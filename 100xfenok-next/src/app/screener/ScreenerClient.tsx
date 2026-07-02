@@ -949,12 +949,48 @@ function mobileMetricKeys(preset: ColumnPreset): ScreenerSortKey[] {
   return keys.slice(0, 8);
 }
 
+function ScreenerEmptyState({
+  canvasPlusPreview,
+  hasFilters,
+  onResetFilters,
+}: {
+  canvasPlusPreview: boolean;
+  hasFilters: boolean;
+  onResetFilters: () => void;
+}) {
+  if (!canvasPlusPreview) {
+    return (
+      <div className="col-span-full px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
+        조건에 맞는 종목이 없습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="cp-screener-empty-state" data-canvas-plus-screener-empty-state="true">
+      <p>조건에 맞는 종목이 없습니다.</p>
+      {hasFilters ? (
+        <button
+          type="button"
+          onClick={onResetFilters}
+          className="cp-button cp-screener-empty-action"
+          data-variant="ghost"
+          data-density="compact"
+        >
+          필터 초기화
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function MobileStockCard({
   stock,
   expanded,
   detailId,
   preset,
   selected,
+  canvasPlusPreview,
   onToggle,
   onSelectedChange,
 }: {
@@ -963,6 +999,7 @@ function MobileStockCard({
   detailId: string;
   preset: ColumnPreset;
   selected: boolean;
+  canvasPlusPreview: boolean;
   onToggle: () => void;
   onSelectedChange: () => void;
 }) {
@@ -973,7 +1010,11 @@ function MobileStockCard({
   const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
   const metrics = mobileMetricKeys(preset);
   return (
-    <article data-screener-stock-card className="overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
+    <article
+      data-screener-stock-card
+      data-canvas-plus-screener-card={canvasPlusPreview ? "mobile" : undefined}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
+    >
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
         <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
@@ -1045,7 +1086,7 @@ function MobileStockCard({
       </div>
       {preset === "estimate" ? <MobileEstimateTrendSections stock={stock} compact /> : null}
       {expanded ? (
-        <div id={detailId} className="border-t border-[var(--c-line-2)]">
+        <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
           <StockDetailPanel ticker={stock.ticker} stock={stock} />
         </div>
       ) : null}
@@ -1059,6 +1100,7 @@ function DesktopStockCard({
   detailId,
   preset,
   selected,
+  canvasPlusPreview,
   onToggle,
   onSelectedChange,
 }: {
@@ -1067,6 +1109,7 @@ function DesktopStockCard({
   detailId: string;
   preset: ColumnPreset;
   selected: boolean;
+  canvasPlusPreview: boolean;
   onToggle: () => void;
   onSelectedChange: () => void;
 }) {
@@ -1076,7 +1119,12 @@ function DesktopStockCard({
   const actionTitle = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
   const metrics = mobileMetricKeys(preset).slice(0, 6);
   return (
-    <article data-screener-stock-card data-screener-desktop-stock-card className="overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
+    <article
+      data-screener-stock-card
+      data-screener-desktop-stock-card
+      data-canvas-plus-screener-card={canvasPlusPreview ? "desktop" : undefined}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
+    >
       <div className="flex items-center justify-between gap-3 border-b border-[var(--c-line-2)] px-4 py-3">
         <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
@@ -1143,7 +1191,7 @@ function DesktopStockCard({
         ))}
       </div>
       {expanded ? (
-        <div id={detailId} className="border-t border-[var(--c-line-2)]">
+        <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
           <StockDetailPanel ticker={stock.ticker} stock={stock} />
         </div>
       ) : null}
@@ -2171,7 +2219,13 @@ export default function ScreenerClient({
       )}
 
       {screenerDataState.status !== "ready" ? (
-        <DataStateNotice state={screenerDataState} />
+        enableCanvasPlusPreview ? (
+          <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
+            <DataStateNotice state={screenerDataState} />
+          </section>
+        ) : (
+          <DataStateNotice state={screenerDataState} />
+        )
       ) : null}
 
       {initialMacroContextId ? (
@@ -3245,21 +3299,24 @@ export default function ScreenerClient({
                 detailId={detailId}
                 preset={preset}
                 selected={selectedTickers.has(stock.ticker)}
+                canvasPlusPreview={enableCanvasPlusPreview}
                 onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
                 onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
               />
             );
           })}
           {dataReady && pageRows.length === 0 ? (
-            <div className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-              조건에 맞는 종목이 없습니다.
-            </div>
+            <ScreenerEmptyState canvasPlusPreview={enableCanvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
           ) : null}
         </div>
 
         <div className={enableCanvasPlusPreview ? "cp-screener-results-body hidden md:block" : "hidden md:block"}>
           {viewMode === "card" ? (
-            <div data-screener-card-grid className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+            <div
+              data-screener-card-grid
+              data-canvas-plus-screener-card-grid={enableCanvasPlusPreview ? "true" : undefined}
+              className={enableCanvasPlusPreview ? "cp-screener-card-grid" : "grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"}
+            >
               {pageRows.map((stock) => {
                 const expanded = expandedTicker === stock.ticker;
                 const detailId = `screener-card-detail-${stock.ticker}`;
@@ -3271,15 +3328,14 @@ export default function ScreenerClient({
                     detailId={detailId}
                     preset={preset}
                     selected={selectedTickers.has(stock.ticker)}
+                    canvasPlusPreview={enableCanvasPlusPreview}
                     onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
                     onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                   />
                 );
               })}
               {dataReady && pageRows.length === 0 ? (
-                <div className="col-span-full px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-                  조건에 맞는 종목이 없습니다.
-                </div>
+                <ScreenerEmptyState canvasPlusPreview={enableCanvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
               ) : null}
             </div>
           ) : (
@@ -3289,6 +3345,7 @@ export default function ScreenerClient({
               dataReady={dataReady}
               density={density}
               densityClass={densityClass}
+              hasFilters={hasFilters}
               canvasPlusPreview={enableCanvasPlusPreview}
               enabled={enableCanvasPlusPreview}
               expandedTicker={expandedTicker}
@@ -3299,6 +3356,8 @@ export default function ScreenerClient({
                   dataReady={dataReady}
                   density={density}
                   densityClass={densityClass}
+                  hasFilters={hasFilters}
+                  canvasPlusPreview={enableCanvasPlusPreview}
                   expandedTicker={expandedTicker}
                   pageRows={pageRows}
                   preset={preset}
@@ -3307,6 +3366,7 @@ export default function ScreenerClient({
                   sortKey={sortKey}
                   deselectPageRows={deselectPageRows}
                   onToggleExpandedTicker={onToggleExpandedTicker}
+                  onResetFilters={resetFilters}
                   renderCell={renderCell}
                   renderGuruHolderBadge={renderGuruHolderBadge}
                   selectPageRows={selectPageRows}
@@ -3317,6 +3377,7 @@ export default function ScreenerClient({
               pageRows={pageRows}
               preset={preset}
               selectedTickers={selectedTickers}
+              onResetFilters={resetFilters}
               sortDir={sortDir}
               sortKey={sortKey}
               deselectPageRows={deselectPageRows}

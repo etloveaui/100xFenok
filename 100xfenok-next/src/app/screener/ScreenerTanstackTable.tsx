@@ -185,12 +185,14 @@ function ScreenerTanstackTableInner({
   density,
   densityClass,
   expandedTicker,
+  hasFilters = false,
   pageRows,
   preset,
   selectedTickers,
   sortDir,
   sortKey,
   deselectPageRows,
+  onResetFilters,
   onToggleExpandedTicker,
   renderCell,
   renderGuruHolderBadge,
@@ -459,7 +461,9 @@ function ScreenerTanstackTableInner({
                     data-canvas-plus-detail-row={canvasPlusPreview ? "true" : undefined}
                   >
                     <td colSpan={visibleColumns.length + 1} className="p-0">
-                      <StockDetailPanel ticker={stock.ticker} stock={stock} />
+                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
+                        <StockDetailPanel ticker={stock.ticker} stock={stock} />
+                      </div>
                     </td>
                   </tr>
                 ) : null}
@@ -468,8 +472,25 @@ function ScreenerTanstackTableInner({
           })}
           {dataReady && pageRows.length === 0 ? (
             <tr>
-              <td colSpan={visibleColumns.length + 1} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-                조건에 맞는 종목이 없습니다.
+              <td colSpan={visibleColumns.length + 1} className={canvasPlusPreview ? "p-0" : "px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]"}>
+                {canvasPlusPreview ? (
+                  <div className="cp-screener-empty-state" data-canvas-plus-screener-empty-state="true">
+                    <p>조건에 맞는 종목이 없습니다.</p>
+                    {hasFilters && onResetFilters ? (
+                      <button
+                        type="button"
+                        onClick={onResetFilters}
+                        className="cp-button cp-screener-empty-action"
+                        data-variant="ghost"
+                        data-density="compact"
+                      >
+                        필터 초기화
+                      </button>
+                    ) : null}
+                  </div>
+                ) : (
+                  "조건에 맞는 종목이 없습니다."
+                )}
               </td>
             </tr>
           ) : null}
