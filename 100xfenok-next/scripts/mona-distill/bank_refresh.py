@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-from chains import _ensure_aa_path, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import _ensure_aa_path, _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
 from distill_engine import read_json, write_json_atomic
 from enrich import LLM_SLEEP_LADDER_S, add_entry_enrichment, backup_expression_bank, default_transcript_dir, read_transcript_text, utc_iso
 from gates import apply_source_verification
@@ -74,7 +74,7 @@ def extract_from_transcript(text: str) -> str:
     try:
         return call_gemini_flash_lite(EXTRACT_SYSTEM, prompt)
     except Exception:
-        return make_gpt_adapter("gpt-5.4-mini")(EXTRACT_SYSTEM, prompt)
+        return make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))(EXTRACT_SYSTEM, prompt)
 
 
 def extract_from_video(video_id: str) -> str:
@@ -89,7 +89,7 @@ def extract_from_video(video_id: str) -> str:
         ]}],
         "generationConfig": {"responseMimeType": "application/json"},
     }
-    result = call_gemini("gemini-3.1-flash-lite", payload)
+    result = call_gemini(_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), payload)
     if not result.success or not result.text.strip():
         raise RuntimeError(f"gemini video: {result.error or 'empty'}")
     return result.text
@@ -99,8 +99,8 @@ def extract_enriched_from_transcript(text: str) -> str:
     prompt = f"다음 한국어 영어회화 강의 자막에서 학습 표현을 풀증류해라.\n\n{EXTRACT_ENRICHED_RULES}\n\n[자막]\n{text[:16000]}"
     errors: list[str] = []
     for name, adapter in [
-        ("gemini-3.1-flash-lite", call_gemini_flash_lite),
-        ("gpt-5.4-mini", make_gpt_adapter("gpt-5.4-mini")),
+        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
+        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
     ]:
         for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
             if sleep_s:

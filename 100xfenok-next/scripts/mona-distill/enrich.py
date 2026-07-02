@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from chains import call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
 from distill_engine import read_json, write_json_atomic
 from gates import ORIGINAL_BANK_FIELDS, validate_enriched_entry, word_count
 from worker import default_root
@@ -208,8 +208,8 @@ def call_enrich_chain(source_id: str, entries: list[dict[str, Any]], transcript:
     prompt = build_enrich_prompt(source_id, entries, transcript, grounded)
     errors: list[str] = []
     for name, adapter in [
-        ("gemini-3.1-flash-lite", call_gemini_flash_lite),
-        ("gpt-5.4-mini", make_gpt_adapter("gpt-5.4-mini")),
+        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
+        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
     ]:
         for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
             if sleep_s:

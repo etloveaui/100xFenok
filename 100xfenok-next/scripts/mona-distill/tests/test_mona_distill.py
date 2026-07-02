@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -23,6 +24,23 @@ from gates import (
 )
 from providers import MockProvider
 from worker import canonical_study_date, drain_once, enqueue_pending
+
+
+MONA_VNEXT_MODEL_OPTIONS = SCRIPT_DIR.parents[1] / "src" / "features" / "mona-vnext" / "live" / "modelOptions.ts"
+
+DISTILL_REGISTRY_SYNC_SITES = [
+    ("chains.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
+    ("chains.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 2),
+    ("chains.py", '_resolve_model_id("mimo-2.5", "mimo-v2.5")', 2),
+    ("chains.py", '_resolve_model_id("gpt-5.5", "gpt-5.5")', 2),
+    ("chains.py", '_resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro")', 2),
+    ("enrich.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 1),
+    ("enrich.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 2),
+    ("teach_notes.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
+    ("teach_notes.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 4),
+    ("bank_refresh.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
+    ("bank_refresh.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 3),
+]
 
 
 def read_json(path: Path):
@@ -202,6 +220,62 @@ class ChainProviderTests(unittest.TestCase):
         self.assertEqual(unquote(' "secret" '), "secret")
         self.assertEqual(unquote(" 'secret' "), "secret")
         self.assertEqual(unquote("secret"), "secret")
+
+    def test_feno_llm_resolver_path_resolves_from_worktree(self) -> None:
+        import chains
+
+        python_path = chains._ensure_feno_llm_path()
+        registry_path = chains._feno_llm_registry_path()
+        self.assertTrue((python_path / "feno_llm" / "resolver.py").exists(), python_path)
+        self.assertTrue(registry_path.exists(), registry_path)
+
+        from feno_llm.resolver import resolve
+
+        resolved = resolve("gemini-live", registry_path=str(registry_path))
+        self.assertEqual(resolved.wire_id, "gemini-3.1-flash-live-preview")
+        self.assertEqual(resolved.family, "gemini")
+        self.assertNotEqual(resolved.usage_tier, "disabled")
+
+    def test_mona_vnext_live_model_literals_stay_synced_with_registry(self) -> None:
+        import chains
+
+        registry_path = chains._feno_llm_registry_path()
+        chains._ensure_feno_llm_path()
+        from feno_llm.resolver import resolve
+
+        expected = resolve("gemini-live", registry_path=str(registry_path))
+        text = MONA_VNEXT_MODEL_OPTIONS.read_text(encoding="utf-8")
+        model_literals = re.findall(r'"(gemini-3\.1-flash-live-preview)"', text)
+
+        self.assertEqual(model_literals, [expected.wire_id, expected.wire_id])
+        self.assertEqual(expected.family, "gemini")
+        self.assertNotEqual(expected.usage_tier, "disabled")
+
+    def test_distill_registry_sync_sites_resolve_live_wire_ids(self) -> None:
+        import chains
+
+        registry_path = chains._feno_llm_registry_path()
+        chains._ensure_feno_llm_path()
+        from feno_llm.resolver import resolve
+
+        expected_wire_ids = {
+            "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
+            "gpt-5.4-mini": "gpt-5.4-mini",
+            "mimo-2.5": "mimo-v2.5",
+            "gpt-5.5": "gpt-5.5",
+            "deepseek-v4-pro": "deepseek-v4-pro",
+        }
+        for alias, wire_id in expected_wire_ids.items():
+            with self.subTest(alias=alias):
+                resolved = resolve(alias, registry_path=str(registry_path))
+                self.assertEqual(resolved.wire_id, wire_id)
+                self.assertNotEqual(resolved.usage_tier, "disabled")
+                self.assertEqual(chains._resolve_model_id(alias, wire_id), wire_id)
+
+        for filename, needle, expected_count in DISTILL_REGISTRY_SYNC_SITES:
+            with self.subTest(filename=filename, needle=needle):
+                text = (SCRIPT_DIR / filename).read_text(encoding="utf-8")
+                self.assertEqual(text.count(needle), expected_count)
 
     def test_nightly_job_reaches_provider(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

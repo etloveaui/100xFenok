@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from bank_refresh import append_jsonl, distillate_dir, list_transcript_sources, load_coverage, read_jsonl, write_coverage
-from chains import call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
 from distill_engine import write_text_atomic
 from enrich import LLM_SLEEP_LADDER_S, default_transcript_dir, utc_iso
 from worker import default_root
@@ -69,8 +69,8 @@ def call_teach_chain(video_id: str, transcript: str) -> str:
     prompt = build_teach_prompt(video_id, transcript)
     errors: list[str] = []
     for name, adapter in [
-        ("gemini-3.1-flash-lite", call_gemini_flash_lite),
-        ("gpt-5.4-mini", make_gpt_adapter("gpt-5.4-mini")),
+        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
+        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
     ]:
         for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
             if sleep_s:
@@ -126,8 +126,8 @@ def call_cluster_chain(section: str, items: list[dict[str, Any]], merge: bool = 
     prompt = build_cluster_prompt(section, items, merge=merge)
     errors: list[str] = []
     for name, adapter in [
-        ("gemini-3.1-flash-lite", call_gemini_flash_lite),
-        ("gpt-5.4-mini", make_gpt_adapter("gpt-5.4-mini")),
+        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
+        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
     ]:
         for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
             if sleep_s:

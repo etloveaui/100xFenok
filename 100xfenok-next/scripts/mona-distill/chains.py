@@ -20,6 +20,14 @@ DEFAULT_AA_SCRIPTS = (
     Path.home()
     / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/Asset_Allocator/scripts"
 )
+DEFAULT_FENO_LLM_PYTHON = (
+    Path.home()
+    / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/products/llm-runtime/python"
+)
+DEFAULT_FENO_LLM_REGISTRY = (
+    Path.home()
+    / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/references/shared-model-provider-registry.yaml"
+)
 SECRETS_FILE = Path.home() / ".secrets/all-keys.env"
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 
@@ -32,6 +40,46 @@ def _ensure_aa_path() -> None:
     path = str(Path(os.environ.get("AA_SCRIPTS_DIR", str(DEFAULT_AA_SCRIPTS))))
     if path not in sys.path:
         sys.path.insert(0, path)
+
+
+def _find_sibling_cch_path(*parts: str) -> Path | None:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "claude-code-hub" / Path(*parts)
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _feno_llm_python_path() -> Path:
+    override = os.environ.get("FENO_LLM_PYTHON_DIR")
+    if override:
+        return Path(override)
+    return _find_sibling_cch_path("docs", "products", "llm-runtime", "python") or DEFAULT_FENO_LLM_PYTHON
+
+
+def _feno_llm_registry_path() -> Path:
+    override = os.environ.get("FENO_LLM_REGISTRY")
+    if override:
+        return Path(override)
+    return _find_sibling_cch_path("docs", "references", "shared-model-provider-registry.yaml") or DEFAULT_FENO_LLM_REGISTRY
+
+
+def _ensure_feno_llm_path() -> Path:
+    path = _feno_llm_python_path()
+    path_str = str(path)
+    if path_str not in sys.path:
+        sys.path.insert(0, path_str)
+    return path
+
+
+def _resolve_model_id(alias: str, fallback: str) -> str:
+    try:
+        _ensure_feno_llm_path()
+        from feno_llm.resolver import resolve
+
+        return resolve(alias, registry_path=str(_feno_llm_registry_path())).wire_id
+    except Exception:
+        return fallback
 
 
 def unquote(value: str) -> str:
@@ -137,7 +185,7 @@ def call_gemini_flash_lite(system: str, prompt: str) -> str:
         "contents": [{"parts": [{"text": f"{system}\n\n{prompt}"}]}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
     }
-    result = call_gemini("gemini-3.1-flash-lite", payload)
+    result = call_gemini(_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), payload)
     if not result.success or not result.text.strip():
         raise RuntimeError(f"gemini: {result.error or 'empty response'}")
     return result.text
@@ -181,7 +229,7 @@ def call_mimo_v25(system: str, prompt: str) -> str:
     _ensure_aa_path()
     from _mimo_api import call_mimo
 
-    text, _meta = call_mimo(prompt, model="mimo-v2.5", system=system, response_format="json")
+    text, _meta = call_mimo(prompt, model=_resolve_model_id("mimo-2.5", "mimo-v2.5"), system=system, response_format="json")
     if not text.strip():
         raise RuntimeError("mimo: empty response")
     return text
@@ -192,7 +240,7 @@ def call_deepseek_v4_pro(system: str, prompt: str) -> str:
     if not key:
         raise RuntimeError("deepseek: DEEPSEEK_API_KEY not found")
     body = {
-        "model": "deepseek-v4-pro",
+        "model": _resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro"),
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
@@ -241,9 +289,9 @@ def interrupt_chain() -> ChainProvider:
     """Fast/free chain for post-session interrupt distill (spec v3 bench)."""
     return ChainProvider(
         [
-            ("gemini-3.1-flash-lite", call_gemini_flash_lite),
-            ("gpt-5.4-mini", make_gpt_adapter("gpt-5.4-mini")),
-            ("mimo-v2.5", call_mimo_v25),
+            (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
+            (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
+            (_resolve_model_id("mimo-2.5", "mimo-v2.5"), call_mimo_v25),
         ]
     )
 
@@ -253,7 +301,7 @@ def nightly_chain() -> ChainProvider:
     return ChainProvider(
         [
             ("kimi-for-coding+thinking", call_kimi_thinking),
-            ("gpt-5.5", make_gpt_adapter("gpt-5.5")),
-            ("deepseek-v4-pro", call_deepseek_v4_pro),
+            (_resolve_model_id("gpt-5.5", "gpt-5.5"), make_gpt_adapter(_resolve_model_id("gpt-5.5", "gpt-5.5"))),
+            (_resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro"), call_deepseek_v4_pro),
         ]
     )
