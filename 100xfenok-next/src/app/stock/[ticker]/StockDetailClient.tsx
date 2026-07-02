@@ -1024,7 +1024,7 @@ function DividendPanel({
       data-stock-dividend-panel
       tabIndex={-1}
       className={`mt-5 scroll-mt-24 rounded-lg border p-3 transition ${
-        highlight ? "border-emerald-400 bg-emerald-50/80 shadow-[0_0_0_3px_rgba(16,185,129,0.16)]" : "border-slate-200 bg-slate-50/60"
+        highlight ? "border-emerald-400 bg-emerald-50/80 shadow-[var(--sh-sm)]" : "border-slate-200 bg-slate-50/60"
       }`}
       aria-label="배당 분석"
     >
