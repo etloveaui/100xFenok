@@ -1,27 +1,27 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-07-02T00:03:21.228Z",
+  "generated_at": "2026-07-02T01:59:25.964Z",
   "required_history_periods": [
     "monthly_3y",
     "monthly_5y"
   ],
-  "primary_stockanalysis_detail_files": 4592,
+  "primary_stockanalysis_detail_files": 4593,
   "complete_required_history": 4580,
-  "missing_required_history": 12,
+  "missing_required_history": 13,
   "fetchable_required_history": 0,
-  "inception_limited_required_history": 12,
-  "coverage_pct": 99.74,
+  "inception_limited_required_history": 13,
+  "coverage_pct": 99.72,
   "missing_by_period": {
-    "monthly_3y": 12,
-    "monthly_5y": 12
+    "monthly_3y": 13,
+    "monthly_5y": 13
   },
   "fetchable_by_period": {
     "monthly_3y": 0,
     "monthly_5y": 0
   },
   "inception_limited_by_period": {
-    "monthly_3y": 12,
-    "monthly_5y": 12
+    "monthly_3y": 13,
+    "monthly_5y": 13
   },
   "samples": {
     "missing": [
@@ -329,15 +329,15 @@
   },
   "daily_1y_gap": {
     "min_rows": 200,
-    "detail_files_scanned": 5351,
+    "detail_files_scanned": 5362,
     "complete": 4152,
-    "missing": 1199,
-    "fetchable": 444,
-    "inception_limited": 755,
+    "missing": 1210,
+    "fetchable": 454,
+    "inception_limited": 756,
     "fetchable_breakdown": {
       "counts": {
         "stockanalysis_short_rows": 21,
-        "yahoo_fallback_short_rows": 423
+        "yahoo_fallback_short_rows": 433
       },
       "samples": {
         "stockanalysis_short_rows": [
@@ -454,7 +454,7 @@
         },
         {
           "ticker": "ADIU",
-          "actual_rows": 7,
+          "actual_rows": 11,
           "fetchable_missing": [
             "daily_1y"
           ],
@@ -917,7 +917,7 @@
     "caveat": "StockAnalysis ETF detail daily 1Y continuity is required; fetchable daily 1Y gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block by themselves."
   },
   "incremental_plan": {
-    "generated_at": "2026-07-02T00:03:09Z",
+    "generated_at": "2026-07-02T01:59:14Z",
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
@@ -930,8 +930,8 @@
       "incremental_selected": 0,
       "incremental_candidates": 0,
       "history_gap": 0,
-      "inception_limited_history_gap": 4,
-      "total_history_gap": 4,
+      "inception_limited_history_gap": 5,
+      "total_history_gap": 5,
       "cooldown_skipped": 0
     },
     "first5": [],
@@ -963,8 +963,8 @@
   "market_facts_return_3y": {
     "etf": 2867,
     "stockanalysis_history": 2607,
-    "etf_coverage_pct": 53.57,
-    "etf_denominator": 5352,
+    "etf_coverage_pct": 53.56,
+    "etf_denominator": 5353,
     "stockanalysis_universe_denominator": 5333
   },
   "recommended_dispatch": {
