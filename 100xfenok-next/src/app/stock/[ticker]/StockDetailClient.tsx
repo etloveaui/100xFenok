@@ -504,6 +504,22 @@ function fmtDateish(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) return "—";
   return value.trim();
 }
+function fmtKstMinute(value: string | null | undefined): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.trim();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
+}
 function rawText(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (isFiniteNumber(value)) return value.toLocaleString();
@@ -888,6 +904,7 @@ function ValuationBandSummaryCard({
 function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | null | undefined }) {
   const score = resolveFenokEdgeScore(record);
   const coverage = record?.lensCoverageRatio ?? record?.coverageRatio;
+  const asOfLabel = fmtKstMinute(record?.asOf);
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const offset = score === null ? circumference : circumference * (1 - score / 100);
@@ -904,7 +921,7 @@ function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | nu
       <header className="cp-stock-rail-card__header">
         <div>
           <p className="cp-stock-rail-eyebrow">Fenok Edge</p>
-          <h2>펜오크 엣지</h2>
+          <h2>종합 신호 점수</h2>
         </div>
         <span>{formatCoverageRatio(coverage)}</span>
       </header>
@@ -939,7 +956,7 @@ function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | nu
         ))}
       </div>
       <p className="cp-stock-rail-card__summary">
-        {record?.asOf ? `신호 기준 ${record.asOf}` : record === undefined ? "신호 로딩 중" : "신호 데이터 대기"}
+        {asOfLabel ? `신호 기준 ${asOfLabel}` : record === undefined ? "신호 로딩 중" : "신호 데이터 대기"}
       </p>
     </article>
   );
