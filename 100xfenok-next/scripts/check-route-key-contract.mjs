@@ -31,13 +31,13 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     lines: "1-105",
     note: "Lane C corrected route-scope classification source",
   },
-  page_route_count: 44,
+  page_route_count: 45,
   core_covered_count: 19,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
   admin_internal_count: 9,
   closed_alias_count: 4,
-  out_of_scope_count: 3,
+  out_of_scope_count: 4,
   blocked_actions: ["route_patch", "redirect", "delete", "deploy", "public_mutation"],
   core_covered_representative_routes: [
     "/etfs/SPY",
@@ -295,6 +295,27 @@ function assertRouteScopeClassificationAck(errors) {
   );
 }
 
+function assertRank2DailyWrapRedirectContract(errors) {
+  const label = "rank2 market legacy archive remap";
+  const redirectsPath = path.join(APP_ROOT, "public", "_redirects");
+  assert(fs.existsSync(redirectsPath), `${label}: public/_redirects is missing`, errors);
+  if (!fs.existsSync(redirectsPath)) return;
+
+  const lines = fs.readFileSync(redirectsPath, "utf8").split(/\r?\n/);
+  const source = "/100x/100x-main.html";
+  const destination = "/100x/daily-wrap";
+  const expectedRule = `${source} ${destination} 307`;
+  const ibHelperRule = "/admin/ib-helper /admin/ib-helper/ 308";
+  const ruleIndex = lines.indexOf(expectedRule);
+  const ibHelperIndex = lines.indexOf(ibHelperRule);
+
+  assert(ruleIndex !== -1, `${label}: missing _redirects rule ${expectedRule}`, errors);
+  assert(ibHelperIndex !== -1, `${label}: missing _redirects anchor ${ibHelperRule}`, errors);
+  if (ruleIndex !== -1 && ibHelperIndex !== -1) {
+    assert(ruleIndex === ibHelperIndex + 1, `${label}: ${expectedRule} must stay immediately after ${ibHelperRule}`, errors);
+  }
+}
+
 function assertRouteIaContracts(errors) {
   const productNavSource = readAppSource("src/lib/product-nav.ts");
   const shellSource = readAppSource("src/components/shell/AppShell.tsx");
@@ -424,6 +445,7 @@ for (const key of REQUIRED_ROUTE_KEYS) {
 
 assertRouteIaContracts(errors);
 assertRouteScopeClassificationAck(errors);
+assertRank2DailyWrapRedirectContract(errors);
 
 for (const routePattern of routeExports.appRoutePatterns ?? []) {
   const pagePath = routePatternPage(routePattern);

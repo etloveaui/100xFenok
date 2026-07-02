@@ -62,7 +62,7 @@ function categoryForPath(relPath) {
     };
   }
 
-  if (["src/styles/theme-c.css", "src/styles/app-shell.css"].includes(relPath)) {
+  if (["src/styles/theme-c.css", "src/styles/app-shell.css", "src/styles/canvas-plus.css"].includes(relPath)) {
     return {
       category: "token-source",
       note: "Theme/app-shell CSS source layer keeps bootstrap literal values.",
