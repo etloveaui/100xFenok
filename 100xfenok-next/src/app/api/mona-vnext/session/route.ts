@@ -10,8 +10,8 @@ import {
 } from "@/features/mona-vnext/coach/coachPolicy";
 import {
   buildMonaVnextSessionBankSeed,
-  buildMonaVnextSessionExpressionBank,
 } from "@/features/mona-vnext/server/expressionBank";
+import { buildTeacherFilteredMonaVnextSessionExpressionBank } from "@/features/mona-vnext/server/teacherMaterialBank";
 import {
   MONA_VNEXT_LIVE_THINKING_LEVEL,
   normalizeMonaVnextLiveTemperature,
@@ -92,9 +92,21 @@ export async function POST(request: Request) {
   const englishVisible = body?.englishVisible !== false;
   const temperature = normalizeMonaVnextLiveTemperature(body?.temperature);
   const clientBuildVersion = normalizeClientBuildVersion(body?.clientBuildVersion);
-  const expressionBank = buildMonaVnextSessionExpressionBank({
+  const expressionBank = buildTeacherFilteredMonaVnextSessionExpressionBank({
     seed: buildMonaVnextSessionBankSeed({ startedAt: now, conversationId }),
   });
+
+  if (expressionBank.entries.length === 0) {
+    return noStoreJson(
+      {
+        error: "MONA_TSM_MATERIAL_GATE_EMPTY",
+        status: "BLOCKED",
+        materialQuarantine: expressionBank.metadata.materialQuarantine ?? [],
+        materialWarnings: expressionBank.metadata.materialWarnings ?? [],
+      },
+      503,
+    );
+  }
   const activeExpression = getMonaVnextExpressionById(body?.activeExpressionId, expressionBank.entries);
 
   if (!apiKey) {

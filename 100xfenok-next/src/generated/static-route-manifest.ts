@@ -39,8 +39,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "fenok-edge-coverage-index.json",
-      "sizeBytes": 31948,
-      "updatedAt": "2026-07-02T04:31:38.343Z"
+      "sizeBytes": 31945,
+      "updatedAt": "2026-07-02T04:47:24.830Z"
     },
     {
       "name": "fenok-edge-korea-krx-daily-index.json",
@@ -65,7 +65,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 13390,
-      "updatedAt": "2026-07-02T04:31:29.798Z"
+      "updatedAt": "2026-07-02T04:47:15.315Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -148,27 +148,27 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 985237,
-      "updatedAt": "2026-07-02T04:31:29.642Z"
+      "updatedAt": "2026-07-02T04:47:15.164Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 153638,
-      "updatedAt": "2026-07-02T04:31:29.644Z"
+      "updatedAt": "2026-07-02T04:47:15.167Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7915361,
-      "updatedAt": "2026-07-02T04:31:29.618Z"
+      "updatedAt": "2026-07-02T04:47:15.131Z"
     },
     {
       "name": "fenok_etf_core_daily_basket_summary.json",
       "sizeBytes": 76424,
-      "updatedAt": "2026-07-02T04:31:26.799Z"
+      "updatedAt": "2026-07-02T04:47:12.267Z"
     },
     {
       "name": "fenok_etf_signals_summary.json",
       "sizeBytes": 2604025,
-      "updatedAt": "2026-07-02T04:31:24.203Z"
+      "updatedAt": "2026-07-02T04:47:09.710Z"
     },
     {
       "name": "fenok_occ_options_availability.json",
@@ -178,7 +178,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "fenok_signals_summary.json",
       "sizeBytes": 323243,
-      "updatedAt": "2026-07-02T04:31:19.035Z"
+      "updatedAt": "2026-07-02T04:47:02.124Z"
     },
     {
       "name": "market_data_audit.json",

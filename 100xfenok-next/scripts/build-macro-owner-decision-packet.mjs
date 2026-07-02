@@ -17,6 +17,8 @@ const inventoryScript = path.join(__dirname, "check-canonical-root-inventory.mjs
 const liveEquivalenceScript = path.join(__dirname, "check-macro-owner-live-equivalence.mjs");
 const ISO_8601_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
 const PRODUCTION_WORKER_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CLOUDFLARE_VERSION_PREVIEW_HOST_PATTERN = /^[a-z0-9]+-100xfenok\.etloveaui\.workers\.dev$/;
 
 function requireArgValue(argv, index, flag) {
   const value = argv[index + 1];
@@ -6986,6 +6988,53 @@ function rank2LocalPostPatchSmokeRecordTemplate(packet) {
   };
 }
 
+function validateCloudflareVersionPreviewLocalSmoke(record) {
+  const errors = [];
+  if (record.runtime_scope !== "cloudflare_version_preview") return errors;
+  if (!UUID_PATTERN.test(record.version_id ?? "")) {
+    errors.push("rank2 local post-patch smoke record cloudflare_version_preview requires uuid version_id");
+  }
+  if (typeof record.local_emulation_blocker_reason !== "string" || record.local_emulation_blocker_reason.trim().length === 0) {
+    errors.push("rank2 local post-patch smoke record cloudflare_version_preview requires local_emulation_blocker_reason");
+  }
+  let host = null;
+  try {
+    host = new URL(record.local_live_equivalence_base_url ?? "").hostname.toLowerCase();
+  } catch {
+    errors.push(`rank2 local post-patch smoke record cloudflare_version_preview base URL is invalid: ${record.local_live_equivalence_base_url}`);
+  }
+  if (host && !CLOUDFLARE_VERSION_PREVIEW_HOST_PATTERN.test(host)) {
+    errors.push(`rank2 local post-patch smoke record cloudflare_version_preview host mismatch: ${host}`);
+  }
+  if (!Array.isArray(record.rows) || record.rows.length === 0) {
+    errors.push("rank2 local post-patch smoke record cloudflare_version_preview rows are required");
+    return errors;
+  }
+  for (const row of record.rows) {
+    const label = `${row?.role ?? "unknown"} ${row?.path ?? "unknown"}`;
+    if (typeof row?.role !== "string" || typeof row?.path !== "string" || !row.path.startsWith("/")) {
+      errors.push(`rank2 local post-patch smoke record cloudflare_version_preview row identity invalid: ${label}`);
+    }
+    if (typeof row?.command !== "string" || row.command.trim().length === 0) {
+      errors.push(`rank2 local post-patch smoke record cloudflare_version_preview row command is required: ${label}`);
+    }
+    if (typeof row?.expected_http_status !== "number") {
+      errors.push(`rank2 local post-patch smoke record cloudflare_version_preview row expected status is required: ${label}`);
+      continue;
+    }
+    if (row.smoke_executed !== true || row.actual_http_status !== row.expected_http_status || row.ok !== true) {
+      errors.push(`rank2 local post-patch smoke record cloudflare_version_preview row must pass: ${label}`);
+    }
+    if (row.expected_location && row.actual_location !== row.expected_location) {
+      errors.push(`rank2 local post-patch smoke record cloudflare_version_preview row location mismatch: ${label}`);
+    }
+    if (row.expected_final_url && row.actual_final_url !== row.expected_final_url) {
+      errors.push(`rank2 local post-patch smoke record cloudflare_version_preview row final URL mismatch: ${label}`);
+    }
+  }
+  return errors;
+}
+
 function validateRank2LocalPostPatchSmokeRecord(record, template, packet) {
   const errors = [];
   if (!record) return errors;
@@ -7019,9 +7068,6 @@ function validateRank2LocalPostPatchSmokeRecord(record, template, packet) {
   if (!isIso8601Timestamp(record.recorded_at)) {
     errors.push(`rank2 local post-patch smoke record recorded_at must be a full ISO-8601 timestamp with timezone: ${record.recorded_at}`);
   }
-  if (record.local_live_equivalence_base_url !== template.local_live_equivalence_base_url) {
-    errors.push("rank2 local post-patch smoke record base URL mismatch");
-  }
   if (record.owner_route !== template.owner_route || record.compatibility_route !== template.compatibility_route) {
     errors.push("rank2 local post-patch smoke record route identity mismatch");
   }
@@ -7037,23 +7083,33 @@ function validateRank2LocalPostPatchSmokeRecord(record, template, packet) {
   if (JSON.stringify(record.rollback_steps) !== JSON.stringify(template.rollback_steps)) {
     errors.push("rank2 local post-patch smoke record rollback steps mismatch");
   }
-  if (!Array.isArray(record.rows) || record.rows.length !== template.rows.length) {
-    errors.push(`rank2 local post-patch smoke record row count mismatch: ${record.rows?.length}`);
-    return errors;
-  }
-  for (let index = 0; index < template.rows.length; index += 1) {
-    const expected = template.rows[index];
-    const actual = record.rows[index];
-    const label = `${expected.role} ${expected.path}`;
-    if (actual.role !== expected.role || actual.path !== expected.path) {
-      errors.push(`rank2 local post-patch smoke record row identity mismatch: ${label}`);
+  const runtimeScope = record.runtime_scope ?? "localhost";
+  if (runtimeScope === "cloudflare_version_preview") {
+    errors.push(...validateCloudflareVersionPreviewLocalSmoke(record));
+  } else if (runtimeScope === "localhost") {
+    if (record.local_live_equivalence_base_url !== template.local_live_equivalence_base_url) {
+      errors.push("rank2 local post-patch smoke record base URL mismatch");
     }
-    if (actual.expected_http_status !== expected.expected_http_status || actual.command !== expected.command) {
-      errors.push(`rank2 local post-patch smoke record row command/status mismatch: ${label}`);
+    if (!Array.isArray(record.rows) || record.rows.length !== template.rows.length) {
+      errors.push(`rank2 local post-patch smoke record row count mismatch: ${record.rows?.length}`);
+      return errors;
     }
-    if (actual.smoke_executed !== true || actual.actual_http_status !== expected.expected_http_status || actual.ok !== true) {
-      errors.push(`rank2 local post-patch smoke record row must pass local smoke: ${label}`);
+    for (let index = 0; index < template.rows.length; index += 1) {
+      const expected = template.rows[index];
+      const actual = record.rows[index];
+      const label = `${expected.role} ${expected.path}`;
+      if (actual.role !== expected.role || actual.path !== expected.path) {
+        errors.push(`rank2 local post-patch smoke record row identity mismatch: ${label}`);
+      }
+      if (actual.expected_http_status !== expected.expected_http_status || actual.command !== expected.command) {
+        errors.push(`rank2 local post-patch smoke record row command/status mismatch: ${label}`);
+      }
+      if (actual.smoke_executed !== true || actual.actual_http_status !== expected.expected_http_status || actual.ok !== true) {
+        errors.push(`rank2 local post-patch smoke record row must pass local smoke: ${label}`);
+      }
     }
+  } else {
+    errors.push(`rank2 local post-patch smoke record runtime_scope unsupported: ${runtimeScope}`);
   }
   if (record.route_patch_applied !== true || record.post_patch_smoke_executed !== true) {
     errors.push("rank2 local post-patch smoke record must record route patch and local smoke as complete");
@@ -7199,14 +7255,40 @@ function validateRank2DeployExecutionRecord(record, template, packet) {
   return errors;
 }
 
+function productionLiveSmokeCommand(baseUrl, row) {
+  if (row.method === "HEAD") {
+    return `curl -sS -I ${baseUrl}${row.path}`;
+  }
+  if (row.follow_redirects === true) {
+    return `curl -L -sS -o /dev/null -w 'status=%{http_code}\\nurl=%{url_effective}\\n' ${baseUrl}${row.path}`;
+  }
+  return `curl -fsS -o /dev/null -w "%{http_code}" ${baseUrl}${row.path}`;
+}
+
+function rewriteExpectedFinalUrl(baseUrl, value) {
+  if (!value) return value;
+  try {
+    const url = new URL(value);
+    return `${baseUrl}${url.pathname}${url.search}`;
+  } catch {
+    return value;
+  }
+}
+
 function rank2ProductionLiveSmokeRows(deployExecution) {
   return (deployExecution.local_smoke_record_rows ?? []).map((row) => ({
     role: row.role,
     path: row.path,
+    method: row.method,
+    follow_redirects: row.follow_redirects,
     expected_http_status: row.expected_http_status,
-    command: `curl -fsS -o /dev/null -w "%{http_code}" ${PRODUCTION_WORKER_BASE_URL}${row.path}`,
+    expected_location: row.expected_location,
+    expected_final_url: rewriteExpectedFinalUrl(PRODUCTION_WORKER_BASE_URL, row.expected_final_url),
+    command: productionLiveSmokeCommand(PRODUCTION_WORKER_BASE_URL, row),
     smoke_executed: true,
     actual_http_status: null,
+    actual_location: null,
+    actual_final_url: null,
     ok: null,
   }));
 }
@@ -7321,6 +7403,12 @@ function validateRank2ProductionLiveSmokeRecord(record, template, packet) {
     }
     if (actual.smoke_executed !== true || actual.actual_http_status !== expected.expected_http_status || actual.ok !== true) {
       errors.push(`rank2 production live smoke row must pass production smoke: ${label}`);
+    }
+    if (expected.expected_location && actual.actual_location !== expected.expected_location) {
+      errors.push(`rank2 production live smoke row location mismatch: ${label}`);
+    }
+    if (expected.expected_final_url && actual.actual_final_url !== expected.expected_final_url) {
+      errors.push(`rank2 production live smoke row final URL mismatch: ${label}`);
     }
   }
   if (

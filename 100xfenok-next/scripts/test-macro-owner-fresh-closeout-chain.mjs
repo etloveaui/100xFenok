@@ -196,6 +196,23 @@ function makeValidRecord(template) {
   return record;
 }
 
+function makeCloudflareVersionPreviewLocalSmokeRecord(template, overrides = {}) {
+  const record = makeValidRecord(template);
+  record.runtime_scope = "cloudflare_version_preview";
+  record.version_id = "01b028bf-0bd5-4ae8-af3a-6c3f26685786";
+  record.local_live_equivalence_base_url = "https://01b028bf-100xfenok.etloveaui.workers.dev";
+  record.local_emulation_blocker_reason = "workerd spawn EBADF";
+  for (const row of record.rows ?? []) {
+    if (row.expected_location && row.actual_location == null) {
+      row.actual_location = row.expected_location;
+    }
+    if (row.expected_final_url && row.actual_final_url == null) {
+      row.actual_final_url = row.expected_final_url;
+    }
+  }
+  return Object.assign(record, overrides);
+}
+
 function expectedCurrentSafeSliceId(packet) {
   const gate = packet.current_next_required_gate;
   if (!gate) return null;
@@ -1201,6 +1218,53 @@ for (const [index, step] of steps.entries()) {
       packet.rank2_execution_readiness.blocked_actions,
       routePatchBlockedActions,
     );
+  }
+  if (step.label === "rank2-route-patch-application") {
+    const badPreviewMissingVersionRecord = makeCloudflareVersionPreviewLocalSmokeRecord(packet.rank2_local_post_patch_smoke_record_template);
+    delete badPreviewMissingVersionRecord.version_id;
+    const badPreviewMissingVersionFile = path.join(tempDir, "bad-rank2-preview-missing-version-id.json");
+    fs.writeFileSync(badPreviewMissingVersionFile, `${JSON.stringify(badPreviewMissingVersionRecord, null, 2)}\n`);
+    const negativePreviewMissingVersion = runPacket(
+      [
+        ...recordArgs(records),
+        "--rank2-local-post-patch-smoke-record",
+        badPreviewMissingVersionFile,
+      ],
+      {
+        expectFailure: true,
+        label: "negative rank2 preview missing version_id",
+      },
+    );
+    const negativePreviewMissingVersionOutput = `${negativePreviewMissingVersion.stderr}\n${negativePreviewMissingVersion.stdout}`;
+    assert(
+      negativePreviewMissingVersionOutput.includes("version_id"),
+      "negative guard did not report cloudflare preview version_id validation",
+    );
+
+    const badPreviewForeignHostRecord = makeCloudflareVersionPreviewLocalSmokeRecord(
+      packet.rank2_local_post_patch_smoke_record_template,
+      { local_live_equivalence_base_url: "https://foreign.example.com" },
+    );
+    const badPreviewForeignHostFile = path.join(tempDir, "bad-rank2-preview-foreign-host.json");
+    fs.writeFileSync(badPreviewForeignHostFile, `${JSON.stringify(badPreviewForeignHostRecord, null, 2)}\n`);
+    const negativePreviewForeignHost = runPacket(
+      [
+        ...recordArgs(records),
+        "--rank2-local-post-patch-smoke-record",
+        badPreviewForeignHostFile,
+      ],
+      {
+        expectFailure: true,
+        label: "negative rank2 preview foreign host",
+      },
+    );
+    const negativePreviewForeignHostOutput = `${negativePreviewForeignHost.stderr}\n${negativePreviewForeignHost.stdout}`;
+    assert(
+      negativePreviewForeignHostOutput.includes("host mismatch"),
+      "negative guard did not report cloudflare preview host validation",
+    );
+    console.log("[macro-owner-fresh-closeout-chain] negative guard OK rank2_cloudflare_preview_missing_version_id=true");
+    console.log("[macro-owner-fresh-closeout-chain] negative guard OK rank2_cloudflare_preview_foreign_host=true");
   }
 }
 

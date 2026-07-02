@@ -158,7 +158,7 @@ function checkDynamicExpressionBank(): Result {
     && selected.has(next.expression.id)
     && setupRaw.includes(`Prepared expression count for direct meta questions: ${MONA_VNEXT_SESSION_EXPRESSION_COUNT}.`)
     && setupRaw.includes(lesson.expression.ko)
-    && routeSource.includes("buildMonaVnextSessionExpressionBank")
+    && routeSource.includes("buildTeacherFilteredMonaVnextSessionExpressionBank")
     && routeSource.includes("expressionBank,")
     && appSource.includes("session.expressionBank.entries")
     && appSource.includes("selectedExpressionIds")
