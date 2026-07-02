@@ -1898,19 +1898,25 @@ export default function ScreenerClient({
   const [growthOpen, setGrowthOpen] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth >= 768) {
-      const frame = window.requestAnimationFrame(() => setScaleOpen(true));
-      return () => window.cancelAnimationFrame(frame);
-    }
-  }, []);
-
   const scaleCount = Number(Boolean(search.trim())) + selectedSectors.length + selectedCountries.length + Number(Boolean(marketCapMin)) + Number(Boolean(marketCapMax));
   const valueCount = Number(Boolean(perMin)) + Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
   const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(fenokEdgeMin)) + Number(Boolean(convictionMin)) + Number(Boolean(connectionFilter));
   const densityClass = DENSITY_TABLE_CLASS[density];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const frame = window.requestAnimationFrame(() => {
+      if (window.innerWidth >= 768) setScaleOpen(true);
+      if (!enableCanvasPlusPreview) return;
+      if (scaleCount > 0) setScaleOpen(true);
+      if (valueCount > 0) setValueOpen(true);
+      if (growthCount > 0) setGrowthOpen(true);
+      if (qualityCount > 0) setQualityOpen(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [enableCanvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
 
   return (
     <div
@@ -2222,6 +2228,376 @@ export default function ScreenerClient({
       </section>
 
       {/* Filter bar */}
+      {enableCanvasPlusPreview ? (
+        <section className="cp-card cp-screener-filter-deck" data-canvas-plus-screener-filter-deck="true">
+          <div className="cp-screener-filter-groups">
+            <div className="cp-screener-filter-group">
+              <button
+                type="button"
+                onClick={() => setScaleOpen((v) => !v)}
+                className="cp-screener-filter-group__toggle"
+                aria-expanded={scaleOpen}
+              >
+                <span>종목 범위</span>
+                <span className="cp-screener-filter-group__meta">
+                  {scaleCount > 0 ? (
+                    <span className="cp-screener-filter-count" data-active="true">
+                      {scaleCount}
+                    </span>
+                  ) : null}
+                  <span className="cp-screener-filter-chevron" aria-hidden="true">
+                    {scaleOpen ? "▲" : "▼"}
+                  </span>
+                </span>
+              </button>
+              {scaleOpen ? (
+                <div className="cp-screener-filter-grid cp-screener-filter-grid--scope">
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">섹터</span>
+                    <select
+                      value=""
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        if (value && !selectedSectors.includes(value)) {
+                          setSelectedSectors((prev) => [...prev, value]);
+                        }
+                      }}
+                      className="cp-screener-control"
+                    >
+                      <option value="">섹터 추가</option>
+                      {sectors
+                        .filter((item) => !selectedSectors.includes(item))
+                        .map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                    </select>
+                    {selectedSectors.length > 0 ? (
+                      <div className="cp-screener-inline-chip-row">
+                        {selectedSectors.map((item) => (
+                          <span key={item} className="cp-screener-inline-chip">
+                            {item}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSectors((prev) => prev.filter((s) => s !== item))}
+                              aria-label={`Remove ${item}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">국가</span>
+                    <select
+                      value=""
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        if (value && !selectedCountries.includes(value)) {
+                          setSelectedCountries((prev) => [...prev, value]);
+                        }
+                      }}
+                      className="cp-screener-control"
+                    >
+                      <option value="">국가 추가</option>
+                      {countries
+                        .filter((code) => !selectedCountries.includes(code))
+                        .map((code) => (
+                          <option key={code} value={code}>
+                            {COUNTRY_LABEL[code] ?? code}
+                          </option>
+                        ))}
+                    </select>
+                    {selectedCountries.length > 0 ? (
+                      <div className="cp-screener-inline-chip-row">
+                        {selectedCountries.map((code) => (
+                          <span key={code} className="cp-screener-inline-chip">
+                            {COUNTRY_LABEL[code] ?? code}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCountries((prev) => prev.filter((c) => c !== code))}
+                              aria-label={`Remove ${code}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">시총 최소($B)</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={marketCapMin}
+                      onChange={(event) => setMarketCapMin(event.target.value)}
+                      placeholder="예: 100"
+                      className="cp-screener-control"
+                    />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">시총 최대($B)</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={marketCapMax}
+                      onChange={(event) => setMarketCapMax(event.target.value)}
+                      placeholder="예: 1000"
+                      className="cp-screener-control"
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="cp-screener-filter-group">
+              <button
+                type="button"
+                onClick={() => setValueOpen((v) => !v)}
+                className="cp-screener-filter-group__toggle"
+                aria-expanded={valueOpen}
+              >
+                <span>가치 조건</span>
+                <span className="cp-screener-filter-group__meta">
+                  {valueCount > 0 ? (
+                    <span className="cp-screener-filter-count" data-active="true">
+                      {valueCount}
+                    </span>
+                  ) : null}
+                  <span className="cp-screener-filter-chevron" aria-hidden="true">
+                    {valueOpen ? "▲" : "▼"}
+                  </span>
+                </span>
+              </button>
+              {valueOpen ? (
+                <div className="cp-screener-filter-grid">
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">PER 최소</span>
+                    <input type="number" inputMode="decimal" value={perMin} onChange={(event) => setPerMin(event.target.value)} placeholder="예: 5" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">PER 최대</span>
+                    <input type="number" inputMode="decimal" value={perMax} onChange={(event) => setPerMax(event.target.value)} placeholder="예: 20" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">예상 PER 상한</span>
+                    <input type="number" inputMode="decimal" value={forwardPerMax} onChange={(event) => setForwardPerMax(event.target.value)} placeholder="예: 25" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">PBR 최소</span>
+                    <input type="number" inputMode="decimal" value={pbrMin} onChange={(event) => setPbrMin(event.target.value)} placeholder="예: 0.5" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">PBR 최대</span>
+                    <input type="number" inputMode="decimal" value={pbrMax} onChange={(event) => setPbrMax(event.target.value)} placeholder="예: 1.5" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">PEG 최대</span>
+                    <input type="number" inputMode="decimal" value={pegMax} onChange={(event) => setPegMax(event.target.value)} placeholder="예: 1" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">PER 밴드</span>
+                    <select
+                      value={bandFilter}
+                      onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
+                      className="cp-screener-control"
+                    >
+                      <option value="">전체 밴드</option>
+                      <option value="cheap">저평가 (하위 25%)</option>
+                      <option value="fair">적정 (중간 50%)</option>
+                      <option value="rich">고평가 (상위 25%)</option>
+                    </select>
+                  </label>
+                  <label className="cp-screener-check">
+                    <input
+                      type="checkbox"
+                      checked={profitableOnly}
+                      onChange={(event) => setProfitableOnly(event.target.checked)}
+                      className="cp-screener-check__input"
+                    />
+                    <span>흑자 종목만 (PER &gt; 0)</span>
+                  </label>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="cp-screener-filter-group">
+              <button
+                type="button"
+                onClick={() => setGrowthOpen((v) => !v)}
+                className="cp-screener-filter-group__toggle"
+                aria-expanded={growthOpen}
+              >
+                <span>성장·수익</span>
+                <span className="cp-screener-filter-group__meta">
+                  {growthCount > 0 ? (
+                    <span className="cp-screener-filter-count" data-active="true">
+                      {growthCount}
+                    </span>
+                  ) : null}
+                  <span className="cp-screener-filter-chevron" aria-hidden="true">
+                    {growthOpen ? "▲" : "▼"}
+                  </span>
+                </span>
+              </button>
+              {growthOpen ? (
+                <div className="cp-screener-filter-grid">
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">매출+1 최소</span>
+                    <input type="number" inputMode="decimal" value={revenueGrowthMin} onChange={(event) => setRevenueGrowthMin(event.target.value)} placeholder="예: 10" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">EPS+1 최소</span>
+                    <input type="number" inputMode="decimal" value={epsGrowthMin} onChange={(event) => setEpsGrowthMin(event.target.value)} placeholder="예: 10" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">배당률 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={dividendYieldMin} onChange={(event) => setDividendYieldMin(event.target.value)} placeholder="예: 3" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">배당률 최대 (%)</span>
+                    <input type="number" inputMode="decimal" value={dividendYieldMax} onChange={(event) => setDividendYieldMax(event.target.value)} placeholder="예: 6" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">12M 수익률 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={return12mMin} onChange={(event) => setReturn12mMin(event.target.value)} placeholder="예: 0" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">3Y 수익률 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={ret3yMin} onChange={(event) => setRet3yMin(event.target.value)} placeholder="예: 20" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">5Y 수익률 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={ret5yMin} onChange={(event) => setRet5yMin(event.target.value)} placeholder="예: 50" className="cp-screener-control" />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="cp-screener-filter-group">
+              <button
+                type="button"
+                onClick={() => setQualityOpen((v) => !v)}
+                className="cp-screener-filter-group__toggle"
+                aria-expanded={qualityOpen}
+              >
+                <span>품질·신호</span>
+                <span className="cp-screener-filter-group__meta">
+                  {qualityCount > 0 ? (
+                    <span className="cp-screener-filter-count" data-active="true">
+                      {qualityCount}
+                    </span>
+                  ) : null}
+                  <span className="cp-screener-filter-chevron" aria-hidden="true">
+                    {qualityOpen ? "▲" : "▼"}
+                  </span>
+                </span>
+              </button>
+              {qualityOpen ? (
+                <div className="cp-screener-filter-grid">
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">ROE 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={roeMin} onChange={(event) => setRoeMin(event.target.value)} placeholder="예: 20" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">FY+1 ROE 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={roeFy1Min} onChange={(event) => setRoeFy1Min(event.target.value)} placeholder="예: 15" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">OPM 최소 (%)</span>
+                    <input type="number" inputMode="decimal" value={opmMin} onChange={(event) => setOpmMin(event.target.value)} placeholder="예: 15" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">투자 신호</span>
+                    <select value={actionFilter} onChange={(event) => setActionFilter(event.target.value as ActionFilter)} className="cp-screener-control">
+                      <option value="">전체 신호</option>
+                      <option value="guru_held">기관·고수 보유</option>
+                      <option value="smart_money">기관/고수 주목</option>
+                      <option value="value_momentum">저평가+모멘텀</option>
+                      <option value="index_core">지수 핵심</option>
+                      <option value="income">배당 점검</option>
+                      <option value="momentum">모멘텀 리더</option>
+                      <option value="watch">관찰</option>
+                    </select>
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">Fenok Edge</span>
+                    <select
+                      value={fenokEdgeMin}
+                      onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
+                      className="cp-screener-control"
+                      title="Fenok 파생 upside/downside 프록시"
+                    >
+                      <option value="">전체 Edge</option>
+                      <option value="70">70 이상</option>
+                      <option value="60">60 이상</option>
+                      <option value="50">50 이상</option>
+                    </select>
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">Fenok 컨빅션</span>
+                    <select
+                      value={convictionMin}
+                      onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
+                      className="cp-screener-control"
+                      title="Fenok 4-신호 동등가중 종합 · 매수권유 아님"
+                    >
+                      <option value="">전체 컨빅션</option>
+                      <option value="70">70 이상</option>
+                      <option value="60">60 이상</option>
+                      <option value="50">50 이상</option>
+                    </select>
+                  </label>
+                  <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">연결 범위</span>
+                    <select
+                      value={connectionFilter}
+                      onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
+                      disabled={!connectionIndexReady}
+                      className="cp-screener-control"
+                    >
+                      <option value="">전체 연결</option>
+                      <option value="filings">공시 요약 연결</option>
+                      <option value="smartMoney">13F 보유 연결</option>
+                      <option value="indexMembership">지수 편입 연결</option>
+                      <option value="singleStockEtfs">단일종목 ETF 연결</option>
+                    </select>
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="cp-screener-filter-footer">
+            {activeFilterChips.length > 0 ? (
+              <div className="cp-screener-chip-row" data-canvas-plus-screener-active-chips="true">
+                {activeFilterChips.map((chip) => (
+                  <span key={chip.label} className="cp-screener-chip">
+                    {chip.label}
+                    <button type="button" onClick={chip.clear} aria-label={`Clear ${chip.label}`}>
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <div className="cp-screener-filter-summary">
+              <span>
+                <strong className="orbitron">{sorted.length.toLocaleString()}</strong>개 종목
+              </span>
+              {hasFilters ? (
+                <button type="button" onClick={resetFilters} className="cp-button cp-screener-reset-button" data-variant="ghost" data-density="compact">
+                  초기화
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : (
       <section className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
         <div className="flex flex-col gap-3">
           {/* Scale & Domain */}
@@ -2730,6 +3106,7 @@ export default function ScreenerClient({
           </div>
         )}
       </section>
+      )}
 
       {/* Preset selector */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
