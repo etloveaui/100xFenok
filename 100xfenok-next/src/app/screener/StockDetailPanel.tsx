@@ -2322,10 +2322,117 @@ export function StockDetailBody({
         </div>
       ) : null}
     </>
+	  );
+	}
+
+function w4ClampScore(score: number | null): number {
+  if (!isFiniteNumber(score)) return 0;
+  return Math.max(0, Math.min(100, score));
+}
+
+function w4ScoreText(score: number | null): string {
+  return isFiniteNumber(score) ? Math.round(score).toString() : "—";
+}
+
+function w4ScoreTone(score: number | null): "strong" | "balanced" | "watch" | "muted" {
+  if (!isFiniteNumber(score)) return "muted";
+  if (score >= 70) return "strong";
+  if (score >= 55) return "balanced";
+  return "watch";
+}
+
+function w4FormatPrice(value: MaybeNumber): string {
+  return isFiniteNumber(value) ? `$${value.toFixed(2)}` : "—";
+}
+
+function w4FormatMarketCap(mn: MaybeNumber): string {
+  if (!isFiniteNumber(mn)) return "—";
+  if (mn >= 1_000_000) return `$${(mn / 1_000_000).toFixed(2)}T`;
+  if (mn >= 1_000) return `$${(mn / 1_000).toFixed(1)}B`;
+  return `$${Math.round(mn)}M`;
+}
+
+function w4FormatRatio(value: MaybeNumber, digits = 1): string {
+  return isFiniteNumber(value) ? value.toFixed(digits) : "—";
+}
+
+function w4FormatFractionPercent(value: MaybeNumber, digits = 2): string {
+  return isFiniteNumber(value) ? `${(value * 100).toFixed(digits)}%` : "—";
+}
+
+function w4FormatSignedFractionPercent(value: MaybeNumber, digits = 1): string {
+  if (!isFiniteNumber(value)) return "—";
+  const pct = value * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+}
+
+function w4DirectionEnglish(direction: string): string {
+  if (direction === "상방 우세") return "UPSIDE";
+  if (direction === "하방 우세") return "DOWNSIDE";
+  if (direction === "균형") return "BALANCED";
+  return "UNCONFIRMED";
+}
+
+function w4Initials(ticker: string): string {
+  return ticker.trim().slice(0, 2).toUpperCase() || "ST";
+}
+
+function W4ScoreDonut({ score }: { score: number | null }) {
+  const value = w4ClampScore(score);
+  return (
+    <div
+      className="cpw4-detail-donut"
+      style={{
+        background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, #e8edf6 ${value * 3.6}deg 360deg)`,
+      }}
+      aria-label={`Fenok Edge ${w4ScoreText(score)}점`}
+    >
+      <span>{w4ScoreText(score)}</span>
+      <small>/100</small>
+    </div>
   );
 }
 
-export default function StockDetailPanel({ ticker, stock }: { ticker: string; stock?: ScreenerStock }) {
+function W4Meter({ label, score, call }: { label: string; score: number | null; call: string | null }) {
+  const value = w4ClampScore(score);
+  return (
+    <div className="cpw4-meter" data-tone={w4ScoreTone(score)}>
+      <div className="cpw4-meter__head">
+        <span>{label}</span>
+        <strong>{w4ScoreText(score)} {call ?? "미정"}</strong>
+      </div>
+      <div className="cpw4-meter__track" aria-hidden="true">
+        <span style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function W4AxisCard({ axis, rank }: { axis: DetailLongTermAxis; rank: number }) {
+  const value = w4ClampScore(axis.score);
+  return (
+    <div className="cpw4-axis-card" data-tone={w4ScoreTone(axis.score)}>
+      <div className="cpw4-axis-card__head">
+        <span>TOP {rank}</span>
+        <strong>{w4ScoreText(axis.score)}</strong>
+      </div>
+      <p>{axis.fullLabel}</p>
+      <div className="cpw4-axis-card__bar" aria-hidden="true">
+        <span style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
+
+export default function StockDetailPanel({
+  ticker,
+  stock,
+  canvasPlusPreview = false,
+}: {
+  ticker: string;
+  stock?: ScreenerStock;
+  canvasPlusPreview?: boolean;
+}) {
   const { detail, loading } = useStockDetail(ticker);
   const f13Entries = use13FData(ticker);
 
@@ -2378,6 +2485,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
   const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
 
+  if (!canvasPlusPreview) {
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-2 py-3 sm:p-4">
       {stock && (
@@ -2518,6 +2626,173 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
       <StockDetailBoundary ticker={ticker}>
         <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
       </StockDetailBoundary>
+    </div>
+  );
+  }
+
+  const allAxes = [...longTermAxes, ...shortTermAxes];
+  const topAxes = allAxes
+    .filter((axis) => axis.score !== null)
+    .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
+    .slice(0, 3);
+  const weakAxis = allAxes
+    .filter((axis) => axis.score !== null)
+    .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))[0] ?? null;
+  const detailScore = edgeScore ?? convictionScore;
+  const verdictHeadline = `${edgeLead}${shortTermConvictionCall ? `, 단기 ${shortTermConvictionCall}` : ""}`;
+  const verdictCopy = [
+    longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",
+    shortTermConvictionScore !== null ? `단기 ${shortTermConvictionScore}` : "단기 미확인",
+    signalCoverage,
+  ].join(" · ");
+  const etfCompareHref = stock?.connection?.singleStockEtfs?.length
+    ? ROUTES.etfCompareTickers(stock.connection.singleStockEtfs.map((link) => link.ticker).slice(0, 4))
+    : null;
+
+  return (
+    <div className="cpw4-detail-panel">
+      {stock ? (
+        <>
+          <div className="cpw4-detail-context">
+            <div className="cpw4-detail-context__ticker">
+              <span className="cpw4-detail-avatar">{w4Initials(stock.ticker)}</span>
+              <div>
+                <strong>{stock.ticker}</strong>
+                <span>{stock.name}</span>
+              </div>
+            </div>
+            <div className="cpw4-detail-context__metrics">
+              <span>투자 신호 {stock.actionScore !== null && stock.actionScore !== undefined ? Math.round(stock.actionScore) : "—"}</span>
+              <span>{w4FormatPrice(stock.price)}</span>
+              <span>{w4FormatMarketCap(stock.marketCap)}</span>
+              <span>PER {w4FormatRatio(stock.per)}</span>
+              <span>PBR {w4FormatRatio(stock.pbr, 2)}</span>
+              <span>배당 {w4FormatFractionPercent(stock.dividendYield)}</span>
+              <span>12M {w4FormatSignedFractionPercent(stock.return12m)}</span>
+            </div>
+          </div>
+
+          <section className="cpw4-edge-card" aria-label={`${stock.ticker} Fenok Edge`}>
+            <div className="cpw4-edge-card__meta">
+              <span className="cpw4-edge-kicker">
+                <span aria-hidden="true" /> FENOK EDGE · 매수 권유 아님
+              </span>
+              <span>{stock.fenokSignalAsOf ? `기준 ${stock.fenokSignalAsOf.slice(0, 10)}` : signalCoverage}</span>
+            </div>
+
+            <div className="cpw4-edge-identity">
+              <div className="cpw4-edge-identity__left">
+                <span className="cpw4-detail-avatar cpw4-detail-avatar--large">{w4Initials(stock.ticker)}</span>
+                <div>
+                  <h2>{stock.ticker}</h2>
+                  <p>{stock.name} · {stock.sector || "섹터 미정"} · {stock.country || "국가 미정"}</p>
+                </div>
+              </div>
+              <div className="cpw4-edge-price">
+                <strong>{w4FormatPrice(stock.price)}</strong>
+                <span>12M {w4FormatSignedFractionPercent(stock.return12m)}</span>
+              </div>
+            </div>
+
+            <div className="cpw4-hero-verdict">
+              <W4ScoreDonut score={detailScore} />
+              <div className="cpw4-hero-verdict__copy">
+                <span className="cpw4-verdict-badge">
+                  {edgeDirection} · {w4DirectionEnglish(edgeDirection)}
+                </span>
+                <h3>{verdictHeadline}</h3>
+                <p>{verdictCopy}. Fenok 파생 신호는 축별 강도와 약점을 함께 보여주는 참고 지표입니다.</p>
+              </div>
+              <div className="cpw4-hero-verdict__meters">
+                <W4Meter label="단기" score={shortTermConvictionScore} call={shortTermConvictionCall ?? null} />
+                <W4Meter label="장기" score={longTermConvictionScore} call={longTermConvictionCall ?? null} />
+              </div>
+            </div>
+
+            <div className="cpw4-top3-grid">
+              {topAxes.length > 0 ? (
+                topAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)
+              ) : (
+                <p className="cpw4-empty-axis">확인된 강점 축이 없습니다.</p>
+              )}
+            </div>
+
+            {weakAxis ? (
+              <div className="cpw4-weak-axis-callout">
+                <strong>약점 축 · {weakAxis.fullLabel} {w4ScoreText(weakAxis.score)}</strong>
+                <span>{weakAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
+              </div>
+            ) : null}
+
+            <div className="cpw4-cta-row">
+              <TransitionLink href={`${ROUTES.stock(ticker)}?v2=1`} className="cpw4-primary-cta">
+                종목 상세 보기 →
+              </TransitionLink>
+              <TransitionLink href={ROUTES.portfolioTicker(ticker)} className="cpw4-secondary-cta">
+                관심 추가
+              </TransitionLink>
+              {etfCompareHref ? (
+                <TransitionLink href={etfCompareHref} className="cpw4-secondary-cta">
+                  ETF 비교
+                </TransitionLink>
+              ) : (
+                <span className="cpw4-secondary-cta cpw4-secondary-cta--disabled">ETF 비교</span>
+              )}
+              <span className="cpw4-cta-note">Fenok 파생 신호 · 투자 조언 아님</span>
+            </div>
+          </section>
+
+          <details className="cpw4-axis-detail">
+            <summary>
+              <span>12축 전체 보기</span>
+              <small>단기 6축 · 장기 6축 레이더 + 전체 스코어</small>
+            </summary>
+            <div className="cpw4-axis-detail__body">
+              <FenokSignalRadarHexagonPair
+                leftTitle="Short-term"
+                rightTitle="Long-term"
+                leftAxes={shortTermAxes}
+                rightAxes={longTermAxes}
+                size="md"
+              />
+              <div className="cpw4-axis-detail__grid">
+                {hasShortTermSignal ? (
+                  <div>
+                    <h3>단기 축</h3>
+                    <div className="cpw4-axis-legend-grid">
+                      {shortTermAxes.map((axis) => (
+                        <DetailAxisLegend key={axis.key} axis={axis} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {hasLongTermSignal ? (
+                  <div>
+                    <h3>장기 축</h3>
+                    <div className="cpw4-axis-legend-grid">
+                      {longTermAxes.map((axis) => (
+                        <DetailAxisLegend key={axis.key} axis={axis} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </details>
+        </>
+      ) : null}
+
+      <details className="cpw4-financial-detail">
+        <summary>
+          <span>재무·추정치 원본 보기</span>
+          <small>기존 상세 패널</small>
+        </summary>
+        <div className="cpw4-financial-detail__body">
+          <StockDetailBoundary ticker={ticker}>
+            <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+          </StockDetailBoundary>
+        </div>
+      </details>
     </div>
   );
 }

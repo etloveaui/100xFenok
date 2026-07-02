@@ -460,11 +460,11 @@ function ScreenerTanstackTableInner({
                     data-ticker={stock.ticker}
                     data-canvas-plus-detail-row={canvasPlusPreview ? "true" : undefined}
                   >
-                    <td colSpan={visibleColumns.length + 1} className="p-0">
-                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
-                        <StockDetailPanel ticker={stock.ticker} stock={stock} />
-                      </div>
-                    </td>
+	                    <td colSpan={visibleColumns.length + 1} className="p-0">
+	                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
+	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
+	                      </div>
+	                    </td>
                   </tr>
                 ) : null}
               </Fragment>
