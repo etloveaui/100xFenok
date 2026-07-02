@@ -8,40 +8,41 @@ import CpBadge from "@/components/canvas-plus/CpBadge";
 import CpFeatureTile from "@/components/canvas-plus/CpFeatureTile";
 import CpInsightCard from "@/components/canvas-plus/CpInsightCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { clamp, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
+import { clamp, formatSignedPercentDecimal, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
+import type { SectorSnapshot } from "@/lib/dashboard/types";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 
 const GATEWAY_TILES = [
   {
-    label: "Stock",
-    title: "Stock report",
-    value: "Search first",
-    detail: "Open a ticker report from the global search, or start with NVDA as the sample route.",
+    label: "종목",
+    title: "종목 리포트",
+    value: "검색",
+    detail: "티커를 바로 열어 가격, 밸류에이션, 신호를 한 화면에서 확인합니다.",
     href: ROUTES.stock("NVDA"),
     tone: "accent",
   },
   {
-    label: "Screener",
-    title: "Condition search",
-    value: "Filter",
-    detail: "Move from market state to names using valuation, growth, revision, and quality filters.",
+    label: "스크리너",
+    title: "조건 검색",
+    value: "필터",
+    detail: "밸류, 성장, 퀄리티, 모멘텀 조건으로 후보 종목을 좁힙니다.",
     href: ROUTES.screener,
     tone: "positive",
   },
   {
     label: "ETF",
-    title: "ETF center",
-    value: "Universe",
-    detail: "Check ETF families, categories, segments, and comparison workflows.",
+    title: "ETF 센터",
+    value: "비교",
+    detail: "ETF 분류, 테마, 보유 구조를 비교하며 시장 노출을 점검합니다.",
     href: ROUTES.etfs,
     tone: "neutral",
   },
   {
-    label: "Portfolio",
-    title: "Review queue",
-    value: "Holdings",
-    detail: "Jump to portfolio review after search, screen, and market context checks.",
+    label: "포트폴리오",
+    title: "보유 점검",
+    value: "리뷰",
+    detail: "관심 종목과 보유 비중을 시장 흐름과 함께 다시 봅니다.",
     href: ROUTES.portfolio,
     tone: "warning",
   },
@@ -52,10 +53,27 @@ function formatDatePart(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
-function pct(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(1)}%`;
+function dataStateLabel(dataReady: boolean): string {
+  return dataReady ? "동기화됨" : "불러오는 중";
+}
+
+function failedSourceLabel(failedCount: number): string {
+  return failedCount === 0 ? "없음" : `${failedCount}개`;
+}
+
+function sectorHorizonLabel(horizon: SectorSnapshot["displayHorizon"]): string {
+  return horizon === "1D" ? "1일" : "1개월";
+}
+
+function sectorModeLabel(mode: "LIVE_1D" | "MIXED" | "BASE_1M"): string {
+  if (mode === "LIVE_1D") return "실시간 1일 기준";
+  if (mode === "MIXED") return "실시간+1개월 혼합";
+  return "1개월 기준";
+}
+
+function sectorMoveLabel(sector: SectorSnapshot | undefined): string {
+  if (!sector) return "불러오는 중";
+  return `${sector.name} ${formatSignedPercentDecimal(sector.displayChange, 1)} (${sectorHorizonLabel(sector.displayHorizon)})`;
 }
 
 function CpHomeHero({
@@ -74,19 +92,19 @@ function CpHomeHero({
   return (
     <section className="cp-hero-search cp-home-hero" data-canvas-plus-home-hero data-home-search-first>
       <div className="cp-hero-search__copy">
-        <p className="cp-lab__eyebrow">CANVAS+ HOME</p>
-        <h1 className="cp-hero-search__title">Search first, then decide what deserves attention.</h1>
+        <p className="cp-lab__eyebrow">100xFenok 홈</p>
+        <h1 className="cp-hero-search__title">먼저 검색하고, 오늘 볼 종목을 바로 정합니다.</h1>
         <p className="cp-hero-search__summary">
-          A light production candidate for ticker lookup, market state scanning, and gateway navigation.
+          티커 검색, 시장 판독, 주요 화면 이동을 한 번에 시작하는 투자 대시보드입니다.
         </p>
       </div>
 
       <div className="cp-hero-search__form">
         <span className="cp-hero-search__label">
-          Ticker, investor, or company
+          티커, 투자자, 기업명
         </span>
         <TickerTypeahead
-          placeholder="NVDA, SPY, Buffett..."
+          placeholder="NVDA, SPY, 워런 버핏..."
           className="cp-hero-search__input"
           formClass="cp-hero-search__control"
           showButton
@@ -95,21 +113,21 @@ function CpHomeHero({
         />
       </div>
 
-      <dl className="cp-hero-search__metrics" aria-label="Home data state">
+      <dl className="cp-hero-search__metrics" aria-label="홈 데이터 상태">
         <div className="cp-hero-search__metric">
-          <dt>Market stance</dt>
+          <dt>시장 판독</dt>
           <dd><CpBadge tone={regimeTone}>{regimeLabel}</CpBadge></dd>
         </div>
         <div className="cp-hero-search__metric">
-          <dt>Data state</dt>
-          <dd>{dataReady ? "Synced" : "Loading"}</dd>
+          <dt>데이터 상태</dt>
+          <dd>{dataStateLabel(dataReady)}</dd>
         </div>
         <div className="cp-hero-search__metric">
-          <dt>Fallbacks</dt>
-          <dd>{failedCount === 0 ? "0" : `${failedCount}`}</dd>
+          <dt>확인 필요</dt>
+          <dd>{failedSourceLabel(failedCount)}</dd>
         </div>
         <div className="cp-hero-search__metric">
-          <dt>Updated</dt>
+          <dt>업데이트</dt>
           <dd>{updatedAt}</dd>
         </div>
       </dl>
@@ -159,7 +177,7 @@ export default function HomeCanvasPlusClient() {
               updatedAt={formatDatePart(dashboard.tickerFetchedAt)}
             />
 
-            <section className="cp-poc__feature-grid" aria-label="CANVAS+ production gateways">
+            <section className="cp-poc__feature-grid" aria-label="홈 주요 화면">
               {GATEWAY_TILES.map((tile) => (
                 <TransitionLink
                   key={tile.label}
@@ -178,27 +196,27 @@ export default function HomeCanvasPlusClient() {
               ))}
             </section>
 
-            <section className="cp-poc__insight-grid" aria-label="CANVAS+ production brief">
+            <section className="cp-poc__insight-grid" aria-label="홈 시장 요약">
               <CpInsightCard
-                title="Today brief"
-                meta="Live dashboard snapshot"
+                title="오늘의 시장 요약"
+                meta="심리·섹터·스트레스"
                 badge={`${regime.confidence}/100`}
                 tone={regime.tone}
                 rows={[
-                  { label: "Regime", value: regime.label, tone: regime.tone },
-                  { label: "Breadth", value: `${regime.breadth}% up`, tone: regime.breadth >= 55 ? "positive" : "warning" },
+                  { label: "시장 구간", value: regime.label, tone: regime.tone },
+                  { label: "상승 섹터", value: `${regime.breadth}%`, tone: regime.breadth >= 55 ? "positive" : "warning" },
                   { label: "Fear & Greed", value: `${dashboard.fearGreedScore}`, tone: dashboard.fearGreedScore >= 65 ? "warning" : "neutral" },
                 ]}
               />
               <CpInsightCard
-                title="Action queue"
-                meta="Route-one compact scope"
-                badge={failedSources.length === 0 ? "Ready" : "Check"}
+                title="다음 확인 포인트"
+                meta="섹터 흐름과 데이터 상태"
+                badge={failedSources.length === 0 ? "정상" : "확인"}
                 tone={failedSources.length === 0 ? "positive" : "warning"}
                 rows={[
-                  { label: "Strong sector", value: strongestSector ? `${strongestSector.name} ${pct(strongestSector.displayChange)}` : "Loading", tone: "positive" },
-                  { label: "Weak sector", value: weakestSector ? `${weakestSector.name} ${pct(weakestSector.displayChange)}` : "Loading", tone: "warning" },
-                  { label: "Market mode", value: dashboard.sectorMode, tone: dataReady ? "positive" : "neutral" },
+                  { label: "강한 섹터", value: sectorMoveLabel(strongestSector), tone: "positive" },
+                  { label: "약한 섹터", value: sectorMoveLabel(weakestSector), tone: "warning" },
+                  { label: "섹터 기준", value: sectorModeLabel(dashboard.sectorMode), tone: dataReady ? "positive" : "neutral" },
                 ]}
               />
             </section>
