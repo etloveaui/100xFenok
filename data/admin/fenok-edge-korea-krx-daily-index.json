@@ -1,19 +1,19 @@
 {
   "schema_version": "fenok-edge-korea-krx-bridge/v1",
-  "generated_at": "2026-06-29T12:58:27.413Z",
+  "generated_at": "2026-07-02T01:52:50.121Z",
   "market": "Korea",
   "source": "KRX_OPEN_API",
   "raw_public": false,
   "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.",
   "bridge_scope": "stats_only_private_path_refs_no_raw_rows",
-  "as_of": "2026-06-26",
+  "as_of": "2026-07-01",
   "freshness": {
-    "as_of": "2026-06-26",
-    "source_date_min": "2026-06-01",
-    "source_date_max": "2026-06-26",
-    "date_count": 20,
-    "fetched_at": "2026-06-29T12:54:18.142Z",
-    "completed_at": "2026-06-29T12:58:27.410Z"
+    "as_of": "2026-07-01",
+    "source_date_min": "2026-07-01",
+    "source_date_max": "2026-07-01",
+    "date_count": 1,
+    "fetched_at": "2026-07-02T01:52:45.942Z",
+    "completed_at": "2026-07-02T01:52:50.120Z"
   },
   "feno_data_read": {
     "category": "admin",
@@ -21,83 +21,83 @@
     "jq_example": "jq '{as_of, freshness, latest_run, normalized_score_candidates}' \"$DATA_ROOT/admin/fenok-edge-korea-krx-daily-index.json\""
   },
   "private_artifacts": {
-    "output_root": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626",
-    "top_manifest_path": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/manifest.json",
-    "raw_root": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/raw",
+    "output_root": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701",
+    "top_manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/manifest.json",
+    "raw_root": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/raw",
     "group_manifests": {
-      "core_stock_index": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/core_stock_index/manifest.json",
-      "derivatives_products": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/derivatives_products/manifest.json",
-      "bond_commodity_esg": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/bond_commodity_esg/manifest.json"
+      "core_stock_index": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/core_stock_index/manifest.json",
+      "derivatives_products": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/derivatives_products/manifest.json",
+      "bond_commodity_esg": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/bond_commodity_esg/manifest.json"
     }
   },
   "latest_run": {
-    "run_id": "krx_backfill_20d_20260626",
-    "backfill_type": "krx-daily-accumulation-runner",
+    "run_id": "krx_daily_20260701",
+    "backfill_type": "krx-daily-scheduled-accumulation",
     "full_252_status": "not_run_heavy",
     "planned_full_trading_day_count": 252,
     "endpoint_count": 31,
-    "attempted_call_count": 620,
+    "attempted_call_count": 31,
     "summary": {
-      "total_files": 620,
-      "success_files": 590,
-      "empty_files": 30,
+      "total_files": 31,
+      "success_files": 31,
+      "empty_files": 0,
       "failed_files": 0,
-      "total_rows": 939278,
+      "total_rows": 50041,
       "failed_reasons": {}
     },
     "endpoint_class_counts": {
-      "daily-history": 500,
-      "snapshot": 120
+      "daily-history": 25,
+      "snapshot": 6
     },
     "group_summaries": {
       "core_stock_index": {
-        "manifest_path": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/core_stock_index/manifest.json",
+        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/core_stock_index/manifest.json",
         "endpoint_count": 9,
-        "date_count": 20,
+        "date_count": 1,
         "summary": {
-          "total_files": 180,
-          "success_files": 174,
-          "empty_files": 6,
+          "total_files": 9,
+          "success_files": 9,
+          "empty_files": 0,
           "failed_files": 0,
-          "total_rows": 114644,
+          "total_rows": 5877,
           "failed_reasons": {}
         },
         "endpoint_class_counts": {
-          "daily-history": 120,
-          "snapshot": 60
+          "daily-history": 6,
+          "snapshot": 3
         }
       },
       "derivatives_products": {
-        "manifest_path": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/derivatives_products/manifest.json",
+        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/derivatives_products/manifest.json",
         "endpoint_count": 10,
-        "date_count": 20,
+        "date_count": 1,
         "summary": {
-          "total_files": 200,
-          "success_files": 192,
-          "empty_files": 8,
+          "total_files": 10,
+          "success_files": 10,
+          "empty_files": 0,
           "failed_files": 0,
-          "total_rows": 768599,
+          "total_rows": 41347,
           "failed_reasons": {}
         },
         "endpoint_class_counts": {
-          "daily-history": 200
+          "daily-history": 10
         }
       },
       "bond_commodity_esg": {
-        "manifest_path": "source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/bond_commodity_esg/manifest.json",
+        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/bond_commodity_esg/manifest.json",
         "endpoint_count": 12,
-        "date_count": 20,
+        "date_count": 1,
         "summary": {
-          "total_files": 240,
-          "success_files": 224,
-          "empty_files": 16,
+          "total_files": 12,
+          "success_files": 12,
+          "empty_files": 0,
           "failed_files": 0,
-          "total_rows": 56035,
+          "total_rows": 2817,
           "failed_reasons": {}
         },
         "endpoint_class_counts": {
-          "daily-history": 180,
-          "snapshot": 60
+          "daily-history": 9,
+          "snapshot": 3
         }
       }
     }
@@ -124,19 +124,39 @@
   ],
   "request_budget": {
     "estimated_daily_calls": 31,
+    "estimated_calls": 31,
     "estimated_full_252_calls": 7812,
-    "concurrency_default": 4,
-    "concurrency_used": 4,
+    "max_calls_per_run": 40,
+    "status": "within_budget",
+    "concurrency_default": 2,
+    "concurrency_used": 2,
+    "sleep_ms_between_attempts": 250,
     "timeout_ms_default": 30000,
-    "timeout_ms_used": 30000,
+    "timeout_ms_used": 90000,
     "credential_source": "KRX_OPEN_API_AUTH_KEY env only"
   },
-  "daily_command": "KRX_BACKFILL_END_DATE=YYYYMMDD KRX_BACKFILL_DAYS=1 KRX_BACKFILL_RUN_ID=krx_daily_YYYYMMDD KRX_BACKFILL_BRIDGE_INDEX=source/100xFenok/data/admin/fenok-edge-korea-krx-daily-index.json node source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/scripts/krx_daily_backfill_runner.mjs",
+  "daily_command": "KRX_END_DATE=YYYYMMDD KRX_DAYS=1 KRX_RUN_ID=krx_daily_YYYYMMDD KRX_BRIDGE_INDEX=data/admin/fenok-edge-korea-krx-daily-index.json node scripts/fetch-fenok-krx-daily-private.mjs",
+  "daily_accumulation": {
+    "automatic_cron_installed": false,
+    "latest_daily_manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20260701/manifest.json",
+    "latest_run_id": "krx_daily_20260701",
+    "raw_storage_policy": "_private/admin only",
+    "bridge_index_path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+    "fail_closed_policy": {
+      "max_calls_per_run": 40,
+      "fail_threshold": 0,
+      "required_non_empty_daily_issuer_endpoints": [
+        "ksq_bydd_trd",
+        "stk_bydd_trd"
+      ],
+      "allow_empty_daily": false
+    }
+  },
   "first_safe_batch_plan": {
     "requires_user_approval": true,
-    "end_date": "20260626",
+    "end_date": "YYYYMMDD",
     "trading_days": 20,
     "estimated_calls": 620,
-    "command": "KRX_BACKFILL_END_DATE=20260626 KRX_BACKFILL_DAYS=20 KRX_BACKFILL_RUN_ID=krx_backfill_20d_20260626 KRX_BACKFILL_OUTPUT_ROOT=source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626 KRX_BACKFILL_BRIDGE_INDEX=source/100xFenok/data/admin/fenok-edge-korea-krx-daily-index.json node source/100xFenok/_private/admin/fenok-edge-korea/backfill/20260629/scripts/krx_daily_backfill_runner.mjs"
+    "command": "KRX_END_DATE=YYYYMMDD KRX_DAYS=20 KRX_RUN_ID=krx_backfill_20d_YYYYMMDD KRX_OUTPUT_ROOT=_private/admin/fenok-edge-korea/daily/krx_backfill_20d_YYYYMMDD KRX_BRIDGE_INDEX=data/admin/fenok-edge-korea-krx-daily-index.json node scripts/fetch-fenok-krx-daily-private.mjs"
   }
 }
