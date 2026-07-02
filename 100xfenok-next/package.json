@@ -22,6 +22,7 @@
     "probe:live-skill-bridge": "node scripts/probe-admin-live-skill-bridge.mjs",
     "probe:live-stall": "tsx scripts/probe-gemini-live-stall.ts",
     "test:mona-vnext": "tsx scripts/score-mona-vnext-fixtures.ts && tsx scripts/score-mona-vnext-behavior.ts",
+    "test:canvas-plus-v3": "node scripts/test-canvas-plus-v3.mjs",
     "score:mona-vnext-session": "tsx scripts/score-mona-vnext-session.ts",
     "check:mona-vnext-owner-smoke": "tsx scripts/check-mona-vnext-owner-smoke-ready.ts",
     "watch:mona-vnext-owner-smoke": "tsx scripts/watch-mona-vnext-owner-smoke.ts",
@@ -111,6 +112,7 @@
     "qa:a11y:strict": "QA_A11Y_STRICT=1 node .qa-a11y.js"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
     "chart.js": "^4.5.1",
