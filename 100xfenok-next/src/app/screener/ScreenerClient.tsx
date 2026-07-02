@@ -16,6 +16,7 @@ import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGa
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
+import ScreenerTanstackTable from "./ScreenerTanstackTable";
 import StockDetailPanel from "./StockDetailPanel";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import type { MacroContextId } from "@/lib/macro-chart/context";
@@ -40,6 +41,7 @@ import {
 } from "@/lib/screener/filter-url";
 
 const PAGE_SIZE = 50;
+const ENABLE_TANSTACK_DESKTOP_TABLE = false;
 type ScreenerDensity = "compact" | "standard" | "comfortable";
 type ScreenerViewMode = "table" | "card";
 
@@ -2671,28 +2673,51 @@ export default function ScreenerClient({
                 </div>
               ) : null}
             </div>
-	          ) : (
-	            <ScreenerDesktopTable
-	              activeColumns={activeColumns}
-	              allPageSelected={allPageSelected}
-	              dataReady={dataReady}
-	              density={density}
-	              densityClass={densityClass}
-	              expandedTicker={expandedTicker}
-	              pageRows={pageRows}
-	              preset={preset}
-	              selectedTickers={selectedTickers}
-	              sortDir={sortDir}
-	              sortKey={sortKey}
-	              deselectPageRows={deselectPageRows}
-	              onToggleExpandedTicker={(ticker) => setExpandedTicker((prev) => (prev === ticker ? null : ticker))}
-	              renderCell={renderCell}
-	              renderGuruHolderBadge={(stock) => <GuruHolderBadge stock={stock} compact />}
-	              selectPageRows={selectPageRows}
-	              toggleSelectedTicker={toggleSelectedTicker}
-	              toggleSort={toggleSort}
-	            />
-	          )}
+          ) : (
+            <ScreenerTanstackTable
+              activeColumns={activeColumns}
+              allPageSelected={allPageSelected}
+              dataReady={dataReady}
+              density={density}
+              densityClass={densityClass}
+              enabled={ENABLE_TANSTACK_DESKTOP_TABLE}
+              expandedTicker={expandedTicker}
+              fallback={
+                <ScreenerDesktopTable
+                  activeColumns={activeColumns}
+                  allPageSelected={allPageSelected}
+                  dataReady={dataReady}
+                  density={density}
+                  densityClass={densityClass}
+                  expandedTicker={expandedTicker}
+                  pageRows={pageRows}
+                  preset={preset}
+                  selectedTickers={selectedTickers}
+                  sortDir={sortDir}
+                  sortKey={sortKey}
+                  deselectPageRows={deselectPageRows}
+                  onToggleExpandedTicker={(ticker) => setExpandedTicker((prev) => (prev === ticker ? null : ticker))}
+                  renderCell={renderCell}
+                  renderGuruHolderBadge={(stock) => <GuruHolderBadge stock={stock} compact />}
+                  selectPageRows={selectPageRows}
+                  toggleSelectedTicker={toggleSelectedTicker}
+                  toggleSort={toggleSort}
+                />
+              }
+              pageRows={pageRows}
+              preset={preset}
+              selectedTickers={selectedTickers}
+              sortDir={sortDir}
+              sortKey={sortKey}
+              deselectPageRows={deselectPageRows}
+              onToggleExpandedTicker={(ticker) => setExpandedTicker((prev) => (prev === ticker ? null : ticker))}
+              renderCell={renderCell}
+              renderGuruHolderBadge={(stock) => <GuruHolderBadge stock={stock} compact />}
+              selectPageRows={selectPageRows}
+              toggleSelectedTicker={toggleSelectedTicker}
+              toggleSort={toggleSort}
+            />
+          )}
         </div>
 
         {/* Pagination */}

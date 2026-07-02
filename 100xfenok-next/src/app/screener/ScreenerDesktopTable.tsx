@@ -6,13 +6,13 @@ import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/typ
 import type { ColumnPreset } from "@/lib/screener/filter-url";
 import StockDetailPanel from "./StockDetailPanel";
 
-type ScreenerColumn = {
+export type ScreenerColumn = {
   key: ScreenerSortKey;
   label: string;
   align: "left" | "right";
 };
 
-type ScreenerDensityClass = {
+export type ScreenerDensityClass = {
   scroller: string;
   table: string;
   headerCell: string;
@@ -20,7 +20,7 @@ type ScreenerDensityClass = {
   tickerCell: string;
 };
 
-type ScreenerDesktopTableProps = {
+export type ScreenerDesktopTableProps = {
   activeColumns: ScreenerColumn[];
   allPageSelected: boolean;
   dataReady: boolean;
