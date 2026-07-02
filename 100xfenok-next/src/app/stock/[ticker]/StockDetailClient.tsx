@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import CpButton from "@/components/canvas-plus/CpButton";
 import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
@@ -25,6 +25,11 @@ import {
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
 import EdgarSummaryClient from "@/components/filings/EdgarSummaryClient";
+import {
+  loadEdgarKoreanSummariesForTicker,
+  edgarFilingsForTicker,
+  type EdgarKoreanSummaryFilingEntry,
+} from "@/lib/edgarKoreanSummaries";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
@@ -1650,6 +1655,1406 @@ function KV({ label, value }: { label: string; value: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// W4 stock-tab surface redesign — shared SVG/format helpers
+// ---------------------------------------------------------------------------
+
+function polarPoint(cx: number, cy: number, r: number, angleDeg: number): [number, number] {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+function radarPolygonPoints(scores: Array<number | null>, cx: number, cy: number, maxR: number): string {
+  const n = scores.length;
+  if (n === 0) return "";
+  return scores
+    .map((score, i) => {
+      const r = (maxR * Math.max(0, Math.min(100, score ?? 0))) / 100;
+      const [x, y] = polarPoint(cx, cy, r, (360 / n) * i);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function axisToneClass(score: number | null): "positive" | "warning" | "negative" | "neutral" {
+  if (!isFiniteNumber(score)) return "neutral";
+  if (score >= 70) return "positive";
+  if (score >= 45) return "warning";
+  return "negative";
+}
+
+function axisToneLabel(tone: ReturnType<typeof axisToneClass>): string {
+  if (tone === "positive") return "양호";
+  if (tone === "warning") return "관리";
+  if (tone === "negative") return "약함";
+  return "—";
+}
+
+function tradeInvestorNameOf(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && typeof (value as Record<string, unknown>).name === "string") return (value as Record<string, unknown>).name as string;
+  if (value && typeof value === "object" && typeof (value as Record<string, unknown>).id === "string") return (value as Record<string, unknown>).id as string;
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// W4 재무(Financials) tab surface
+// ---------------------------------------------------------------------------
+
+function FinancialsHeroCp({
+  detail, years, currency, financialCandidate, profitabilityEstimates,
+}: {
+  detail: any;
+  years: string[];
+  currency: string;
+  financialCandidate: StockanalysisFinancialPayload | null | undefined;
+  profitabilityEstimates: ReturnType<typeof deriveProfitabilityEstimates> | null;
+}) {
+  const revenueActual = numberSeries(detail.income_statement?.revenue);
+  const revenueEstimates = detail.income_statement_estimates?.revenue ?? null;
+  const marginActual = numberSeries((detail.profitability as any)?.operating_margin);
+  const marginEstimatesRaw = profitabilityEstimates?.operating_margin ?? null;
+  const revVals = finiteValues(revenueActual);
+  if (revVals.length === 0) return null;
+
+  const annual = financialCandidate?.statements?.annual ?? {};
+  // financialCandidate is raw currency units (formatCompactMoney); revenueActual (detail.*) is
+  // pre-scaled to millions (fmtLarge) — keep the two paired with their own formatter.
+  const ttmRevenueCandidate = firstFiniteValue(findFinancialRow(annual.income, ["revenue"]));
+  const ttmRevenueDetail = lastFinite(revenueActual);
+  const ttmRevenueText = isFiniteNumber(ttmRevenueCandidate)
+    ? formatCompactMoney(ttmRevenueCandidate, currency)
+    : isFiniteNumber(ttmRevenueDetail)
+      ? `$${fmtLarge(ttmRevenueDetail)}`
+      : "—";
+  const firstRev = revVals[0];
+  const lastRev = revVals[revVals.length - 1];
+  const growthMultiple = firstRev > 0 ? lastRev / firstRev : null;
+  const yoyGrowth = revVals.length >= 2 && revVals[revVals.length - 2] !== 0
+    ? (lastRev - revVals[revVals.length - 2]) / Math.abs(revVals[revVals.length - 2])
+    : null;
+  const marginVals = finiteValues(marginActual);
+  const firstMargin = marginVals[0] ?? null;
+  const lastMargin = marginVals[marginVals.length - 1] ?? null;
+  const marginTrendUp = firstMargin !== null && lastMargin !== null ? lastMargin >= firstMargin : null;
+
+  const estKeys = ["fy1", "fy2", "fy3"] as const;
+  const revBars = [
+    ...revenueActual.map((v, i) => ({
+      label: (years[years.length - revenueActual.length + i] ?? years[i] ?? "").replace("FY", ""),
+      value: v,
+      estimate: false,
+    })),
+    ...estKeys.filter((k) => isFiniteNumber(revenueEstimates?.[k])).map((k) => ({
+      label: ESTIMATE_LABELS[k] ?? k.toUpperCase(),
+      value: revenueEstimates![k] as number,
+      estimate: true,
+    })),
+  ];
+  const marginBars = [
+    ...marginActual.map((v) => ({ value: v, estimate: false })),
+    ...estKeys.filter((k) => isFiniteNumber(marginEstimatesRaw?.[k])).map((k) => ({ value: marginEstimatesRaw![k] as number, estimate: true })),
+  ];
+
+  const revValsAll = finiteValues(revBars.map((b) => b.value));
+  const maxRev = Math.max(...revValsAll, 1);
+  const W = 1000, H = 300, padL = 8, padR = 8, padT = 34, padB = 34;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const n = revBars.length;
+  const slot = n > 0 ? plotW / n : plotW;
+  const barW = Math.max(20, slot * 0.56);
+  const xCenterFor = (i: number) => padL + slot * i + slot / 2;
+  const yForRev = (v: number) => padT + plotH - (maxRev > 0 ? (Math.max(0, v) / maxRev) * plotH : 0);
+  const marginValsAll = finiteValues(marginBars.map((b) => b.value));
+  const maxMargin = Math.max(...marginValsAll, 10);
+  const yForMargin = (v: number) => padT + plotH - (maxMargin > 0 ? (Math.max(0, v) / maxMargin) * plotH : 0);
+  const firstEstimateIndex = revBars.findIndex((b) => b.estimate);
+
+  const actualMarginPoints = marginBars
+    .map((b, i) => (!b.estimate && isFiniteNumber(b.value) ? { x: xCenterFor(i), y: yForMargin(b.value) } : null))
+    .filter((p): p is { x: number; y: number } => p !== null);
+  const estimateMarginPoints = marginBars
+    .map((b, i) => (b.estimate && isFiniteNumber(b.value) ? { x: xCenterFor(i), y: yForMargin(b.value) } : null))
+    .filter((p): p is { x: number; y: number } => p !== null);
+  const marginBridgePoint = actualMarginPoints.length > 0 ? actualMarginPoints[actualMarginPoints.length - 1] : null;
+  const toPointsStr = (pts: Array<{ x: number; y: number }>) => pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+  const verdictParts: string[] = [];
+  if (growthMultiple !== null && growthMultiple > 1.05) verdictParts.push(`매출은 ${years.length}년간 ${growthMultiple.toFixed(1)}배`);
+  else if (growthMultiple !== null && growthMultiple > 0 && growthMultiple < 0.95) verdictParts.push(`매출은 ${years.length}년간 ${(1 / growthMultiple).toFixed(1)}배 축소`);
+  if (firstMargin !== null && lastMargin !== null) {
+    verdictParts.push(`영업이익률은 ${firstMargin.toFixed(0)}%대에서 ${lastMargin.toFixed(0)}%${marginTrendUp ? "까지 확장" : "로 후퇴"}`);
+  }
+
+  return (
+    <section className="cpw4-hero" data-stock-tab-card="financial-trend">
+      <div className="cpw4-hero__top">
+        <p className="cpw4-hero__eyebrow">재무 · FINANCIALS</p>
+        {yoyGrowth !== null ? (
+          <span className={`cpw4-badge ${yoyGrowth >= 0 ? "cpw4-badge--positive" : "cpw4-badge--negative"}`}>
+            {yoyGrowth >= 0 ? "▲" : "▼"} {fmtPct(yoyGrowth)} YoY
+          </span>
+        ) : null}
+      </div>
+      <div className="cpw4-hero__top" style={{ marginTop: -6 }}>
+        <span className="cpw4-hero__number" style={{ fontSize: 34 }}>{ttmRevenueText}</span>
+        <span style={{ fontSize: 14, fontWeight: 750, color: "var(--cp-text-muted)" }}>매출(최근 회계연도)</span>
+      </div>
+      {verdictParts.length > 0 ? <h2 className="cpw4-hero__verdict">{verdictParts.join(", ")}</h2> : null}
+      <div className="cpw4-fin-chart-wrap">
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="매출 및 영업이익률 추이">
+          {firstEstimateIndex >= 0 ? (
+            <rect
+              x={xCenterFor(firstEstimateIndex) - slot / 2}
+              y={padT}
+              width={Math.max(0, padL + plotW - (xCenterFor(firstEstimateIndex) - slot / 2))}
+              height={plotH}
+              fill="var(--cp-surface-strong)"
+              opacity="0.5"
+            />
+          ) : null}
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="var(--cp-divider)" strokeWidth={1} />
+          {revBars.map((bar, i) => {
+            if (!isFiniteNumber(bar.value)) return null;
+            const x = xCenterFor(i) - barW / 2;
+            const y = yForRev(bar.value);
+            const h = Math.max(2, padT + plotH - y);
+            return (
+              <g key={`${bar.label}-${i}`}>
+                <rect
+                  x={x} y={y} width={barW} height={h} rx={4}
+                  fill="var(--cp-positive)"
+                  opacity={bar.estimate ? 0.32 : 1}
+                  stroke={bar.estimate ? "var(--cp-positive)" : "none"}
+                  strokeDasharray={bar.estimate ? "3 3" : undefined}
+                  strokeWidth={bar.estimate ? 1.5 : 0}
+                />
+                <text x={xCenterFor(i)} y={Math.max(14, y - 8)} textAnchor="middle" fontSize="12" fontWeight={bar.estimate ? 600 : 800} fill={bar.estimate ? "var(--cp-text-muted)" : "var(--cp-text-strong)"}>
+                  ${fmtLarge(bar.value)}
+                </text>
+                <text x={xCenterFor(i)} y={padT + plotH + 20} textAnchor="middle" fontSize="11.5" fontWeight={bar.estimate ? 600 : 700} fill={bar.estimate ? "var(--cp-text-soft)" : "var(--cp-text-muted)"}>
+                  {bar.label}{bar.estimate ? "E" : ""}
+                </text>
+              </g>
+            );
+          })}
+          {actualMarginPoints.length >= 2 ? (
+            <polyline points={toPointsStr(actualMarginPoints)} fill="none" stroke="var(--cp-chart-line-2)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+          ) : null}
+          {marginBridgePoint && estimateMarginPoints.length > 0 ? (
+            <polyline points={toPointsStr([marginBridgePoint, ...estimateMarginPoints])} fill="none" stroke="var(--cp-chart-line-2)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" strokeDasharray="5 4" />
+          ) : null}
+          {[...actualMarginPoints, ...estimateMarginPoints].map((p, i, arr) => (
+            <circle key={i} cx={p.x} cy={p.y} r={i < actualMarginPoints.length ? 3.5 : 3} fill="var(--cp-chart-line-2)" opacity={i < actualMarginPoints.length ? 1 : 0.75} />
+          ))}
+        </svg>
+        <div className="cpw4-fin-chart-legend">
+          <span><span className="swatch" style={{ background: "var(--cp-positive)" }} />매출 · 실적</span>
+          <span><span className="swatch" style={{ background: "var(--cp-positive)", opacity: 0.32, border: "1.5px dashed var(--cp-positive)" }} />매출 · 컨센서스 추정</span>
+          <span><span className="line" />영업이익률(선)</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinancialsTilesCp({
+  detail, financialCandidate, currency,
+}: {
+  detail: any;
+  financialCandidate: StockanalysisFinancialPayload | null | undefined;
+  currency: string;
+}) {
+  const annual = financialCandidate?.statements?.annual ?? {};
+  // financialCandidate values are raw currency units (formatCompactMoney); detail.* series are
+  // pre-scaled to millions (fmtLarge) — pick source and formatter together to avoid unit mismatch.
+  const opIncomeCandidate = firstFiniteValue(findFinancialRow(annual.income, ["operatingIncome"]));
+  const opIncomeDetail = lastFinite(numberSeries(detail.income_statement?.operating_income));
+  const opIncomeText = isFiniteNumber(opIncomeCandidate) ? formatCompactMoney(opIncomeCandidate, currency) : isFiniteNumber(opIncomeDetail) ? `$${fmtLarge(opIncomeDetail)}` : "—";
+  const opMarginLast = lastFinite(numberSeries((detail.profitability as any)?.operating_margin));
+  const netMarginLast = lastFinite(numberSeries((detail.profitability as any)?.net_margin));
+  const roeLast = lastFinite(numberSeries((detail.profitability as any)?.roe));
+  const roaLast = lastFinite(numberSeries((detail.profitability as any)?.roa));
+  const fcfCandidate = firstFiniteValue(findFinancialRow(annual.cash_flow, ["fcf", "leveredFCF", "unleveredFCF"]));
+  const fcfDetail = lastFinite(numberSeries(detail.cash_flow?.fcf));
+  const fcfText = isFiniteNumber(fcfCandidate) ? formatCompactMoney(fcfCandidate, currency) : isFiniteNumber(fcfDetail) ? `$${fmtLarge(fcfDetail)}` : "—";
+
+  const tiles = [
+    { label: "영업이익", value: opIncomeText, sub: opMarginLast !== null ? `영업이익률 ${opMarginLast.toFixed(1)}%` : undefined },
+    { label: "순이익률", value: netMarginLast !== null ? `${netMarginLast.toFixed(1)}%` : "—", sub: [roeLast !== null ? `ROE ${roeLast.toFixed(1)}%` : null, roaLast !== null ? `ROA ${roaLast.toFixed(1)}%` : null].filter(Boolean).join(" · ") || undefined },
+    { label: "잉여현금흐름(FCF)", value: fcfText, sub: "영업활동 현금창출" },
+  ];
+  if (!tiles.some((t) => t.value !== "—")) return null;
+
+  return (
+    <div className="cpw4-tile-row">
+      {tiles.map((t) => (
+        <div className="cpw4-tile" key={t.label}>
+          <p className="cpw4-tile__label">{t.label}</p>
+          <p className="cpw4-tile__value">{t.value}</p>
+          {t.sub ? <p className="cpw4-tile__sub">{t.sub}</p> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// W4 밸류(Valuation/statistics) tab surface
+// ---------------------------------------------------------------------------
+
+function ValuationHeroCp({ detailPerBands }: { detailPerBands: { current: number; min_8y: number; avg_8y: number; max_8y: number } }) {
+  const { current, min_8y, max_8y, avg_8y } = detailPerBands;
+  if (max_8y <= min_8y) return null;
+  const pct = bandPct(current, min_8y, max_8y);
+  const avgPct = bandPct(avg_8y, min_8y, max_8y);
+  const clampedPct = Math.max(0, Math.min(100, pct * 100));
+  const diffFromAvg = avg_8y !== 0 ? (current - avg_8y) / avg_8y : 0;
+  const zoneLabel = clampedPct < 30 ? "저평가 구간" : clampedPct > 70 ? "고평가 구간" : "평균 밴드 · 중립권";
+  const zoneClass = clampedPct < 30 ? "up" : clampedPct > 70 ? "down" : "warn";
+  const verdictDetail = Math.abs(diffFromAvg) < 0.03
+    ? `현재 PER ${current.toFixed(1)}x는 8년 밸류에이션 밴드의 평균과 거의 일치합니다 — 싸지도, 비싸지도 않은 자리입니다.`
+    : diffFromAvg < 0
+      ? `현재 PER ${current.toFixed(1)}x는 8년 평균(${avg_8y.toFixed(1)}x) 대비 ${fmtPct(Math.abs(diffFromAvg))} 낮은 자리입니다.`
+      : `현재 PER ${current.toFixed(1)}x는 8년 평균(${avg_8y.toFixed(1)}x) 대비 ${fmtPct(diffFromAvg)} 높은 자리입니다.`;
+
+  const W = 1160, trackX = 30, trackW = 1100, trackY = 76, trackH = 34;
+  const markerX = trackX + (clampedPct / 100) * trackW;
+  const avgX = trackX + Math.max(0, Math.min(100, avgPct * 100)) / 100 * trackW;
+  const gradMid = `${Math.max(5, Math.min(95, avgPct * 100)).toFixed(1)}%`;
+
+  return (
+    <section className="cpw4-hero" data-stock-tab-card="valuation-band">
+      <div className="cpw4-hero__top">
+        <p className="cpw4-hero__eyebrow">VALUATION · PER 밴드 위치 (8년)</p>
+        <span className="cpw4-val-current-tag"><span className="l">현재 PER</span><span className="v">{current.toFixed(1)}x</span></span>
+      </div>
+      <h2 className="cpw4-hero__verdict">지금 가격은 <span className={zoneClass}>{zoneLabel}</span>입니다</h2>
+      <p className="cpw4-hero__sub">{verdictDetail}</p>
+      <div className="cpw4-val-gauge-wrap">
+        <svg viewBox={`0 0 ${W} 168`} role="img" aria-label={`PER 밸류에이션 밴드: 최저 ${min_8y.toFixed(1)}배, 평균 ${avg_8y.toFixed(1)}배, 현재 ${current.toFixed(1)}배, 최고 ${max_8y.toFixed(1)}배`}>
+          <defs>
+            <linearGradient id="cpw4-val-band-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="var(--cp-positive)" />
+              <stop offset={gradMid} stopColor="var(--cp-warning)" />
+              <stop offset="100%" stopColor="var(--cp-negative)" />
+            </linearGradient>
+          </defs>
+          <rect x={trackX} y={trackY} width={trackW} height={trackH} rx={trackH / 2} fill="url(#cpw4-val-band-grad)" />
+          <line x1={avgX} y1={trackY} x2={avgX} y2={trackY + trackH} stroke="#ffffff" strokeWidth={2} opacity={0.85} />
+          <line x1={markerX} y1={40} x2={markerX} y2={trackY} stroke="var(--cp-text-strong)" strokeWidth={1.5} strokeDasharray="2 3" />
+          <rect x={Math.max(0, markerX - 65)} y={8} width={130} height={30} rx={8} fill="var(--cp-text-strong)" />
+          <text x={markerX} y={28} textAnchor="middle" fontSize="14" fontWeight="800" fill="#fff">현재 {current.toFixed(1)}x</text>
+          <circle cx={markerX} cy={trackY + trackH / 2} r={9} fill="#fff" stroke="var(--cp-text-strong)" strokeWidth={3} />
+          <line x1={trackX} y1={trackY + trackH} x2={trackX} y2={trackY + trackH + 10} stroke="var(--cp-border-strong)" strokeWidth={1.5} />
+          <line x1={trackX + trackW} y1={trackY + trackH} x2={trackX + trackW} y2={trackY + trackH + 10} stroke="var(--cp-border-strong)" strokeWidth={1.5} />
+          <text x={trackX} y={140} fontSize="16" fontWeight="800" fill="var(--cp-text-strong)">{min_8y.toFixed(1)}x</text>
+          <text x={trackX} y={156} fontSize="11" fill="var(--cp-text-soft)">8년 최저</text>
+          <text x={trackX + trackW} y={140} textAnchor="end" fontSize="16" fontWeight="800" fill="var(--cp-text-strong)">{max_8y.toFixed(1)}x</text>
+          <text x={trackX + trackW} y={156} textAnchor="end" fontSize="11" fill="var(--cp-text-soft)">8년 최고</text>
+        </svg>
+      </div>
+    </section>
+  );
+}
+
+function ValuationBodyCp({
+  yfData, industryBench, detail, profitabilityEstimates, currency,
+}: {
+  yfData: any;
+  industryBench: IndustryBench | null;
+  detail: any;
+  profitabilityEstimates: ReturnType<typeof deriveProfitabilityEstimates> | null;
+  currency: string;
+  years: string[];
+}) {
+  const info = yfData?.info ?? {};
+  const trailingPE = isFiniteNumber(info.trailingPE) ? info.trailingPE : null;
+  const forwardPE = isFiniteNumber(info.forwardPE) ? info.forwardPE : null;
+  const perDeltaPct = trailingPE && forwardPE && trailingPE !== 0 ? (forwardPE - trailingPE) / trailingPE : null;
+  const pbr = isFiniteNumber(info.priceToBook) ? info.priceToBook : null;
+  const peg = isFiniteNumber(info.pegRatio) ? info.pegRatio : null;
+  const evEbitda = isFiniteNumber(info.enterpriseToEbitda) ? info.enterpriseToEbitda : null;
+  const evRevenue = isFiniteNumber(info.enterpriseToRevenue) ? info.enterpriseToRevenue : null;
+
+  const rrTiles: Array<{ label: string; body: ReactNode; cap: string }> = [];
+  if (trailingPE !== null || forwardPE !== null) {
+    rrTiles.push({
+      label: "PER TTM → FWD",
+      body: (
+        <div className="flow">
+          <span className="from">{trailingPE !== null ? `${trailingPE.toFixed(1)}x` : "—"}</span>
+          <span className="arrow">→</span>
+          <span className="to">{forwardPE !== null ? `${forwardPE.toFixed(1)}x` : "—"}</span>
+        </div>
+      ),
+      cap: perDeltaPct !== null ? `선행 PER 컨센서스 반영 시 배수 ${fmtPct(perDeltaPct)}` : "선행 PER 컨센서스 기준",
+    });
+  }
+  if (pbr !== null) rrTiles.push({ label: "PBR", body: <div className="hero-num">{pbr.toFixed(1)}<span className="unit">x</span></div>, cap: isFiniteNumber(info.bookValue) ? `주당 장부가 ${formatMoney(info.bookValue, currency)}` : "Yahoo Finance 기준" });
+  if (peg !== null) rrTiles.push({ label: "PEG", body: <div className="hero-num">{peg.toFixed(2)}</div>, cap: peg < 1 ? "1.0 미만 = 이익 성장 대비 저평가 신호" : "1.0 이상 = 이익 성장 대비 프리미엄" });
+  if (evEbitda !== null) rrTiles.push({ label: "EV / EBITDA", body: <div className="hero-num">{evEbitda.toFixed(1)}<span className="unit">x</span></div>, cap: evRevenue !== null ? `EV/매출 ${evRevenue.toFixed(1)}x` : "Yahoo Finance 기준" });
+
+  const industryChips: Array<{ label: string; stock: number; ind: number; isFraction: boolean; lowerBetter: boolean }> = [];
+  if (industryBench) {
+    const push = (label: string, stock: unknown, ind: unknown, isFraction: boolean, lowerBetter: boolean) => {
+      const s = isFiniteNumber(stock) ? stock : null;
+      const i = isFiniteNumber(ind) ? ind : null;
+      if (s !== null && i !== null) industryChips.push({ label, stock: s, ind: i, isFraction, lowerBetter });
+    };
+    push("PER (TTM)", info.trailingPE, industryBench.trailing_pe, false, true);
+    push("FY+1 PER", info.forwardPE, industryBench.forward_pe, false, true);
+    push("ROE", info.returnOnEquity, industryBench.roe, true, false);
+    push("영업이익률", info.operatingMargins, industryBench.operating_margin, true, false);
+    push("순이익률", info.profitMargins, industryBench.net_margin, true, false);
+  }
+
+  const profRows = [
+    { label: "매출총이익률", now: lastFinite(numberSeries((detail?.profitability as any)?.gross_margin)), fy1: isFiniteNumber(profitabilityEstimates?.gross_margin?.fy1) ? profitabilityEstimates!.gross_margin!.fy1 : null, industry: null as number | null, signed: false },
+    { label: "영업이익률", now: lastFinite(numberSeries((detail?.profitability as any)?.operating_margin)), fy1: isFiniteNumber(profitabilityEstimates?.operating_margin?.fy1) ? profitabilityEstimates!.operating_margin!.fy1 : null, industry: isFiniteNumber(industryBench?.operating_margin) ? industryBench!.operating_margin! * 100 : null, signed: false },
+    { label: "순이익률", now: lastFinite(numberSeries((detail?.profitability as any)?.net_margin)), fy1: isFiniteNumber(profitabilityEstimates?.net_margin?.fy1) ? profitabilityEstimates!.net_margin!.fy1 : null, industry: isFiniteNumber(industryBench?.net_margin) ? industryBench!.net_margin! * 100 : null, signed: false },
+    { label: "ROE", now: lastFinite(numberSeries((detail?.profitability as any)?.roe)), fy1: isFiniteNumber(profitabilityEstimates?.roe?.fy1) ? profitabilityEstimates!.roe!.fy1 : null, industry: isFiniteNumber(industryBench?.roe) ? industryBench!.roe! * 100 : null, signed: false },
+    { label: "ROA", now: lastFinite(numberSeries((detail?.profitability as any)?.roa)), fy1: isFiniteNumber(profitabilityEstimates?.roa?.fy1) ? profitabilityEstimates!.roa!.fy1 : null, industry: null, signed: false },
+    { label: "매출 성장률", now: lastFinite(numberSeries((detail?.growth as any)?.revenue_growth)), fy1: isFiniteNumber(detail?.growth_estimates?.revenue_growth?.fy1) ? detail.growth_estimates.revenue_growth.fy1 : null, industry: null, signed: true },
+    { label: "EPS 성장률", now: lastFinite(numberSeries((detail?.growth as any)?.eps_growth)), fy1: isFiniteNumber(detail?.growth_estimates?.eps_growth?.fy1) ? detail.growth_estimates.eps_growth.fy1 : null, industry: null, signed: true },
+  ].filter((r) => r.now !== null || r.fy1 !== null);
+
+  const roeNow = lastFinite(numberSeries((detail?.profitability as any)?.roe));
+  const wacc = isFiniteNumber(industryBench?.cost_of_capital) ? industryBench!.cost_of_capital! * 100 : null;
+
+  if (rrTiles.length === 0 && industryChips.length === 0 && profRows.length === 0) return null;
+
+  return (
+    <>
+      {rrTiles.length > 0 ? (
+        <section data-stock-tab-card="valuation-rerating">
+          <div className="cpw4-section-head" style={{ marginBottom: 10 }}>
+            <h3>리레이팅 — 이익 성장이 배수를 어떻게 눌렀나</h3>
+            <span>Yahoo Finance 밸류 지표</span>
+          </div>
+          <div className="cpw4-rerating-row">
+            {rrTiles.map((t) => (
+              <div className="cpw4-rr-tile" key={t.label}>
+                <span className="l">{t.label}</span>
+                {t.body}
+                <span className="cap">{t.cap}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {industryChips.length > 0 && industryBench ? (
+        <section data-stock-tab-card="profitability-growth">
+          <div className="cpw4-section-head" style={{ marginBottom: 10 }}>
+            <h3>산업 대비 ({industryBench.name}, 다모다란{isFiniteNumber(industryBench.num_firms) ? ` ${industryBench.num_firms}개사` : ""})</h3>
+            <span>TTM 기준</span>
+          </div>
+          <div className="cpw4-dchip-row">
+            {industryChips.map((c) => {
+              const fmt = (v: number) => (c.isFraction ? `${(v * 100).toFixed(1)}%` : `${v.toFixed(1)}x`);
+              const better = c.lowerBetter ? c.stock < c.ind : c.stock > c.ind;
+              const deltaPct = c.ind !== 0 ? (c.stock - c.ind) / Math.abs(c.ind) : null;
+              return (
+                <div className="cpw4-dchip" key={c.label}>
+                  <div className="cpw4-dchip-main">
+                    <span className="l">{c.label}</span>
+                    <span className="v">{fmt(c.stock)}<span className="vs">vs 산업</span>{fmt(c.ind)}</span>
+                  </div>
+                  {deltaPct !== null ? <span className={`cpw4-badge ${better ? "cpw4-badge--positive" : "cpw4-badge--negative"}`}>{fmtPct(deltaPct)}</span> : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {profRows.length > 0 ? (
+        <section data-stock-tab-card="profitability-growth-detail">
+          <div className="cpw4-section-head" style={{ marginBottom: 10 }}>
+            <h3>수익성 · 성장 — 현재 → FY+1(E)</h3>
+            <span>스톡분석 재무 데이터 · 산업 비교 병기</span>
+          </div>
+          <div className="cpw4-metric-grid">
+            {profRows.map((r) => {
+              const now = r.now;
+              const fy1 = r.fy1;
+              const delta = now !== null && fy1 !== null ? fy1 - now : null;
+              const maxV = Math.max(Math.abs(now ?? 0), Math.abs(fy1 ?? 0), 1);
+              return (
+                <div className="cpw4-metric-cell" key={r.label}>
+                  <span className="label">{r.label}</span>
+                  <div className="cpw4-metric-row">
+                    <span className="now">{now !== null ? `${r.signed && now >= 0 ? "+" : ""}${now.toFixed(1)}` : "—"}<span className="unit">%</span></span>
+                    {fy1 !== null ? (
+                      <span className="cpw4-metric-fy">
+                        FY+1 <strong>{r.signed && fy1 >= 0 ? "+" : ""}{fy1.toFixed(1)}%</strong>
+                        {delta !== null ? <span className={`cpw4-metric-delta ${delta >= 0 ? "cpw4-metric-delta--positive" : "cpw4-metric-delta--warn"}`}>{delta >= 0 ? "▲" : "▼"}{Math.abs(delta).toFixed(1)}%p</span> : null}
+                      </span>
+                    ) : null}
+                    {isFiniteNumber(r.industry) ? <span className="cpw4-badge cpw4-badge--neutral">산업 {r.industry.toFixed(1)}%</span> : null}
+                  </div>
+                  {now !== null && fy1 !== null ? (
+                    <div className="cpw4-metric-bars">
+                      <div className="cpw4-metric-bar-row"><span className="cpw4-metric-bar-tag">현재</span><span className="cpw4-metric-bar-track"><span className="cpw4-metric-bar-fill cpw4-metric-bar-fill--now" style={{ width: `${Math.min(100, (Math.abs(now) / maxV) * 100)}%` }} /></span></div>
+                      <div className="cpw4-metric-bar-row"><span className="cpw4-metric-bar-tag">FY+1</span><span className="cpw4-metric-bar-track"><span className={`cpw4-metric-bar-fill ${delta !== null && delta >= 0 ? "cpw4-metric-bar-fill--positive" : "cpw4-metric-bar-fill--warn"}`} style={{ width: `${Math.min(100, (Math.abs(fy1) / maxV) * 100)}%` }} /></span></div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+          {roeNow !== null && wacc !== null ? (
+            <p className="cpw4-insight-line" style={{ marginTop: 12 }}>
+              ROE <b>{roeNow.toFixed(1)}%</b>가 자본비용(WACC) <b>{wacc.toFixed(1)}%</b>를 {roeNow >= wacc ? "웃돕니다" : "밑돕니다"} — 자본을 굴릴수록 가치를 {roeNow >= wacc ? "만들어내는" : "갉아먹는"} 스프레드입니다.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// W4 추정치(Estimates) tab surface
+// ---------------------------------------------------------------------------
+
+function EstimatesHeroCp({ yfData, detail, currency }: { yfData: any; detail: any; currency: string }) {
+  const targets = yfData?.analyst_price_targets ?? {};
+  const current = isFiniteNumber(targets.current) ? targets.current : null;
+  const mean = isFiniteNumber(targets.mean) ? targets.mean : null;
+  const low = isFiniteNumber(targets.low) ? targets.low : null;
+  const upsidePct = current && mean && current !== 0 ? (mean - current) / current : null;
+
+  const epsActual = lastFinite(numberSeries(detail?.per_share?.eps));
+  const epsEst = detail?.per_share_estimates?.eps ?? null;
+  const epsPoints = [
+    { label: "FY0(실적)", value: epsActual, estimate: false },
+    { label: "FY+1(E)", value: isFiniteNumber(epsEst?.fy1) ? epsEst.fy1 : null, estimate: true },
+    { label: "FY+2(E)", value: isFiniteNumber(epsEst?.fy2) ? epsEst.fy2 : null, estimate: true },
+    { label: "FY+3(E)", value: isFiniteNumber(epsEst?.fy3) ? epsEst.fy3 : null, estimate: true },
+  ].filter((p): p is { label: string; value: number; estimate: boolean } => isFiniteNumber(p.value));
+  const epsCumGrowth = epsPoints.length >= 2 && epsPoints[0].value !== 0
+    ? (epsPoints[epsPoints.length - 1].value - epsPoints[0].value) / Math.abs(epsPoints[0].value)
+    : null;
+
+  if (current === null && epsPoints.length === 0) return null;
+  const maxEps = Math.max(...epsPoints.map((p) => p.value), 1);
+  const chartW = 860, chartH = 130, baseY = 100, barW = 70;
+  const slotW = epsPoints.length > 0 ? chartW / epsPoints.length : chartW;
+
+  return (
+    <section className="cpw4-hero" data-stock-tab-card="estimates-consensus">
+      <p className="cpw4-hero__eyebrow">ESTIMATES · 시장 전망</p>
+      <div className="cpw4-est-hero-grid">
+        <div>
+          {upsidePct !== null ? (
+            <>
+              <h2 className="cpw4-hero__verdict" style={{ fontSize: 21 }}>시장은 여전히 <span className={upsidePct >= 0 ? "up" : "down"}>{upsidePct >= 0 ? "위쪽" : "아래쪽"}</span>을 본다</h2>
+              <div className="cpw4-est-headline">
+                <span className={`num ${upsidePct < 0 ? "down" : ""}`}>{fmtPct(upsidePct)}</span>
+                <span className="lbl">목표가 여력</span>
+              </div>
+              <p className="cpw4-hero__sub">
+                애널리스트 평균 목표가 <b>{formatMoney(mean, currency)}</b>는 현재가 <b>{formatMoney(current, currency)}</b>보다 {fmtPct(Math.abs(upsidePct))} {upsidePct >= 0 ? "높습니다" : "낮습니다"}.
+                {" "}{low !== null && current !== null ? (low >= current ? "최저 목표도 현재가를 밑돌지 않아, 하방 컨센서스는 아직 형성되지 않았습니다." : `최저 목표(${formatMoney(low, currency)})는 현재가 아래에 있습니다.`) : ""}
+              </p>
+            </>
+          ) : (
+            <p className="cpw4-hero__sub">애널리스트 목표가 컨센서스를 아직 확인하지 못했습니다.</p>
+          )}
+        </div>
+        {epsPoints.length > 0 ? (
+          <>
+            <div className="cpw4-divider-v" />
+            <div>
+              <div className="cpw4-eps-trio-head">
+                <span className="cpw4-eps-trio-title">EPS 실적 → 컨센서스 (FY0 → FY+3)</span>
+                {epsCumGrowth !== null ? <span className="cpw4-badge cpw4-badge--neutral">누적 {fmtPct(epsCumGrowth)}</span> : null}
+              </div>
+              <div className="cpw4-eps-chart">
+                <svg viewBox={`0 0 ${chartW} ${chartH}`} role="img" aria-label="EPS 실적 대비 컨센서스 추이">
+                  <line x1={0} y1={baseY} x2={chartW} y2={baseY} stroke="var(--cp-divider)" strokeWidth={1} />
+                  {epsPoints.map((p, i) => {
+                    const h = maxEps > 0 ? Math.max(6, (p.value / maxEps) * (baseY - 20)) : 6;
+                    const x = i * slotW + (slotW - barW) / 2;
+                    const y = baseY - h;
+                    const isLast = i === epsPoints.length - 1;
+                    return (
+                      <g key={p.label}>
+                        <rect x={x} y={y} width={barW} height={h} rx={6}
+                          fill={p.estimate ? `color-mix(in srgb, var(--cp-positive) ${28 + i * 22}%, var(--cp-surface-strong))` : "var(--cp-surface-strong)"}
+                          stroke={p.estimate ? "none" : "var(--cp-border-strong)"} strokeWidth={p.estimate ? 0 : 1} />
+                        <text x={x + barW / 2} y={Math.max(12, y - 8)} textAnchor="middle" fontSize={isLast ? 16 : 14} fontWeight={isLast ? 850 : 800} fill={isLast ? "var(--cp-positive)" : "var(--cp-text-strong)"}>
+                          {formatMoney(p.value, currency)}
+                        </text>
+                        <text x={x + barW / 2} y={chartH - 4} textAnchor="middle" fontSize="11" fill="var(--cp-text-soft)">{p.label}</text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function EstimatesBandCp({ yfData, currency }: { yfData: any; currency: string }) {
+  const targets = yfData?.analyst_price_targets ?? {};
+  const low = isFiniteNumber(targets.low) ? targets.low : null;
+  const high = isFiniteNumber(targets.high) ? targets.high : null;
+  const mean = isFiniteNumber(targets.mean) ? targets.mean : null;
+  const current = isFiniteNumber(targets.current) ? targets.current : null;
+  if (low === null || high === null || mean === null || current === null || high <= low) return null;
+  const pctFor = (v: number) => Math.max(0, Math.min(100, ((v - low) / (high - low)) * 100));
+  const currentPct = pctFor(current);
+  const meanPct = pctFor(mean);
+  const upsidePct = current !== 0 ? (mean - current) / current : null;
+  const W = 1000, trackY = 52, trackX = 40, trackW = 920, trackH = 10;
+  const currentX = trackX + (currentPct / 100) * trackW;
+  const meanX = trackX + (meanPct / 100) * trackW;
+
+  return (
+    <section className="cp-stock-tab-card" data-stock-tab-card="estimates-target-band">
+      <header className="cp-stock-tab-card__header">
+        <div><p className="cp-stock-rail-eyebrow">Target Range</p><h2>애널리스트 목표가 범위</h2></div>
+      </header>
+      <div className="cp-stock-tab-card__body cpw4-band-svg">
+        <svg viewBox={`0 0 ${W} 118`} role="img" aria-label={`목표가 범위 최저 ${formatMoney(low, currency)}, 현재가 ${formatMoney(current, currency)}, 평균 목표 ${formatMoney(mean, currency)}, 최고 ${formatMoney(high, currency)}`}>
+          <rect x={trackX} y={trackY} width={trackW} height={trackH} rx={5} fill="var(--cp-surface-muted)" stroke="var(--cp-border)" />
+          <rect x={trackX} y={trackY} width={Math.max(0, currentX - trackX)} height={trackH} rx={5} fill="var(--cp-border-strong)" />
+          <rect x={currentX} y={trackY} width={Math.max(0, meanX - currentX)} height={trackH} fill="var(--cp-positive)" />
+          <rect x={meanX} y={trackY} width={Math.max(0, trackX + trackW - meanX)} height={trackH} rx={5} fill="var(--cp-warning-soft)" />
+          <circle cx={currentX} cy={trackY + trackH / 2} r={9} fill="var(--cp-text-strong)" stroke="#fff" strokeWidth={3} />
+          <text x={currentX} y={98} textAnchor="middle" fontSize="12" fill="var(--cp-text-soft)">현재가</text>
+          <text x={currentX} y={113} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--cp-text-strong)">{formatMoney(current, currency)}</text>
+          <line x1={meanX} y1={20} x2={meanX} y2={trackY} stroke="var(--cp-positive)" strokeWidth={2} />
+          <circle cx={meanX} cy={trackY + trackH / 2} r={10} fill="var(--cp-positive)" stroke="#fff" strokeWidth={3} />
+          <text x={meanX} y={16} textAnchor="middle" fontSize="14" fontWeight="850" fill="var(--cp-positive)">평균 목표 {formatMoney(mean, currency)}</text>
+          {upsidePct !== null ? <text x={meanX} y={113} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--cp-positive)">{fmtPct(upsidePct)}</text> : null}
+          <text x={trackX} y={34} fontSize="12" fontWeight="700" fill="var(--cp-text-muted)">최저 {formatMoney(low, currency)}</text>
+          <text x={trackX + trackW} y={34} textAnchor="end" fontSize="12" fontWeight="700" fill="var(--cp-text-muted)">최고 {formatMoney(high, currency)}</text>
+        </svg>
+      </div>
+    </section>
+  );
+}
+
+function EstimatesGrowthTilesCp({ detail, currency }: { detail: any; currency: string }) {
+  const revActual = lastFinite(numberSeries(detail?.income_statement?.revenue));
+  const revFy1 = isFiniteNumber(detail?.income_statement_estimates?.revenue?.fy1) ? detail.income_statement_estimates.revenue.fy1 : null;
+  const epsActual = lastFinite(numberSeries(detail?.per_share?.eps));
+  const epsFy1 = isFiniteNumber(detail?.per_share_estimates?.eps?.fy1) ? detail.per_share_estimates.eps.fy1 : null;
+  const revGrowth = isFiniteNumber(detail?.growth_estimates?.revenue_growth?.fy1) ? detail.growth_estimates.revenue_growth.fy1 : null;
+  const epsGrowth = isFiniteNumber(detail?.growth_estimates?.eps_growth?.fy1) ? detail.growth_estimates.eps_growth.fy1 : null;
+
+  const tiles = [
+    { label: "FY+1 매출 성장 (YoY)", growth: revGrowth, now: revActual, next: revFy1, fmt: (v: number) => `$${fmtLarge(v)}` },
+    { label: "FY+1 EPS 성장 (YoY)", growth: epsGrowth, now: epsActual, next: epsFy1, fmt: (v: number) => formatMoney(v, currency) },
+  ].filter((t) => isFiniteNumber(t.next));
+  if (tiles.length === 0) return null;
+
+  return (
+    <div className="cpw4-tile-row">
+      {tiles.map((t) => {
+        const maxV = Math.max(t.now ?? 0, t.next ?? 0, 1);
+        const nowH = maxV > 0 ? Math.max(6, ((t.now ?? 0) / maxV) * 44) : 6;
+        const nextH = maxV > 0 ? Math.max(6, ((t.next ?? 0) / maxV) * 44) : 6;
+        return (
+          <div className="cpw4-tile" key={t.label}>
+            <div className="cpw4-metric-row" style={{ marginBottom: 0 }}>
+              <p className="cpw4-tile__label" style={{ marginBottom: 0 }}>{t.label}</p>
+              {isFiniteNumber(t.growth) ? <span className={`cpw4-badge ${t.growth >= 0 ? "cpw4-badge--positive" : "cpw4-badge--negative"}`}>{fmtWholeSignedPct(t.growth)}</span> : null}
+            </div>
+            <p className="cpw4-tile__value" style={{ marginTop: 6 }}>{isFiniteNumber(t.next) ? t.fmt(t.next) : "—"}</p>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: "var(--cp-text-soft)", fontWeight: 700 }}>{isFiniteNumber(t.now) ? t.fmt(t.now) : "—"}</span>
+                <div style={{ width: 20, height: nowH, borderRadius: "4px 4px 0 0", background: "var(--cp-surface-strong)" }} />
+                <span style={{ fontSize: 10, color: "var(--cp-text-soft)" }}>FY0</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: "var(--cp-positive)", fontWeight: 800 }}>{isFiniteNumber(t.next) ? t.fmt(t.next) : "—"}</span>
+                <div style={{ width: 20, height: nextH, borderRadius: "4px 4px 0 0", background: "var(--cp-positive)" }} />
+                <span style={{ fontSize: 10, color: "var(--cp-text-soft)" }}>FY+1(E)</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function EstimatesRecoCp({ yfData }: { yfData: any }) {
+  const recs = Array.isArray(yfData?.recommendations) ? yfData.recommendations : [];
+  const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
+  if (!lastRec) return null;
+  const segs: Array<[string, string, string]> = [
+    ["strongBuy", "적극매수", "var(--cp-positive)"],
+    ["buy", "매수", "color-mix(in srgb, var(--cp-positive) 46%, #ffffff)"],
+    ["hold", "보유", "var(--cp-surface-strong)"],
+    ["sell", "매도", "color-mix(in srgb, var(--cp-negative) 46%, #ffffff)"],
+    ["strongSell", "적극매도", "var(--cp-negative)"],
+  ];
+  const total = segs.reduce((s, [key]) => s + (Number(lastRec[key]) || 0), 0);
+  if (total === 0) return null;
+  const bullish = (Number(lastRec.strongBuy) || 0) + (Number(lastRec.buy) || 0);
+  const bullishRatio = bullish / total;
+  const overall = bullishRatio >= 0.7 ? "Strong Buy" : bullishRatio >= 0.5 ? "Buy" : bullishRatio >= 0.3 ? "Hold" : "Sell 우세";
+
+  return (
+    <section className="cp-stock-tab-card" data-stock-tab-card="estimates-recommendation">
+      <header className="cp-stock-tab-card__header">
+        <div><p className="cp-stock-rail-eyebrow">Analyst Recommendations</p><h2>애널리스트 추천 분포</h2></div>
+        <span className="cpw4-badge cpw4-badge--positive">종합: {overall}</span>
+      </header>
+      <div className="cp-stock-tab-card__body">
+        <div className="cpw4-reco-bar">
+          {segs.map(([key, label, color]) => {
+            const count = Number(lastRec[key]) || 0;
+            const pct = (count / total) * 100;
+            if (pct === 0) return null;
+            return (
+              <div key={key} className="cpw4-reco-seg" style={{ width: `${pct}%`, background: color }}>
+                {pct > 8 ? `${label} ${count}` : ""}
+              </div>
+            );
+          })}
+        </div>
+        <div className="cpw4-reco-legend">
+          {segs.filter(([key]) => (Number(lastRec[key]) || 0) > 0).map(([key, label, color]) => (
+            <span key={key}><span className="dot" style={{ background: color }} />{label} {Number(lastRec[key])}명</span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// W4 보유기관(Ownership) tab surface
+// ---------------------------------------------------------------------------
+
+function OwnershipHeroCp({
+  f13Entries, ticker, yfData, displayPrice, currency,
+}: {
+  f13Entries: F13Entry[] | null;
+  ticker: string;
+  yfData: any;
+  displayPrice: number | null;
+  currency: string;
+}) {
+  const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadTradesRanking().then((data) => {
+      if (cancelled || !data) return;
+      const upper = ticker.toUpperCase();
+      const b = data.bought.find((r: any) => r?.ticker === upper);
+      const s = data.sold.find((r: any) => r?.ticker === upper);
+      setTradesChip({ bought: b, sold: s, metadata: data.metadata });
+    });
+    return () => { cancelled = true; };
+  }, [ticker]);
+
+  const holders = useMemo(() => {
+    if (!f13Entries || f13Entries.length === 0) return [];
+    const byInv = new Map<string, { shares: number; weight: number }>();
+    for (const e of f13Entries) {
+      if (typeof e.investor !== "string" || e.investor.trim() === "") continue;
+      const cur = byInv.get(e.investor);
+      const shares = isFiniteNumber(e.shares) ? e.shares : 0;
+      const weight = isFiniteNumber(e.weight) ? e.weight : 0;
+      if (cur) { cur.shares += shares; cur.weight += weight; }
+      else byInv.set(e.investor, { shares, weight });
+    }
+    return [...byInv.entries()].map(([investor, v]) => ({ investor, ...v })).sort((a, b) => b.weight - a.weight);
+  }, [f13Entries]);
+
+  const top10 = holders.slice(0, 10);
+  const holderCount = holders.length;
+  const totalShares = holders.reduce((s, h) => s + h.shares, 0);
+  const guruValueApprox = isFiniteNumber(displayPrice) && totalShares > 0 ? displayPrice * totalShares : null;
+
+  const boughtAmount = isFiniteNumber(tradesChip?.bought?.amount) ? tradesChip.bought.amount : null;
+  const soldAmount = isFiniteNumber(tradesChip?.sold?.amount) ? tradesChip.sold.amount : null;
+  const hasFlow = boughtAmount !== null || soldAmount !== null;
+  const netFlow = hasFlow ? (boughtAmount ?? 0) - (soldAmount ?? 0) : null;
+  const isNetSell = netFlow !== null && netFlow < 0;
+  const flowRatio = boughtAmount && soldAmount ? (isNetSell ? soldAmount / boughtAmount : boughtAmount / soldAmount) : null;
+
+  const quarter = typeof tradesChip?.metadata?.quarter === "string" && tradesChip.metadata.quarter.trim() ? tradesChip.metadata.quarter.trim() : null;
+  const generatedAt = typeof tradesChip?.metadata?.generated_at === "string" && tradesChip.metadata.generated_at.trim() ? tradesChip.metadata.generated_at.slice(0, 10) : null;
+  const reportBasisLabel = [quarter ?? "최근 분기", generatedAt].filter(Boolean).join(" · ");
+
+  const mh = yfData?.major_holders ?? {};
+  const institutionsPct = isFiniteNumber(mh.institutionsPercentHeld) ? mh.institutionsPercentHeld * 100 : null;
+  const institutionsFloatPct = isFiniteNumber(mh.institutionsFloatPercentHeld) ? mh.institutionsFloatPercentHeld * 100 : null;
+  const insidersPct = isFiniteNumber(mh.insidersPercentHeld) ? mh.insidersPercentHeld * 100 : null;
+  const institutionsCount = isFiniteNumber(mh.institutionsCount) ? mh.institutionsCount : null;
+
+  if (holderCount === 0 && !hasFlow && institutionsPct === null) return null;
+
+  const maxFlow = Math.max(boughtAmount ?? 0, soldAmount ?? 0, 1);
+  const sellWidthPct = soldAmount !== null ? Math.max(6, (soldAmount / maxFlow) * 100) : 0;
+  const buyWidthPct = boughtAmount !== null ? Math.max(6, (boughtAmount / maxFlow) * 100) : 0;
+
+  const donutPct = institutionsPct !== null ? Math.max(0, Math.min(100, institutionsPct)) : null;
+  const donutR = 44;
+  const donutCirc = 2 * Math.PI * donutR;
+  const donutOffset = donutPct !== null ? donutCirc * (1 - donutPct / 100) : donutCirc;
+
+  return (
+    <>
+      <section className="cpw4-hero" id="guru-section" data-stock-tab-card="ownership-guru">
+        <div className="cpw4-hero__top">
+          <p className="cpw4-hero__eyebrow">
+            13F 기관 자금 흐름{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}{holderCount > 0 ? ` · 보유 ${holderCount}곳` : ""}
+          </p>
+          {hasFlow ? (
+            <div className="cpw4-own-net">
+              <div className="l">{isNetSell ? "순매도 규모" : "순매수 규모"}</div>
+              <div className={`v ${isNetSell ? "down" : "up"}`}>{isNetSell ? "-" : "+"}{formatCompactMoney(Math.abs(netFlow ?? 0), "USD")}</div>
+              <div className="r">매도 {formatCompactMoney(soldAmount ?? 0, "USD")} − 매수 {formatCompactMoney(boughtAmount ?? 0, "USD")}</div>
+            </div>
+          ) : null}
+        </div>
+        <h2 className="cpw4-hero__verdict">
+          {hasFlow ? (
+            <>이번 분기, 대형 기관은 <span className={isNetSell ? "down" : "up"}>{isNetSell ? "팔고 있습니다" : "사고 있습니다"}</span></>
+          ) : (
+            "이번 분기 랭킹 데이터에서 이 종목의 매매 흐름을 특정하지 못했습니다"
+          )}
+        </h2>
+        {hasFlow && flowRatio !== null ? (
+          <p className="cpw4-hero__sub">
+            추종 대가 {holderCount > 0 ? `${holderCount}곳` : "다수"} 중 {isNetSell ? "매도" : "매수"} 참여가 우세 — {isNetSell ? "매도" : "매수"} 금액이 {isNetSell ? "매수" : "매도"}의 <b>{flowRatio.toFixed(1)}배</b>에 달합니다.
+          </p>
+        ) : null}
+        {hasFlow ? (
+          <div className="cpw4-own-flow-svg">
+            <svg viewBox="0 0 1000 100" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`매도 ${formatCompactMoney(soldAmount ?? 0, "USD")} 대 매수 ${formatCompactMoney(boughtAmount ?? 0, "USD")}`}>
+              <line x1="500" y1="4" x2="500" y2="96" stroke="var(--cp-border-strong)" strokeWidth={2} />
+              <line x1="30" y1="66" x2="970" y2="66" stroke="var(--cp-divider)" strokeWidth={1} />
+              {soldAmount !== null ? (
+                <>
+                  <rect x={500 - (sellWidthPct / 100) * 460} y="48" width={(sellWidthPct / 100) * 460} height="24" rx="6" fill="var(--cp-negative)" />
+                  <text x={500 - (sellWidthPct / 100) * 460 + 10} y="65" fontSize="13" fontWeight="800" fill="#fff">매도 {formatCompactMoney(soldAmount, "USD")}</text>
+                  <text x={500 - (sellWidthPct / 100) * 460} y="42" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
+                    참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳{isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}곳` : ""}
+                  </text>
+                </>
+              ) : null}
+              {boughtAmount !== null ? (
+                <>
+                  <rect x="500" y="48" width={(buyWidthPct / 100) * 460} height="24" rx="6" fill="var(--cp-positive)" />
+                  <text x={500 + (buyWidthPct / 100) * 460 - 10} y="65" fontSize="13" fontWeight="800" fill="#fff" textAnchor="end">매수 {formatCompactMoney(boughtAmount, "USD")}</text>
+                  <text x="500" y="42" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
+                    참여 {isFiniteNumber(tradesChip?.bought?.investors_count) ? tradesChip.bought.investors_count : "—"}곳{isFiniteNumber(tradesChip?.bought?.new_count) && tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}곳` : ""}
+                  </text>
+                </>
+              ) : null}
+            </svg>
+          </div>
+        ) : null}
+        <div className="cpw4-chip-row">
+          {holderCount > 0 ? <div className="cpw4-chip"><strong>{holderCount}</strong><span>보유 Guru 기관 수</span></div> : null}
+          {isFiniteNumber(tradesChip?.sold?.investors_count) ? <div className="cpw4-chip"><strong>{tradesChip.sold.investors_count}</strong><span>이번 분기 매도 참여</span></div> : null}
+          {isFiniteNumber(tradesChip?.bought?.investors_count) ? <div className="cpw4-chip"><strong>{tradesChip.bought.investors_count}</strong><span>이번 분기 매수 참여</span></div> : null}
+          {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? <div className="cpw4-chip"><strong>{tradesChip.sold.exit_count}</strong><span>완전 청산(포지션 제로)</span></div> : null}
+          {guruValueApprox !== null ? <div className="cpw4-chip"><strong>{formatCompactMoney(guruValueApprox, "USD")}</strong><span>Guru 합산 보유 평가액(근사)</span></div> : null}
+        </div>
+      </section>
+
+      <div className="cpw4-own-body-grid">
+        <section className="cp-stock-tab-card" data-stock-tab-card="ownership-holders">
+          <header className="cp-stock-tab-card__header">
+            <div><p className="cp-stock-rail-eyebrow">13F Guru</p><h2>Top Guru 보유 비중</h2></div>
+            <span style={{ fontSize: 11.5, color: "var(--cp-text-soft)", fontWeight: 650 }}>포트폴리오 내 {ticker} 비중 기준{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</span>
+          </header>
+          <div className="cp-stock-tab-card__body">
+            {top10.length > 0 ? (
+              <>
+                <div className="cpw4-holder-cols">
+                  <span>#</span><span>투자자</span><span>포트폴리오 비중</span><span className="right">비중</span><span className="right">주식수</span><span className="right">공시 기준</span>
+                </div>
+                {top10.map((h, i) => {
+                  const maxWeight = top10[0]?.weight || 1;
+                  const barPct = maxWeight > 0 ? Math.max(4, (h.weight / maxWeight) * 100) : 0;
+                  return (
+                    <div className="cpw4-holder-row" key={h.investor}>
+                      <div className={`cpw4-holder-rank ${i < 3 ? "cpw4-holder-rank--top" : ""}`}>{i + 1}</div>
+                      <TransitionLink href={ROUTES.superinvestorsGuru(h.investor)} className="cpw4-holder-name" title={h.investor}>{h.investor}</TransitionLink>
+                      <div className="cpw4-holder-track"><div className="cpw4-holder-fill" style={{ width: `${barPct}%` }} /></div>
+                      <div className="cpw4-holder-pct right">{h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}</div>
+                      <div className="cpw4-holder-shares right">{h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"}</div>
+                      <div className="cpw4-holder-quarter right">{quarter ?? "—"}</div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <p style={{ fontSize: 12.5, color: "var(--cp-text-muted)" }}>13F 보유자 데이터를 찾지 못했습니다.</p>
+            )}
+          </div>
+        </section>
+
+        <div style={{ display: "grid", gap: 16 }}>
+          {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? (
+            <section className="cpw4-own-changes">
+              <div className="cpw4-own-changes__eyebrow">최근 주요 변화{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</div>
+              <div className="cpw4-own-changes__headline">완전 청산 <strong>{tradesChip.sold.exit_count}건</strong></div>
+              <div className="cpw4-own-changes__sub">매도 참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳 중 {tradesChip.sold.exit_count}곳은 포지션을 아예 제로로 정리했습니다</div>
+              {tradeInvestorNameOf(tradesChip?.sold?.top_investor) ? (
+                <div className="cpw4-own-change-row">
+                  <div>
+                    <div className="cpw4-own-change-name">{tradeInvestorNameOf(tradesChip.sold.top_investor)}</div>
+                    <div className="cpw4-own-change-desc">이번 분기 최대 매도 참여자 · 전량 청산 여부는 개별 확인 필요</div>
+                  </div>
+                  <span className="cpw4-badge cpw4-badge--negative">매도 랭크 #{isFiniteNumber(tradesChip.sold.rank) ? tradesChip.sold.rank : "—"}</span>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {institutionsPct !== null || institutionsCount !== null ? (
+            <section className="cp-stock-tab-card" data-stock-tab-card="ownership-institutional-summary">
+              <header className="cp-stock-tab-card__header">
+                <div><p className="cp-stock-rail-eyebrow">Institutional</p><h2>기관 보유 요약</h2></div>
+                <span style={{ fontSize: 11, color: "var(--cp-text-soft)" }}>Yahoo Finance</span>
+              </header>
+              <div className="cp-stock-tab-card__body">
+                <div className="cpw4-own-gauge-wrap">
+                  {donutPct !== null ? (
+                    <svg width="104" height="104" viewBox="0 0 104 104">
+                      <circle cx="52" cy="52" r={donutR} fill="none" stroke="var(--cp-surface-strong)" strokeWidth="12" />
+                      <circle cx="52" cy="52" r={donutR} fill="none" stroke="var(--cp-accent-strong)" strokeWidth="12" strokeLinecap="round"
+                        strokeDasharray={donutCirc} strokeDashoffset={donutOffset} transform="rotate(-90 52 52)" />
+                      <text x="52" y="48" textAnchor="middle" fontSize="20" fontWeight="800" fill="var(--cp-text-strong)">{donutPct.toFixed(1)}%</text>
+                      <text x="52" y="65" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--cp-text-soft)">기관보유</text>
+                    </svg>
+                  ) : null}
+                  <p className="cpw4-own-gauge-sub">
+                    {institutionsCount !== null ? <>기관투자자 <strong>{institutionsCount.toLocaleString()}곳</strong>이 {ticker}를 보유 중이며, </> : null}
+                    {donutPct !== null ? <>발행주식의 <strong>{donutPct.toFixed(1)}%</strong>를 쥐고 있습니다.</> : null}
+                  </p>
+                </div>
+                <div className="cpw4-own-tiles">
+                  {institutionsFloatPct !== null ? <div className="cpw4-own-tile"><div className="v">{institutionsFloatPct.toFixed(1)}%</div><div className="l">유동주 기준 기관 보유율</div></div> : null}
+                  {insidersPct !== null ? <div className="cpw4-own-tile"><div className="v">{insidersPct.toFixed(1)}%</div><div className="l">내부자 보유율</div></div> : null}
+                  {institutionsCount !== null ? <div className="cpw4-own-tile"><div className="v">{institutionsCount.toLocaleString()}</div><div className="l">보유 기관 총 수</div></div> : null}
+                  {holderCount > 0 ? <div className="cpw4-own-tile"><div className="v">{holderCount}</div><div className="l">추종 Guru 기관 수</div></div> : null}
+                </div>
+              </div>
+            </section>
+          ) : null}
+        </div>
+      </div>
+
+      <p className="cpw4-disclaimer">13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// W4 공시(Filings) tab surface — consumes edgarKoreanSummaries lib directly
+// ---------------------------------------------------------------------------
+
+interface EdgarFilingArtifactLite {
+  summaryKo?: {
+    oneLine?: string;
+    keyPoints?: Array<{ text: string; stance: string }>;
+    riskChanges?: Array<{ text: string; stance: string }>;
+    financialHighlights?: Array<{ text: string; stance: string }>;
+  };
+}
+
+const FILING_STANCE_LABEL: Record<string, string> = {
+  fact: "사실",
+  management_claim: "경영진 언급",
+  feno_interpretation: "Feno 해석",
+};
+const FILING_STANCE_CLASS: Record<string, string> = {
+  fact: "cpw4-filing-tag-fact",
+  management_claim: "cpw4-filing-tag-claim",
+  feno_interpretation: "cpw4-filing-tag-note",
+};
+
+function filingFormBadgeClass(form: string): string {
+  if (form === "8-K" || form === "6-K") return "cpw4-badge--warning";
+  return "cpw4-badge--neutral";
+}
+
+function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
+  const [filings, setFilings] = useState<EdgarKoreanSummaryFilingEntry[] | null>(null);
+  const [heroArtifact, setHeroArtifact] = useState<EdgarFilingArtifactLite | null | undefined>(undefined);
+  const [feedArtifacts, setFeedArtifacts] = useState<Record<string, EdgarFilingArtifactLite | null>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setFilings(null);
+    setHeroArtifact(undefined);
+    setFeedArtifacts({});
+    loadEdgarKoreanSummariesForTicker(ticker).then((manifest) => {
+      if (cancelled) return;
+      setFilings(edgarFilingsForTicker(manifest, ticker));
+    });
+    return () => { cancelled = true; };
+  }, [ticker]);
+
+  const readyFilings = useMemo(() => (filings ?? []).filter((f) => f.summaryPath), [filings]);
+  const heroFiling = readyFilings[0] ?? null;
+  const feedFilings = useMemo(() => readyFilings.slice(1, 3), [readyFilings]);
+  const feedKey = feedFilings.map((f) => f.summaryPath).join(",");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!heroFiling?.summaryPath) {
+      setHeroArtifact(null);
+      return () => { cancelled = true; };
+    }
+    setHeroArtifact(undefined);
+    fetch(heroFiling.summaryPath, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (!cancelled) setHeroArtifact(data); })
+      .catch(() => { if (!cancelled) setHeroArtifact(null); });
+    return () => { cancelled = true; };
+  }, [heroFiling?.summaryPath]);
+
+  useEffect(() => {
+    let cancelled = false;
+    feedFilings.forEach((filing) => {
+      if (!filing.summaryPath) return;
+      const path = filing.summaryPath;
+      fetch(path, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => { if (!cancelled) setFeedArtifacts((prev) => (path in prev ? prev : { ...prev, [path]: data })); })
+        .catch(() => { if (!cancelled) setFeedArtifacts((prev) => (path in prev ? prev : { ...prev, [path]: null })); });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedKey]);
+
+  if (filings === null) return <div className="cp-stock-tab-loading"><SkeletonSection /></div>;
+  if (filings.length === 0) {
+    return (
+      <section className="cp-stock-tab-card">
+        <div className="cp-stock-tab-card__body">
+          <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
+          <p className="mt-2 text-sm text-slate-500">{ticker}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.</p>
+          <ExternalSourceLinks ticker={ticker} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
+        </div>
+      </section>
+    );
+  }
+
+  const readyCount = readyFilings.length;
+  const readyRatio = filings.length > 0 ? readyCount / filings.length : 0;
+  const gaugeR = 32, gaugeCirc = 2 * Math.PI * gaugeR;
+  const gaugeOffset = gaugeCirc * (1 - readyRatio);
+  const dateRange = filings.length > 0 ? `${filings[filings.length - 1].filingDate} ~ ${filings[0].filingDate}` : "";
+  const otherFilings = filings.filter((f) => f !== heroFiling && !feedFilings.includes(f));
+  const otherReady = otherFilings.filter((f) => f.summaryPath);
+  const otherPending = otherFilings.filter((f) => !f.summaryPath);
+
+  return (
+    <>
+      <div className="cpw4-filing-section-head">
+        <div>
+          <p className="cpw4-hero__eyebrow">EDGAR · LLM 한글 요약</p>
+          <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>공시가 지금 이 종목에 의미하는 것</h2>
+          <p className="cpw4-hero__sub">최근 {filings.length}건 공시 · {dateRange}</p>
+          <p className="cpw4-filing-ai-caption"><span className="dot" />AI가 SEC 원문 공시를 분석해 한국어로 번역·요약합니다 · 투자 판단의 단독 근거로 쓰지 마세요</p>
+        </div>
+        <div className="cpw4-filing-coverage-gauge">
+          <svg width="76" height="76" viewBox="0 0 76 76">
+            <circle cx="38" cy="38" r={gaugeR} fill="none" stroke="var(--cp-divider)" strokeWidth="9" />
+            <circle cx="38" cy="38" r={gaugeR} fill="none" stroke="var(--cp-accent)" strokeWidth="9" strokeLinecap="round"
+              strokeDasharray={gaugeCirc} strokeDashoffset={gaugeOffset} transform="rotate(-90 38 38)" />
+            <text x="38" y="34" textAnchor="middle" fontSize="14" fontWeight="800" fill="var(--cp-text-strong)">{Math.round(readyRatio * 100)}%</text>
+            <text x="38" y="48" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--cp-text-soft)">요약 완료</text>
+          </svg>
+          <div>
+            <div className="lbl">한글 요약 완료</div>
+            <div className="val">{readyCount}<small>&nbsp;/&nbsp;{filings.length}건</small></div>
+          </div>
+        </div>
+      </div>
+
+      {heroFiling ? (
+        <section className="cpw4-hero" id="filing-hero" data-stock-tab-card="filings-hero">
+          <div className="cpw4-hero__top">
+            <span className={`cpw4-badge ${filingFormBadgeClass(heroFiling.form)}`}>{heroFiling.form}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--cp-text-muted)" }}>{heroFiling.filingDate} 접수</span>
+            <span className="cpw4-badge cpw4-badge--warning">가장 중요한 최근 공시</span>
+          </div>
+          {heroArtifact === undefined ? (
+            <p className="cpw4-hero__sub">요약을 불러오는 중입니다…</p>
+          ) : (
+            <>
+              <h2 className="cpw4-hero__verdict">{heroArtifact?.summaryKo?.oneLine ?? heroFiling.summaryOneLine ?? heroFiling.title}</h2>
+              {heroArtifact?.summaryKo?.keyPoints && heroArtifact.summaryKo.keyPoints.length > 0 ? (
+                <div className="cpw4-filing-hero-bullets">
+                  {heroArtifact.summaryKo.keyPoints.slice(0, 2).map((bullet, i) => (
+                    <div className="cpw4-filing-bullet" key={i}>
+                      <span className={`tag ${FILING_STANCE_CLASS[bullet.stance] ?? "cpw4-filing-tag-fact"}`}>{FILING_STANCE_LABEL[bullet.stance] ?? "핵심"}</span>
+                      <span>{bullet.text}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          )}
+          <div className="cpw4-chip-row" style={{ marginTop: 4 }}>
+            <a href={heroFiling.sourceUrl} target="_blank" rel="noreferrer" className="cpw4-badge cpw4-badge--neutral">원문 보기</a>
+            {heroFiling.translationPath ? <a href={heroFiling.translationPath} className="cpw4-badge cpw4-badge--neutral">번역 보기</a> : null}
+          </div>
+        </section>
+      ) : null}
+
+      {feedFilings.length > 0 ? (
+        <section data-stock-tab-card="filings-feed">
+          <div className="cpw4-section-head" style={{ marginBottom: 10 }}><h3>공시 피드 · 최근 상세 요약</h3></div>
+          <div className="cpw4-filing-feed-grid">
+            {feedFilings.map((filing) => {
+              const artifact = filing.summaryPath ? feedArtifacts[filing.summaryPath] : null;
+              const bullets = [
+                ...(artifact?.summaryKo?.financialHighlights ?? []),
+                ...(artifact?.summaryKo?.riskChanges ?? []),
+              ].slice(0, 1);
+              return (
+                <article className="cpw4-filing-feed-card" key={filing.accession}>
+                  <div className="cpw4-filing-feed-head">
+                    <span className={`cpw4-badge ${filingFormBadgeClass(filing.form)}`}>{filing.form}</span>
+                    <span className="date">{filing.filingDate} 접수</span>
+                  </div>
+                  <p className="cpw4-filing-feed-headline">{artifact?.summaryKo?.oneLine ?? filing.summaryOneLine ?? filing.title}</p>
+                  {bullets.map((bullet, i) => (
+                    <div className="cpw4-filing-bullet" key={i}>
+                      <span className={`tag ${FILING_STANCE_CLASS[bullet.stance] ?? "cpw4-filing-tag-fact"}`}>{FILING_STANCE_LABEL[bullet.stance] ?? "핵심"}</span>
+                      <span>{bullet.text}</span>
+                    </div>
+                  ))}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {filings.length > 1 ? <FilingsTimelineCp filings={filings} heroFiling={heroFiling} /> : null}
+
+      {otherFilings.length > 0 ? (
+        <section data-stock-tab-card="filings-other">
+          <div className="cpw4-section-head" style={{ marginBottom: 10 }}><h3>그 외 공시 ({otherFilings.length}건)</h3></div>
+          <div className="cpw4-filing-other-cols">
+            {otherReady.length > 0 ? (
+              <div>
+                <p className="cpw4-filing-other-group-title">요약 완료 · 원문 참고 ({otherReady.length}건)</p>
+                {otherReady.map((f) => (
+                  <div className="cpw4-filing-other-row" id={`other-${f.accession}`} key={f.accession}>
+                    <span className={`cpw4-badge ${filingFormBadgeClass(f.form)}`}>{f.form}</span>
+                    <span className="date">{f.filingDate}</span>
+                    <span className="stat stat--ready">요약 완료</span>
+                    <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="cta">원문 보기</a>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {otherPending.length > 0 ? (
+              <div>
+                <p className="cpw4-filing-other-group-title">요약 대기 ({otherPending.length}건)</p>
+                {otherPending.map((f) => (
+                  <div className="cpw4-filing-other-row" key={f.accession}>
+                    <span className="cpw4-badge cpw4-badge--neutral">{f.form}</span>
+                    <span className="date">{f.filingDate}</span>
+                    <span className="stat stat--pending">요약 대기</span>
+                    <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="cta">원문 보기</a>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <p className="cpw4-disclaimer">EDGAR 공시 원문 · Fenok LLM 한글 요약(자동 생성) · 투자 판단의 참고 자료이며 매수·매도 권유가 아닙니다.</p>
+    </>
+  );
+}
+
+function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummaryFilingEntry[]; heroFiling: EdgarKoreanSummaryFilingEntry | null }) {
+  const sorted = [...filings].sort((a, b) => a.filingDate.localeCompare(b.filingDate));
+  const dates = sorted.map((f) => new Date(f.filingDate).getTime()).filter((t) => Number.isFinite(t));
+  if (dates.length === 0) return null;
+  const minT = Math.min(...dates);
+  const maxT = Math.max(...dates);
+  const span = Math.max(1, maxT - minT);
+  const W = 1200, padX = 90;
+  const xFor = (dateStr: string) => {
+    const t = new Date(dateStr).getTime();
+    if (!Number.isFinite(t)) return padX;
+    return padX + ((t - minT) / span) * (W - padX - 40);
+  };
+  const periodicLaneY = 52, eightKLaneY = 102;
+  const isPeriodic = (form: string) => form === "10-K" || form === "10-Q" || form === "20-F";
+
+  return (
+    <section data-stock-tab-card="filings-timeline">
+      <div className="cpw4-section-head" style={{ marginBottom: 8 }}><h3>공시 캘린더 · {filings.length}건</h3></div>
+      <svg className="cpw4-filing-timeline-svg" viewBox={`0 0 ${W} 150`} preserveAspectRatio="xMidYMid meet">
+        <line x1={padX} y1={periodicLaneY} x2={W - 40} y2={periodicLaneY} stroke="var(--cp-divider)" strokeWidth={1} />
+        <line x1={padX} y1={eightKLaneY} x2={W - 40} y2={eightKLaneY} stroke="var(--cp-divider)" strokeWidth={1} />
+        <text x={4} y={periodicLaneY + 4} fontSize="11.5" fontWeight="700" fill="var(--cp-text-soft)">10-K/Q</text>
+        <text x={4} y={eightKLaneY + 4} fontSize="11.5" fontWeight="700" fill="var(--cp-text-soft)">8-K 등</text>
+        {sorted.map((f) => {
+          const x = xFor(f.filingDate);
+          const y = isPeriodic(f.form) ? periodicLaneY : eightKLaneY;
+          const ready = Boolean(f.summaryPath);
+          const isHero = Boolean(heroFiling && f.accession === heroFiling.accession);
+          const anchor = ready ? (isHero ? "#filing-hero" : `#other-${f.accession}`) : undefined;
+          const dot = (
+            <>
+              <circle cx={x} cy={y} r={isHero ? 8 : 6} fill={ready ? (isPeriodic(f.form) ? "var(--cp-chart-line-2)" : "var(--cp-warning)") : "var(--cp-surface)"}
+                stroke={ready ? "none" : "var(--cp-neutral)"} strokeWidth={ready ? 0 : 1.6} strokeDasharray={ready ? undefined : "2 1.6"}>
+                <title>{`${f.form} · ${f.filingDate} · ${ready ? "요약 완료" : "요약 대기"}`}</title>
+              </circle>
+              {isHero ? <circle cx={x} cy={y} r={11} fill="none" stroke="var(--cp-warning)" strokeWidth={2} opacity={0.6} /> : null}
+            </>
+          );
+          return anchor ? <a href={anchor} key={f.accession}>{dot}</a> : <g key={f.accession}>{dot}</g>;
+        })}
+      </svg>
+      <div className="cpw4-filing-timeline-legend">
+        <span><span className="dot" style={{ background: "var(--cp-chart-line-2)" }} />10-K/10-Q 요약 완료</span>
+        <span><span className="dot" style={{ background: "var(--cp-warning)" }} />8-K 등 요약 완료</span>
+        <span><span className="dot" style={{ border: "1.6px dashed var(--cp-neutral)", background: "transparent" }} />요약 대기</span>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// W4 Fenok Edge — overview 탭 full-width 섹션
+// ---------------------------------------------------------------------------
+
+interface EdgeAxisRow { key: string; label: string; score: number | null; inverted: boolean; group: "short" | "long" }
+
+const EDGE_SHORT_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean }> = [
+  { key: "technicalFlowScore", label: "기술·자금 흐름" },
+  { key: "volumeLiquidityTrendScore", label: "거래량·유동성" },
+  { key: "shortTermRelativeStrengthScore", label: "단기 상대강도" },
+  { key: "netOptionsProxyScore", label: "옵션 활동" },
+  { key: "offExchangeActivityProxyScore", label: "장외거래" },
+  { key: "shortPressureProxyScore", label: "숏압력 완화", inverted: true },
+];
+const EDGE_LONG_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean }> = [
+  { key: "profitabilityScore", label: "수익성" },
+  { key: "growthScore", label: "성장" },
+  { key: "upsidePotentialScore", label: "상승 잠재력" },
+  { key: "downsidePressureScore", label: "하락 압력(안정)", inverted: true },
+  { key: "marketSimilarityScore", label: "동종군 유사성" },
+  { key: "durabilityProfitabilityScore", label: "내구 수익성" },
+];
+
+function buildEdgeAxes(record: FenokSignalsSummaryRecord, config: typeof EDGE_SHORT_AXES, group: "short" | "long"): EdgeAxisRow[] {
+  return config.map((c) => {
+    const raw = record[c.key];
+    const rawScore = isFiniteNumber(raw) ? raw : null;
+    const score = rawScore !== null && c.inverted ? Math.max(0, Math.min(100, 100 - rawScore)) : rawScore;
+    return { key: c.key as string, label: c.label, score, inverted: Boolean(c.inverted), group };
+  });
+}
+
+function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | null | undefined; symbol: string }) {
+  if (!record) return null;
+  const shortAxes = buildEdgeAxes(record, EDGE_SHORT_AXES, "short");
+  const longAxes = buildEdgeAxes(record, EDGE_LONG_AXES, "long");
+  const allAxes = [...shortAxes, ...longAxes];
+  if (!allAxes.some((a) => a.score !== null)) return null;
+
+  const shortScore = isFiniteNumber(record.shortTermConvictionScore) ? record.shortTermConvictionScore
+    : isFiniteNumber(record.shortTermScore) ? record.shortTermScore : null;
+  const longScore = isFiniteNumber(record.longTermConvictionScore) ? record.longTermConvictionScore
+    : isFiniteNumber(record.longTermScore) ? record.longTermScore : null;
+  const compositeScoreRaw = isFiniteNumber(record.convictionScore) ? record.convictionScore
+    : shortScore !== null && longScore !== null ? (shortScore + longScore) / 2
+    : shortScore ?? longScore;
+
+  const round = (v: number | null) => (v === null ? null : Math.round(Math.max(0, Math.min(100, v))));
+  const compositeR = round(compositeScoreRaw);
+  const shortR = round(shortScore);
+  const longR = round(longScore);
+
+  const compositeVerdict = shortR !== null && longR !== null
+    ? (shortR >= longR + 12 ? "단기 신호가 장기 펀더멘털을 앞섭니다" : longR >= shortR + 12 ? "장기 펀더멘털이 단기 신호를 앞섭니다" : "단기 신호와 장기 펀더멘털이 균형을 이룹니다")
+    : "신호 커버리지가 제한적입니다";
+  const compositeTone: "positive" | "warning" | "neutral" = shortR !== null && longR !== null && Math.abs(shortR - longR) >= 12
+    ? (longR > shortR ? "positive" : "warning")
+    : "neutral";
+
+  const rankedAxes = allAxes.filter((a) => a.score !== null).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const best = rankedAxes[0] ?? null;
+  const worst = rankedAxes[rankedAxes.length - 1] ?? null;
+  const asOfLabel = fmtKstMinute(record.asOf);
+  const coverage = record.lensCoverageRatio ?? record.coverageRatio;
+
+  const gaugeR = 90, gaugeCirc = Math.PI * gaugeR;
+  const semiGauge = (score: number | null) => {
+    const clamped = score === null ? 0 : Math.max(0, Math.min(100, score));
+    return { filled: gaugeCirc * (clamped / 100), total: gaugeCirc };
+  };
+  const shortGauge = semiGauge(shortR);
+  const longGauge = semiGauge(longR);
+  const donutR2 = 70, donutCirc2 = 2 * Math.PI * donutR2;
+  const donutOffset2 = compositeR === null ? donutCirc2 : donutCirc2 * (1 - compositeR / 100);
+
+  function renderRadar(axes: EdgeAxisRow[], color: string, label: string) {
+    const cx = 130, cy = 122, maxR = 76;
+    const points = radarPolygonPoints(axes.map((a) => a.score), cx, cy, maxR);
+    return (
+      <svg viewBox="0 0 260 244" role="img" aria-label={`${label} 6축 레이더`}>
+        {[1, 0.75, 0.5, 0.25].map((level) => (
+          <polygon key={level} points={radarPolygonPoints(axes.map(() => 100 * level), cx, cy, maxR)} fill="none" stroke="var(--cp-divider)" strokeWidth={1} opacity={0.55} />
+        ))}
+        {axes.map((_, i) => {
+          const [x, y] = polarPoint(cx, cy, maxR, (360 / axes.length) * i);
+          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--cp-divider)" opacity={0.55} />;
+        })}
+        <polygon points={points} fill={`color-mix(in srgb, ${color} 16%, transparent)`} stroke={color} strokeWidth={2} strokeLinejoin="round" />
+        {axes.map((a, i) => {
+          const r = (maxR * Math.max(0, Math.min(100, a.score ?? 0))) / 100;
+          const [x, y] = polarPoint(cx, cy, r, (360 / axes.length) * i);
+          return <circle key={a.key} cx={x} cy={y} r={3} fill={color} />;
+        })}
+        {axes.map((a, i) => {
+          const [x, y] = polarPoint(cx, cy, maxR + 28, (360 / axes.length) * i);
+          return (
+            <text key={`${a.key}-label`} x={x} y={y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
+              {a.label} {a.score !== null ? Math.round(a.score) : "—"}
+            </text>
+          );
+        })}
+      </svg>
+    );
+  }
+
+  function renderAxisGroup(axes: EdgeAxisRow[], groupClass: "short" | "long", title: string) {
+    return (
+      <div>
+        <div className={`cpw4-edge-axis-group-title cpw4-edge-axis-group-title--${groupClass}`}><span className="dot" />{title}</div>
+        {axes.map((a) => {
+          const tone = axisToneClass(a.score);
+          return (
+            <div className="cpw4-edge-axis-row" key={a.key}>
+              <span className="cpw4-edge-axis-name">{a.label}</span>
+              <span className="cpw4-edge-axis-track"><span className={`cpw4-edge-axis-fill cpw4-edge-axis-fill--${tone}`} style={{ width: `${a.score ?? 0}%` }} /></span>
+              <span className="cpw4-edge-axis-value">{a.score !== null ? Math.round(a.score) : "—"}</span>
+              <span className={`cpw4-edge-axis-tone cpw4-edge-axis-tone--${tone}`}>{axisToneLabel(tone)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <section className="cpw4-edge-section" data-stock-tab-card="fenok-edge-overview">
+      <div className="cpw4-edge-head">
+        <div>
+          <p className="cpw4-hero__eyebrow">FENOK EDGE · 단기·장기 진단</p>
+          <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>{compositeVerdict}</h2>
+          <p className="cpw4-hero__sub">
+            {best ? <>최강 신호는 <b>{best.label}</b>({Math.round(best.score ?? 0)}), </> : null}
+            {worst ? <>최약 신호는 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}
+          </p>
+        </div>
+        <div className="cpw4-edge-head-right">
+          <div className="cpw4-edge-meta-row">
+            {record.confidence ? <span className="cpw4-badge cpw4-badge--positive">신뢰 {record.confidence === "high" ? "높음" : record.confidence === "medium" ? "중간" : "낮음"}</span> : null}
+            {isFiniteNumber(coverage) ? <span className="cpw4-badge cpw4-badge--neutral">커버리지 {formatCoverageRatio(coverage)}</span> : null}
+          </div>
+          <span style={{ fontSize: 11, color: "var(--cp-text-soft)" }}>FENOK 파생 신호 · 매수 권유 아님</span>
+        </div>
+      </div>
+
+      <div className="cpw4-edge-hero-row">
+        <div className="cpw4-edge-score-card cpw4-edge-score-card--composite">
+          <span className="cpw4-edge-score-label">종합 컨빅션</span>
+          <div className="cpw4-edge-gauge-wrap" style={{ width: 176, aspectRatio: "1 / 1" }}>
+            <svg viewBox="0 0 176 176">
+              <circle cx="88" cy="88" r={donutR2} fill="none" stroke="var(--cp-surface-strong)" strokeWidth="16" />
+              <circle cx="88" cy="88" r={donutR2} fill="none" stroke="var(--cp-neutral)" strokeWidth="16" strokeLinecap="round"
+                strokeDasharray={donutCirc2} strokeDashoffset={donutOffset2} transform="rotate(-90 88 88)" />
+            </svg>
+            <div className="cpw4-edge-gauge-value"><strong>{compositeR ?? "—"}</strong><span>/ 100</span></div>
+          </div>
+          <span className={`cpw4-badge cpw4-badge--${compositeTone}`}>{compositeTone === "positive" ? "장기 우세" : compositeTone === "warning" ? "단기 우세" : "균형"}</span>
+          <p className="cpw4-edge-score-read">{compositeVerdict}</p>
+        </div>
+
+        <div className="cpw4-edge-score-card cpw4-edge-score-card--short">
+          <span className="cpw4-edge-score-label">SHORT EDGE · 단기</span>
+          <div className="cpw4-edge-gauge-wrap" style={{ width: 220, aspectRatio: "220 / 132" }}>
+            <svg viewBox="0 0 220 132">
+              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-surface-strong)" strokeWidth="16" strokeLinecap="round" />
+              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-warning)" strokeWidth="16" strokeLinecap="round" strokeDasharray={`${shortGauge.filled} ${shortGauge.total}`} />
+            </svg>
+            <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{shortR ?? "—"}</strong><span>/100</span></div>
+          </div>
+          <p className="cpw4-edge-score-read">단기 6축 평균 신호입니다. {worst && worst.group === "short" ? <>가장 약한 축은 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}</p>
+        </div>
+
+        <div className="cpw4-edge-score-card cpw4-edge-score-card--long">
+          <span className="cpw4-edge-score-label">LONG EDGE · 장기</span>
+          <div className="cpw4-edge-gauge-wrap" style={{ width: 220, aspectRatio: "220 / 132" }}>
+            <svg viewBox="0 0 220 132">
+              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-surface-strong)" strokeWidth="16" strokeLinecap="round" />
+              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-positive)" strokeWidth="16" strokeLinecap="round" strokeDasharray={`${longGauge.filled} ${longGauge.total}`} />
+            </svg>
+            <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{longR ?? "—"}</strong><span>/100</span></div>
+          </div>
+          <p className="cpw4-edge-score-read">장기 6축 평균 신호입니다. {best && best.group === "long" ? <>가장 강한 축은 <b>{best.label}</b>({Math.round(best.score ?? 0)})입니다.</> : null}</p>
+        </div>
+      </div>
+
+      {best || worst ? (
+        <div className="cpw4-edge-signal-strip">
+          {best ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--best"><span className="tag">최강 신호</span><div className="body"><span className="name">{best.label}</span></div><span className="val">{Math.round(best.score ?? 0)}</span></div> : null}
+          {worst ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--worst"><span className="tag">최약 신호</span><div className="body"><span className="name">{worst.label}</span></div><span className="val">{Math.round(worst.score ?? 0)}</span></div> : null}
+        </div>
+      ) : null}
+
+      <div className="cpw4-edge-radar-row">
+        <div className="cpw4-edge-radar-card">
+          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--short">SHORT-TERM 6축</div><div className="cpw4-edge-radar-sub">기술·거래·강도·옵션·장외·숏완화</div></div>
+          <div className="cpw4-edge-radar-svg">{renderRadar(shortAxes, "var(--cp-warning)", "단기")}</div>
+        </div>
+        <div className="cpw4-edge-radar-card">
+          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--long">LONG-TERM 6축</div><div className="cpw4-edge-radar-sub">수익성·성장·상방·하방·동종군·내구</div></div>
+          <div className="cpw4-edge-radar-svg">{renderRadar(longAxes, "var(--cp-positive)", "장기")}</div>
+        </div>
+      </div>
+
+      <div className="cpw4-edge-axis-groups">
+        {renderAxisGroup(shortAxes, "short", "단기 축 (SHORT · 6)")}
+        {renderAxisGroup(longAxes, "long", "장기 축 (LONG · 6)")}
+      </div>
+
+      <div className="cpw4-edge-footnote">
+        <span>FENOK 신호 한눈에 보기 · 매수 권유 아님</span>
+        <span>{asOfLabel ? `기준 ${asOfLabel}` : "기준일 미확인"}{isFiniteNumber(coverage) ? ` · 데이터 커버리지 ${formatCoverageRatio(coverage)}` : ""}</span>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // StockDetailClient main
 // ---------------------------------------------------------------------------
 
@@ -2109,6 +3514,7 @@ export default function StockDetailClient({
         </section>
 
         {activeStockTab === "overview" ? (
+          <>
           <div
             id={stockPanelId(symbol, activeStockTab)}
             role="tabpanel"
@@ -2207,6 +3613,8 @@ export default function StockDetailClient({
               <FinancialSnapshotRail data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
             </aside>
           </div>
+          <FenokEdgeSectionCp record={fenokSignalLens} symbol={symbol} />
+          </>
         ) : (
           <div
             id={stockPanelId(symbol, activeStockTab)}
@@ -2409,23 +3817,11 @@ export default function StockDetailClient({
   // Canvas-plus S1 exemplar: 재무 tab restyled with cp-stock-tab-* card surfaces.
   // Reuses CompactFinancialTable / DividendPanel / FinancialCandidatePanel / RawFinancialDepth
   // and the yf FinancialsTab block verbatim — wrapper-level restyle only.
+  // W4 재무 tab: hero (TTM 매출 + verdict + 매출/영업이익률 콤보 차트) → 스냅샷 타일
+  // → 배당 카드 → 전체 재무제표 아코디언 (CompactFinancialTable/yf/FinancialCandidate/RawDepth).
   function renderFinancialsCpTab() {
     return (
       <div className="cp-stock-tab-financials">
-        {yfAvailable ? (
-          <section className="cp-stock-tab-card" data-stock-tab-card="financials-yf">
-            <header className="cp-stock-tab-card__header">
-              <div>
-                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
-                <h2>재무제표 상세</h2>
-              </div>
-            </header>
-            <div className="cp-stock-tab-card__body">
-              {renderYfTab("financials", yfData, industryBench)}
-            </div>
-          </section>
-        ) : null}
-
         {detailLoading ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
@@ -2433,33 +3829,8 @@ export default function StockDetailClient({
           </div>
         ) : detail ? (
           <>
-            <section className="cp-stock-tab-card" data-stock-tab-card="financial-trend">
-              <header className="cp-stock-tab-card__header">
-                <div>
-                  <p className="cp-stock-rail-eyebrow">Financial Trend</p>
-                  <h2>재무 추이</h2>
-                </div>
-              </header>
-              <div className="cp-stock-tab-card__body">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {([
-                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "var(--c-up)"],
-                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "var(--c-info)"],
-                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "var(--c-recovery)"],
-                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "var(--c-warn)"],
-                  ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
-                    <div key={label}>
-                      <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
-                      <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
-                    </div>
-                  ))}
-                </div>
-                <div className="cp-stock-tab-card__subsection">
-                  <h3 className="cp-stock-tab-card__subheading">실적 추이 · 추정</h3>
-                  <CompactFinancialTable detail={detail} years={years} />
-                </div>
-              </div>
-            </section>
+            <FinancialsHeroCp detail={detail} years={years} currency={displayCurrency} financialCandidate={financialCandidate} profitabilityEstimates={profitabilityEstimates} />
+            <FinancialsTilesCp detail={detail} financialCandidate={financialCandidate} currency={displayCurrency} />
 
             <section className="cp-stock-tab-card" data-stock-tab-card="dividend">
               <div className="cp-stock-tab-card__body cp-stock-tab-card__body--flush">
@@ -2467,17 +3838,33 @@ export default function StockDetailClient({
               </div>
             </section>
 
-            <details className="cp-stock-tab-card cp-stock-tab-card--secondary" data-stock-tab-card="financial-candidate" open>
-              <summary className="cp-stock-tab-card__summary">재무 보강 데이터 (교차검증)</summary>
-              <div className="cp-stock-tab-card__body">
-                <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
-              </div>
-            </details>
-
-            <details className="cp-stock-tab-card cp-stock-tab-card--secondary" data-stock-tab-card="raw-financial-depth" open>
-              <summary className="cp-stock-tab-card__summary">원본 재무 데이터 상세</summary>
-              <div className="cp-stock-tab-card__body">
-                <RawFinancialDepth detail={detail} />
+            <details className="cpw4-accordion" open>
+              <summary>
+                <span>
+                  전체 재무제표 보기
+                  <div className="cpw4-accordion__meta">추정 그리드 · 손익계산서 · 재무상태표 · 현금흐름표 — 실적 + 컨센서스</div>
+                </span>
+                <span className="cpw4-accordion__chev">▸</span>
+              </summary>
+              <div className="cpw4-accordion__body">
+                <div>
+                  <h3 className="cp-stock-tab-card__subheading">실적 추이 · 추정</h3>
+                  <CompactFinancialTable detail={detail} years={years} />
+                </div>
+                {yfAvailable ? (
+                  <div data-stock-tab-card="financials-yf">
+                    <h3 className="cp-stock-tab-card__subheading">Yahoo Finance 재무제표 상세</h3>
+                    {renderYfTab("financials", yfData, industryBench)}
+                  </div>
+                ) : null}
+                <div data-stock-tab-card="financial-candidate">
+                  <h3 className="cp-stock-tab-card__subheading">재무 보강 데이터 (교차검증)</h3>
+                  <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
+                </div>
+                <div data-stock-tab-card="raw-financial-depth">
+                  <h3 className="cp-stock-tab-card__subheading">원본 재무 데이터 상세</h3>
+                  <RawFinancialDepth detail={detail} />
+                </div>
               </div>
             </details>
           </>
@@ -2501,10 +3888,8 @@ export default function StockDetailClient({
     );
   }
 
-  // Canvas-plus S2: 밸류(statistics) tab restyled with cp-stock-tab-* card surfaces.
-  // PER-band chart + band position bars are the tab hero; profitability/growth and
-  // price/dividend history follow. Reuses PerBandChart / MetricWithSpark /
-  // PriceDividendHistoryDepth and the yf StatisticsTab block verbatim.
+  // W4 밸류 tab: hero (PER 8Y 밴드 그라디언트 + 판정 문장) → 리레이팅 타일 → 산업 대비
+  // 델타 칩 → 수익성/성장 FY+1 그리드 + WACC 인사이트 → 가격·배당/전체지표 아코디언.
   function renderStatisticsCpTab() {
     return (
       <div className="cp-stock-tab-financials">
@@ -2515,90 +3900,30 @@ export default function StockDetailClient({
           </div>
         ) : detail ? (
           <>
-            <section className="cp-stock-tab-card" data-stock-tab-card="valuation-band">
-              <header className="cp-stock-tab-card__header">
-                <div>
-                  <p className="cp-stock-rail-eyebrow">Valuation</p>
-                  <h2>PER 밸류에이션</h2>
-                </div>
-              </header>
-              <div className="cp-stock-tab-card__body">
-                <div className="grid gap-5 sm:grid-cols-2">
+            {detailPerBands ? (
+              <ValuationHeroCp detailPerBands={detailPerBands} />
+            ) : finiteValues(detail.valuation?.per).length >= 2 ? (
+              <section className="cp-stock-tab-card" data-stock-tab-card="valuation-band">
+                <header className="cp-stock-tab-card__header">
                   <div>
-                    <h3 className="cp-stock-tab-card__subheading">PER 밴드 (8Y)</h3>
-                    {finiteValues(detail.valuation?.per).length >= 2 ? (
-                      <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
-                    ) : <span className="text-xs text-slate-300">—</span>}
+                    <p className="cp-stock-rail-eyebrow">Valuation</p>
+                    <h2>PER 밸류에이션</h2>
                   </div>
-                  {detailPerBands ? (
-                    <div>
-                      <h3 className="cp-stock-tab-card__subheading">PER 밴드 위치</h3>
-                      <div className="space-y-2">
-                        {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
-                          const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
-                          const pct = Math.min(100, Math.max(0, ((v - detailPerBands.min_8y) / range) * 100));
-                          const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
-                          const textColor = highlight ? "text-slate-900" : "text-slate-500";
-                          return (
-                            <div key={label} className="flex items-center gap-2">
-                              <span className={`w-10 text-right text-[10px] font-semibold ${highlight ? "font-black text-brand-interactive" : "text-slate-500"}`}>{label}</span>
-                              <div className="relative h-3 flex-1 rounded-full bg-slate-100">
-                                <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
-                              </div>
-                              <span className={`w-14 text-xs orbitron tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
+                </header>
+                <div className="cp-stock-tab-card__body">
+                  <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                 </div>
-              </div>
-            </section>
+              </section>
+            ) : null}
 
-            <section className="cp-stock-tab-card" data-stock-tab-card="profitability-growth">
-              <header className="cp-stock-tab-card__header">
-                <div>
-                  <p className="cp-stock-rail-eyebrow">Profitability &amp; Growth</p>
-                  <h2>수익성·성장</h2>
-                </div>
-              </header>
-              <div className="cp-stock-tab-card__body">
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <h3 className="cp-stock-tab-card__subheading">수익성</h3>
-                    <div className="space-y-3">
-                      <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={profitabilityEstimates?.gross_margin} color="var(--c-up)" years={years} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={profitabilityEstimates?.operating_margin} color="var(--c-info)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={profitabilityEstimates?.net_margin} color="var(--c-brand)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={profitabilityEstimates?.roe} color="var(--c-recovery)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="var(--c-info)" years={years} formatValue={fmtWholePct} />
-                    </div>
-                    {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
-                      <p className="mt-2 text-[10px] font-semibold text-slate-500">
-                        다모다란 산업 자본비용 {fmtWholePct(industryBench.cost_of_capital * 100)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div>
-                    <h3 className="cp-stock-tab-card__subheading">성장률 (YoY)</h3>
-                    <div className="space-y-3">
-                      <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} estimates={estimateSeries(detail.growth_estimates?.revenue_growth, 100)} color="var(--c-up)" years={years} formatValue={fmtPct} />
-                      <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} estimates={estimateSeries(detail.growth_estimates?.eps_growth, 100)} color="var(--c-warn)" years={years} formatValue={fmtPct} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <ValuationBodyCp yfData={yfData} industryBench={industryBench} detail={detail} profitabilityEstimates={profitabilityEstimates} currency={displayCurrency} years={years} />
 
-            <section className="cp-stock-tab-card cp-stock-tab-card--secondary" data-stock-tab-card="price-dividend">
-              <header className="cp-stock-tab-card__header">
-                <div>
-                  <p className="cp-stock-rail-eyebrow">Price &amp; Dividend</p>
-                  <h2>가격·수익률·배당</h2>
-                </div>
-              </header>
-              <div className="cp-stock-tab-card__body">
+            <details className="cpw4-accordion" data-stock-tab-card="price-dividend">
+              <summary>
+                <span>가격·수익률·배당 히스토리<div className="cpw4-accordion__meta">SlickCharts 가격/배당 이력</div></span>
+                <span className="cpw4-accordion__chev">▸</span>
+              </summary>
+              <div className="cpw4-accordion__body">
                 {hasSlickChartsTicker ? (
                   <PriceDividendHistoryDepth ticker={symbol} showUnavailable />
                 ) : (
@@ -2607,7 +3932,17 @@ export default function StockDetailClient({
                   </div>
                 )}
               </div>
-            </section>
+            </details>
+
+            <details className="cpw4-accordion" data-stock-tab-card="statistics-yf" open>
+              <summary>
+                <span>밸류 지표 상세 보기 (Yahoo 전체 지표)<div className="cpw4-accordion__meta">밸류에이션 · 수익성 · 재무건전성 · 배당 · 거래·규모</div></span>
+                <span className="cpw4-accordion__chev">▸</span>
+              </summary>
+              <div className="cpw4-accordion__body">
+                {yfAvailable ? renderYfTab("statistics", yfData, industryBench) : <p className="text-sm text-slate-500">Yahoo Finance 데이터가 아직 준비되지 않았습니다.</p>}
+              </div>
+            </details>
           </>
         ) : (
           <section className="cp-stock-tab-card">
@@ -2625,48 +3960,48 @@ export default function StockDetailClient({
             </div>
           </section>
         )}
-
-        {yfAvailable ? (
-          <section className="cp-stock-tab-card" data-stock-tab-card="statistics-yf">
-            <header className="cp-stock-tab-card__header">
-              <div>
-                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
-                <h2>밸류 지표 상세</h2>
-              </div>
-            </header>
-            <div className="cp-stock-tab-card__body">
-              {renderYfTab("statistics", yfData, industryBench)}
-            </div>
-          </section>
-        ) : null}
       </div>
     );
   }
 
-  // Canvas-plus S2: 추정치(estimates) tab restyled with cp-stock-tab-* card surfaces.
-  // Reuses StockEstimatesPanel (variant="canvasPlus" drops its own SectionCard box,
-  // content/data-stock-* attrs unchanged) and the yf EstimatesTab block verbatim.
-  // The 분기 추정치 연결 대기 deferred panel + data-stock-estimate-disclosure survive as-is.
+  // W4 추정치 tab: hero (목표가 여력 + EPS FY0→FY+3 컨센서스 바) → 목표가 범위 밴드
+  // → FY+1 성장 타일 → 추천 분포 → 연간/분기 상세 아코디언.
   function renderEstimatesCpTab() {
     return (
       <div className="cp-stock-tab-financials">
-        {detailLoading ? (
+        {detailLoading || yfData === undefined ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />
           </div>
-        ) : detail ? (
-          <section className="cp-stock-tab-card" data-stock-tab-card="estimates-consensus">
-            <header className="cp-stock-tab-card__header">
-              <div>
-                <p className="cp-stock-rail-eyebrow">Estimates</p>
-                <h2>추정치 변화</h2>
+        ) : detail || yfAvailable ? (
+          <>
+            {detail ? <EstimatesHeroCp yfData={yfData} detail={detail} currency={displayCurrency} /> : null}
+            {yfAvailable ? <EstimatesBandCp yfData={yfData} currency={displayCurrency} /> : null}
+            {detail ? <EstimatesGrowthTilesCp detail={detail} currency={displayCurrency} /> : null}
+            {yfAvailable ? <EstimatesRecoCp yfData={yfData} /> : null}
+
+            <details className="cpw4-accordion" data-stock-tab-card="estimates-yf">
+              <summary>
+                <span>연간·분기 추정 상세 보기<div className="cpw4-accordion__meta">FY-4~FY+3 실적/추정 그리드 · 애널리스트 EPS·매출 추정 상세</div></span>
+                <span className="cpw4-accordion__chev">▸</span>
+              </summary>
+              <div className="cpw4-accordion__body">
+                {detail ? (
+                  <div data-stock-tab-card="estimates-consensus">
+                    <h3 className="cp-stock-tab-card__subheading">추정치 변화</h3>
+                    <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} variant="canvasPlus" />
+                  </div>
+                ) : null}
+                {yfAvailable ? (
+                  <div>
+                    <h3 className="cp-stock-tab-card__subheading">Yahoo Finance 애널리스트 추정치 상세</h3>
+                    {renderYfTab("estimates", yfData, industryBench)}
+                  </div>
+                ) : null}
               </div>
-            </header>
-            <div className="cp-stock-tab-card__body">
-              <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} variant="canvasPlus" />
-            </div>
-          </section>
+            </details>
+          </>
         ) : (
           <section className="cp-stock-tab-card">
             <div className="cp-stock-tab-card__body">
@@ -2683,32 +4018,13 @@ export default function StockDetailClient({
             </div>
           </section>
         )}
-
-        {yfAvailable ? (
-          <section className="cp-stock-tab-card" data-stock-tab-card="estimates-yf">
-            <header className="cp-stock-tab-card__header">
-              <div>
-                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
-                <h2>애널리스트 추정치 상세</h2>
-              </div>
-            </header>
-            <div className="cp-stock-tab-card__body">
-              {renderYfTab("estimates", yfData, industryBench)}
-            </div>
-          </section>
-        ) : null}
       </div>
     );
   }
 
-  // Canvas-plus S3: 보유기관(ownership) tab restyled with cp-stock-tab-* card surfaces.
-  // Reuses GuruSection (13F table; internal markup + 45-day-lag disclosure line
-  // untouched) — holder count surfaces as a header stat on the wrapping cp card.
-  // yf OwnershipTab block wrapped in its own cp card, verbatim.
+  // W4 보유기관 tab: hero (13F 매수/매도 흐름 대칭 바 + 청산 콜아웃 + Top Guru 표)
+  // → 기관 보유 요약 도넛 → Yahoo 상세 아코디언.
   function renderOwnershipCpTab() {
-    const holderCount = f13Entries
-      ? new Set(f13Entries.map((e) => e.investor).filter((investor) => typeof investor === "string" && investor.trim() !== "")).size
-      : 0;
     return (
       <div className="cp-stock-tab-financials">
         {detailLoading ? (
@@ -2717,23 +4033,21 @@ export default function StockDetailClient({
             <SkeletonSection />
           </div>
         ) : detail ? (
-          <section className="cp-stock-tab-card" data-stock-tab-card="ownership-guru" id="guru-section">
-            <header className="cp-stock-tab-card__header">
-              <div>
-                <p className="cp-stock-rail-eyebrow">13F Guru</p>
-                <h2>보유기관</h2>
-              </div>
-              {holderCount > 0 ? (
-                <div className="cp-stock-tab-card__stat">
-                  <strong>{holderCount}</strong>
-                  <em>보유 투자자</em>
+          <>
+            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} currency={displayCurrency} />
+
+            {yfAvailable ? (
+              <details className="cpw4-accordion" data-stock-tab-card="ownership-yf">
+                <summary>
+                  <span>기관 보유 상세 보기 (Yahoo Finance)<div className="cpw4-accordion__meta">기관 보유 TOP 10 · 지분율·주식수·증감</div></span>
+                  <span className="cpw4-accordion__chev">▸</span>
+                </summary>
+                <div className="cpw4-accordion__body">
+                  {renderYfTab("ownership", yfData, industryBench)}
                 </div>
-              ) : null}
-            </header>
-            <div className="cp-stock-tab-card__body cp-stock-tab-card__body--flush">
-              <GuruSection f13Entries={f13Entries} ticker={symbol} />
-            </div>
-          </section>
+              </details>
+            ) : null}
+          </>
         ) : (
           <section className="cp-stock-tab-card">
             <div className="cp-stock-tab-card__body">
@@ -2750,32 +4064,16 @@ export default function StockDetailClient({
             </div>
           </section>
         )}
-
-        {yfAvailable ? (
-          <section className="cp-stock-tab-card" data-stock-tab-card="ownership-yf">
-            <header className="cp-stock-tab-card__header">
-              <div>
-                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
-                <h2>기관 보유 상세</h2>
-              </div>
-            </header>
-            <div className="cp-stock-tab-card__body">
-              {renderYfTab("ownership", yfData, industryBench)}
-            </div>
-          </section>
-        ) : null}
       </div>
     );
   }
 
-  // Canvas-plus S3: 공시(filings) tab — minimal cp body wrapper around EdgarSummaryClient.
-  // EdgarSummaryClient owns its own panel/panel-b styling internally (own fetch +
-  // internal sections); this pass only routes it through the cp-stock-tab-financials
-  // grid so hero/nav/background match the other cp tabs. No internal rewrite.
+  // W4 공시 tab: hero (요약완료율 게이지 + 최중요 최근 공시 인사이트 카드) → 공시 피드
+  // → 공시 캘린더 타임라인 → 나머지 공시 목록. edgarKoreanSummaries lib 직접 소비.
   function renderFilingsCpTab() {
     return (
       <div className="cp-stock-tab-financials" data-stock-tab-card="filings">
-        <EdgarSummaryClient ticker={symbol} embedded />
+        <FilingsHeroFeedCp ticker={symbol} />
       </div>
     );
   }
