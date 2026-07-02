@@ -267,9 +267,9 @@ function legacyHtmlClassification(legacyHtml) {
     if (publicPath === "/llm-guide.html") {
       return {
         ...baseItem,
-        class: "llm_site_guide_stale_high_risk",
+        class: "llm_site_guide_current_facts_preserve",
         route: "/",
-        reason: "machine-readable LLM site guide hardcodes retired GitHub Pages hosting and old main.html map; retire or replace with current facts",
+        reason: "machine-readable LLM site guide has been replaced with current DEC-256/Next.js route facts; preserve at root unless owner-approved redirect/delete supersedes it",
       };
     }
     if (
@@ -594,11 +594,11 @@ function ownerFamilyForHighRisk(row) {
   }
   if (pathName === "/llm-guide.html") {
     return family({
-      id: "llm_site_guide_stale",
+      id: "llm_site_guide_current_facts",
       owner_route: "/",
       owner_area: "site_metadata",
-      pro_route_ia_acceptance: "stale machine-readable site guide must not be treated as Workbench content; retire or replace only after current-facts owner review",
-      first_action: "prepare retire-or-replace candidate record for the stale LLM guide; do not route through Workbench as a cleanup shortcut",
+      pro_route_ia_acceptance: "DEC-256 replace satisfied the current-facts owner review; future redirect/delete still requires owner and deploy approval",
+      first_action: "preserve the current-facts LLM guide at /llm-guide.html; re-verify route facts before any future replacement",
     });
   }
   if (pathName === "/tools/asset/multichart.html") {
@@ -724,7 +724,7 @@ function ownerReviewPriority(family) {
     ["ib_legacy_tools", [90, "legacy IB tools need /ib owner comparison before proposal"]],
     ["vr_legacy_tools", [100, "legacy VR tools need /vr owner comparison before proposal"]],
     ["multichart_legacy_tool", [110, "legacy multichart asset needs macro/multichart owner decision"]],
-    ["llm_site_guide_stale", [120, "stale machine-readable LLM site guide must be retired or replaced with current facts, not routed through Workbench"]],
+    ["llm_site_guide_current_facts", [120, "current-facts machine-readable LLM site guide stays rooted at /llm-guide.html unless owner-approved redirect/delete supersedes it"]],
     ["admin_data_lab_legacy", [130, "single admin data-lab legacy row with exact owner route"]],
     ["admin_ib_helper_legacy", [140, "admin helper catch-all route requires admin owner confirmation"]],
     ["admin_personal_legacy", [150, "personal admin content must stay outside product IA"]],
