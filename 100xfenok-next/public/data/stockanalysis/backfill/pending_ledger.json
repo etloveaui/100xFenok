@@ -2,54 +2,21 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-02T01:57:36Z",
+  "generated_at": "2026-07-02T23:47:45Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "skip ETF detail candidates after consecutive expected-missing failures until next_attempt_after_utc"
   },
   "counts": {
-    "tracked": 121,
-    "cooldown": 74,
-    "updated": 23,
-    "cleared": 10
+    "tracked": 120,
+    "cooldown": 73,
+    "updated": 0,
+    "cleared": 1
   },
-  "updated": [
-    "ACHX",
-    "ARMA",
-    "ASMZ",
-    "AVGC",
-    "BEC",
-    "CIFC",
-    "DISK",
-    "ECHX",
-    "EO",
-    "GMEC",
-    "GOLI",
-    "IONC",
-    "IOSX",
-    "LAZR",
-    "ORAC",
-    "RANK",
-    "RKX",
-    "UGLD",
-    "USLV",
-    "UXRP",
-    "XQTM",
-    "YCLO",
-    "ZINC"
-  ],
+  "updated": [],
   "cleared": [
-    "MNSX",
-    "MSIX",
-    "MTSG",
-    "ONTX",
-    "RMBC",
-    "SIMX",
-    "SMTG",
-    "SPCF",
-    "TPLX",
-    "UMCX"
+    "ZINC"
   ],
   "entries": {
     "AAAD": {
@@ -1125,15 +1092,6 @@
     },
     "YCLO": {
       "ticker": "YCLO",
-      "last_attempt_utc": "2026-07-02T01:57:36Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-09T01:57:36Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "ZINC": {
-      "ticker": "ZINC",
       "last_attempt_utc": "2026-07-02T01:57:36Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "consecutive_failures": 4,
