@@ -37,13 +37,22 @@ export function buildMonaVnextSessionBankSeed(args: {
   return normalizeSeed(`${args.startedAt.toISOString().slice(0, 10)}:${args.conversationId}`);
 }
 
+export function listMonaVnextGeneratedExpressionEntries(): MonaVnextExpression[] {
+  return artifact.entries.map((entry) => ({ ...entry, state: "prompt" }));
+}
+
 export function buildMonaVnextSessionExpressionBank(args: {
   seed: string;
   count?: number;
+  entries?: MonaVnextExpression[];
+  metadata?: Partial<MonaVnextSessionExpressionBank["metadata"]>;
 }): MonaVnextSessionExpressionBank {
   const seed = normalizeSeed(args.seed);
-  const count = Math.max(1, Math.min(args.count ?? MONA_VNEXT_SESSION_EXPRESSION_COUNT, artifact.entries.length));
-  const entries = artifact.entries
+  const sourceEntries = args.entries ?? artifact.entries;
+  const count = sourceEntries.length === 0
+    ? 0
+    : Math.max(1, Math.min(args.count ?? MONA_VNEXT_SESSION_EXPRESSION_COUNT, sourceEntries.length));
+  const entries = sourceEntries
     .map((entry) => ({
       entry,
       score: hash32(`${seed}:${entry.id}`),
@@ -57,10 +66,11 @@ export function buildMonaVnextSessionExpressionBank(args: {
       source: artifact.source,
       updatedAt: artifact.updatedAt,
       sourceEntryCount: artifact.sourceEntryCount,
-      eligibleEntryCount: artifact.eligibleEntryCount,
+      eligibleEntryCount: sourceEntries.length,
       selectedCount: entries.length,
       seed,
       strategy: MONA_VNEXT_SESSION_BANK_STRATEGY,
+      ...args.metadata,
     },
     entries,
   };

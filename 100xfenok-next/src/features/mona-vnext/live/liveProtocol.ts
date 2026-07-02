@@ -19,6 +19,7 @@ export type MonaVnextLiveStatus =
 export type MonaVnextSessionResponse = {
   sessionId: string;
   conversationId: string;
+  resumedFromConversationId?: string;
   status: "LIVE_TOKEN_READY";
   startedAt: string;
   adapter: "gemini-live-ephemeral-vnext";

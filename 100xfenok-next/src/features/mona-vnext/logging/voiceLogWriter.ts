@@ -22,6 +22,11 @@ function safeSegment(value: unknown, fallback: string) {
   return sanitized || fallback;
 }
 
+function optionalSafeSegment(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  return safeSegment(value, "");
+}
+
 function normalizeIso(value: unknown) {
   if (typeof value !== "string") return null;
   const time = Date.parse(value);
@@ -110,6 +115,7 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
   const now = new Date().toISOString();
   const conversationId = safeSegment(args.conversationId, `mona-vnext-${Date.now().toString(36)}`);
   const sessionId = safeSegment(args.sessionId, conversationId);
+  const resumedFromConversationId = optionalSafeSegment(args.resumedFromConversationId);
   const startedAt = normalizeIso(args.startedAt) ?? now;
   const final = args.final === true;
   const relPath = path.join(LOG_DIR, `${startedAt.slice(0, 10)}_mona-vnext_${conversationId}.json`);
@@ -124,6 +130,7 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
       tester: "owner",
       sessionId,
       conversationId,
+      ...(resumedFromConversationId ? { resumedFromConversationId } : {}),
       startedAt,
       savedAt: now,
       stoppedAt: null,
@@ -170,6 +177,7 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
       tester: "owner",
       sessionId,
       conversationId,
+      resumedFromConversationId: resumedFromConversationId ?? doc.resumedFromConversationId,
       startedAt: doc.startedAt || startedAt,
       savedAt: now,
       stoppedAt: final ? (normalizeIso(args.stoppedAt) ?? now) : doc.stoppedAt,

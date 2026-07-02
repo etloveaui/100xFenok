@@ -4,7 +4,9 @@ import type { MONA_VNEXT_GEMINI_MODELS, MonaVnextGeminiModel } from "@/features/
 import type { MonaVnextLiveStatus, MonaVnextSessionResponse } from "@/features/mona-vnext/live/liveProtocol";
 import type { MonaVnextSessionMetrics } from "@/features/mona-vnext/live/useGeminiLiveSession";
 import type { MonaVnextLogEvent } from "@/features/mona-vnext/logging/voiceLogSchema";
+import type { MonaVnextCorrectionCandidate } from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextNamespacePolicy } from "@/features/mona-vnext/memory/monaVnextNamespace";
+import type { StudyMode } from "@/features/mona-vnext/teacher/teacherSession";
 import type { MonaVnextTranscriptState } from "@/features/mona-vnext/transcript/transcriptStore";
 import { ExpressionCard } from "@/features/mona-vnext/ui/ExpressionCard";
 import { SessionControls } from "@/features/mona-vnext/ui/SessionControls";
@@ -33,8 +35,16 @@ type Props = {
   modeLabel: string;
   activeExperimentalFeatures: string[];
   answerVerdict: MonaVnextAnswerVerdict | null;
+  resumeOffer: { fromConversationId: string } | null;
+  studyModeControls?: {
+    mode: StudyMode;
+    options: Array<{ mode: StudyMode; label: string }>;
+    onChange: (mode: StudyMode) => void;
+  } | null;
+  correctionCandidates?: MonaVnextCorrectionCandidate[];
   onStart: () => void;
   onStop: () => void;
+  onResume: () => void;
   onSendStart: () => void;
   onRevealAnswer: () => void;
   onNext: () => void;
@@ -69,8 +79,12 @@ export function WindDownVnextShell({
   modeLabel,
   activeExperimentalFeatures,
   answerVerdict,
+  resumeOffer,
+  studyModeControls = null,
+  correctionCandidates = [],
   onStart,
   onStop,
+  onResume,
   onSendStart,
   onRevealAnswer,
   onNext,
@@ -102,6 +116,26 @@ export function WindDownVnextShell({
         </header>
 
         <div className="flex flex-1 flex-col justify-center gap-4 py-6">
+          {resumeOffer ? (
+            <section className="rounded-lg border border-[#8a7ab8] bg-[#f0ecff] p-4 text-sm leading-6 text-[#4f3d78]">
+              <p className="font-semibold">연결이 끊겼어. 아까 하던 문장 이어서 할게.</p>
+              <p className="mt-1 font-mono text-[11px] text-[#6d5d8f]">{resumeOffer.fromConversationId}</p>
+              <button
+                type="button"
+                onClick={onResume}
+                className="mt-3 min-h-10 rounded-md border border-[#6d5d8f] bg-[#6d5d8f] px-4 text-[13px] font-semibold text-white transition active:scale-[0.99]"
+              >
+                이어서 하기
+              </button>
+            </section>
+          ) : null}
+
+          {metrics.micDead ? (
+            <section className="rounded-lg border border-[#d06a6a] bg-[#fff1f1] p-4 text-sm font-semibold leading-6 text-[#9b3d3d]">
+              마이크가 안 들려. 입력 장치나 권한을 확인해줘.
+            </section>
+          ) : null}
+
           <ExpressionCard
             ko={lessonState.expression.ko}
             en={lessonState.englishVisible ? lessonState.expression.en : "English hidden"}
@@ -169,6 +203,25 @@ export function WindDownVnextShell({
                 </button>
               ))}
             </div>
+            {studyModeControls ? (
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {studyModeControls.options.map((option) => (
+                  <button
+                    key={option.mode}
+                    type="button"
+                    onClick={() => studyModeControls.onChange(option.mode)}
+                    className={[
+                      "min-h-10 rounded-md border px-3 text-[12px] font-semibold transition active:scale-[0.99]",
+                      studyModeControls.mode === option.mode
+                        ? "border-[#2f7d66] bg-[#e7f5ef] text-[#225c4c]"
+                        : "border-[#dfd4c4] bg-white text-[#5f5867] hover:border-[#a9cabb]",
+                    ].join(" ")}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <p className="mt-3 text-[13px]">{promptPolicy.reject[0]}</p>
             {session ? (
               <p className="mt-2 text-[12px] text-[#857b8d]">
@@ -176,6 +229,22 @@ export function WindDownVnextShell({
               </p>
             ) : null}
           </section>
+
+          {studyModeControls ? (
+            <section className="rounded-lg border border-[#dfd4c4] bg-white/65 p-4">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">오늘의 교정</p>
+              <div className="mt-3 space-y-3 text-sm leading-6">
+                {correctionCandidates.length === 0 ? (
+                  <p className="text-[#7d7484]">아직 후보가 없습니다.</p>
+                ) : correctionCandidates.slice(0, 5).map((candidate) => (
+                  <div key={`${candidate.sessionId}-${candidate.atIso}-${candidate.expressionId}`} className="border-t border-[#eadfce] pt-3 first:border-t-0 first:pt-0">
+                    <p className="font-semibold text-[#2f2b33]">{candidate.learnerText}</p>
+                    <p className="mt-1 text-[#2f7d66]">{candidate.suggestion}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="rounded-lg border border-[#dfd4c4] bg-white/65 p-4">
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">turn log</p>

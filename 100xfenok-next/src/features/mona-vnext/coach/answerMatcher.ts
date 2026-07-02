@@ -1,4 +1,4 @@
-export type MonaVnextAnswerMatchTier = "garbage" | "canonical" | "close" | "miss";
+export type MonaVnextAnswerMatchTier = "garbage" | "canonical" | "variant" | "close" | "miss";
 
 export type MonaVnextAnswerMatch = {
   tier: MonaVnextAnswerMatchTier;
@@ -73,6 +73,7 @@ function hasLikelyGarbageShape(rawUser: string, normalizedUser: string) {
 export function evaluateMonaVnextAnswerAttempt(
   userText: string | null | undefined,
   targetText: string,
+  acceptedVariants: string[] = [],
 ): MonaVnextAnswerMatch {
   const rawUser = (userText ?? "").trim();
   const normalizedUser = normalizeAnswerText(rawUser);
@@ -105,6 +106,19 @@ export function evaluateMonaVnextAnswerAttempt(
       tier: "canonical",
       confidence: 1,
       reason: "exact-normalized-match",
+      normalizedUser,
+      normalizedTarget,
+    };
+  }
+
+  const normalizedVariants = acceptedVariants
+    .map((variant) => normalizeAnswerText(variant))
+    .filter(Boolean);
+  if (normalizedVariants.includes(normalizedUser)) {
+    return {
+      tier: "variant",
+      confidence: 1,
+      reason: "accepted-variant-match",
       normalizedUser,
       normalizedTarget,
     };

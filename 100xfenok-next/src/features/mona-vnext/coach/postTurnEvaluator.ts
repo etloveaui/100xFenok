@@ -63,7 +63,11 @@ export function evaluateMonaVnextTurn(
   const stopRequested = turn.intent === "stop";
   const lessonAttempt = turn.intent === "lesson_attempt";
   const answerMatch = options.answerMatcherEnabled && lessonAttempt
-    ? evaluateMonaVnextAnswerAttempt(turn.userText, lessonState.expression.en)
+    ? evaluateMonaVnextAnswerAttempt(
+      turn.userText,
+      lessonState.expression.en,
+      lessonState.expression.acceptedVariants ?? [],
+    )
     : null;
   const garbageAnswerDetected = answerMatch?.tier === "garbage";
   const canonicalAnswerDetected = answerMatch?.tier === "canonical";

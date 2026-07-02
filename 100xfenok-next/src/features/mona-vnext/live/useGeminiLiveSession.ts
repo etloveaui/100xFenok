@@ -27,6 +27,7 @@ export type MonaVnextSessionMetrics = {
   audioFramesSent: number;
   lastAudioRms: number | null;
   lastAudioPeak: number | null;
+  micDead: boolean;
   inputSampleRate: number | null;
   turnCount: number;
   interruptionCount: number;
@@ -47,7 +48,9 @@ export type MonaVnextSessionSettings = {
 type Options = {
   settings: MonaVnextSessionSettings;
   clientBuildVersion: string;
+  enableResumePrewarm?: boolean;
   onSessionReady?: (session: MonaVnextSessionResponse) => void;
+  onSessionResumed?: (session: MonaVnextSessionResponse) => void;
   onServerContent?: (content: MonaVnextServerContent) => void;
   onEvent?: (event: { type: string; message: string; atIso: string; detail?: Record<string, unknown> }) => void;
   onRecoverFailed?: (reason: string) => void;
@@ -64,6 +67,7 @@ const EMPTY_METRICS: MonaVnextSessionMetrics = {
   audioFramesSent: 0,
   lastAudioRms: null,
   lastAudioPeak: null,
+  micDead: false,
   inputSampleRate: null,
   turnCount: 0,
   interruptionCount: 0,
@@ -92,6 +96,17 @@ function nowIso() {
 const GO_AWAY_RECONNECT_MARGIN_MS = 1500;
 const GO_AWAY_RECONNECT_MAX_DELAY_MS = 15000;
 const MAX_RESUME_ATTEMPTS = 3;
+const MIC_DEAD_DETECTION_MS = 5000;
+const MIC_DEAD_RMS_THRESHOLD = 0.0001;
+
+type StartOptions = {
+  resumedFromConversationId?: string | null;
+};
+
+type OpenSocketOptions = {
+  reconnect?: boolean;
+  prewarmedFreshStart?: boolean;
+};
 
 function parseFiniteNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -136,7 +151,9 @@ function buildResumeSetup(setup: Record<string, unknown>, handle: string) {
 export function useGeminiLiveSession({
   settings,
   clientBuildVersion,
+  enableResumePrewarm = false,
   onSessionReady,
+  onSessionResumed,
   onServerContent,
   onEvent,
   onRecoverFailed,
@@ -157,9 +174,13 @@ export function useGeminiLiveSession({
   const reconnectingRef = useRef(false);
   const reconnectStartedMsRef = useRef<number | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const micDeadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resumeAttemptCountRef = useRef(0);
   const expectedCloseSocketsRef = useRef<WeakSet<WebSocket>>(new WeakSet());
   const pendingReplacedSocketRef = useRef<WebSocket | null>(null);
+  const prewarmedResumeSessionRef = useRef<MonaVnextSessionResponse | null>(null);
+  const prewarmResumePromiseRef = useRef<Promise<MonaVnextSessionResponse | null> | null>(null);
+  const audioActivitySeenRef = useRef(false);
   const resumeSocketRef = useRef<(handle: string) => void>(() => undefined);
 
   const emitEvent = useCallback((type: string, message: string, detail?: Record<string, unknown>) => {
@@ -177,6 +198,12 @@ export function useGeminiLiveSession({
     if (!reconnectTimerRef.current) return;
     clearTimeout(reconnectTimerRef.current);
     reconnectTimerRef.current = null;
+  }, []);
+
+  const clearMicDeadTimer = useCallback(() => {
+    if (!micDeadTimerRef.current) return;
+    clearTimeout(micDeadTimerRef.current);
+    micDeadTimerRef.current = null;
   }, []);
 
   const closeExpectedSocket = useCallback((socket: WebSocket | null, reason: string) => {
@@ -203,9 +230,58 @@ export function useGeminiLiveSession({
     onRecoverFailed?.(message);
   }, [clearReconnectTimer, emitEvent, onRecoverFailed]);
 
+  const prewarmResumeSession = useCallback((reason: string) => {
+    if (!enableResumePrewarm) return;
+    const liveSession = activeSessionRef.current;
+    if (!liveSession || prewarmResumePromiseRef.current || prewarmedResumeSessionRef.current) return;
+    const startedMs = performance.now();
+    emitEvent("resume-prewarm-start", "Pre-warming next Gemini Live token for resume.", {
+      reason,
+      resumedFromConversationId: liveSession.conversationId,
+    });
+    prewarmResumePromiseRef.current = fetch("/api/mona-vnext/session/", {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        ...settings,
+        clientBuildVersion,
+        resumedFromConversationId: liveSession.conversationId,
+      }),
+    }).then(async (response) => {
+      const tokenMintMs = Math.round(performance.now() - startedMs);
+      emitEvent("token_mint_ms", "Resume token mint measured.", {
+        durationMs: tokenMintMs,
+        resume: true,
+        prewarm: true,
+        reason,
+      });
+      const payload = (await response.json().catch(() => null)) as unknown;
+      if (!response.ok || !isSessionResponse(payload)) return null;
+      prewarmedResumeSessionRef.current = payload;
+      emitEvent("resume-prewarm-ready", "Pre-warmed Gemini Live token ready.", {
+        resumedFromConversationId: payload.resumedFromConversationId ?? liveSession.conversationId,
+        conversationId: payload.conversationId,
+        tokenMintMs,
+      });
+      return payload;
+    }).catch((error: unknown) => {
+      emitEvent("resume-prewarm-failed", error instanceof Error ? error.message : "RESUME_PREWARM_FAILED", {
+        reason,
+      });
+      return null;
+    }).finally(() => {
+      prewarmResumePromiseRef.current = null;
+    });
+  }, [clientBuildVersion, emitEvent, enableResumePrewarm, settings]);
+
   const stop = useCallback((finalStatus: MonaVnextLiveStatus = "stopped") => {
     setStatus("stopping");
     clearReconnectTimer();
+    clearMicDeadTimer();
     socketGenerationRef.current += 1;
     reconnectingRef.current = false;
     reconnectStartedMsRef.current = null;
@@ -223,12 +299,17 @@ export function useGeminiLiveSession({
     audioOutput.stop();
     activeSessionRef.current = null;
     latestResumeHandleRef.current = null;
+    prewarmedResumeSessionRef.current = null;
+    prewarmResumePromiseRef.current = null;
+    audioActivitySeenRef.current = false;
     audioStreamEndSentRef.current = false;
     dropAudioUntilTurnCompleteRef.current = false;
     setStatus(finalStatus);
-  }, [audioInput, audioOutput, clearReconnectTimer, closeExpectedSocket, sendAudioStreamEnd]);
+  }, [audioInput, audioOutput, clearMicDeadTimer, clearReconnectTimer, closeExpectedSocket, sendAudioStreamEnd]);
 
   const beginAudioInput = useCallback(async (socket: WebSocket) => {
+    audioActivitySeenRef.current = false;
+    clearMicDeadTimer();
     await audioInput.start({
       socket,
       onFrameSent: () => {
@@ -238,10 +319,14 @@ export function useGeminiLiveSession({
         }));
       },
       onAudioStats: (stats) => {
+        if (stats.rms > MIC_DEAD_RMS_THRESHOLD || stats.peak > MIC_DEAD_RMS_THRESHOLD) {
+          audioActivitySeenRef.current = true;
+        }
         setMetrics((current) => ({
           ...current,
           lastAudioRms: stats.rms,
           lastAudioPeak: stats.peak,
+          micDead: current.micDead && !audioActivitySeenRef.current,
           inputSampleRate: stats.inputSampleRate,
         }));
       },
@@ -249,7 +334,16 @@ export function useGeminiLiveSession({
         setMetrics((current) => ({ ...current, micPermission }));
       },
     });
-  }, [audioInput]);
+    micDeadTimerRef.current = setTimeout(() => {
+      micDeadTimerRef.current = null;
+      if (audioActivitySeenRef.current) return;
+      setMetrics((current) => ({ ...current, micDead: true }));
+      emitEvent("mic-dead", "마이크가 안 들려. 입력 레벨이 0으로 유지됐어.", {
+        micDead: true,
+        detectionMs: MIC_DEAD_DETECTION_MS,
+      });
+    }, MIC_DEAD_DETECTION_MS);
+  }, [audioInput, clearMicDeadTimer, emitEvent]);
 
   const scheduleReconnect = useCallback((goAway: MonaVnextServerMessage["goAway"]) => {
     const handle = latestResumeHandleRef.current;
@@ -271,11 +365,14 @@ export function useGeminiLiveSession({
       delayMs,
       handleLength: handle.length,
     });
+    if (enableResumePrewarm) {
+      prewarmResumeSession("go-away");
+    }
     reconnectTimerRef.current = setTimeout(() => {
       reconnectTimerRef.current = null;
       resumeSocketRef.current(handle);
     }, delayMs);
-  }, [emitEvent, failRecovery]);
+  }, [emitEvent, enableResumePrewarm, failRecovery, prewarmResumeSession]);
 
   const handleServerMessage = useCallback((
     payload: MonaVnextServerMessage,
@@ -320,6 +417,10 @@ export function useGeminiLiveSession({
         wasReconnecting ? "Gemini Live setup complete after resume." : "Gemini Live setup complete.",
         wasReconnecting ? { reconnectMs } : undefined,
       );
+      emitEvent("setup_complete_ms", "Gemini Live setup-complete latency measured.", {
+        durationMs: wasReconnecting ? reconnectMs : setupDoneMs,
+        resume: wasReconnecting,
+      });
       void beginAudioInput(socket).then(() => {
         const replacedSocket = pendingReplacedSocketRef.current;
         pendingReplacedSocketRef.current = null;
@@ -373,6 +474,10 @@ export function useGeminiLiveSession({
       firstResponseSeenRef.current = true;
       const firstResponseMs = startMsRef.current ? Math.round(performance.now() - startMsRef.current) : null;
       setMetrics((current) => ({ ...current, firstResponseMs }));
+      emitEvent("first_model_audio_ms", "First model audio latency measured.", {
+        durationMs: firstResponseMs,
+        resume: reconnectingRef.current,
+      });
     }
 
     if (serverContent.turnComplete) {
@@ -389,7 +494,7 @@ export function useGeminiLiveSession({
   const openSocket = useCallback((
     liveSession: MonaVnextSessionResponse,
     setup: Record<string, unknown>,
-    options: { reconnect?: boolean } = {},
+    options: OpenSocketOptions = {},
   ) => {
     const socket = new WebSocket(buildMonaVnextWebSocketUrl(liveSession.websocketEndpoint, liveSession.token));
     socket.binaryType = "arraybuffer";
@@ -402,6 +507,13 @@ export function useGeminiLiveSession({
       if (generation !== socketGenerationRef.current || socket !== socketRef.current) return;
       const socketOpenMs = startMsRef.current ? Math.round(performance.now() - startMsRef.current) : null;
       setMetrics((current) => ({ ...current, socketOpenMs }));
+      emitEvent("ws_connect_ms", "Gemini Live websocket connect latency measured.", {
+        durationMs: options.reconnect && reconnectStartedMsRef.current
+          ? Math.round(performance.now() - reconnectStartedMsRef.current)
+          : socketOpenMs,
+        resume: options.reconnect === true,
+        prewarmedFreshStart: options.prewarmedFreshStart === true,
+      });
       try {
         socket.send(JSON.stringify({ setup }));
       } catch (error) {
@@ -418,7 +530,7 @@ export function useGeminiLiveSession({
       emitEvent(
         options.reconnect ? "socket-reopen" : "socket-open",
         options.reconnect ? "Gemini Live resume socket opened; setup sent." : "Gemini Live socket opened; setup sent.",
-        options.reconnect ? { generation } : undefined,
+        options.reconnect ? { generation, prewarmedFreshStart: options.prewarmedFreshStart === true } : undefined,
       );
     };
 
@@ -494,7 +606,8 @@ export function useGeminiLiveSession({
   }, [audioInput, audioOutput, emitEvent, failRecovery, handleServerMessage]);
 
   const resumeSocket = useCallback((handle: string) => {
-    const liveSession = activeSessionRef.current;
+    const prewarmedSession = prewarmedResumeSessionRef.current;
+    const liveSession = prewarmedSession ?? activeSessionRef.current;
     if (!liveSession) {
       failRecovery("SESSION_RESUMPTION_SESSION_MISSING");
       return;
@@ -510,25 +623,33 @@ export function useGeminiLiveSession({
     reconnectingRef.current = true;
     reconnectStartedMsRef.current = performance.now();
     pendingReplacedSocketRef.current = socketRef.current;
+    if (prewarmedSession) {
+      prewarmedResumeSessionRef.current = null;
+      activeSessionRef.current = prewarmedSession;
+      setSession(prewarmedSession);
+      onSessionResumed?.(prewarmedSession);
+    }
     dropAudioUntilTurnCompleteRef.current = false;
     audioStreamEndSentRef.current = false;
     setStatus("setup-wait");
     emitEvent("session-reconnect-start", "Gemini Live resume socket starting.", {
       attempt: resumeAttemptCountRef.current,
       handleLength: handle.length,
+      ...(prewarmedSession ? { prewarmedConversationId: prewarmedSession.conversationId } : {}),
     });
+    const setup = prewarmedSession ? liveSession.setup : buildResumeSetup(liveSession.setup, handle);
 
     try {
-      openSocket(liveSession, buildResumeSetup(liveSession.setup, handle), { reconnect: true });
+      openSocket(liveSession, setup, { reconnect: true, prewarmedFreshStart: Boolean(prewarmedSession) });
     } catch (error) {
       const message = error instanceof Error ? error.message : "SESSION_RESUME_SOCKET_OPEN_FAILED";
       failRecovery(message);
     }
-  }, [clearReconnectTimer, emitEvent, failRecovery, openSocket]);
+  }, [clearReconnectTimer, emitEvent, failRecovery, onSessionResumed, openSocket]);
 
   resumeSocketRef.current = resumeSocket;
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (options: StartOptions = {}) => {
     if (status === "connecting" || status === "setup-wait" || status === "listening") return;
     if (!window.isSecureContext) {
       setStatus("blocked");
@@ -549,9 +670,12 @@ export function useGeminiLiveSession({
     activeSessionRef.current = null;
     latestResumeHandleRef.current = null;
     resumeAttemptCountRef.current = 0;
+    prewarmedResumeSessionRef.current = null;
+    prewarmResumePromiseRef.current = null;
     firstResponseSeenRef.current = false;
     dropAudioUntilTurnCompleteRef.current = false;
     audioStreamEndSentRef.current = false;
+    audioActivitySeenRef.current = false;
 
     try {
       await audioOutput.ensure();
@@ -567,10 +691,16 @@ export function useGeminiLiveSession({
         body: JSON.stringify({
           ...settings,
           clientBuildVersion,
+          ...(options.resumedFromConversationId ? { resumedFromConversationId: options.resumedFromConversationId } : {}),
         }),
       });
       const sessionPostMs = startMsRef.current ? Math.round(performance.now() - startMsRef.current) : null;
       setMetrics((current) => ({ ...current, sessionPostMs }));
+      emitEvent("token_mint_ms", "Gemini Live token mint latency measured.", {
+        durationMs: sessionPostMs,
+        resume: Boolean(options.resumedFromConversationId),
+        resumedFromConversationId: options.resumedFromConversationId ?? null,
+      });
       const payload = (await response.json().catch(() => null)) as unknown;
       if (!response.ok || !isSessionResponse(payload)) {
         const errorPayload = payload && typeof payload === "object" && !Array.isArray(payload)

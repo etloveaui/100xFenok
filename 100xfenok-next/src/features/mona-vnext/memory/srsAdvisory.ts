@@ -1,10 +1,16 @@
 import type { MonaVnextPostTurnEvaluation } from "@/features/mona-vnext/coach/postTurnEvaluator";
+import type {
+  MonaVnextCorrectionCandidate,
+  MonaVnextMasteryEvent,
+} from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextTurn } from "@/features/mona-vnext/transcript/turnBoundary";
 
 export type MonaVnextSrsAdvisory = {
   best3Candidates: string[];
   weakNoteCandidates: Array<{ ko: string; reason: string }>;
   nextSessionSuggestions: string[];
+  masteryEvents?: MonaVnextMasteryEvent[];
+  correctionCandidates?: MonaVnextCorrectionCandidate[];
 };
 
 export function buildMonaVnextSrsAdvisory(

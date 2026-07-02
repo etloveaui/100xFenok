@@ -16,6 +16,7 @@ export type MonaVnextVoiceLogDoc = {
   tester: "owner";
   sessionId: string;
   conversationId: string;
+  resumedFromConversationId?: string;
   startedAt: string;
   savedAt: string;
   stoppedAt: string | null;

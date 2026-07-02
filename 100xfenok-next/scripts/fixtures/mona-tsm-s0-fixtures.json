@@ -1,0 +1,89 @@
+{
+  "cards": [
+    {
+      "expressionId": "rain-heavy",
+      "ko": "비가 억수같이 와.",
+      "targetEn": "It's raining heavily.",
+      "acceptedVariants": ["It's raining cats and dogs."],
+      "difficulty": 2
+    },
+    {
+      "expressionId": "still-raining",
+      "ko": "아직도 비가 와.",
+      "targetEn": "It's still raining.",
+      "acceptedVariants": [],
+      "difficulty": 1
+    },
+    {
+      "expressionId": "hope-that-makes-sense",
+      "ko": "내 말이 좀 말이 됐으면 좋겠어.",
+      "targetEn": "I hope that makes sense.",
+      "acceptedVariants": ["I hope it makes sense."],
+      "difficulty": 2
+    }
+  ],
+  "failureClasses": [
+    {
+      "id": "word-drop",
+      "description": "Model says a target-moment sentence that drops a word."
+    },
+    {
+      "id": "next-ignored",
+      "description": "Learner next must advance app state even if the model keeps talking."
+    },
+    {
+      "id": "ghost-praise",
+      "description": "Garbage or silence must repair without praise."
+    },
+    {
+      "id": "variant-rejected",
+      "description": "Accepted variants must be treated as correct, not rejected."
+    },
+    {
+      "id": "malformed-ko",
+      "description": "Malformed Korean or contaminated tried values must be quarantined."
+    }
+  ],
+  "materialGate": [
+    {
+      "expressionId": "valid-rain",
+      "ko": "아직도 비가 와.",
+      "targetEn": "It's still raining.",
+      "acceptedVariants": [],
+      "difficulty": 1,
+      "grounded": true,
+      "verifiedInSource": true,
+      "tried": []
+    },
+    {
+      "expressionId": "malformed-register-clash",
+      "ko": "우리 어떻게 지내세요?",
+      "targetEn": "How are you?",
+      "acceptedVariants": [],
+      "difficulty": 1,
+      "grounded": true,
+      "verifiedInSource": true,
+      "tried": []
+    },
+    {
+      "expressionId": "contaminated-tried",
+      "ko": "잠깐만 기다려.",
+      "targetEn": "Hold up.",
+      "acceptedVariants": [],
+      "difficulty": 1,
+      "grounded": true,
+      "verifiedInSource": true,
+      "tried": ["Hold up...", "Hola."]
+    },
+    {
+      "expressionId": "too-hard",
+      "ko": "나는 그 결정을 다시 생각하고 싶어.",
+      "targetEn": "I would like to reconsider that decision after reviewing the details.",
+      "acceptedVariants": [],
+      "difficulty": 3,
+      "grounded": true,
+      "verifiedInSource": true,
+      "tried": []
+    }
+  ]
+}

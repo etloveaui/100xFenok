@@ -2,6 +2,10 @@ import path from "node:path";
 import {
   MONA_VNEXT_DATA_NAMESPACE,
 } from "@/features/mona-vnext/memory/monaVnextNamespace";
+import type {
+  MonaVnextCorrectionCandidate,
+  MonaVnextMasteryEvent,
+} from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvisory";
 import { createMonaVnextObjectStore } from "@/features/mona-vnext/storage/objectStore";
 
@@ -29,6 +33,47 @@ function normalizeStringArray(value: unknown, maxItems = 12) {
     .slice(0, maxItems);
 }
 
+function normalizeMasteryEvents(value: unknown): MonaVnextMasteryEvent[] {
+  if (!Array.isArray(value)) return [];
+  const events: MonaVnextMasteryEvent[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const record = item as Record<string, unknown>;
+    let verdict: MonaVnextMasteryEvent["verdict"];
+    if (record.verdict === "canonical") {
+      verdict = "canonical";
+    } else if (record.verdict === "variant") {
+      verdict = "variant";
+    } else {
+      continue;
+    }
+    const event: MonaVnextMasteryEvent = {
+      expressionId: typeof record.expressionId === "string" ? record.expressionId.trim().slice(0, 120) : "",
+      verdict,
+      atIso: typeof record.atIso === "string" ? record.atIso.trim().slice(0, 80) : "",
+      sessionId: typeof record.sessionId === "string" ? record.sessionId.trim().slice(0, 120) : "",
+    };
+    if (event.expressionId && event.atIso && event.sessionId) events.push(event);
+    if (events.length >= 20) break;
+  }
+  return events;
+}
+
+function normalizeCorrectionCandidates(value: unknown): MonaVnextCorrectionCandidate[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    .map((item) => ({
+      expressionId: typeof item.expressionId === "string" ? item.expressionId.trim().slice(0, 120) : "",
+      learnerText: typeof item.learnerText === "string" ? item.learnerText.trim().replace(/\s+/g, " ").slice(0, 400) : "",
+      suggestion: typeof item.suggestion === "string" ? item.suggestion.trim().replace(/\s+/g, " ").slice(0, 400) : "",
+      atIso: typeof item.atIso === "string" ? item.atIso.trim().slice(0, 80) : "",
+      sessionId: typeof item.sessionId === "string" ? item.sessionId.trim().slice(0, 120) : "",
+    }))
+    .filter((item) => item.expressionId && item.learnerText && item.suggestion && item.atIso && item.sessionId)
+    .slice(0, 20);
+}
+
 function normalizeAdvisory(value: unknown): MonaVnextSrsAdvisory {
   const record = value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -48,6 +93,8 @@ function normalizeAdvisory(value: unknown): MonaVnextSrsAdvisory {
     best3Candidates: normalizeStringArray(record.best3Candidates, 3),
     weakNoteCandidates: weak,
     nextSessionSuggestions: normalizeStringArray(record.nextSessionSuggestions, 6),
+    masteryEvents: normalizeMasteryEvents(record.masteryEvents),
+    correctionCandidates: normalizeCorrectionCandidates(record.correctionCandidates),
   };
 }
 
@@ -125,6 +172,8 @@ export async function readMonaVnextMemorySummary() {
     best3Candidates: string[];
     weakNoteCount: number;
     nextSessionSuggestions: string[];
+    masteryEventCount: number;
+    correctionCandidateCount: number;
   }> = [];
 
   for (const file of files.sort((a, b) => b.mtimeMs - a.mtimeMs).slice(0, 20)) {
@@ -147,6 +196,8 @@ export async function readMonaVnextMemorySummary() {
         best3Candidates: normalizeStringArray(advisory.best3Candidates, 3),
         weakNoteCount: Array.isArray(advisory.weakNoteCandidates) ? advisory.weakNoteCandidates.length : 0,
         nextSessionSuggestions: normalizeStringArray(advisory.nextSessionSuggestions, 6),
+        masteryEventCount: Array.isArray(advisory.masteryEvents) ? advisory.masteryEvents.length : 0,
+        correctionCandidateCount: Array.isArray(advisory.correctionCandidates) ? advisory.correctionCandidates.length : 0,
       });
     } catch {
       // Ignore malformed owner-test advisory docs.
