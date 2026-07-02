@@ -59,6 +59,12 @@ const DENSITY_LABEL: Record<ScreenerDensity, string> = {
 
 const DENSITY_BUTTONS: ScreenerDensity[] = ["compact", "standard", "comfortable"];
 
+const DENSITY_ROW_HEIGHT: Record<ScreenerDensity, number> = {
+  compact: 32,
+  standard: 40,
+  comfortable: 48,
+};
+
 const DENSITY_TABLE_CLASS: Record<ScreenerDensity, {
   scroller: string;
   table: string;
@@ -2172,21 +2178,26 @@ export default function ScreenerClient({
         <MacroContextCard contextId={initialMacroContextId} surface="screener" />
       ) : null}
 
-      <section className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
-            <p className="mt-1 text-sm font-bold text-slate-700">
+      <section
+        className={enableCanvasPlusPreview ? "cp-card cp-screener-selection-card" : "rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm"}
+        data-canvas-plus-screener-selection-actions={enableCanvasPlusPreview ? "true" : undefined}
+      >
+        <div className={enableCanvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
+          <div className={enableCanvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
+            <p className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-slate-500"}>선택 작업</p>
+            <p className={enableCanvasPlusPreview ? "cp-screener-selection-summary" : "mt-1 text-sm font-bold text-slate-700"}>
               현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
               {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className={enableCanvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
             <button
               type="button"
               onClick={allPageSelected ? deselectPageRows : selectPageRows}
               disabled={pageRows.length === 0}
-              className="min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
+              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
+              data-density={enableCanvasPlusPreview ? "compact" : undefined}
             >
               {allPageSelected ? "페이지 해제" : "페이지 선택"}
             </button>
@@ -2194,7 +2205,9 @@ export default function ScreenerClient({
               type="button"
               onClick={selectFilteredRows}
               disabled={sorted.length === 0}
-              className="min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
+              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
+              data-density={enableCanvasPlusPreview ? "compact" : undefined}
             >
               필터 전체 선택
             </button>
@@ -2202,7 +2215,9 @@ export default function ScreenerClient({
               type="button"
               onClick={clearSelectedRows}
               disabled={selectedTickers.size === 0}
-              className="min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
+              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
+              data-density={enableCanvasPlusPreview ? "compact" : undefined}
             >
               선택 해제
             </button>
@@ -2210,16 +2225,23 @@ export default function ScreenerClient({
               type="button"
               onClick={() => downloadConnectionCsv(selectedRows)}
               disabled={!connectionIndexReady || selectedRows.length === 0}
-              className="min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
+              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={enableCanvasPlusPreview ? "primary" : undefined}
+              data-density={enableCanvasPlusPreview ? "compact" : undefined}
             >
               선택 CSV
             </button>
             {selectedSingleStockEtfCompareHref ? (
-              <TransitionLink href={selectedSingleStockEtfCompareHref} className="inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]">
+              <TransitionLink
+                href={selectedSingleStockEtfCompareHref}
+                className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
+                data-variant={enableCanvasPlusPreview ? "primary" : undefined}
+                data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              >
                 선택 ETF 비교
               </TransitionLink>
             ) : (
-              <span className="inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]">
+              <span className={enableCanvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]"}>
                 선택 ETF 부족
               </span>
             )}
@@ -3109,29 +3131,35 @@ export default function ScreenerClient({
       )}
 
       {/* Preset selector */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">컬럼</span>
+      <div
+        className={enableCanvasPlusPreview ? "cp-card cp-screener-toolbar-card" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}
+        data-canvas-plus-screener-toolbar={enableCanvasPlusPreview ? "true" : undefined}
+      >
+        <div className={enableCanvasPlusPreview ? "cp-screener-toolbar-section cp-screener-preset-toolbar" : "flex flex-wrap items-center gap-2"}>
+          <span className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
           {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => handlePresetChange(p)}
               aria-pressed={preset === p}
-              className={cx(
-                "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-                preset === p
-                  ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
-                  : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-              )}
+              data-canvas-plus-active={enableCanvasPlusPreview ? String(preset === p) : undefined}
+              className={enableCanvasPlusPreview
+                ? "cp-screener-segment"
+                : cx(
+                  "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                  preset === p
+                    ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
+                    : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+                )}
             >
               {PRESET_LABEL[p]}
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div data-screener-view-mode-control className="hidden flex-wrap items-center gap-2 md:flex">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">표시</span>
+        <div className={enableCanvasPlusPreview ? "cp-screener-toolbar-controls" : "flex flex-wrap items-center gap-3"}>
+          <div data-screener-view-mode-control className={enableCanvasPlusPreview ? "cp-screener-toolbar-section cp-screener-view-toolbar" : "hidden flex-wrap items-center gap-2 md:flex"}>
+            <span className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
             {VIEW_MODE_BUTTONS.map((item) => (
               <button
                 key={item}
@@ -3139,31 +3167,39 @@ export default function ScreenerClient({
                 data-screener-view-mode-option={item}
                 onClick={() => handleViewModeChange(item)}
                 aria-pressed={viewMode === item}
-                className={cx(
-                  "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-                  viewMode === item
-                    ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
-                    : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-                )}
+                data-canvas-plus-active={enableCanvasPlusPreview ? String(viewMode === item) : undefined}
+                className={enableCanvasPlusPreview
+                  ? "cp-screener-segment"
+                  : cx(
+                    "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                    viewMode === item
+                      ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
+                      : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+                  )}
               >
                 {VIEW_MODE_LABEL[item]}
               </button>
             ))}
           </div>
-          <div data-screener-density-control className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">밀도</span>
+          <div data-screener-density-control className={enableCanvasPlusPreview ? "cp-screener-toolbar-section cp-screener-density-toolbar" : "flex flex-wrap items-center gap-2"}>
+            <span className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>밀도</span>
             {DENSITY_BUTTONS.map((item) => (
               <button
                 key={item}
                 type="button"
+                data-screener-density-option={item}
+                data-canvas-plus-row-height={enableCanvasPlusPreview ? DENSITY_ROW_HEIGHT[item] : undefined}
                 onClick={() => handleDensityChange(item)}
                 aria-pressed={density === item}
-                className={cx(
-                  "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-                  density === item
-                    ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
-                    : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-                )}
+                data-canvas-plus-active={enableCanvasPlusPreview ? String(density === item) : undefined}
+                className={enableCanvasPlusPreview
+                  ? "cp-screener-segment"
+                  : cx(
+                    "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                    density === item
+                      ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
+                      : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+                  )}
               >
                 {DENSITY_LABEL[item]}
               </button>
@@ -3173,8 +3209,31 @@ export default function ScreenerClient({
       </div>
 
       {/* Results */}
-      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}>
-        <div className="space-y-3 md:hidden">
+      <section
+        className={enableCanvasPlusPreview
+          ? cx("cp-card cp-screener-results-shell", !dataReady && "cp-screener-results-shell--muted")
+          : cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}
+        data-canvas-plus-screener-results-shell={enableCanvasPlusPreview ? "true" : undefined}
+      >
+        {enableCanvasPlusPreview ? (
+          <div className="cp-screener-results-header">
+            <div className="cp-screener-results-title-stack">
+              <p className="cp-screener-section-label">결과</p>
+              <p className="cp-screener-results-summary">
+                {sorted.length.toLocaleString("ko-KR")}개 종목 · {safePage + 1} / {pageCount}
+              </p>
+            </div>
+            <span
+              className="cp-screener-results-density"
+              data-density={density}
+              data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[density]}
+            >
+              {DENSITY_LABEL[density]}
+            </span>
+          </div>
+        ) : null}
+
+        <div className={enableCanvasPlusPreview ? "cp-screener-results-mobile space-y-3 md:hidden" : "space-y-3 md:hidden"}>
           {pageRows.map((stock) => {
             const expanded = expandedTicker === stock.ticker;
             const detailId = `screener-mobile-detail-${stock.ticker}`;
@@ -3198,7 +3257,7 @@ export default function ScreenerClient({
           ) : null}
         </div>
 
-        <div className="hidden md:block">
+        <div className={enableCanvasPlusPreview ? "cp-screener-results-body hidden md:block" : "hidden md:block"}>
           {viewMode === "card" ? (
             <div data-screener-card-grid className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {pageRows.map((stock) => {
@@ -3273,23 +3332,27 @@ export default function ScreenerClient({
 
         {/* Pagination */}
         {sorted.length > PAGE_SIZE ? (
-          <div className="mt-3 flex items-center justify-between gap-3 px-2">
+          <div className={enableCanvasPlusPreview ? "cp-screener-pagination" : "mt-3 flex items-center justify-between gap-3 px-2"}>
             <button
               type="button"
               onClick={() => setPage((value) => Math.max(0, value - 1))}
               disabled={safePage === 0}
-              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"
+              className={enableCanvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
+              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
+              data-density={enableCanvasPlusPreview ? "compact" : undefined}
             >
               이전
             </button>
-            <span className="orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]">
+            <span className={enableCanvasPlusPreview ? "cp-screener-page-status" : "orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
               {safePage + 1} / {pageCount}
             </span>
             <button
               type="button"
               onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
               disabled={safePage >= pageCount - 1}
-              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"
+              className={enableCanvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
+              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
+              data-density={enableCanvasPlusPreview ? "compact" : undefined}
             >
               다음
             </button>
