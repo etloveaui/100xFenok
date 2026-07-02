@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MacroContextCard from "@/components/macro/MacroContextCard";
@@ -15,6 +15,7 @@ import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
+import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import StockDetailPanel from "./StockDetailPanel";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import type { MacroContextId } from "@/lib/macro-chart/context";
@@ -2670,123 +2671,28 @@ export default function ScreenerClient({
                 </div>
               ) : null}
             </div>
-          ) : (
-            <div
-              className={cx("-mx-1 overflow-auto px-1", densityClass.scroller)}
-              data-screener-density={density}
-            >
-              <table className={cx("w-full min-w-[760px]", densityClass.table)}>
-                <thead>
-                  <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
-                    <th className={cx("w-12 text-left", densityClass.headerCell)}>
-                      <input
-                        type="checkbox"
-                        checked={allPageSelected}
-                        onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
-                        aria-label="현재 페이지 종목 선택"
-                        className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-                      />
-                    </th>
-                    {activeColumns.map((column) => {
-                      const active = column.key === sortKey;
-                      return (
-                        <th
-                          key={column.key}
-                          aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
-                          className={cx(densityClass.headerCell, column.align === "right" ? "text-right" : "text-left")}
-                        >
-                          <div className={cx("inline-flex items-center gap-1", column.align === "right" && "justify-end")}>
-                            <button
-                              type="button"
-                              onClick={() => toggleSort(column.key)}
-                              aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
-                              className={cx(
-                                "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
-                                column.align === "right" && "flex-row-reverse",
-                              )}
-                            >
-                              {column.label}
-                              <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
-                            </button>
-                            <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
-                          </div>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageRows.map((stock) => {
-                    const expanded = expandedTicker === stock.ticker;
-                    const detailId = `screener-detail-${stock.ticker}`;
-                    return (
-                      <Fragment key={stock.ticker}>
-                        <tr
-                          data-testid="screener-desktop-row"
-                          data-ticker={stock.ticker}
-                          onClick={() =>
-                            setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
-                          }
-                          className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
-                        >
-                          <td className={densityClass.bodyCell}>
-                            <input
-                              type="checkbox"
-                              checked={selectedTickers.has(stock.ticker)}
-                              onChange={() => toggleSelectedTicker(stock.ticker)}
-                              onClick={(event) => event.stopPropagation()}
-                              aria-label={`${stock.ticker} 선택`}
-                              className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-                            />
-                          </td>
-                          {activeColumns.map((column) => (
-                            <td
-                              key={column.key}
-                              className={cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left")}
-                            >
-                              {column.key === "ticker" ? (
-                                <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
-                                  <button
-                                    type="button"
-                                    aria-expanded={expanded}
-                                    aria-controls={detailId}
-                                    aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
-                                    }}
-                                    className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-                                  >
-                                    <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
-                                    <span className="truncate">{stock.ticker}</span>
-                                  </button>
-                                  <GuruHolderBadge stock={stock} compact />
-                                </div>
-                              ) : renderCell(stock, column.key, preset)}
-                            </td>
-                          ))}
-                        </tr>
-                        {expanded ? (
-                          <tr id={detailId} data-testid="screener-desktop-detail-row" data-ticker={stock.ticker}>
-                            <td colSpan={activeColumns.length + 1} className="p-0">
-                              <StockDetailPanel ticker={stock.ticker} stock={stock} />
-                            </td>
-                          </tr>
-                        ) : null}
-                      </Fragment>
-                    );
-                  })}
-                  {dataReady && pageRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={activeColumns.length + 1} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-                        조건에 맞는 종목이 없습니다.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          )}
+	          ) : (
+	            <ScreenerDesktopTable
+	              activeColumns={activeColumns}
+	              allPageSelected={allPageSelected}
+	              dataReady={dataReady}
+	              density={density}
+	              densityClass={densityClass}
+	              expandedTicker={expandedTicker}
+	              pageRows={pageRows}
+	              preset={preset}
+	              selectedTickers={selectedTickers}
+	              sortDir={sortDir}
+	              sortKey={sortKey}
+	              deselectPageRows={deselectPageRows}
+	              onToggleExpandedTicker={(ticker) => setExpandedTicker((prev) => (prev === ticker ? null : ticker))}
+	              renderCell={renderCell}
+	              renderGuruHolderBadge={(stock) => <GuruHolderBadge stock={stock} compact />}
+	              selectPageRows={selectPageRows}
+	              toggleSelectedTicker={toggleSelectedTicker}
+	              toggleSort={toggleSort}
+	            />
+	          )}
         </div>
 
         {/* Pagination */}
