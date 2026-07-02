@@ -41,7 +41,6 @@ import {
 } from "@/lib/screener/filter-url";
 
 const PAGE_SIZE = 50;
-const ENABLE_TANSTACK_DESKTOP_TABLE = false;
 type ScreenerDensity = "compact" | "standard" | "comfortable";
 type ScreenerViewMode = "table" | "card";
 
@@ -1141,6 +1140,7 @@ function DesktopStockCard({
 }
 
 export default function ScreenerClient({
+  enableCanvasPlusPreview = false,
   initialSearch = "",
   initialSector = "",
   initialMacroContextId,
@@ -1156,6 +1156,7 @@ export default function ScreenerClient({
   initialActionFilter?: string;
   initialConnectionFilter?: string;
   initialFilters?: Partial<ScreenerFilterState>;
+  enableCanvasPlusPreview?: boolean;
 }) {
   const initialFilterValues = initialFilters ?? defaultScreenerFilterState();
   const {
@@ -2680,7 +2681,8 @@ export default function ScreenerClient({
               dataReady={dataReady}
               density={density}
               densityClass={densityClass}
-              enabled={ENABLE_TANSTACK_DESKTOP_TABLE}
+              canvasPlusPreview={enableCanvasPlusPreview}
+              enabled={enableCanvasPlusPreview}
               expandedTicker={expandedTicker}
               fallback={
                 <ScreenerDesktopTable

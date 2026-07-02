@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, Fragment, useMemo, type ErrorInfo, type ReactNode } from "react";
+import { Component, Fragment, useMemo, type CSSProperties, type ErrorInfo, type ReactNode } from "react";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
 import MetricHelp from "@/components/MetricHelp";
 import type { ScreenerSortKey, ScreenerStock } from "@/lib/screener/types";
@@ -8,8 +8,13 @@ import StockDetailPanel from "./StockDetailPanel";
 import type { ScreenerColumn, ScreenerDesktopTableProps } from "./ScreenerDesktopTable";
 
 type ScreenerTanstackTableProps = ScreenerDesktopTableProps & {
+  canvasPlusPreview?: boolean;
   enabled: boolean;
   fallback: ReactNode;
+};
+
+type ScreenerTanstackTableInnerProps = ScreenerDesktopTableProps & {
+  canvasPlusPreview: boolean;
 };
 
 type ScreenerTanstackBoundaryProps = {
@@ -23,6 +28,18 @@ type ScreenerTanstackBoundaryState = {
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
+}
+
+function canvasPlusDensityMode(density: string): "compact" | "default" | "comfy" {
+  if (density === "compact") return "compact";
+  if (density === "comfortable") return "comfy";
+  return "default";
+}
+
+function canvasPlusRowHeight(density: string): number {
+  if (density === "compact") return 32;
+  if (density === "comfortable") return 48;
+  return 40;
 }
 
 class ScreenerTanstackBoundary extends Component<ScreenerTanstackBoundaryProps, ScreenerTanstackBoundaryState> {
@@ -46,12 +63,14 @@ class ScreenerTanstackBoundary extends Component<ScreenerTanstackBoundaryProps, 
 }
 
 function TickerCell({
+  canvasPlusPreview,
   densityClass,
   expanded,
   onToggleExpandedTicker,
   renderGuruHolderBadge,
   stock,
 }: {
+  canvasPlusPreview: boolean;
   densityClass: ScreenerDesktopTableProps["densityClass"];
   expanded: boolean;
   onToggleExpandedTicker: (ticker: string) => void;
@@ -59,6 +78,28 @@ function TickerCell({
   stock: ScreenerStock;
 }) {
   const detailId = `screener-detail-${stock.ticker}`;
+  if (canvasPlusPreview) {
+    return (
+      <span className="cp-screener-name-cell">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={detailId}
+          aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleExpandedTicker(stock.ticker);
+          }}
+          className="cp-screener-ticker inline-flex items-center gap-1 border-0 bg-transparent p-0 font-black transition focus:outline-none focus:ring-2 focus:ring-[var(--cp-focus-ring)]"
+        >
+          <span className="w-5 text-center text-[12px]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+          <span className="truncate">{stock.ticker}</span>
+        </button>
+        {renderGuruHolderBadge(stock)}
+      </span>
+    );
+  }
+
   return (
     <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
       <button
@@ -83,6 +124,7 @@ function TickerCell({
 function ScreenerTanstackTableInner({
   activeColumns,
   allPageSelected,
+  canvasPlusPreview,
   dataReady,
   density,
   densityClass,
@@ -99,7 +141,9 @@ function ScreenerTanstackTableInner({
   selectPageRows,
   toggleSelectedTicker,
   toggleSort,
-}: ScreenerDesktopTableProps) {
+}: ScreenerTanstackTableInnerProps) {
+  const rowHeight = canvasPlusRowHeight(density);
+  const densityMode = canvasPlusDensityMode(density);
   const columnById = useMemo(() => new Map<ScreenerSortKey, ScreenerColumn>(activeColumns.map((column) => [column.key, column])), [activeColumns]);
   const columns = useMemo<Array<ColumnDef<ScreenerStock>>>(() => [
     {
@@ -135,10 +179,12 @@ function ScreenerTanstackTableInner({
               type="button"
               onClick={() => toggleSort(column.key)}
               aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
-              className={cx(
-                "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
-                column.align === "right" && "flex-row-reverse",
-              )}
+              className={canvasPlusPreview
+                ? cx("inline-flex items-center gap-1", column.align === "right" && "flex-row-reverse")
+                : cx(
+                  "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
+                  column.align === "right" && "flex-row-reverse",
+                )}
             >
               {column.label}
               <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
@@ -152,6 +198,7 @@ function ScreenerTanstackTableInner({
         if (column.key === "ticker") {
           return (
             <TickerCell
+              canvasPlusPreview={canvasPlusPreview}
               densityClass={densityClass}
               expanded={expandedTicker === stock.ticker}
               onToggleExpandedTicker={onToggleExpandedTicker}
@@ -166,6 +213,7 @@ function ScreenerTanstackTableInner({
   ], [
     activeColumns,
     allPageSelected,
+    canvasPlusPreview,
     densityClass,
     deselectPageRows,
     expandedTicker,
@@ -189,16 +237,21 @@ function ScreenerTanstackTableInner({
     getCoreRowModel: getCoreRowModel(),
     getRowId: (stock) => stock.ticker,
   });
+  const canvasPlusCellFrameStyle = {
+    maxHeight: `${Math.max(20, rowHeight - 1)}px`,
+  } as CSSProperties;
 
-  return (
+  const tableMarkup = (
     <div
-      className={cx("-mx-1 overflow-auto px-1", densityClass.scroller)}
+      className={canvasPlusPreview ? "cp-screener-table-wrap" : cx("-mx-1 overflow-auto px-1", densityClass.scroller)}
+      data-canvas-plus-table-preview={canvasPlusPreview ? "true" : undefined}
+      data-canvas-plus-row-height={canvasPlusPreview ? rowHeight : undefined}
       data-screener-density={density}
     >
-      <table className={cx("w-full min-w-[760px]", densityClass.table)}>
+      <table className={canvasPlusPreview ? "cp-screener-table" : cx("w-full min-w-[760px]", densityClass.table)}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+            <tr key={headerGroup.id} className={canvasPlusPreview ? undefined : "sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]"}>
               {headerGroup.headers.map((header) => {
                 const column = columnById.get(header.column.id as ScreenerSortKey);
                 const active = column?.key === sortKey;
@@ -206,9 +259,14 @@ function ScreenerTanstackTableInner({
                   <th
                     key={header.id}
                     aria-sort={column ? (active ? (sortDir === "asc" ? "ascending" : "descending") : "none") : undefined}
-                    className={column ? cx(densityClass.headerCell, column.align === "right" ? "text-right" : "text-left") : cx("w-12 text-left", densityClass.headerCell)}
+                    data-align={canvasPlusPreview ? column?.align ?? "left" : undefined}
+                    className={canvasPlusPreview ? undefined : column ? cx(densityClass.headerCell, column.align === "right" ? "text-right" : "text-left") : cx("w-12 text-left", densityClass.headerCell)}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {canvasPlusPreview ? (
+                      <span className="block overflow-hidden" style={canvasPlusCellFrameStyle}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </span>
+                    ) : flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
                 );
               })}
@@ -226,16 +284,21 @@ function ScreenerTanstackTableInner({
                   data-testid="screener-desktop-row"
                   data-ticker={stock.ticker}
                   onClick={() => onToggleExpandedTicker(stock.ticker)}
-                  className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
+                  className={canvasPlusPreview ? "cursor-pointer" : "cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const column = columnById.get(cell.column.id as ScreenerSortKey);
                     return (
                       <td
                         key={cell.id}
-                        className={column ? cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left") : densityClass.bodyCell}
+                        data-align={canvasPlusPreview ? column?.align ?? "left" : undefined}
+                        className={canvasPlusPreview ? undefined : column ? cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left") : densityClass.bodyCell}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {canvasPlusPreview ? (
+                          <span className="block overflow-hidden" style={canvasPlusCellFrameStyle}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </span>
+                        ) : flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     );
                   })}
@@ -261,13 +324,31 @@ function ScreenerTanstackTableInner({
       </table>
     </div>
   );
+
+  if (!canvasPlusPreview) return tableMarkup;
+
+  return (
+    <div
+      className="canvas-plus"
+      data-canvas-plus
+      data-canvas-plus-screener-preview
+      data-row-density={densityMode}
+      style={{
+        "--cp-active-row-height": `${rowHeight}px`,
+        background: "transparent",
+        minHeight: "auto",
+      } as CSSProperties}
+    >
+      {tableMarkup}
+    </div>
+  );
 }
 
-export default function ScreenerTanstackTable({ enabled, fallback, ...props }: ScreenerTanstackTableProps) {
+export default function ScreenerTanstackTable({ canvasPlusPreview = false, enabled, fallback, ...props }: ScreenerTanstackTableProps) {
   if (!enabled) return fallback;
   return (
     <ScreenerTanstackBoundary fallback={fallback}>
-      <ScreenerTanstackTableInner {...props} />
+      <ScreenerTanstackTableInner {...props} canvasPlusPreview={canvasPlusPreview} />
     </ScreenerTanstackBoundary>
   );
 }
