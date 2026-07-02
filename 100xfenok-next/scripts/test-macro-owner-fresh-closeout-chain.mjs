@@ -1266,6 +1266,80 @@ for (const [index, step] of steps.entries()) {
     console.log("[macro-owner-fresh-closeout-chain] negative guard OK rank2_cloudflare_preview_missing_version_id=true");
     console.log("[macro-owner-fresh-closeout-chain] negative guard OK rank2_cloudflare_preview_foreign_host=true");
   }
+  if (step.label === "rank2-production-live-smoke") {
+    const badPostLiveApprovalRequestExecutionRecord = makeValidRecord(
+      packet.rank2_post_live_redirect_delete_approval_request_template,
+    );
+    badPostLiveApprovalRequestExecutionRecord.redirect_delete_executed = true;
+    badPostLiveApprovalRequestExecutionRecord.public_files_modified = true;
+    badPostLiveApprovalRequestExecutionRecord.redirect_config_changed = true;
+    const badPostLiveApprovalRequestExecutionFile = path.join(
+      tempDir,
+      "bad-rank2-post-live-approval-request-execution.json",
+    );
+    fs.writeFileSync(
+      badPostLiveApprovalRequestExecutionFile,
+      `${JSON.stringify(badPostLiveApprovalRequestExecutionRecord, null, 2)}\n`,
+    );
+    const negativePostLiveApprovalRequestExecution = runPacket(
+      [
+        ...recordArgs(records),
+        "--rank2-post-live-redirect-delete-approval-request",
+        badPostLiveApprovalRequestExecutionFile,
+      ],
+      {
+        expectFailure: true,
+        label: "negative rank2 post-live approval request execution flags",
+      },
+    );
+    const negativePostLiveApprovalRequestExecutionOutput = [
+      negativePostLiveApprovalRequestExecution.stderr,
+      negativePostLiveApprovalRequestExecution.stdout,
+    ].join("\n");
+    assert(
+      negativePostLiveApprovalRequestExecutionOutput.includes("must not redirect, delete, or mutate public files"),
+      "negative guard did not report rank2 post-live approval request execution/public mutation validation",
+    );
+
+    const badPostLiveApprovalRequestDeletePathsRecord = makeValidRecord(
+      packet.rank2_post_live_redirect_delete_approval_request_template,
+    );
+    badPostLiveApprovalRequestDeletePathsRecord.delete_paths = ["/100x/100x-main.html"];
+    const badPostLiveApprovalRequestDeletePathsFile = path.join(
+      tempDir,
+      "bad-rank2-post-live-approval-request-delete-paths.json",
+    );
+    fs.writeFileSync(
+      badPostLiveApprovalRequestDeletePathsFile,
+      `${JSON.stringify(badPostLiveApprovalRequestDeletePathsRecord, null, 2)}\n`,
+    );
+    const negativePostLiveApprovalRequestDeletePaths = runPacket(
+      [
+        ...recordArgs(records),
+        "--rank2-post-live-redirect-delete-approval-request",
+        badPostLiveApprovalRequestDeletePathsFile,
+      ],
+      {
+        expectFailure: true,
+        label: "negative rank2 post-live approval request delete paths",
+      },
+    );
+    const negativePostLiveApprovalRequestDeletePathsOutput = [
+      negativePostLiveApprovalRequestDeletePaths.stderr,
+      negativePostLiveApprovalRequestDeletePaths.stdout,
+    ].join("\n");
+    assert(
+      negativePostLiveApprovalRequestDeletePathsOutput.includes("delete_paths must stay empty"),
+      "negative guard did not report rank2 post-live approval request delete_paths validation",
+    );
+
+    console.log(
+      "[macro-owner-fresh-closeout-chain] negative guard OK rank2_post_live_approval_request_execution_flags=true",
+    );
+    console.log(
+      "[macro-owner-fresh-closeout-chain] negative guard OK rank2_post_live_approval_request_delete_paths=true",
+    );
+  }
 }
 
 assertExactBlockedActions(
