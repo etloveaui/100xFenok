@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-02T06:14:33.162Z",
+  "generated_at": "2026-07-02T11:46:28.613Z",
   "totals": {
     "rootJsonCount": 17729,
     "publicJsonCount": 17765,
     "mirroredRootJsonCount": 17712,
     "missingPublicMirrorCount": 17,
     "publicOnlyJsonCount": 53,
-    "directDataFetchCount": 120,
+    "directDataFetchCount": 121,
     "dynamicPatternCount": 9
   },
   "mirror_sync_status": "partial",
@@ -280,7 +280,7 @@
       "category": "yf",
       "rootJsonCount": 2019,
       "publicJsonCount": 2019,
-      "directFetchCount": 0,
+      "directFetchCount": 1,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 1,
       "status": "active",
@@ -522,6 +522,7 @@
       "dataPath": "global-scouter/core/revision_movers.json",
       "category": "global-scouter",
       "consumers": [
+        "100xfenok-next/src/app/HomeCanvasPlusClient.tsx",
         "100xfenok-next/src/app/explore/RevisionMoversCard.tsx",
         "100xfenok-next/src/app/explore/StockWorkbenchCard.tsx"
       ]
@@ -783,6 +784,7 @@
       "dataPath": "sec-13f/analytics/trades_ranking.json",
       "category": "sec-13f",
       "consumers": [
+        "100xfenok-next/src/app/HomeCanvasPlusClient.tsx",
         "100xfenok-next/src/app/explore/ExploreHotTopics.tsx",
         "100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx",
         "100xfenok-next/src/app/superinvestors/InsightsTab.tsx",
@@ -1251,6 +1253,13 @@
       "consumers": [
         "100xfenok-next/src/app/market-valuation/YardeniCard.tsx"
       ]
+    },
+    {
+      "dataPath": "yf/finance/${symbol}.json",
+      "category": "yf",
+      "consumers": [
+        "100xfenok-next/src/app/HomeCanvasPlusClient.tsx"
+      ]
     }
   ],
   "dynamicPatterns": [
@@ -1314,7 +1323,7 @@
       },
       {
         "id": "liquidity_stress",
-        "asOf": "2026-07-01",
+        "asOf": "2026-07-02",
         "status": "caution"
       },
       {
