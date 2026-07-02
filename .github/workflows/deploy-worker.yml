@@ -91,6 +91,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run cf:build
 
+      - name: Verify Worker bundle budget
+        working-directory: 100xfenok-next
+        run: npm run qa:worker-bundle-budget
+
       - name: Verify build manifest routes presence
         run: node scripts/check-source-paths.mjs
 
