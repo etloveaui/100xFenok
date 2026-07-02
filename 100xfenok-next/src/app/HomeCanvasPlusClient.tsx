@@ -703,7 +703,7 @@ function CpHomeHero({
     <section className="cp-hero-search cp-home-hero" data-canvas-plus-home-hero data-home-search-first>
       <div className="cp-hero-search__copy">
         <p className="cp-lab__eyebrow">100xFenok 홈</p>
-        <h1 className="cp-hero-search__title">시장의 첫 화면</h1>
+        <h1 className="cp-hero-search__title">오늘 시장의 기준점</h1>
         <p className="cp-hero-search__summary">
           검색에서 판독까지, 오늘의 후보를 한 화면에서 이어 봅니다.
         </p>
