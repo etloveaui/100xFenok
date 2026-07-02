@@ -18,6 +18,8 @@ type CpHeroSearchProps = FormHTMLAttributes<HTMLFormElement> & {
   placeholder: string;
   defaultValue?: string;
   metrics?: CpHeroMetric[];
+  label?: ReactNode;
+  buttonLabel?: ReactNode;
 };
 
 export default function CpHeroSearch({
@@ -27,6 +29,8 @@ export default function CpHeroSearch({
   placeholder,
   defaultValue,
   metrics = [],
+  label = "티커 또는 테마",
+  buttonLabel = "검색",
   className,
   ...props
 }: CpHeroSearchProps) {
@@ -38,7 +42,7 @@ export default function CpHeroSearch({
         <p className="cp-hero-search__summary">{summary}</p>
       </div>
       <form className={cpClassNames("cp-hero-search__form", className)} role="search" {...props}>
-        <label className="cp-hero-search__label" htmlFor="cp-hero-search-input">Ticker or theme</label>
+        <label className="cp-hero-search__label" htmlFor="cp-hero-search-input">{label}</label>
         <div className="cp-hero-search__control">
           <input
             id="cp-hero-search-input"
@@ -49,7 +53,7 @@ export default function CpHeroSearch({
             placeholder={placeholder}
             defaultValue={defaultValue}
           />
-          <CpButton variant="primary" type="submit">Search</CpButton>
+          <CpButton variant="primary" type="submit">{buttonLabel}</CpButton>
         </div>
       </form>
       {metrics.length > 0 ? (
