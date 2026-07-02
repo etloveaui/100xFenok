@@ -1013,7 +1013,7 @@ function FinancialSnapshotRail({
           <p className="cp-stock-rail-eyebrow">Financials</p>
           <h2>TTM 재무 스냅샷</h2>
         </div>
-        <span>{fmtDateish(data?.fetched_at)}</span>
+        <span>{fmtKstMinute(data?.fetched_at) ?? "—"}</span>
       </header>
       <div className="cp-stock-financial-list">
         {metrics.map((metric) => (
@@ -2064,7 +2064,7 @@ export default function StockDetailClient({
     ? `${ROUTES.screener}?sector=${encodeURIComponent(row.sector)}`
     : ROUTES.screener;
 
-  if (enableCanvasPlusPreview && activeStockTab === "overview" && !isEtfOnlyAsset) {
+  if (enableCanvasPlusPreview && !isEtfOnlyAsset) {
     const contextLine = [
       displayName,
       canonical ? sectorLabelKo(canonical) : null,
@@ -2102,104 +2102,118 @@ export default function StockDetailClient({
           />
         </section>
 
-        <div
-          id={stockPanelId(symbol, activeStockTab)}
-          role="tabpanel"
-          aria-labelledby={stockTabId(symbol, activeStockTab)}
-          tabIndex={0}
-          className="cp-stock-detail-body"
-        >
-          <main className="cp-stock-detail-main">
-            <section className="cp-stock-chart-card" data-stock-preview-module="price-chart">
-              <header className="cp-stock-chart-card__header">
-                <div>
-                  <p className="cp-stock-rail-eyebrow">Price Action</p>
-                  <h2>가격 차트</h2>
-                </div>
-                <div className="cp-stock-range-tabs" role="group" aria-label="가격 차트 기간">
-                  {STOCK_CHART_RANGES.map((range) => (
-                    <CpButton
-                      key={range}
-                      density="compact"
-                      variant={range === stockChartRange ? "primary" : "ghost"}
-                      aria-pressed={range === stockChartRange}
-                      onClick={() => setStockChartRange(range)}
-                    >
-                      {range}
-                    </CpButton>
-                  ))}
-                </div>
-              </header>
-              <CpPriceChart
-                kind="candlestick"
-                range={stockChartRange}
-                height={420}
-                density="comfy"
-                title={`${symbol} OHLCV`}
-                summary={stockChartCopy}
-                headingLevel="h3"
-                data={rangedStockChartData}
-                showVolume
-                className="cp-stock-price-chart"
-                emptyLabel={stockAuxData === undefined ? "가격 이력 로딩 중..." : "표시할 가격 이력이 없습니다."}
-              />
-            </section>
-
-            <section className="cp-stock-showcase-metrics" aria-label="핵심 지표">
-              {previewMetricCards.map((card) => (
-                <div key={card.label}>
-                  <span>{card.label}</span>
-                  <strong>{card.value}</strong>
-                  <em>{card.note}</em>
-                </div>
-              ))}
-            </section>
-
-            {detailLoading ? (
-              <div className="cp-stock-preview-loading">
-                <SkeletonSection />
-              </div>
-            ) : detail ? (
-              <section className="cp-stock-action-strip" data-stock-summary-module="summary-score" aria-label="상세 분석 바로가기">
-                {[
-                  { axis: "밸류에이션", label: "밸류", desc: "PER 밴드·수익성", tab: "statistics" as const },
-                  { axis: "미래 성장", label: "추정치", desc: "FY+1~3 변화", tab: "estimates" as const },
-                  { axis: "과거 실적", label: "재무", desc: "매출·FCF 상세", tab: "financials" as const },
-                  { axis: "재무 건전성", label: "건전성", desc: "마진·현금흐름", tab: "financials" as const },
-                  { axis: "배당", label: "배당", desc: "배당 이력", tab: "financials" as const, hash: "#dividend" },
-                ].map(({ axis, label, desc, tab, hash }) => (
-                  <button
-                    key={axis}
-                    type="button"
-                    data-stock-summary-axis-link
-                    data-stock-summary-axis={axis}
-                    data-stock-summary-axis-tab={tab}
-                    onClick={() => selectStockTab(tab, "push", hash ?? null)}
-                  >
-                    <strong>{label}</strong>
-                    <span>{desc}</span>
-                  </button>
-                ))}
-              </section>
-            ) : (
-              <section className="cp-stock-action-strip cp-stock-action-strip--empty">
-                <DataStateNotice
-                  state={makeDataState({
-                    status: "unavailable",
-                    label: "상세 데이터 준비 중",
-                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
-                  })}
+        {activeStockTab === "overview" ? (
+          <div
+            id={stockPanelId(symbol, activeStockTab)}
+            role="tabpanel"
+            aria-labelledby={stockTabId(symbol, activeStockTab)}
+            tabIndex={0}
+            className="cp-stock-detail-body"
+          >
+            <main className="cp-stock-detail-main">
+              <section className="cp-stock-chart-card" data-stock-preview-module="price-chart">
+                <header className="cp-stock-chart-card__header">
+                  <div>
+                    <p className="cp-stock-rail-eyebrow">Price Action</p>
+                    <h2>가격 차트</h2>
+                  </div>
+                  <div className="cp-stock-range-tabs" role="group" aria-label="가격 차트 기간">
+                    {STOCK_CHART_RANGES.map((range) => (
+                      <CpButton
+                        key={range}
+                        density="compact"
+                        variant={range === stockChartRange ? "primary" : "ghost"}
+                        aria-pressed={range === stockChartRange}
+                        onClick={() => setStockChartRange(range)}
+                      >
+                        {range}
+                      </CpButton>
+                    ))}
+                  </div>
+                </header>
+                <CpPriceChart
+                  kind="candlestick"
+                  range={stockChartRange}
+                  height={420}
+                  density="comfy"
+                  title={`${symbol} OHLCV`}
+                  summary={stockChartCopy}
+                  headingLevel="h3"
+                  data={rangedStockChartData}
+                  showVolume
+                  className="cp-stock-price-chart"
+                  emptyLabel={stockAuxData === undefined ? "가격 이력 로딩 중..." : "표시할 가격 이력이 없습니다."}
                 />
               </section>
-            )}
-          </main>
 
-          <aside className="cp-stock-right-rail" aria-label={`${symbol} 우측 요약`}>
-            <ValuationBandSummaryCard band={valuationBandSummary} signalLens={fenokSignalLens} variant="canvasPlusRail" />
-            <FenokEdgeDonutCard record={fenokSignalLens} />
-            <FinancialSnapshotRail data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
-          </aside>
-        </div>
+              <section className="cp-stock-showcase-metrics" aria-label="핵심 지표">
+                {previewMetricCards.map((card) => (
+                  <div key={card.label}>
+                    <span>{card.label}</span>
+                    <strong>{card.value}</strong>
+                    <em>{card.note}</em>
+                  </div>
+                ))}
+              </section>
+
+              {detailLoading ? (
+                <div className="cp-stock-preview-loading">
+                  <SkeletonSection />
+                </div>
+              ) : detail ? (
+                <section className="cp-stock-action-strip" data-stock-summary-module="summary-score" aria-label="상세 분석 바로가기">
+                  {[
+                    { axis: "밸류에이션", label: "밸류", desc: "PER 밴드·수익성", tab: "statistics" as const },
+                    { axis: "미래 성장", label: "추정치", desc: "FY+1~3 변화", tab: "estimates" as const },
+                    { axis: "과거 실적", label: "재무", desc: "매출·FCF 상세", tab: "financials" as const },
+                    { axis: "재무 건전성", label: "건전성", desc: "마진·현금흐름", tab: "financials" as const },
+                    { axis: "배당", label: "배당", desc: "배당 이력", tab: "financials" as const, hash: "#dividend" },
+                  ].map(({ axis, label, desc, tab, hash }) => (
+                    <button
+                      key={axis}
+                      type="button"
+                      data-stock-summary-axis-link
+                      data-stock-summary-axis={axis}
+                      data-stock-summary-axis-tab={tab}
+                      onClick={() => selectStockTab(tab, "push", hash ?? null)}
+                    >
+                      <strong>{label}</strong>
+                      <span>{desc}</span>
+                    </button>
+                  ))}
+                </section>
+              ) : (
+                <section className="cp-stock-action-strip cp-stock-action-strip--empty">
+                  <DataStateNotice
+                    state={makeDataState({
+                      status: "unavailable",
+                      label: "상세 데이터 준비 중",
+                      detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                    })}
+                  />
+                </section>
+              )}
+            </main>
+
+            <aside className="cp-stock-right-rail" aria-label={`${symbol} 우측 요약`}>
+              <ValuationBandSummaryCard band={valuationBandSummary} signalLens={fenokSignalLens} variant="canvasPlusRail" />
+              <FenokEdgeDonutCard record={fenokSignalLens} />
+              <FinancialSnapshotRail data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
+            </aside>
+          </div>
+        ) : (
+          <div
+            id={stockPanelId(symbol, activeStockTab)}
+            role="tabpanel"
+            aria-labelledby={stockTabId(symbol, activeStockTab)}
+            tabIndex={0}
+            className="cp-stock-detail-body cp-stock-tab-shell"
+          >
+            <main className="cp-stock-detail-main cp-stock-tab-body">
+              {activeStockTab === "financials" ? renderFinancialsCpTab() : renderStockDataTab(false)}
+            </main>
+          </div>
+        )}
 
         <footer className="cp-stock-detail-footer">
           <TransitionLink href={ROUTES.screenerTicker(symbol)}>스크리너에서 보기</TransitionLink>
@@ -2210,7 +2224,7 @@ export default function StockDetailClient({
     );
   }
 
-  function renderStockDataTab() {
+  function renderStockDataTab(showFooter: boolean = true) {
     if (activeStockTab === "overview") return null;
     if (activeStockTab === "filings") {
       return <EdgarSummaryClient ticker={symbol} embedded />;
@@ -2219,10 +2233,12 @@ export default function StockDetailClient({
       return (
         <div className="stock-main-stack">
           <EtfDataPanel ticker={symbol} data={etfData} loading={etfData === undefined} marketFacts={marketFacts} />
-          <footer className="stock-footer">
-            <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록에서 보기" : "스크리너에서 보기"}</TransitionLink>
-            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
-          </footer>
+          {showFooter ? (
+            <footer className="stock-footer">
+              <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록에서 보기" : "스크리너에서 보기"}</TransitionLink>
+              <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+            </footer>
+          ) : null}
         </div>
       );
     }
@@ -2363,11 +2379,108 @@ export default function StockDetailClient({
             </div>
           </SectionCard>
         )}
-        <footer className="stock-footer">
-          <TransitionLink href={ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-          <TransitionLink href={ROUTES.superinvestorsByTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
-          <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
-        </footer>
+        {showFooter ? (
+          <footer className="stock-footer">
+            <TransitionLink href={ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+            <TransitionLink href={ROUTES.superinvestorsByTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
+            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+          </footer>
+        ) : null}
+      </div>
+    );
+  }
+
+  // Canvas-plus S1 exemplar: 재무 tab restyled with cp-stock-tab-* card surfaces.
+  // Reuses CompactFinancialTable / DividendPanel / FinancialCandidatePanel / RawFinancialDepth
+  // and the yf FinancialsTab block verbatim — wrapper-level restyle only.
+  function renderFinancialsCpTab() {
+    return (
+      <div className="cp-stock-tab-financials">
+        {yfAvailable ? (
+          <section className="cp-stock-tab-card" data-stock-tab-card="financials-yf">
+            <header className="cp-stock-tab-card__header">
+              <div>
+                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
+                <h2>재무제표 상세</h2>
+              </div>
+            </header>
+            <div className="cp-stock-tab-card__body">
+              {renderYfTab("financials", yfData, industryBench)}
+            </div>
+          </section>
+        ) : null}
+
+        {detailLoading ? (
+          <div className="cp-stock-tab-loading">
+            <SkeletonSection />
+            <SkeletonSection />
+          </div>
+        ) : detail ? (
+          <>
+            <section className="cp-stock-tab-card" data-stock-tab-card="financial-trend">
+              <header className="cp-stock-tab-card__header">
+                <div>
+                  <p className="cp-stock-rail-eyebrow">Financial Trend</p>
+                  <h2>재무 추이</h2>
+                </div>
+              </header>
+              <div className="cp-stock-tab-card__body">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {([
+                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "var(--c-up)"],
+                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "var(--c-info)"],
+                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "var(--c-recovery)"],
+                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "var(--c-warn)"],
+                  ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
+                    <div key={label}>
+                      <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
+                      <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
+                    </div>
+                  ))}
+                </div>
+                <div className="cp-stock-tab-card__subsection">
+                  <h3 className="cp-stock-tab-card__subheading">실적 추이 · 추정</h3>
+                  <CompactFinancialTable detail={detail} years={years} />
+                </div>
+              </div>
+            </section>
+
+            <section className="cp-stock-tab-card" data-stock-tab-card="dividend">
+              <div className="cp-stock-tab-card__body cp-stock-tab-card__body--flush">
+                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} />
+              </div>
+            </section>
+
+            <details className="cp-stock-tab-card cp-stock-tab-card--secondary" data-stock-tab-card="financial-candidate" open>
+              <summary className="cp-stock-tab-card__summary">재무 보강 데이터 (교차검증)</summary>
+              <div className="cp-stock-tab-card__body">
+                <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
+              </div>
+            </details>
+
+            <details className="cp-stock-tab-card cp-stock-tab-card--secondary" data-stock-tab-card="raw-financial-depth" open>
+              <summary className="cp-stock-tab-card__summary">원본 재무 데이터 상세</summary>
+              <div className="cp-stock-tab-card__body">
+                <RawFinancialDepth detail={detail} />
+              </div>
+            </details>
+          </>
+        ) : (
+          <section className="cp-stock-tab-card">
+            <div className="cp-stock-tab-card__body">
+              <div className="py-8 text-center">
+                <DataStateNotice
+                  state={makeDataState({
+                    status: "unavailable",
+                    label: "상세 데이터 준비 중",
+                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                  })}
+                />
+                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     );
   }
@@ -2690,7 +2803,7 @@ function StockAuxiliaryPanel({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold text-slate-500">주요 지표를 기존 분석 데이터와 교차 확인합니다.</p>
         <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-          {fmtDateish(data.fetched_at)}
+          {fmtKstMinute(data.fetched_at) ?? "—"}
         </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -2781,7 +2894,7 @@ function FinancialCandidatePanel({
           <p className="mt-1 text-xs font-semibold text-slate-500">교차검증용 · 가치평가 입력 아님</p>
         </div>
         <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-          {fmtDateish(data.fetched_at)}
+          {fmtKstMinute(data.fetched_at) ?? "—"}
         </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">

@@ -1493,6 +1493,7 @@
 
 .cp-stock-detail-preview {
   display: grid;
+  align-content: start;
   gap: 16px;
   width: min(100%, 1320px);
   margin: 0 auto;
@@ -2865,4 +2866,120 @@
   .cp-stock-action-strip {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Stock detail — non-overview tab shell (P3 S1, additive, namespaced)
+--------------------------------------------------------------------------- */
+
+/* Higher specificity than the pre-existing .fnk-shell .cp-stock-detail-preview
+   .cp-stock-detail-body{display:grid} override (3 classes) so the tab shell's
+   single-column full-width layout actually wins the cascade. */
+.fnk-shell .cp-stock-detail-preview .cp-stock-detail-body.cp-stock-tab-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cp-stock-tab-body {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cp-stock-tab-financials {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cp-stock-tab-card {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent),
+    0 16px 38px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
+}
+
+.cp-stock-tab-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 16px 0;
+}
+
+.cp-stock-tab-card__header h2 {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.cp-stock-tab-card__body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.cp-stock-tab-card__body--flush {
+  padding: 0;
+}
+
+.cp-stock-tab-card__subsection {
+  border-top: 1px solid var(--cp-divider);
+  padding-top: 14px;
+}
+
+.cp-stock-tab-card__subheading {
+  margin: 0 0 8px;
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cp-stock-tab-loading {
+  display: grid;
+  gap: 14px;
+}
+
+.cp-stock-tab-card--secondary {
+  background: var(--cp-surface-muted);
+  box-shadow: none;
+}
+
+.cp-stock-tab-card--secondary > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+
+.cp-stock-tab-card--secondary > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cp-stock-tab-card--secondary > summary::after {
+  content: "\25BE";
+  transition: transform 0.15s ease;
+}
+
+.cp-stock-tab-card--secondary[open] > summary::after {
+  transform: rotate(-180deg);
+}
+
+.cp-stock-tab-card--secondary > .cp-stock-tab-card__body {
+  padding-top: 0;
 }
