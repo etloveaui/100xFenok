@@ -710,12 +710,12 @@ interface ScoreCheck { label: string; pass: boolean }
 interface AreaScore { area: string; score: number; total: number; checks: ScoreCheck[] }
 export type SummaryScoreTabTarget = "statistics" | "estimates" | "financials" | "ownership";
 
-const SUMMARY_SCORE_AREA_TARGETS: Record<string, { tab: SummaryScoreTabTarget; label: string; description: string }> = {
+const SUMMARY_SCORE_AREA_TARGETS: Record<string, { tab: SummaryScoreTabTarget; label: string; description: string; hash?: string }> = {
   "밸류에이션": { tab: "statistics", label: "밸류", description: "PER 밴드·비교" },
   "미래 성장": { tab: "estimates", label: "추정치", description: "FY+1 전망" },
   "과거 실적": { tab: "financials", label: "재무", description: "8Y 추이" },
   "재무 건전성": { tab: "financials", label: "재무", description: "현금·부채" },
-  "배당": { tab: "financials", label: "재무", description: "배당 이력" },
+  "배당": { tab: "financials", label: "재무", description: "배당 이력", hash: "#dividend" },
 };
 
 function pushCheck(checks: ScoreCheck[], label: string, pass: boolean | null) {
@@ -819,7 +819,7 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
   data: YfData;
   perBand: { current: number; min: number; max: number } | null;
   industry?: IndustryBench | null;
-  onAreaSelect?: (tab: SummaryScoreTabTarget) => void;
+  onAreaSelect?: (tab: SummaryScoreTabTarget, hash?: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const areas = computeSummaryScores(data, perBand, industry);
@@ -857,7 +857,8 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
               data-stock-summary-axis-link
               data-stock-summary-axis={a.area}
               data-stock-summary-axis-tab={target?.tab ?? ""}
-              onClick={() => target ? onAreaSelect?.(target.tab) : undefined}
+              data-stock-summary-axis-hash={target?.hash ?? ""}
+              onClick={() => target ? onAreaSelect?.(target.tab, target.hash) : undefined}
               className="min-h-11 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-left transition hover:border-brand-interactive hover:bg-white"
               aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
             >

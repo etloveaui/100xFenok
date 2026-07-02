@@ -327,13 +327,16 @@ function stockTabFromLocation(): StockTab {
   return isStockTab(value) ? value : "overview";
 }
 
-function writeStockTabUrl(tab: StockTab, mode: "push" | "replace"): void {
+function writeStockTabUrl(tab: StockTab, mode: "push" | "replace", hash?: string | null): void {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
   if (tab === "overview") {
     url.searchParams.delete("tab");
   } else {
     url.searchParams.set("tab", tab);
+  }
+  if (hash !== undefined) {
+    url.hash = hash ?? "";
   }
   const nextHref = `${url.pathname}${url.search}${url.hash}`;
   const currentHref = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -976,6 +979,106 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
   );
 }
 
+function DividendPanel({
+  detail,
+  yfData,
+  years,
+  currency,
+  highlight,
+}: {
+  detail: any;
+  yfData: any;
+  years: string[];
+  currency: string;
+  highlight: boolean;
+}) {
+  const info = yfData?.info && typeof yfData.info === "object" ? yfData.info : {};
+  const dividendYield = isFiniteNumber(info.dividendYield) ? info.dividendYield : null; // yf finance uses percent points here.
+  const payoutRatio = isFiniteNumber(info.payoutRatio) ? info.payoutRatio : null;
+  const dpsSeries = numberSeries(detail?.dividend?.dps);
+  const dpsValues = finiteValues(dpsSeries);
+  const latestDps = lastFinite(dpsSeries);
+  const estimateDps = detail?.dividend_estimates?.dps ?? null;
+  const nextDps = ["fy1", "fy2", "fy3"]
+    .map((key) => estimateDps?.[key])
+    .find((value) => isFiniteNumber(value)) ?? null;
+  const dividends = yfData?.dividends && typeof yfData.dividends === "object" && !Array.isArray(yfData.dividends)
+    ? yfData.dividends
+    : null;
+  const dividendDates = dividends ? Object.keys(dividends).sort() : [];
+  const historyValue = dividendDates.length > 0
+    ? `${dividendDates.length.toLocaleString()}회`
+    : dpsValues.length > 0
+      ? `${dpsValues.length}년 DPS`
+      : "—";
+  const historyNote = dividendDates.length > 0
+    ? `${dividendDates[0]} ~ ${dividendDates[dividendDates.length - 1]}`
+    : dpsValues.length > 0
+      ? "StockAnalysis DPS series"
+      : "배당 데이터 없음";
+  const hasDividendData = dividendYield !== null || payoutRatio !== null || dpsValues.length > 0 || dividendDates.length > 0;
+
+  return (
+    <section
+      id="dividend"
+      data-stock-dividend-panel
+      tabIndex={-1}
+      className={`mt-5 scroll-mt-24 rounded-lg border p-3 transition ${
+        highlight ? "border-emerald-400 bg-emerald-50/80 shadow-[0_0_0_3px_rgba(16,185,129,0.16)]" : "border-slate-200 bg-slate-50/60"
+      }`}
+      aria-label="배당 분석"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h4 className="text-[11px] font-black tracking-[0.08em] text-slate-700">배당 분석</h4>
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            배당수익률, 배당성향, DPS 이력을 재무 흐름과 함께 확인합니다.
+          </p>
+        </div>
+        {!hasDividendData ? (
+          <span data-stock-dividend-empty className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
+            배당 데이터 없음
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <div data-stock-dividend-metric="yield" className="rounded-md border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[10px] font-bold text-slate-500">배당수익률</p>
+          <p className="orbitron tabular-nums text-sm font-black text-slate-900">{dividendYield !== null ? `${dividendYield.toFixed(2)}%` : "—"}</p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">Yahoo Finance 기준</p>
+        </div>
+        <div data-stock-dividend-metric="payout" className="rounded-md border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[10px] font-bold text-slate-500">배당성향</p>
+          <p className="orbitron tabular-nums text-sm font-black text-slate-900">{payoutRatio !== null ? `${(payoutRatio * 100).toFixed(1)}%` : "—"}</p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">순이익 대비 지급 비율</p>
+        </div>
+        <div data-stock-dividend-metric="history" className="rounded-md border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[10px] font-bold text-slate-500">배당 이력</p>
+          <p className="orbitron tabular-nums text-sm font-black text-slate-900">{historyValue}</p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">{historyNote}</p>
+        </div>
+      </div>
+
+      {dpsValues.length > 0 ? (
+        <div data-stock-dividend-history-chart className="mt-4 border-t border-slate-200 pt-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] font-black tracking-[0.08em] text-slate-500">DPS 추이</p>
+            <p className="text-[10px] font-semibold text-slate-500">
+              최근 {latestDps !== null ? formatMoney(latestDps, currency) : "—"} · 추정 {isFiniteNumber(nextDps) ? formatMoney(nextDps, currency) : "—"}
+            </p>
+          </div>
+          <MiniBarChart actuals={dpsSeries} estimates={estimateDps} years={years} color="var(--c-info)" formatValue={(value) => formatMoney(value, currency)} />
+        </div>
+      ) : (
+        <p data-stock-dividend-empty className="mt-4 rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500">
+          이 티커에서는 DPS 시계열을 찾지 못했습니다. 수익률/성향 값이 없으면 배당 분석은 빈 상태로 유지됩니다.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function StockEstimatesPanel({
   detail,
   years,
@@ -1316,10 +1419,11 @@ export default function StockDetailClient({
   const [connectionEntry, setConnectionEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
   const [stockServicesEntry, setStockServicesEntry] = useState<StockServicesEntry | null | undefined>(undefined);
   const [fenokSignalLens, setFenokSignalLens] = useState<FenokSignalsSummaryRecord | null | undefined>(undefined);
+  const [highlightDividend, setHighlightDividend] = useState(false);
   const marketFactsAssetType = marketFacts?.asset_type;
-  const selectStockTab = useCallback((tab: StockTab, mode: "push" | "replace" = "push") => {
+  const selectStockTab = useCallback((tab: StockTab, mode: "push" | "replace" = "push", hash: string | null = null) => {
     setStockTab(tab);
-    writeStockTabUrl(tab, mode);
+    writeStockTabUrl(tab, mode, hash);
   }, []);
 
   useEffect(() => {
@@ -1480,6 +1584,18 @@ export default function StockDetailClient({
       : []),
     ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
   ];
+
+  useEffect(() => {
+    if (activeStockTab !== "financials" || typeof window === "undefined" || window.location.hash !== "#dividend") return;
+    const raf = window.requestAnimationFrame(() => {
+      const panel = document.getElementById("dividend");
+      if (!panel) return;
+      panel.scrollIntoView({ block: "start", behavior: "smooth" });
+      setHighlightDividend(true);
+      window.setTimeout(() => setHighlightDividend(false), 1800);
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [activeStockTab, detail, detailLoading]);
 
   useEffect(() => {
     function handlePopState() {
@@ -1706,13 +1822,14 @@ export default function StockDetailClient({
                     </div>
                   ))}
                 </div>
-                <div className="mt-5 border-t border-slate-100 pt-4">
-                  <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
-                  <CompactFinancialTable detail={detail} years={years} />
-                </div>
-                <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
-                <RawFinancialDepth detail={detail} />
-              </SectionCard>
+	                <div className="mt-5 border-t border-slate-100 pt-4">
+	                  <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
+	                  <CompactFinancialTable detail={detail} years={years} />
+	                </div>
+	                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} />
+	                <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
+	                <RawFinancialDepth detail={detail} />
+	              </SectionCard>
             ) : null}
 
             {activeStockTab === "statistics" ? (
@@ -1876,11 +1993,11 @@ export default function StockDetailClient({
             {yfAvailable ? (
               <div data-stock-summary-module="summary-score">
                 <SummaryScoreCard
-                  data={yfData}
-                  perBand={rowPerBand}
-                  industry={industryBench}
-                  onAreaSelect={selectStockTab}
-                />
+	                  data={yfData}
+	                  perBand={rowPerBand}
+	                  industry={industryBench}
+	                  onAreaSelect={(tab, hash) => selectStockTab(tab, "push", hash ?? null)}
+	                />
               </div>
             ) : null}
             <ValuationBandSummaryCard band={valuationBandSummary} signalLens={fenokSignalLens} />

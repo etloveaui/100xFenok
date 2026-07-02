@@ -3024,6 +3024,22 @@ async function collectRouteChecks(page, route) {
         });
       }
       if (stockTab === "financials") {
+        const dividendPanel = document.querySelector('[data-stock-dividend-panel][id="dividend"]');
+        if (!dividendPanel || dividendPanel.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "stock-dividend-panel-visible", detail: "missing visible #dividend panel on financials tab" });
+        } else {
+          const panelText = dividendPanel.textContent || "";
+          [
+            ["배당수익률", "yield"],
+            ["배당성향", "payout"],
+            ["배당 이력", "history"],
+          ].forEach(([label, key]) => {
+            const metric = dividendPanel.querySelector(`[data-stock-dividend-metric="${key}"]`);
+            if (!metric || !(metric.textContent || "").includes(label)) {
+              failures.push({ check: "stock-dividend-panel-label", detail: `missing ${label} (${key}); text=${panelText.slice(0, 120)}` });
+            }
+          });
+        }
         const rowChartButtons = Array.from(document.querySelectorAll("[data-stock-financial-row-chart-button]"))
           .filter((node) => {
             const rect = node.getBoundingClientRect();
@@ -3650,6 +3666,69 @@ async function collectStockSummaryAxisClickChecks(page, route) {
   }, route);
 }
 
+async function collectStockSummaryDividendAxisClickChecks(page, route) {
+  await page.goto(routeUrl(route), {
+    waitUntil: "networkidle",
+    timeout: 45000,
+  });
+  await page.waitForTimeout(250);
+
+  const button = page.locator('[data-stock-summary-axis="배당"]').first();
+  if ((await button.count()) === 0) {
+    return {
+      route,
+      viewportWidth: null,
+      scrollWidth: null,
+      failures: [{ check: "stock-summary-dividend-axis-click-target", detail: "no dividend axis link" }],
+    };
+  }
+
+  const buttonBox = await button.boundingBox();
+  const preClickFailures = [];
+  if (!buttonBox || buttonBox.height < 44) {
+    preClickFailures.push({ check: "stock-summary-dividend-axis-touch-target", detail: `height=${Math.round(buttonBox?.height || 0)}` });
+  }
+  await button.click({ timeout: 10000 });
+  await page.waitForTimeout(500);
+
+  const result = await page.evaluate((currentRoute) => {
+    const failures = [];
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    const dividendPanel = document.querySelector('[data-stock-dividend-panel][id="dividend"]');
+    const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
+    const params = new URLSearchParams(window.location.search);
+
+    if (!dividendPanel || dividendPanel.getBoundingClientRect().height <= 0) {
+      failures.push({ check: "stock-summary-dividend-axis-panel-visible", detail: "dividend panel not visible after axis click" });
+    }
+    if (params.get("tab") !== "financials" || window.location.hash !== "#dividend") {
+      failures.push({ check: "stock-summary-dividend-axis-url-sync", detail: `tab=${params.get("tab") || "missing"} hash=${window.location.hash || "missing"}` });
+    }
+    if (!selectedTab || !(selectedTab.textContent || "").includes("재무")) {
+      failures.push({ check: "stock-summary-dividend-axis-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
+    }
+    if (scrollWidth > viewportWidth + 1) {
+      failures.push({
+        check: "stock-summary-dividend-axis-no-horizontal-overflow",
+        detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+      });
+    }
+
+    return {
+      route: currentRoute,
+      viewportWidth,
+      scrollWidth,
+      failures,
+    };
+  }, route);
+  result.failures.unshift(...preClickFailures);
+  return result;
+}
+
 async function collectSectorViewSwitchChecks(page, route) {
   const viewport = page.viewportSize();
   if (!viewport || viewport.width >= 768) {
@@ -3767,6 +3846,9 @@ try {
           const summaryAxisChecks = await collectStockSummaryAxisClickChecks(page, route);
           result.failures.push(...summaryAxisChecks.failures);
           result.summaryAxisScrollWidth = summaryAxisChecks.scrollWidth;
+          const dividendAxisChecks = await collectStockSummaryDividendAxisClickChecks(page, route);
+          result.failures.push(...dividendAxisChecks.failures);
+          result.summaryDividendAxisScrollWidth = dividendAxisChecks.scrollWidth;
         }
         if (route.startsWith("/sectors")) {
           const sectorViewChecks = await collectSectorViewSwitchChecks(page, route);
