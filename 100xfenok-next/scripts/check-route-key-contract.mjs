@@ -31,13 +31,13 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     lines: "1-105",
     note: "Lane C corrected route-scope classification source",
   },
-  page_route_count: 45,
+  page_route_count: 47,
   core_covered_count: 19,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
   admin_internal_count: 9,
   closed_alias_count: 4,
-  out_of_scope_count: 4,
+  out_of_scope_count: 6,
   blocked_actions: ["route_patch", "redirect", "delete", "deploy", "public_mutation"],
   core_covered_representative_routes: [
     "/etfs/SPY",
@@ -316,6 +316,27 @@ function assertRank2DailyWrapRedirectContract(errors) {
   }
 }
 
+function assertClearCacheRetireRedirectContract(errors) {
+  const label = "low-risk CLEAR_CACHE retire redirect";
+  const redirectsPath = path.join(APP_ROOT, "public", "_redirects");
+  assert(fs.existsSync(redirectsPath), `${label}: public/_redirects is missing`, errors);
+  if (!fs.existsSync(redirectsPath)) return;
+
+  const lines = fs.readFileSync(redirectsPath, "utf8").split(/\r?\n/);
+  const source = "/tools/stock_analyzer/CLEAR_CACHE.html";
+  const destination = "/tools/stock-analyzer/";
+  const expectedRule = `${source} ${destination} 307`;
+  const anchorRule = "/100x/100x-main.html /100x/daily-wrap 307";
+  const ruleIndex = lines.indexOf(expectedRule);
+  const anchorIndex = lines.indexOf(anchorRule);
+
+  assert(ruleIndex !== -1, `${label}: missing _redirects rule ${expectedRule}`, errors);
+  assert(anchorIndex !== -1, `${label}: missing _redirects anchor ${anchorRule}`, errors);
+  if (ruleIndex !== -1 && anchorIndex !== -1) {
+    assert(ruleIndex === anchorIndex + 1, `${label}: ${expectedRule} must stay immediately after ${anchorRule}`, errors);
+  }
+}
+
 function assertRouteIaContracts(errors) {
   const productNavSource = readAppSource("src/lib/product-nav.ts");
   const shellSource = readAppSource("src/components/shell/AppShell.tsx");
@@ -446,6 +467,7 @@ for (const key of REQUIRED_ROUTE_KEYS) {
 assertRouteIaContracts(errors);
 assertRouteScopeClassificationAck(errors);
 assertRank2DailyWrapRedirectContract(errors);
+assertClearCacheRetireRedirectContract(errors);
 
 for (const routePattern of routeExports.appRoutePatterns ?? []) {
   const pagePath = routePatternPage(routePattern);
