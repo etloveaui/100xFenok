@@ -24,6 +24,44 @@ const REQUIRED_ROUTE_KEYS = [
   "radar",
 ];
 
+const ROUTE_SCOPE_CLASSIFICATION_ACK = {
+  schema_version: "route_scope_classification_ack/v0.1",
+  source: {
+    path: "../../../docs/research/20260702_route_scope_classification.md",
+    lines: "1-105",
+    note: "Lane C corrected route-scope classification source",
+  },
+  page_route_count: 44,
+  core_covered_count: 19,
+  needs_route_owner_probe_count: 0,
+  legacy_bridge_closed_count: 9,
+  admin_internal_count: 9,
+  closed_alias_count: 4,
+  out_of_scope_count: 3,
+  blocked_actions: ["route_patch", "redirect", "delete", "deploy", "public_mutation"],
+  core_covered_representative_routes: [
+    "/etfs/SPY",
+    "/etfs/compare",
+    "/etfs/new",
+    "/etfs",
+    "/explore",
+    "/macro-chart",
+    "/market-valuation",
+    "/market-valuation/structure",
+    "/market/events",
+    "/multichart",
+    "/",
+    "/portfolio",
+    "/regime",
+    "/screener",
+    "/sectors",
+    "/stock/NVDA",
+    "/superinvestors?tab=insights",
+    "/tools/stock-analyzer/native",
+    "/workbench",
+  ],
+};
+
 function collectComponentFiles(rootDir, relativeRoot) {
   const results = [];
   const dir = path.join(APP_ROOT, relativeRoot);
@@ -191,10 +229,70 @@ function readAppSource(relativePath) {
   return fs.readFileSync(path.join(APP_ROOT, relativePath), "utf8");
 }
 
+function collectAppPageRoutes() {
+  const appDir = path.join(APP_ROOT, "src", "app");
+  const routes = [];
+  for (const entry of fs.readdirSync(appDir, { recursive: true })) {
+    if (!entry.endsWith("page.tsx")) continue;
+    const route = entry === "page.tsx"
+      ? "/"
+      : `/${path.posix.dirname(entry).replace(/\\/g, "/")}`;
+    routes.push(route);
+  }
+  return routes.sort();
+}
+
+function readDefaultMobileUxRoutes() {
+  const source = readAppSource("scripts/check-mobile-ux-contract.mjs");
+  const match = source.match(/QA_MOBILE_UX_ROUTES\s*\|\|\s*"([^"]+)"/);
+  if (!match) return null;
+  return match[1].split(",").map((route) => route.trim()).filter(Boolean);
+}
+
 function assertSourceTokens(source, tokens, label, errors) {
   for (const token of tokens) {
     assert(source.includes(token), `${label}: missing ${token}`, errors);
   }
+}
+
+function assertRouteScopeClassificationAck(errors) {
+  const ack = ROUTE_SCOPE_CLASSIFICATION_ACK;
+  const label = ack.schema_version;
+  const countedTotal = ack.core_covered_count
+    + ack.needs_route_owner_probe_count
+    + ack.legacy_bridge_closed_count
+    + ack.admin_internal_count
+    + ack.closed_alias_count
+    + ack.out_of_scope_count;
+  assert(countedTotal === ack.page_route_count, `${label}: classification counts must sum to ${ack.page_route_count}`, errors);
+  assert(ack.needs_route_owner_probe_count === 0, `${label}: needs_route_owner_probe must remain 0`, errors);
+  assert(
+    ack.core_covered_representative_routes.length === ack.core_covered_count,
+    `${label}: representative route count must match core_covered_count`,
+    errors,
+  );
+  assert(
+    new Set(ack.core_covered_representative_routes).size === ack.core_covered_representative_routes.length,
+    `${label}: representative routes must be unique`,
+    errors,
+  );
+  for (const action of ["route_patch", "redirect", "delete", "deploy", "public_mutation"]) {
+    assert(ack.blocked_actions.includes(action), `${label}: blocked_actions missing ${action}`, errors);
+  }
+
+  const appPageRoutes = collectAppPageRoutes();
+  assert(appPageRoutes.length === ack.page_route_count, `${label}: expected ${ack.page_route_count} app page routes, got ${appPageRoutes.length}`, errors);
+
+  const defaultMobileUxRoutes = readDefaultMobileUxRoutes();
+  assert(Boolean(defaultMobileUxRoutes), `${label}: could not parse default qa:mobile-ux route list`, errors);
+  if (!defaultMobileUxRoutes) return;
+  const defaultMobileUxRouteSet = new Set(defaultMobileUxRoutes);
+  const missingRepresentatives = ack.core_covered_representative_routes.filter((route) => !defaultMobileUxRouteSet.has(route));
+  assert(
+    missingRepresentatives.length === 0,
+    `${label}: core_covered representative routes missing from default qa:mobile-ux: ${missingRepresentatives.join(", ")}`,
+    errors,
+  );
 }
 
 function assertRouteIaContracts(errors) {
@@ -325,6 +423,7 @@ for (const key of REQUIRED_ROUTE_KEYS) {
 }
 
 assertRouteIaContracts(errors);
+assertRouteScopeClassificationAck(errors);
 
 for (const routePattern of routeExports.appRoutePatterns ?? []) {
   const pagePath = routePatternPage(routePattern);
