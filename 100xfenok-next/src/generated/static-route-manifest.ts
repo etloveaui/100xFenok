@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 29322,
-      "updatedAt": "2026-07-02T02:39:56.143Z"
+      "updatedAt": "2026-07-02T04:29:09.841Z"
     },
     {
       "name": "reports-index.json",
@@ -34,13 +34,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 45024,
-      "updatedAt": "2026-07-02T02:39:56.140Z"
+      "sizeBytes": 44983,
+      "updatedAt": "2026-07-02T04:29:09.841Z"
     },
     {
       "name": "fenok-edge-coverage-index.json",
       "sizeBytes": 31948,
-      "updatedAt": "2026-07-02T03:43:39.130Z"
+      "updatedAt": "2026-07-02T04:31:38.343Z"
     },
     {
       "name": "fenok-edge-korea-krx-daily-index.json",
@@ -55,7 +55,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-07-02T01:36:00.735Z"
+      "updatedAt": "2026-07-02T04:29:09.841Z"
     },
     {
       "name": "pro-density-baseline.json",
@@ -65,7 +65,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 13390,
-      "updatedAt": "2026-07-02T03:43:32.010Z"
+      "updatedAt": "2026-07-02T04:31:29.798Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -148,27 +148,27 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 985237,
-      "updatedAt": "2026-07-02T03:43:31.853Z"
+      "updatedAt": "2026-07-02T04:31:29.642Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 153638,
-      "updatedAt": "2026-07-02T03:43:31.856Z"
+      "updatedAt": "2026-07-02T04:31:29.644Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7915361,
-      "updatedAt": "2026-07-02T03:43:31.830Z"
+      "updatedAt": "2026-07-02T04:31:29.618Z"
     },
     {
       "name": "fenok_etf_core_daily_basket_summary.json",
       "sizeBytes": 76424,
-      "updatedAt": "2026-07-02T03:43:29.065Z"
+      "updatedAt": "2026-07-02T04:31:26.799Z"
     },
     {
       "name": "fenok_etf_signals_summary.json",
       "sizeBytes": 2604025,
-      "updatedAt": "2026-07-02T03:43:26.486Z"
+      "updatedAt": "2026-07-02T04:31:24.203Z"
     },
     {
       "name": "fenok_occ_options_availability.json",
@@ -178,7 +178,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "fenok_signals_summary.json",
       "sizeBytes": 323243,
-      "updatedAt": "2026-07-02T03:43:21.117Z"
+      "updatedAt": "2026-07-02T04:31:19.035Z"
     },
     {
       "name": "market_data_audit.json",
@@ -47701,8 +47701,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "yahoo-ticker.json",
-      "sizeBytes": 730,
-      "updatedAt": "2026-07-02T01:36:00.767Z"
+      "sizeBytes": 734,
+      "updatedAt": "2026-07-02T04:29:09.841Z"
     }
   ],
   "metadata": [
