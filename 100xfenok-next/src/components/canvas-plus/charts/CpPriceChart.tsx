@@ -8,7 +8,7 @@ function CpPriceChartLoading() {
   return (
     <div className="cp-chart-shell" data-cp-price-chart-loading>
       <div className="cp-chart-skeleton" aria-hidden="true" />
-      <p className="cp-chart-summary">Chart loading...</p>
+      <p className="cp-chart-summary">차트 불러오는 중...</p>
     </div>
   );
 }

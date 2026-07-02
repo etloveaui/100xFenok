@@ -17,6 +17,7 @@ export type CpPriceChartProps = {
   data: readonly CpChartDatum[];
   title: string;
   summary: string;
+  headingLevel?: "h2" | "h3";
   ariaLabel?: string;
   range?: CpChartRange;
   height?: number;

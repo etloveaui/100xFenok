@@ -51,8 +51,7 @@ export type SectorDefinition = {
 };
 
 export type QuickIndexDefinition = {
-  symbol: 'SPY' | 'QQQ';
-  fallback: number;
+  symbol: 'SPY' | 'QQQ' | 'DIA';
 };
 
 export type DashboardFreshnessCadence = 'realtime' | 'daily' | 'weekly' | 'quarterly';
@@ -89,11 +88,13 @@ export type SectorSnapshot = {
 };
 
 export type QuickIndexSnapshot = {
-  symbol: 'SPY' | 'QQQ';
+  symbol: 'SPY' | 'QQQ' | 'DIA';
   price: number | null;
   change: number;
   displayHorizon: '1D' | 'BASE';
   marketState: string | null;
+  fetchedAt: string | null;
+  isLive: boolean;
 };
 
 export type LiquidityBar = {

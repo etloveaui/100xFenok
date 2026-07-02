@@ -254,12 +254,14 @@ export function buildDashboardSnapshot(payload: {
 
   const quickIndices: QuickIndexSnapshot[] = QUICK_INDEX_DEFINITIONS.map((item, index): QuickIndexSnapshot => {
     const ticker = payload.indexTicker[item.symbol];
-    const fallbackQuick: QuickIndexSnapshot = fallback.quickIndices[index] ?? {
+    const fallbackQuick: QuickIndexSnapshot = fallback.quickIndices.find((entry) => entry.symbol === item.symbol) ?? fallback.quickIndices[index] ?? {
       symbol: item.symbol,
       price: null,
-      change: item.fallback,
+      change: 0,
       displayHorizon: 'BASE' as const,
       marketState: null,
+      fetchedAt: null,
+      isLive: false,
     };
     const liveChange = typeof ticker?.changePercent === 'number' && Number.isFinite(ticker.changePercent)
       ? ticker.changePercent / 100
@@ -267,6 +269,8 @@ export function buildDashboardSnapshot(payload: {
     const price = typeof ticker?.price === 'number' && Number.isFinite(ticker.price)
       ? ticker.price
       : fallbackQuick.price;
+    const fetchedAt = pickTimestamp(ticker?.fetchedAt) ?? fallbackQuick.fetchedAt;
+    const isLive = hasTickerData(ticker);
     const marketState = typeof ticker?.marketState === 'string' && ticker.marketState.trim().length > 0
       ? ticker.marketState.toUpperCase()
       : fallbackQuick.marketState;
@@ -277,6 +281,8 @@ export function buildDashboardSnapshot(payload: {
       change: liveChange ?? fallbackQuick.change,
       displayHorizon: liveChange === null ? 'BASE' : '1D',
       marketState,
+      fetchedAt,
+      isLive,
     };
   });
 

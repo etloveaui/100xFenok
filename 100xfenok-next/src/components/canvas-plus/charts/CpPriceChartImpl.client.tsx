@@ -81,6 +81,7 @@ export function CpPriceChartImpl({
   data,
   title,
   summary,
+  headingLevel = "h2",
   ariaLabel,
   range = "1Y",
   height = 280,
@@ -89,7 +90,7 @@ export function CpPriceChartImpl({
   showCrosshair = true,
   showVolume = false,
   className,
-  emptyLabel = "No chart data available.",
+  emptyLabel = "차트 데이터 없음",
 }: CpPriceChartProps) {
   const shellRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -99,8 +100,16 @@ export function CpPriceChartImpl({
   );
 
   const hasData = useMemo(() => {
-    if (kind === "candlestick") return toCandlestickData(data).length > 0;
-    return toLineData(data).length > 0;
+    if (kind === "candlestick") {
+      return data.some(
+        (datum) =>
+          Number.isFinite(datum.open) &&
+          Number.isFinite(datum.high) &&
+          Number.isFinite(datum.low) &&
+          Number.isFinite(datum.close),
+      );
+    }
+    return data.some((datum) => Number.isFinite(datum.value));
   }, [data, kind]);
 
   useEffect(() => {
@@ -230,6 +239,8 @@ export function CpPriceChartImpl({
     };
   }, [data, hasData, height, isVisible, kind, prefersReducedMotion, showCrosshair, showGrid, showVolume]);
 
+  const HeadingTag = headingLevel;
+
   return (
     <section
       ref={shellRef}
@@ -242,7 +253,7 @@ export function CpPriceChartImpl({
     >
       <header className="cp-chart-shell__header">
         <div>
-          <h2 className="cp-chart-shell__title">{title}</h2>
+          <HeadingTag className="cp-chart-shell__title">{title}</HeadingTag>
           <p className="cp-chart-summary" data-cp-price-chart-summary>
             {summary}
           </p>
@@ -252,13 +263,15 @@ export function CpPriceChartImpl({
 
       {!hasData ? <p className="cp-chart-fallback">{emptyLabel}</p> : null}
       {hasData && !isVisible ? <div className="cp-chart-skeleton" aria-hidden="true" /> : null}
-      <div
-        ref={canvasRef}
-        className="cp-chart-shell__canvas"
-        data-cp-price-chart-canvas
-        data-reduced-motion={prefersReducedMotion ? "true" : "false"}
-        style={{ minHeight: height }}
-      />
+      {hasData ? (
+        <div
+          ref={canvasRef}
+          className="cp-chart-shell__canvas"
+          data-cp-price-chart-canvas
+          data-reduced-motion={prefersReducedMotion ? "true" : "false"}
+          style={{ minHeight: height }}
+        />
+      ) : null}
     </section>
   );
 }

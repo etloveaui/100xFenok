@@ -25,8 +25,9 @@ export const SECTOR_DEFINITIONS: SectorDefinition[] = [
 ];
 
 export const QUICK_INDEX_DEFINITIONS: QuickIndexDefinition[] = [
-  { symbol: 'SPY', fallback: 0.0085 },
-  { symbol: 'QQQ', fallback: 0.0112 },
+  { symbol: 'SPY' },
+  { symbol: 'QQQ' },
+  { symbol: 'DIA' },
 ];
 
 function fallbackFreshness(cadence: DashboardFreshnessCadence): DashboardSourceFreshness {
@@ -83,9 +84,11 @@ export const DEFAULT_DASHBOARD: DashboardSnapshot = {
   quickIndices: QUICK_INDEX_DEFINITIONS.map((item) => ({
     symbol: item.symbol,
     price: null,
-    change: item.fallback,
+    change: 0,
     displayHorizon: 'BASE',
     marketState: null,
+    fetchedAt: null,
+    isLive: false,
   })),
   liquidityFlow: 87,
   liquidityFlowLabel: '대출 흐름이 개선되고 있습니다.',

@@ -270,19 +270,19 @@
 }
 
 .cp-badge[data-tone="positive"] {
-  color: var(--cp-positive);
+  color: color-mix(in srgb, var(--cp-positive) 78%, var(--cp-text-strong));
   background: var(--cp-positive-soft);
   border-color: var(--cp-positive-soft);
 }
 
 .cp-badge[data-tone="negative"] {
-  color: var(--cp-negative);
+  color: color-mix(in srgb, var(--cp-negative) 72%, var(--cp-text-strong));
   background: var(--cp-negative-soft);
   border-color: var(--cp-negative-soft);
 }
 
 .cp-badge[data-tone="warning"] {
-  color: var(--cp-warning);
+  color: color-mix(in srgb, var(--cp-warning) 68%, var(--cp-text-strong));
   background: var(--cp-warning-soft);
   border-color: var(--cp-warning-soft);
 }
@@ -738,6 +738,11 @@
   --cp-index-soft: color-mix(in srgb, var(--cp-negative) 10%, transparent);
 }
 
+.cp-index-card[data-tone="neutral"] {
+  --cp-index-tone: var(--cp-neutral);
+  --cp-index-soft: color-mix(in srgb, var(--cp-neutral) 10%, transparent);
+}
+
 .cp-index-card__topline,
 .cp-index-card__quote {
   display: flex;
@@ -1091,6 +1096,205 @@
   transform: translateY(-2px);
 }
 
+.cp-home-slice-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.72fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.cp-watch-zone,
+.cp-investor-card {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--cp-border-strong) 78%, transparent);
+  border-radius: var(--cp-radius-lg);
+  background:
+    radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--cp-chart-line-2) 10%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 96%, transparent) 0%, var(--cp-surface) 100%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--cp-surface) 86%, transparent) inset,
+    0 16px 34px color-mix(in srgb, var(--cp-text-strong) 7%, transparent);
+}
+
+.cp-watch-zone {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.cp-watch-zone__header,
+.cp-investor-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+}
+
+.cp-watch-zone__header h2,
+.cp-investor-card__header h2 {
+  color: var(--cp-text-strong);
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.18;
+}
+
+.cp-watch-zone__header span,
+.cp-investor-card__header span {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border: 1px solid var(--cp-divider);
+  border-radius: 999px;
+  color: var(--cp-text-muted);
+  background: color-mix(in srgb, var(--cp-surface) 72%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cp-watch-zone__indices {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cp-watch-chip {
+  --cp-watch-tone: var(--cp-positive);
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--cp-watch-tone) 24%, var(--cp-border));
+  border-radius: var(--cp-radius-md);
+  color: inherit;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--cp-watch-tone) 10%, transparent), transparent 58%),
+    var(--cp-surface);
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.cp-watch-chip[data-tone="negative"] {
+  --cp-watch-tone: var(--cp-negative);
+}
+
+.cp-watch-chip:hover {
+  border-color: color-mix(in srgb, var(--cp-watch-tone) 44%, var(--cp-border));
+  transform: translateY(-1px);
+}
+
+.cp-watch-chip span {
+  color: var(--cp-text-soft);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.cp-watch-chip strong {
+  overflow: hidden;
+  color: var(--cp-text-strong);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-watch-chip p {
+  overflow: hidden;
+  min-height: 30px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.cp-watch-chip em {
+  color: var(--cp-watch-tone);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.cp-investor-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.cp-investor-card:hover {
+  border-color: color-mix(in srgb, var(--cp-accent) 44%, var(--cp-border));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--cp-surface) 92%, transparent) inset,
+    0 18px 36px color-mix(in srgb, var(--cp-accent) 11%, transparent);
+  transform: translateY(-1px);
+}
+
+.cp-investor-card__stack {
+  display: grid;
+  gap: 9px;
+}
+
+.cp-investor-row {
+  --cp-investor-tone: var(--cp-neutral);
+  display: grid;
+  grid-template-columns: minmax(70px, 0.7fr) minmax(64px, 0.62fr) minmax(0, 1.4fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--cp-investor-tone) 20%, var(--cp-divider));
+  border-radius: var(--cp-radius-sm);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--cp-investor-tone) 8%, transparent), transparent 68%),
+    var(--cp-surface-muted);
+}
+
+.cp-investor-row[data-tone="positive"] {
+  --cp-investor-tone: var(--cp-positive);
+}
+
+.cp-investor-row[data-tone="negative"] {
+  --cp-investor-tone: var(--cp-negative);
+}
+
+.cp-investor-row[data-tone="warning"] {
+  --cp-investor-tone: var(--cp-warning);
+}
+
+.cp-investor-row span {
+  color: var(--cp-text-soft);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.cp-investor-row strong {
+  color: var(--cp-text-strong);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.cp-investor-row p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-investor-row em {
+  color: var(--cp-investor-tone);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
 .cp-poc__feature-grid,
 .cp-poc__insight-grid,
 .cp-poc__two-column {
@@ -1285,6 +1489,462 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.cp-stock-detail-preview {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 84%, transparent), transparent 360px),
+    var(--cp-bg);
+}
+
+.cp-stock-detail-hero,
+.cp-stock-chart-card,
+.cp-stock-rail-card,
+.cp-stock-showcase-metrics,
+.cp-stock-action-strip {
+  min-width: 0;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent),
+    0 16px 38px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
+}
+
+.cp-stock-detail-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "identity price"
+    "links links"
+    "tabs tabs";
+  gap: 14px 18px;
+  padding: 18px;
+}
+
+.cp-stock-detail-hero__identity {
+  grid-area: identity;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 14px;
+}
+
+.cp-stock-detail-logo {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  color: var(--cp-surface);
+  background:
+    radial-gradient(circle at 32% 24%, color-mix(in srgb, var(--cp-surface) 40%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--cp-text-strong), var(--cp-accent-strong));
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.cp-stock-detail-title-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.cp-stock-detail-title-row h1 {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.cp-stock-detail-hero__identity p {
+  margin: 4px 0 0;
+  color: var(--cp-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cp-stock-detail-price {
+  grid-area: price;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: start;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.cp-stock-detail-price__value {
+  color: var(--cp-text-strong);
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-stock-detail-price__chip {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--cp-surface);
+  background: var(--cp-neutral);
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-stock-detail-price__chip[data-tone="positive"] {
+  background: var(--cp-positive);
+}
+
+.cp-stock-detail-price__chip[data-tone="negative"] {
+  background: var(--cp-negative);
+}
+
+.cp-stock-detail-hero__links {
+  grid-area: links;
+}
+
+.cp-stock-detail-preview .stock-market-links {
+  margin: 0;
+}
+
+.cp-stock-detail-preview .stock-tabs {
+  grid-area: tabs;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  border-top: 1px solid var(--cp-divider);
+  padding-top: 12px;
+}
+
+.cp-stock-detail-preview .stock-tab {
+  min-height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  padding: 0 12px;
+  color: var(--cp-text-muted);
+  background: var(--cp-surface);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.cp-stock-detail-preview .stock-tab.on {
+  color: var(--cp-surface);
+  border-color: var(--cp-accent);
+  background: var(--cp-accent);
+}
+
+.cp-stock-detail-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(310px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.cp-stock-detail-main,
+.cp-stock-right-rail {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cp-stock-chart-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.cp-stock-chart-card__header,
+.cp-stock-rail-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cp-stock-chart-card__header h2,
+.cp-stock-rail-card__header h2 {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.cp-stock-rail-eyebrow {
+  margin: 0 0 4px;
+  color: var(--cp-accent-strong);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.cp-stock-range-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.cp-stock-price-chart.cp-chart-shell {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.cp-stock-price-chart .cp-chart-shell__canvas,
+.cp-stock-price-chart .cp-chart-skeleton,
+.cp-stock-price-chart .cp-chart-fallback {
+  min-height: 420px;
+}
+
+.cp-stock-showcase-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  padding: 0;
+  background: var(--cp-divider);
+}
+
+.cp-stock-showcase-metrics > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px;
+  background: var(--cp-surface);
+}
+
+.cp-stock-showcase-metrics span,
+.cp-stock-financial-list span,
+.cp-stock-edge-rows span {
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.cp-stock-showcase-metrics strong,
+.cp-stock-financial-list strong,
+.cp-stock-edge-rows strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--cp-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-stock-showcase-metrics em,
+.cp-stock-financial-list em {
+  color: var(--cp-text-soft);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.cp-stock-action-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+}
+
+.cp-stock-action-strip button {
+  display: grid;
+  gap: 3px;
+  min-height: 64px;
+  min-width: 0;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  padding: 10px;
+  text-align: left;
+  background: var(--cp-surface-muted);
+  cursor: pointer;
+}
+
+.cp-stock-action-strip button:hover {
+  border-color: var(--cp-accent);
+  background: var(--cp-surface);
+}
+
+.cp-stock-action-strip strong {
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.cp-stock-action-strip span {
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.cp-stock-action-strip--empty {
+  display: block;
+}
+
+.cp-stock-rail-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.cp-stock-rail-card__header > span {
+  flex: 0 0 auto;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--cp-text-muted);
+  background: var(--cp-surface-muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.cp-stock-rail-card__summary {
+  margin: 0;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.cp-stock-valuation-track {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--cp-surface-muted);
+}
+
+.cp-stock-valuation-track span,
+.cp-stock-valuation-track i {
+  position: absolute;
+  inset-block: 0;
+}
+
+.cp-stock-valuation-track [data-zone="deep-discount"] {
+  left: 0;
+  background: color-mix(in srgb, var(--cp-positive) 58%, var(--cp-surface));
+}
+
+.cp-stock-valuation-track [data-zone="discount"] {
+  background: var(--cp-positive-soft);
+}
+
+.cp-stock-valuation-track [data-zone="neutral"] {
+  background: var(--cp-surface);
+}
+
+.cp-stock-valuation-track [data-zone="premium"] {
+  background: var(--cp-negative-soft);
+}
+
+.cp-stock-valuation-track [data-zone="overheated"] {
+  background: color-mix(in srgb, var(--cp-negative) 52%, var(--cp-surface));
+}
+
+.cp-stock-valuation-track i {
+  width: 4px;
+  border-radius: 999px;
+  background: var(--cp-text-strong);
+  transform: translateX(-2px);
+}
+
+.cp-stock-valuation-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-stock-valuation-labels strong {
+  color: var(--cp-text-strong);
+}
+
+.cp-stock-edge-gauge {
+  width: min(166px, 100%);
+}
+
+.cp-stock-edge-rows,
+.cp-stock-financial-list {
+  display: grid;
+  gap: 8px;
+}
+
+.cp-stock-edge-rows > div,
+.cp-stock-financial-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 10px;
+  align-items: baseline;
+  border-top: 1px solid var(--cp-divider);
+  padding-top: 8px;
+}
+
+.cp-stock-financial-list em {
+  grid-column: 1 / -1;
+}
+
+.cp-stock-skeleton-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.cp-stock-skeleton-stack span {
+  min-height: 56px;
+  border-radius: var(--cp-radius-sm);
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent),
+    var(--cp-surface-muted);
+  background-size: 220px 100%, auto;
+  animation: cp-chart-skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+.cp-stock-detail-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cp-stock-detail-footer a {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  padding: 0 12px;
+  color: var(--cp-text-muted);
+  background: var(--cp-surface);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.fnk-shell .cp-stock-detail-preview {
+  display: grid;
+  flex-direction: initial;
+}
+
+.fnk-shell .cp-stock-detail-preview .cp-stock-detail-body {
+  display: grid;
 }
 
 .cp-screener-lab {
@@ -1608,6 +2268,147 @@
   display: none;
 }
 
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td {
+  overflow: visible;
+  padding: 0;
+  border-bottom: 1px solid var(--cp-border-strong);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-accent) 7%, var(--cp-surface)) 0%, var(--cp-surface-muted) 100%);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  border-top: 1px solid var(--cp-border-strong);
+  color: var(--cp-text-strong);
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 88%, var(--cp-surface-muted)) 0%, var(--cp-surface-muted) 100%);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > * {
+  min-width: 0;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"] {
+  overflow: hidden;
+  border-color: var(--cp-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 96%, transparent) 0%, var(--cp-surface) 100%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--cp-surface) 92%, transparent) inset,
+    0 16px 30px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"]:first-child {
+  border-color: color-mix(in srgb, var(--cp-accent) 26%, var(--cp-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--cp-accent) 8%, transparent), transparent 42%),
+    var(--cp-surface);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child > .mb-3.grid > div,
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"] [class*="rounded-lg"],
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"] [class*="rounded-xl"] {
+  border-color: var(--cp-divider);
+  background: var(--cp-surface-muted);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > div:first-child {
+  padding: 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, var(--cp-surface) 0%, var(--cp-surface-muted) 100%);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > .grid > div {
+  padding: 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: 8px;
+  background: var(--cp-surface);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > .grid > div h3 {
+  margin: 0 0 8px;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > .grid > div .grid > div {
+  background: var(--cp-surface-muted);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .mb-3.flex {
+  align-items: center;
+  margin: 0;
+  padding: 2px 2px 0;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .mb-3.flex > span {
+  color: var(--cp-text-strong);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .mb-3.flex a {
+  border-color: var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text-strong);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--cp-text-strong) 5%, transparent);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 {
+  gap: 12px;
+  margin: 0;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: 8px;
+  background: var(--cp-surface);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--cp-surface) 90%, transparent) inset,
+    0 12px 24px color-mix(in srgb, var(--cp-text-strong) 5%, transparent);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 > div h4,
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div h3,
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div h4 {
+  color: var(--cp-text-strong);
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 svg {
+  border: 1px solid var(--cp-divider);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, var(--cp-surface-muted) 0%, var(--cp-surface) 100%);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div th,
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div td {
+  border-color: var(--cp-divider);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div th,
+[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div td.sticky {
+  background: var(--cp-surface);
+}
+
 [data-canvas-plus-screener-preview] .cp-screener-table [data-canvas-plus-sticky-cell] {
   position: sticky;
   z-index: 4;
@@ -1809,14 +2610,18 @@
   }
 
   .cp-home-production .cp-market-band {
-    order: 3;
-  }
-
-  .cp-home-production .cp-poc__feature-grid {
     order: 2;
   }
 
+  .cp-home-production .cp-poc__feature-grid {
+    order: 5;
+  }
+
   .cp-home-production .cp-home-visual-grid {
+    order: 3;
+  }
+
+  .cp-home-production .cp-home-slice-two {
     order: 4;
   }
 
@@ -1854,12 +2659,15 @@
 
   .cp-home-production .cp-market-band,
   .cp-home-production .cp-edge-panel,
-  .cp-home-production .cp-sector-heatmap {
+  .cp-home-production .cp-sector-heatmap,
+  .cp-home-production .cp-watch-zone,
+  .cp-home-production .cp-investor-card {
     padding: 12px;
   }
 
   .cp-home-production .cp-market-band__cards,
   .cp-home-production .cp-home-visual-grid,
+  .cp-home-production .cp-home-slice-two,
   .cp-home-production .cp-edge-panel__body {
     grid-template-columns: 1fr;
   }
@@ -1887,6 +2695,33 @@
   .cp-home-production .cp-sector-heatmap__tile:nth-child(3) {
     grid-column: auto;
     grid-row: auto;
+  }
+
+  .cp-home-production .cp-watch-zone__indices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .cp-home-production .cp-watch-chip {
+    gap: 4px;
+    padding: 9px;
+  }
+
+  .cp-home-production .cp-watch-chip strong {
+    font-size: 16px;
+  }
+
+  .cp-home-production .cp-watch-chip p {
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  .cp-home-production .cp-investor-row {
+    grid-template-columns: minmax(0, 0.8fr) minmax(58px, 0.5fr) auto;
+  }
+
+  .cp-home-production .cp-investor-row p {
+    display: none;
   }
 
   .cp-home-production .cp-feature-tile,
@@ -1928,6 +2763,37 @@
   .cp-screener-card-grid {
     display: grid;
   }
+
+  .cp-stock-detail-preview {
+    padding: 12px;
+  }
+
+  .cp-stock-detail-hero {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "identity"
+      "price"
+      "links"
+      "tabs";
+  }
+
+  .cp-stock-detail-price {
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .cp-stock-detail-body {
+    grid-template-columns: 1fr;
+  }
+
+  .cp-stock-right-rail {
+    grid-row: auto;
+  }
+
+  .cp-stock-showcase-metrics,
+  .cp-stock-action-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 520px) {
@@ -1952,5 +2818,51 @@
 
   .cp-stock-summary__badges {
     justify-content: flex-start;
+  }
+
+  .cp-stock-detail-preview {
+    padding: 10px;
+  }
+
+  .cp-stock-detail-hero,
+  .cp-stock-chart-card,
+  .cp-stock-rail-card,
+  .cp-stock-action-strip {
+    padding: 12px;
+  }
+
+  .cp-stock-detail-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 21px;
+  }
+
+  .cp-stock-detail-title-row h1 {
+    font-size: 24px;
+  }
+
+  .cp-stock-detail-price__value {
+    font-size: 28px;
+  }
+
+  .cp-stock-chart-card__header,
+  .cp-stock-rail-card__header {
+    flex-direction: column;
+  }
+
+  .cp-stock-range-tabs {
+    justify-content: flex-start;
+  }
+
+  .cp-stock-price-chart .cp-chart-shell__canvas,
+  .cp-stock-price-chart .cp-chart-skeleton,
+  .cp-stock-price-chart .cp-chart-fallback {
+    min-height: 320px;
+  }
+
+  .cp-stock-showcase-metrics,
+  .cp-stock-action-strip {
+    grid-template-columns: 1fr;
   }
 }

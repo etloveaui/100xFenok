@@ -12,6 +12,7 @@ import { clamp, formatSignedPercentDecimal, getRegimeClass, getRegimeLabel } fro
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
+import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 type RegimeTone = "positive" | "negative" | "warning" | "neutral";
 type GatewayTone = "accent" | RegimeTone;
@@ -29,8 +30,6 @@ type IndexCardDefinition = {
   symbol: IndexSymbol;
   label: string;
   detail: string;
-  fallbackPrice: number;
-  fallbackChangePercent: number;
 };
 
 type IndexCardViewModel = IndexCardDefinition & {
@@ -42,13 +41,36 @@ type IndexCardViewModel = IndexCardDefinition & {
   isLive: boolean;
 };
 
-type TickerQuoteResponse = {
-  symbol?: string;
-  price?: number | null;
-  change?: number | null;
-  changePercent?: number | null;
-  fetchedAt?: string | null;
-  marketState?: string | null;
+type InvestorHighlight = {
+  key: string;
+  label: string;
+  ticker: string;
+  meta: string;
+  signal: string;
+  tone: RegimeTone;
+};
+
+type RevisionMoverRow = {
+  ticker?: string;
+  name?: string | null;
+  change_1w?: number | null;
+  eps_fy1?: number | null;
+  as_of?: string | null;
+};
+
+type RevisionMoversData = {
+  generated_at?: string;
+  up?: RevisionMoverRow[];
+  down?: RevisionMoverRow[];
+};
+
+type StockMoverHighlight = {
+  key: string;
+  label: string;
+  ticker: string;
+  name: string;
+  change: number;
+  tone: RegimeTone;
 };
 
 type FinanceHistoryPoint = {
@@ -68,22 +90,16 @@ const INDEX_CARDS = [
     symbol: "SPY",
     label: "SPY",
     detail: "S&P 500 ETF",
-    fallbackPrice: 745.76,
-    fallbackChangePercent: 1.71,
   },
   {
     symbol: "QQQ",
     label: "QQQ",
     detail: "NASDAQ 100 ETF",
-    fallbackPrice: 725.17,
-    fallbackChangePercent: 2.05,
   },
   {
     symbol: "DIA",
     label: "DIA",
     detail: "DOW 30 ETF",
-    fallbackPrice: 522.4,
-    fallbackChangePercent: 0.75,
   },
 ] satisfies readonly IndexCardDefinition[];
 
@@ -139,6 +155,13 @@ function formatDatePart(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
+function maxTimestamp(values: Array<string | null | undefined>): string | null {
+  return values
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .sort()
+    .at(-1) ?? null;
+}
+
 function dataStateLabel(dataReady: boolean): string {
   return dataReady ? "동기화됨" : "불러오는 중";
 }
@@ -164,6 +187,11 @@ function formatSignedPercentUnit(value: number | null | undefined, digits = 2): 
   return `${prefix}${Math.abs(value).toFixed(digits)}%`;
 }
 
+function formatRevisionMove(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  return formatSignedPercentUnit(value * 100, 1);
+}
+
 function formatMarketState(value: string | null): string {
   if (!value) return "대기";
   if (value.includes("REGULAR")) return "장중";
@@ -177,23 +205,6 @@ function readFiniteNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function buildFallbackSparkline(price: number, changePercent: number, symbol: IndexSymbol): CpChartDatum[] {
-  const seed = symbol === "SPY" ? 0.0018 : symbol === "QQQ" ? 0.0026 : 0.0012;
-  const length = 24;
-  const startPrice = price / Math.max(0.65, 1 + changePercent / 100);
-
-  return Array.from({ length }, (_, index) => {
-    const progress = index / (length - 1);
-    const wave = Math.sin(index * 0.95) * seed + Math.cos(index * 0.42) * seed * 0.55;
-    const trend = (price - startPrice) * progress;
-    const value = index === length - 1 ? price : Math.max(1, startPrice + trend + price * wave);
-    return {
-      time: `2026-06-${String(index + 3).padStart(2, "0")}`,
-      value,
-    };
-  });
-}
-
 function historyToChartData(payload: FinanceHistoryResponse | null): CpChartDatum[] {
   const rows = payload?.data?.history_1y;
   if (!Array.isArray(rows)) return [];
@@ -201,28 +212,12 @@ function historyToChartData(payload: FinanceHistoryResponse | null): CpChartDatu
   const chartData: CpChartDatum[] = [];
   rows
     .filter((row): row is FinanceHistoryPoint & { date: string } => typeof row.date === "string")
-    .slice(-36)
+    .slice(-21)
     .forEach((row) => {
       const close = readFiniteNumber(row.Close) ?? readFiniteNumber(row.close);
       if (close !== null) chartData.push({ time: row.date, value: close });
     });
   return chartData;
-}
-
-function fallbackIndexCard(definition: IndexCardDefinition): IndexCardViewModel {
-  return {
-    ...definition,
-    price: definition.fallbackPrice,
-    changePercent: definition.fallbackChangePercent,
-    fetchedAt: null,
-    marketState: null,
-    chartData: buildFallbackSparkline(
-      definition.fallbackPrice,
-      definition.fallbackChangePercent,
-      definition.symbol,
-    ),
-    isLive: false,
-  };
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
@@ -231,43 +226,174 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   return (await response.json()) as T;
 }
 
-async function loadIndexCard(definition: IndexCardDefinition): Promise<IndexCardViewModel> {
-  const fallback = fallbackIndexCard(definition);
-
-  try {
-    const [quote, history] = await Promise.all([
-      fetchJson<TickerQuoteResponse>(`/api/ticker/${definition.symbol}/`).catch(() => null),
-      fetchJson<FinanceHistoryResponse>(`/data/yf/finance/${definition.symbol}.json`).catch(() => null),
-    ]);
-    const chartData = historyToChartData(history);
-    return {
-      ...definition,
-      price: readFiniteNumber(quote?.price) ?? fallback.price,
-      changePercent: readFiniteNumber(quote?.changePercent) ?? readFiniteNumber(quote?.change) ?? fallback.changePercent,
-      fetchedAt: typeof quote?.fetchedAt === "string" ? quote.fetchedAt : fallback.fetchedAt,
-      marketState: typeof quote?.marketState === "string" ? quote.marketState : fallback.marketState,
-      chartData: chartData.length > 0 ? chartData : fallback.chartData,
-      isLive: Boolean(quote?.fetchedAt || chartData.length > 0),
-    };
-  } catch {
-    return fallback;
-  }
+async function loadIndexCardHistory(symbol: IndexSymbol): Promise<CpChartDatum[]> {
+  const history = await fetchJson<FinanceHistoryResponse>(`/data/yf/finance/${symbol}.json`).catch(() => null);
+  return historyToChartData(history);
 }
 
-function useIndexCards(): IndexCardViewModel[] {
-  const [cards, setCards] = useState<IndexCardViewModel[]>(() => INDEX_CARDS.map(fallbackIndexCard));
+function useIndexCardHistories(): Partial<Record<IndexSymbol, CpChartDatum[]>> {
+  const [histories, setHistories] = useState<Partial<Record<IndexSymbol, CpChartDatum[]>>>({});
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(INDEX_CARDS.map(loadIndexCard)).then((nextCards) => {
-      if (!cancelled) setCards(nextCards);
+    Promise.all(
+      INDEX_CARDS.map(async (definition) => [definition.symbol, await loadIndexCardHistory(definition.symbol)] as const),
+    ).then((entries) => {
+      if (!cancelled) setHistories(Object.fromEntries(entries) as Partial<Record<IndexSymbol, CpChartDatum[]>>);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return cards;
+  return histories;
+}
+
+function useIndexCards(dashboard: DashboardSnapshot): IndexCardViewModel[] {
+  const histories = useIndexCardHistories();
+
+  return useMemo(() => INDEX_CARDS.map((definition) => {
+    const snapshot = dashboard.quickIndices.find((item) => item.symbol === definition.symbol);
+    const isLiveQuote = Boolean(snapshot?.isLive && snapshot.displayHorizon === "1D");
+    return {
+      ...definition,
+      price: isLiveQuote ? snapshot?.price ?? null : null,
+      changePercent: isLiveQuote ? (snapshot?.change ?? 0) * 100 : null,
+      fetchedAt: snapshot?.fetchedAt ?? null,
+      marketState: isLiveQuote ? snapshot?.marketState ?? null : null,
+      chartData: histories[definition.symbol] ?? [],
+      isLive: isLiveQuote,
+    };
+  }), [dashboard.quickIndices, histories]);
+}
+
+function buildInvestorHighlights(data: TradesRankingData | null): InvestorHighlight[] {
+  if (!data) return [];
+  const topBought: TradesRankingRow | undefined = data.bought[0];
+  const topSold: TradesRankingRow | undefined = data.sold[0];
+  const topNew = data.bought
+    .filter((row) => (row.new_count ?? 0) > 0)
+    .sort((a, b) => (b.new_count ?? 0) - (a.new_count ?? 0) || b.amount - a.amount)[0];
+  const highlights: InvestorHighlight[] = [];
+
+  if (topBought) {
+    highlights.push({
+      key: "bought",
+      label: "최다 매수",
+      ticker: topBought.ticker,
+      meta: `최대 ${topBought.top_investor.name}`,
+      signal: `${topBought.investors_count}명 매수`,
+      tone: "positive",
+    });
+  }
+  if (topSold) {
+    highlights.push({
+      key: "sold",
+      label: "최다 매도",
+      ticker: topSold.ticker,
+      meta: `최대 ${topSold.top_investor.name}`,
+      signal: `${topSold.investors_count}명 매도`,
+      tone: "negative",
+    });
+  }
+  if (topNew) {
+    highlights.push({
+      key: "new",
+      label: "신규 편입",
+      ticker: topNew.ticker,
+      meta: topNew.sector,
+      signal: `${topNew.new_count ?? 0}명 신규`,
+      tone: "warning",
+    });
+  }
+  return highlights;
+}
+
+function buildStockMoverHighlights(data: RevisionMoversData | null): StockMoverHighlight[] {
+  if (!data) return [];
+  const up = (data.up ?? [])
+    .filter((row) => row.ticker && typeof row.change_1w === "number" && Number.isFinite(row.change_1w))
+    .sort((a, b) => (b.change_1w ?? 0) - (a.change_1w ?? 0))
+    .slice(0, 2)
+    .map((row) => ({
+      key: `up-${row.ticker}`,
+      label: "상향",
+      ticker: row.ticker ?? "",
+      name: row.name ?? "FY+1 EPS 추정치",
+      change: row.change_1w ?? 0,
+      tone: "positive" as RegimeTone,
+    }));
+  const down = (data.down ?? [])
+    .filter((row) => row.ticker && typeof row.change_1w === "number" && Number.isFinite(row.change_1w))
+    .sort((a, b) => (a.change_1w ?? 0) - (b.change_1w ?? 0))
+    .slice(0, 2)
+    .map((row) => ({
+      key: `down-${row.ticker}`,
+      label: "하향",
+      ticker: row.ticker ?? "",
+      name: row.name ?? "FY+1 EPS 추정치",
+      change: row.change_1w ?? 0,
+      tone: "negative" as RegimeTone,
+    }));
+  return [...up, ...down];
+}
+
+function useInvestorHighlights(): { highlights: InvestorHighlight[]; quarter: string; loading: boolean } {
+  const [data, setData] = useState<TradesRankingData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<TradesRankingData>("/data/sec-13f/analytics/trades_ranking.json")
+      .then((payload) => {
+        if (!cancelled) setData(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return {
+    highlights: buildInvestorHighlights(data),
+    quarter: data?.metadata?.quarter ?? "13F",
+    loading,
+  };
+}
+
+function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string; loading: boolean } {
+  const [data, setData] = useState<RevisionMoversData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<RevisionMoversData>("/data/global-scouter/core/revision_movers.json")
+      .then((payload) => {
+        if (!cancelled) setData(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const firstDatedRow = [...(data?.up ?? []), ...(data?.down ?? [])].find((row) => row.as_of);
+
+  return {
+    movers: buildStockMoverHighlights(data),
+    asOf: firstDatedRow?.as_of ?? data?.generated_at ?? "추정치",
+    loading,
+  };
 }
 
 function CpMarketDashboardBand({
@@ -289,7 +415,7 @@ function CpMarketDashboardBand({
 
       <div className="cp-market-band__cards">
         {indexCards.map((card) => {
-          const tone = (card.changePercent ?? 0) >= 0 ? "positive" : "negative";
+          const tone = card.isLive ? ((card.changePercent ?? 0) >= 0 ? "positive" : "negative") : "neutral";
           return (
             <article className="cp-index-card" data-tone={tone} key={card.symbol}>
               <div className="cp-index-card__topline">
@@ -297,7 +423,7 @@ function CpMarketDashboardBand({
                   <span className="cp-index-card__symbol">{card.label}</span>
                   <p>{card.detail}</p>
                 </div>
-                <span className="cp-index-card__state">{formatMarketState(card.marketState)}</span>
+                <span className="cp-index-card__state">{card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
               </div>
               <div className="cp-index-card__quote">
                 <strong>{formatPriceValue(card.price)}</strong>
@@ -354,8 +480,8 @@ function CpFenokEdgePanel({
       detail: `${dashboard.sectorUp}개 상승`,
     },
     {
-      label: "스트레스 완화",
-      value: Math.round((1 - dashboard.stressScore) * 100),
+      label: "시장 스트레스",
+      value: Math.round(dashboard.stressScore * 100),
       detail: dashboard.stressLabel,
     },
   ];
@@ -487,6 +613,79 @@ function CpGatewayCard({ tile }: { tile: (typeof GATEWAY_TILES)[number] }) {
   );
 }
 
+function CpHomeSliceTwo() {
+  const investor = useInvestorHighlights();
+  const stockMovers = useStockMovers();
+  const moverFallback: StockMoverHighlight[] = [{
+    key: "pending",
+    label: "대기",
+    ticker: "확인 중",
+    name: "실적추정 변화 데이터 확인 중",
+    change: 0,
+    tone: "neutral",
+  }];
+
+  return (
+    <section className="cp-home-slice-two" aria-label="홈 관찰 구역">
+      <div className="cp-watch-zone" data-canvas-plus-watch-zone>
+        <header className="cp-watch-zone__header">
+          <div>
+            <p className="cp-lab__eyebrow">관찰 구역</p>
+            <h2>오늘의 관찰대</h2>
+          </div>
+          <span>{stockMovers.loading ? "확인 중" : formatDatePart(stockMovers.asOf)}</span>
+        </header>
+
+        <div className="cp-watch-zone__indices">
+          {(stockMovers.movers.length > 0 ? stockMovers.movers : moverFallback).map((mover) => {
+            return (
+              <TransitionLink
+                href={mover.ticker === "확인 중" ? ROUTES.explore : ROUTES.stock(mover.ticker)}
+                className="cp-watch-chip"
+                data-tone={mover.tone}
+                key={mover.key}
+              >
+                <span>실적추정 {mover.label}</span>
+                <strong>{mover.ticker}</strong>
+                <p>{mover.name}</p>
+                <em>{formatRevisionMove(mover.change)}</em>
+              </TransitionLink>
+            );
+          })}
+        </div>
+      </div>
+
+      <TransitionLink href={ROUTES.superinvestors} className="cp-investor-card" data-canvas-plus-investor-card>
+        <header className="cp-investor-card__header">
+          <div>
+            <p className="cp-lab__eyebrow">13F 신호</p>
+            <h2>투자자 하이라이트</h2>
+          </div>
+          <span>{investor.loading ? "확인 중" : investor.quarter}</span>
+        </header>
+
+        <div className="cp-investor-card__stack">
+          {(investor.highlights.length > 0 ? investor.highlights : [{
+            key: "pending",
+            label: "13F 대기",
+            ticker: "대기",
+            meta: "투자자 매매 동향 확인 중",
+            signal: "-",
+            tone: "neutral" as RegimeTone,
+          }]).map((item) => (
+            <div className="cp-investor-row" data-tone={item.tone} key={item.key}>
+              <span>{item.label}</span>
+              <strong>{item.ticker}</strong>
+              <p>{item.meta}</p>
+              <em>{item.signal}</em>
+            </div>
+          ))}
+        </div>
+      </TransitionLink>
+    </section>
+  );
+}
+
 function CpHomeHero({
   regimeLabel,
   regimeTone,
@@ -504,9 +703,9 @@ function CpHomeHero({
     <section className="cp-hero-search cp-home-hero" data-canvas-plus-home-hero data-home-search-first>
       <div className="cp-hero-search__copy">
         <p className="cp-lab__eyebrow">100xFenok 홈</p>
-        <h1 className="cp-hero-search__title">먼저 검색하고, 오늘 볼 종목을 바로 정합니다.</h1>
+        <h1 className="cp-hero-search__title">시장의 첫 화면</h1>
         <p className="cp-hero-search__summary">
-          티커 검색, 시장 판독, 주요 화면 이동을 한 번에 시작하는 투자 대시보드입니다.
+          검색에서 판독까지, 오늘의 후보를 한 화면에서 이어 봅니다.
         </p>
       </div>
 
@@ -548,7 +747,8 @@ function CpHomeHero({
 
 export default function HomeCanvasPlusClient() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
-  const indexCards = useIndexCards();
+  const indexCards = useIndexCards(dashboard);
+  const indexUpdatedAt = useMemo(() => formatDatePart(maxTimestamp(indexCards.map((card) => card.fetchedAt))), [indexCards]);
   const regime = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
     const breadthRatio = dashboard.sectorUp / breadthTotal;
@@ -584,13 +784,15 @@ export default function HomeCanvasPlusClient() {
 
             <CpMarketDashboardBand
               indexCards={indexCards}
-              updatedAt={formatDatePart(dashboard.tickerFetchedAt)}
+              updatedAt={indexUpdatedAt}
             />
 
             <section className="cp-home-visual-grid" aria-label="홈 시장 시각화">
               <CpFenokEdgePanel regime={regime} dashboard={dashboard} />
               <CpSectorHeatmap sectors={dashboard.sectorRows} mode={dashboard.sectorMode} />
             </section>
+
+            <CpHomeSliceTwo />
 
             <section className="cp-poc__feature-grid" aria-label="홈 주요 화면">
               {GATEWAY_TILES.map((tile) => <CpGatewayCard key={tile.label} tile={tile} />)}
