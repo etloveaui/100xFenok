@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import DataProvenanceNote from "@/components/DataProvenanceNote";
+import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
+import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
@@ -760,6 +762,121 @@ function latestFiniteLabel(series: readonly MarketChartSeries[], hiddenIds: read
   return latest;
 }
 
+function latestFinitePoint(series: MarketChartSeries) {
+  for (let index = series.points.length - 1; index >= 0; index -= 1) {
+    const point = series.points[index];
+    if (typeof point?.value === "number" && Number.isFinite(point.value)) return point;
+  }
+  return null;
+}
+
+function firstFinitePoint(series: MarketChartSeries) {
+  return series.points.find((point) => typeof point.value === "number" && Number.isFinite(point.value)) ?? null;
+}
+
+function seriesDelta(series: MarketChartSeries) {
+  const first = firstFinitePoint(series);
+  const latest = latestFinitePoint(series);
+  if (!first || !latest || typeof first.value !== "number" || typeof latest.value !== "number") return null;
+  const firstValue = first.value;
+  const latestValue = latest.value;
+  return {
+    first,
+    latest,
+    firstValue,
+    latestValue,
+    delta: latestValue - firstValue,
+  };
+}
+
+function deltaTone(delta: number | null | undefined): "positive" | "negative" | "warning" | "neutral" {
+  if (delta == null || Math.abs(delta) < 0.01) return "neutral";
+  return delta > 0 ? "positive" : "negative";
+}
+
+function movementPhrase(delta: number | null | undefined) {
+  if (delta == null || Math.abs(delta) < 0.01) return "거의 움직이지 않았습니다";
+  return delta > 0 ? "올랐습니다" : "내렸습니다";
+}
+
+function movementLead(delta: number | null | undefined, hasSecondary: boolean) {
+  if (!hasSecondary) return movementPhrase(delta);
+  if (delta == null || Math.abs(delta) < 0.01) return "거의 움직이지 않았고";
+  return delta > 0 ? "올랐고" : "내렸고";
+}
+
+function movementConnector(delta: number | null | undefined) {
+  if (delta == null || Math.abs(delta) < 0.01) return "횡보했습니다";
+  return delta > 0 ? "올랐습니다" : "내렸습니다";
+}
+
+function verdictSeriesName(series: MarketChartSeries) {
+  const definition = seriesById(series.id);
+  if (!definition) return series.label.split("·")[0]?.trim() || series.label;
+  if (definition.id === "sp500") return "S&P 500 지수";
+  if (definition.id === "nasdaq") return "나스닥 지수";
+  if (definition.id === "DGS10") return "미 10년물 금리";
+  if (definition.id === "HY_spread") return "하이일드 스프레드";
+  if (definition.id === "M2SL") return "M2 유동성";
+  if (definition.group === "equity") return `${definition.shortLabel} 지수`;
+  return definition.description || definition.label || definition.shortLabel;
+}
+
+function verdictValue(series: MarketChartSeries, value: number) {
+  const definition = seriesById(series.id);
+  const formatted = formatValue(value);
+  if (definition?.unit === "percent" || definition?.unit === "spread" || series.label.includes("%")) {
+    return `${formatted}%`;
+  }
+  return formatted;
+}
+
+function verdictRelationshipLabel(primaryDelta: number, secondaryDelta: number | null | undefined, context: MacroWorkbenchContext) {
+  if (secondaryDelta == null || Math.abs(secondaryDelta) < 0.01) return `${context.label} 흐름은 보조 지표 확인이 더 필요합니다.`;
+  if (Math.abs(primaryDelta) < 0.01) return `${context.label} 흐름은 아직 방향성이 약합니다.`;
+  return primaryDelta * secondaryDelta > 0
+    ? `${context.label} 흐름은 같은 방향입니다.`
+    : `${context.label} 흐름은 엇갈린 방향입니다.`;
+}
+
+function macroVerdictText(params: {
+  context: MacroWorkbenchContext;
+  visibleSeries: readonly MarketChartSeries[];
+  rangeId: string;
+  latestVisibleDate: string | null;
+}) {
+  const [primary, secondary] = params.visibleSeries;
+  const primaryDelta = primary ? seriesDelta(primary) : null;
+  const secondaryDelta = secondary ? seriesDelta(secondary) : null;
+  const latestLabel = formatAsOf(params.latestVisibleDate) ?? "기준일 확인 중";
+
+  if (!primary || !primaryDelta) {
+    return {
+      tone: "warning" as const,
+      lead: `${params.context.shortLabel} 렌즈의 시리즈를 불러오는 중입니다.`,
+      detail: `${latestLabel} · 기간 ${rangeLabel(params.rangeId)} · 선택한 지표가 준비되면 최신값과 방향을 계산합니다.`,
+      primaryValue: "—",
+      secondaryValue: "—",
+    };
+  }
+
+  const tone = deltaTone(primaryDelta.delta);
+  const primaryName = verdictSeriesName(primary);
+  const primaryValue = verdictValue(primary, primaryDelta.latestValue);
+  const relationship = verdictRelationshipLabel(primaryDelta.delta, secondaryDelta?.delta, params.context);
+  const secondaryClause = secondary && secondaryDelta
+    ? `, ${verdictSeriesName(secondary)}는 ${verdictValue(secondary, secondaryDelta.latestValue)}로 ${movementConnector(secondaryDelta.delta)}`
+    : "";
+
+  return {
+    tone,
+    lead: `${primaryName}는 ${primaryValue}로 ${movementLead(primaryDelta.delta, Boolean(secondary && secondaryDelta))}${secondaryClause} — ${relationship}`,
+    detail: `${latestLabel} · ${rangeLabel(params.rangeId)} 구간의 실제 로드 시리즈에서 계산했습니다.`,
+    primaryValue: `${primaryName} ${primaryValue}`,
+    secondaryValue: secondary && secondaryDelta ? `${verdictSeriesName(secondary)} ${verdictValue(secondary, secondaryDelta.latestValue)}` : "보조 시리즈 없음",
+  };
+}
+
 function PickerButton({
   item,
   active,
@@ -830,7 +947,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [stooqTickerNotice, setStooqTickerNotice] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [loadRetryKey, setLoadRetryKey] = useState(0);
-  const [pickerOpen, setPickerOpen] = useState(stockCompareMode);
+  const [seriesEditorOpen, setSeriesEditorOpen] = useState(stockCompareMode);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   const selectedDefinitions = useMemo(
@@ -1048,7 +1165,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const applyMarketCompareLens = useCallback((lens: MarketCompareLens) => {
     applyChartState(lens.state);
     setPresetName(`${lens.label} 뷰`);
-    setPickerOpen(true);
+    setSeriesEditorOpen(true);
   }, [applyChartState]);
 
   const addFormula = useCallback(() => {
@@ -1171,6 +1288,24 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     ];
   }, [macroContextId, selectedGroupKeys]);
   const activeMacroContext = MACRO_CONTEXTS[macroContextId];
+  const visibleChartSeries = useMemo(
+    () => chartSeries.filter((series) => !visibleHiddenIds.includes(series.id)),
+    [chartSeries, visibleHiddenIds],
+  );
+  const macroVerdict = useMemo(
+    () => macroVerdictText({ context: activeMacroContext, visibleSeries: visibleChartSeries, rangeId, latestVisibleDate }),
+    [activeMacroContext, latestVisibleDate, rangeId, visibleChartSeries],
+  );
+  const freshnessState = useMemo(
+    () =>
+      freshnessDataState({
+        asOf: latestVisibleDate ?? MACRO_CATALOG_CURATED_AT,
+        readyLabel: "기준일 확인",
+        readyDetail: `${activeMacroContext.label} 렌즈의 최신 표시 기준입니다.`,
+        maxAgeDays: 45,
+      }),
+    [activeMacroContext.label, latestVisibleDate],
+  );
   const analysisCards = useMemo(
     () => [
       {
@@ -1206,151 +1341,104 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
 
   return (
     <div
-      className="space-y-5"
+      className="canvas-plus cpw5-macro-shell"
       data-macro-chart-workbench="true"
       data-multichart-workbench={stockCompareMode ? "true" : undefined}
       data-multichart-mode={stockCompareMode ? "stock-compare" : undefined}
     >
-      <section
-        className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-        data-macro-chart-header="true"
-        data-multichart-header={stockCompareMode ? "true" : undefined}
-      >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{headerEyebrow}</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">{headerTitle}</h1>
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              {headerDescription}
-            </p>
+      <section className="cpw5-hero cpw5-macro-hero" data-macro-chart-hero="true">
+        <div className="cpw5-hero__top">
+          <p className="cpw5-hero__eyebrow">{headerEyebrow}</p>
+          <div className="cpw5-hero__trust-row">
+            <DataStateBadge state={freshnessState} className="cpw5-macro-data-badge" />
+            <span className="cpw5-hero__trust-chip">
+              <span className="cpw5-hero__trust-label">카탈로그</span>
+              <span className="cpw5-hero__trust-value">{MACRO_CATALOG_SERIES_COUNT}개</span>
+            </span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {MACRO_CHART_PRESETS.map((preset) => (
+        </div>
+
+        <div className="cpw5-macro-hero__copy">
+          <h1 className="cpw5-macro-title">{headerTitle}</h1>
+          <p className="cpw5-hero__verdict cpw5-macro-verdict" data-macro-chart-verdict="true">
+            <span className={macroVerdict.tone}>{macroVerdict.lead}</span>
+          </p>
+          <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
+          <p className="cpw5-macro-description">{headerDescription}</p>
+        </div>
+
+        <section className="cpw5-macro-chart-card" aria-label="매크로 차트 히어로">
+          <div className="cpw5-macro-chart-toolbar">
+            <div className="cpw5-macro-chart-toolbar__copy">
+              <h2>시장 방향 차트</h2>
+              <p>{sourceSummary(selectedDefinitions)}</p>
+            </div>
+            <div className="cpw5-macro-chart-toolbar__actions" aria-label="차트 도구">
               <button
-                key={preset.id}
                 type="button"
-                onClick={() => applyPreset(preset.id)}
-                className="min-h-11 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                title={preset.description}
-                data-macro-chart-preset={preset.id}
+                onClick={() => setRangeId(nextRangeId(rangeId, -1))}
+                disabled={!canZoomIn}
+                className="cpw5-macro-tool-button"
+                aria-label="차트 확대"
+                data-macro-chart-action="zoom-in"
               >
-                {preset.label}
+                +
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setRangeId(nextRangeId(rangeId, -1))}
-              disabled={!canZoomIn}
-              className="min-h-11 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
-              data-macro-chart-action="zoom-in"
-            >
-              확대
-            </button>
-            <button
-              type="button"
-              onClick={() => setRangeId(nextRangeId(rangeId, 1))}
-              disabled={!canZoomOut}
-              className="min-h-11 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
-              data-macro-chart-action="zoom-out"
-            >
-              축소
-            </button>
-            <button
-              type="button"
-              onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
-              disabled={!ready || chartSeries.length === 0}
-              className="min-h-11 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
-              data-macro-chart-action="png"
-            >
-              PNG 저장
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (!ready) return;
-                downloadCsv(chartSeries, selected);
-                setExportNotice("전체 CSV 저장됨");
-              }}
-              disabled={!ready || chartSeries.length === 0}
-              className="min-h-11 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
-              data-macro-chart-action="csv"
-            >
-              전체 CSV 저장
-            </button>
+              <button
+                type="button"
+                onClick={() => setRangeId(nextRangeId(rangeId, 1))}
+                disabled={!canZoomOut}
+                className="cpw5-macro-tool-button"
+                aria-label="차트 축소"
+                data-macro-chart-action="zoom-out"
+              >
+                -
+              </button>
+              <button
+                type="button"
+                onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
+                disabled={!ready || chartSeries.length === 0}
+                className="cpw5-macro-tool-button"
+                data-macro-chart-action="png"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!ready) return;
+                  downloadCsv(chartSeries, selected);
+                  setExportNotice("전체 CSV 저장됨");
+                }}
+                disabled={!ready || chartSeries.length === 0}
+                className="cpw5-macro-tool-button"
+                data-macro-chart-action="csv"
+              >
+                CSV
+              </button>
+            </div>
           </div>
           {exportNotice ? (
-            <p className="text-right text-[11px] font-bold text-slate-500" role="status">
+            <p className="cpw5-macro-export-note" role="status">
               {exportNotice}
             </p>
           ) : null}
-        </div>
-      </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          {selectedDefinitions.length ? (
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 xl:hidden" aria-label="모바일 매크로 상태" data-macro-chart-mobile-status="true">
-              <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-900 px-3 text-xs font-black text-white">
-                기간 {rangeLabel(rangeId)}
-              </span>
-              <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-black text-slate-700">
-                선택 {selected.length}개
-              </span>
-              <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-black text-slate-700">
-                합성 {formulas.length}개
-              </span>
-              {visibleHiddenIds.length ? (
-                <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-black text-slate-700">
-                  숨김 {visibleHiddenIds.length}개
-                </span>
-              ) : null}
-              {selected.map((item) => {
-                const definition = seriesById(item.id);
-                if (!definition) return null;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => toggleSeries(item.id)}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700"
-                    aria-label={`${definition.shortLabel} 제거`}
-                    data-macro-chart-mobile-chip={item.id}
-                  >
-                    {definition.shortLabel}
-                    <span aria-hidden className="text-slate-400">×</span>
-                  </button>
-                );
-              })}
-              {formulas.map((formula) => (
-                <button
-                  key={formula.id}
-                  type="button"
-                  onClick={() => removeFormula(formula.id)}
-                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-black text-amber-800"
-                  aria-label={`${formulaLabel(formula)} 삭제`}
-                  data-macro-chart-mobile-formula={formula.id}
-                >
-                  {formulaLabel(formula)}
-                  <span aria-hidden className="text-amber-500">×</span>
-                </button>
-              ))}
-            </div>
-          ) : null}
           {activeLoadState.status === "error" ? (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">
+            <div className="cpw5-macro-error" role="alert">
               <p>차트 데이터를 불러오지 못했습니다.</p>
-              <p className="mt-1 text-xs font-semibold text-rose-600">{activeLoadState.message}</p>
-              <button
-                type="button"
-                onClick={() => setLoadRetryKey((value) => value + 1)}
-                className="mt-3 min-h-9 rounded-md bg-rose-700 px-3 text-xs font-black text-white transition hover:bg-rose-800"
-              >
+              <span>{activeLoadState.message}</span>
+              <button type="button" onClick={() => setLoadRetryKey((value) => value + 1)}>
                 다시 시도
               </button>
             </div>
           ) : activeLoadState.status === "loading" ? (
-            <div className="flex h-[22rem] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm font-black text-slate-500 sm:h-[26rem] lg:h-[30rem]">
-              차트 준비 중
+            <div className="cpw5-macro-chart-skeleton" aria-label="차트 데이터를 불러오는 중입니다">
+              <span className="sr-only">차트 데이터를 불러오는 중입니다.</span>
+              <i />
+              <i />
+              <i />
+              <i />
             </div>
           ) : activeLoadState.status === "ready" && chartSeries.length ? (
             <MarketChartFrame
@@ -1368,165 +1456,130 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               y1AxisTitle={rightAxisTitle}
               formatValue={formatValue}
               footnote={sourceSummary(selectedDefinitions)}
+              bare
             />
           ) : (
-            <div className="flex h-96 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm font-black text-slate-500">
-              비교할 시리즈를 선택하세요.
-            </div>
+            <div className="cpw5-macro-empty">비교할 시리즈를 선택하세요.</div>
           )}
-          <DataProvenanceNote
-            className="mt-3"
-            title="데이터 연결"
-            details={[
-              selectedDefinitions.length ? sourceSummary(selectedDefinitions) : null,
-              `기간 ${rangeId}`,
-              visibleHiddenIds.length ? `${visibleHiddenIds.length}개 시리즈 숨김` : null,
-              visibleAxisOverrides ? `${visibleAxisOverrides}개 축 고정` : null,
-              formulas.length ? `${formulas.length}개 합성 시리즈` : null,
-              hasStooqSelection ? "시장 심볼은 owner Worker proxy 경유" : null,
-              `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
-              "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
-              "URL로 선택값·기간·숨김·축 상태 공유 가능",
-            ]}
-          >
-            public data spine의 정적 JSON과 승인된 시장 심볼 proxy만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
-          </DataProvenanceNote>
-          <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3 md:grid-cols-3" aria-label="매크로 분석 요약">
-            {analysisCards.map((card) => (
-              <div key={card.label} className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">{card.label}</p>
-                <p className="mt-1 truncate text-sm font-black text-slate-900">{card.value}</p>
-                <p className="mt-0.5 truncate text-[11px] font-bold text-slate-500">{card.detail}</p>
-              </div>
-            ))}
-          </div>
         </section>
 
-        <aside className="space-y-4">
-          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black text-slate-900">분석 렌즈</h2>
-              <span className="text-[11px] font-bold text-slate-500">{MACRO_ANALYSIS_LENSES.length}개</span>
+        <div className="cpw5-tile-row cpw5-macro-metrics" aria-label="매크로 분석 요약">
+          {analysisCards.map((card) => (
+            <div key={card.label} className="cpw5-tile">
+              <p className="cpw5-tile__label">{card.label}</p>
+              <p className="cpw5-tile__value">{card.value}</p>
+              <p className="cpw5-tile__sub">{card.detail}</p>
             </div>
-            <div className="mt-3 space-y-2">
-              {MACRO_ANALYSIS_LENSES.map((lens) => (
+          ))}
+        </div>
+      </section>
+
+      <section className="cpw5-macro-lens-section" aria-label="분석 렌즈">
+        <div className="cpw5-macro-section-head">
+          <div>
+            <h2>분석 렌즈</h2>
+            <p>한 번 누르면 차트 상태가 통째로 바뀝니다.</p>
+          </div>
+          <span>{MACRO_ANALYSIS_LENSES.length}개</span>
+        </div>
+        <div className="cpw5-macro-lens-row">
+          {MACRO_ANALYSIS_LENSES.map((lens) => (
+            <button
+              key={lens.id}
+              type="button"
+              onClick={() => applyAnalysisLens(lens)}
+              className="cpw5-macro-lens-card"
+              data-macro-chart-lens={lens.id}
+            >
+              <strong>{lens.label}</strong>
+              <span>{lens.detail}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="cpw5-macro-insight-grid" aria-label="매크로 인사이트">
+        <article className="cpw5-macro-insight-card">
+          <span>{activeMacroContext.label}</span>
+          <h2>{activeMacroContext.detail}</h2>
+        </article>
+        {activeMacroContext.insightBullets.slice(0, 2).map((bullet) => (
+          <article key={bullet} className="cpw5-macro-insight-card">
+            <span>읽는 법</span>
+            <p>{bullet}</p>
+          </article>
+        ))}
+      </section>
+
+      <details
+        className="cpw5-macro-accordion"
+        open={seriesEditorOpen}
+        onToggle={(event) => setSeriesEditorOpen(event.currentTarget.open)}
+        data-macro-chart-series-editor="true"
+      >
+        <summary>
+          <span className="cpw5-macro-accordion__summary">
+            <span>시리즈 편집</span>
+            <b>{selected.length}/{MAX_SELECTED_SERIES} 선택 · 합성 {formulas.length}개</b>
+          </span>
+          <span className="cpw5-macro-accordion__chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div className="cpw5-macro-accordion__body">
+          <section className="cpw5-macro-editor-block" aria-label="빠른 프리셋">
+            <div className="cpw5-macro-section-head">
+              <div>
+                <h2>빠른 프리셋</h2>
+                <p>기본 차트 조합을 적용합니다.</p>
+              </div>
+            </div>
+            <div className="cpw5-macro-chip-grid">
+              {MACRO_CHART_PRESETS.map((preset) => (
                 <button
-                  key={lens.id}
+                  key={preset.id}
                   type="button"
-                  onClick={() => applyAnalysisLens(lens)}
-                  className="block min-h-11 w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
-                  data-macro-chart-lens={lens.id}
+                  onClick={() => applyPreset(preset.id)}
+                  className="cpw5-macro-chip-button"
+                  title={preset.description}
+                  data-macro-chart-preset={preset.id}
                 >
-                  <span className="block truncate text-xs font-black text-slate-900">{lens.label}</span>
-                  <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
+                  {preset.label}
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm" aria-label="시장 비교 프리셋">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black text-slate-900">시장 비교</h2>
-              <span className="text-[11px] font-bold text-slate-500">통합</span>
+          <section className="cpw5-macro-editor-block" aria-label="시장 비교 프리셋">
+            <div className="cpw5-macro-section-head">
+              <div>
+                <h2>시장 비교</h2>
+                <p>주식·ETF·지수와 매크로를 같은 시간축에서 비교합니다.</p>
+              </div>
+              <span>{MARKET_COMPARE_LENSES.length}개</span>
             </div>
-            <div className="mt-3 space-y-2">
+            <div className="cpw5-macro-chip-grid">
               {MARKET_COMPARE_LENSES.map((lens) => (
                 <button
                   key={lens.id}
                   type="button"
                   onClick={() => applyMarketCompareLens(lens)}
-                  className="block min-h-11 w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                  className="cpw5-macro-compare-card"
                   data-macro-chart-market-lens={lens.id}
                 >
-                  <span className="block truncate text-xs font-black text-slate-900">{lens.label}</span>
-                  <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
+                  <strong>{lens.label}</strong>
+                  <span>{lens.detail}</span>
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-3 shadow-sm" aria-label="매크로 인사이트 카드">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black text-slate-900">인사이트 카드</h2>
-              <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-sky-800">
-                {activeMacroContext.label}
-              </span>
-            </div>
-            <p className="mt-2 text-xs font-bold leading-5 text-slate-700">{activeMacroContext.detail}</p>
-            <ul className="mt-3 space-y-2">
-              {activeMacroContext.insightBullets.map((bullet) => (
-                <li key={bullet} className="rounded-md bg-white px-3 py-2 text-[11px] font-semibold leading-5 text-slate-700">
-                  {bullet}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <TransitionLink
-                href={activeMacroContext.screenerHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-900 px-2 text-[11px] font-black text-white transition hover:bg-brand-interactive"
-                data-macro-chart-context-link="screener"
-              >
-                스크리너
-              </TransitionLink>
-              <TransitionLink
-                href={activeMacroContext.etfHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
-                data-macro-chart-context-link="etf"
-              >
-                ETF
-              </TransitionLink>
-              <TransitionLink
-                href={activeMacroContext.stockHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
-                data-macro-chart-context-link="stock"
-              >
-                {activeMacroContext.stockSymbol}
-              </TransitionLink>
-            </div>
-          </section>
-
-          {connectionLinks.length ? (
-            <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-sm font-black text-slate-900">연결 탐색</h2>
-                <span className="text-[11px] font-bold text-slate-500">{connectionLinks.length}개</span>
+          <section className="cpw5-macro-editor-block" aria-label="시리즈 검색">
+            <div className="cpw5-macro-section-head">
+              <div>
+                <h2>시리즈 검색</h2>
+                <p>{filteredCatalog.length}개 표시 · 시장 심볼 직접 추가 가능</p>
               </div>
-              <div className="mt-3 space-y-2">
-                {connectionLinks.map((link) => (
-                  <TransitionLink
-                    key={link.id}
-                    href={link.href}
-                    className="block min-h-11 rounded-lg bg-slate-50 px-3 py-2 transition hover:bg-slate-100"
-                    data-macro-chart-connection-link={link.id}
-                  >
-                    <span className="block truncate text-xs font-black text-slate-900">{link.label}</span>
-                    <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{link.detail}</span>
-                  </TransitionLink>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">시리즈 검색</p>
-                <p className="mt-1 text-xs font-bold text-slate-500">
-                  {selected.length}/{MAX_SELECTED_SERIES} 선택 · {filteredCatalog.length}개 표시
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPickerOpen((value) => !value)}
-                aria-controls="macro-series-picker-panel"
-                aria-expanded={pickerOpen}
-                className="min-h-11 shrink-0 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-700 xl:hidden"
-                data-macro-chart-picker-toggle="true"
-              >
-                {pickerOpen ? "닫기" : "열기"}
-              </button>
             </div>
-            <div id="macro-series-picker-panel" className={cx("mt-3", pickerOpen ? "block" : "hidden xl:block")}>
+            <div id="macro-series-picker-panel" className="cpw5-macro-picker">
               <label className="sr-only" htmlFor="macro-series-search">
                 시리즈 검색
               </label>
@@ -1535,14 +1588,14 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={queryInput}
                 onChange={(event) => setQueryInput(event.target.value)}
                 placeholder="M2, VIX, PMI..."
-                className="min-h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                className="cpw5-macro-input"
                 data-macro-chart-search="true"
               />
-              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+              <div className="cpw5-macro-symbol-add">
                 <label className="sr-only" htmlFor="macro-stooq-ticker">
                   시장 심볼 추가
                 </label>
-                <div className="flex gap-2">
+                <div className="cpw5-macro-inline-form">
                   <input
                     id="macro-stooq-ticker"
                     value={stooqTickerInput}
@@ -1554,29 +1607,29 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       }
                     }}
                     placeholder="NVDA, SPY.US..."
-                    className="min-h-11 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                    className="cpw5-macro-input"
                     data-macro-chart-symbol-input="true"
                   />
                   <button
                     type="button"
                     onClick={addStooqSeries}
-                    className="min-h-11 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
+                    className="cpw5-macro-primary-button"
                     data-macro-chart-symbol-add="true"
                   >
                     + 티커 추가
                   </button>
                 </div>
-                <p className="mt-2 min-h-4 text-[11px] font-bold text-slate-500" role="status">
+                <p className="cpw5-macro-status" role="status">
                   {stooqTickerNotice ?? "주식·ETF·지수 심볼을 같은 차트에 추가합니다."}
                 </p>
               </div>
-              <div className="mt-2 min-h-5 text-[11px] font-bold text-slate-500" role="status">
+              <div className="cpw5-macro-status" role="status">
                 {limitNotice ??
                   (activeLoadState.status === "loading"
                     ? "선택한 시리즈 데이터를 불러오는 중입니다."
                     : `최대 ${MAX_SELECTED_SERIES}개까지 비교할 수 있습니다.`)}
               </div>
-              <div className="mt-3 max-h-[22rem] space-y-2 overflow-y-auto pr-1 sm:max-h-[28rem] xl:max-h-[32rem]">
+              <div className="cpw5-macro-picker-list">
                 {filteredCatalog.map((item) => (
                   <PickerButton
                     key={item.id}
@@ -1586,23 +1639,26 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   />
                 ))}
                 {filteredCatalog.length === 0 ? (
-                  <p className="rounded-lg bg-slate-50 p-3 text-xs font-semibold text-slate-500">검색 결과가 없습니다.</p>
+                  <p className="cpw5-macro-empty-small">검색 결과가 없습니다.</p>
                 ) : null}
               </div>
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black text-slate-900">합성 시리즈</h2>
-              <span className="text-[11px] font-bold text-slate-500">{formulas.length}/{MAX_FORMULA_SERIES}</span>
+          <section className="cpw5-macro-editor-block">
+            <div className="cpw5-macro-section-head">
+              <div>
+                <h2>합성 시리즈</h2>
+                <p>현재 변환값 기준으로 차이·비율을 계산합니다.</p>
+              </div>
+              <span>{formulas.length}/{MAX_FORMULA_SERIES}</span>
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-2">
+            <div className="cpw5-macro-form-grid">
               <select
                 value={currentFormulaLeftId}
                 onChange={(event) => setFormulaLeftId(event.target.value)}
                 disabled={selected.length < 2}
-                className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+                className="cpw5-macro-select"
                 aria-label="합성 왼쪽 시리즈"
                 data-macro-chart-formula-control="left"
               >
@@ -1616,7 +1672,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={formulaOperator}
                 onChange={(event) => setFormulaOperator(event.target.value as MacroFormulaOperator)}
                 disabled={selected.length < 2}
-                className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+                className="cpw5-macro-select"
                 aria-label="합성 계산식"
                 data-macro-chart-formula-control="operator"
               >
@@ -1627,7 +1683,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={currentFormulaRightId}
                 onChange={(event) => setFormulaRightId(event.target.value)}
                 disabled={selected.length < 2}
-                className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+                className="cpw5-macro-select"
                 aria-label="합성 오른쪽 시리즈"
                 data-macro-chart-formula-control="right"
               >
@@ -1643,29 +1699,28 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 type="button"
                 onClick={addFormula}
                 disabled={selected.length < 2 || formulas.length >= MAX_FORMULA_SERIES}
-                className="min-h-11 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
+                className="cpw5-macro-primary-button"
                 data-macro-chart-formula-control="add"
               >
                 합성 추가
               </button>
             </div>
-            <div className="mt-2 min-h-5 text-[11px] font-bold text-slate-500" role="status">
+            <div className="cpw5-macro-status" role="status">
               {formulaNotice ?? "현재 변환값 기준으로 계산합니다."}
             </div>
-            <div className="mt-2 space-y-2">
+            <div className="cpw5-macro-formula-list">
               {formulas.length ? (
                 formulas.map((formula) => (
-                  <div key={formula.id} className="flex items-center gap-2 rounded-lg border border-slate-200 p-2">
-                    <span className="min-w-0 flex-1 truncate text-xs font-black text-slate-800">
+                  <div key={formula.id} className="cpw5-macro-selected-row">
+                    <span>
                       {formulaLabel(formula)}
                     </span>
-                    <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">
+                    <b>
                       {MACRO_FORMULA_LABELS[formula.operator]}
-                    </span>
+                    </b>
                     <button
                       type="button"
                       onClick={() => removeFormula(formula.id)}
-                      className="min-h-8 shrink-0 rounded-md px-2 text-[11px] font-black text-slate-500 hover:bg-slate-100"
                       aria-label={`${formulaLabel(formula)} 삭제`}
                     >
                       삭제
@@ -1673,17 +1728,20 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   </div>
                 ))
               ) : (
-                <p className="rounded-lg bg-slate-50 p-3 text-xs font-semibold text-slate-500">합성 시리즈가 없습니다.</p>
+                <p className="cpw5-macro-empty-small">합성 시리즈가 없습니다.</p>
               )}
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black text-slate-900">내 프리셋</h2>
-              <span className="text-[11px] font-bold text-slate-500">{userPresets.length}/8</span>
+          <section className="cpw5-macro-editor-block">
+            <div className="cpw5-macro-section-head">
+              <div>
+                <h2>내 프리셋</h2>
+                <p>선택·기간·숨김·축을 브라우저에 저장합니다.</p>
+              </div>
+              <span>{userPresets.length}/8</span>
             </div>
-            <div className="mt-3 flex gap-2">
+            <div className="cpw5-macro-inline-form">
               <label className="sr-only" htmlFor="macro-user-preset-name">
                 프리셋 이름
               </label>
@@ -1692,38 +1750,34 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={presetName}
                 onChange={(event) => setPresetName(event.target.value)}
                 maxLength={32}
-                className="min-h-10 min-w-0 flex-1 rounded-md border border-slate-200 px-3 text-xs font-bold text-slate-800 outline-none transition focus:border-brand-interactive"
+                className="cpw5-macro-input"
               />
               <button
                 type="button"
                 onClick={saveUserPreset}
-                className="min-h-10 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
+                className="cpw5-macro-primary-button"
               >
                 저장
               </button>
             </div>
-            <div className="mt-2 min-h-5 text-[11px] font-bold text-slate-500" role="status">
+            <div className="cpw5-macro-status" role="status">
               {presetNotice ?? "현재 선택·기간·숨김·축을 저장합니다."}
             </div>
-            <div className="mt-2 space-y-2">
+            <div className="cpw5-macro-formula-list">
               {userPresets.length ? (
                 userPresets.map((preset) => (
-                  <div key={preset.id} className="flex items-center gap-2 rounded-lg border border-slate-200 p-2">
+                  <div key={preset.id} className="cpw5-macro-selected-row">
                     <button
                       type="button"
                       onClick={() => applyUserPreset(preset)}
-                      className="min-w-0 flex-1 text-left"
                       title={preset.name}
                     >
-                      <span className="block truncate text-xs font-black text-slate-800">{preset.name}</span>
-                      <span className="block truncate text-[11px] font-semibold text-slate-500">
-                        {preset.selected.length}개 · {preset.rangeId}
-                      </span>
+                      <span>{preset.name}</span>
+                      <b>{preset.selected.length}개 · {preset.rangeId}</b>
                     </button>
                     <button
                       type="button"
                       onClick={() => deleteUserPreset(preset.id)}
-                      className="min-h-8 shrink-0 rounded-md px-2 text-[11px] font-black text-slate-500 hover:bg-slate-100"
                       aria-label={`${preset.name} 삭제`}
                     >
                       삭제
@@ -1731,14 +1785,17 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   </div>
                 ))
               ) : (
-                <p className="rounded-lg bg-slate-50 p-3 text-xs font-semibold text-slate-500">저장한 프리셋이 없습니다.</p>
+                <p className="cpw5-macro-empty-small">저장한 프리셋이 없습니다.</p>
               )}
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black text-slate-900">선택 시리즈</h2>
+          <section className="cpw5-macro-editor-block">
+            <div className="cpw5-macro-section-head">
+              <div>
+                <h2>선택 시리즈</h2>
+                <p>변환과 좌·우 축 고정을 조정합니다.</p>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -1750,36 +1807,35 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   setFormulaNotice(null);
                   setStooqTickerNotice(null);
                 }}
-                className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-black text-slate-500 hover:border-brand-interactive hover:text-brand-interactive"
+                className="cpw5-macro-secondary-button"
               >
                 비우기
               </button>
             </div>
-            <div className="mt-3 space-y-2">
+            <div className="cpw5-macro-formula-list">
               {selected.length === 0 ? (
-                <p className="rounded-lg bg-slate-50 p-3 text-xs font-semibold text-slate-500">시리즈가 없습니다.</p>
+                <p className="cpw5-macro-empty-small">시리즈가 없습니다.</p>
               ) : (
                 selected.map((item) => {
                   const definition = seriesById(item.id);
                   if (!definition) return null;
                   const current = item.transform ?? definition.defaultTransform ?? "raw";
                   return (
-                    <div key={item.id} className="rounded-lg border border-slate-200 p-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="min-w-0 truncate text-xs font-black text-slate-800">{definition.shortLabel}</span>
+                    <div key={item.id} className="cpw5-macro-series-control">
+                      <div className="cpw5-macro-series-control__head">
+                        <span>{definition.shortLabel}</span>
                         <button
                           type="button"
                           onClick={() => toggleSeries(item.id)}
-                          className="min-h-8 rounded-md px-2 py-1 text-[11px] font-black text-slate-500 hover:bg-slate-100"
                         >
                           제거
                         </button>
                       </div>
-                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                      <div className="cpw5-macro-form-grid">
                         <select
                           value={current}
                           onChange={(event) => setTransform(item.id, event.target.value as MacroValueTransform)}
-                          className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700"
+                          className="cpw5-macro-select"
                           aria-label={`${definition.shortLabel} 변환`}
                         >
                           {Object.entries(MACRO_TRANSFORM_LABELS).map(([value, label]) => (
@@ -1791,7 +1847,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                         <select
                           value={axisById[item.id] ?? "auto"}
                           onChange={(event) => setAxis(item.id, event.target.value as MacroAxisId)}
-                          className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700"
+                          className="cpw5-macro-select"
                           aria-label={`${definition.shortLabel} 축`}
                         >
                           <option value="auto">축 자동</option>
@@ -1799,14 +1855,71 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                           <option value="right">우축</option>
                         </select>
                       </div>
-                      <p className="mt-2 truncate text-[10px] font-bold text-slate-500">{definitionMetaLabel(definition)}</p>
+                      <p>{definitionMetaLabel(definition)}</p>
                     </div>
                   );
                 })
               )}
             </div>
           </section>
-        </aside>
+        </div>
+      </details>
+
+      <details className="cpw5-macro-accordion" data-macro-chart-connection-editor="true">
+        <summary>
+          <span className="cpw5-macro-accordion__summary">
+            <span>연결 탐색</span>
+            <b>{connectionLinks.length + 3}개 링크</b>
+          </span>
+          <span className="cpw5-macro-accordion__chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div className="cpw5-macro-accordion__body">
+          <div className="cpw5-macro-connection-grid">
+            <TransitionLink href={activeMacroContext.screenerHref} data-macro-chart-context-link="screener">
+              <strong>스크리너</strong>
+              <span>{activeMacroContext.screenerPreset} 조건으로 종목을 좁힙니다.</span>
+            </TransitionLink>
+            <TransitionLink href={activeMacroContext.etfHref} data-macro-chart-context-link="etf">
+              <strong>ETF 센터</strong>
+              <span>{activeMacroContext.shortLabel} 국면을 ETF 자산군으로 봅니다.</span>
+            </TransitionLink>
+            <TransitionLink href={activeMacroContext.stockHref} data-macro-chart-context-link="stock">
+              <strong>{activeMacroContext.stockSymbol}</strong>
+              <span>{activeMacroContext.stockLabel} 상세로 이어 봅니다.</span>
+            </TransitionLink>
+            {connectionLinks.map((link) => (
+              <TransitionLink key={link.id} href={link.href} data-macro-chart-connection-link={link.id}>
+                <strong>{link.label}</strong>
+                <span>{link.detail}</span>
+              </TransitionLink>
+            ))}
+          </div>
+        </div>
+      </details>
+
+      <DataProvenanceNote
+        className="cpw5-macro-provenance"
+        title="데이터 연결"
+        details={[
+          selectedDefinitions.length ? sourceSummary(selectedDefinitions) : null,
+          `기간 ${rangeId}`,
+          visibleHiddenIds.length ? `${visibleHiddenIds.length}개 시리즈 숨김` : null,
+          visibleAxisOverrides ? `${visibleAxisOverrides}개 축 고정` : null,
+          formulas.length ? `${formulas.length}개 합성 시리즈` : null,
+          hasStooqSelection ? "시장 심볼은 owner Worker proxy 경유" : null,
+          `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
+          "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
+          "URL로 선택값·기간·숨김·축 상태 공유 가능",
+        ]}
+      >
+        public data spine의 정적 JSON과 승인된 시장 심볼 proxy만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
+      </DataProvenanceNote>
+
+      <div className="cpw5-macro-cta-row">
+        <TransitionLink href={activeMacroContext.screenerHref}>스크리너로 보기</TransitionLink>
+        <TransitionLink href={activeMacroContext.etfHref}>ETF로 보기</TransitionLink>
+        <TransitionLink href={activeMacroContext.stockHref}>{activeMacroContext.stockSymbol} 상세</TransitionLink>
+        <span>투자 조언 아님 · 데이터 기준 {formatAsOf(latestVisibleDate) ?? MACRO_CATALOG_CURATED_AT}</span>
       </div>
     </div>
   );

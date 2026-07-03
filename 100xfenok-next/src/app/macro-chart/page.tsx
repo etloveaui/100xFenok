@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import AppShell from "@/components/shell/AppShell";
+import "@/styles/cp-w5-macro-chart.css";
 import { ROUTES } from "@/lib/routes";
 import MacroChartClient from "./MacroChartClient";
 
