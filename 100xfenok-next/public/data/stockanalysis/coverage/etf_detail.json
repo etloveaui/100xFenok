@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-02T23:47:53Z",
+  "generated_at": "2026-07-03T01:25:58Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,43 +17,43 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5430,
+    "candidate_total": 5444,
     "source_breakdown": {
       "etf_universe": 5333,
-      "etf_screener": 5424,
+      "etf_screener": 5438,
       "new_etfs": 100
     },
     "detail_files": 5363,
     "covered_detail_files": 5350,
-    "missing_detail_files": 80,
+    "missing_detail_files": 94,
     "extra_detail_files": 13,
-    "stockanalysis_detail_files": 4594,
-    "yahoo_fallback_files": 769,
+    "stockanalysis_detail_files": 4601,
+    "yahoo_fallback_files": 762,
     "invalid_detail_files": 0,
-    "coverage_pct": 98.53,
-    "primary_stockanalysis_pct": 84.36,
+    "coverage_pct": 98.27,
+    "primary_stockanalysis_pct": 84.28,
     "missing_by_source": {
       "etf_universe": 62,
-      "etf_screener": 80,
-      "new_etfs": 11
+      "etf_screener": 94,
+      "new_etfs": 25
     },
     "missing_status_breakdown": {
-      "retry_cooldown": 62,
-      "retry_pending": 18
+      "retry_cooldown": 64,
+      "retry_pending": 30
     },
     "missing_failure_breakdown": {
-      "external_quote_type_mismatch": 80
+      "external_quote_type_mismatch": 94
     },
-    "pending_tracked": 120,
-    "pending_cooldown": 73,
-    "pending_tracked_missing": 80
+    "pending_tracked": 134,
+    "pending_cooldown": 75,
+    "pending_tracked_missing": 94
   },
   "missing_reason_summary": {
-    "external_quote_type_mismatch": 80
+    "external_quote_type_mismatch": 94
   },
   "missing_status_summary": {
-    "retry_cooldown": 62,
-    "retry_pending": 18
+    "retry_cooldown": 64,
+    "retry_pending": 30
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
@@ -66,9 +66,9 @@
       "AIQD",
       "AIQU",
       "AMHI",
+      "ARKE",
       "ARMA",
-      "ASMZ",
-      "AVGC"
+      "ASMZ"
     ]
   },
   "missing_status_samples": {
@@ -81,24 +81,24 @@
       "AIQD",
       "AIQU",
       "AMHI",
+      "ASMZ",
       "BAVA",
       "BD",
-      "BRSM",
-      "BTCU"
+      "BRSM"
     ],
     "retry_pending": [
       "ACHX",
+      "ARKE",
       "ARMA",
-      "ASMZ",
       "AVGC",
       "BEC",
+      "CIEX",
       "CIFC",
       "DISK",
       "ECHX",
       "EO",
-      "GMEC",
-      "GOLI",
-      "IONC"
+      "FECM",
+      "FESC"
     ]
   },
   "missing_tickers": [
@@ -111,6 +111,7 @@
     "AIQD",
     "AIQU",
     "AMHI",
+    "ARKE",
     "ARMA",
     "ASMZ",
     "AVGC",
@@ -119,6 +120,7 @@
     "BEC",
     "BRSM",
     "BTCU",
+    "CIEX",
     "CIFC",
     "CLNK",
     "CLOO",
@@ -130,6 +132,8 @@
     "EO",
     "ESUM",
     "EVMU",
+    "FECM",
+    "FESC",
     "GCSH",
     "GISC",
     "GMEC",
@@ -141,6 +145,8 @@
     "IONC",
     "IOSX",
     "JPO",
+    "JULI",
+    "KMEM",
     "KRYP",
     "LAZR",
     "LSTB",
@@ -150,14 +156,20 @@
     "NUDG",
     "ORAC",
     "PHYS",
+    "PQV",
+    "PQX",
+    "PQXV",
+    "PQXX",
     "PRIZ",
     "PSLV",
+    "QNTU",
     "RAAR",
     "RAAY",
     "RANK",
     "RCLR",
     "RCLY",
     "RKX",
+    "RMBX",
     "RMHY",
     "RWEM",
     "RWLC",
@@ -168,6 +180,8 @@
     "SPPP",
     "TOT",
     "TPUT",
+    "TSEU",
+    "TTMX",
     "UFOX",
     "UGLD",
     "USLV",
@@ -593,7 +607,6 @@
     "LITU",
     "LITX",
     "LJUL",
-    "LOFF",
     "LQDW",
     "LQTI",
     "LRCU",
@@ -607,7 +620,6 @@
     "MAUG",
     "MAYU",
     "MBCE",
-    "MCHG",
     "MCHU",
     "MDCR",
     "METW",
@@ -760,18 +772,15 @@
     "SNXX",
     "SOEZ",
     "SOLC",
-    "SPAL",
     "SPAX",
     "SPBC",
     "SPCG",
-    "SPCH",
     "SPCQ",
     "SPCU",
     "SPDF",
     "SPDN",
     "SPUC",
     "SPYU",
-    "SSPC",
     "STLU",
     "STXF",
     "STXX",
@@ -788,7 +797,6 @@
     "TDAQ",
     "TDOG",
     "TDOT",
-    "TELG",
     "TEMT",
     "TESC",
     "TETH",
@@ -810,7 +818,6 @@
     "TPLX",
     "TRUI",
     "TRUO",
-    "TSEG",
     "TSL",
     "TSLW",
     "TSOL",
@@ -981,6 +988,7 @@
       "AIQD",
       "AIQU",
       "AMHI",
+      "ARKE",
       "ARMA",
       "ASMZ",
       "AVGC",
@@ -989,6 +997,7 @@
       "BEC",
       "BRSM",
       "BTCU",
+      "CIEX",
       "CIFC",
       "CLNK",
       "CLOO",
@@ -1000,6 +1009,8 @@
       "EO",
       "ESUM",
       "EVMU",
+      "FECM",
+      "FESC",
       "GCSH",
       "GISC",
       "GMEC",
@@ -1011,17 +1022,13 @@
       "IONC",
       "IOSX",
       "JPO",
+      "JULI",
+      "KMEM",
       "KRYP",
       "LAZR",
       "LSTB",
       "MIVL",
-      "NGIF",
-      "NISM",
-      "NUDG",
-      "ORAC",
-      "PHYS",
-      "PRIZ",
-      "PSLV"
+      "NGIF"
     ],
     "missing_retry_cooldown": [
       "AAAD",
@@ -1032,24 +1039,24 @@
       "AIQD",
       "AIQU",
       "AMHI",
+      "ASMZ",
       "BAVA",
       "BD",
-      "BRSM",
-      "BTCU"
+      "BRSM"
     ],
     "missing_retry_pending": [
       "ACHX",
+      "ARKE",
       "ARMA",
-      "ASMZ",
       "AVGC",
       "BEC",
+      "CIEX",
       "CIFC",
       "DISK",
       "ECHX",
       "EO",
-      "GMEC",
-      "GOLI",
-      "IONC"
+      "FECM",
+      "FESC"
     ],
     "missing_external_quote_type_mismatch": [
       "AAAD",
@@ -1061,9 +1068,9 @@
       "AIQD",
       "AIQU",
       "AMHI",
+      "ARKE",
       "ARMA",
-      "ASMZ",
-      "AVGC"
+      "ASMZ"
     ],
     "yahoo_fallback": [
       "AAAP",

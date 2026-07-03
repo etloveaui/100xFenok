@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-07-02T23:49:02Z",
+  "generated_at": "2026-07-03T01:27:29Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "monthly_3y",
@@ -27,7 +27,7 @@
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-02T23:49:02Z",
+    "generated_at": "2026-07-03T01:27:29Z",
     "policy": {
       "limit": 0,
       "max_age_hours": 720,
@@ -59,7 +59,7 @@
         "ticker": "QNDX",
         "source": "new_etfs",
         "reason": "history_gap",
-        "age_hours": 78.01,
+        "age_hours": 79.65,
         "prior_failures": 0,
         "priority": 0,
         "reason_priority": 2,
@@ -81,12 +81,37 @@
         "status": "inception_limited"
       },
       {
-        "ticker": "JCAL",
-        "source": "new_etfs",
+        "ticker": "BITA",
+        "source": "etf_universe",
         "reason": "history_gap",
-        "age_hours": 326.33,
+        "age_hours": 327.97,
         "prior_failures": 0,
-        "priority": 0,
+        "priority": 1,
+        "reason_priority": 2,
+        "missing_history_periods": [
+          "monthly_3y",
+          "monthly_5y"
+        ],
+        "fetchable_missing_history_periods": [],
+        "inception_limited_history_periods": [
+          "monthly_3y",
+          "monthly_5y"
+        ],
+        "inception_date": "2026-06-09",
+        "history_period_row_counts": {
+          "monthly_3y": 0,
+          "monthly_5y": 0
+        },
+        "history_period_min_rows": {},
+        "status": "inception_limited"
+      },
+      {
+        "ticker": "JCAL",
+        "source": "etf_universe",
+        "reason": "history_gap",
+        "age_hours": 327.97,
+        "prior_failures": 0,
+        "priority": 1,
         "reason_priority": 2,
         "missing_history_periods": [
           "monthly_3y",
@@ -107,11 +132,11 @@
       },
       {
         "ticker": "JTNY",
-        "source": "new_etfs",
+        "source": "etf_universe",
         "reason": "history_gap",
-        "age_hours": 326.33,
+        "age_hours": 327.97,
         "prior_failures": 0,
-        "priority": 0,
+        "priority": 1,
         "reason_priority": 2,
         "missing_history_periods": [
           "monthly_3y",
@@ -132,34 +157,9 @@
       },
       {
         "ticker": "SPCF",
-        "source": "new_etfs",
-        "reason": "history_gap",
-        "age_hours": 21.86,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "missing_history_periods": [
-          "monthly_3y",
-          "monthly_5y"
-        ],
-        "fetchable_missing_history_periods": [],
-        "inception_limited_history_periods": [
-          "monthly_3y",
-          "monthly_5y"
-        ],
-        "inception_date": "2026-06-12",
-        "history_period_row_counts": {
-          "monthly_3y": 0,
-          "monthly_5y": 0
-        },
-        "history_period_min_rows": {},
-        "status": "inception_limited"
-      },
-      {
-        "ticker": "BITA",
         "source": "etf_universe",
         "reason": "history_gap",
-        "age_hours": 326.33,
+        "age_hours": 23.5,
         "prior_failures": 0,
         "priority": 1,
         "reason_priority": 2,
@@ -172,7 +172,7 @@
           "monthly_3y",
           "monthly_5y"
         ],
-        "inception_date": "2026-06-09",
+        "inception_date": "2026-06-12",
         "history_period_row_counts": {
           "monthly_3y": 0,
           "monthly_5y": 0
