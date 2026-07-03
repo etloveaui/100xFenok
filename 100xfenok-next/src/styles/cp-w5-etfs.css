@@ -1,0 +1,424 @@
+/* /etfs route — CANVAS+ W5 factory slice. Additive, `.cpw5-etfs-*` namespace.
+   Built on the shared `.cpw5-*` kit (src/styles/cp-w5-kit.css) + `--cp-*` tokens.
+   Token-pure: zero raw hex/rgb literals (see qa:tokens). Imported directly from
+   src/app/etfs/page.tsx, not globals.css, so parallel W5 route slices never
+   collide on a shared import list. */
+
+.cpw5-etfs-layout {
+  display: grid;
+  gap: var(--s4, 16px);
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Hero block (verdict + band/gauge combo + CTA row + metric tiles)       */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-etfs-hero-block {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+[data-etfs-surface] .cpw5-cta-btn--primary {
+  color: var(--cp-bg);
+}
+
+.cpw5-etfs-hero-visuals {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.cpw5-etfs-hero-visuals > .cpw5-band,
+.cpw5-etfs-hero-visuals > .cpw5-gauge {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+}
+
+.cpw5-etfs-hero-visuals > .cpw5-gauge {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+/* Composition share is a neutral count metric, not a gain/loss reading —
+   override the kit's default valuation-style green->amber->red band gradient
+   with a neutral accent gradient so color roles stay disjoint (design grammar
+   rule 6: green/red = data only). Kit component/CSS itself is left untouched. */
+.cpw5-etfs-band--neutral .cpw5-band__track {
+  background: linear-gradient(
+    90deg,
+    var(--cp-surface-strong) 0%,
+    var(--cp-accent-soft) 55%,
+    var(--cp-accent) 100%
+  );
+}
+
+.cpw5-etfs-band--neutral .cpw5-band__flag {
+  background: var(--cp-text-strong);
+}
+
+@media (max-width: 760px) {
+  .cpw5-etfs-hero-visuals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Metric tile mini-lists (top-3 movers embedded in CpMetricTile sub)      */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-etfs-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.cpw5-etfs-mini-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 2px 0;
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.cpw5-etfs-mini-link:hover {
+  color: var(--cp-accent-strong);
+}
+
+.cpw5-etfs-mini-link span:first-child {
+  overflow: hidden;
+  color: var(--cp-text-strong);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-mini-link b {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tier 3 — unified table toolbar (search + segment pills)                 */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-etfs-table-toolbar {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cpw5-etfs-search {
+  width: 100%;
+  min-width: 0;
+  height: var(--cp-input-height);
+  padding: 0 14px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cpw5-etfs-search:focus-visible {
+  outline: 2px solid var(--cp-focus-ring);
+  outline-offset: 1px;
+}
+
+.cpw5-etfs-segment-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cpw5-etfs-segment-pill {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-segment-pill span {
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.cpw5-etfs-segment-pill[data-active="true"] {
+  border-color: var(--cp-accent-strong);
+  background: var(--cp-accent);
+  color: var(--cp-surface);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tier 3 — advanced filter accordion body                                 */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-etfs-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .cpw5-etfs-filter-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cpw5-etfs-filter-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cpw5-etfs-filter-field span {
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.cpw5-etfs-filter-field select {
+  min-width: 0;
+  height: var(--cp-input-height);
+  padding: 0 10px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  color: var(--cp-text-strong);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tier 3 — data table cell content                                        */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-etfs-table-ticker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cpw5-etfs-table-ticker strong {
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.cpw5-etfs-table-ticker span {
+  overflow: hidden;
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.cpw5-etfs-badge {
+  border: 1px solid var(--cp-divider);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--cp-surface-muted);
+  color: var(--cp-text-muted);
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-badge-empty {
+  color: var(--cp-text-soft);
+}
+
+.cpw5-etfs-up { color: var(--cp-positive); font-variant-numeric: tabular-nums; }
+.cpw5-etfs-down { color: var(--cp-negative); font-variant-numeric: tabular-nums; }
+
+.cpw5-etfs-table-desktop {
+  min-width: 0;
+}
+
+.cpw5-etfs-mobile-list {
+  display: none;
+}
+
+.cpw5-etfs-mobile-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+}
+
+.cpw5-etfs-mobile-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.cpw5-etfs-mobile-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cpw5-etfs-mobile-title strong {
+  color: var(--cp-text-strong);
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.cpw5-etfs-mobile-title span {
+  overflow: hidden;
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-mobile-category {
+  color: var(--cp-text-soft);
+  font-size: 10.5px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-mobile-badges {
+  justify-content: flex-start;
+}
+
+.cpw5-etfs-mobile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.cpw5-etfs-mobile-stats div {
+  min-width: 0;
+  padding: 8px;
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface-muted);
+}
+
+.cpw5-etfs-mobile-stats dt {
+  color: var(--cp-text-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.cpw5-etfs-mobile-stats dd {
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: var(--cp-text-strong);
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .cpw5-etfs-table-desktop {
+    display: none;
+  }
+
+  .cpw5-etfs-mobile-list {
+    display: grid;
+    gap: 10px;
+  }
+}
+
+.cpw5-etfs-load-more {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  color: var(--cp-accent-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Footer (demoted cross-route links + disclaimer)                         */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-etfs-footer {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 4px 0 8px;
+  text-align: center;
+}
+
+.cpw5-etfs-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 0;
+  max-width: 100%;
+}
+
+.cpw5-etfs-footer-links a {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.cpw5-etfs-footer-links a + a {
+  border-left: 1px solid var(--cp-divider);
+}
+
+.cpw5-etfs-disclaimer {
+  margin: 0;
+  color: var(--cp-text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
