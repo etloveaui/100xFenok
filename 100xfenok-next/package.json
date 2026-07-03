@@ -49,6 +49,8 @@
     "qa:browser:webkit": "timeout 25s env QA_WEBKIT_ROUTE=/ QA_WEBKIT_TIMEOUT_MS=10000 node .qa-webkit-smoke.js",
     "qa:browser:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_DEV=1 node .qa-playwright.js",
     "qa:browser:dist": "QA_BASE_URL=http://127.0.0.1:4173 node .qa-playwright.js",
+    "qa:visual": "playwright test --config playwright.visual.config.ts",
+    "qa:visual:update-baselines": "playwright test --config playwright.visual.config.ts --update-snapshots",
     "qa:stockanalysis": "node scripts/smoke-stockanalysis-routes.mjs",
     "qa:routes": "node scripts/check-route-key-contract.mjs && node scripts/check-ticker-normalize-parity.mjs",
     "qa:worker-bundle-budget": "node scripts/check-worker-bundle-budget.mjs",
@@ -129,6 +131,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@opennextjs/cloudflare": "^1.19.10",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

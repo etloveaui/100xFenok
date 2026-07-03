@@ -1,0 +1,76 @@
+name: QA Visual
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "100xfenok-next/src/**"
+      - "100xfenok-next/public/**"
+      - "100xfenok-next/tests/visual/**"
+      - "100xfenok-next/playwright.visual.config.ts"
+      - "100xfenok-next/qa-baselines/visual/v6/**"
+      - "100xfenok-next/package.json"
+      - "100xfenok-next/package-lock.json"
+      - ".github/workflows/qa-visual.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: qa-visual-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: 100xfenok-next
+
+jobs:
+  visual:
+    name: visual-${{ matrix.project }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop-1440, mobile-390]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: 100xfenok-next/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: NEXT_BUILD_TARGET=cloudflare npx next build
+
+      - name: Run visual QA
+        env:
+          CI: "true"
+          PROJECT: ${{ matrix.project }}
+        run: npm run qa:visual -- --project="$PROJECT"
+
+      - name: Upload visual report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-report-${{ matrix.project }}
+          path: 100xfenok-next/playwright-report/visual/
+          retention-days: 14
+
+      - name: Upload visual diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-results-${{ matrix.project }}
+          path: 100xfenok-next/test-results/visual/
+          retention-days: 14
