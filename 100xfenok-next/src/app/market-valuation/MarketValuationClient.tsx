@@ -9,6 +9,7 @@ import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type {
   MarketBondPulse,
   MarketEventRisk,
+  MarketIndexValuation,
   MarketIndexTrend,
   MarketMacroPulse,
   MarketSentimentPulse,
@@ -25,7 +26,7 @@ import {
 } from "@/lib/market-valuation/charts/ledgerChartPanels";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
-import { freshnessDataState } from "@/lib/data-state";
+import { formatAsOf as formatDataAsOf, freshnessDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -505,6 +506,177 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
   );
 }
 
+function averagePremiumPct(band: ValuationBand): number | null {
+  if (band.current === null || band.avg === null || band.avg === 0) return null;
+  return (band.current / band.avg - 1) * 100;
+}
+
+function fmtSignedNumber(value: number | null, digits = 1): string {
+  if (value === null) return "—";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
+}
+
+function buildVerdict(index: MarketIndexValuation | undefined): { headline: string; support: string; metaLabel: string; premium: number | null } {
+  if (!index) {
+    return {
+      headline: "S&P 500 밸류에이션 데이터를 불러오는 중입니다.",
+      support: "데이터가 준비되면 16년 밴드 기준의 현재 위치와 이익/멀티플 기여도를 함께 표시합니다.",
+      metaLabel: "대기",
+      premium: null,
+    };
+  }
+
+  const percentile = index.pe.percentile;
+  const meta = valuationMeta(percentile);
+  const premium = averagePremiumPct(index.pe);
+  const percentileText = percentile === null ? "위치 확인 중" : `16년 역사 ${percentile}%ile`;
+  const driverText = index.driver?.detail ?? "이익과 멀티플 기여도는 보조 지표로 확인 중입니다.";
+  const premiumText = premium === null ? "평균 대비 거리는 계산 중" : `평균 대비 ${fmtSignedNumber(premium)}%`;
+
+  return {
+    headline: `${index.name} Fwd P/E는 ${percentileText} - ${meta.label} 구간입니다.`,
+    support: `${premiumText}. ${driverText}`,
+    metaLabel: meta.label,
+    premium,
+  };
+}
+
+function HeroBandGauge({ index }: { index: MarketIndexValuation | undefined }) {
+  if (!index) return <EmptyPanel label="S&P 500 밴드 데이터 없음" />;
+
+  const premium = averagePremiumPct(index.pe);
+  const erpText = index.driver?.label ?? "이익/멀티플 확인";
+
+  return (
+    <div className="cpw5-mv-hero-visual">
+      <ValuationRow label="S&P 500 Fwd P/E" metric="sp500-pe" band={index.pe} digits={1} />
+      <div className="cpw5-mv-hero-metrics">
+        <span>
+          평균 대비 <strong>{premium === null ? "—" : `${fmtSignedNumber(premium)}%`}</strong>
+        </span>
+        <span>
+          ROE <strong>{index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}</strong>
+        </span>
+        <span>
+          현재가 <strong>{index.price === null ? "—" : index.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+        </span>
+        <span>
+          드라이버 <strong>{erpText}</strong>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MarketHero({
+  sp500,
+  sourceDate,
+  erpValue,
+}: {
+  sp500: MarketIndexValuation | undefined;
+  sourceDate: string | null;
+  erpValue: number | null;
+}) {
+  const verdict = buildVerdict(sp500);
+  const erpLabel = erpValue === null ? "ERP 확인 중" : `미국 ERP ${formatPercent(erpValue * 100, 1)}`;
+
+  return (
+    <section className="cpw5-mv-hero" data-market-valuation-hero>
+      <div className="cpw5-mv-hero-copy">
+        <div className="cpw5-mv-eyebrow-row">
+          <p className="cpw5-mv-eyebrow">오늘의 밸류에이션 판정</p>
+          {sourceDate ? <DataStateBadge state={freshnessDataState({ asOf: sourceDate })} prefix="기준" /> : null}
+        </div>
+        <h2>{verdict.headline}</h2>
+        <p>{verdict.support}</p>
+        <div className="cpw5-mv-chip-row" aria-label="핵심 보조 지표">
+          <span>{verdict.metaLabel}</span>
+          <span>{erpLabel}</span>
+          <span>Yardeni 차트 아래 확인</span>
+        </div>
+        <div className="cpw5-mv-cta-row" aria-label="연결 화면">
+          <TransitionLink href={ROUTES.marketStructure}>구조 상세</TransitionLink>
+          <TransitionLink href={ROUTES.macroChartQuery("macro=activity&preset=activity&range=MAX")}>경기 차트</TransitionLink>
+          <TransitionLink href={`${ROUTES.screener}?macro=activity&preset=estimate&action=value_momentum`}>추정치 스크리너</TransitionLink>
+        </div>
+      </div>
+      <HeroBandGauge index={sp500} />
+    </section>
+  );
+}
+
+function SecondaryIndexTable({ indices }: { indices: MarketIndexValuation[] }) {
+  const secondary = indices.filter((index) => index.id !== "sp500");
+
+  if (secondary.length === 0) {
+    return <EmptyPanel label="보조 지수 데이터 없음" />;
+  }
+
+  return (
+    <section className="cpw5-mv-secondary" data-market-valuation-secondary>
+      <header>
+        <p className="cpw5-mv-eyebrow">보조 지수 비교</p>
+        <h2>나머지 지수는 한 화면에서 압축 비교합니다.</h2>
+      </header>
+      <div className="cpw5-mv-index-table" role="table" aria-label="보조 지수 밸류에이션">
+        <div className="cpw5-mv-index-row cpw5-mv-index-head" role="row">
+          <span role="columnheader">지수</span>
+          <span role="columnheader">Fwd P/E</span>
+          <span role="columnheader">P/B</span>
+          <span role="columnheader">ROE</span>
+          <span role="columnheader">구간</span>
+        </div>
+        {secondary.map((index) => {
+          const meta = valuationMeta(index.pe.percentile);
+          return (
+            <div key={index.id} className="cpw5-mv-index-row" role="row">
+              <span role="cell">
+                <strong>{index.name}</strong>
+                <small>{index.nameEn}</small>
+              </span>
+              <span role="cell" className="tabular-nums">
+                {fmt(index.pe.current, 1)}
+              </span>
+              <span role="cell" className="tabular-nums">
+                {fmt(index.pb.current, 2)}
+              </span>
+              <span role="cell" className="tabular-nums">
+                {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
+              </span>
+              <span role="cell">
+                <em>{meta.label}</em>
+                {index.pe.percentile !== null ? <small>{index.pe.percentile}%ile</small> : null}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ContextAccordion({
+  title,
+  summary,
+  children,
+}: {
+  title: string;
+  summary: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="cpw5-mv-accordion">
+      <summary>
+        <span>
+          <strong>{title}</strong>
+          <small>{summary}</small>
+        </span>
+      </summary>
+      <div className="cpw5-mv-accordion-body">{children}</div>
+    </details>
+  );
+}
+
 export default function MarketValuationClient() {
   const {
     indices,
@@ -515,26 +687,29 @@ export default function MarketValuationClient() {
     indexTrends,
     structurePulses,
     bondPulses,
+    damodaranUsErp,
     dataReady,
     failed,
     sourceDate,
   } = useMarketValuation();
+  const sp500 = indices.find((index) => index.id === "sp500") ?? indices[0];
+  const headerVerdict = buildVerdict(sp500);
 
   return (
-    <div className="data-shell-page" data-market-valuation-surface>
+    <div className="data-shell-page canvas-plus cpw5-market-valuation" data-market-valuation-surface>
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">시장 밸류에이션</p>
           <h1 className="data-shell-title">시장 밸류에이션</h1>
           <p className="data-shell-desc">
-            주요 미국 지수가 <strong className="text-slate-800">역사적으로 비싼지/싼지</strong>. Fwd P/E·P/B를 16년 밴드와 대조합니다.
+            <strong>{headerVerdict.headline}</strong> {headerVerdict.support}
           </p>
         </div>
         <div className="data-shell-head-actions">
           {sourceDate ? (
             <span className="data-shell-pill ok">
               <span />
-              {sourceDate}
+              {formatDataAsOf(sourceDate) ?? sourceDate}
             </span>
           ) : null}
           <MarketSectionNav active="valuation" />
@@ -547,67 +722,35 @@ export default function MarketValuationClient() {
         </div>
       ) : null}
 
-      <MarketSection sectionKey="overview" index="01 개요" title="개요" summary="시장 체온과 주요 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
+      <MarketHero sp500={sp500} sourceDate={sourceDate} erpValue={damodaranUsErp} />
+
+      <SecondaryIndexTable indices={indices} />
+
+      <MarketSection sectionKey="valuation" index="01 근거" title="이익과 멀티플이 만든 현재 위치" summary="S&P 500 판정의 배경을 시장 체온, ERP, Yardeni 모델로 확인합니다." muted={!dataReady}>
         <MarketThermometer />
         <SignalPulsePanel items={signalPulses} />
-      </MarketSection>
-
-      <MarketSection sectionKey="macro" index="02 매크로" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
-        <PmiActivityChartPanel />
-        <MacroPulsePanel items={macroPulses} fallbackAsOf={sourceDate} />
-        <BondPulsePanel items={bondPulses} fallbackAsOf={sourceDate} />
-      </MarketSection>
-
-      <MarketSection sectionKey="valuation" index="03 밸류에이션" title="밸류에이션" summary="ERP, 야데니 모델, 지수별 평가 밴드를 한곳에 모았습니다." muted={!dataReady}>
         <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]" data-market-valuation-chart-grid>
           <ErpHistoryPanel />
           <YardeniOverlayChartPanel />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {indices.map((index) => (
-            <section
-              key={index.id}
-              className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5"
-              data-market-index-card={index.id}
-            >
-              <header className="flex items-end justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">{index.nameEn}</p>
-                  <h2 className="truncate text-lg font-black text-[var(--c-ink)]">{index.name}</h2>
-                </div>
-                <div className="text-right">
-                  <p className="orbitron text-lg font-black tabular-nums text-[var(--c-ink)]">
-                    {index.price === null ? "—" : index.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </p>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--c-ink-4)]">{index.date ?? "—"}</p>
-                </div>
-              </header>
-
-              <div className="mt-3 grid gap-2">
-                <ValuationRow label="Fwd P/E" metric="pe" band={index.pe} digits={1} />
-                <ValuationRow label="P/B" metric="pb" band={index.pb} digits={2} />
-                <div className="flex items-center justify-between rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-2">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE</span>
-                  <span className="orbitron text-lg font-black tabular-nums text-[var(--c-ink)]">
-                    {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
-                  </span>
-                </div>
-              </div>
-            </section>
-          ))}
-        </div>
       </MarketSection>
 
-      <MarketSection sectionKey="structure" index="04 구조·심리" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
-        <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
-        <StructureDetailEntry />
-        <SentimentPulsePanel items={sentimentPulses} fallbackAsOf={sourceDate} />
-      </MarketSection>
-
-      <MarketSection sectionKey="context" index="05 맥락" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
-        <AnnualReturnsChartPanel />
-        <EventRiskPanel items={eventRisks} fallbackAsOf={sourceDate} />
-      </MarketSection>
+      <div className="cpw5-mv-context-stack" data-market-valuation-context>
+        <ContextAccordion title="매크로" summary="PMI, 경기 펄스, 채권 신호는 판정 이후 확인합니다.">
+          <PmiActivityChartPanel />
+          <MacroPulsePanel items={macroPulses} fallbackAsOf={sourceDate} />
+          <BondPulsePanel items={bondPulses} fallbackAsOf={sourceDate} />
+        </ContextAccordion>
+        <ContextAccordion title="구조·심리" summary="시장 내부 구조와 센티먼트 압력을 접어서 봅니다.">
+          <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
+          <StructureDetailEntry />
+          <SentimentPulsePanel items={sentimentPulses} fallbackAsOf={sourceDate} />
+        </ContextAccordion>
+        <ContextAccordion title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다.">
+          <AnnualReturnsChartPanel />
+          <EventRiskPanel items={eventRisks} fallbackAsOf={sourceDate} />
+        </ContextAccordion>
+      </div>
 
       <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
         역사 밴드 = 2010년 이후 주간 시계열의 최저·평균·최고 범위입니다. 백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다. 연초 이후 분해는 가격 변화가 EPS 개선에서 왔는지 평가배수 확장/축소에서 왔는지 보기 위한 보조 지표입니다.

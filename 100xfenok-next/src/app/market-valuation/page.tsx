@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { ROUTES } from "@/lib/routes";
 import MarketValuationClient from "./MarketValuationClient";
+import "@/styles/cp-w5-market-valuation.css";
 
 export const metadata: Metadata = {
   title: "시장 밸류에이션 | 100xFenok",

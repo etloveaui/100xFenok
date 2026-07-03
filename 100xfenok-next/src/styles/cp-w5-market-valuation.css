@@ -1,0 +1,317 @@
+/* W5 /market-valuation route shell.
+   Token-pure: no raw hex/rgb literals; built on CANVAS+ and app tokens. */
+
+.cpw5-market-valuation {
+  min-width: 0;
+}
+
+.cpw5-market-valuation * {
+  min-width: 0;
+}
+
+.cpw5-mv-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(min(390px, 100%), 0.78fr);
+  gap: 18px;
+  align-items: stretch;
+  padding: 22px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: linear-gradient(180deg, var(--cp-surface), var(--cp-surface-muted));
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent),
+    0 18px 44px color-mix(in srgb, var(--cp-text-strong) 7%, transparent);
+}
+
+.cpw5-mv-hero-copy {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.cpw5-mv-eyebrow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cpw5-mv-eyebrow {
+  margin: 0;
+  color: var(--cp-accent-strong);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cpw5-mv-hero-copy h2 {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.26;
+  word-break: keep-all;
+}
+
+.cpw5-mv-hero-copy p {
+  margin: 0;
+  color: var(--cp-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.cpw5-mv-chip-row,
+.cpw5-mv-cta-row,
+.cpw5-mv-hero-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cpw5-mv-chip-row span,
+.cpw5-mv-cta-row a,
+.cpw5-mv-hero-metrics span {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.cpw5-mv-chip-row span,
+.cpw5-mv-hero-metrics span {
+  padding: 7px 10px;
+}
+
+.cpw5-mv-cta-row a {
+  min-height: 36px;
+  padding: 8px 11px;
+}
+
+.cpw5-mv-cta-row a:hover {
+  border-color: var(--cp-accent);
+  color: var(--cp-accent-strong);
+}
+
+.cpw5-mv-hero-metrics strong {
+  margin-left: 4px;
+  color: var(--cp-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.cpw5-mv-hero-visual {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: color-mix(in srgb, var(--cp-surface) 78%, var(--cp-accent-soft));
+}
+
+.cpw5-mv-hero-visual [data-market-valuation-row] {
+  padding: 16px;
+  border-radius: var(--cp-radius-md);
+}
+
+.cpw5-mv-hero-visual [data-market-valuation-row] [data-market-valuation-gauge] {
+  height: 12px;
+}
+
+.cpw5-mv-secondary {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--cp-text-strong) 4%, transparent);
+}
+
+.cpw5-mv-secondary header {
+  display: grid;
+  gap: 4px;
+}
+
+.cpw5-mv-secondary h2 {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.cpw5-mv-index-table {
+  display: grid;
+  gap: 6px;
+}
+
+.cpw5-mv-index-row {
+  display: grid;
+  grid-template-columns: minmax(118px, 1.4fr) repeat(4, minmax(0, 0.8fr));
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface-muted);
+}
+
+.cpw5-mv-index-head {
+  background: transparent;
+  color: var(--cp-text-soft);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cpw5-mv-index-row span {
+  overflow-wrap: anywhere;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw5-mv-index-row strong {
+  display: block;
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.cpw5-mv-index-row small {
+  display: block;
+  margin-top: 2px;
+  color: var(--cp-text-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.cpw5-mv-index-row em {
+  display: block;
+  color: var(--cp-accent-strong);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.cpw5-mv-context-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.cpw5-mv-accordion {
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--cp-text-strong) 4%, transparent);
+}
+
+.cpw5-mv-accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 14px 16px;
+  color: var(--cp-text-strong);
+  cursor: pointer;
+  list-style: none;
+}
+
+.cpw5-mv-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.cpw5-mv-accordion summary::after {
+  content: "+";
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-sm);
+  color: var(--cp-accent-strong);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.cpw5-mv-accordion[open] summary::after {
+  content: "-";
+}
+
+.cpw5-mv-accordion strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.cpw5-mv-accordion small {
+  display: block;
+  margin-top: 2px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cpw5-mv-accordion-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+@media (max-width: 960px) {
+  .cpw5-mv-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .cpw5-mv-hero,
+  .cpw5-mv-secondary {
+    padding: 14px;
+    border-radius: var(--cp-radius-md);
+  }
+
+  .cpw5-mv-hero-copy h2 {
+    font-size: 22px;
+    line-height: 1.32;
+  }
+
+  .cpw5-mv-hero-copy p {
+    font-size: 13px;
+  }
+
+  .cpw5-mv-cta-row a {
+    min-height: 44px;
+  }
+
+  .cpw5-mv-index-row {
+    grid-template-columns: minmax(96px, 1.25fr) repeat(4, minmax(0, 0.7fr));
+    gap: 5px;
+    padding: 9px 8px;
+  }
+
+  .cpw5-mv-index-row span {
+    font-size: 10.5px;
+  }
+
+  .cpw5-mv-index-row strong {
+    font-size: 11.5px;
+  }
+
+  .cpw5-mv-index-row small {
+    font-size: 9.5px;
+  }
+}
