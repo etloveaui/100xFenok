@@ -1,0 +1,400 @@
+/* W5 route CSS — /sectors. Additive, `.cpw5-sectors-*` namespace.
+   Built on the live --cp-* tokens (canvas-plus.css) + the shared W5 kit
+   (cp-w5-kit.css). Token-pure: zero raw hex/rgb literals (see qa:tokens).
+   Recipe SSOT: docs/references/cp-design-system-spec.md.
+   Brief: _tmp/w5-briefs/brief-sectors.md */
+
+.cpw5-sectors-page {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+}
+
+.cpw5-sectors-topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Hero rank chart (promoted SectorRelativeBarChart)                      */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-sectors-hero-chart {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent);
+}
+
+.cpw5-sectors-hero-chart__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cpw5-sectors-hero-chart__title {
+  margin: 0;
+  min-width: 0;
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.cpw5-sectors-hero-chart__baseline {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface-muted);
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cpw5-sectors-period-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cpw5-sectors-period-btn {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: background-color 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.cpw5-sectors-period-btn:hover {
+  border-color: var(--cp-accent);
+  color: var(--cp-accent-strong);
+}
+
+.cpw5-sectors-period-btn[data-active="true"] {
+  border-color: var(--cp-accent-strong);
+  background: var(--cp-accent-strong);
+  color: var(--cp-surface);
+}
+
+.cpw5-sectors-bar-list {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cpw5-sectors-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr) minmax(0, 0.6fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.cpw5-sectors-bar-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--cp-text-strong);
+  font-size: 12.5px;
+  font-weight: 850;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.cpw5-sectors-bar-name:hover,
+a.cpw5-sectors-bar-name:focus-visible {
+  color: var(--cp-accent-strong);
+  text-decoration: underline;
+}
+
+.cpw5-sectors-bar-etf {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--cp-text-soft);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cpw5-sectors-bar-track {
+  position: relative;
+  min-width: 0;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--cp-surface-muted);
+  overflow: hidden;
+}
+
+/* Market-cap weight cue: a low-opacity backdrop sized by ETF market cap
+   share, independent of the direction/magnitude bar drawn on top
+   (Finviz treemap steal — size = weight, color/length = performance). */
+.cpw5-sectors-bar-weight {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--cp-surface-strong);
+}
+
+.cpw5-sectors-bar-mid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--cp-divider);
+}
+
+.cpw5-sectors-bar-fill {
+  position: absolute;
+  top: 50%;
+  height: 12px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+}
+
+.cpw5-sectors-bar-fill[data-side="up"] {
+  left: 50%;
+  background: var(--cp-positive);
+}
+
+.cpw5-sectors-bar-fill[data-side="down"] {
+  right: 50%;
+  background: var(--cp-negative);
+}
+
+.cpw5-sectors-bar-values {
+  min-width: 0;
+  text-align: right;
+}
+
+.cpw5-sectors-bar-relative {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpw5-sectors-bar-relative[data-tone="positive"] { color: var(--cp-positive); }
+.cpw5-sectors-bar-relative[data-tone="negative"] { color: var(--cp-negative); }
+.cpw5-sectors-bar-relative[data-tone="neutral"] { color: var(--cp-text-soft); }
+
+.cpw5-sectors-bar-absolute {
+  display: block;
+  color: var(--cp-text-soft);
+  font-size: 10.5px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpw5-sectors-hero-chart__empty {
+  padding: 14px;
+  border: 1px dashed var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  color: var(--cp-text-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Full-matrix heat cell (inside the "전체 표 보기" accordion)              */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-sectors-heat-cell {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cp-radius-sm);
+  padding: 0 6px;
+  font-size: 12.5px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile card grids (ETF / valuation / smart-money)                      */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-sectors-card-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .cpw5-sectors-card-grid[data-cols="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cpw5-sectors-card {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface-muted);
+}
+
+.cpw5-sectors-card__head {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cpw5-sectors-card__name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--cp-text-strong);
+  font-size: 12.5px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw5-sectors-card__etf {
+  display: block;
+  color: var(--cp-text-soft);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cpw5-sectors-card__value {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpw5-sectors-card__value[data-tone="positive"] { color: var(--cp-positive); }
+.cpw5-sectors-card__value[data-tone="negative"] { color: var(--cp-negative); }
+.cpw5-sectors-card__value[data-tone="neutral"] { color: var(--cp-text-soft); }
+
+.cpw5-sectors-card__badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.cpw5-sectors-card__badge[data-tone="positive"] { background: var(--cp-positive-soft); color: var(--cp-positive); }
+.cpw5-sectors-card__badge[data-tone="negative"] { background: var(--cp-negative-soft); color: var(--cp-negative); }
+.cpw5-sectors-card__badge[data-tone="neutral"] { background: var(--cp-surface-strong); color: var(--cp-text-muted); }
+
+.cpw5-sectors-card__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.cpw5-sectors-card__cell {
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px 7px;
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 10px;
+  font-weight: 750;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Smart-money holdings chips (inside SmartMoneyPanel)                    */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-sectors-holding-chip {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 3px 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Industry map bridge line                                               */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-sectors-bridge {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface-muted);
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cpw5-sectors-bridge b { color: var(--cp-text-strong); font-weight: 900; }
+
+/* ---------------------------------------------------------------------- */
+/* Loading skeleton                                                       */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-sectors-skeleton {
+  padding: 16px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+}
+
+.cpw5-sectors-skeleton__bar {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--cp-surface-muted);
+  animation: cpw5-sectors-pulse 1.4s ease-in-out infinite;
+}
+
+.cpw5-sectors-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@keyframes cpw5-sectors-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .cpw5-sectors-page { padding: 12px 12px 28px; }
+  .cpw5-sectors-bar-row { grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.3fr) minmax(0, 0.7fr); }
+}

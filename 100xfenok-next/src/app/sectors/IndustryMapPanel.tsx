@@ -320,7 +320,7 @@ function IndustryConstituentList({
   );
 }
 
-export default function IndustryMapPanel() {
+export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string | null } = {}) {
   const [data, setData] = useState<IndustryData | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [industryQuery, setIndustryQuery] = useState("");
@@ -380,6 +380,9 @@ export default function IndustryMapPanel() {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      {bridgeText ? (
+        <p className="cpw5-sectors-bridge xl:col-span-2">{bridgeText}</p>
+      ) : null}
       <section className="panel">
         <div className="panel-h">
           <h2>산업 지도</h2>

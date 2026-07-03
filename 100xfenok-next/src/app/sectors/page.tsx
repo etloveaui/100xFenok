@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { ROUTES } from "@/lib/routes";
 import SectorsClient from "./SectorsClient";
+import "@/styles/cp-w5-sectors.css";
 
 export const metadata: Metadata = {
   title: "섹터 히트맵 | 100xFenok",

@@ -1,19 +1,31 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
-import { DataStateBadge } from "@/components/DataStateNotice";
+import {
+  CpAccordion,
+  CpCTARow,
+  CpDataTable,
+  CpSectionCard,
+  CpStatChipRow,
+  CpVerdictHero,
+  type CpDataTableColumn,
+  type CpVerdictHeroTrustChip,
+} from "@/components/canvas-plus/kit";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
+import TransitionLink from "@/components/TransitionLink";
+import { ROUTES, withQuery } from "@/lib/routes";
 import { useSectorData } from "@/hooks/useSectorData";
-import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorSourceMeta, type SectorValuationBand } from "@/lib/sectors/types";
+import {
+  MOMENTUM_WINDOWS,
+  type MomentumWindow,
+  type SectorRow,
+  type SectorValuationBand,
+} from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
-import { useMarketChartTheme, type MarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
-import { makeDataState } from "@/lib/data-state";
-
-function cx(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
+import { formatAsOf } from "@/lib/data-state";
 
 function pct(value: number | null | undefined, digits = 1): string {
   return typeof value !== "number" || !Number.isFinite(value) ? "—" : formatSignedPercentDecimal(value, digits);
@@ -24,144 +36,40 @@ function pp(value: number | null | undefined, digits = 1): string {
   return formatted === "—" ? formatted : formatted.replace("%", "%p");
 }
 
-type MobileView = "heatmap" | "etf" | "valuation" | "guru";
-
-const MOBILE_VIEWS: ReadonlyArray<{ key: MobileView; label: string }> = [
-  { key: "heatmap", label: "흐름" },
-  { key: "etf", label: "ETF" },
-  { key: "valuation", label: "가치" },
-  { key: "guru", label: "기관 보유" },
-];
-
-const MOBILE_VIEW_COPY: Record<MobileView, { title: string; description: string }> = {
-  heatmap: {
-    title: "성과 흐름",
-    description: "기간별 상대 강도와 리더·약세 업종을 먼저 봅니다.",
-  },
-  etf: {
-    title: "대표 ETF",
-    description: "섹터 ETF 수익률, 베타, 보수율을 비교합니다.",
-  },
-  valuation: {
-    title: "밸류 위치",
-    description: "Fwd P/E 밴드와 ROE로 비싼/싼 업종을 나눕니다.",
-  },
-  guru: {
-    title: "기관 보유",
-    description: "13F 기반 스마트머니 비중과 4분기 변화를 봅니다.",
-  },
-};
-
 function dateOnly(value: string | null | undefined): string | null {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
 }
 
-function metricTone(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "text-[var(--c-ink-3)]";
-  return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
+function toneOf(value: number | null | undefined): "positive" | "negative" | "neutral" {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "neutral";
+  return value >= 0 ? "positive" : "negative";
 }
 
-function mobilePanelClass(active: boolean, display = "block"): string {
-  if (display === "grid") return active ? "grid" : "hidden md:grid";
-  return active ? "block" : "hidden md:block";
-}
+/**
+ * SECTOR_DEFINITIONS.key (snake_case, e.g. "information_technology") ->
+ * CANONICAL_SECTORS id used by the screener's sector filter (Title Case,
+ * e.g. "Technology"). Exhaustive 11-entry map — see
+ * src/lib/design/sector-map.json `canonical` for the source list. Passing
+ * the Korean label here would silently no-op the screener filter
+ * (service-map.md section B gap #6).
+ */
+const SECTOR_KEY_TO_SCREENER_SECTOR: Record<string, string> = {
+  information_technology: "Technology",
+  financials: "Financials",
+  health_care: "Healthcare",
+  energy: "Energy",
+  industrials: "Industrials",
+  communication_services: "Communication Services",
+  consumer_discretionary: "Consumer Discretionary",
+  consumer_staples: "Consumer Staples",
+  real_estate: "Real Estate",
+  materials: "Materials",
+  utilities: "Utilities",
+};
 
-/** Continuous green/red heat scale over a momentum fraction. */
-function heatStyle(value: number | null | undefined, theme: MarketChartTheme): CSSProperties {
-  return theme.heatStyle(value);
-}
-
-function SectionCard({
-  kicker,
-  title,
-  children,
-  className,
-}: {
-  kicker: string;
-  title: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={cx(
-        "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm sm:p-6",
-        className,
-      )}
-    >
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--c-ink-3)]">{kicker}</p>
-      <h2 className="mt-1 text-lg font-black tracking-tight text-[var(--c-ink)] sm:text-xl">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm">
-      <div className="h-3 w-32 animate-pulse rounded-full bg-[var(--c-surface-2)]" />
-      <div className="mt-3 grid gap-2 sm:grid-cols-4">
-        {Array.from({ length: 8 }, (_, index) => (
-          <div
-            key={index}
-            className="h-10 animate-pulse rounded-lg bg-[var(--c-surface-2)]"
-            style={{ animationDelay: `${index * 70}ms` }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const valuationHelp = {
-  pe: "Fwd P/E: 향후 12개월 예상 이익 대비 주가 배수",
-  pb: "P/B: 장부가 대비 주가 배수",
-  roe: "ROE: 자기자본이익률",
-} as const;
-
-function valuationTone(percentile: number | null | undefined): { label: string; className: string } {
-  if (typeof percentile !== "number" || !Number.isFinite(percentile)) {
-    return { label: "범위 없음", className: "bg-[var(--c-surface-2)] text-[var(--c-ink-3)]" };
-  }
-  if (percentile <= 0.25) return { label: "저평가권", className: "bg-[var(--c-up-soft)] text-[var(--c-up)]" };
-  if (percentile >= 0.75) return { label: "고평가권", className: "bg-[var(--c-down-soft)] text-[var(--c-down)]" };
-  return { label: "평균권", className: "bg-[var(--c-surface-2)] text-[var(--c-ink-2)]" };
-}
-
-function PeBandGauge({ value, band }: { value: number | null; band: SectorValuationBand | null }) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return <span className="orbitron text-sm font-bold text-[var(--c-ink-3)]">—</span>;
-  }
-  if (!band) {
-    return <span className="orbitron text-sm font-bold text-[var(--c-ink)]">{value.toFixed(1)}</span>;
-  }
-  const span = band.max - band.min;
-  const position = span > 0 ? Math.min(100, Math.max(0, ((value - band.min) / span) * 100)) : 50;
-  const percentile = Math.round(band.percentile * 100);
-  const tone = valuationTone(band.percentile);
-  return (
-    <div
-      className="ml-auto w-full max-w-[190px]"
-      title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
-      aria-label={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
-    >
-      <div className="mb-1 flex items-center justify-end gap-2">
-        <span className="orbitron text-sm font-black tabular-nums text-[var(--c-ink)]">{value.toFixed(1)}</span>
-        <span className={cx("rounded-full px-2 py-0.5 text-[10px] font-black", tone.className)}>{tone.label}</span>
-      </div>
-      <div className="relative h-2 rounded-full bg-gradient-to-r from-[var(--c-up-soft)] via-[var(--c-line-2)] to-[var(--c-down-soft)]">
-        <span
-          className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--c-brand)] shadow"
-          style={{ left: `${position}%` }}
-        />
-      </div>
-      <div className="mt-1 flex justify-between text-[9px] font-bold text-[var(--c-ink-3)]">
-        <span>{band.min.toFixed(1)}</span>
-        <span>{percentile}%</span>
-        <span>{band.max.toFixed(1)}</span>
-      </div>
-    </div>
-  );
+function screenerSectorHref(key: string): string {
+  const canonical = SECTOR_KEY_TO_SCREENER_SECTOR[key];
+  return canonical ? withQuery(ROUTES.screener, { sector: canonical }) : ROUTES.screener;
 }
 
 function failedSourceLabel(source: string): string | null {
@@ -173,184 +81,67 @@ function failedSourceLabel(source: string): string | null {
   return null;
 }
 
-function SourceLine({ sourceMeta, failedSources = [] }: { sourceMeta: SectorSourceMeta; failedSources?: string[] }) {
-  const parts = [
-    sourceMeta.benchmarksGenerated ? `모멘텀 ${dateOnly(sourceMeta.benchmarksGenerated)}` : null,
-    sourceMeta.valuationLatestDate ? `가치 ${sourceMeta.valuationLatestDate}` : null,
-    sourceMeta.smartMoneyQuarter ? `기관 보유 ${sourceMeta.smartMoneyQuarter}` : null,
-  ].filter(Boolean);
-  const missing = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
-  if (parts.length > 0) {
-    return <>{missing.length > 0 ? `${parts.join(" · ")} · 확인 불가 ${missing.join("/")}` : parts.join(" · ")}</>;
+function valuationTone(percentile: number | null | undefined): { label: string; tone: "positive" | "negative" | "neutral" } {
+  if (typeof percentile !== "number" || !Number.isFinite(percentile)) return { label: "범위 없음", tone: "neutral" };
+  if (percentile <= 0.25) return { label: "저평가권", tone: "positive" };
+  if (percentile >= 0.75) return { label: "고평가권", tone: "negative" };
+  return { label: "평균권", tone: "neutral" };
+}
+
+function PeBandGauge({ value, band }: { value: number | null; band: SectorValuationBand | null }) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return <span className="text-sm font-bold text-[var(--cp-text-soft)]">—</span>;
   }
-  return <>{missing.length > 0 ? `데이터 없음: ${missing.join(" · ")}` : "기준일 확인 중"}</>;
-}
-
-function valuationSourceLine(sourceMeta: SectorSourceMeta): string {
-  return `가치 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "확인 중"}`;
-}
-
-function MobileViewSwitch({
-  value,
-  onChange,
-  activeSummary,
-}: {
-  value: MobileView;
-  onChange: (next: MobileView) => void;
-  activeSummary: string;
-}) {
-  const activeCopy = MOBILE_VIEW_COPY[value];
+  if (!band) {
+    return <span className="text-sm font-bold text-[var(--cp-text-strong)]">{value.toFixed(1)}</span>;
+  }
+  const span = band.max - band.min;
+  const position = span > 0 ? Math.min(100, Math.max(0, ((value - band.min) / span) * 100)) : 50;
+  const percentile = Math.round(band.percentile * 100);
+  const tone = valuationTone(band.percentile);
   return (
-    <div className="md:hidden" data-sector-view-switch>
-      <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm sm:grid-cols-4">
-        {MOBILE_VIEWS.map((view) => {
-          const active = view.key === value;
-          return (
-            <button
-              key={view.key}
-              type="button"
-              data-sector-view-tab={view.key}
-              aria-controls={`sector-panel-${view.key}`}
-              onClick={() => onChange(view.key)}
-              aria-pressed={active}
-              className={cx(
-                "min-h-11 rounded-xl px-2 text-[11px] font-black transition",
-                active ? "bg-[var(--c-brand)] text-white" : "text-[var(--c-ink-3)] hover:bg-[var(--c-surface-2)]",
-              )}
-            >
-              {view.label}
-            </button>
-          );
-        })}
+    <div
+      className="ml-auto w-full max-w-[190px]"
+      title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
+    >
+      <div className="mb-1 flex items-center justify-end gap-2">
+        <span className="text-sm font-black tabular-nums text-[var(--cp-text-strong)]">{value.toFixed(1)}</span>
+        <span
+          className="rounded-full px-2 py-0.5 text-[10px] font-black"
+          style={{
+            background: tone.tone === "positive" ? "var(--cp-positive-soft)" : tone.tone === "negative" ? "var(--cp-negative-soft)" : "var(--cp-surface-strong)",
+            color: tone.tone === "positive" ? "var(--cp-positive)" : tone.tone === "negative" ? "var(--cp-negative)" : "var(--cp-text-muted)",
+          }}
+        >
+          {tone.label}
+        </span>
       </div>
       <div
-        data-sector-view-current={value}
-        className="mt-2 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 shadow-sm"
+        className="relative h-2 rounded-full"
+        style={{ background: "linear-gradient(90deg, var(--cp-positive-soft), var(--cp-surface-strong), var(--cp-negative-soft))" }}
       >
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-black text-[var(--c-ink)]">{activeCopy.title}</p>
-          <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black tabular-nums text-[var(--c-ink-3)]">
-            {activeSummary}
-          </span>
-        </div>
-        <p className="mt-1 text-[11px] font-semibold leading-relaxed text-[var(--c-ink-3)]">{activeCopy.description}</p>
+        <span
+          className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ left: `${position}%`, background: "var(--cp-accent-strong)" }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[9px] font-bold text-[var(--cp-text-soft)]">
+        <span>{band.min.toFixed(1)}</span>
+        <span>{percentile}%</span>
+        <span>{band.max.toFixed(1)}</span>
       </div>
     </div>
   );
 }
 
-function SectorPulse({
-  leader,
-  laggard,
-  beatCount,
-  totalCount,
-  activeWindowLabel,
-  activeWindowKey,
-  cheapest,
-  richest,
-  smartLeader,
-  smartDeltaLeader,
-  sourceMeta,
-  failedSources,
-}: {
-  leader: SectorRow | undefined;
-  laggard: SectorRow | undefined;
-  beatCount: number | null;
-  totalCount: number;
-  activeWindowLabel: string;
-  activeWindowKey: MomentumWindow;
-  cheapest: SectorRow | null;
-  richest: SectorRow | null;
-  smartLeader: SectorRow | null;
-  smartDeltaLeader: SectorRow | null;
-  sourceMeta: SectorSourceMeta;
-  failedSources: string[];
-}) {
-  const leaderValue = leader?.momentum ? leader.momentum[activeWindowKey] : null;
-  const laggardValue = laggard?.momentum ? laggard.momentum[activeWindowKey] : null;
-  return (
-    <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">{activeWindowLabel} 주도</p>
-        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
-          {leader ? `${leader.name} ${pct(leaderValue, 1)}` : "데이터 없음"}
-        </p>
-        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]">
-          약세 {laggard ? `${laggard.name} ${pct(laggardValue, 1)}` : "—"}
-        </p>
-      </div>
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">시장 대비</p>
-        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
-          {beatCount === null ? "S&P 기준 없음" : `${beatCount}/${totalCount}개 섹터가 S&P 상회`}
-        </p>
-        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"><SourceLine sourceMeta={sourceMeta} failedSources={failedSources} /></p>
-      </div>
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">가치 위치</p>
-        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
-          저평가 {cheapest ? cheapest.name : "—"} · 고평가 {richest ? richest.name : "—"}
-        </p>
-        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]">
-          {valuationSourceLine(sourceMeta)}
-        </p>
-      </div>
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">기관 보유</p>
-        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
-          {smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "기관 보유 없음"}
-        </p>
-        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]">
-          증가 {smartDeltaLeader?.smartMoney ? `${smartDeltaLeader.name} ${pp(smartDeltaLeader.smartMoney.delta4q, 1)}` : "—"}
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function SectorMomentumCard({
-  row,
-  windowKey,
-  benchmarkValue,
-}: {
-  row: SectorRow;
-  windowKey: MomentumWindow;
-  benchmarkValue: number | null;
-}) {
-  const value = row.momentum[windowKey];
-  const relative = typeof value === "number" && typeof benchmarkValue === "number" ? value - benchmarkValue : null;
-  const tone = valuationTone(row.valuation?.peBand?.percentile);
-  return (
-    <article className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className={cx("orbitron text-base font-black tabular-nums", metricTone(value))}>{pct(value, 1)}</p>
-          <p className={cx("orbitron text-[10px] font-bold tabular-nums", metricTone(relative))}>S&P {pp(relative, 1)}</p>
-        </div>
-      </div>
-      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-[var(--c-ink-2)]">
-        <span className="rounded-lg bg-white px-2 py-1">당일 {pct(row.dayChange, 2)}</span>
-        <span className="rounded-lg bg-white px-2 py-1">{tone.label}</span>
-        <span className="rounded-lg bg-white px-2 py-1">기관 {pct(row.smartMoney?.weight, 1)}</span>
-      </div>
-    </article>
-  );
-}
-
-function SectorRelativeBarChart({
+function SectorHeroBars({
   rows,
   windowKey,
   benchmarkValue,
-  windowLabel,
 }: {
   rows: SectorRow[];
   windowKey: MomentumWindow;
   benchmarkValue: number | null;
-  windowLabel: string;
 }) {
   const items = rows
     .map((row) => {
@@ -358,112 +149,134 @@ function SectorRelativeBarChart({
       const relative = typeof value === "number" && typeof benchmarkValue === "number" ? value - benchmarkValue : null;
       return { row, value, relative };
     })
-    .filter((item): item is { row: SectorRow; value: number; relative: number } => (
-      typeof item.value === "number" &&
-      typeof item.relative === "number" &&
-      Number.isFinite(item.value) &&
-      Number.isFinite(item.relative)
-    ));
-  const maxAbs = Math.max(0.01, ...items.map((item) => Math.abs(item.relative)));
+    .filter((item): item is { row: SectorRow; value: number; relative: number } =>
+      typeof item.value === "number" && typeof item.relative === "number" && Number.isFinite(item.value) && Number.isFinite(item.relative),
+    );
+
+  if (items.length === 0) {
+    return <p className="cpw5-sectors-hero-chart__empty">S&amp;P 500 기준선 또는 섹터 성과 데이터가 아직 없습니다.</p>;
+  }
+
+  const sorted = [...items].sort((a, b) => b.relative - a.relative);
+  const maxAbs = Math.max(0.01, ...sorted.map((item) => Math.abs(item.relative)));
+  const maxMarketCap = Math.max(1, ...sorted.map((item) => item.row.etfInfo?.marketCap ?? 0));
 
   return (
-    <div
-      data-sector-relative-bars
-      data-sector-relative-window={windowKey}
-      data-sector-relative-count={items.length}
-      className="mb-4 rounded-2xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] p-3"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-black text-[var(--c-ink)]">S&amp;P 500 대비 {windowLabel} 초과 성과</p>
-        <span className="orbitron rounded-full bg-white px-2 py-1 text-[10px] font-black tabular-nums text-[var(--c-ink-3)]">
-          기준 {pct(benchmarkValue, 1)}
-        </span>
-      </div>
-      {items.length === 0 ? (
-        <p className="mt-3 text-xs font-semibold text-[var(--c-ink-3)]">S&amp;P 기준선 또는 섹터 성과가 없습니다.</p>
-      ) : (
-        <div className="mt-3 grid gap-2">
-          {items.map(({ row, value, relative }) => {
-            const width = Math.max(3, Math.min(50, (Math.abs(relative) / maxAbs) * 50));
-            const positive = relative >= 0;
-            return (
-              <div
-                key={row.key}
-                data-sector-relative-bar
-                data-sector-relative-side={positive ? "up" : "down"}
-                className="grid min-h-11 grid-cols-[minmax(88px,0.8fr)_minmax(140px,1.4fr)_minmax(58px,auto)] items-center gap-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-black text-[var(--c-ink)]">{row.name}</p>
-                  <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</p>
-                </div>
-                <div className="relative h-6 rounded-full bg-white">
-                  <span className="absolute left-1/2 top-0 h-full w-px bg-[var(--c-line)]" aria-hidden="true" />
-                  <span
-                    className={cx(
-                      "absolute top-1/2 h-3 -translate-y-1/2 rounded-full",
-                      positive ? "left-1/2 bg-[var(--c-up)]" : "right-1/2 bg-[var(--c-down)]",
-                    )}
-                    style={{ width: `${width}%` }}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="text-right">
-                  <p className={cx("orbitron text-xs font-black tabular-nums", metricTone(relative))}>{pp(relative, 1)}</p>
-                  <p className="orbitron text-[10px] font-bold tabular-nums text-[var(--c-ink-3)]">{pct(value, 1)}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+    <div className="cpw5-sectors-bar-list" data-sector-relative-bars data-sector-relative-window={windowKey} data-sector-relative-count={sorted.length}>
+      {sorted.map(({ row, value, relative }) => {
+        const width = Math.max(3, Math.min(50, (Math.abs(relative) / maxAbs) * 50));
+        const positive = relative >= 0;
+        const marketCap = row.etfInfo?.marketCap ?? null;
+        const weightPct = marketCap !== null ? Math.max(8, Math.min(100, (marketCap / maxMarketCap) * 100)) : 0;
+        return (
+          <div key={row.key} className="cpw5-sectors-bar-row" data-sector-relative-bar data-sector-relative-side={positive ? "up" : "down"}>
+            <div className="min-w-0">
+              <TransitionLink href={screenerSectorHref(row.key)} className="cpw5-sectors-bar-name" title={`${row.name} 종목을 스크리너에서 보기`}>
+                {row.name}
+              </TransitionLink>
+              <span className="cpw5-sectors-bar-etf">{row.etf}</span>
+            </div>
+            <div className="cpw5-sectors-bar-track" title={marketCap !== null ? `ETF 시가총액 비중 참고선` : undefined}>
+              {marketCap !== null ? <span className="cpw5-sectors-bar-weight" style={{ width: `${weightPct}%` }} aria-hidden="true" /> : null}
+              <span className="cpw5-sectors-bar-mid" aria-hidden="true" />
+              <span
+                className="cpw5-sectors-bar-fill"
+                data-side={positive ? "up" : "down"}
+                style={{ width: `${width}%` }}
+                aria-hidden="true"
+              />
+            </div>
+            <div className="cpw5-sectors-bar-values">
+              <span className="cpw5-sectors-bar-relative" data-tone={toneOf(relative)}>{pp(relative, 1)}</span>
+              <span className="cpw5-sectors-bar-absolute">{pct(value, 1)}</span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function EtfMobileCard({ row }: { row: SectorRow }) {
+function EtfCard({ row }: { row: SectorRow }) {
   const etf = row.etfInfo;
+  const oneMonthTone = toneOf(etf?.returns["1m"]);
   return (
-    <article className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-      <div className="flex min-w-0 items-start justify-between gap-3">
+    <article className="cpw5-sectors-card">
+      <div className="cpw5-sectors-card__head">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-[var(--c-ink)]">{row.etf}</p>
-          <p className="truncate text-[11px] font-bold text-[var(--c-ink-2)]">{row.name}</p>
+          <p className="cpw5-sectors-card__name">{row.etf}</p>
+          <span className="cpw5-sectors-card__etf">{row.name}</span>
         </div>
-        <p className={cx("orbitron shrink-0 text-base font-black tabular-nums", metricTone(etf?.returns["1m"]))}>
-          {pct(etf?.returns["1m"], 1)}
-        </p>
+        <span className="cpw5-sectors-card__value" data-tone={oneMonthTone}>{pct(etf?.returns["1m"], 1)}</span>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-[var(--c-ink-2)]">
-        <span className="rounded-lg bg-white px-2 py-1">YTD {pct(etf?.returns.ytd, 1)}</span>
-        <span className="rounded-lg bg-white px-2 py-1">1Y {pct(etf?.returns["1y"], 1)}</span>
-        <span className="rounded-lg bg-white px-2 py-1">3Y {pct(etf?.cagr["3y"], 1)}</span>
-        <span className="rounded-lg bg-white px-2 py-1">Beta {typeof etf?.beta === "number" ? etf.beta.toFixed(2) : "—"}</span>
-        <span className="rounded-lg bg-white px-2 py-1">보수 {typeof etf?.expenseRatio === "number" ? formatPercent(etf.expenseRatio * 100, 2) : "—"}</span>
-        <span className="rounded-lg bg-white px-2 py-1">{etf ? "추적 중" : "ETF 없음"}</span>
+      <div className="cpw5-sectors-card__grid">
+        <span className="cpw5-sectors-card__cell">YTD {pct(etf?.returns.ytd, 1)}</span>
+        <span className="cpw5-sectors-card__cell">1Y {pct(etf?.returns["1y"], 1)}</span>
+        <span className="cpw5-sectors-card__cell">3Y {pct(etf?.cagr["3y"], 1)}</span>
+        <span className="cpw5-sectors-card__cell">Beta {typeof etf?.beta === "number" ? etf.beta.toFixed(2) : "—"}</span>
+        <span className="cpw5-sectors-card__cell">보수 {typeof etf?.expenseRatio === "number" ? formatPercent(etf.expenseRatio * 100, 2) : "—"}</span>
+        <span className="cpw5-sectors-card__cell">{etf ? "추적 중" : "ETF 없음"}</span>
       </div>
     </article>
   );
 }
 
-function ValuationMobileCard({ row }: { row: SectorRow }) {
+function ValuationCard({ row }: { row: SectorRow }) {
   const value = row.valuation;
   const tone = valuationTone(value?.peBand?.percentile);
   return (
-    <article className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-      <div className="flex min-w-0 items-start justify-between gap-3">
+    <article className="cpw5-sectors-card">
+      <div className="cpw5-sectors-card__head">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</p>
+          <p className="cpw5-sectors-card__name">{row.name}</p>
+          <span className="cpw5-sectors-card__etf">{row.etf}</span>
         </div>
-        <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", tone.className)}>{tone.label}</span>
+        <span className="cpw5-sectors-card__badge" data-tone={tone.tone}>{tone.label}</span>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-[var(--c-ink-2)]">
-        <span className="rounded-lg bg-white px-2 py-1">Fwd P/E {typeof value?.pe === "number" ? value.pe.toFixed(1) : "—"}</span>
-        <span className="rounded-lg bg-white px-2 py-1">P/B {typeof value?.pb === "number" ? value.pb.toFixed(2) : "—"}</span>
-        <span className="rounded-lg bg-white px-2 py-1">ROE {typeof value?.roe === "number" ? formatPercent(value.roe * 100, 1) : "—"}</span>
+      <div className="cpw5-sectors-card__grid">
+        <span className="cpw5-sectors-card__cell">Fwd P/E {typeof value?.pe === "number" ? value.pe.toFixed(1) : "—"}</span>
+        <span className="cpw5-sectors-card__cell">P/B {typeof value?.pb === "number" ? value.pb.toFixed(2) : "—"}</span>
+        <span className="cpw5-sectors-card__cell">ROE {typeof value?.roe === "number" ? formatPercent(value.roe * 100, 1) : "—"}</span>
       </div>
     </article>
+  );
+}
+
+type MatrixRow = {
+  rowKey: string;
+  name: string;
+  etf: string;
+  benchmark: boolean;
+  dayChange: number | null;
+  marketState: string | null;
+  momentum: Partial<Record<MomentumWindow, number | null>>;
+  [key: string]: unknown;
+};
+
+/** CpDataTable requires `T extends Record<string, unknown>`; SectorRow has no
+ * index signature, so widen it locally for the two tables that render it
+ * directly (kit is read-only — see FILES YOU OWN in the task brief). */
+type SectorTableRow = SectorRow & Record<string, unknown>;
+
+function HeatCell({ value }: { value: number | null | undefined }) {
+  const theme = useMarketChartTheme();
+  return (
+    <div className="cpw5-sectors-heat-cell" style={theme.heatStyle(value)}>
+      {pct(value, 1)}
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="cpw5-sectors-skeleton">
+      <div className="cpw5-sectors-skeleton__bar" style={{ width: 160 }} />
+      <div className="cpw5-sectors-skeleton__grid">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div key={index} className="cpw5-sectors-skeleton__bar" style={{ height: 36, animationDelay: `${index * 70}ms` }} />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -480,14 +293,9 @@ export default function SectorsClient() {
     sourceMeta,
   } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
-  const [mobileView, setMobileView] = useState<MobileView>("heatmap");
-  const chartTheme = useMarketChartTheme();
 
   const sorted = useMemo(
-    () =>
-      [...rows].sort(
-        (a, b) => (b.momentum[sortWindow] ?? -Infinity) - (a.momentum[sortWindow] ?? -Infinity),
-      ),
+    () => [...rows].sort((a, b) => (b.momentum[sortWindow] ?? -Infinity) - (a.momentum[sortWindow] ?? -Infinity)),
     [rows, sortWindow],
   );
   const leaders = sorted.slice(0, 3);
@@ -497,396 +305,290 @@ export default function SectorsClient() {
   const activeWindowLabel = MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label ?? sortWindow;
 
   const isMuted = !(benchmarksReady || etfsReady || valuationReady);
-  const benchmarksFailed = failedSources.includes("benchmarks");
-  const dateLabel = updatedAt ? updatedAt.slice(0, 10) : null;
-  const sectorDataState = makeDataState({
-    status: dataReady
-      ? failedSources.length > 0 ? "partial" : "ready"
-      : failedSources.length > 0 ? "error" : "pending",
-    label: dataReady
-      ? failedSources.length > 0 ? "일부 섹터 데이터만 표시" : "섹터 데이터 준비됨"
-      : failedSources.length > 0 ? "섹터 데이터 오류" : "섹터 데이터 확인 중",
-    detail: dataReady
-      ? failedSources.length > 0 ? "확인된 섹터 지표를 먼저 표시합니다." : "섹터 흐름과 보조 지표를 표시할 수 있습니다."
-      : failedSources.length > 0 ? "섹터 데이터를 불러오지 못했습니다." : "섹터 흐름 데이터를 읽고 있습니다.",
-    asOf: dateLabel,
-  });
+  const dateLabel = formatAsOf(updatedAt) ?? dateOnly(updatedAt);
   const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
-  const marketThreeMonth = benchmarkMomentum?.["3m"] ?? null;
   const beatCount =
     typeof activeBenchmark === "number"
       ? rows.filter((row) => typeof row.momentum[sortWindow] === "number" && (row.momentum[sortWindow] ?? -Infinity) > activeBenchmark).length
       : null;
+
   const valuationWithBands = valuationRows.filter((row) => typeof row.valuation?.peBand?.percentile === "number");
-  const cheapest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => (a.valuation!.peBand!.percentile - b.valuation!.peBand!.percentile))[0] : null;
-  const richest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => (b.valuation!.peBand!.percentile - a.valuation!.peBand!.percentile))[0] : null;
+  const cheapest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => a.valuation!.peBand!.percentile - b.valuation!.peBand!.percentile)[0] : null;
+  const richest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => b.valuation!.peBand!.percentile - a.valuation!.peBand!.percentile)[0] : null;
   const smartRows = rows.filter((row) => row.smartMoney);
   const smartLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.weight ?? -Infinity) - (a.smartMoney?.weight ?? -Infinity))[0] : null;
   const smartDeltaLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.delta4q ?? -Infinity) - (a.smartMoney?.delta4q ?? -Infinity))[0] : null;
-  const mobileViewSummary: Record<MobileView, string> = {
-    heatmap: `${rows.length}개`,
-    etf: `${etfRows.length}개`,
-    valuation: `${valuationRows.length}개`,
-    guru: `${smartRows.length}개`,
-  };
-  const headerDesc =
-    benchmarksReady && leaders[0] && laggards[0]
-      ? `${dateLabel ?? "최신"} 기준 ${activeWindowLabel} 리더는 ${leaders[0].name} ${pct(leaders[0].momentum[sortWindow], 1)}, 약세는 ${laggards[0].name} ${pct(laggards[0].momentum[sortWindow], 1)}입니다.`
-      : dataReady
-        ? "섹터 자료 일부를 불러왔지만 모멘텀 기준선은 없습니다."
-        : failedSources.length > 0
-          ? "섹터 데이터를 불러오지 못했습니다."
-          : "섹터 데이터를 불러오는 중입니다.";
-  const etfCoverageText =
-    sourceMeta.etfMissing.length > 0
-      ? `ETF 상세 정보 대기: ${sourceMeta.etfMissing.join(", ")}`
-      : `${etfRows.length}개 섹터 ETF 상세 확인 중`;
+
+  const missingLabels = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
+
+  const verdict: ReactNode = !dataReady
+    ? failedSources.length > 0
+      ? "섹터 데이터를 불러오지 못했습니다. 새로고침 후 다시 확인해 주세요."
+      : "섹터 데이터를 불러오는 중입니다."
+    : benchmarksReady && leaders[0] && laggards[0]
+      ? (
+          <>
+            {dateLabel ?? "최신"} 기준 {activeWindowLabel}에는{" "}
+            <b className="up">{leaders[0].name} {pct(leaders[0].momentum[sortWindow], 1)}</b>가 시장을 주도하고,{" "}
+            <b className="down">{laggards[0].name} {pct(laggards[0].momentum[sortWindow], 1)}</b>가 가장 약합니다. S&amp;P 500 대비{" "}
+            <b>{beatCount ?? 0}/{rows.length}개</b> 섹터가 상회 중입니다.
+          </>
+        )
+      : "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
+
+  const trustChips: CpVerdictHeroTrustChip[] = [
+    { id: "asof", label: "기준일", value: dateLabel ?? "확인 중", freshness: true, tone: dataReady ? "neutral" : "warning" },
+    { id: "count", label: "섹터", value: `${rows.length}개` },
+    ...(missingLabels.length > 0
+      ? [{ id: "missing", label: "확인 불가", value: missingLabels.join(" · "), tone: "warning" as const }]
+      : []),
+  ];
+
+  const matrixRows: MatrixRow[] = [
+    {
+      rowKey: "sp500",
+      name: "S&P 500",
+      etf: benchmarksReady ? "시장 기준선" : failedSources.includes("benchmarks") ? "데이터 없음" : "확인 중",
+      benchmark: true,
+      dayChange: null,
+      marketState: null,
+      momentum: benchmarkMomentum ?? {},
+    },
+    ...sorted.map((row) => ({
+      rowKey: row.key,
+      name: row.name,
+      etf: row.etf,
+      benchmark: false,
+      dayChange: row.dayChange,
+      marketState: row.marketState,
+      momentum: row.momentum,
+    })),
+  ];
+
+  const matrixColumns: CpDataTableColumn<MatrixRow>[] = [
+    {
+      key: "name",
+      header: "업종",
+      align: "left",
+      render: (row) => (
+        <>
+          <span className="block text-[13px] font-black text-[var(--cp-text-strong)]">{row.name}</span>
+          <span className="block text-[10.5px] font-bold uppercase tracking-[0.06em] text-[var(--cp-text-soft)]">{row.etf}</span>
+        </>
+      ),
+    },
+    {
+      key: "day",
+      header: "당일",
+      render: (row) => {
+        if (row.benchmark) return <span className="text-xs font-black text-[var(--cp-text-soft)]">기준</span>;
+        const state = getMarketStateMeta(row.marketState);
+        return (
+          <>
+            <span className="text-sm font-black tabular-nums" style={{ color: row.dayChange === null ? "var(--cp-text-soft)" : row.dayChange >= 0 ? "var(--cp-positive)" : "var(--cp-negative)" }}>
+              {pct(row.dayChange, 2)}
+            </span>
+            {state ? <span className="market-state-badge ml-1 align-middle">{state.label}</span> : null}
+          </>
+        );
+      },
+    },
+    ...MOMENTUM_WINDOWS.map((window) => ({
+      key: window.key,
+      header: window.label,
+      render: (row: MatrixRow) => <HeatCell value={row.momentum[window.key]} />,
+    })),
+  ];
+
+  const dayCoverageText = `${etfRows.length}/${rows.length}개 섹터 ETF 상세 확인`;
+  const valuationSourceLine = `가치 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "확인 중"}`;
 
   return (
-    <div className="data-shell-page">
-      <section className="panel data-shell-header">
-        <div className="data-shell-head-main">
-          <p className="data-shell-kicker">섹터 흐름</p>
-          <h1 className="data-shell-title">섹터 히트맵</h1>
-          <p className="data-shell-desc">
-            {headerDesc}
-          </p>
-        </div>
-        <div className="data-shell-head-actions">
-          <DataStateBadge state={sectorDataState} />
-          <span className="hidden sm:inline-flex">
-            <span className="data-shell-pill">
-              <span />
-              <SourceLine sourceMeta={sourceMeta} failedSources={failedSources} />
-            </span>
-          </span>
-          <MarketSectionNav active="sectors" />
-        </div>
-      </section>
+    <div className="canvas-plus cpw5-sectors-page" data-canvas-plus data-canvas-plus-sectors>
+      <div className="cpw5-sectors-topbar">
+        <MarketSectionNav active="sectors" />
+      </div>
 
-      {isMuted ? (
-        <LoadingSkeleton />
-      ) : null}
-
-      <MobileViewSwitch value={mobileView} onChange={setMobileView} activeSummary={mobileViewSummary[mobileView]} />
-
-      <SectorPulse
-        leader={leaders[0]}
-        laggard={laggards[0]}
-        beatCount={beatCount}
-        totalCount={rows.length}
-        activeWindowLabel={activeWindowLabel}
-        activeWindowKey={sortWindow}
-        cheapest={cheapest}
-        richest={richest}
-        smartLeader={smartLeader}
-        smartDeltaLeader={smartDeltaLeader}
-        sourceMeta={sourceMeta}
-        failedSources={failedSources}
+      <CpVerdictHero
+        eyebrow="SECTORS · GICS 11개 업종 흐름"
+        verdict={verdict}
+        sub="S&amp;P 500 대비 초과 성과와 밸류에이션, 기관 보유 방향이 같은 편인지 한 화면에서 확인합니다."
+        trustChips={trustChips}
       />
 
-      {/* Heatmap */}
-      <div id="sector-panel-heatmap" className={mobilePanelClass(mobileView === "heatmap")} data-sector-panel="heatmap">
-        <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과">
-          <p className="mb-3 text-xs text-[var(--c-ink-2)]">
-            {beatCount === null
-              ? benchmarksFailed
-                ? "S&P 500 기준선 데이터가 없습니다."
-                : "S&P 500 기준선을 불러오는 중입니다."
-              : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
-          </p>
-          <SectorRelativeBarChart
-            rows={sorted}
-            windowKey={sortWindow}
-            benchmarkValue={activeBenchmark}
-            windowLabel={activeWindowLabel}
-          />
-          <div className="grid gap-2 md:hidden">
-            {sorted.map((row) => (
-              <SectorMomentumCard key={row.key} row={row} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
-            ))}
-          </div>
-        <div className="scroll-hint-x -mx-1 mt-3 px-1 md:mt-0" role="region" tabIndex={0} aria-label="섹터 기간별 성과표 가로 스크롤">
-          <table className="w-full min-w-[720px] border-separate border-spacing-1 text-sm">
-            <thead>
-              <tr>
-                <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-sm">
-                  업종
-                </th>
-                <th scope="col" className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">당일</th>
-                {MOMENTUM_WINDOWS.map((window) => {
-                  const active = window.key === sortWindow;
-                  return (
-                    <th
-                      key={window.key}
-                      scope="col"
-                      aria-sort={active ? "descending" : "none"}
-                      className="px-1 py-2 text-center"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setSortWindow(window.key)}
-                        aria-pressed={active}
-                        className={cx(
-                          "inline-flex min-h-11 w-full items-center justify-center rounded-md px-2 text-[11px] font-black uppercase tracking-[0.08em] transition",
-                          active
-                            ? "bg-[var(--c-brand)] text-white"
-                            : "text-[var(--c-ink-3)] hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink-2)]",
-                        )}
-                      >
-                        {window.label}
-                        {active ? " ↓" : ""}
-                      </button>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-[var(--c-line)]">
-                <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-sm">
-                  <span className="block text-sm font-black text-[var(--c-ink)]">S&amp;P 500</span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                    {benchmarksReady ? "시장 기준선" : benchmarksFailed ? "데이터 없음" : "확인 중"}
-                  </span>
-                </th>
-                <td className="px-2 py-1.5 text-right text-xs font-black text-[var(--c-ink-3)]">
-                  {benchmarksReady ? "기준" : "—"}
-                </td>
-                {MOMENTUM_WINDOWS.map((window) => {
-                  const value = benchmarkMomentum?.[window.key] ?? null;
-                  return (
-                    <td key={window.key} className="px-1 py-1.5">
-                      <div
-                        className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
-                        style={heatStyle(value, chartTheme)}
-                      >
-                        {pct(value, 1)}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-              {sorted.map((row) => {
-                const state = getMarketStateMeta(row.marketState);
-                const relativeThreeMonth =
-                  typeof row.momentum["3m"] === "number" && typeof marketThreeMonth === "number"
-                    ? row.momentum["3m"] - marketThreeMonth
-                    : null;
-                return (
-                  <tr key={row.key}>
-                    <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-sm">
-                      <span className="block text-sm font-black text-[var(--c-ink)]">{row.name}</span>
-                      <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</span>
-                      {relativeThreeMonth !== null ? (
-                        <span
-                          className={cx(
-                            "ml-2 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-black",
-                            relativeThreeMonth >= 0 ? "bg-[var(--c-up-soft)] text-[var(--c-up)]" : "bg-[var(--c-down-soft)] text-[var(--c-down)]",
-                          )}
-                          title="3개월 S&P 500 대비 성과"
-                        >
-                          S&amp;P {pp(relativeThreeMonth, 1)}
-                        </span>
-                      ) : null}
-                    </th>
-                    <td className="px-2 py-1.5 text-right">
-                      {row.dayChange === null ? (
-                        <span className="text-xs font-semibold text-[var(--c-line-2)]">—</span>
-                      ) : (
-                        <span
-                          className={cx(
-                            "orbitron text-sm font-black",
-                            row.dayChange >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]",
-                          )}
-                        >
-                          {pct(row.dayChange, 2)}
-                        </span>
-                      )}
-                      {state ? <span className={cx("market-state-badge ml-1 align-middle", state.className)}>{state.label}</span> : null}
-                    </td>
-                    {MOMENTUM_WINDOWS.map((window) => {
-                      const value = row.momentum[window.key];
-                      return (
-                        <td key={window.key} className="px-1 py-1.5">
-                          <div
-                            className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
-                            style={heatStyle(value, chartTheme)}
-                          >
-                            {pct(value, 1)}
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {isMuted ? <LoadingSkeleton /> : null}
+
+      <section className="cpw5-sectors-hero-chart" aria-label="섹터 성과 랭킹 (S&P 500 대비)">
+        <div className="cpw5-sectors-hero-chart__head">
+          <h2 className="cpw5-sectors-hero-chart__title">S&amp;P 500 대비 {activeWindowLabel} 초과 성과 · 트랙 굵기는 ETF 시가총액 비중</h2>
+          <span className="cpw5-sectors-hero-chart__baseline">기준 {pct(activeBenchmark, 1)}</span>
         </div>
-      </SectionCard>
-      </div>
-
-      {/* Leaders / Laggards */}
-      <div className={cx(mobilePanelClass(mobileView === "heatmap", "grid"), "gap-4 sm:grid-cols-2")}>
-        <SectionCard kicker="강세 리더" title={`강세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
-          <RankList rows={leaders} window={sortWindow} tone="up" />
-        </SectionCard>
-        <SectionCard kicker="약세 업종" title={`약세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
-          <RankList rows={laggards} window={sortWindow} tone="down" />
-        </SectionCard>
-      </div>
-
-      {/* ETF comparison */}
-      <div id="sector-panel-etf" className={mobilePanelClass(mobileView === "etf")} data-sector-panel="etf">
-      <SectionCard kicker="섹터 ETF" title="섹터 ETF 비교">
-        {etfRows.length === 0 ? (
-          <p className="text-sm text-[var(--c-ink-2)]">ETF 데이터를 불러오지 못했습니다.</p>
-        ) : (
-          <>
-          <div className="grid gap-2 md:hidden">
-            {rows.map((row) => (
-              <EtfMobileCard key={row.key} row={row} />
-            ))}
-          </div>
-          <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
-            <table className="w-full min-w-[680px] text-sm">
-              <thead>
-                <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                  <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-sm">ETF</th>
-                  <th scope="col" className="px-2 py-2 text-right">1M</th>
-                  <th scope="col" className="px-2 py-2 text-right">YTD</th>
-                  <th scope="col" className="px-2 py-2 text-right">1Y</th>
-                  <th scope="col" className="px-2 py-2 text-right">3Y CAGR</th>
-                  <th scope="col" className="px-2 py-2 text-right">5Y CAGR</th>
-                  <th scope="col" className="px-2 py-2 text-right">Beta</th>
-                  <th scope="col" className="px-2 py-2 text-right">보수율</th>
-                </tr>
-              </thead>
-              <tbody>
-                {etfRows.map((row) => {
-                  const etf = row.etfInfo!;
-                  return (
-                    <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
-                      <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-sm">
-                        <span className="text-sm font-black text-[var(--c-ink)]">{row.etf}</span>
-                        <span className="ml-2 text-xs font-semibold text-[var(--c-ink-2)]">{row.name}</span>
-                      </th>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns["1m"], 1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns.ytd, 1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns["1y"], 1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.cagr["3y"], 1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.cagr["5y"], 1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">
-                        {typeof etf.beta === "number" && Number.isFinite(etf.beta) ? etf.beta.toFixed(2) : "—"}
-                      </td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">
-                        {typeof etf.expenseRatio === "number" && Number.isFinite(etf.expenseRatio) ? formatPercent(etf.expenseRatio * 100, 2) : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          </>
-        )}
-        <p className="mt-3 text-[11px] text-[var(--c-ink-3)]">
-          {etfCoverageText}
-        </p>
-      </SectionCard>
-      </div>
-
-      {/* Sector valuation */}
-      <div id="sector-panel-valuation" className={mobilePanelClass(mobileView === "valuation")} data-sector-panel="valuation">
-      <SectionCard kicker="밸류에이션" title="섹터 밸류에이션">
-        <div className="grid gap-2 md:hidden">
-          {valuationRows.map((row) => (
-            <ValuationMobileCard key={row.key} row={row} />
+        <div className="cpw5-sectors-period-toggle" role="group" aria-label="기간 선택">
+          {MOMENTUM_WINDOWS.map((window) => (
+            <button
+              key={window.key}
+              type="button"
+              data-active={window.key === sortWindow ? "true" : "false"}
+              className="cpw5-sectors-period-btn"
+              onClick={() => setSortWindow(window.key)}
+              aria-pressed={window.key === sortWindow}
+            >
+              {window.label}
+            </button>
           ))}
         </div>
-        <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
-          <table className="w-full min-w-[560px] text-sm">
-            <thead>
-              <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                <th scope="col" className="px-2 py-2 text-left">업종</th>
-                <th scope="col" className="px-2 py-2 text-right">
-                  <abbr title={valuationHelp.pe} className="cursor-help no-underline">Fwd P/E</abbr>
-                </th>
-                <th scope="col" className="px-2 py-2 text-right">
-                  <abbr title={valuationHelp.pb} className="cursor-help no-underline">P/B</abbr>
-                </th>
-                <th scope="col" className="px-2 py-2 text-right">
-                  <abbr title={valuationHelp.roe} className="cursor-help no-underline">ROE</abbr>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows
-                .filter((row) => row.valuation)
-                .map((row) => {
-                  const v = row.valuation;
-                  if (!v) return null;
-                  return (
-                    <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
-                      <th scope="row" className="px-2 py-2 text-left">
-                        <span className="text-sm font-bold text-[var(--c-ink)]">{row.name}</span>
-                        <span className="ml-2 text-xs font-semibold text-[var(--c-ink-3)]">{row.etf}</span>
-                      </th>
-                      <td className="px-2 py-2 text-right">
-                        <PeBandGauge value={v.pe} band={v.peBand} />
-                      </td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{typeof v.pb === "number" && Number.isFinite(v.pb) ? v.pb.toFixed(2) : "—"}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{typeof v.roe === "number" && Number.isFinite(v.roe) ? formatPercent(v.roe * 100, 1) : "—"}</td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+        <SectorHeroBars rows={sorted} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
+      </section>
+
+      <CpStatChipRow
+        items={[
+          {
+            id: "valuation",
+            label: "가치 위치 (저평가 · 고평가)",
+            value: `${cheapest?.name ?? "—"} · ${richest?.name ?? "—"}`,
+          },
+          {
+            id: "smart-leader",
+            label: "기관 보유 리더",
+            value: smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "—",
+          },
+          {
+            id: "smart-delta",
+            label: "기관 보유 증가",
+            value: smartDeltaLeader?.smartMoney ? `${smartDeltaLeader.name} ${pp(smartDeltaLeader.smartMoney.delta4q, 1)}` : "—",
+            tone: smartDeltaLeader?.smartMoney && (smartDeltaLeader.smartMoney.delta4q ?? 0) >= 0 ? "positive" : "negative",
+          },
+        ]}
+      />
+
+      <CpAccordion title="전체 업종 × 기간 성과표 보기" meta={`${rows.length}개 업종 · 당일 포함 ${MOMENTUM_WINDOWS.length + 1}개 구간`}>
+        <CpDataTable
+          columns={matrixColumns}
+          rows={matrixRows}
+          getRowKey={(row) => row.rowKey}
+          emphRowKeys={new Set(["sp500"])}
+        />
+      </CpAccordion>
+
+      <CpSectionCard eyebrow="ETF" title="섹터 ETF 비교" footnote={dayCoverageText}>
+        {etfRows.length === 0 ? (
+          <p className="text-sm text-[var(--cp-text-muted)]">ETF 데이터를 불러오지 못했습니다.</p>
+        ) : (
+          <>
+            <div className="cpw5-sectors-card-grid md:hidden" data-cols="1">
+              {rows.map((row) => (
+                <EtfCard key={row.key} row={row} />
+              ))}
+            </div>
+            <div className="hidden md:block">
+              <CpDataTable<SectorTableRow>
+                columns={[
+                  {
+                    key: "etf",
+                    header: "ETF",
+                    align: "left",
+                    render: (row: SectorRow) => (
+                      <>
+                        <span className="text-sm font-black text-[var(--cp-text-strong)]">{row.etf}</span>
+                        <span className="ml-2 text-xs font-semibold text-[var(--cp-text-muted)]">{row.name}</span>
+                      </>
+                    ),
+                  },
+                  { key: "1m", header: "1M", render: (row: SectorRow) => pct(row.etfInfo?.returns["1m"], 1) },
+                  { key: "ytd", header: "YTD", render: (row: SectorRow) => pct(row.etfInfo?.returns.ytd, 1) },
+                  { key: "1y", header: "1Y", render: (row: SectorRow) => pct(row.etfInfo?.returns["1y"], 1) },
+                  { key: "3y", header: "3Y CAGR", render: (row: SectorRow) => pct(row.etfInfo?.cagr["3y"], 1) },
+                  { key: "5y", header: "5Y CAGR", render: (row: SectorRow) => pct(row.etfInfo?.cagr["5y"], 1) },
+                  {
+                    key: "beta",
+                    header: "Beta",
+                    render: (row: SectorRow) => (typeof row.etfInfo?.beta === "number" ? row.etfInfo.beta.toFixed(2) : "—"),
+                  },
+                  {
+                    key: "expense",
+                    header: "보수율",
+                    render: (row: SectorRow) => (typeof row.etfInfo?.expenseRatio === "number" ? formatPercent(row.etfInfo.expenseRatio * 100, 2) : "—"),
+                  },
+                ]}
+                rows={etfRows as SectorTableRow[]}
+                getRowKey={(row: SectorRow) => row.key}
+              />
+            </div>
+          </>
+        )}
+      </CpSectionCard>
+
+      <CpSectionCard eyebrow="VALUATION" title="섹터 밸류에이션" footnote={valuationSourceLine}>
+        <div className="cpw5-sectors-card-grid md:hidden" data-cols="1">
+          {valuationRows.map((row) => (
+            <ValuationCard key={row.key} row={row} />
+          ))}
         </div>
-        <p className="mt-3 text-[11px] text-[var(--c-ink-3)]">
-          {valuationSourceLine(sourceMeta)}
-        </p>
-      </SectionCard>
-      </div>
-      <div id="sector-panel-guru" className={mobilePanelClass(mobileView === "guru")} data-sector-panel="guru">
-        <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
-      </div>
+        <div className="hidden md:block">
+          <CpDataTable<SectorTableRow>
+            columns={[
+              {
+                key: "name",
+                header: "업종",
+                align: "left",
+                render: (row: SectorRow) => (
+                  <>
+                    <span className="text-sm font-bold text-[var(--cp-text-strong)]">{row.name}</span>
+                    <span className="ml-2 text-xs font-semibold text-[var(--cp-text-soft)]">{row.etf}</span>
+                  </>
+                ),
+              },
+              {
+                key: "pe",
+                header: (
+                  <abbr title="Fwd P/E: 향후 12개월 예상 이익 대비 주가 배수" className="cursor-help no-underline">
+                    Fwd P/E
+                  </abbr>
+                ),
+                render: (row: SectorRow) => <PeBandGauge value={row.valuation?.pe ?? null} band={row.valuation?.peBand ?? null} />,
+              },
+              {
+                key: "pb",
+                header: (
+                  <abbr title="P/B: 장부가 대비 주가 배수" className="cursor-help no-underline">
+                    P/B
+                  </abbr>
+                ),
+                render: (row: SectorRow) => (typeof row.valuation?.pb === "number" ? row.valuation.pb.toFixed(2) : "—"),
+              },
+              {
+                key: "roe",
+                header: (
+                  <abbr title="ROE: 자기자본이익률" className="cursor-help no-underline">
+                    ROE
+                  </abbr>
+                ),
+                render: (row: SectorRow) => (typeof row.valuation?.roe === "number" ? formatPercent(row.valuation.roe * 100, 1) : "—"),
+              },
+            ]}
+            rows={valuationRows as SectorTableRow[]}
+            getRowKey={(row: SectorRow) => row.key}
+          />
+        </div>
+      </CpSectionCard>
 
-      <IndustryMapPanel />
+      <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
 
+      <CpAccordion title="업종 세부 지도 보기" meta="산업 단위 드릴다운">
+        <IndustryMapPanel
+          bridgeText={
+            leaders[0]
+              ? `${leaders[0].name} 섹터 내 세부 산업(기술 섹터/반도체 등)은 아래에서 이어서 확인합니다.`
+              : null
+          }
+        />
+      </CpAccordion>
+
+      <CpCTARow
+        primary={{ label: "업종 이벤트 보기", href: ROUTES.marketEvents }}
+        secondary={{ label: "투자 대가 보유 보기", href: ROUTES.superinvestors }}
+        note="투자 조언 아님 · 데이터 지연 가능"
+      />
     </div>
-  );
-}
-
-function RankList({ rows, window, tone }: { rows: SectorRow[]; window: MomentumWindow; tone: "up" | "down" }) {
-  if (rows.length === 0) {
-    return <p className="text-sm text-[var(--c-ink-3)]">데이터 없음</p>;
-  }
-  return (
-    <ol className="space-y-2">
-      {rows.map((row, index) => {
-        const value = row.momentum[window];
-        return (
-          <li key={row.key} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
-              <span className="flex min-w-0 items-center gap-2">
-              <span
-                className={cx(
-                  "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black",
-                  tone === "up" ? "bg-[var(--c-up-soft)] text-[var(--c-up)]" : "bg-[var(--c-down-soft)] text-[var(--c-down)]",
-                )}
-              >
-                {index + 1}
-              </span>
-              <span className="truncate text-sm font-bold text-[var(--c-ink)]">{row.name}</span>
-              <span className="shrink-0 text-[11px] font-bold uppercase text-[var(--c-ink-3)]">{row.etf}</span>
-            </span>
-              <span className={cx("orbitron shrink-0 text-sm font-black tabular-nums", tone === "up" ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
-              {pct(value, 1)}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
   );
 }
