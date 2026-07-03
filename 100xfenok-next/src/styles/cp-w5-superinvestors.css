@@ -1,0 +1,65 @@
+/* CANVAS+ W5 route CSS — /superinvestors. Additive, `.cpw5-super-*` namespace.
+   Built on the shared --cp-* tokens + W5 kit recipes (src/styles/cp-w5-kit.css).
+   Token-pure: zero raw hex/rgb literals in this file (see qa:tokens).
+   Recipe SSOT: docs/references/cp-design-system-spec.md.
+   Route brief: _tmp/w5-briefs/brief-superinvestors.md (section D/E — Tier 2 layout). */
+
+.cpw5-super-tier2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "tiles"
+    "band"
+    "insights";
+  gap: 16px;
+}
+
+.cpw5-super-tier2__tiles {
+  grid-area: tiles;
+  min-width: 0;
+}
+
+.cpw5-super-tier2__band {
+  grid-area: band;
+  min-width: 0;
+}
+
+.cpw5-super-tier2__insights {
+  grid-area: insights;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.cpw5-super-trades-panel,
+.cpw5-super-trades-region,
+.cpw5-super-trades-table {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.cpw5-super-trades-table {
+  table-layout: fixed;
+}
+
+.cpw5-super-trades-table th,
+.cpw5-super-trades-table td {
+  overflow-wrap: anywhere;
+}
+
+/* Desktop: band beside tiles (brief D), insight cards row spans both columns.
+   Mobile keeps source order (tiles -> band -> insights, brief E) via grid-template-areas
+   rows, so no `order` override is needed below this breakpoint. */
+@media (min-width: 900px) {
+  .cpw5-super-tier2 {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-areas:
+      "band tiles"
+      "insights insights";
+  }
+
+  .cpw5-super-tier2__insights {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

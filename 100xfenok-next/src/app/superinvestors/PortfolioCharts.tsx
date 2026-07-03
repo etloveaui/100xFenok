@@ -5,15 +5,24 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData, ChartOptions } from "chart.js";
 import { Doughnut, Bar, Line, Chart, Scatter, Radar } from "react-chartjs-2";
-import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
+import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { FactorExposureRecord, FactorExposuresSummaryData, PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 type MaybeNumber = number | null | undefined;
+const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function normalizeSuperSector(gicsRaw?: string | null, scouterRaw?: string | null): CanonicalSector {
+  const gics = gicsRaw?.trim();
+  if (gics && CANONICAL_SECTOR_SET.has(gics)) return gics as CanonicalSector;
+  const scouter = scouterRaw?.trim();
+  if (scouter && CANONICAL_SECTOR_SET.has(scouter)) return scouter as CanonicalSector;
+  return resolveSector(gicsRaw, scouterRaw);
 }
 
 ChartJS.register(
@@ -148,6 +157,33 @@ function retStr(ret: MaybeNumber): string {
   return ret >= 0 ? `+${pct}%` : `${pct}%`;
 }
 
+function normalizeSectorWeights(sectors: Record<string, number>): Array<[CanonicalSector, number]> {
+  const bySector = new Map<CanonicalSector, number>();
+  Object.entries(sectors).forEach(([rawSector, weight]) => {
+    if (!isFiniteNumber(weight) || weight <= 0) return;
+    const sector = normalizeSuperSector(rawSector, rawSector);
+    bySector.set(sector, (bySector.get(sector) ?? 0) + weight);
+  });
+  return [...bySector.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+function normalizeSectorHistory(
+  history: Record<string, number[]>,
+  length: number,
+): Array<[CanonicalSector, number[]]> {
+  const bySector = new Map<CanonicalSector, number[]>();
+  Object.entries(history).forEach(([rawSector, values]) => {
+    const sector = normalizeSuperSector(rawSector, rawSector);
+    const current = bySector.get(sector) ?? Array.from({ length }, () => 0);
+    for (let i = 0; i < length; i += 1) {
+      const value = values[i];
+      current[i] += isFiniteNumber(value) ? value : 0;
+    }
+    bySector.set(sector, current);
+  });
+  return [...bySector.entries()].sort((a, b) => (b[1].at(-1) ?? 0) - (a[1].at(-1) ?? 0));
+}
+
 // ---------------------------------------------------------------------------
 // PortfolioTreemap
 // ---------------------------------------------------------------------------
@@ -224,7 +260,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
               return [
                 `비중: ${isFiniteNumber(d.weight) ? (d.weight * 100).toFixed(2) : "—"}%`,
                 `분기말 이후 수익률: ${retStr(d.ret)}`,
-                `섹터: ${sectorLabelKo(d.sector as CanonicalSector)}`,
+                `섹터: ${sectorLabelKo(normalizeSuperSector(d.sector, d.sector))}`,
               ];
             },
           },
@@ -403,21 +439,20 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
 
   // --- Current doughnut ---
   const doughnutData = useMemo(() => {
-    const entries = Object.entries(currentSectors)
-      .filter(([, w]) => isFiniteNumber(w) && w >= 0.01)
-      .sort((a, b) => b[1] - a[1]);
-    // Aggregate sub-1% into "기타"
-    const otherW = Object.entries(currentSectors)
-      .filter(([, w]) => isFiniteNumber(w) && w < 0.01)
-      .reduce((sum, [, w]) => sum + w, 0);
-    const labels = entries.map(([s]) => sectorLabelKo(s as CanonicalSector));
-    const colors = entries.map(([s]) => sectorColor(s as CanonicalSector));
+    const entries: Array<[CanonicalSector, number]> = [];
+    let otherW = 0;
+    normalizeSectorWeights(currentSectors).forEach(([sector, weight]) => {
+      if (sector === "Other" || weight < 0.01) {
+        otherW += weight;
+        return;
+      }
+      entries.push([sector, weight]);
+    });
+    if (otherW > 0) entries.push(["Other", otherW]);
+
+    const labels = entries.map(([s]) => sectorLabelKo(s));
+    const colors = entries.map(([s]) => sectorColor(s));
     const data = entries.map(([, w]) => w);
-    if (otherW > 0) {
-      labels.push("기타");
-      colors.push(chartTheme.token("neutral"));
-      data.push(otherW);
-    }
     return {
       labels,
       datasets: [{ data, backgroundColor: colors, borderColor: chartTheme.token("panel"), borderWidth: 2 }],
@@ -452,13 +487,13 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
 
   // --- History stacked bar ---
   const barData = useMemo(() => {
-    const sectors = Object.keys(history);
+    const sectors = normalizeSectorHistory(history, quarters.length);
     // Show label every 4th quarter
     const xLabels = quarters.map((q, i) => (i % 4 === 0 ? q : ""));
-    const datasets = sectors.map((s) => ({
-      label: sectorLabelKo(s as CanonicalSector),
-      data: Array.isArray(history[s]) ? history[s].map((v) => (isFiniteNumber(v) ? v : null)) : [],
-      backgroundColor: sectorColor(s as CanonicalSector),
+    const datasets = sectors.map(([s, values]) => ({
+      label: sectorLabelKo(s),
+      data: values.map((v) => (isFiniteNumber(v) ? v : null)),
+      backgroundColor: sectorColor(s),
     }));
     return { labels: xLabels, datasets };
   }, [history, quarters]);

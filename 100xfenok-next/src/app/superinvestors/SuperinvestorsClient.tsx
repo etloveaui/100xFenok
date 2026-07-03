@@ -4,12 +4,23 @@ import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
-import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
-import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
+import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
+import type { CanonicalSector } from "@/lib/design/sectorMap";
+import {
+  CpVerdictHero,
+  CpDivergingBar,
+  CpSectionCard,
+  CpMeterRow,
+  CpMetricTile,
+  CpMetricTileGrid,
+  CpInsightCard,
+  CpAccordion,
+  CpEmptyState,
+} from "@/components/canvas-plus/kit";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
 import type {
@@ -32,14 +43,16 @@ const SUPERINVESTOR_TAB_ITEMS = {
   consensus: { id: "consensus", label: "공통 보유" },
   gurus: { id: "gurus", label: "투자자 목록" },
   "by-ticker": { id: "by-ticker", label: "종목별 보유" },
-  trades: { id: "trades", label: "매매 순위" },
+  trades: { id: "trades", label: "매매 동향" },
   insights: { id: "insights", label: "인사이트" },
 } satisfies Record<SuperInvestorsTab, TabItem<SuperInvestorsTab>>;
+// Reordered by decision value (brief-superinvestors.md D/H): 매매 동향 leads, methodology-flavored
+// tiles no longer gate the page. Default active tab stays "consensus" (unchanged in function).
 const SUPERINVESTOR_TABS: Array<TabItem<SuperInvestorsTab>> = [
-  SUPERINVESTOR_TAB_ITEMS.consensus,
-  SUPERINVESTOR_TAB_ITEMS.gurus,
-  SUPERINVESTOR_TAB_ITEMS["by-ticker"],
   SUPERINVESTOR_TAB_ITEMS.trades,
+  SUPERINVESTOR_TAB_ITEMS.consensus,
+  SUPERINVESTOR_TAB_ITEMS["by-ticker"],
+  SUPERINVESTOR_TAB_ITEMS.gurus,
   SUPERINVESTOR_TAB_ITEMS.insights,
 ];
 
@@ -64,6 +77,16 @@ const SectorMixPanel = dynamic(() => import("./PortfolioCharts").then((mod) => m
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
+}
+
+const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
+
+function normalizeSuperSector(gicsRaw?: string | null, scouterRaw?: string | null): CanonicalSector {
+  const gics = gicsRaw?.trim();
+  if (gics && CANONICAL_SECTOR_SET.has(gics)) return gics as CanonicalSector;
+  const scouter = scouterRaw?.trim();
+  if (scouter && CANONICAL_SECTOR_SET.has(scouter)) return scouter as CanonicalSector;
+  return resolveSector(gicsRaw, scouterRaw);
 }
 
 // Module-level turnover cache — fetched lazily once per page
@@ -178,11 +201,6 @@ function fmtWeight(value: number | null | undefined): string {
   return `${(value * 100).toFixed(2)}%`;
 }
 
-function fmtPct(value: number | null | undefined, digits = 1): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
-  return `${(value * 100).toFixed(digits)}%`;
-}
-
 function fmtScore(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   return `${Math.round(value * 100)}`;
@@ -191,6 +209,20 @@ function fmtScore(value: number | null | undefined): string {
 function fmtNumber(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   return value.toLocaleString();
+}
+
+function fmtPercent(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return `${value.toFixed(1)}%`;
+}
+
+function tradeShare(amount: number | null | undefined, totalAmount: number): number | null {
+  if (amount === null || amount === undefined || Number.isNaN(amount) || totalAmount <= 0) return null;
+  return (amount / totalAmount) * 100;
+}
+
+function formatTradeShare(amount: number | null | undefined, totalAmount: number): string {
+  return fmtPercent(tradeShare(amount, totalAmount));
 }
 
 function fmtDateTimeKo(value: string | null | undefined): string | null {
@@ -238,6 +270,35 @@ function classSummary(entry: EnhancedConsensusTicker | undefined): string {
   const extra = Math.max(0, entry.total_holders - entry.equity_holders);
   if (extra > 0) return `${entry.equity_holders}/${entry.total_holders}`;
   return `${entry.equity_holders}`;
+}
+
+function buildSectorRotationRows(
+  hist: PortfolioViewsData["total"]["sector_history"],
+): Array<{ sector: CanonicalSector; current: number; deltaPp: number }> {
+  if (!hist || hist.quarters.length < 2) return [];
+  const lastIdx = hist.quarters.length - 1;
+  const prevIdx = lastIdx - 1;
+  const bySector = new Map<CanonicalSector, { current: number; prev: number }>();
+
+  Object.entries(hist.series).forEach(([rawSector, values]) => {
+    const current = values[lastIdx] ?? 0;
+    const prev = values[prevIdx] ?? 0;
+    const canonicalSector = normalizeSuperSector(rawSector, rawSector);
+    const existing = bySector.get(canonicalSector) ?? { current: 0, prev: 0 };
+    bySector.set(canonicalSector, {
+      current: existing.current + current,
+      prev: existing.prev + prev,
+    });
+  });
+
+  return [...bySector.entries()]
+    .map(([sector, value]) => ({
+      sector,
+      current: value.current,
+      deltaPp: (value.current - value.prev) * 100,
+    }))
+    .sort((a, b) => Math.abs(b.deltaPp) - Math.abs(a.deltaPp))
+    .slice(0, 8);
 }
 
 function EmptyState({ title, desc }: { title: string; desc: string }) {
@@ -589,6 +650,7 @@ type AmountColor = "emerald" | "rose";
 function TradeRankingPanel({
   title,
   rows,
+  totalAmount,
   amountColor,
   side,
   expanded,
@@ -597,6 +659,7 @@ function TradeRankingPanel({
 }: {
   title: string;
   rows: TradesRankingRow[];
+  totalAmount: number;
   amountColor: AmountColor;
   side: "bought" | "sold";
   expanded: boolean;
@@ -606,6 +669,7 @@ function TradeRankingPanel({
   const visibleRows = expanded ? rows : rows.slice(0, 10);
   const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
   const topLabel = amountColor === "emerald" ? "TOP 매수자" : "TOP 매도자";
+  const shareScopeLabel = side === "bought" ? "매수 상위권 내 비중" : "매도 상위권 내 비중";
 
   if (rows.length === 0) {
     return (
@@ -620,88 +684,99 @@ function TradeRankingPanel({
     <div
       data-superinvestor-trades-panel
       data-superinvestor-trades-side={side}
-      className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4"
+      className="cpw5-super-trades-panel rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4"
     >
       <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
       <div
         data-superinvestor-trades-region
         data-superinvestor-trades-side={side}
-        className="scroll-hint-x mt-3 -mx-1 px-1"
+        className="cpw5-super-trades-region scroll-hint-x mt-3 -mx-1 px-1"
         role="region"
         tabIndex={0}
-        aria-label={`${title} 표 가로 스크롤`}
+        aria-label={`${title} 표`}
       >
-        <table className="w-full min-w-[440px] text-xs">
+        <table className="cpw5-super-trades-table w-full min-w-0 table-fixed text-xs">
+          <colgroup>
+            <col className="w-[9%]" />
+            <col className="w-[23%]" />
+            <col className="w-[17%]" />
+            <col className="w-[14%]" />
+            <col className="w-[14%]" />
+            <col className="w-[23%]" />
+          </colgroup>
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
               <th className="px-2 py-2 text-left">순위</th>
               <th className="px-2 py-2 text-left">종목</th>
               <th className="px-2 py-2 text-left">섹터</th>
-              <th className="px-2 py-2 text-right">금액</th>
+              <th className="px-2 py-2 text-right">비중</th>
               <th className="px-2 py-2 text-right">투자자</th>
               <th className="px-2 py-2 text-left">{topLabel}</th>
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((r) => (
-              <tr
-                key={`${r.ticker}-${r.rank}`}
-                data-superinvestor-trades-row
-                data-superinvestor-trades-side={side}
-                data-superinvestor-trades-ticker={r.ticker}
-                className="border-b border-slate-100 last:border-b-0"
-              >
-                <td className="px-2 py-2">
-                  <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
-                </td>
-                <td className="px-2 py-2">
-                  <TransitionLink
-                    href={ROUTES.stock(r.ticker)}
-                    data-superinvestor-trades-action
-                    data-superinvestor-trades-stock-link
-                    className="inline-flex min-h-11 max-w-[150px] flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
-                  >
-                    <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
-                    <TickerChip ticker={r.ticker} variant="inline" />
-                  </TransitionLink>
-                </td>
-                <td className="px-2 py-2">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
-                    <span
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: sectorColor(r.sector as Parameters<typeof sectorColor>[0]) }}
-                    />
-                    {sectorLabelKo(r.sector as Parameters<typeof sectorLabelKo>[0])}
-                  </span>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className={`orbitron tabular-nums font-bold ${amountTextClass}`}>
-                    {fmtAum(r.amount)}
-                  </span>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{r.investors_count}</span>
-                  {actionLabel(r) ? (
-                    <span className="block text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(r)}</span>
-                  ) : null}
-                </td>
-                <td className="px-2 py-2 max-w-[110px]">
-                  {r.top_investor?.id ? (
+            {visibleRows.map((r) => {
+              const canonicalSector = normalizeSuperSector(r.sector_gics ?? r.sector, r.sector);
+              return (
+                <tr
+                  key={`${r.ticker}-${r.rank}`}
+                  data-superinvestor-trades-row
+                  data-superinvestor-trades-side={side}
+                  data-superinvestor-trades-ticker={r.ticker}
+                  className="border-b border-slate-100 last:border-b-0"
+                >
+                  <td className="min-w-0 px-1 py-2 sm:px-2">
+                    <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
+                  </td>
+                  <td className="min-w-0 px-1 py-2 sm:px-2">
                     <TransitionLink
-                      href={ROUTES.superinvestorsGuru(r.top_investor.id)}
+                      href={ROUTES.stock(r.ticker)}
                       data-superinvestor-trades-action
-                      data-superinvestor-trades-investor-link
-                      className="inline-flex min-h-11 max-w-[118px] items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                      title={r.top_investor.name}
+                      data-superinvestor-trades-stock-link
+                      className="inline-flex min-h-11 w-full min-w-0 max-w-full flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
                     >
-                      <span className="truncate">{r.top_investor.name}</span>
+                      <span className="block max-w-full truncate font-bold text-slate-900">{r.name}</span>
+                      <span className="mt-0.5 text-[10px] font-black text-brand-interactive">{r.ticker}</span>
                     </TransitionLink>
-                  ) : (
-                    <span className="block truncate text-[10px] font-bold text-slate-700">—</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="min-w-0 px-1 py-2 sm:px-2">
+                    <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold sm:px-2">
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: sectorColor(canonicalSector) }}
+                      />
+                      <span className="truncate">{sectorLabelKo(canonicalSector)}</span>
+                    </span>
+                  </td>
+                  <td className="min-w-0 px-1 py-2 text-right sm:px-2" title={shareScopeLabel}>
+                    <span className={`orbitron tabular-nums font-bold ${amountTextClass}`}>
+                      {formatTradeShare(r.amount, totalAmount)}
+                    </span>
+                  </td>
+                  <td className="min-w-0 px-1 py-2 text-right sm:px-2">
+                    <span className="orbitron tabular-nums font-bold text-slate-900">{r.investors_count}</span>
+                    {actionLabel(r) ? (
+                      <span className="block truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(r)}</span>
+                    ) : null}
+                  </td>
+                  <td className="min-w-0 px-1 py-2 sm:px-2">
+                    {r.top_investor?.id ? (
+                      <TransitionLink
+                        href={ROUTES.superinvestorsGuru(r.top_investor.id)}
+                        data-superinvestor-trades-action
+                        data-superinvestor-trades-investor-link
+                        className="inline-flex min-h-11 w-full min-w-0 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                        title={r.top_investor.name}
+                      >
+                        <span className="truncate">{r.top_investor.name}</span>
+                      </TransitionLink>
+                    ) : (
+                      <span className="block truncate text-[10px] font-bold text-slate-700">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -874,7 +949,6 @@ export default function SuperinvestorsClient({
     return () => { cancelled = true; };
   }, []);
 
-  const quarterLabel = quarter ? `${quarter} 기준` : null;
   const delayLabel = "기관 공시는 분기 종료 후 최대 45일 지연됩니다";
   const generatedAtLabel = fmtDateTimeKo(summary?.metadata?.generated_at);
   const investorCount =
@@ -887,7 +961,7 @@ export default function SuperinvestorsClient({
     summary?.metadata?.total_tickers ??
     (byTicker ? Object.keys(byTicker).length : null);
   const topSector = sectorRows[0] ?? null;
-  const topSectorLabel = topSector ? sectorLabelKo(resolveSector(topSector.sector)) : "—";
+  const topSectorLabel = topSector ? sectorLabelKo(normalizeSuperSector(topSector.sector, topSector.sector)) : "—";
   const topSectorHoldings = topSector?.top_holdings?.slice(0, 3).join(", ") || "—";
   const convictionNewCount = convictionEntries?.metadata?.high_conviction_new_count ?? null;
   const convictionHoldCount = convictionEntries?.metadata?.top_conviction_hold_count ?? null;
@@ -896,6 +970,36 @@ export default function SuperinvestorsClient({
   const tradesBoughtAmount = tradesData?.bought.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
   const tradesSoldAmount = tradesData?.sold.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
   const tradesGeneratedAtLabel = fmtDateTimeKo(tradesData?.metadata.generated_at);
+  const tradeTotalAmount = tradesBoughtAmount + tradesSoldAmount;
+  const boughtSegmentPct = tradeTotalAmount > 0 ? (tradesBoughtAmount / tradeTotalAmount) * 100 : 50;
+  const soldSegmentPct = tradeTotalAmount > 0 ? (tradesSoldAmount / tradeTotalAmount) * 100 : 50;
+  const netFlowPct = tradeTotalAmount > 0 ? ((tradesBoughtAmount - tradesSoldAmount) / tradeTotalAmount) * 100 : 0;
+  const topBoughtShare = formatTradeShare(topBoughtTrade?.amount, tradesBoughtAmount);
+  const topSoldShare = formatTradeShare(topSoldTrade?.amount, tradesSoldAmount);
+
+  // ---- CANVAS+ hero + Tier 2 (brief-superinvestors.md D/G/H) --------------
+  const heroReady = dataReady && !tradesFailed && !!tradesData && !!topBoughtTrade && !!topSoldTrade;
+  const heroInvestorCount = investorCount ?? tradesData?.metadata.investors_included.length ?? null;
+  const heroVerdict = heroReady ? (
+    <>
+      이번 분기 거장 {fmtNumber(heroInvestorCount)}명 중 <b className="up">{topBoughtTrade!.investors_count}명</b>이{" "}
+      <b>{topBoughtTrade!.ticker}</b>을 순매수(<b className="up">매수 상위권 {topBoughtShare}</b>), 최대 매도는{" "}
+      <b className="down">{topSoldTrade!.ticker}</b>(<b className="down">매도 상위권 {topSoldShare}</b>) —
+      자금은 <b>{topSectorLabel}</b> 섹터로 쏠렸다.
+    </>
+  ) : failed || tradesFailed ? (
+    "13F 매매 데이터를 불러오지 못했습니다."
+  ) : (
+    "13F 매매 데이터를 불러오는 중입니다…"
+  );
+
+  const sectorRotationRows = useMemo(() => {
+    const hist = pvData?.total?.sector_history;
+    return buildSectorRotationRows(hist);
+  }, [pvData]);
+
+  const highConvictionNewRows = convictionEntries?.high_conviction_new?.slice(0, 3) ?? [];
+  const topConvictionHoldRows = convictionEntries?.top_conviction_hold?.slice(0, 3) ?? [];
 
   return (
     <div className="data-shell-page">
@@ -908,19 +1012,6 @@ export default function SuperinvestorsClient({
           </p>
         </div>
         <div className="data-shell-head-actions">
-          {quarterLabel ? (
-            <span className="data-shell-pill ok">
-              <span />
-              {quarterLabel}
-            </span>
-          ) : null}
-          {generatedAtLabel ? (
-            <span className="data-shell-pill ok">
-              <span />
-              변환 {generatedAtLabel}
-            </span>
-          ) : null}
-          <MarketQuickLinks />
           <span className="data-shell-note">{delayLabel}</span>
           {excludedStale.length > 0 ? (
             <span className="data-shell-note warn">
@@ -935,6 +1026,118 @@ export default function SuperinvestorsClient({
           기관 공시 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
+
+      {/* Hero — verdict-first (cp-design-system-spec.md §A.1). Buy/sell balance is the
+          route's single dominant visual; methodology detail moves to the bottom accordion. */}
+      <CpVerdictHero
+        eyebrow="13F · 이번 분기 자금 흐름"
+        verdict={heroVerdict}
+        sub={delayLabel}
+        trustChips={[
+          { id: "quarter", label: "기준 분기", value: quarter ?? "—", freshness: true, tone: "positive" },
+          { id: "generated", label: "데이터 변환", value: generatedAtLabel ?? "확인 중" },
+        ]}
+      />
+
+      {tradeTotalAmount > 0 ? (
+        <CpDivergingBar
+          data-superinvestor-hero-meter
+          segments={[
+            { id: "bought", label: `매수 ${fmtPercent(boughtSegmentPct)}`, percent: boughtSegmentPct, tone: "positive" },
+            { id: "sold", label: `매도 ${fmtPercent(soldSegmentPct)}`, percent: soldSegmentPct, tone: "negative" },
+          ]}
+          net={{
+            label: "매수/매도 균형",
+            value: `${netFlowPct >= 0 ? "매수" : "매도"} 우위 ${fmtPercent(Math.abs(netFlowPct))}`,
+            direction: netFlowPct >= 0 ? "up" : "down",
+            sub: tradesData ? `${tradesData.metadata.quarter} · 상위 ${tradesData.metadata.top_n}개 랭킹 내부 상대 비중` : undefined,
+          }}
+        />
+      ) : null}
+
+      {/* Tier 2 — sector rotation band + compressed metric tiles + promoted insight cards. */}
+      <section className="cpw5-super-tier2">
+        <div className="cpw5-super-tier2__tiles">
+          <CpMetricTileGrid>
+            <CpMetricTile label="코호트" value={fmtNumber(investorCount)} unit="명" sub="추적 중인 거장 투자자" />
+            <CpMetricTile label="추적 종목" value={fmtNumber(tickerCount)} unit="개" sub="13F 보유 유니버스" />
+            <CpMetricTile label="신규 고비중" value={fmtNumber(convictionNewCount)} unit="건" sub="이번 분기 신규 진입" />
+          </CpMetricTileGrid>
+        </div>
+
+        <div className="cpw5-super-tier2__band">
+          <CpSectionCard
+            title="섹터 로테이션"
+            meta={pvData ? `${pvData.metadata.quarter} · 전분기 대비` : undefined}
+            footnote="가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다."
+          >
+            {sectorRotationRows.length > 0 ? (
+              sectorRotationRows.map((row) => {
+                const canonicalSector = row.sector;
+                const tone = row.deltaPp > 0.05 ? "positive" : row.deltaPp < -0.05 ? "negative" : "neutral";
+                return (
+                  <CpMeterRow
+                    key={row.sector}
+                    variant="axis"
+                    label={sectorLabelKo(canonicalSector)}
+                    value={`${(row.current * 100).toFixed(1)}%`}
+                    percent={row.current * 100}
+                    tone={tone}
+                    toneWord={`${row.deltaPp >= 0 ? "▲" : "▼"}${Math.abs(row.deltaPp).toFixed(1)}%p`}
+                  />
+                );
+              })
+            ) : (
+              <CpEmptyState message={pvFailed ? "섹터 로테이션 데이터를 불러오지 못했습니다." : "섹터 로테이션 데이터를 불러오는 중입니다…"} />
+            )}
+          </CpSectionCard>
+        </div>
+
+        <div className="cpw5-super-tier2__insights">
+          <div>
+            <CpInsightCard
+              badgeLabel="신규 고비중"
+              badgeTone="positive"
+              dateLabel={quarter ?? "—"}
+              headline={`이번 분기 고비중 신규 진입 ${fmtNumber(convictionNewCount)}건`}
+              bullets={highConvictionNewRows.map((r) => ({
+                id: `${r.investor}-${r.ticker}`,
+                tone: "fact",
+                tagLabel: r.ticker,
+                text: `${r.investor} · 비중 ${fmtWeight(r.weight)}`,
+              }))}
+            />
+            <button
+              type="button"
+              onClick={() => setTab("insights")}
+              className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+            >
+              인사이트 탭에서 더 보기
+            </button>
+          </div>
+          <div>
+            <CpInsightCard
+              badgeLabel="상위 확신 유지"
+              badgeTone="neutral"
+              dateLabel={quarter ?? "—"}
+              headline={`상위 확신 보유 유지 ${fmtNumber(convictionHoldCount)}건`}
+              bullets={topConvictionHoldRows.map((r) => ({
+                id: `${r.investor}-${r.ticker}`,
+                tone: "note",
+                tagLabel: r.ticker,
+                text: `${r.investor} · 비중 ${fmtWeight(r.weight)}`,
+              }))}
+            />
+            <button
+              type="button"
+              onClick={() => setTab("insights")}
+              className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+            >
+              인사이트 탭에서 더 보기
+            </button>
+          </div>
+        </div>
+      </section>
 
       {dataReady && selectedGuruEntry ? (
         <section
@@ -976,6 +1179,14 @@ export default function SuperinvestorsClient({
             >
               프로필 보기
             </a>
+            <TransitionLink
+              href={`${ROUTES.screener}?preset=guru`}
+              data-superinvestor-guru-action
+              data-superinvestor-guru-screener-link
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+            >
+              스크리너 guru 보기
+            </TransitionLink>
             {[...new Set(selectedGuruEntry[1].top5)].slice(0, 5).map((ticker, i) => (
               <TransitionLink
                 key={`${ticker}-${i}`}
@@ -1109,12 +1320,12 @@ export default function SuperinvestorsClient({
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             <div data-superinvestor-trades-kpi="bought" className="rounded-xl border border-emerald-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">상위 매수 규모</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtAum(tradesBoughtAmount)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">상위 매수 비중</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtPercent(boughtSegmentPct)}</p>
             </div>
             <div data-superinvestor-trades-kpi="sold" className="rounded-xl border border-rose-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">상위 매도 규모</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtAum(tradesSoldAmount)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">상위 매도 비중</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtPercent(soldSegmentPct)}</p>
             </div>
             <div data-superinvestor-trades-kpi="cohort" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 투자자</p>
@@ -1154,72 +1365,6 @@ export default function SuperinvestorsClient({
               </TransitionLink>
             ))}
           </div>
-        </section>
-      ) : null}
-
-      {dataReady ? (
-        <section
-          className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
-          aria-label="13F 자료 기준"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">자료 기준</p>
-              <h2 className="mt-1 text-sm font-black tracking-tight text-slate-950">SEC 13F 공시 변환 데이터</h2>
-              <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-[var(--c-ink-3)]">
-                SEC 13F 공시 원문을 100x SEC13F DataPack으로 변환한 자료만 사용합니다. 실시간 보유가 아니라 분기 보고 기준입니다.
-              </p>
-            </div>
-            <span className="inline-flex min-h-8 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700">
-              분기 종료 후 최대 45일 지연
-            </span>
-          </div>
-
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">기준 분기</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{quarter ?? "—"}</p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                {generatedAtLabel ? `생성 ${generatedAtLabel}` : "생성 시각 정보 없음"}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 범위</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">
-                {fmtNumber(investorCount)}명 · {fmtNumber(tickerCount)}종목
-              </p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                오래된 공시는 최신 분기 계산에서 제외
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">섹터 분해</p>
-              <p className="mt-1 text-sm font-black text-slate-950">{topSectorLabel}</p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                {sectorBreakdownCount}개 섹터 · 대표 {topSectorHoldings}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">종목별 보유</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtNumber(tickerCount)}</p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                보유 투자자·비중은 종목별 보유 탭에서 확인
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 신호</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">
-                {fmtNumber(convictionNewCount)} / {fmtNumber(convictionHoldCount)}
-              </p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                신규 고비중 / 상위 보유 유지
-              </p>
-            </div>
-          </div>
-
-          <p className="mt-3 text-[10px] font-semibold leading-4 text-[var(--c-ink-3)]">
-            섹터·종목·확신 신호는 같은 기준 분기의 변환 데이터에서 계산합니다. 공시 지연 때문에 오늘의 실제 보유와 다를 수 있습니다.
-          </p>
         </section>
       ) : null}
 
@@ -1287,42 +1432,6 @@ export default function SuperinvestorsClient({
                   ) : null}
                 </div>
               ) : null}
-            </div>
-          ) : null}
-
-          {sectorRows.length > 0 ? (
-            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h2 className="text-sm font-black tracking-tight text-slate-900">섹터 정렬</h2>
-                  <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                    최신 공시 보유를 섹터별로 묶어 어느 영역에 거장 자금이 모이는지 봅니다.
-                  </p>
-                </div>
-                <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-black text-slate-500">
-                  보강 지표 반영
-                </span>
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {sectorRows.map((row) => {
-                  const canonicalSector = resolveSector(row.sector);
-                  return (
-                    <div key={row.sector} className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-[11px] font-black text-slate-800">
-                          {sectorLabelKo(canonicalSector)}
-                        </span>
-                        <span className="orbitron tabular-nums text-[11px] font-black text-brand-interactive">
-                          {fmtPct(row.avg_weight)}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                        {row.investors.filter(Boolean).length}명 보유 · 대표 {row.top_holdings.slice(0, 3).join(", ")}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           ) : null}
 
@@ -1561,14 +1670,23 @@ export default function SuperinvestorsClient({
                       </div>
                     ) : null}
 
-                    <button
-                      type="button"
-                      onClick={() => setExpandedGuru(isOpen ? null : id)}
-                      aria-pressed={isOpen}
-                      className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-                    >
-                      {isOpen ? "접기" : "포트폴리오 보기"}
-                    </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedGuru(isOpen ? null : id)}
+                        aria-pressed={isOpen}
+                        className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+                      >
+                        {isOpen ? "접기" : "포트폴리오 보기"}
+                      </button>
+                      <TransitionLink
+                        href={`${ROUTES.screener}?preset=guru`}
+                        data-superinvestor-guru-screener-link
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+                      >
+                        스크리너 guru 보기
+                      </TransitionLink>
+                    </div>
 
                     {isOpen ? <GuruDetailPanel id={id} summary={inv} pvData={pvData} /> : null}
                   </div>
@@ -1801,6 +1919,7 @@ export default function SuperinvestorsClient({
                 <TradeRankingPanel
                   title="많이 매수된 종목"
                   rows={tradesData.bought}
+                  totalAmount={tradesBoughtAmount}
                   amountColor="emerald"
                   side="bought"
                   expanded={tradesBoughtExpanded}
@@ -1814,6 +1933,7 @@ export default function SuperinvestorsClient({
                 <TradeRankingPanel
                   title="많이 매도된 종목"
                   rows={tradesData.sold}
+                  totalAmount={tradesSoldAmount}
                   amountColor="rose"
                   side="sold"
                   expanded={tradesSoldExpanded}
@@ -1833,6 +1953,64 @@ export default function SuperinvestorsClient({
       <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.insights} active={tab === "insights"}>
         <InsightsTab />
       </TabPanel>
+
+      {/* Methodology — demoted per brief-superinvestors.md D (content preserved verbatim,
+          just relocated from a top-of-page card into a collapsed bottom accordion). */}
+      {dataReady ? (
+      <CpAccordion
+        title="자료 기준 · SEC 13F 공시 변환 데이터"
+        meta={`${quarter ?? "—"} · 45일 지연`}
+      >
+        <p className="text-xs font-semibold leading-5 text-[var(--c-ink-3)]">
+          SEC 13F 공시 원문을 100x SEC13F DataPack으로 변환한 자료만 사용합니다. 실시간 보유가 아니라 분기 보고 기준이며,
+          분기 종료 후 최대 45일 지연됩니다.
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">기준 분기</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">{quarter ?? "—"}</p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+              {generatedAtLabel ? `생성 ${generatedAtLabel}` : "생성 시각 정보 없음"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 범위</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              {fmtNumber(investorCount)}명 · {fmtNumber(tickerCount)}종목
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+              오래된 공시는 최신 분기 계산에서 제외
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">섹터 분해</p>
+            <p className="mt-1 text-sm font-black text-slate-950">{topSectorLabel}</p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+              {sectorBreakdownCount}개 섹터 · 대표 {topSectorHoldings}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">종목별 보유</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtNumber(tickerCount)}</p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+              보유 투자자·비중은 종목별 보유 탭에서 확인
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 신호</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              {fmtNumber(convictionNewCount)} / {fmtNumber(convictionHoldCount)}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+              신규 고비중 / 상위 보유 유지
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 text-[10px] font-semibold leading-4 text-[var(--c-ink-3)]">
+          섹터·종목·확신 신호는 같은 기준 분기의 변환 데이터에서 계산합니다. 공시 지연 때문에 오늘의 실제 보유와 다를 수 있습니다.
+        </p>
+      </CpAccordion>
+      ) : null}
 
     </div>
   );

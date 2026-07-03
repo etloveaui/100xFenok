@@ -3,6 +3,7 @@ import AppShell from "@/components/shell/AppShell";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import SuperinvestorsClient from "./SuperinvestorsClient";
 import type { SuperInvestorsTab } from "@/lib/superinvestors/types";
+import "@/styles/cp-w5-superinvestors.css";
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
