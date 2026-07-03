@@ -1,9 +1,18 @@
 "use client";
 
+import {
+  CpAccordion,
+  CpCTARow,
+  CpGaugeCard,
+  CpMeterRow,
+  CpSectionCard,
+  CpVerdictHero,
+  type CpTone,
+} from "@/components/canvas-plus/kit";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
+import { formatAsOf, freshnessDataState, latestAsOf } from "@/lib/data-state";
 import type {
   MarketBondPulse,
   MarketIndexValuation,
@@ -67,10 +76,6 @@ const REGIME_ACTIONS: RegimeAction[] = [
   },
 ];
 
-function cx(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
-
 function toneRank(tone: MarketTone): number {
   if (tone === "rose") return 3;
   if (tone === "amber") return 2;
@@ -89,25 +94,20 @@ function toneLabel(tone: MarketTone): string {
   return "중립";
 }
 
-function toneClass(tone: MarketTone): string {
-  if (tone === "rose") return "border-[var(--c-down)] bg-[var(--c-down-soft)] text-[var(--c-down)]";
-  if (tone === "amber") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
-  if (tone === "emerald") return "border-[var(--c-up)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
-  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-2)]";
+/** Maps the route's 4-value MarketTone (rose/amber/emerald/slate) onto the kit's CpTone. */
+function carrierTone(tone: MarketTone): CpTone {
+  if (tone === "rose") return "negative";
+  if (tone === "amber") return "warning";
+  if (tone === "emerald") return "positive";
+  return "neutral";
 }
 
-function dotClass(tone: MarketTone): string {
-  if (tone === "rose") return "bg-[var(--c-down)]";
-  if (tone === "amber") return "bg-[var(--c-warn)]";
-  if (tone === "emerald") return "bg-[var(--c-up)]";
-  return "bg-[var(--c-line)]";
-}
-
-function toneTextClass(tone: MarketTone): string {
-  if (tone === "rose") return "text-[var(--c-down)]";
-  if (tone === "amber") return "text-[var(--c-warn)]";
-  if (tone === "emerald") return "text-[var(--c-up)]";
-  return "text-[var(--c-ink)]";
+/** Discrete axis tone → a position on the 경계→양호 meter track (see brief-regime.md D). */
+function axisPercent(tone: MarketTone): number {
+  if (tone === "rose") return 15;
+  if (tone === "amber") return 40;
+  if (tone === "emerald") return 85;
+  return 55;
 }
 
 function formatNumber(value: number | null, digits = 1): string {
@@ -245,11 +245,17 @@ function sp500ValuationPulse(index: MarketIndexValuation | undefined): Pulse | n
   };
 }
 
+function toneCounts(pulses: Pulse[]) {
+  return {
+    alert: pulses.filter((pulse) => pulse.tone === "rose").length,
+    caution: pulses.filter((pulse) => pulse.tone === "amber").length,
+    friendly: pulses.filter((pulse) => pulse.tone === "emerald").length,
+  };
+}
+
 function buildHeadline(axes: Axis[]) {
   const pulses = axes.flatMap((axis) => axis.pulses);
-  const alertCount = pulses.filter((pulse) => pulse.tone === "rose").length;
-  const cautionCount = pulses.filter((pulse) => pulse.tone === "amber").length;
-  const friendlyCount = pulses.filter((pulse) => pulse.tone === "emerald").length;
+  const { alert: alertCount, caution: cautionCount, friendly: friendlyCount } = toneCounts(pulses);
   const topTone = strongestTone(pulses);
 
   if (alertCount > 0) {
@@ -278,6 +284,26 @@ function buildHeadline(axes: Axis[]) {
     tone: "slate" as MarketTone,
     detail: "강한 한쪽 신호보다 중립 신호가 많은 상태입니다.",
   };
+}
+
+/**
+ * Composite gauge position — a pure client-side transform of already-loaded tone counts
+ * (friendlyCount − cautionCount − alertCount×2, normalized to 0-100). No new data source;
+ * see brief-regime.md section G/H — a true numeric regime score is not emitted by the hook.
+ */
+function gaugeReading(pulses: Pulse[]) {
+  const { alert, caution, friendly } = toneCounts(pulses);
+  const total = pulses.length;
+  if (total === 0) {
+    return { percent: 50, tone: "neutral" as CpTone, position: "중립", alert, caution, friendly, total };
+  }
+  const raw = friendly - caution - alert * 2;
+  const min = -2 * total;
+  const max = total;
+  const percent = ((raw - min) / (max - min)) * 100;
+  const tone: CpTone = alert > 0 ? "negative" : caution > friendly ? "warning" : friendly > 0 ? "positive" : "neutral";
+  const position = percent < 20 ? "경계" : percent < 40 ? "주의" : percent < 60 ? "중립" : percent < 80 ? "양호" : "강한 양호";
+  return { percent, tone, position, alert, caution, friendly, total };
 }
 
 function readableSourceLabel(source: ValuationDataSource): string {
@@ -321,50 +347,45 @@ function readableCadence(value: string | null): string {
   return labels[value] ?? value;
 }
 
-function EvidenceList({ axisId, items }: { axisId: string; items: Pulse[] }) {
+function EvidenceList({ items }: { items: Pulse[] }) {
   if (items.length === 0) {
-    return <p className="text-sm font-semibold text-[var(--c-ink-4)]">표시할 신호가 없습니다.</p>;
+    return <p className="cpw5-regime-evidence-row__detail">표시할 신호가 없습니다.</p>;
   }
   return (
-    <div className="grid gap-2">
+    <div className="cpw5-regime-evidence-list">
       {items.map((item) => (
-        <div
-          key={item.id}
-          className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-2"
-          data-regime-evidence-row={item.id}
-          data-regime-evidence-axis={axisId}
-        >
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-black text-[var(--c-ink)]">{item.label}</p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{item.detail}</p>
-            </div>
-            <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[11px] font-black", toneClass(item.tone))}>
-              {item.valueLabel}
-            </span>
+        <div key={item.id} className="cpw5-regime-evidence-row" data-regime-evidence-row={item.id}>
+          <div className="cpw5-regime-evidence-row__main">
+            <p className="cpw5-regime-evidence-row__label">{item.label}</p>
+            <p className="cpw5-regime-evidence-row__detail">{item.detail}</p>
+            {item.asOf ? <p className="cpw5-regime-evidence-row__asof">기준 {formatAsOf(item.asOf)}</p> : null}
           </div>
-          {item.asOf ? <p className="mt-2 text-[10px] font-bold text-[var(--c-ink-4)]">기준 {formatAsOf(item.asOf)}</p> : null}
+          <span className="cpw5-regime-evidence-row__value" data-tone={carrierTone(item.tone)}>
+            {item.valueLabel}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
-function AxisCard({ axis }: { axis: Axis }) {
+function AxisAccordion({ axis }: { axis: Axis }) {
+  // CpAccordionProps intersects DetailsHTMLAttributes (native `title?: string` tooltip attr)
+  // with its own `title: ReactNode`, so the merged type only accepts `string`. Cast around the
+  // kit's own type collision rather than editing the read-only kit file.
+  const axisTitle = (
+    <span className="cpw5-regime-axis-title-row">
+      <span className="cpw5-regime-tone-pill" data-tone={carrierTone(axis.tone)} data-regime-axis-tone>
+        {toneLabel(axis.tone)}
+      </span>
+      {axis.title}
+    </span>
+  ) as unknown as string;
+
   return (
-    <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]" data-regime-axis-card={axis.id}>
-      <header className="mb-3 flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">판정 근거</p>
-          <h2 className="mt-1 text-lg font-black text-[var(--c-ink)]">{axis.title}</h2>
-          <p className="mt-1 text-sm font-semibold leading-6 text-[var(--c-ink-3)]">{axis.summary}</p>
-        </div>
-        <span className={cx("shrink-0 rounded-full border px-2.5 py-1 text-xs font-black", toneClass(axis.tone))} data-regime-axis-tone>
-          {toneLabel(axis.tone)}
-        </span>
-      </header>
-      <EvidenceList axisId={axis.id} items={axis.pulses} />
-    </section>
+    <CpAccordion title={axisTitle} meta={`${axis.summary} · ${axis.pulses.length}개 신호`} data-regime-axis-card={axis.id}>
+      <EvidenceList items={axis.pulses} />
+    </CpAccordion>
   );
 }
 
@@ -428,14 +449,16 @@ export default function RegimeClient() {
   ];
 
   const headline = buildHeadline(axes);
-  const latestSource = latestAsOf([
-    sourceDate,
-    ...axes.flatMap((axis) => axis.pulses.map((pulse) => pulse.asOf)),
-  ]);
+  const allPulses = axes.flatMap((axis) => axis.pulses);
+  const gauge = gaugeReading(allPulses);
+  const latestSource = latestAsOf([sourceDate, ...allPulses.map((pulse) => pulse.asOf)]);
+  const freshness = freshnessDataState({ asOf: latestSource, maxAgeDays: 3 });
   const visibleSources = dataSources.filter((source) => ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"].includes(source.id));
 
+  const isLoading = !dataReady && !failed;
+
   return (
-    <div className="data-shell-page" data-regime-surface>
+    <div className="data-shell-page canvas-plus" data-regime-surface data-canvas-plus data-canvas-plus-regime>
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">시장 국면</p>
@@ -456,87 +479,118 @@ export default function RegimeClient() {
       </section>
 
       {failed ? (
-        <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink)]">
+        <div className="cpw5-empty" data-variant="skip-note" data-regime-failed>
           시장 국면 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
 
-      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-[var(--sh-sm)]", !dataReady && "opacity-70")} data-regime-headline>
-        <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">종합 판독</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-[var(--c-ink)]">{headline.label}</h2>
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[var(--c-ink-3)]">{headline.detail}</p>
-          </div>
-          <span className={cx("inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-black", toneClass(headline.tone))}>
-            <span className={cx("h-2.5 w-2.5 rounded-full", dotClass(headline.tone))} />
-            {toneLabel(headline.tone)}
-          </span>
+      {isLoading ? (
+        <div className="cpw5-regime-skeleton" aria-busy="true" data-regime-loading>
+          <div className="cpw5-regime-skeleton__hero" />
+          <div className="cpw5-regime-skeleton__gauge" />
+          <div className="cpw5-regime-skeleton__row" />
+          <div className="cpw5-regime-skeleton__row" />
+          <div className="cpw5-regime-skeleton__row" />
+          <div className="cpw5-regime-skeleton__row" />
         </div>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {axes.map((axis) => (
-            <div key={axis.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-regime-axis-summary-card={axis.id}>
-              <p className="text-[11px] font-black text-[var(--c-ink-4)]">{axis.title}</p>
-              <p className={cx("mt-1 text-lg font-black", toneTextClass(axis.tone))}>
-                {toneLabel(axis.tone)}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">{axis.pulses.length}개 신호</p>
+      ) : null}
+
+      {dataReady ? (
+        <>
+          <CpVerdictHero
+            eyebrow="MARKET REGIME · 종합 판독"
+            verdict={headline.label}
+            sub={headline.detail}
+            trustChips={[
+              {
+                label: freshness.status === "stale" ? "오래된 기준일" : "기준",
+                value: formatAsOf(latestSource) ?? "확인 불가",
+                freshness: true,
+                tone: freshness.status === "ready" ? "positive" : freshness.status === "stale" ? "warning" : "neutral",
+              },
+            ]}
+            data-regime-headline
+          />
+
+          <CpSectionCard title="국면 포지션" meta={`긍정 ${gauge.friendly} · 주의 ${gauge.caution} · 경계 ${gauge.alert}`}>
+            <div className="cpw5-regime-gauge-wrap">
+              <CpGaugeCard
+                value={gauge.percent}
+                displayValue={gauge.position}
+                unitLabel="시장 국면"
+                tone={gauge.tone}
+                sub={
+                  <>
+                    긍정 신호 <b>{gauge.friendly}개</b>, 주의 신호 <b>{gauge.caution}개</b>, 경계 신호 <b>{gauge.alert}개</b>를 종합한
+                    위치입니다.
+                  </>
+                }
+              />
             </div>
-          ))}
-        </div>
-        <div className="mt-4 border-t border-[var(--c-line)] pt-4" data-regime-action-rail>
-          <div className="mb-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">오늘 확인 순서</p>
-            <p className="text-xs font-semibold text-[var(--c-ink-3)]">판독 후 바로 이어갈 작업</p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            {REGIME_ACTIONS.map((action, index) => (
-              <TransitionLink
-                key={action.key}
-                href={action.href}
-                className="group flex min-h-14 min-w-0 items-center gap-3 rounded-[1rem] border border-[var(--c-line)] bg-white/75 px-3 py-3 text-left transition hover:border-[var(--c-brand)] hover:bg-[var(--c-surface-2)]"
-                data-regime-action={action.key}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-surface)] text-xs font-black text-[var(--c-ink)] group-hover:border-[var(--c-brand)] group-hover:text-[var(--c-brand)]">
-                  {index + 1}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-black text-[var(--c-ink)]">{action.label}</span>
-                  <span className="block text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{action.detail}</span>
-                </span>
-              </TransitionLink>
+          </CpSectionCard>
+
+          <CpSectionCard variant="edge" eyebrow="AXIS · 4축 포지션" title="축별 신호 위치" meta={latestSource ? `기준 ${formatAsOf(latestSource)}` : undefined}>
+            {axes.map((axis) => (
+              <CpMeterRow
+                key={axis.id}
+                variant="axis"
+                label={axis.title}
+                value={toneLabel(axis.tone)}
+                percent={axisPercent(axis.tone)}
+                tone={carrierTone(axis.tone)}
+                toneWord={`${axis.pulses.length}개 신호`}
+                data-regime-axis-summary-card={axis.id}
+              />
             ))}
-          </div>
-        </div>
-      </section>
+          </CpSectionCard>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        {axes.map((axis) => (
-          <AxisCard key={axis.id} axis={axis} />
-        ))}
-      </section>
-
-      <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
-        <header className="mb-3 flex min-w-0 flex-wrap items-end justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">자료 기준</p>
-            <h2 className="mt-1 text-lg font-black text-[var(--c-ink)]">저장 데이터 갱신 정보</h2>
-          </div>
-          <p className="text-xs font-semibold text-[var(--c-ink-3)]">직접 실시간 조회 없이 저장된 데이터만 사용</p>
-        </header>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {visibleSources.map((source) => (
-            <div key={source.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-regime-source-card={source.id}>
-              <p className="text-sm font-black text-[var(--c-ink)]">{readableSourceLabel(source)}</p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{readableSourceUsage(source)}</p>
-              <p className="mt-2 text-[10px] font-bold text-[var(--c-ink-4)]">
-                {source.updated ? `갱신 ${formatAsOf(source.updated)}` : "갱신일 확인 필요"}
-                {source.cadence ? ` · ${readableCadence(source.cadence)}` : ""}
-              </p>
+          <CpSectionCard title="오늘 확인 순서" meta="판독 후 바로 이어갈 작업">
+            <div className="cpw5-regime-action-rail" data-regime-action-rail>
+              {REGIME_ACTIONS.map((action, index) => (
+                <TransitionLink
+                  key={action.key}
+                  href={action.href}
+                  className="cpw5-regime-action-card"
+                  data-regime-action={action.key}
+                >
+                  <span className="cpw5-regime-action-card__num">{index + 1}</span>
+                  <span className="cpw5-regime-action-card__body">
+                    <span className="cpw5-regime-action-card__label">{action.label}</span>
+                    <span className="cpw5-regime-action-card__detail">{action.detail}</span>
+                  </span>
+                </TransitionLink>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </CpSectionCard>
+
+          <section className="grid gap-3" data-regime-axis-accordions>
+            {axes.map((axis) => (
+              <AxisAccordion key={axis.id} axis={axis} />
+            ))}
+          </section>
+
+          <CpAccordion title="데이터 신선도 보기" meta="직접 실시간 조회 없이 저장된 데이터만 사용" data-regime-source-accordion>
+            <div className="cpw5-regime-source-grid">
+              {visibleSources.map((source) => (
+                <div key={source.id} className="cpw5-regime-source-tile" data-regime-source-card={source.id}>
+                  <p className="cpw5-regime-source-tile__label">{readableSourceLabel(source)}</p>
+                  <p className="cpw5-regime-source-tile__usage">{readableSourceUsage(source)}</p>
+                  <p className="cpw5-regime-source-tile__meta">
+                    {source.updated ? `갱신 ${formatAsOf(source.updated)}` : "갱신일 확인 필요"}
+                    {source.cadence ? ` · ${readableCadence(source.cadence)}` : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CpAccordion>
+
+          <CpCTARow
+            primary={{ label: "스크리너로 이어가기", href: ROUTES.screener }}
+            secondary={{ label: "포트폴리오 점검", href: ROUTES.portfolio }}
+            note="투자 조언 아님"
+          />
+        </>
+      ) : null}
     </div>
   );
 }

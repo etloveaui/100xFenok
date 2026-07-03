@@ -1,0 +1,301 @@
+/* CANVAS+ W5 route: /regime — route-owned additions, .cpw5-regime-* namespace.
+   Built on --cp-* tokens (canvas-plus.css) and the shared W5 kit (cp-w5-kit.css).
+   Token-pure: zero raw hex/rgb literals (see qa:tokens).
+   Recipe SSOT: docs/references/cp-design-system-spec.md sections C + G. */
+
+/* ---------------------------------------------------------------------- */
+/* Loading skeleton — dataReady === false must never look like a real     */
+/* neutral verdict, so this renders instead of the hero/gauge/meters.     */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-regime-skeleton {
+  display: grid;
+  gap: 14px;
+}
+
+.cpw5-regime-skeleton__hero {
+  min-height: 96px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+}
+
+.cpw5-regime-skeleton__gauge {
+  justify-self: center;
+  width: min(200px, 100%);
+  aspect-ratio: 1;
+  border-radius: 999px;
+}
+
+.cpw5-regime-skeleton__row {
+  height: 40px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+}
+
+.cpw5-regime-skeleton__hero,
+.cpw5-regime-skeleton__gauge,
+.cpw5-regime-skeleton__row {
+  background-color: var(--cp-surface-muted);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--cp-accent) 10%, transparent),
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-size: 220px 100%;
+  animation: cp-chart-skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tone pill (axis accordion header)                                      */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-regime-axis-title-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.cpw5-regime-tone-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.cpw5-regime-tone-pill[data-tone="positive"] { color: color-mix(in srgb, var(--cp-positive) 78%, var(--cp-text-strong)); background: var(--cp-positive-soft); }
+.cpw5-regime-tone-pill[data-tone="negative"] { color: color-mix(in srgb, var(--cp-negative) 72%, var(--cp-text-strong)); background: var(--cp-negative-soft); }
+.cpw5-regime-tone-pill[data-tone="warning"] { color: color-mix(in srgb, var(--cp-warning) 68%, var(--cp-text-strong)); background: var(--cp-warning-soft); }
+.cpw5-regime-tone-pill[data-tone="neutral"] { color: var(--cp-neutral); background: var(--cp-surface-strong); }
+
+/* ---------------------------------------------------------------------- */
+/* Gauge hero wrap                                                        */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-regime-gauge-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+[data-regime-surface] .cpw5-cta-btn--primary {
+  color: var(--cp-bg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Action rail ("오늘 확인 순서")                                          */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-regime-action-rail {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+.cpw5-regime-action-card {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  text-decoration: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.cpw5-regime-action-card:hover {
+  border-color: var(--cp-accent);
+  background: var(--cp-accent-soft);
+}
+
+.cpw5-regime-action-card__num {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  background: var(--cp-surface-muted);
+  color: var(--cp-text-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpw5-regime-action-card:hover .cpw5-regime-action-card__num {
+  border-color: var(--cp-accent);
+  color: var(--cp-accent-strong);
+}
+
+.cpw5-regime-action-card__body {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.cpw5-regime-action-card__label {
+  color: var(--cp-text-strong);
+  font-size: 13.5px;
+  font-weight: 850;
+}
+
+.cpw5-regime-action-card__detail {
+  overflow: hidden;
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .cpw5-regime-action-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cpw5-regime-action-card {
+    align-items: flex-start;
+  }
+
+  .cpw5-regime-action-card__label,
+  .cpw5-regime-action-card__detail {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .cpw5-regime-action-card__detail {
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Axis evidence rows (inside CpAccordion body)                           */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-regime-evidence-list {
+  display: grid;
+  gap: 8px;
+}
+
+.cpw5-regime-evidence-row {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface-muted);
+}
+
+.cpw5-regime-evidence-row__main {
+  min-width: 0;
+}
+
+.cpw5-regime-evidence-row__label {
+  overflow: hidden;
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw5-regime-evidence-row__detail {
+  margin: 4px 0 0;
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.cpw5-regime-evidence-row__asof {
+  margin: 6px 0 0;
+  color: var(--cp-text-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cpw5-regime-evidence-row__value {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.cpw5-regime-evidence-row__value[data-tone="positive"] { color: color-mix(in srgb, var(--cp-positive) 78%, var(--cp-text-strong)); background: var(--cp-positive-soft); }
+.cpw5-regime-evidence-row__value[data-tone="negative"] { color: color-mix(in srgb, var(--cp-negative) 72%, var(--cp-text-strong)); background: var(--cp-negative-soft); }
+.cpw5-regime-evidence-row__value[data-tone="warning"] { color: color-mix(in srgb, var(--cp-warning) 68%, var(--cp-text-strong)); background: var(--cp-warning-soft); }
+.cpw5-regime-evidence-row__value[data-tone="neutral"] { color: var(--cp-neutral); background: var(--cp-surface-strong); }
+
+@media (max-width: 520px) {
+  .cpw5-regime-evidence-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cpw5-regime-evidence-row__label {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .cpw5-regime-evidence-row__value {
+    align-self: flex-start;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Source freshness tiles (inside the collapsed "데이터 신선도 보기")      */
+/* ---------------------------------------------------------------------- */
+
+.cpw5-regime-source-grid {
+  display: grid;
+  gap: 10px;
+  /* min(200px,100%) keeps 320-390px from clipping per the mobile hard rule */
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+}
+
+.cpw5-regime-source-tile {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+}
+
+.cpw5-regime-source-tile__label {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.cpw5-regime-source-tile__usage {
+  margin: 4px 0 0;
+  color: var(--cp-text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.cpw5-regime-source-tile__meta {
+  margin: 8px 0 0;
+  color: var(--cp-text-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
