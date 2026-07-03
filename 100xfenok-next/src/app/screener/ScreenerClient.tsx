@@ -104,6 +104,21 @@ const COUNTRY_LABEL: Record<string, string> = {
   XX: "기타",
 };
 
+const ACTION_BUCKET_DISTRIBUTION_LABEL: Record<string, string> = {
+  guru_held: "기관·고수 보유",
+  smart_money: "기관/고수 주목",
+  value_momentum: "저평가+모멘텀",
+  index_core: "지수 핵심",
+  income: "배당 점검",
+  momentum: "모멘텀 리더",
+  watch: "관찰",
+  none: "신호 없음",
+};
+
+function actionBucketDistributionLabel(bucket: string): string {
+  return ACTION_BUCKET_DISTRIBUTION_LABEL[bucket] ?? bucket;
+}
+
 const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left" | "right" }> = [
   { key: "ticker", label: "티커", align: "left" },
   { key: "actionScore", label: "투자 신호", align: "left" },
@@ -1008,7 +1023,11 @@ function MobileStockCard({
   const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
   const actionTitle = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
   const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
-  const metrics = mobileMetricKeys(preset);
+  const allMetrics = mobileMetricKeys(preset);
+  const collapsedMetricCount = canvasPlusPreview ? 4 : allMetrics.length;
+  const metrics = canvasPlusPreview ? allMetrics.slice(0, collapsedMetricCount) : allMetrics;
+  const restMetrics = canvasPlusPreview ? allMetrics.slice(collapsedMetricCount) : [];
+  const [metricsExpanded, setMetricsExpanded] = useState(false);
   return (
     <article
       data-screener-stock-card
@@ -1046,17 +1065,21 @@ function MobileStockCard({
         <div onClick={onToggle} className="min-w-0 flex-1 cursor-pointer">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-base font-black text-slate-950">{stock.ticker}</span>
-            <GuruHolderBadge stock={stock} compact />
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
-              {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
-            </span>
             <span
               className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}
               title={actionTitle}
             >
               {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
             </span>
-            {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
+            {!canvasPlusPreview ? (
+              <>
+                <GuruHolderBadge stock={stock} compact />
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
+                  {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
+                </span>
+                {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
+              </>
+            ) : null}
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
           <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
@@ -1084,9 +1107,37 @@ function MobileStockCard({
           <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
         ))}
       </div>
+      {restMetrics.length > 0 ? (
+        <div className="border-t border-[var(--c-line-2)] px-3 py-2">
+          <button
+            type="button"
+            onClick={() => setMetricsExpanded((v) => !v)}
+            className="cpw5-more-metrics-toggle"
+            aria-expanded={metricsExpanded}
+          >
+            {metricsExpanded ? "지표 접기 ▲" : `지표 더보기 (${restMetrics.length}) ▼`}
+          </button>
+          {metricsExpanded ? (
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {restMetrics.map((metricKey) => (
+                <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {preset === "estimate" ? <MobileEstimateTrendSections stock={stock} compact /> : null}
       {expanded ? (
         <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
+          {canvasPlusPreview ? (
+            <div className="cpw5-expanded-meta">
+              <GuruHolderBadge stock={stock} compact />
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
+                {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
+              </span>
+              {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
+            </div>
+          ) : null}
           <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
         </div>
       ) : null}
@@ -1963,9 +2014,45 @@ export default function ScreenerClient({
   const pricedCount = sorted.filter((stock) => stock.price !== null).length;
   const missingPriceCount = Math.max(0, sorted.length - pricedCount);
   const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
+  const heroStats = useMemo(() => {
+    const withReturn = sorted.filter((stock) => typeof stock.return12m === "number");
+    const upCount = withReturn.filter((stock) => (stock.return12m as number) > 0).length;
+    const upRatio = withReturn.length > 0 ? Math.round((upCount / withReturn.length) * 100) : 0;
+    const edgeCount = sorted.filter((stock) => typeof stock.fenokEdgeScore === "number" && stock.fenokEdgeScore >= 70).length;
+    const edgeRatio = sorted.length > 0 ? Math.round((edgeCount / sorted.length) * 100) : 0;
+    const actionBucketCounts = sorted.reduce<Record<string, number>>((counts, stock) => {
+      const dominantActionBucket = stock.actionBucket?.trim() || "none";
+      counts[dominantActionBucket] = (counts[dominantActionBucket] ?? 0) + 1;
+      return counts;
+    }, {});
+    const actionBucketEntries = Object.entries(actionBucketCounts).sort(([bucketA, countA], [bucketB, countB]) => {
+      if (countA !== countB) return countB - countA;
+      return bucketA.localeCompare(bucketB);
+    });
+    const [dominantActionBucket = "none", dominantActionCount = 0] = actionBucketEntries[0] ?? [];
+    const dominantActionRatio = sorted.length > 0 ? Math.round((dominantActionCount / sorted.length) * 100) : 0;
+    const dominantActionLabel = actionBucketDistributionLabel(dominantActionBucket);
+    const actionBucketSummary = actionBucketEntries
+      .slice(0, 3)
+      .map(([bucket, count]) => `${actionBucketDistributionLabel(bucket)} ${count.toLocaleString("ko-KR")}개`)
+      .join(" · ");
+    return {
+      upRatio,
+      returnCount: withReturn.length,
+      edgeCount,
+      edgeRatio,
+      hasReturns: withReturn.length > 0,
+      actionBucketCounts,
+      dominantActionBucket,
+      dominantActionLabel,
+      dominantActionCount,
+      dominantActionRatio,
+      actionBucketSummary,
+    };
+  }, [sorted]);
   const filterPreviewLabel = activeFilterChips.length > 0
     ? activeFilterChips.slice(0, 5).map((chip) => chip.label).join(" · ")
-    : "매크로 · 이벤트 · 리스크 · 경기 · 비교";
+    : "종목 범위 · 가치 조건 · 성장·수익 · 품질·신호";
   const sourceDateLabel = sourceDate ?? "확인 중";
   const densityClass = DENSITY_TABLE_CLASS[density];
 
@@ -1982,6 +2069,39 @@ export default function ScreenerClient({
     return () => window.cancelAnimationFrame(frame);
   }, [enableCanvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
 
+  const signalPresets: { key: string; label: string; active: boolean; onToggle: () => void }[] = [
+    {
+      key: "cheap",
+      label: "저평가",
+      active: bandFilter === "cheap",
+      onToggle: () => setBandFilter((v) => (v === "cheap" ? "" : "cheap")),
+    },
+    {
+      key: "momentum",
+      label: "모멘텀 상승",
+      active: actionFilter === "momentum",
+      onToggle: () => setActionFilter((v) => (v === "momentum" ? "" : "momentum")),
+    },
+    {
+      key: "smart_money",
+      label: "고수 관심",
+      active: actionFilter === "smart_money",
+      onToggle: () => setActionFilter((v) => (v === "smart_money" ? "" : "smart_money")),
+    },
+    {
+      key: "income",
+      label: "배당 점검",
+      active: actionFilter === "income",
+      onToggle: () => setActionFilter((v) => (v === "income" ? "" : "income")),
+    },
+    {
+      key: "edge70",
+      label: "Fenok Edge 70+",
+      active: fenokEdgeMin === "70",
+      onToggle: () => setFenokEdgeMin((v) => (v === "70" ? "" : "70")),
+    },
+  ];
+
   return (
     <div
       className={enableCanvasPlusPreview ? "canvas-plus cp-screener-service" : "data-shell-page"}
@@ -1993,7 +2113,6 @@ export default function ScreenerClient({
             <div className="cpw4-hero__copy">
               <p className="cpw4-kicker">SCREENER</p>
               <h1>종목 스크리너</h1>
-              <p>글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목을 가격·밸류에이션·Fenok 신호로 좁혀 봅니다.</p>
             </div>
             <div className="cpw4-freshness" aria-label={`데이터 기준 ${sourceDateLabel}`}>
               <span className="cpw4-freshness__dot" aria-hidden="true" />
@@ -2192,7 +2311,65 @@ export default function ScreenerClient({
         </section>
       )}
 
-      {screenerDataState.status !== "ready" ? (
+      {enableCanvasPlusPreview ? (
+        <section className="cpw5-verdict" data-canvas-plus-screener-verdict="true">
+          <p className="cpw5-verdict__sentence">
+            현재 <strong>{sorted.length.toLocaleString("ko-KR")}</strong>개 중 가격 확인{" "}
+            <strong>{pricedCount.toLocaleString("ko-KR")}</strong>개
+            <span className="cpw5-verdict__muted">({priceCoverageRatio}%)</span>
+            {heroStats.hasReturns ? (
+              <>
+                {" "}— 이 중{" "}
+                <strong className={heroStats.upRatio >= 50 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}>
+                  {heroStats.upRatio}%
+                </strong>
+                가 12개월 상승,
+              </>
+            ) : null}{" "}
+            신호 분포는 <strong>{heroStats.dominantActionLabel}</strong>{" "}
+            <strong>{heroStats.dominantActionCount.toLocaleString("ko-KR")}</strong>개
+            <span className="cpw5-verdict__muted">({heroStats.dominantActionRatio}%)</span>가 가장 많고,
+            Fenok Edge 70+ 종목은 <strong className="text-[var(--c-warn)]">{heroStats.edgeCount.toLocaleString("ko-KR")}</strong>개입니다.
+          </p>
+          <div className="cpw5-tile-row">
+            <div className="cpw5-tile">
+              <span className="cpw5-tile__label">12개월 상승 비중</span>
+              <strong className="cpw5-tile__value">{heroStats.upRatio}%</strong>
+              <span className="cpw5-tile__sub">{heroStats.returnCount.toLocaleString("ko-KR")}개 수익률 기준</span>
+            </div>
+            <div className="cpw5-tile">
+              <span className="cpw5-tile__label">신호 분포 1위</span>
+              <strong className="cpw5-tile__value">{heroStats.dominantActionLabel}</strong>
+              <span className="cpw5-tile__sub">
+                {heroStats.dominantActionCount.toLocaleString("ko-KR")}개 · {heroStats.dominantActionRatio}%
+              </span>
+            </div>
+            <div className="cpw5-tile">
+              <span className="cpw5-tile__label">Fenok Edge 70+</span>
+              <strong className="cpw5-tile__value">{heroStats.edgeCount.toLocaleString("ko-KR")}</strong>
+              <span className="cpw5-tile__sub">
+                전체 중 {heroStats.edgeRatio}% · 가격 미확인 {missingPriceCount.toLocaleString("ko-KR")}개
+              </span>
+            </div>
+          </div>
+          <div className="cpw5-preset-row" role="group" aria-label="원클릭 신호 프리셋">
+            {signalPresets.map((preset) => (
+              <button
+                key={preset.key}
+                type="button"
+                className="cpw5-preset-chip"
+                data-active={preset.active ? "true" : "false"}
+                aria-pressed={preset.active}
+                onClick={preset.onToggle}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {screenerDataState.status !== "ready" && !(enableCanvasPlusPreview && screenerDataState.status === "partial") ? (
         enableCanvasPlusPreview ? (
           <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
             <DataStateNotice state={screenerDataState} />

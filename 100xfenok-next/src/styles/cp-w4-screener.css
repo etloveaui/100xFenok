@@ -2,7 +2,8 @@
 
 .cpw4-hero,
 .cpw4-filter-shell,
-.cpw4-detail-panel {
+.cpw4-detail-panel,
+.cpw5-verdict {
   --cpw4-accent: #2563eb;
   --cpw4-accent-soft: #eaf1ff;
   --cpw4-ink: #111827;
@@ -312,8 +313,12 @@
   justify-content: center;
   border-radius: 999px;
   background: var(--cpw4-accent);
-  color: #fff;
   font-size: 11px;
+}
+
+.cpw4-filter-summary__count strong,
+.cpw5-preset-chip[data-active="true"] {
+  color: #fff;
 }
 
 .cpw4-filter-drawer {
@@ -383,11 +388,20 @@
   padding: 0;
 }
 
+@media (max-width: 900px) {
+  .cpw4-icon-button,
+  .cpw4-density-button {
+    min-height: 44px;
+    width: 44px;
+  }
+}
+
 .cpw4-column-chip:hover,
 .cpw4-icon-button:hover,
 .cpw4-density-button:hover,
 .cpw4-icon-button[data-canvas-plus-active="true"],
-.cpw4-density-button[data-canvas-plus-active="true"] {
+.cpw4-density-button[data-canvas-plus-active="true"],
+.cpw5-preset-chip:hover {
   border-color: #bcd0f8;
   background: var(--cpw4-accent-soft);
   color: var(--cpw4-accent);
@@ -725,6 +739,123 @@
   margin-top: 14px;
 }
 
+/* W5 verdict hero — go-forward .cpw5-* namespace (W5-C screener polish) */
+
+.cpw5-verdict {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  border: 1px solid var(--cpw4-line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--cpw4-panel) 0%, var(--cpw4-soft) 140%);
+  padding: 18px 20px;
+}
+
+.cpw5-verdict__sentence {
+  margin: 0;
+  color: var(--cpw4-ink);
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.cpw5-verdict__sentence strong {
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpw5-verdict__muted {
+  color: var(--cpw4-muted);
+  font-weight: 750;
+}
+
+.cpw5-tile-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.cpw5-tile {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  border: 1px solid var(--cpw4-line);
+  border-radius: 8px;
+  background: var(--cpw4-panel);
+  padding: 12px 14px;
+}
+
+.cpw5-tile__label {
+  color: var(--cpw4-muted);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.cpw5-tile__value {
+  min-width: 0;
+  color: var(--cpw4-ink);
+  font-size: 22px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.cpw5-tile__sub {
+  min-width: 0;
+  color: var(--cpw4-muted);
+  font-size: 11px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.cpw5-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cpw5-preset-chip {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border: 1px solid var(--cpw4-line);
+  border-radius: 999px;
+  background: var(--cpw4-panel);
+  padding: 0 14px;
+  color: var(--cpw4-ink);
+  font-size: 12.5px;
+  font-weight: 850;
+  letter-spacing: 0;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.cpw5-preset-chip[data-active="true"] {
+  border-color: var(--cpw4-accent);
+  background: var(--cpw4-accent);
+}
+
+.cpw5-more-metrics-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--cpw4-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cpw4-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpw5-expanded-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px 0;
+}
+
 .cpw4-axis-card {
   border: 1px solid var(--cpw4-line);
   border-radius: 8px;
@@ -942,12 +1073,39 @@
     margin-left: 0;
     width: 100%;
   }
+
+  .cpw5-verdict {
+    padding: 16px;
+  }
+
+  .cpw5-verdict__sentence {
+    font-size: 14.5px;
+  }
 }
 
 @media (max-width: 520px) {
   .cpw4-hero {
     grid-template-columns: minmax(0, 1fr);
     padding: 18px;
+  }
+
+  .cpw5-verdict,
+  .cpw5-tile-row,
+  .cpw5-preset-row {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .cpw5-tile-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cpw5-preset-chip {
+    min-width: 0;
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
   }
 
   .cpw4-hero h1 {
