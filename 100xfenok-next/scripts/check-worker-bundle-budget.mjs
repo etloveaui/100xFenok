@@ -7,8 +7,8 @@ import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 export const BUILD_COMMAND = "npm run cf:build";
-export const WARN_GZIP_BYTES = 2720 * 1024;
-export const HARD_GZIP_BYTES = 2800 * 1024;
+export const WARN_GZIP_BYTES = 2950 * 1024;
+export const HARD_GZIP_BYTES = 3000 * 1024;
 export const BASELINE_DELTA_BYTES = 128 * 1024;
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url);

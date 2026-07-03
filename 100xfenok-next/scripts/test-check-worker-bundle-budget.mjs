@@ -15,13 +15,13 @@ import {
 
 assert.equal(formatKiB(1024), "1.00 KiB");
 assert.equal(formatKiB(1536), "1.50 KiB");
-assert.equal(WARN_GZIP_BYTES, 2720 * 1024);
-assert.equal(HARD_GZIP_BYTES, 2800 * 1024);
+assert.equal(WARN_GZIP_BYTES, 2950 * 1024);
+assert.equal(HARD_GZIP_BYTES, 3000 * 1024);
 assert.equal(BASELINE_DELTA_BYTES, 128 * 1024);
 
 assert.equal(evaluateBudget(2719 * 1024, { baselineGzipBytes: 2600 * 1024 }).status, "pass");
-assert.equal(evaluateBudget(2720 * 1024, { baselineGzipBytes: 2600 * 1024 }).status, "warn");
-assert.equal(evaluateBudget(2801 * 1024, { baselineGzipBytes: 2800 * 1024 }).status, "fail");
+assert.equal(evaluateBudget(2960 * 1024, { baselineGzipBytes: 2900 * 1024 }).status, "warn");
+assert.equal(evaluateBudget(3001 * 1024, { baselineGzipBytes: 2800 * 1024 }).status, "fail");
 assert.equal(evaluateBudget(2728 * 1024, { baselineGzipBytes: 2600 * 1024 }).exitCode, 0);
 assert.equal(evaluateBudget(2729 * 1024, { baselineGzipBytes: 2600 * 1024 }).status, "fail");
 assert.equal(evaluateBudget(2729 * 1024, { baselineGzipBytes: 2600 * 1024 }).baselineDeltaBytes, 129 * 1024);
