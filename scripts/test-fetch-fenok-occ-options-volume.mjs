@@ -46,6 +46,10 @@ assert.deepEqual(
   ["20260619", "20260618", "20260617"],
 );
 assert.deepEqual(
+  candidateDates({ requestedDate: "20260705", maxWalkbackDays: 0 }),
+  ["20260703"],
+);
+assert.deepEqual(
   applyTickerBatch(["A", "B", "C", "D", "E"], { batchSize: 2, batchIndex: 1 }),
   ["C", "D"],
 );
@@ -138,6 +142,8 @@ assert.equal(allEligiblePlan.request_budget.status, "within_budget");
 
 const overBudgetPlan = await build(parseArgs([
   "--all-eligible",
+  "--date",
+  "20260705",
   "--batch-size",
   "51",
   "--max-requests",

@@ -135,6 +135,15 @@ function candidateDates({ requestedDate, maxWalkbackDays }) {
     if (day === 0 || day === 6) continue;
     out.push(ymdFromDate(d));
   }
+  if (out.length === 0) {
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
+      const day = d.getUTCDay();
+      if (day === 0 || day === 6) continue;
+      out.push(ymdFromDate(d));
+      break;
+    }
+  }
   return out;
 }
 
