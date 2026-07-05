@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 
 import {
+  classTickerPreservationOk,
   corporateActionEvidenceFor,
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
@@ -84,6 +85,22 @@ assert.equal(dayLocalSources.accepted_family_flags.stockanalysis, true);
 assert.deepEqual(
   evidenceFamiliesForTicker("STRC", { sources: { yf: true, stockanalysis: true } }, commonSets),
   ["stockanalysis", "yf"],
+);
+
+assert.equal(
+  classTickerPreservationOk(
+    ["230360.KQ", "BF.B"],
+    [{ ticker: "BF.B" }, { ticker: "230360.KQ" }],
+  ),
+  true,
+);
+
+assert.equal(
+  classTickerPreservationOk(
+    ["230360.KQ", "BF.B"],
+    [{ ticker: "BF.B" }],
+  ),
+  false,
 );
 
 console.log("test-audit-fenok-stock-promotion-candidates: ok");

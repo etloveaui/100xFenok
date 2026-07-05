@@ -169,6 +169,13 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))].sort(compareTicker);
 }
 
+function classTickerPreservationOk(expectedTickers, statusRows) {
+  const expected = unique(expectedTickers.map(ticker));
+  const actual = unique((statusRows ?? []).map((status) => ticker(status?.ticker)));
+  return expected.length === actual.length
+    && expected.every((item, index) => item === actual[index]);
+}
+
 function sample(values, limit) {
   return values.slice(0, limit);
 }
@@ -1851,7 +1858,7 @@ function buildAudit({
     },
     {
       id: "s1_joined_gate_preserves_class_tickers",
-      ok: (s1JoinedGate.examples.class_tickers ?? []).every((status) => status.ticker === "BF.B"),
+      ok: classTickerPreservationOk(classTickerGap, s1JoinedGate.examples.class_tickers ?? []),
       detail: `class tickers checked=${s1JoinedGate.counts.class_tickers_checked}`,
     },
   ];
@@ -2280,6 +2287,7 @@ function printHuman(result) {
 
 export {
   buildAudit,
+  classTickerPreservationOk,
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
   corporateActionEvidenceFor,
