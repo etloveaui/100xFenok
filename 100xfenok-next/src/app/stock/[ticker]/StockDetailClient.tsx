@@ -35,7 +35,7 @@ import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
 import { formatSignedPercent } from "@/lib/format";
-import { makeDataState } from "@/lib/data-state";
+import { DATA_STATE_LABELS, makeDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
@@ -961,7 +961,7 @@ function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | nu
         ))}
       </div>
       <p className="cp-stock-rail-card__summary">
-        {asOfLabel ? `신호 기준 ${asOfLabel}` : record === undefined ? "신호 로딩 중" : "신호 데이터 대기"}
+        {asOfLabel ? `신호 기준 ${asOfLabel}` : record === undefined ? `신호 ${DATA_STATE_LABELS.pending}` : "신호 데이터 대기"}
       </p>
     </article>
   );
@@ -3360,7 +3360,7 @@ export default function StockDetailClient({
               tabs={stockTabs}
               activeTab={activeStockTab}
               onSelect={selectStockTab}
-              note={etfData === undefined ? "ETF 상세 로딩 중..." : null}
+              note={etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : null}
             />
           </section>
           <div
@@ -3398,7 +3398,6 @@ export default function StockDetailClient({
             <DataStateNotice
               state={makeDataState({
                 status: "unavailable",
-                label: "ETF 상세 데이터 준비 중",
                 detail: `${symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.`,
               })}
             />
@@ -3493,7 +3492,7 @@ export default function StockDetailClient({
                 <h1>{symbol}</h1>
                 <WatchStar ticker={symbol} className="stock-star" />
               </div>
-              <p>{contextLine || "종목 컨텍스트 로딩 중"}</p>
+              <p>{contextLine || `종목 컨텍스트 ${DATA_STATE_LABELS.pending}`}</p>
             </div>
           </div>
           <div className="cp-stock-detail-price">
@@ -3509,7 +3508,7 @@ export default function StockDetailClient({
             tabs={stockTabs}
             activeTab={activeStockTab}
             onSelect={selectStockTab}
-            note={isEtfAsset && etfData === undefined ? "ETF 상세 로딩 중..." : !yfLoaded ? "추가 지표 로딩 중..." : !yfAvailable ? "추가 지표 준비 중" : null}
+            note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
           />
         </section>
 
@@ -3556,7 +3555,7 @@ export default function StockDetailClient({
                   composition="w4"
                   volumeTone="muted"
                   className="cp-stock-price-chart"
-                  emptyLabel={stockAuxData === undefined ? "가격 이력 로딩 중..." : "표시할 가격 이력이 없습니다."}
+                  emptyLabel={stockAuxData === undefined ? `가격 이력 ${DATA_STATE_LABELS.pending}...` : "표시할 가격 이력이 없습니다."}
                 />
               </section>
 
@@ -3601,7 +3600,6 @@ export default function StockDetailClient({
                   <DataStateNotice
                     state={makeDataState({
                       status: "unavailable",
-                      label: "상세 데이터 준비 중",
                       detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                     })}
                   />
@@ -3797,7 +3795,6 @@ export default function StockDetailClient({
               <DataStateNotice
                 state={makeDataState({
                   status: "unavailable",
-                  label: "상세 데이터 준비 중",
                   detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                 })}
               />
@@ -3877,7 +3874,6 @@ export default function StockDetailClient({
                 <DataStateNotice
                   state={makeDataState({
                     status: "unavailable",
-                    label: "상세 데이터 준비 중",
                     detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                   })}
                 />
@@ -3953,7 +3949,6 @@ export default function StockDetailClient({
                 <DataStateNotice
                   state={makeDataState({
                     status: "unavailable",
-                    label: "상세 데이터 준비 중",
                     detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                   })}
                 />
@@ -4011,7 +4006,6 @@ export default function StockDetailClient({
                 <DataStateNotice
                   state={makeDataState({
                     status: "unavailable",
-                    label: "상세 데이터 준비 중",
                     detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                   })}
                 />
@@ -4057,7 +4051,6 @@ export default function StockDetailClient({
                 <DataStateNotice
                   state={makeDataState({
                     status: "unavailable",
-                    label: "상세 데이터 준비 중",
                     detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                   })}
                 />
@@ -4118,7 +4111,7 @@ export default function StockDetailClient({
           tabs={stockTabs}
           activeTab={activeStockTab}
           onSelect={selectStockTab}
-          note={isEtfAsset && etfData === undefined ? "ETF 상세 로딩 중..." : !yfLoaded ? "추가 지표 로딩 중..." : !yfAvailable ? "추가 지표 준비 중" : null}
+          note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
         />
       </section>
 
@@ -4259,7 +4252,6 @@ export default function StockDetailClient({
                 <DataStateNotice
                   state={makeDataState({
                     status: "unavailable",
-                    label: "상세 데이터 준비 중",
                     detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                   })}
                 />

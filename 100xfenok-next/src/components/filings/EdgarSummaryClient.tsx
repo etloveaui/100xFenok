@@ -530,7 +530,7 @@ export default function EdgarSummaryClient({
                         disabled={!canShowSummary}
                         className={`inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold transition ${canShowSummary ? "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700" : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"}`}
                       >
-                        {canShowSummary ? "요약 보기" : "요약 준비중"}
+                        {canShowSummary ? "요약 보기" : "요약 준비 중"}
                       </button>
                       {canShowTranslation && filing.translationPath ? (
                         <a
@@ -541,7 +541,7 @@ export default function EdgarSummaryClient({
                         </a>
                       ) : (
                         <span className="inline-flex min-h-8 cursor-not-allowed items-center rounded-full border border-slate-200 bg-slate-100 px-3 text-xs font-bold text-slate-400">
-                          번역 준비중
+                          번역 준비 중
                         </span>
                       )}
                     </div>

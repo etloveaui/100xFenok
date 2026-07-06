@@ -9,6 +9,7 @@ import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
 import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, formatSignedPercentDecimal, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
+import { DATA_STATE_LABELS } from "@/lib/data-state";
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
@@ -71,6 +72,8 @@ type StockMoverHighlight = {
   name: string;
   change: number;
   tone: RegimeTone;
+  /** True for the placeholder row shown while movers are loading — routing must key off this, never off display text. */
+  isPlaceholder?: boolean;
 };
 
 type FinanceHistoryPoint = {
@@ -163,7 +166,7 @@ function maxTimestamp(values: Array<string | null | undefined>): string | null {
 }
 
 function dataStateLabel(dataReady: boolean): string {
-  return dataReady ? "동기화됨" : "불러오는 중";
+  return dataReady ? DATA_STATE_LABELS.ready : DATA_STATE_LABELS.pending;
 }
 
 function failedSourceLabel(failedCount: number): string {
@@ -619,10 +622,11 @@ function CpHomeSliceTwo() {
   const moverFallback: StockMoverHighlight[] = [{
     key: "pending",
     label: "대기",
-    ticker: "확인 중",
-    name: "실적추정 변화 데이터 확인 중",
+    ticker: DATA_STATE_LABELS.pending,
+    name: `실적추정 변화 데이터 ${DATA_STATE_LABELS.pending}`,
     change: 0,
     tone: "neutral",
+    isPlaceholder: true,
   }];
 
   return (
@@ -633,14 +637,14 @@ function CpHomeSliceTwo() {
             <p className="cp-lab__eyebrow">관찰 구역</p>
             <h2>오늘의 관찰대</h2>
           </div>
-          <span>{stockMovers.loading ? "확인 중" : formatDatePart(stockMovers.asOf)}</span>
+          <span>{stockMovers.loading ? DATA_STATE_LABELS.pending : formatDatePart(stockMovers.asOf)}</span>
         </header>
 
         <div className="cp-watch-zone__indices">
           {(stockMovers.movers.length > 0 ? stockMovers.movers : moverFallback).map((mover) => {
             return (
               <TransitionLink
-                href={mover.ticker === "확인 중" ? ROUTES.explore : ROUTES.stock(mover.ticker)}
+                href={mover.isPlaceholder ? ROUTES.explore : ROUTES.stock(mover.ticker)}
                 className="cp-watch-chip"
                 data-tone={mover.tone}
                 key={mover.key}
@@ -661,7 +665,7 @@ function CpHomeSliceTwo() {
             <p className="cp-lab__eyebrow">13F 신호</p>
             <h2>투자자 하이라이트</h2>
           </div>
-          <span>{investor.loading ? "확인 중" : investor.quarter}</span>
+          <span>{investor.loading ? DATA_STATE_LABELS.pending : investor.quarter}</span>
         </header>
 
         <div className="cp-investor-card__stack">
@@ -669,7 +673,7 @@ function CpHomeSliceTwo() {
             key: "pending",
             label: "13F 대기",
             ticker: "대기",
-            meta: "투자자 매매 동향 확인 중",
+            meta: `투자자 매매 동향 ${DATA_STATE_LABELS.pending}`,
             signal: "-",
             tone: "neutral" as RegimeTone,
           }]).map((item) => (

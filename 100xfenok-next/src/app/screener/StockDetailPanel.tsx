@@ -1253,7 +1253,6 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       <DataStateNotice
         state={makeDataState({
           status: "unavailable",
-          label: "통합 데이터 없음",
           detail: "이 종목의 가격·분류·보조 지표를 아직 찾지 못했습니다.",
         })}
         className="mt-4"
@@ -2441,7 +2440,6 @@ export default function StockDetailPanel({
       <DataStateNotice
         state={makeDataState({
           status: "pending",
-          label: "상세 데이터 확인 중",
           detail: "종목 상세 지표를 읽고 있습니다.",
         })}
         className="col-span-full border-t border-[var(--c-line-2)]"
@@ -2454,7 +2452,6 @@ export default function StockDetailPanel({
       <DataStateNotice
         state={makeDataState({
           status: "unavailable",
-          label: "상세 데이터 없음",
           detail: "이 종목의 상세 재무·추정치 데이터를 아직 찾지 못했습니다.",
         })}
         className="col-span-full border-t border-[var(--c-line-2)]"

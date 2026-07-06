@@ -25,7 +25,7 @@ import {
 } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
-import { formatAsOf } from "@/lib/data-state";
+import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
 
 function pct(value: number | null | undefined, digits = 1): string {
   return typeof value !== "number" || !Number.isFinite(value) ? "—" : formatSignedPercentDecimal(value, digits);
@@ -337,10 +337,10 @@ export default function SectorsClient() {
       : "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
 
   const trustChips: CpVerdictHeroTrustChip[] = [
-    { id: "asof", label: "기준일", value: dateLabel ?? "확인 중", freshness: true, tone: dataReady ? "neutral" : "warning" },
+    { id: "asof", label: "기준일", value: dateLabel ?? DATA_STATE_LABELS.pending, freshness: true, tone: dataReady ? "neutral" : "warning" },
     { id: "count", label: "섹터", value: `${rows.length}개` },
     ...(missingLabels.length > 0
-      ? [{ id: "missing", label: "확인 불가", value: missingLabels.join(" · "), tone: "warning" as const }]
+      ? [{ id: "missing", label: DATA_STATE_LABELS.unavailable, value: missingLabels.join(" · "), tone: "warning" as const }]
       : []),
   ];
 
@@ -348,7 +348,7 @@ export default function SectorsClient() {
     {
       rowKey: "sp500",
       name: "S&P 500",
-      etf: benchmarksReady ? "시장 기준선" : failedSources.includes("benchmarks") ? "데이터 없음" : "확인 중",
+      etf: benchmarksReady ? "시장 기준선" : failedSources.includes("benchmarks") ? DATA_STATE_LABELS.unavailable : DATA_STATE_LABELS.pending,
       benchmark: true,
       dayChange: null,
       marketState: null,
@@ -401,7 +401,7 @@ export default function SectorsClient() {
   ];
 
   const dayCoverageText = `${etfRows.length}/${rows.length}개 섹터 ETF 상세 확인`;
-  const valuationSourceLine = `가치 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "확인 중"}`;
+  const valuationSourceLine = `가치 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? DATA_STATE_LABELS.pending}`;
 
   return (
     <div className="canvas-plus cpw5-sectors-page" data-canvas-plus data-canvas-plus-sectors>

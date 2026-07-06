@@ -326,7 +326,7 @@ const TOOL_CATEGORY_ORDER: LiveToolCategory[] = ["study", "data", "search", "vis
 const TOOL_STATUS_TEXT: Record<LiveToolStatus, string> = {
   available: "사용 가능",
   locked: "잠김",
-  soon: "준비중",
+  soon: "준비 중",
 };
 
 const TOOL_REGISTRY_FALLBACK: LiveToolMetadata[] = [
@@ -3139,7 +3139,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
               type="button"
               disabled
               className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-black text-slate-400"
-              title="카메라/이미지 입력 준비중"
+              title="카메라/이미지 입력 준비 중"
             >
               CAM
             </button>

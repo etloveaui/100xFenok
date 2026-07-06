@@ -12,7 +12,7 @@ import {
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { formatAsOf, freshnessDataState, latestAsOf } from "@/lib/data-state";
+import { DATA_STATE_LABELS, formatAsOf, freshnessDataState, latestAsOf } from "@/lib/data-state";
 import type {
   MarketBondPulse,
   MarketIndexValuation,
@@ -170,7 +170,7 @@ function valuationTone(percentile: number | null): MarketTone {
 }
 
 function valuationLabel(percentile: number | null): string {
-  if (percentile === null) return "자료 없음";
+  if (percentile === null) return DATA_STATE_LABELS.unavailable;
   if (percentile >= 80) return "역사적으로 높은 구간";
   if (percentile >= 60) return "평균보다 높은 구간";
   if (percentile <= 25) return "부담이 낮은 구간";
@@ -504,7 +504,7 @@ export default function RegimeClient() {
             trustChips={[
               {
                 label: freshness.status === "stale" ? "오래된 기준일" : "기준",
-                value: formatAsOf(latestSource) ?? "확인 불가",
+                value: formatAsOf(latestSource) ?? DATA_STATE_LABELS.unavailable,
                 freshness: true,
                 tone: freshness.status === "ready" ? "positive" : freshness.status === "stale" ? "warning" : "neutral",
               },
