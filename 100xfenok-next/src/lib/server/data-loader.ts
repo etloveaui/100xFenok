@@ -1,7 +1,6 @@
 import type { Dirent } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
-import { DATA_JSON_FILES_BY_PATH } from "@/generated/static-route-manifest";
 import { normalizeForFilePath } from "@/lib/ticker";
 import type { z } from "zod";
 import {
@@ -19,6 +18,12 @@ import {
 
 const PUBLIC_DATA_ROOT = path.join(process.cwd(), "public", "data");
 const DATA_MANIFEST_PATH = path.join(PUBLIC_DATA_ROOT, "manifest.json");
+const DATA_JSON_FILES_MANIFEST_PATH = path.join(
+  process.cwd(),
+  "public",
+  "generated",
+  "data-json-files-manifest.json",
+);
 
 const SENTIMENT_FILES = [
   "aaii",
@@ -62,8 +67,11 @@ type JsonFileEntry = {
 };
 
 type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
+type DataJsonFilesByPath = Record<string, readonly DataJsonManifestEntry[]>;
 type JsonRecord = Record<string, unknown>;
 export type StockanalysisAssetKind = "etfs" | "stocks" | "financials";
+
+let dataJsonFilesByPathPromise: Promise<DataJsonFilesByPath> | null = null;
 
 async function readJson<T>(filePath: string, schema: z.ZodType<T>): Promise<T> {
   const raw = await readPublicDataFile(filePath);
@@ -149,13 +157,53 @@ function getDataPathKey(publicBasePath: string) {
   return publicBasePath.replace(/^\/data\/?/, "") || ".";
 }
 
-function getManifestJsonEntries(publicBasePath: string): DataJsonManifestEntry[] {
-  const key = getDataPathKey(publicBasePath);
-  return [...((DATA_JSON_FILES_BY_PATH as Record<string, readonly DataJsonManifestEntry[]>)[key] ?? [])];
+function parseDataJsonFilesManifest(value: unknown): DataJsonFilesByPath {
+  const manifest = asJsonRecord(value);
+  if (!manifest) throw new Error("INVALID_DATA_JSON_FILES_MANIFEST");
+
+  const parsed: Record<string, DataJsonManifestEntry[]> = {};
+  for (const [directory, entries] of Object.entries(manifest)) {
+    if (!Array.isArray(entries)) throw new Error(`INVALID_DATA_JSON_FILES_MANIFEST:${directory}`);
+
+    parsed[directory] = entries.map((entry, index) => {
+      const record = asJsonRecord(entry);
+      if (
+        !record ||
+        typeof record.name !== "string" ||
+        typeof record.sizeBytes !== "number" ||
+        !Number.isFinite(record.sizeBytes) ||
+        typeof record.updatedAt !== "string"
+      ) {
+        throw new Error(`INVALID_DATA_JSON_FILES_MANIFEST:${directory}:${index}`);
+      }
+
+      return {
+        name: record.name,
+        sizeBytes: record.sizeBytes,
+        updatedAt: record.updatedAt,
+      };
+    });
+  }
+
+  return parsed;
 }
 
-function getAllManifestJsonEntries() {
-  return Object.entries(DATA_JSON_FILES_BY_PATH as Record<string, readonly DataJsonManifestEntry[]>)
+async function getDataJsonFilesByPath(): Promise<DataJsonFilesByPath> {
+  dataJsonFilesByPathPromise ??= readPublicDataFile(DATA_JSON_FILES_MANIFEST_PATH).then((raw) =>
+    parseDataJsonFilesManifest(JSON.parse(raw) as unknown),
+  );
+  return dataJsonFilesByPathPromise;
+}
+
+async function getManifestJsonEntries(publicBasePath: string): Promise<DataJsonManifestEntry[]> {
+  const key = getDataPathKey(publicBasePath);
+  const manifest = await getDataJsonFilesByPath();
+  return [...(manifest[key] ?? [])];
+}
+
+async function getAllManifestJsonEntries() {
+  const manifest = await getDataJsonFilesByPath();
+  return Object.entries(manifest)
     .flatMap(([directory, entries]) =>
       entries.map((entry) => ({
         directory,
@@ -172,7 +220,7 @@ async function listJsonFileNames(
   try {
     entries = await readdir(absDir, { withFileTypes: true });
   } catch {
-    return getManifestJsonEntries(publicBasePath)
+    return (await getManifestJsonEntries(publicBasePath))
       .filter((entry) => entry.name !== "schema.json")
       .map((entry) => entry.name);
   }
@@ -293,7 +341,7 @@ function addCount(target: Record<string, number>, key: string) {
 
 export async function getDataAtlas() {
   const root = await getRootDataManifest();
-  const entries = getAllManifestJsonEntries()
+  const entries = (await getAllManifestJsonEntries())
     .map((entry) => {
       const category = getCategory(entry.directory, entry.name);
       const relativePath = entry.directory === "." ? entry.name : `${entry.directory}/${entry.name}`;
@@ -395,8 +443,9 @@ async function buildJsonSample(
   sampleLimit: number,
 ): Promise<{ count: number; sample: JsonFileEntry[] }> {
   const names = await listJsonFileNames(absDir, publicBasePath);
+  const manifestEntries = await getManifestJsonEntries(publicBasePath).catch(() => []);
   const manifestByName = new Map(
-    getManifestJsonEntries(publicBasePath).map((entry) => [entry.name, entry]),
+    manifestEntries.map((entry) => [entry.name, entry]),
   );
   const sampleNames = names.slice(0, sampleLimit);
   const sample = await Promise.all(
