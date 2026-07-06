@@ -38,21 +38,10 @@ const REQUIRED_SUMMARY_FIELDS = [
   ...SHORT_AXES.map((axis) => axis.summaryKey),
 ];
 
+// FenokSignalLensCard.tsx contract removed 2026-07-06 (legacy L2): the card
+// was the ?v2=0 stock branch surface; the CANVAS+ equivalents live in
+// screener/StockDetailPanel.tsx whose contract below covers the same markers.
 const UI_CONTRACTS = [
-  {
-    file: "src/app/stock/[ticker]/FenokSignalLensCard.tsx",
-    markers: [
-      "const LONG_TERM_AXIS_CONFIG",
-      "const SHORT_TERM_AXIS_CONFIG",
-      "function buildLongTermAxes",
-      "function buildShortTermAxes",
-      "FenokSignalRadarHexagon title=\"Short-term\"",
-      "FenokSignalRadarHexagon title=\"Long-term\"",
-      "Fenok Edge Score",
-      "Short Edge",
-      "Long Edge",
-    ],
-  },
   {
     file: "src/hooks/useScreenerData.ts",
     markers: [
@@ -206,7 +195,6 @@ function requireUiContracts(errors) {
     }
   }
   for (const file of [
-    "src/app/stock/[ticker]/FenokSignalLensCard.tsx",
     "src/app/screener/StockDetailPanel.tsx",
   ]) {
     const text = fs.readFileSync(path.join(appRoot, file), "utf8");
