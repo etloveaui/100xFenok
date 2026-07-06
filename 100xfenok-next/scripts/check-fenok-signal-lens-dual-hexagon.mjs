@@ -77,7 +77,10 @@ const UI_CONTRACTS = [
     ],
   },
   {
-    file: "src/components/screener/FenokSignalRadarHexagon.tsx",
+    // Chart body split out of FenokSignalRadarHexagon.tsx (ssr:false isolation,
+    // P1 bundle diet 2026-07-06); the null-honesty render contract lives in the
+    // chart implementation file.
+    file: "src/components/screener/FenokSignalRadarHexagonChart.tsx",
     markers: [
       "score: isFiniteNumber(axis.score) ? axis.score : null",
       "axis.score !== null ? axis.score : null",
