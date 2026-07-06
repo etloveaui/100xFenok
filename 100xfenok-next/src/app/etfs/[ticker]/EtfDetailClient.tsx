@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import WatchStar from "@/components/WatchStar";
-import { formatSignedPercent } from "@/lib/format";
+import { formatSignedPercent, formatCurrency, formatCurrencyCompact, type Currency } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -442,24 +442,6 @@ function fmtDateish(value: unknown): string {
   return value.trim();
 }
 
-function formatMoney(value: MaybeNumber, currency: string) {
-  if (!isFiniteNumber(value)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: Math.abs(value) >= 100 ? 0 : 2,
-  }).format(value);
-}
-
-function formatCompactMoney(value: MaybeNumber, currency: string) {
-  if (!isFiniteNumber(value)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    notation: "compact",
-    maximumFractionDigits: 2,
-  }).format(value);
-}
 
 function fmtPercentPoints(value: MaybeNumber) {
   if (!isFiniteNumber(value)) return "—";
@@ -1231,8 +1213,8 @@ function HistoryView({
       ) : null}
       <div className="grid gap-2 sm:grid-cols-3">
         <MetricCard label={`${activeLabel} 구간 수익률`} value={fmtCompactSignedPercent(historyStats.periodReturn)} note={`${activeRange} ${activeLabel} 종가 기준`} />
-        <MetricCard label="구간 고점" value={formatMoney(historyStats.max, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
-        <MetricCard label="구간 저점" value={formatMoney(historyStats.min, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label="구간 고점" value={formatCurrency(historyStats.max, currency as Currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label="구간 저점" value={formatCurrency(historyStats.min, currency as Currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
         <div className="flex h-40 items-end gap-1 overflow-hidden rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3">
@@ -1242,7 +1224,7 @@ function HistoryView({
             const height = 10 + ((close - historyStats.min) / historyStats.priceRange) * 90;
             const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
             return (
-              <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatMoney(close, currency)}`}>
+              <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatCurrency(close, currency as Currency)}`}>
                 <div className={`w-full rounded-t ${up ? "bg-[color:var(--c-up)]" : "bg-[color:var(--c-down)]"}`} style={{ height: `${height}%` }} />
                 <span className="hidden max-w-full truncate text-[9px] font-bold text-[var(--c-ink-3)] sm:block">{(date ?? "").slice(5, 7)}</span>
               </div>
@@ -1263,7 +1245,7 @@ function HistoryView({
               {rows.map((point, index) => (
                 <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-[var(--c-line)] last:border-b-0">
                   <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">{historyPointDate(point) ?? "—"}</th>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-[var(--c-ink)]">{formatMoney(historyPointClose(point), currency)}</td>
+                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-[var(--c-ink)]">{formatCurrency(historyPointClose(point), currency as Currency)}</td>
                   <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
                   <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>
                 </tr>
@@ -1433,9 +1415,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     history.length === 0 ? "가격 히스토리" : null,
   ].filter((item): item is string => Boolean(item));
   const metrics = [
-    { label: "가격", value: formatMoney(price, currency), note: fmtDateish(updateDate) },
+    { label: "가격", value: formatCurrency(price, currency as Currency), note: fmtDateish(updateDate) },
     { label: "당일 변화", value: fmtSignedPercentPoints(changePct), note: metricValue(quote.ex, exchange) },
-    { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "총 운용자산" },
+    { label: "운용자산", value: totalAssets !== null ? formatCurrencyCompact(totalAssets, currency as Currency) : rawText(overview.aum), note: "총 운용자산" },
     { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
     { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "상장일", value: inceptionDate, note: "상장 시작일" },
@@ -1443,8 +1425,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "시장 민감도" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
     { label: "PER", value: trailingPe !== null ? trailingPe.toFixed(1) : rawText(overview.peRatio), note: "최근 실적 기준" },
-    { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatMoney(quote.h52, currency) : "—", note: "최근 52주 고점" },
-    { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatMoney(quote.l52, currency) : "—", note: "최근 52주 저점" },
+    { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatCurrency(quote.h52, currency as Currency) : "—", note: "최근 52주 고점" },
+    { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatCurrency(quote.l52, currency as Currency) : "—", note: "최근 52주 저점" },
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((metric) => metric.value !== "—");
@@ -1589,7 +1571,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             ) : null}
           </div>
           <div className="stock-price" data-etf-detail-price="true">
-            <span className="big num">{formatMoney(price, currency)}</span>
+            <span className="big num">{formatCurrency(price, currency as Currency)}</span>
             {changePct !== null ? <span className={`stock-chip num ${changePct >= 0 ? "up" : "down"}`}>{fmtSignedPercentPoints(changePct)}</span> : null}
             <span className="delay">{fmtDateish(updateDate)}</span>
           </div>

@@ -24,6 +24,12 @@ import {
   PmiActivityChartPanel,
   YardeniOverlayChartPanel,
 } from "@/lib/market-valuation/charts/ledgerChartPanels";
+import {
+  formatDecimal,
+  formatInteger,
+  formatSignedDecimal,
+  formatSignedPercent,
+} from "@/lib/format";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
 import { formatAsOf as formatDataAsOf, freshnessDataState } from "@/lib/data-state";
@@ -48,16 +54,6 @@ function positionPct(value: number | null, min: number | null, max: number | nul
   return Math.min(100, Math.max(0, Math.round(((value - min) / (max - min)) * 100)));
 }
 
-function fmt(value: number | null, digits: number): string {
-  return value === null ? "—" : value.toFixed(digits);
-}
-
-function fmtSignedPct(value: number | null, digits = 1): string {
-  if (value === null) return "—";
-  const pct = value * 100;
-  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
-}
-
 function toneClass(tone: MarketTone): string {
   if (tone === "emerald") return "border-[var(--c-up)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
   if (tone === "amber") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
@@ -70,10 +66,6 @@ function toneDotClass(tone: MarketTone): string {
   if (tone === "amber") return "bg-[var(--c-warn)]";
   if (tone === "rose") return "bg-[var(--c-down)]";
   return "bg-[var(--c-line)]";
-}
-
-function fmtIndex(value: number | null): string {
-  return value === null ? "—" : value.toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
 function EmptyPanel({ label }: { label: string }) {
@@ -211,7 +203,7 @@ function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; f
                 <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
               </div>
               <div className="mt-2 flex min-w-0 items-end gap-1">
-                <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{fmt(item.value, 1)}</span>
+                <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{formatDecimal(item.value, { digits: 1 })}</span>
                 <span className="pb-1 text-[10px] font-bold uppercase text-[var(--c-ink-4)]">{item.unit}</span>
               </div>
               <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-4)]">{formatAsOf(item.releaseDate ?? item.period) ?? "—"}</p>
@@ -333,7 +325,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
-                      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{fmtIndex(trend.latestValue)}</p>
+                      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{formatInteger(trend.latestValue)}</p>
                     </div>
                     <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{trend.latestDate ?? "—"}</span>
                   </div>
@@ -367,14 +359,14 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
               {concentration.map((item) => (
                 <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label} 집중도</p>
-                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmt(item.top10Weight ?? null, 1)}%</p>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">상위 3개 {fmt(item.top3Weight ?? null, 1)}%</p>
+                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{formatDecimal(item.top10Weight ?? null, { digits: 1 })}%</p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-500">상위 3개 {formatDecimal(item.top3Weight ?? null, { digits: 1 })}%</p>
                 </div>
               ))}
               {credit ? (
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신용 스프레드</p>
-                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmtSignedPct(credit.medianSpread ?? null, 2)}</p>
+                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{formatSignedPercent(credit.medianSpread ?? null, { digits: 2 })}</p>
                   <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · 표 {doc.creditRatings?.tableCount ?? 0}개</p>
                 </div>
               ) : null}
@@ -389,7 +381,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                       <div key={row.id} className="flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 py-1 first:border-t-0">
                         <span className="min-w-0 truncate text-[11px] font-black text-slate-700">{row.label}</span>
                         <span className="shrink-0 text-[10px] font-black tabular-nums text-slate-500">
-                          YTD {fmtSignedPct(row.price?.ytd ?? null, 1)} · EPS {fmtSignedPct(row.eps?.ytd ?? null, 1)}
+                          YTD {formatSignedPercent(row.price?.ytd ?? null, { digits: 1 })} · EPS {formatSignedPercent(row.eps?.ytd ?? null, { digits: 1 })}
                         </span>
                       </div>
                     ))}
@@ -458,7 +450,7 @@ function MomentumCell({ label, value }: { label: string; value: number | null })
     <div className="rounded-xl border border-[var(--c-line)] bg-white/70 px-3 py-2">
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{label}</p>
       <p className={cx("orbitron mt-1 text-sm font-black tabular-nums", value === null ? "text-[var(--c-line-2)]" : positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
-        {fmtSignedPct(value)}
+        {formatSignedPercent(value)}
       </p>
     </div>
   );
@@ -472,7 +464,7 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
     <div className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-market-valuation-row={metric}>
       <div className="flex items-baseline justify-between">
         <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</span>
-        <span className="orbitron text-xl font-black text-[var(--c-ink)]">{fmt(band.current, digits)}</span>
+        <span className="orbitron text-xl font-black text-[var(--c-ink)]">{formatDecimal(band.current, { digits })}</span>
       </div>
       <div className="mt-1 flex items-center justify-between text-[11px] font-bold">
         <span className={cx("inline-flex items-center gap-1", meta.tone)} data-market-valuation-verdict>
@@ -481,7 +473,7 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
           {band.percentile !== null ? <span className="text-[var(--c-ink-4)]">· 역사 {band.percentile}%</span> : null}
         </span>
         <span className="tabular-nums text-[var(--c-ink-4)]">
-          {fmt(band.min, digits)} ~ {fmt(band.max, digits)}
+          {formatDecimal(band.min, { digits })} ~ {formatDecimal(band.max, { digits })}
         </span>
       </div>
       {/* 16-year band gauge: min ── avg ── max, with current marker */}
@@ -499,7 +491,7 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
       </div>
       <div className="mt-1 flex justify-between text-[9px] font-bold uppercase tracking-wider text-[var(--c-ink-2)]">
         <span>저평가</span>
-        <span>avg {fmt(band.avg, digits)}</span>
+        <span>avg {formatDecimal(band.avg, { digits })}</span>
         <span>고평가</span>
       </div>
     </div>
@@ -509,11 +501,6 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
 function averagePremiumPct(band: ValuationBand): number | null {
   if (band.current === null || band.avg === null || band.avg === 0) return null;
   return (band.current / band.avg - 1) * 100;
-}
-
-function fmtSignedNumber(value: number | null, digits = 1): string {
-  if (value === null) return "—";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
 }
 
 function buildVerdict(index: MarketIndexValuation | undefined): { headline: string; support: string; metaLabel: string; premium: number | null } {
@@ -531,7 +518,7 @@ function buildVerdict(index: MarketIndexValuation | undefined): { headline: stri
   const premium = averagePremiumPct(index.pe);
   const percentileText = percentile === null ? "위치 확인 중" : `16년 역사 ${percentile}%ile`;
   const driverText = index.driver?.detail ?? "이익과 멀티플 기여도는 보조 지표로 확인 중입니다.";
-  const premiumText = premium === null ? "평균 대비 거리는 계산 중" : `평균 대비 ${fmtSignedNumber(premium)}%`;
+  const premiumText = premium === null ? "평균 대비 거리는 계산 중" : `평균 대비 ${formatSignedDecimal(premium)}%`;
 
   return {
     headline: `${index.name} Fwd P/E는 ${percentileText} - ${meta.label} 구간입니다.`,
@@ -552,13 +539,13 @@ function HeroBandGauge({ index }: { index: MarketIndexValuation | undefined }) {
       <ValuationRow label="S&P 500 Fwd P/E" metric="sp500-pe" band={index.pe} digits={1} />
       <div className="cpw5-mv-hero-metrics">
         <span>
-          평균 대비 <strong>{premium === null ? "—" : `${fmtSignedNumber(premium)}%`}</strong>
+          평균 대비 <strong>{premium === null ? "—" : `${formatSignedDecimal(premium)}%`}</strong>
         </span>
         <span>
           ROE <strong>{index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}</strong>
         </span>
         <span>
-          현재가 <strong>{index.price === null ? "—" : index.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+          현재가 <strong>{index.price === null ? "—" : formatInteger(index.price)}</strong>
         </span>
         <span>
           드라이버 <strong>{erpText}</strong>
@@ -635,10 +622,10 @@ function SecondaryIndexTable({ indices }: { indices: MarketIndexValuation[] }) {
                 <small>{index.nameEn}</small>
               </span>
               <span role="cell" className="tabular-nums">
-                {fmt(index.pe.current, 1)}
+                {formatDecimal(index.pe.current, { digits: 1 })}
               </span>
               <span role="cell" className="tabular-nums">
-                {fmt(index.pb.current, 2)}
+                {formatDecimal(index.pb.current, { digits: 2 })}
               </span>
               <span role="cell" className="tabular-nums">
                 {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}

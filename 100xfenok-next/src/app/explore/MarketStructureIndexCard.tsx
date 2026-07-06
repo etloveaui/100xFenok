@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
+import { formatDecimal, formatPercent } from "@/lib/format";
 
 interface StructureDoc {
   generated_at?: string;
@@ -35,10 +36,6 @@ function loadStructure(): Promise<StructureDoc | null> {
       return null;
     });
   return pending;
-}
-
-function fmt(value: number | null | undefined, suffix = ""): string {
-  return typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(1)}${suffix}` : "—";
 }
 
 function labelComponent(id: string): string {
@@ -104,9 +101,9 @@ export default function MarketStructureIndexCard() {
           <div className="mv-row">
             <span className="co">
               <div className="n">{topConcentration.label} 집중도</div>
-              <div className="tk">Top10 {fmt(topConcentration.top10Weight, "%")}</div>
+              <div className="tk">Top10 {formatPercent(topConcentration.top10Weight, { digits: 1, fraction: false })}</div>
             </span>
-            <span className="pc num up">{fmt(topConcentration.top3Weight, "%")}</span>
+            <span className="pc num up">{formatPercent(topConcentration.top3Weight, { digits: 1, fraction: false })}</span>
           </div>
         ) : null}
         {!change && !topConcentration ? (
@@ -120,7 +117,7 @@ export default function MarketStructureIndexCard() {
         ) : null}
       </div>
       <div className="panel-foot">
-        CNN 약한 축 {weakSentiment.map((item) => `${labelComponent(item.id)} ${fmt(item.value)}`).join(" · ") || "—"}
+        CNN 약한 축 {weakSentiment.map((item) => `${labelComponent(item.id)} ${formatDecimal(item.value, { digits: 1 })}`).join(" · ") || "—"}
         <TransitionLink href={ROUTES.market} style={{ marginLeft: "var(--s2)", fontWeight: 900 }}>
           시장 상세
         </TransitionLink>

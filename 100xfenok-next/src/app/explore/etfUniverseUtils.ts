@@ -1,3 +1,5 @@
+import { finiteNumber, formatCurrencyCompact } from "@/lib/format";
+
 export interface EtfUniverseRecord {
   ticker?: string;
   name?: string;
@@ -93,13 +95,9 @@ export function formatNumber(value: number | null | undefined): string {
 }
 
 export function formatAum(row: EtfUniverseRecord): string {
-  if (typeof row.aum_raw === "string" && row.aum_raw.trim() && row.aum_raw.trim() !== "-") return row.aum_raw.trim();
-  const value = typeof row.aum === "number" && Number.isFinite(row.aum) ? row.aum : null;
+  const value = finiteNumber(row.aum) ?? finiteNumber(row.aum_raw);
   if (value === null) return "—";
-  if (value >= 1_000_000_000_000) return `${(value / 1_000_000_000_000).toFixed(2)}T`;
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  return value.toLocaleString("en-US");
+  return formatCurrencyCompact(value, "USD");
 }
 
 export function asOfDate(value: string | null | undefined): string {

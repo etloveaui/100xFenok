@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
+import { formatCurrencyCompact } from "@/lib/format";
 
 interface SurfaceDoc<T = EventRow> {
   fetched_at?: string | null;
@@ -401,7 +402,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <div className="text-[11px] font-black text-slate-600">가장 큰 산업</div>
               <div className="mt-1 truncate text-sm font-black text-slate-800">{topIndustry?.name ?? "-"}</div>
-              <div className="mt-0.5 text-xs font-bold text-slate-500">{topIndustry?.marketCapRaw ?? "-"}</div>
+              <div className="mt-0.5 text-xs font-bold text-slate-500">{topIndustry?.marketCap !== null && topIndustry?.marketCap !== undefined ? formatCurrencyCompact(topIndustry.marketCap, "USD") : "—"}</div>
             </div>
             <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
               <div className="text-[11px] font-black text-emerald-800">1년 상승</div>
@@ -444,7 +445,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
               <option value="up">1년 상승</option>
               <option value="down">1년 하락</option>
               <option value="profitable">순이익률 플러스</option>
-              <option value="large">시총 1조 달러 이상</option>
+              <option value="large">시총 $1T 이상</option>
             </select>
             <select
               value={industrySort}
@@ -497,7 +498,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
                   <div className="min-w-0">
                     <div className="truncate text-sm font-black">{row.name}</div>
                     <div className="mt-1 text-[11px] font-bold opacity-95">
-                      {row.stocksRaw}개 종목 · 시총 {row.marketCapRaw}
+                      {row.stocksRaw}개 종목 · 시총 {row.marketCap !== null ? formatCurrencyCompact(row.marketCap, "USD") : "—"}
                     </div>
                     <div className="mt-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-black opacity-90">
                       {industryDetailStatus(row)}
@@ -545,7 +546,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
                   <div className="text-[11px] font-black text-slate-600">산업</div>
                   <div className="mt-1 text-base font-black text-slate-900">{selectedIndustry.name}</div>
                   <div className="mt-1 text-xs font-bold text-slate-500">
-                    {selectedIndustry.stocksRaw}개 종목 · 시총 {selectedIndustry.marketCapRaw} · PER {selectedIndustry.peRatioRaw}
+                    {selectedIndustry.stocksRaw}개 종목 · 시총 {selectedIndustry.marketCap !== null ? formatCurrencyCompact(selectedIndustry.marketCap, "USD") : "—"} · PER {selectedIndustry.peRatioRaw}
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">

@@ -26,10 +26,10 @@ import {
 } from "./etfSurfaceData";
 
 type EtfSegment = "전체" | "신규" | "디지털자산" | "레버리지" | "단일종목 레버리지" | "인버스";
-type AumFilter = "전체" | "1,000억 달러 이상" | "100억 달러 이상" | "10억 달러 이상" | "10억 달러 미만" | "운용자산 미표시";
+type AumFilter = "전체" | "$100B 이상" | "$10B 이상" | "$1B 이상" | "$1B 미만" | "운용자산 미표시";
 type ExpenseFilter = "전체" | "0.05% 이하" | "0.10% 이하" | "0.50% 이하" | "1.00% 이상" | "보수 미표시";
 
-const AUM_FILTERS: readonly AumFilter[] = ["전체", "1,000억 달러 이상", "100억 달러 이상", "10억 달러 이상", "10억 달러 미만", "운용자산 미표시"];
+const AUM_FILTERS: readonly AumFilter[] = ["전체", "$100B 이상", "$10B 이상", "$1B 이상", "$1B 미만", "운용자산 미표시"];
 const EXPENSE_FILTERS: readonly ExpenseFilter[] = ["전체", "0.05% 이하", "0.10% 이하", "0.50% 이하", "1.00% 이상", "보수 미표시"];
 const PAGE_SIZE = 30;
 
@@ -38,9 +38,9 @@ function matchesAum(value: number | null | undefined, filter: AumFilter): boolea
   if (filter === "전체") return true;
   if (filter === "운용자산 미표시") return aum === null;
   if (aum === null) return false;
-  if (filter === "1,000억 달러 이상") return aum >= 100_000_000_000;
-  if (filter === "100억 달러 이상") return aum >= 10_000_000_000;
-  if (filter === "10억 달러 이상") return aum >= 1_000_000_000;
+  if (filter === "$100B 이상") return aum >= 100_000_000_000;
+  if (filter === "$10B 이상") return aum >= 10_000_000_000;
+  if (filter === "$1B 이상") return aum >= 1_000_000_000;
   return aum < 1_000_000_000;
 }
 
