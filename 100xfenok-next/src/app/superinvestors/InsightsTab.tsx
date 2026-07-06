@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import TransitionLink from "@/components/TransitionLink";
 import TickerChip from "@/components/TickerChip";
 import { ROUTES } from "@/lib/routes";
@@ -17,7 +18,30 @@ import type {
   TradesRankingData,
   PortfolioViewsData,
 } from "@/lib/superinvestors/types";
-import { loadPortfolioViews, loadFactorExposuresSummary, RiskReturnScatter, CumulativeReturnOverlay, FactorExposureRadar } from "./PortfolioCharts";
+import { loadPortfolioViews, loadFactorExposuresSummary } from "./portfolioViewsLoader";
+import { DATA_STATE_LABELS } from "@/lib/data-state";
+
+// Chart.js is client-only; load the chart bodies behind ssr:false so they stay
+// out of the Worker/SSR bundle. Fallback height matches the chart containers
+// (h-[300px]) to avoid layout jump.
+const InsightsChartLoading = () => (
+  <div className="grid h-[300px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-4)]">
+    {`차트 ${DATA_STATE_LABELS.pending}`}
+  </div>
+);
+
+const RiskReturnScatter = dynamic(() => import("./PortfolioCharts").then((mod) => mod.RiskReturnScatter), {
+  ssr: false,
+  loading: InsightsChartLoading,
+});
+const CumulativeReturnOverlay = dynamic(() => import("./PortfolioCharts").then((mod) => mod.CumulativeReturnOverlay), {
+  ssr: false,
+  loading: InsightsChartLoading,
+});
+const FactorExposureRadar = dynamic(() => import("./PortfolioCharts").then((mod) => mod.FactorExposureRadar), {
+  ssr: false,
+  loading: InsightsChartLoading,
+});
 
 // ---------------------------------------------------------------------------
 // Module-level caches
