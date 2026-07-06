@@ -5,6 +5,8 @@ import CpFeatureTile from "@/components/canvas-plus/CpFeatureTile";
 import CpHeroSearch from "@/components/canvas-plus/CpHeroSearch";
 import CpInsightCard from "@/components/canvas-plus/CpInsightCard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ Home Lab | 100xFenok",
   description: "CANVAS+ search-first home proof of concept.",

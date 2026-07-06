@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Design Gallery — 100xFenok",
   description: "150 curated design patterns for finance dashboard inspiration",

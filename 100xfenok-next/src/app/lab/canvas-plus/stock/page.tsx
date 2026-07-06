@@ -5,6 +5,8 @@ import CpCard from "@/components/canvas-plus/CpCard";
 import CpInsightCard from "@/components/canvas-plus/CpInsightCard";
 import CpValuationBand from "@/components/canvas-plus/CpValuationBand";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ Stock Lab | 100xFenok",
   description: "CANVAS+ stock report proof of concept.",

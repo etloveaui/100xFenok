@@ -4,6 +4,8 @@ import CpBadge from "@/components/canvas-plus/CpBadge";
 import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
 import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ Charts Lab | 100xFenok",
   description: "CANVAS+ V4 Lightweight Charts line, area, sparkline, and fallback proof of concept.",

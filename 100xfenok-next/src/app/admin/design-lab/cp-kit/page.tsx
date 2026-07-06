@@ -19,6 +19,8 @@ import {
   type CpDataTableColumn,
 } from "@/components/canvas-plus/kit";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin · CANVAS+ W5 Kit Lab",
   description: "CANVAS+ W5 컴포넌트 킷 눈검수용 랩 페이지",

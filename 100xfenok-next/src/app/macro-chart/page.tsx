@@ -5,6 +5,8 @@ import "@/styles/cp-w5-macro-chart.css";
 import { ROUTES } from "@/lib/routes";
 import MacroChartClient from "./MacroChartClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "매크로 차트",
   description: "100xFenok 매크로 시계열 비교 차트",

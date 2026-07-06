@@ -3,6 +3,8 @@ import Link from "next/link";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { ROUTES } from "@/lib/routes";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin Data Lab | 100xFenok",
   description: "100xFenok 관리자 데이터 상태와 레거시 Data Lab 경계를 분리한 진단 화면",

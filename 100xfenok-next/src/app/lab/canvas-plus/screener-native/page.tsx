@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import CpScreenerNativeLab from "@/components/canvas-plus/CpScreenerNativeLab";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ Native Screener Lab | 100xFenok",
   description: "CANVAS+ V3 native screener density proof of concept.",

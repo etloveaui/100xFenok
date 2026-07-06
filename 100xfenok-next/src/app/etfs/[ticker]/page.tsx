@@ -9,6 +9,8 @@ interface Props {
   params: Promise<{ ticker: string }>;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
   const symbol = normalizeForRouteTicker(ticker);

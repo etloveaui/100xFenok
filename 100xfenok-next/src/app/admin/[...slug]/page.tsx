@@ -4,6 +4,8 @@ import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
 import { publicAssetExists } from "@/lib/server/public-assets";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin Legacy Bridge",
   description: "Legacy admin 페이지를 Next.js 라우트로 브릿지합니다.",

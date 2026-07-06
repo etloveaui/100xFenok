@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import CpScreenerTanstackLabClient from "@/components/canvas-plus/CpScreenerTanstackLabClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ TanStack Screener Lab | 100xFenok",
   description: "CANVAS+ V3 TanStack Table screener density proof of concept.",

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
 import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ Stock Chart Lab | 100xFenok",
   description: "CANVAS+ V4 candlestick and volume chart proof of concept.",

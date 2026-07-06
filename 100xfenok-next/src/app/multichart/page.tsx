@@ -3,6 +3,8 @@ import AppShell from '@/components/shell/AppShell';
 import { ROUTES } from '@/lib/routes';
 import MacroChartClient from '../macro-chart/MacroChartClient';
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: '멀티차트 | 100xFenok',
   description: '여러 자산을 비교하는 멀티차트 도구',

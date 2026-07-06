@@ -5,6 +5,8 @@ import CpButton from "@/components/canvas-plus/CpButton";
 import CpCard from "@/components/canvas-plus/CpCard";
 import CpTabs from "@/components/canvas-plus/CpTabs";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "CANVAS+ UI System Lab | 100xFenok",
   description: "CANVAS+ light token and primitive lab.",

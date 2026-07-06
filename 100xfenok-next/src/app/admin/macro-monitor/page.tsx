@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin · Macro Monitor",
   description: "100xFenok 매크로 모니터 관리자 페이지",

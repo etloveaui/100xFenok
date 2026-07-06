@@ -4,6 +4,8 @@ import AppShell from "@/components/shell/AppShell";
 import { StockAnalyzerDashboard } from "@/features/stock-analyzer/components/stock-analyzer-dashboard";
 import { ROUTES } from "@/lib/routes";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Stock Analyzer",
   description: "종목 탐색과 비교를 위한 분석 대시보드",
