@@ -410,7 +410,7 @@ export default function SectorsClient() {
       </div>
 
       <CpVerdictHero
-        eyebrow="SECTORS · GICS 11개 업종 흐름"
+        eyebrow="SECTORS · GICS 기준 11개 업종 흐름"
         verdict={verdict}
         sub="S&amp;P 500 대비 초과 성과와 밸류에이션, 기관 보유 방향이 같은 편인지 한 화면에서 확인합니다."
         trustChips={trustChips}

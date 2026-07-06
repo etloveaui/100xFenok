@@ -322,7 +322,7 @@ function buildStockMoverHighlights(data: RevisionMoversData | null): StockMoverH
       key: `up-${row.ticker}`,
       label: "상향",
       ticker: row.ticker ?? "",
-      name: row.name ?? "FY+1 EPS 추정치",
+      name: row.name ?? "내년(FY+1) EPS 추정치",
       change: row.change_1w ?? 0,
       tone: "positive" as RegimeTone,
     }));
@@ -334,7 +334,7 @@ function buildStockMoverHighlights(data: RevisionMoversData | null): StockMoverH
       key: `down-${row.ticker}`,
       label: "하향",
       ticker: row.ticker ?? "",
-      name: row.name ?? "FY+1 EPS 추정치",
+      name: row.name ?? "내년(FY+1) EPS 추정치",
       change: row.change_1w ?? 0,
       tone: "negative" as RegimeTone,
     }));

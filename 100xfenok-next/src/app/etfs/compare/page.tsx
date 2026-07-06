@@ -31,7 +31,7 @@ export default async function EtfComparePage({ searchParams }: Props) {
         <section className="panel" data-etf-compare-header="true">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
-              <p className="data-shell-kicker">ETF Compare</p>
+              <p className="data-shell-kicker">ETF 비교</p>
               <h1 className="data-shell-title">ETF 겹침 비교</h1>
               <p className="data-shell-desc">
                 ETF 상세에 연결된 상위 보유 항목을 기준으로 비용, 규모, 보유 구성 겹침을 확인합니다.

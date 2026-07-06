@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
+import { DATA_STATE_LABELS } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrencyCompact } from "@/lib/format";
 
@@ -370,7 +371,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
       <section className="panel">
         <div className="mv-row">
           <span className="co">
-            <div className="n">산업 지도 확인 중</div>
+            <div className="n">{DATA_STATE_LABELS.pending}</div>
             <div className="tk">산업별 요약과 구성종목 자료를 읽고 있습니다</div>
           </span>
           <span className="pc num neutral">...</span>
@@ -393,7 +394,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
         </div>
         <div className="panel-b">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
-            <span>시장 이벤트의 산업 흐름은 이 섹터 화면에서 이어서 확인합니다.</span>
+            <span>GICS 산업명은 표준 분류명 그대로 표시합니다. 시장 이벤트의 산업 흐름은 이 섹터 화면에서 이어서 확인합니다.</span>
             <TransitionLink href={ROUTES.marketEvents} className="font-black text-brand-interactive hover:underline">
               이벤트 보기
             </TransitionLink>
