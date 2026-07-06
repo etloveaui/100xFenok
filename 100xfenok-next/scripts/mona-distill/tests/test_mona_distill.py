@@ -27,6 +27,7 @@ from worker import canonical_study_date, drain_once, enqueue_pending
 
 
 MONA_VNEXT_MODEL_OPTIONS = SCRIPT_DIR.parents[1] / "src" / "features" / "mona-vnext" / "live" / "modelOptions.ts"
+ADMIN_LIVE_TS = SCRIPT_DIR.parents[1] / "src" / "lib" / "server" / "admin-live.ts"
 
 DISTILL_REGISTRY_SYNC_SITES = [
     ("chains.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
@@ -248,6 +249,23 @@ class ChainProviderTests(unittest.TestCase):
         model_literals = re.findall(r'"(gemini-3\.1-flash-live-preview)"', text)
 
         self.assertEqual(model_literals, [expected.wire_id, expected.wire_id])
+        self.assertEqual(expected.family, "gemini")
+        self.assertNotEqual(expected.usage_tier, "disabled")
+
+    def test_admin_live_model_literal_stays_synced_with_registry(self) -> None:
+        import chains
+
+        registry_path = chains._feno_llm_registry_path()
+        chains._ensure_feno_llm_path()
+        from feno_llm.resolver import resolve
+
+        expected = resolve("gemini-live", registry_path=str(registry_path))
+        text = ADMIN_LIVE_TS.read_text(encoding="utf-8")
+        fallback_literals = re.findall(
+            r'GEMINI_LIVE_MODEL_FALLBACK\s*=\s*"(gemini-3\.1-flash-live-preview)"', text
+        )
+
+        self.assertEqual(fallback_literals, [expected.wire_id])
         self.assertEqual(expected.family, "gemini")
         self.assertNotEqual(expected.usage_tier, "disabled")
 

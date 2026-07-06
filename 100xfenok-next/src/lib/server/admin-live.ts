@@ -17,9 +17,13 @@ import {
   normalizeCoachConfig,
   type CoachConfig,
 } from "@/lib/admin-live-coach-config";
+import { resolveModelId } from "@/lib/server/model-registry-resolver";
 
 export const GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
-export const GEMINI_LIVE_MODEL = "gemini-3.1-flash-live-preview";
+// Pinned fallback; kept as the literal of record for the sync test in
+// scripts/mona-distill/tests/test_mona_distill.py (registry alias: gemini-live).
+export const GEMINI_LIVE_MODEL_FALLBACK = "gemini-3.1-flash-live-preview";
+export const GEMINI_LIVE_MODEL = resolveModelId("gemini-live", GEMINI_LIVE_MODEL_FALLBACK);
 export const GEMINI_LIVE_MODEL_RESOURCE = `models/${GEMINI_LIVE_MODEL}`;
 export const GEMINI_AUTH_TOKEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1alpha/auth_tokens";
 export const GEMINI_LIVE_WS_ENDPOINT =

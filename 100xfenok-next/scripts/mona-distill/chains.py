@@ -78,7 +78,11 @@ def _resolve_model_id(alias: str, fallback: str) -> str:
         from feno_llm.resolver import resolve
 
         return resolve(alias, registry_path=str(_feno_llm_registry_path())).wire_id
-    except Exception:
+    except Exception as exc:
+        print(
+            f"[chains] resolver failed for alias {alias!r}; using fallback {fallback!r}: {exc}",
+            file=sys.stderr,
+        )
         return fallback
 
 
