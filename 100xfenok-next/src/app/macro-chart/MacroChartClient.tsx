@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
-import { DATA_STATE_LABELS, formatAsOf, freshnessDataState } from "@/lib/data-state";
+import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
@@ -575,9 +575,33 @@ function sourceKindLabel(definition: MacroSeriesDefinition | undefined) {
   return definition.sourceKind === "stooq" ? "market-symbol" : "data-spine";
 }
 
+const MACRO_SOURCE_DISPLAY_LABELS: Record<NonNullable<MacroSeriesDefinition["sourceKind"]> | "local-json", string> = {
+  "local-json": "100x 기본 데이터",
+  stooq: "시장 심볼",
+};
+
+const MACRO_FREQUENCY_DISPLAY_LABELS: Record<MacroSeriesDefinition["frequency"], string> = {
+  daily: "일간",
+  weekly: "주간",
+  monthly: "월간",
+  quarterly: "분기",
+};
+
+const MACRO_UNIT_DISPLAY_LABELS: Record<MacroSeriesDefinition["unit"], string> = {
+  index: "지수",
+  score: "점수",
+  percent: "%",
+  spread: "스프레드",
+  usd_billion: "$B",
+  usd_million: "$M",
+  usd: "$",
+  contracts: "계약",
+};
+
 function sourceDisplayLabel(definition: MacroSeriesDefinition | undefined) {
   if (!definition) return "계산";
-  return definition.sourceKind === "stooq" ? "시장 심볼" : "Data Spine";
+  const key = definition.sourceKind ?? "local-json";
+  return MACRO_SOURCE_DISPLAY_LABELS[key] ?? "100x 기본 데이터";
 }
 
 function frequencyDisplayLabel(definition: MacroSeriesDefinition | undefined) {
@@ -585,7 +609,7 @@ function frequencyDisplayLabel(definition: MacroSeriesDefinition | undefined) {
 }
 
 function definitionMetaLabel(definition: MacroSeriesDefinition) {
-  return `${sourceDisplayLabel(definition)} · ${MACRO_GROUP_LABELS[definition.group]} · ${unitLabel(definition.unit)} · ${definition.frequency}`;
+  return `${sourceDisplayLabel(definition)} · ${MACRO_GROUP_LABELS[definition.group]} · ${MACRO_UNIT_DISPLAY_LABELS[definition.unit]} · ${MACRO_FREQUENCY_DISPLAY_LABELS[definition.frequency]}`;
 }
 
 function formatValue(value: number | null) {
@@ -1014,7 +1038,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        setLoadState({ status: "error", message: error instanceof Error ? error.message : DATA_STATE_LABELS.error });
+        // Technical detail stays in the console; users get the honest Korean label (H-2).
+        console.error("[macro-chart] series load failed", error);
+        setLoadState({ status: "error", message: "거시 지표 데이터 오류" });
       });
     return () => {
       cancelled = true;

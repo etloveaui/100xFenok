@@ -158,7 +158,7 @@ function readablePulseLabel(value: string): string {
     "S&P 500 연간": "S&P 500 연간 수익률",
     "NASDAQ 100 연간": "NASDAQ 100 연간 수익률",
   };
-  return labels[value] ?? value;
+  return labels[value] ?? "기타 신호";
 }
 
 function valuationTone(percentile: number | null): MarketTone {
@@ -344,7 +344,7 @@ function readableCadence(value: string | null): string {
     "daily/weekly/monthly": "일간/주간/월간",
     "yearly + ERP interim": "연간 + ERP 수시",
   };
-  return labels[value] ?? value;
+  return labels[value] ?? "갱신 주기 미지정";
 }
 
 function EvidenceList({ items }: { items: Pulse[] }) {

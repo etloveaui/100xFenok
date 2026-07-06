@@ -244,8 +244,7 @@ function EmptyRows({ label }: { label: string }) {
   return (
     <div className="mv-row">
       <span className="co">
-        <div className="n">표시할 데이터 없음</div>
-        <div className="tk">{label}</div>
+        <div className="n">{label}</div>
       </span>
       <span className="pc num neutral">-</span>
     </div>
