@@ -337,18 +337,6 @@ function fenokEdgeTitle(stock: ScreenerStock): string {
   ].filter(Boolean).join(" · ");
 }
 
-function convictionCallLabel(call: ScreenerStock["fenokConvictionCall"]): string {
-  return call ?? "미정";
-}
-
-function convictionTone(score: number | null, call: ScreenerStock["fenokConvictionCall"]): string {
-  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
-  if (call === "집중") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (call === "희석") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-500";
-}
-
 function signalDirectionLabel(direction: string | null | undefined): string {
   if (direction === "positive" || direction === "upside_bias") return "상";
   if (direction === "negative" || direction === "downside_bias") return "하";
@@ -370,20 +358,6 @@ function downsideRiskTone(score: number | null): string {
   if (score >= 60) return "border-amber-200 bg-amber-50 text-amber-700";
   if (score >= 50) return "border-slate-200 bg-slate-50 text-slate-500";
   return "border-emerald-200 bg-emerald-50 text-emerald-700";
-}
-
-function convictionTooltip(stock: ScreenerStock): string {
-  const lines = [FENOK_CONVICTION_DISCLOSURE];
-  const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
-    const s = typeof score === "number" && Number.isFinite(score) ? Math.round(score) : "—";
-    lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
-  };
-  push("수익성", stock.profitabilityScore, stock.profitabilityDirection);
-  push("성장", stock.growthScore, stock.growthDirection);
-  push("기술/자금", stock.technicalFlowScore, stock.technicalFlowDirection);
-  push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
-  lines.push([confidenceText(stock.fenokSignalConfidence), formatCoverageLabel(stock.fenokSignalCoverageRatio), formatAsOfLabel(stock.fenokSignalAsOf)].filter(Boolean).join(" · "));
-  return lines.join("\n");
 }
 
 function guruHoldersCount(stock: ScreenerStock): number | null {
@@ -1259,7 +1233,6 @@ function DesktopStockCard({
 }
 
 export default function ScreenerClient({
-  enableCanvasPlusPreview = false,
   initialSearch = "",
   initialSector = "",
   initialMacroContextId,
@@ -1275,8 +1248,8 @@ export default function ScreenerClient({
   initialActionFilter?: string;
   initialConnectionFilter?: string;
   initialFilters?: Partial<ScreenerFilterState>;
-  enableCanvasPlusPreview?: boolean;
 }) {
+  const canvasPlusPreview = true;
   const initialFilterValues = initialFilters ?? defaultScreenerFilterState();
   const {
     stocks: rawStocks,
@@ -2068,14 +2041,14 @@ export default function ScreenerClient({
     if (typeof window === "undefined") return;
     const frame = window.requestAnimationFrame(() => {
       if (window.innerWidth >= 768) setScaleOpen(true);
-      if (!enableCanvasPlusPreview) return;
+      if (!canvasPlusPreview) return;
       if (scaleCount > 0) setScaleOpen(true);
       if (valueCount > 0) setValueOpen(true);
       if (growthCount > 0) setGrowthOpen(true);
       if (qualityCount > 0) setQualityOpen(true);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [enableCanvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
+  }, [canvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
 
   const signalPresets: { key: string; label: string; active: boolean; onToggle: () => void }[] = [
     {
@@ -2112,10 +2085,10 @@ export default function ScreenerClient({
 
   return (
     <div
-      className={enableCanvasPlusPreview ? "canvas-plus cp-screener-service" : "data-shell-page"}
-      data-canvas-plus-screener-service={enableCanvasPlusPreview ? "true" : undefined}
+      className="canvas-plus cp-screener-service"
+      data-canvas-plus-screener-service="true"
     >
-      {enableCanvasPlusPreview ? (
+      {canvasPlusPreview ? (
         <section className="cpw4-hero" data-density="compact">
           <div className="cpw4-hero__top">
             <div className="cpw4-hero__copy">
@@ -2319,7 +2292,7 @@ export default function ScreenerClient({
         </section>
       )}
 
-      {enableCanvasPlusPreview ? (
+      {canvasPlusPreview ? (
         <section className="cpw5-verdict" data-canvas-plus-screener-verdict="true">
           <p className="cpw5-verdict__sentence">
             현재 <strong>{sorted.length.toLocaleString("ko-KR")}</strong>개 중 가격 확인{" "}
@@ -2377,8 +2350,8 @@ export default function ScreenerClient({
         </section>
       ) : null}
 
-      {screenerDataState.status !== "ready" && !(enableCanvasPlusPreview && screenerDataState.status === "partial") ? (
-        enableCanvasPlusPreview ? (
+      {screenerDataState.status !== "ready" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
+        canvasPlusPreview ? (
           <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
             <DataStateNotice state={screenerDataState} />
           </section>
@@ -2392,27 +2365,27 @@ export default function ScreenerClient({
       ) : null}
 
       <section
-        className={enableCanvasPlusPreview
+        className={canvasPlusPreview
           ? cx("cp-card cp-screener-selection-card cpw4-selection-card", selectedTickers.size === 0 && "cpw4-selection-card--empty")
           : "rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm"}
-        data-canvas-plus-screener-selection-actions={enableCanvasPlusPreview ? "true" : undefined}
+        data-canvas-plus-screener-selection-actions={canvasPlusPreview ? "true" : undefined}
       >
-        <div className={enableCanvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
-          <div className={enableCanvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
-            <p className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-slate-500"}>선택 작업</p>
-            <p className={enableCanvasPlusPreview ? "cp-screener-selection-summary" : "mt-1 text-sm font-bold text-slate-700"}>
+        <div className={canvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
+          <div className={canvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
+            <p className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-slate-500"}>선택 작업</p>
+            <p className={canvasPlusPreview ? "cp-screener-selection-summary" : "mt-1 text-sm font-bold text-slate-700"}>
               현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
               {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
             </p>
           </div>
-          <div className={enableCanvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
+          <div className={canvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
             <button
               type="button"
               onClick={allPageSelected ? deselectPageRows : selectPageRows}
               disabled={pageRows.length === 0}
-              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
-              data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
             >
               {allPageSelected ? "페이지 해제" : "페이지 선택"}
             </button>
@@ -2420,9 +2393,9 @@ export default function ScreenerClient({
               type="button"
               onClick={selectFilteredRows}
               disabled={sorted.length === 0}
-              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
-              data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
             >
               필터 전체 선택
             </button>
@@ -2430,9 +2403,9 @@ export default function ScreenerClient({
               type="button"
               onClick={clearSelectedRows}
               disabled={selectedTickers.size === 0}
-              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
-              data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
             >
               선택 해제
             </button>
@@ -2440,23 +2413,23 @@ export default function ScreenerClient({
               type="button"
               onClick={() => downloadConnectionCsv(selectedRows)}
               disabled={!connectionIndexReady || selectedRows.length === 0}
-              className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={enableCanvasPlusPreview ? "primary" : undefined}
-              data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "primary" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
             >
               선택 CSV
             </button>
             {selectedSingleStockEtfCompareHref ? (
               <TransitionLink
                 href={selectedSingleStockEtfCompareHref}
-                className={enableCanvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
-                data-variant={enableCanvasPlusPreview ? "primary" : undefined}
-                data-density={enableCanvasPlusPreview ? "compact" : undefined}
+                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
+                data-variant={canvasPlusPreview ? "primary" : undefined}
+                data-density={canvasPlusPreview ? "compact" : undefined}
               >
                 선택 ETF 비교
               </TransitionLink>
             ) : (
-              <span className={enableCanvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]"}>
+              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]"}>
                 선택 ETF 부족
               </span>
             )}
@@ -2465,7 +2438,7 @@ export default function ScreenerClient({
       </section>
 
       {/* Filter bar */}
-      {enableCanvasPlusPreview ? (
+      {canvasPlusPreview ? (
         <section className="cpw4-filter-shell" data-canvas-plus-screener-filter-deck="true">
           <button
             type="button"
@@ -2884,8 +2857,8 @@ export default function ScreenerClient({
               </span>
             </button>
             {scaleOpen && (
-              <div className={cx("mt-3 grid gap-3 sm:grid-cols-2", enableCanvasPlusPreview ? "lg:grid-cols-4" : "lg:grid-cols-5")}>
-                {!enableCanvasPlusPreview ? (
+              <div className={cx("mt-3 grid gap-3 sm:grid-cols-2", canvasPlusPreview ? "lg:grid-cols-4" : "lg:grid-cols-5")}>
+                {!canvasPlusPreview ? (
                   <label className="flex flex-col gap-1">
                     <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
                     <input
@@ -3375,21 +3348,21 @@ export default function ScreenerClient({
       )}
 
       {/* Preset selector */}
-      {!enableCanvasPlusPreview ? (
+      {!canvasPlusPreview ? (
       <div
-        className={enableCanvasPlusPreview ? "cp-card cp-screener-toolbar-card" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}
-        data-canvas-plus-screener-toolbar={enableCanvasPlusPreview ? "true" : undefined}
+        className={canvasPlusPreview ? "cp-card cp-screener-toolbar-card" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}
+        data-canvas-plus-screener-toolbar={canvasPlusPreview ? "true" : undefined}
       >
-        <div className={enableCanvasPlusPreview ? "cp-screener-toolbar-section cp-screener-preset-toolbar" : "flex flex-wrap items-center gap-2"}>
-          <span className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
+        <div className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-preset-toolbar" : "flex flex-wrap items-center gap-2"}>
+          <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
           {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => handlePresetChange(p)}
               aria-pressed={preset === p}
-              data-canvas-plus-active={enableCanvasPlusPreview ? String(preset === p) : undefined}
-              className={enableCanvasPlusPreview
+              data-canvas-plus-active={canvasPlusPreview ? String(preset === p) : undefined}
+              className={canvasPlusPreview
                 ? "cp-screener-segment"
                 : cx(
                   "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
@@ -3402,9 +3375,9 @@ export default function ScreenerClient({
             </button>
           ))}
         </div>
-        <div className={enableCanvasPlusPreview ? "cp-screener-toolbar-controls" : "flex flex-wrap items-center gap-3"}>
-          <div data-screener-view-mode-control className={enableCanvasPlusPreview ? "cp-screener-toolbar-section cp-screener-view-toolbar" : "hidden flex-wrap items-center gap-2 md:flex"}>
-            <span className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
+        <div className={canvasPlusPreview ? "cp-screener-toolbar-controls" : "flex flex-wrap items-center gap-3"}>
+          <div data-screener-view-mode-control className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-view-toolbar" : "hidden flex-wrap items-center gap-2 md:flex"}>
+            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
             {VIEW_MODE_BUTTONS.map((item) => (
               <button
                 key={item}
@@ -3412,8 +3385,8 @@ export default function ScreenerClient({
                 data-screener-view-mode-option={item}
                 onClick={() => handleViewModeChange(item)}
                 aria-pressed={viewMode === item}
-                data-canvas-plus-active={enableCanvasPlusPreview ? String(viewMode === item) : undefined}
-                className={enableCanvasPlusPreview
+                data-canvas-plus-active={canvasPlusPreview ? String(viewMode === item) : undefined}
+                className={canvasPlusPreview
                   ? "cp-screener-segment"
                   : cx(
                     "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
@@ -3426,18 +3399,18 @@ export default function ScreenerClient({
               </button>
             ))}
           </div>
-          <div data-screener-density-control className={enableCanvasPlusPreview ? "cp-screener-toolbar-section cp-screener-density-toolbar" : "flex flex-wrap items-center gap-2"}>
-            <span className={enableCanvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>밀도</span>
+          <div data-screener-density-control className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-density-toolbar" : "flex flex-wrap items-center gap-2"}>
+            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>밀도</span>
             {DENSITY_BUTTONS.map((item) => (
               <button
                 key={item}
                 type="button"
                 data-screener-density-option={item}
-                data-canvas-plus-row-height={enableCanvasPlusPreview ? DENSITY_ROW_HEIGHT[item] : undefined}
+                data-canvas-plus-row-height={canvasPlusPreview ? DENSITY_ROW_HEIGHT[item] : undefined}
                 onClick={() => handleDensityChange(item)}
                 aria-pressed={density === item}
-                data-canvas-plus-active={enableCanvasPlusPreview ? String(density === item) : undefined}
-                className={enableCanvasPlusPreview
+                data-canvas-plus-active={canvasPlusPreview ? String(density === item) : undefined}
+                className={canvasPlusPreview
                   ? "cp-screener-segment"
                   : cx(
                     "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
@@ -3456,12 +3429,12 @@ export default function ScreenerClient({
 
       {/* Results */}
       <section
-        className={enableCanvasPlusPreview
+        className={canvasPlusPreview
           ? cx("cp-card cp-screener-results-shell", !dataReady && "cp-screener-results-shell--muted")
           : cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}
-        data-canvas-plus-screener-results-shell={enableCanvasPlusPreview ? "true" : undefined}
+        data-canvas-plus-screener-results-shell={canvasPlusPreview ? "true" : undefined}
       >
-        {enableCanvasPlusPreview ? (
+        {canvasPlusPreview ? (
           <div className="cpw4-results-header">
             <div className="cpw4-results-title">
               <strong>결과 {sorted.length.toLocaleString("ko-KR")}개</strong>
@@ -3538,7 +3511,7 @@ export default function ScreenerClient({
           </div>
         ) : null}
 
-        <div className={enableCanvasPlusPreview ? "cp-screener-results-mobile space-y-3 md:hidden" : "space-y-3 md:hidden"}>
+        <div className={canvasPlusPreview ? "cp-screener-results-mobile space-y-3 md:hidden" : "space-y-3 md:hidden"}>
           {pageRows.map((stock) => {
             const expanded = expandedTicker === stock.ticker;
             const detailId = `screener-mobile-detail-${stock.ticker}`;
@@ -3550,23 +3523,23 @@ export default function ScreenerClient({
                 detailId={detailId}
                 preset={preset}
                 selected={selectedTickers.has(stock.ticker)}
-                canvasPlusPreview={enableCanvasPlusPreview}
+                canvasPlusPreview={canvasPlusPreview}
                 onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
                 onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
               />
             );
           })}
           {dataReady && pageRows.length === 0 ? (
-            <ScreenerEmptyState canvasPlusPreview={enableCanvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
+            <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
           ) : null}
         </div>
 
-        <div className={enableCanvasPlusPreview ? "cp-screener-results-body hidden md:block" : "hidden md:block"}>
+        <div className={canvasPlusPreview ? "cp-screener-results-body hidden md:block" : "hidden md:block"}>
           {viewMode === "card" ? (
             <div
               data-screener-card-grid
-              data-canvas-plus-screener-card-grid={enableCanvasPlusPreview ? "true" : undefined}
-              className={enableCanvasPlusPreview ? "cp-screener-card-grid" : "grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"}
+              data-canvas-plus-screener-card-grid={canvasPlusPreview ? "true" : undefined}
+              className={canvasPlusPreview ? "cp-screener-card-grid" : "grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"}
             >
               {pageRows.map((stock) => {
                 const expanded = expandedTicker === stock.ticker;
@@ -3579,14 +3552,14 @@ export default function ScreenerClient({
                     detailId={detailId}
                     preset={preset}
                     selected={selectedTickers.has(stock.ticker)}
-                    canvasPlusPreview={enableCanvasPlusPreview}
+                    canvasPlusPreview={canvasPlusPreview}
                     onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
                     onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                   />
                 );
               })}
               {dataReady && pageRows.length === 0 ? (
-                <ScreenerEmptyState canvasPlusPreview={enableCanvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
+                <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
               ) : null}
             </div>
           ) : (
@@ -3597,8 +3570,8 @@ export default function ScreenerClient({
               density={density}
               densityClass={densityClass}
               hasFilters={hasFilters}
-              canvasPlusPreview={enableCanvasPlusPreview}
-              enabled={enableCanvasPlusPreview}
+              canvasPlusPreview={canvasPlusPreview}
+              enabled={true}
               expandedTicker={expandedTicker}
               fallback={
                 <ScreenerDesktopTable
@@ -3608,7 +3581,7 @@ export default function ScreenerClient({
                   density={density}
                   densityClass={densityClass}
                   hasFilters={hasFilters}
-                  canvasPlusPreview={enableCanvasPlusPreview}
+                  canvasPlusPreview={canvasPlusPreview}
                   expandedTicker={expandedTicker}
                   pageRows={pageRows}
                   preset={preset}
@@ -3644,27 +3617,27 @@ export default function ScreenerClient({
 
         {/* Pagination */}
         {sorted.length > PAGE_SIZE ? (
-          <div className={enableCanvasPlusPreview ? "cp-screener-pagination" : "mt-3 flex items-center justify-between gap-3 px-2"}>
+          <div className={canvasPlusPreview ? "cp-screener-pagination" : "mt-3 flex items-center justify-between gap-3 px-2"}>
             <button
               type="button"
               onClick={() => setPage((value) => Math.max(0, value - 1))}
               disabled={safePage === 0}
-              className={enableCanvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
-              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
-              data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              className={canvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
             >
               이전
             </button>
-            <span className={enableCanvasPlusPreview ? "cp-screener-page-status" : "orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
+            <span className={canvasPlusPreview ? "cp-screener-page-status" : "orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
               {safePage + 1} / {pageCount}
             </span>
             <button
               type="button"
               onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
               disabled={safePage >= pageCount - 1}
-              className={enableCanvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
-              data-variant={enableCanvasPlusPreview ? "ghost" : undefined}
-              data-density={enableCanvasPlusPreview ? "compact" : undefined}
+              className={canvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
             >
               다음
             </button>

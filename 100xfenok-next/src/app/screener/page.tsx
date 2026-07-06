@@ -19,23 +19,16 @@ function firstParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
 
-function readFlag(value: string | string[] | undefined): boolean {
-  // P4 flip (2026-07-03 owner instruction): CANVAS+ is the default; ?v2=0 keeps the legacy escape hatch.
-  return firstParam(value) !== "0";
-}
-
 export default async function ScreenerPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialSearch = normalizeForEntityKey(firstParam(params.ticker ?? params.q));
   const initialSector = firstParam(params.sector).trim();
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   const initialFilters = parseScreenerFilterState(params);
-  const enableCanvasPlusPreview = readFlag(params.v2);
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
         <ScreenerClient
-          enableCanvasPlusPreview={enableCanvasPlusPreview}
           initialSearch={initialSearch}
           initialSector={initialSector}
           initialMacroContextId={initialMacroContextId}

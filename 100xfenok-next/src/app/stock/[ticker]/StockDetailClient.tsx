@@ -7,9 +7,8 @@ import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
 import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
-import ConnectedView from "@/components/connected/ConnectedView";
-import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
-import { bandPct, bandClass } from "@/lib/screener/bands";
+import { resolveSector, sectorLabelKo } from "@/lib/design/sectorMap";
+import { bandPct } from "@/lib/screener/bands";
 import {
   useStockDetail,
   use13FData,
@@ -30,7 +29,7 @@ import {
   edgarFilingsForTicker,
   type EdgarKoreanSummaryFilingEntry,
 } from "@/lib/edgarKoreanSummaries";
-import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
+import { renderYfTab, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
@@ -44,18 +43,9 @@ import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGa
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
 import {
-  getStockConnection,
-  getStockServices,
-  loadStockConnectionIndex,
-  loadStockServicesIndex,
-  type StockConnectionEntry,
-  type StockServicesEntry,
-} from "@/lib/data-entity-graph/stock-index";
-import {
   loadFenokSignalsSummaryMap,
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
-import FenokSignalLensCard from "./FenokSignalLensCard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -489,7 +479,6 @@ function fmtMcap(n: number): string {
 function fmtPct(n: number): string {
   return formatSignedPercent(n, { digits: 1 });
 }
-function fmtDivYield(n: number): string { return `${(n * 100).toFixed(2)}%`; }
 function fmtWholePct(n: MaybeNumber): string { return isFiniteNumber(n) ? `${n.toFixed(1)}%` : "—"; }
 function fmtWholeSignedPct(n: MaybeNumber): string { return isFiniteNumber(n) ? fmtPct(n / 100) : "—"; }
 function fmtEtfPct(n: MaybeNumber): string {
@@ -701,19 +690,6 @@ function validDetailPerBands(perBands: any) {
     return null;
   }
   return perBands as { current: number; min_8y: number; avg_8y: number; max_8y: number };
-}
-
-function perBandPositionText(current: number, min: number, max: number): string {
-  const pct = bandPct(current, min, max);
-  const cls = bandClass(pct);
-  const verdict = cls === "emerald" ? "역사적 저평가" : cls === "rose" ? "역사적 고평가" : "적정 범위";
-  return `${(pct * 100).toFixed(0)}% · ${verdict}`;
-}
-function perBandPositionColor(current: number, min: number, max: number): string {
-  const cls = bandClass(bandPct(current, min, max));
-  return cls === "emerald" ? "text-emerald-700 bg-emerald-50"
-    : cls === "rose" ? "text-rose-700 bg-rose-50"
-    : "text-slate-700 bg-slate-50";
 }
 
 type ValuationBandSummary = {
@@ -1642,19 +1618,6 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
 }
 
 // ---------------------------------------------------------------------------
-// KV
-// ---------------------------------------------------------------------------
-
-function KV({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <MetricHelp label={label} className="text-[10px] font-semibold uppercase tracking-[0.05em] text-slate-500" />
-      <span className="orbitron tabular-nums text-xs font-black text-slate-900">{value}</span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // W4 stock-tab surface redesign — shared SVG/format helpers
 // ---------------------------------------------------------------------------
 
@@ -1844,7 +1807,7 @@ function FinancialsHeroCp({
           {marginBridgePoint && estimateMarginPoints.length > 0 ? (
             <polyline points={toPointsStr([marginBridgePoint, ...estimateMarginPoints])} fill="none" stroke="var(--cp-chart-line-2)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" strokeDasharray="5 4" />
           ) : null}
-          {[...actualMarginPoints, ...estimateMarginPoints].map((p, i, arr) => (
+          {[...actualMarginPoints, ...estimateMarginPoints].map((p, i) => (
             <circle key={i} cx={p.x} cy={p.y} r={i < actualMarginPoints.length ? 3.5 : 3} fill="var(--cp-chart-line-2)" opacity={i < actualMarginPoints.length ? 1 : 0.75} />
           ))}
         </svg>
@@ -2340,13 +2303,12 @@ function EstimatesRecoCp({ yfData }: { yfData: any }) {
 // ---------------------------------------------------------------------------
 
 function OwnershipHeroCp({
-  f13Entries, ticker, yfData, displayPrice, currency,
+  f13Entries, ticker, yfData, displayPrice,
 }: {
   f13Entries: F13Entry[] | null;
   ticker: string;
   yfData: any;
   displayPrice: number | null;
-  currency: string;
 }) {
   const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
 
@@ -3062,12 +3024,10 @@ export default function StockDetailClient({
   ticker,
   assetHint,
   initialTab,
-  enableCanvasPlusPreview = false,
 }: {
   ticker: string;
   assetHint?: "stock" | "etf";
   initialTab?: StockTab;
-  enableCanvasPlusPreview?: boolean;
 }) {
   const symbol = normalizeForEntityKey(ticker);
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
@@ -3101,8 +3061,6 @@ export default function StockDetailClient({
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
-  const [connectionEntry, setConnectionEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
-  const [stockServicesEntry, setStockServicesEntry] = useState<StockServicesEntry | null | undefined>(undefined);
   const [fenokSignalLens, setFenokSignalLens] = useState<FenokSignalsSummaryRecord | null | undefined>(undefined);
   const [stockChartRange, setStockChartRange] = useState<StockChartRange>("1Y");
   const [highlightDividend, setHighlightDividend] = useState(false);
@@ -3111,36 +3069,6 @@ export default function StockDetailClient({
     setStockTab(tab);
     writeStockTabUrl(tab, mode, hash);
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve().then(() => {
-      if (!cancelled) setConnectionEntry(undefined);
-    });
-    loadStockConnectionIndex()
-      .then((index) => {
-        if (!cancelled) setConnectionEntry(getStockConnection(index, symbol));
-      })
-      .catch(() => {
-        if (!cancelled) setConnectionEntry(null);
-      });
-    return () => { cancelled = true; };
-  }, [symbol]);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve().then(() => {
-      if (!cancelled) setStockServicesEntry(undefined);
-    });
-    loadStockServicesIndex()
-      .then((index) => {
-        if (!cancelled) setStockServicesEntry(getStockServices(index, symbol));
-      })
-      .catch(() => {
-        if (!cancelled) setStockServicesEntry(null);
-      });
-    return () => { cancelled = true; };
-  }, [symbol]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3470,11 +3398,7 @@ export default function StockDetailClient({
     { label: "PBR", value: isFiniteNumber(row?.pbr) ? `${row.pbr.toFixed(2)}x` : "—", note: "장부가" },
     { label: "12M 수익률", value: returnText ?? "—", note: "후행 성과" },
   ];
-  const sectorFilterHref = row?.sector
-    ? `${ROUTES.screener}?sector=${encodeURIComponent(row.sector)}`
-    : ROUTES.screener;
-
-  if (enableCanvasPlusPreview && !isEtfOnlyAsset) {
+  if (!isEtfOnlyAsset) {
     const contextLine = [
       displayName,
       canonical ? sectorLabelKo(canonical) : null,
@@ -4030,7 +3954,7 @@ export default function StockDetailClient({
           </div>
         ) : detail ? (
           <>
-            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} currency={displayCurrency} />
+            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} />
 
             {yfAvailable ? (
               <details className="cpw4-accordion" data-stock-tab-card="ownership-yf">
@@ -4073,203 +3997,7 @@ export default function StockDetailClient({
     );
   }
 
-  return (
-    <div className="stock-shell">
-      <section className="stock-entity panel">
-        <div className="stock-entity-in">
-          <span className="stock-logo">{symbol.slice(0, 1)}</span>
-          <div className="stock-id">
-            <div className="stock-name">
-              <h1>{symbol}</h1>
-              <WatchStar ticker={symbol} className="stock-star" />
-            </div>
-            <div className="stock-meta">
-              <span className="entity-name" title={displayName}>{displayName}</span>
-              {canonical ? (
-                <>
-                  <span className="x">·</span>
-                  <span>{sectorLabelKo(canonical)}</span>
-                </>
-              ) : null}
-              {row?.sector ? (
-                <>
-                  <span className="x">·</span>
-                  <span>{row.sector}</span>
-                </>
-              ) : null}
-            </div>
-          </div>
-          <div className="stock-price">
-            <span className="big num">{priceText}</span>
-            {returnText ? <span className={`stock-chip num ${returnUp ? "up" : "down"}`}>12M {returnText}</span> : null}
-            <DataStateBadge state={priceDataState} />
-          </div>
-        </div>
-        <MarketQuickLinks className="stock-market-links" />
-        <StockTabsNav
-          symbol={symbol}
-          tabs={stockTabs}
-          activeTab={activeStockTab}
-          onSelect={selectStockTab}
-          note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
-        />
-      </section>
-
-      <div
-        id={stockPanelId(symbol, activeStockTab)}
-        role="tabpanel"
-        aria-labelledby={stockTabId(symbol, activeStockTab)}
-        tabIndex={0}
-        className="stock-body"
-      >
-        {activeStockTab === "overview" ? (
-          <div className="stock-summary-stack">
-            {yfAvailable ? (
-              <div data-stock-summary-module="summary-score">
-                <SummaryScoreCard
-	                  data={yfData}
-	                  perBand={rowPerBand}
-	                  industry={industryBench}
-	                  onAreaSelect={(tab, hash) => selectStockTab(tab, "push", hash ?? null)}
-	                />
-              </div>
-            ) : null}
-            <ValuationBandSummaryCard band={valuationBandSummary} signalLens={fenokSignalLens} />
-            {yfAvailable ? (
-              <div data-stock-summary-module="three-second-summary">
-                <ThreeSecondSummary
-                  data={yfData}
-                  perBand={rowPerBand}
-                  guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
-                  industry={industryBench}
-                />
-              </div>
-            ) : null}
-            {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
-            {!isEtfAsset ? <FenokSignalLensCard record={fenokSignalLens} /> : null}
-            {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
-            <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
-            {!isEtfAsset ? <ConnectedView ticker={symbol} entry={connectionEntry} services={stockServicesEntry} variant="page" compact /> : null}
-          </div>
-        ) : null}
-
-        {activeStockTab !== "overview" ? renderStockDataTab() : (
-          <div className="stock-overview-grid">
-        {/* LEFT RAIL (280px sticky) */}
-        <aside className="stock-side">
-          <div className="panel stock-side-panel">
-            <div className="panel-b">
-            <div className="mb-3">
-              <h1 className="text-lg font-black tracking-tight text-slate-950">{symbol}</h1>
-              <p className="text-sm font-bold text-slate-500">{row ? row.companyName : "..."}</p>
-            </div>
-            {canonical ? (
-              <div className="mb-3">
-                <TransitionLink href={sectorFilterHref} className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: sectorColor(canonical) }} />
-                  {sectorLabelKo(canonical)}
-                </TransitionLink>
-              </div>
-            ) : null}
-            {row && !rowLoading ? (
-              <div className="space-y-2 border-t border-slate-100 pt-3">
-                {/* scouter rows carry null price/ratios for non-US listings */}
-                <KV label="현재가" value={priceText} />
-                <KV label={marketCapLabel} value={marketCapText} />
-                <KV label="PER" value={isFiniteNumber(row.per) ? row.per.toFixed(1) : "—"} />
-                <KV label="PBR" value={isFiniteNumber(row.pbr) ? row.pbr.toFixed(2) : "—"} />
-                <KV label="배당률" value={isFiniteNumber(row.dividendYield) ? fmtDivYield(row.dividendYield) : "—"} />
-                <KV label="12개월 수익률" value={isFiniteNumber(row.return12m) ? fmtPct(row.return12m) : "—"} />
-                {rowPerBand ? (
-                  <div className={`rounded-lg px-2.5 py-1.5 ${perBandPositionColor(rowPerBand.current, rowPerBand.min, rowPerBand.max)}`}>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-slate-600">PER 밴드 위치</p>
-                    <p className="orbitron tabular-nums text-sm font-black">{perBandPositionText(rowPerBand.current, rowPerBand.min, rowPerBand.max)}</p>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="space-y-2">{[1,2,3,4,5,6].map((i) => <div key={i} className="h-5 w-full rounded bg-slate-200" />)}</div>
-            )}
-            {f13Entries && f13Entries.length > 0 ? (
-              <div className="mt-3 border-t border-slate-100 pt-3">
-                <a href="#guru-section" className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.06em] text-amber-700 transition hover:bg-amber-100">
-                  투자 대가 {new Set(f13Entries.map((e) => e.investor)).size}명 보유
-                </a>
-              </div>
-            ) : null}
-            </div>
-          </div>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <div className="stock-main-stack">
-          {detailLoading ? (
-            <div className="space-y-8">
-              <SkeletonSection />
-            </div>
-          ) : detail ? (
-            <>
-              <SectionCard title="핵심 스냅샷">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {[
-                    { label: "PER 밴드", value: detailPerBands ? perBandPositionText(detailPerBands.current, detailPerBands.min_8y, detailPerBands.max_8y) : "—" },
-                    { label: "FY+1 PER", value: isFiniteNumber(detail.valuation_estimates?.per?.fy1) ? `${detail.valuation_estimates.per.fy1.toFixed(1)}x` : "—" },
-                    { label: "FY+1 매출 성장", value: fmtWholeSignedPct(detail.growth_estimates?.revenue_growth?.fy1) },
-                    { label: "FY+1 EPS 성장", value: fmtWholeSignedPct(detail.growth_estimates?.eps_growth?.fy1) },
-                    { label: "최근 매출", value: fmtLarge(lastFinite(numberSeries(detail.income_statement?.revenue))) },
-                    { label: "최근 EPS", value: formatMoney(lastFinite(numberSeries(detail.per_share?.eps)), displayCurrency) },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-                      <MetricHelp label={item.label} className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500" />
-                      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 grid gap-2 sm:grid-cols-4">
-                  {[
-                    { label: "밸류", desc: "PER 밴드·수익성", tab: "statistics" as const },
-                    { label: "추정치", desc: "FY+1~3·변화", tab: "estimates" as const },
-                    { label: "재무", desc: "매출·FCF·상세", tab: "financials" as const },
-                    { label: "보유기관", desc: "13F 투자자", tab: "ownership" as const },
-                  ].map(({ label, desc, tab }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => selectStockTab(tab)}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left transition hover:border-brand-interactive hover:bg-white"
-                    >
-                      <span className="block text-[11px] font-black text-slate-800">{label}</span>
-                      <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </SectionCard>
-              <StockAuxiliaryPanel data={stockAuxData} loading={stockAuxData === undefined} currency={displayCurrency} />
-            </>
-          ) : (
-            <SectionCard>
-              <div className="py-8 text-center">
-                <DataStateNotice
-                  state={makeDataState({
-                    status: "unavailable",
-                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
-                  })}
-                />
-                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
-              </div>
-            </SectionCard>
-          )}
-
-          <footer className="stock-footer">
-            <TransitionLink href={ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-            <TransitionLink href={ROUTES.superinvestorsByTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
-          </footer>
-        </div>
-      </div>
-      )}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 function SectionCard({ title, children }: { title?: string; children: React.ReactNode }) {
@@ -4325,90 +4053,6 @@ function formatCandidateMetric(value: number | null, currency: string, kind: "mo
 
 function fmtCandidateCount(value: unknown): string {
   return isFiniteNumber(value) ? value.toLocaleString("ko-KR") : "—";
-}
-
-function stockOverviewText(value: unknown): string {
-  return rawText(value);
-}
-
-function quoteMoney(value: unknown, currency: string): string {
-  return isFiniteNumber(value) ? formatMoney(value, currency) : rawText(value);
-}
-
-function StockAuxiliaryPanel({
-  data,
-  loading,
-  currency,
-}: {
-  data: StockanalysisStockPayload | null | undefined;
-  loading: boolean;
-  currency: string;
-}) {
-  if (loading) {
-    return (
-      <SectionCard title="추가 지표 체크">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[0, 1, 2, 3].map((item) => <div key={item} className="h-20 rounded-xl bg-slate-100" />)}
-        </div>
-      </SectionCard>
-    );
-  }
-
-  if (!data) {
-    return (
-      <SectionCard title="추가 지표 체크">
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4">
-          <p className="text-sm font-semibold text-slate-500">추가 지표가 아직 준비되지 않았습니다.</p>
-        </div>
-      </SectionCard>
-    );
-  }
-
-  const overview = data.normalized?.overview ?? {};
-  const quote = data.normalized?.quote ?? {};
-  const financials = data.normalized?.financials;
-  const financialSummary = financials?.summary;
-  const annualFieldCount = Object.values(financialSummary?.annual ?? {})
-    .reduce((sum, item) => sum + (isFiniteNumber(item?.field_count) ? item.field_count : 0), 0);
-  const quarterlyFieldCount = Object.values(financialSummary?.quarterly ?? {})
-    .reduce((sum, item) => sum + (isFiniteNumber(item?.field_count) ? item.field_count : 0), 0);
-  const metrics = [
-    { label: "최근가", value: quoteMoney(quote.p, currency), note: fmtDateish(quote.u) },
-    { label: "시가총액", value: stockOverviewText(overview.marketCap), note: "추가 지표" },
-    { label: "매출", value: stockOverviewText(overview.revenue), note: stockOverviewText(overview.revenue_type).toUpperCase() },
-    { label: "순이익", value: stockOverviewText(overview.netIncome), note: "최근 12개월" },
-    { label: "EPS", value: stockOverviewText(overview.eps), note: "희석 기준" },
-    { label: "PER", value: stockOverviewText(overview.peRatio), note: "현재" },
-    { label: "Forward PER", value: stockOverviewText(overview.forwardPE), note: "시장 예상" },
-    { label: "목표가", value: stockOverviewText(overview.target), note: stockOverviewText(overview.analysts) },
-    { label: "배당", value: stockOverviewText(overview.dividend), note: "예상/최근 기준" },
-    { label: "베타", value: stockOverviewText(overview.beta), note: "시장 민감도" },
-  ].filter((item) => item.value !== "—");
-
-  return (
-    <SectionCard title="추가 지표 체크">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-500">주요 지표를 기존 분석 데이터와 교차 확인합니다.</p>
-        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-          {fmtKstMinute(data.fetched_at) ?? "—"}
-        </span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {metrics.map((metric) => (
-          <div key={`${metric.label}-${metric.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-            <MetricHelp label={metric.label} className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500" />
-            <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{metric.value}</p>
-            {metric.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{metric.note}</p> : null}
-          </div>
-        ))}
-      </div>
-      {(annualFieldCount > 0 || quarterlyFieldCount > 0) ? (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
-          재무 보강 범위: 연간 {annualFieldCount.toLocaleString("ko-KR")}개 항목 · 분기 {quarterlyFieldCount.toLocaleString("ko-KR")}개 항목
-        </div>
-      ) : null}
-    </SectionCard>
-  );
 }
 
 function FinancialCandidatePanel({

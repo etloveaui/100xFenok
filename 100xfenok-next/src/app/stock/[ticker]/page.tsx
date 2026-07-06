@@ -9,7 +9,7 @@ import StockDetailClient from "./StockDetailClient";
 
 interface Props {
   params: Promise<{ ticker: string }>;
-  searchParams?: Promise<{ tab?: string | string[]; macro?: string | string[]; v2?: string | string[] }>;
+  searchParams?: Promise<{ tab?: string | string[]; macro?: string | string[] }>;
 }
 
 const STOCK_DETAIL_TABS = ["overview", "etf", "statistics", "estimates", "financials", "ownership", "filings"] as const;
@@ -21,11 +21,6 @@ function isStockDetailInitialTab(value: string | undefined): value is StockDetai
 
 function firstParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
-}
-
-function readFlag(value: string | string[] | undefined): boolean {
-  // P4 flip (2026-07-03 owner instruction): CANVAS+ is the default; ?v2=0 keeps the legacy escape hatch.
-  return firstParam(value) !== "0";
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -47,14 +42,13 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const requestedTab = firstParam(query.tab);
   const initialTab = isStockDetailInitialTab(requestedTab) ? requestedTab : undefined;
   const initialMacroContextId = macroContextFromParam(firstParam(query.macro))?.id;
-  const enableCanvasPlusPreview = readFlag(query.v2);
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title={symbol} backHref={ROUTES.screenerTicker(symbol)}>
         {initialMacroContextId ? (
           <MacroContextCard contextId={initialMacroContextId} surface="stock" className="mb-[var(--s4)]" />
         ) : null}
-        <StockDetailClient ticker={symbol} initialTab={initialTab} enableCanvasPlusPreview={enableCanvasPlusPreview} />
+        <StockDetailClient ticker={symbol} initialTab={initialTab} />
       </AppShell>
     </div>
   );
