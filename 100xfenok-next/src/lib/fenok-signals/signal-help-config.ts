@@ -68,23 +68,23 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   profitability: makeDefaultEntry(
     "profitability",
     "수익성",
-    "기업의 이익 창출 능력과 자본 효율성을 종합한 Fenok 파생 신호예요.",
+    "기업의 이익 창출 능력과 자본 효율성을 종합한 Fenok 파생 신호입니다.",
   ),
   growth: makeDefaultEntry(
     "growth",
     "성장",
-    "향후 매출·이익 성장 잠재력을 종합한 Fenok 파생 신호예요.",
+    "향후 매출·이익 성장 잠재력을 종합한 Fenok 파생 신호입니다.",
   ),
   technicalFlow: makeDefaultEntry(
     "technicalFlow",
     "기술·자금",
-    "가격 모멘텀과 자금 흐름의 기술적 상태를 종합한 Fenok 파생 신호예요.",
+    "가격 모멘텀과 자금 흐름의 기술적 상태를 종합한 Fenok 파생 신호입니다.",
   ),
   upsideDownside: {
     key: "upsideDownside",
     label: "Fenok Edge",
     interpretation:
-      "Fenok 파생 신호로 산출한 상대적 상방/하방 기대치예요.",
+      "Fenok 파생 신호로 산출한 상대적 상방·하방 기대치입니다.",
     bands: [
       { min: 81, max: 100, label: "상방 우세", tone: "up" },
       { min: 61, max: 80, label: "상방 양호", tone: "up" },
@@ -95,18 +95,18 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   durabilityProfitability: makeDefaultEntry(
     "durabilityProfitability",
     "내구 수익성",
-    "수익성의 지속 가능성과 재무적 내구력을 종합한 Fenok 파생 신호예요.",
+    "수익성의 지속 가능성과 재무적 내구력을 종합한 Fenok 파생 신호입니다.",
   ),
   upsidePotential: makeDefaultEntry(
     "upsidePotential",
     "상승 잠재력",
-    "Fenok 파생 신호로 산출한 상대적 상승 잠재력이에요.",
+    "Fenok 파생 신호로 산출한 상대적 상승 잠재력입니다.",
   ),
   downsidePressure: {
     key: "downsidePressure",
     label: "하락 압력",
     interpretation:
-      "Fenok 파생 신호로 산출한 상대적 하락 압력 축이에요. 점수가 높을수록 위험이 커요.",
+      "Fenok 파생 신호로 산출한 상대적 하락 압력 축입니다. 점수가 높을수록 위험이 큽니다.",
     bands: [
       { min: 81, max: 100, label: "위험", tone: "down" },
       { min: 61, max: 80, label: "주의", tone: "warn" },
@@ -117,33 +117,33 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   marketSimilarity: makeDefaultEntry(
     "marketSimilarity",
     "동종군 유사도",
-    "동종 섹터/산업군의 대표 종목들과 움직임이 얼마나 비슷한지 산출한 Fenok 파생 축이에요.",
+    "동종 섹터·산업군의 대표 종목들과 움직임이 얼마나 비슷한지 산출한 Fenok 파생 축입니다.",
   ),
   sp500TrackingSimilarity: makeDefaultEntry(
     "sp500TrackingSimilarity",
     "S&P500 추종 유사도",
-    "1년 일별 수익률 기준으로 S&P500 움직임과 얼마나 비슷하게 움직였는지 산출한 Fenok 파생 축이에요.",
+    "1년 일별 수익률 기준으로 S&P500 움직임과 얼마나 비슷하게 움직였는지 산출한 Fenok 파생 축입니다.",
   ),
   technicalIndicatorProxy: makeDefaultEntry(
     "technicalIndicatorProxy",
     "기술 지표",
-    "RSI, 이동평균 위치, 20/60일 수익률, 거래량 확장을 묶은 Fenok 기술 지표 프록시예요.",
+    "상대강도지수(RSI), 이동평균 위치, 20·60일 수익률, 거래량 확장을 묶은 Fenok 기술 지표 프록시입니다.",
   ),
   netOptionsProxy: makeDefaultEntry(
     "netOptionsProxy",
     "옵션 프록시",
-    "OCC 공개 Volume Query의 콜·풋 거래량만 이용한 Fenok 파생 프록시예요. 실제 옵션 플로우, OPRA, 매수·매도 주체 방향은 아니에요.",
+    "미국 옵션청산회사(OCC)가 공개하는 옵션 거래량 조회 데이터의 콜·풋 거래량만 이용한 Fenok 파생 프록시입니다. 실제 옵션 자금 흐름이나 옵션 가격 통합 데이터(OPRA), 매수·매도 주체 방향은 아닙니다.",
   ),
   offExchangeActivityProxy: makeDefaultEntry(
     "offExchangeActivityProxy",
     "장외거래",
-    "FINRA 계열 공개 데이터에서 파생한 장외거래 활동 프록시예요. 실시간 다크풀 의도 신호로 해석하면 안 돼요.",
+    "미국 금융산업규제청(FINRA) 계열 공개 데이터에서 파생한 장외거래 활동 프록시입니다. 실시간 다크풀 의도 신호로 해석하면 안 됩니다.",
   ),
   shortPressureProxy: {
     key: "shortPressureProxy",
     label: "숏 압력",
     interpretation:
-      "공개 short volume/short activity 데이터를 이용한 Fenok 파생 압력 축이에요. 점수가 높을수록 숏 관련 압력이 큰 쪽이에요.",
+      "공개된 공매도 거래량·공매도 활동 데이터를 이용한 Fenok 파생 압력 축입니다. 점수가 높을수록 공매도 관련 압력이 큰 쪽입니다.",
     bands: [
       { min: 81, max: 100, label: "높음", tone: "down" },
       { min: 61, max: 80, label: "주의", tone: "warn" },
@@ -154,17 +154,17 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   directNewsToneProxy: makeDefaultEntry(
     "directNewsToneProxy",
     "뉴스 톤",
-    "허용된 뉴스/문서 소스에서 파생한 직접 뉴스 톤 프록시예요. 소셜 원문 수집이 승인되기 전까지는 저신뢰 보조축이에요.",
+    "허용된 뉴스·문서 소스에서 파생한 직접 뉴스 톤 프록시입니다. 소셜 원문 수집이 승인되기 전까지는 신뢰도가 낮은 보조축입니다.",
   ),
   volumeLiquidityTrend: makeDefaultEntry(
     "volumeLiquidityTrend",
     "거래량·유동성",
-    "로컬 OHLCV 가격/거래량 데이터에서 파생한 거래량·유동성 추세 프록시예요. 실제 주문 흐름은 아니에요.",
+    "로컬 시가·고가·저가·종가·거래량(OHLCV) 데이터에서 파생한 거래량·유동성 추세 프록시입니다. 실제 주문 흐름은 아닙니다.",
   ),
   shortTermRelativeStrength: makeDefaultEntry(
     "shortTermRelativeStrength",
     "상대 강도",
-    "로컬 20일/60일 수익률과 SPY 대비 상대 강도를 이용한 Fenok 파생 프록시예요. 예측 신호가 아니에요.",
+    "로컬 20일·60일 수익률과 S&P500 ETF(SPY) 대비 상대 강도를 이용한 Fenok 파생 프록시입니다. 예측 신호가 아닙니다.",
   ),
 };
 
@@ -198,10 +198,10 @@ export function getDisplaySignalInterpretation(
   const entry = getSignalHelpEntry(key);
   if (!invertedDisplay) return entry.interpretation;
   if (key === "downsidePressure") {
-    return "화면 점수는 하락 압력 원점수를 뒤집어 표시한 점수예요. 높을수록 하락 위험이 낮다는 뜻이에요.";
+    return "화면 점수는 하락 압력 원점수를 뒤집어 표시한 점수입니다. 높을수록 하락 위험이 낮다는 뜻입니다.";
   }
   if (key === "shortPressureProxy") {
-    return "화면 점수는 숏 볼륨 압력 원점수를 뒤집어 표시한 점수예요. 높을수록 숏 압력이 낮다는 뜻이에요.";
+    return "화면 점수는 공매도 거래량 압력 원점수를 뒤집어 표시한 점수입니다. 높을수록 공매도 압력이 낮다는 뜻입니다.";
   }
   return entry.interpretation;
 }
