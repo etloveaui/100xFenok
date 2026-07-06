@@ -5,6 +5,7 @@ import json
 import re
 import sys
 import tempfile
+import types
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -294,6 +295,77 @@ class ChainProviderTests(unittest.TestCase):
             with self.subTest(filename=filename, needle=needle):
                 text = (SCRIPT_DIR / filename).read_text(encoding="utf-8")
                 self.assertEqual(text.count(needle), expected_count)
+
+    def test_gpt_adapter_routes_through_feno_llm_facade(self) -> None:
+        import chains
+
+        seen: dict[str, object] = {}
+
+        class FakeFacade:
+            @staticmethod
+            def generate_text(prompt: str, **kwargs):
+                seen["prompt"] = prompt
+                seen["kwargs"] = kwargs
+                return types.SimpleNamespace(text="  {\"ok\": true}  ", usage={}, elapsed_ms=11, error=None)
+
+        direct_auth = types.SimpleNamespace(
+            get_codex_token=lambda: (_ for _ in ()).throw(AssertionError("direct codex auth used")),
+            codex_sse_request=lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("direct codex transport used")),
+        )
+        with patch.dict(sys.modules, {"_codex_auth": direct_auth}), \
+             patch.object(chains, "_load_feno_llm_facade", return_value=FakeFacade(), create=True):
+            text = chains.make_gpt_adapter("gpt-test")("system prompt", "user prompt")
+
+        self.assertEqual(text, "  {\"ok\": true}  ")
+        self.assertEqual(seen["prompt"], "user prompt")
+        self.assertEqual(
+            seen["kwargs"],
+            {"model": "gpt-test", "provider": "openai", "system": "system prompt"},
+        )
+
+    def test_gpt_adapter_preserves_fallback_error_surface(self) -> None:
+        import chains
+
+        class FakeFacade:
+            @staticmethod
+            def generate_text(_prompt: str, **_kwargs):
+                return types.SimpleNamespace(text="", usage={}, elapsed_ms=0, error=types.SimpleNamespace(code="no_auth"))
+
+        with patch.object(chains, "_load_feno_llm_facade", return_value=FakeFacade(), create=True):
+            with self.assertRaisesRegex(RuntimeError, "codex token unavailable"):
+                chains.make_gpt_adapter("gpt-test")("system", "prompt")
+
+    def test_mimo_adapter_routes_through_feno_llm_facade_json_mode(self) -> None:
+        import chains
+
+        seen: dict[str, object] = {}
+
+        class FakeFacade:
+            @staticmethod
+            def generate_text(prompt: str, **kwargs):
+                seen["prompt"] = prompt
+                seen["kwargs"] = kwargs
+                return types.SimpleNamespace(text="{\"ok\": true}", usage={}, elapsed_ms=13, error=None)
+
+        direct_mimo = types.SimpleNamespace(
+            call_mimo=lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("direct mimo helper used")),
+        )
+        with patch.dict(sys.modules, {"_mimo_api": direct_mimo}), \
+             patch.object(chains, "_load_feno_llm_facade", return_value=FakeFacade(), create=True), \
+             patch.object(chains, "_resolve_model_id", return_value="mimo-v2.5"):
+            text = chains.mimo_v25_adapter("system prompt", "user prompt")
+
+        self.assertEqual(text, "{\"ok\": true}")
+        self.assertEqual(seen["prompt"], "user prompt")
+        self.assertEqual(
+            seen["kwargs"],
+            {
+                "model": "mimo-v2.5",
+                "provider": "mimo",
+                "system": "system prompt",
+                "response_format": "json",
+            },
+        )
 
     def test_nightly_job_reaches_provider(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

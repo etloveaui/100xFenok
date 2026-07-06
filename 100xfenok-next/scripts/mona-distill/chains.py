@@ -1,9 +1,8 @@
 """Real LLM provider chains for the Mona distill engine (Slice 2).
 
-Calls Asset_Allocator provider modules directly (spec v3 decision). Each
-adapter is (system, prompt) -> raw text; ChainProvider walks the chain and
-returns the first non-empty answer. All-fail raises ChainExhaustedError, which
-the worker converts into a soft-fail alert (previous profile preserved).
+Each adapter is (system, prompt) -> raw text; ChainProvider walks the chain
+and returns the first non-empty answer. All-fail raises ChainExhaustedError,
+which the worker converts into a soft-fail alert (previous profile preserved).
 """
 from __future__ import annotations
 
@@ -70,6 +69,13 @@ def _ensure_feno_llm_path() -> Path:
     if path_str not in sys.path:
         sys.path.insert(0, path_str)
     return path
+
+
+def _load_feno_llm_facade():
+    _ensure_feno_llm_path()
+    from feno_llm import facade  # noqa: PLC0415
+
+    return facade
 
 
 def _resolve_model_id(alias: str, fallback: str) -> str:
@@ -197,23 +203,19 @@ def call_gemini_flash_lite(system: str, prompt: str) -> str:
 
 def make_gpt_adapter(model_id: str) -> Adapter:
     def call(system: str, prompt: str) -> str:
-        _ensure_aa_path()
-        from _codex_auth import codex_sse_request, get_codex_token
-
-        token, account_id = get_codex_token()
-        if not token:
-            raise RuntimeError("codex token unavailable")
-        payload = {
-            "model": model_id,
-            "stream": True,
-            "store": False,
-            "instructions": system,
-            "input": [{"role": "user", "content": [{"type": "input_text", "text": prompt}]}],
-        }
-        text, _usage, err = codex_sse_request(payload, token=token, account_id=account_id, auto_refresh=True)
-        if err or not text.strip():
-            raise RuntimeError(f"{model_id}: {err or 'empty response'}")
-        return text
+        result = _load_feno_llm_facade().generate_text(
+            prompt,
+            model=model_id,
+            provider="openai",
+            system=system,
+        )
+        if result.error:
+            if result.error.code == "no_auth":
+                raise RuntimeError("codex token unavailable")
+            raise RuntimeError(f"{model_id}: {result.error.code}")
+        if not result.text.strip():
+            raise RuntimeError(f"{model_id}: empty response")
+        return result.text
 
     return call
 
@@ -229,14 +231,19 @@ def call_kimi_thinking(system: str, prompt: str) -> str:
     return text
 
 
-def call_mimo_v25(system: str, prompt: str) -> str:
-    _ensure_aa_path()
-    from _mimo_api import call_mimo
-
-    text, _meta = call_mimo(prompt, model=_resolve_model_id("mimo-2.5", "mimo-v2.5"), system=system, response_format="json")
-    if not text.strip():
+def mimo_v25_adapter(system: str, prompt: str) -> str:
+    result = _load_feno_llm_facade().generate_text(
+        prompt,
+        model=_resolve_model_id("mimo-2.5", "mimo-v2.5"),
+        provider="mimo",
+        system=system,
+        response_format="json",
+    )
+    if result.error:
+        raise RuntimeError(f"mimo: {result.error.code}")
+    if not result.text.strip():
         raise RuntimeError("mimo: empty response")
-    return text
+    return result.text
 
 
 def call_deepseek_v4_pro(system: str, prompt: str) -> str:
@@ -295,7 +302,7 @@ def interrupt_chain() -> ChainProvider:
         [
             (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
             (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-            (_resolve_model_id("mimo-2.5", "mimo-v2.5"), call_mimo_v25),
+            (_resolve_model_id("mimo-2.5", "mimo-v2.5"), mimo_v25_adapter),
         ]
     )
 
