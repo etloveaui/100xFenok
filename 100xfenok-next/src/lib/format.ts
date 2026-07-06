@@ -85,6 +85,29 @@ export function formatBasisPoints(value: unknown, options: NumberOptions = {}): 
   return `${fixedLocale(n, digits)}bp`;
 }
 
+export function formatCompactNumber(value: unknown, empty = "—"): string {
+  const n = finiteNumber(value);
+  if (n === null) return empty;
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000_000) {
+    const scaled = n / 1_000_000_000_000;
+    return `${fixedLocale(scaled, compactDigits(scaled))}T`;
+  }
+  if (abs >= 1_000_000_000) {
+    const scaled = n / 1_000_000_000;
+    return `${fixedLocale(scaled, compactDigits(scaled))}B`;
+  }
+  if (abs >= 1_000_000) {
+    const scaled = n / 1_000_000;
+    return `${fixedLocale(scaled, compactDigits(scaled))}M`;
+  }
+  if (abs >= 1_000) {
+    const scaled = n / 1_000;
+    return `${fixedLocale(scaled, compactDigits(scaled))}K`;
+  }
+  return fixedLocale(n, 0);
+}
+
 function compactDigits(scaled: number): number {
   return Math.abs(scaled) >= 100 ? 0 : 1;
 }

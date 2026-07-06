@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TickerChip from "@/components/TickerChip";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
+import { formatCurrencyCompact } from "@/lib/format";
 
 interface TrendDoc {
   metadata?: { global_latest_quarter?: string };
@@ -74,12 +75,6 @@ function loadHedge(): Promise<HedgeDoc | null> {
       return null;
     });
   return hedgePending;
-}
-
-function fmtAum(value: number): string {
-  if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(1)}T`;
-  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(0)}B`;
-  return `$${(value / 1_000_000).toFixed(0)}M`;
 }
 
 const SPARK_W = 120;
@@ -158,7 +153,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
             ) : null}
           </p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="orbitron text-sm font-black text-slate-900">{fmtAum(latestSnap.aum)}</span>
+            <span className="orbitron text-sm font-black text-slate-900">{formatCurrencyCompact(latestSnap.aum, "USD")}</span>
             <span className="text-[10px] font-bold text-slate-500">{latestSnap.quarter}</span>
           </div>
           <div className="mt-0.5 flex gap-3 text-[10px] font-bold text-slate-500">

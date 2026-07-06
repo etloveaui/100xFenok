@@ -20,6 +20,7 @@ import type {
 } from "@/lib/superinvestors/types";
 import { loadPortfolioViews, loadFactorExposuresSummary } from "./portfolioViewsLoader";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
+import { formatCurrencyCompact } from "@/lib/format";
 
 // Chart.js is client-only; load the chart bodies behind ssr:false so they stay
 // out of the Worker/SSR bundle. Fallback height matches the chart containers
@@ -122,13 +123,6 @@ function loadConvictionEntries(): Promise<ConvictionEntriesData | null> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function fmtUSD(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000_000) return `${n >= 0 ? "" : "-"}$${(abs / 1_000_000_000).toFixed(1)}B`;
-  if (abs >= 1_000_000) return `${n >= 0 ? "" : "-"}$${(abs / 1_000_000).toFixed(0)}M`;
-  return `${n >= 0 ? "" : "-"}$${Math.round(abs).toLocaleString()}`;
-}
 
 function isTicker(s: string): boolean {
   return /^[A-Z0-9.]+$/.test(s) && s.length <= 6;
@@ -394,7 +388,7 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-emerald-800">매수 참여</p>
                 <p className="orbitron text-lg font-black tabular-nums text-slate-950">{row.investors_count}명</p>
               </div>
-              <p className="orbitron text-[11px] font-black tabular-nums text-emerald-800">{fmtUSD(row.amount)}</p>
+              <p className="orbitron text-[11px] font-black tabular-nums text-emerald-800">{formatCurrencyCompact(row.amount, "USD")}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-white/70">
               <div className="h-1.5 rounded-full bg-emerald-700" style={{ width: `${Math.max(8, amountIntensity * 100)}%` }} />
@@ -448,7 +442,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   <span className={`orbitron tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
-                    {fmtUSD(r.total_value_change)}
+                    {formatCurrencyCompact(r.total_value_change, "USD")}
                   </span>
                 </td>
               </tr>
@@ -499,7 +493,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
                   <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-bold text-slate-900">{fmtUSD(r.position_value)}</span>
+                  <span className="orbitron tabular-nums text-[10px] font-bold text-slate-900">{formatCurrencyCompact(r.position_value, "USD")}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{(r.position_weight * 100).toFixed(2)}%</span>
@@ -557,7 +551,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
                   <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{fmtUSD(r.market_value)}</span>
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.market_value, "USD")}</span>
                 </td>
               </tr>
             ))}
@@ -607,7 +601,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
                   <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{fmtUSD(r.value)}</span>
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.value, "USD")}</span>
                 </td>
               </tr>
             ))}
@@ -759,7 +753,7 @@ export default function InsightsTab() {
           {/* 0c. Fama-French 파생 팩터 틸트 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">팩터 틸트 레이더</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">FF-derived factor tilt · confidence · coverage · as_of</p>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">FF 파생 팩터 틸트 · 확신도 · 커버리지 · 기준일 — 파생 추정치로 해석합니다</p>
             {fx ? <FactorExposureRadar data={fx} /> : <UnavailablePanel label="팩터 틸트" />}
           </div>
 

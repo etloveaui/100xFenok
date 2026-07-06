@@ -9,6 +9,8 @@ import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { FactorExposureRecord, FactorExposuresSummaryData, PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
+import { formatAsOf } from "@/lib/market-valuation/freshness";
+import { formatPercent } from "@/lib/format";
 
 type MaybeNumber = number | null | undefined;
 const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
@@ -952,11 +954,6 @@ const FACTOR_RADAR_AXES = [
   { label: "Momentum", scoreKey: "momentumScore", betaKey: "momentumBeta" },
 ] as const;
 
-function factorPct(value: number | null | undefined, digits = 0): string {
-  if (!isFiniteNumber(value)) return "—";
-  return `${(value * 100).toFixed(digits)}%`;
-}
-
 function confidenceKo(value: string | null | undefined): string {
   if (value === "high") return "신뢰 높음";
   if (value === "medium") return "신뢰 보통";
@@ -965,11 +962,12 @@ function confidenceKo(value: string | null | undefined): string {
 }
 
 function factorTitle(record: FactorExposureRecord): string {
+  const asOf = formatAsOf(record.asOf);
   return [
-    "FF-derived factor tilt",
+    "FF 파생 팩터 틸트",
     confidenceKo(record.confidence),
-    `coverage=${factorPct(record.coverageRatio)}`,
-    record.asOf ? `as_of=${record.asOf}` : null,
+    `커버리지 ${formatPercent(record.coverageRatio, { digits: 0 })}`,
+    asOf ? `기준일 ${asOf}` : null,
   ].filter(Boolean).join(" · ");
 }
 
@@ -1051,10 +1049,10 @@ export function FactorExposureRadar({ data }: FactorExposureRadarProps) {
           className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-700"
           title={factorTitle(selected)}
         >
-          FF-derived factor tilt
+          FF 파생 팩터 틸트
         </span>
         <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
-          {confidenceKo(selected.confidence)} · coverage {factorPct(selected.coverageRatio)} · {selected.asOf ?? data.coverage?.factor_aligned_as_of ?? "as_of 미정"}
+          {confidenceKo(selected.confidence)} · 커버리지 {formatPercent(selected.coverageRatio, { digits: 0 })} · 기준일 {formatAsOf(selected.asOf ?? data.coverage?.factor_aligned_as_of) ?? "미정"}
         </span>
       </div>
 
