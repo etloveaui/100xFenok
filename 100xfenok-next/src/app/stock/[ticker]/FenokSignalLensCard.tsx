@@ -5,6 +5,7 @@ import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo as axisDirectionKo } from "@/lib/fenok-signals/direction-ko";
+import { DATA_STATE_LABELS, formatAsOf as formatDataAsOf } from "@/lib/data-state";
 
 interface FenokSignalLensCardProps {
   record: FenokSignalsSummaryRecord | null | undefined;
@@ -141,7 +142,7 @@ const LEGACY_SIGNALS: LegacySignalConfig[] = [
     label: "상방 잠재력",
     scoreKey: "upsidePotentialScore",
     directionKey: "upsidePotentialScore",
-    interpretation: "상대적 상방 기대를 요약한 파생 프록시",
+    interpretation: "상대적 상방 기대를 요약한 보조 신호",
     helpKey: "upsidePotential",
   },
   {
@@ -241,7 +242,7 @@ function legacyMetricLabel(signal: LegacySignalConfig): string {
 
 function legacyMetricInterpretation(signal: LegacySignalConfig): string {
   if (signal.key === "downsidePressure" && signal.inverted) return "하락 압력을 뒤집어 표시한 점수, 높을수록 위험 낮음";
-  if (signal.key === "shortPressureProxy" && signal.inverted) return "숏 볼륨 압력을 뒤집어 표시한 점수, 높을수록 압력 낮음";
+  if (signal.key === "shortPressureProxy" && signal.inverted) return "공매도 거래량 압력을 뒤집어 표시한 점수입니다. 높을수록 압력 낮음으로 해석합니다.";
   return signal.interpretation;
 }
 
@@ -305,15 +306,12 @@ function aggregateScore(metrics: SignalMetric[], fallback: unknown): number | nu
   return count ? total / count : null;
 }
 
-function formatAsOf(value: string | null | undefined): string {
-  if (!value) return "미확인";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
-  return date.toISOString().slice(0, 10);
+function formatSignalAsOf(value: string | null | undefined): string {
+  return formatDataAsOf(value) ?? DATA_STATE_LABELS.unavailable;
 }
 
 function formatCoverage(value: number | null | undefined): string {
-  if (!isFiniteNumber(value)) return "미확인";
+  if (!isFiniteNumber(value)) return DATA_STATE_LABELS.unavailable;
   return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
 }
 
@@ -346,7 +344,7 @@ function signalToneForScore(score: number | null): string {
 }
 
 function signalCoverageLabel(value: number | null | undefined): string {
-  return `coverage ${formatCoverage(value)}`;
+  return `커버리지 ${formatCoverage(value)}`;
 }
 
 function metricFromConfig(record: FenokSignalsSummaryRecord, signal: SignalConfig): SignalMetric {
@@ -541,7 +539,7 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
             </span>
           </div>
           <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-            as_of {formatAsOf(record.asOf)} · coverage {formatCoverage(record.coverageRatio)}
+            기준일 {formatSignalAsOf(record.asOf)} · 커버리지 {formatCoverage(record.coverageRatio)}
           </span>
         </div>
 
@@ -600,7 +598,7 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
       </div>
 
       <p className="border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-4 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
-        Fenok 파생 프록시 · 매수 권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+        Fenok 보조 신호 · 매수 권유 아님 · 기준일 {formatSignalAsOf(record.asOf)} · 커버리지{" "}
         {formatCoverage(record.coverageRatio)}
       </p>
     </section>
@@ -721,7 +719,7 @@ const SHORT_TERM_AXIS_CONFIG: ShortTermAxisConfig[] = [
     scoreKey: "volumeLiquidityTrendScore",
     directionKey: "volumeLiquidityTrendDirection",
     helpKey: "volumeLiquidityTrend",
-    tooltipNote: "로컬 OHLCV 프록시, 실제 주문 흐름 아님",
+    tooltipNote: "시가·고가·저가·종가·거래량 기반 보조 신호입니다. 실제 주문 체결 흐름을 뜻하지 않습니다.",
   },
   {
     key: "shortTermRelativeStrength",
@@ -730,23 +728,23 @@ const SHORT_TERM_AXIS_CONFIG: ShortTermAxisConfig[] = [
     scoreKey: "shortTermRelativeStrengthScore",
     directionKey: "shortTermRelativeStrengthDirection",
     helpKey: "shortTermRelativeStrength",
-    tooltipNote: "20일/60일 SPY 대비 상대 강도 프록시",
+    tooltipNote: "20일·60일 기준 S&P 500 대비 상대 강도를 비교한 보조 신호입니다.",
   },
   {
     key: "netOptionsProxy",
     spokeLabel: "옵션",
-    fullLabel: "옵션 활동 프록시",
+    fullLabel: "옵션 활동 보조 신호",
     scoreKey: "netOptionsProxyScore",
     helpKey: "netOptionsProxy",
-    tooltipNote: "OCC 옵션 거래량 편향, 실제 플로우 아님",
+    tooltipNote: "미국 옵션청산회사 공개 거래량을 바탕으로 옵션 쏠림을 추정합니다. 실제 주문 흐름을 뜻하지 않습니다.",
   },
   {
     key: "offExchangeActivityProxy",
     spokeLabel: "장외거래",
-    fullLabel: "장외거래 활동 프록시",
+    fullLabel: "장외 거래 활동 보조 신호",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
-    tooltipNote: "FINRA 공개 데이터 파생, 다크풀/방향 신호 아님",
+    tooltipNote: "미국 금융산업규제청 공개 장외 거래 데이터를 바탕으로 만든 보조 신호입니다. 방향성 확정 신호가 아닙니다.",
   },
   {
     key: "shortPressureProxy",
@@ -755,7 +753,7 @@ const SHORT_TERM_AXIS_CONFIG: ShortTermAxisConfig[] = [
     scoreKey: "shortPressureProxyScore",
     helpKey: "shortPressureProxy",
     invertScore: true,
-    tooltipNote: "숏 볼륨 압력을 뒤집어 표시한 점수, 높을수록 압력 낮음",
+    tooltipNote: "공매도 거래량 압력을 뒤집어 표시한 점수입니다. 높을수록 압력 낮음으로 해석합니다.",
   },
 ];
 
@@ -1058,13 +1056,13 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
         </div>
 
         <p className="text-[10px] font-bold text-[var(--c-ink-3)]">
-          Fenok 파생 신호 · 매수 권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+          Fenok 보조 신호 · 매수 권유 아님 · 기준일 {formatSignalAsOf(record.asOf)} · 커버리지{" "}
           {formatCoverage(coverage)}
         </p>
       </div>
 
       <p className="border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-4 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
-        Fenok 파생 프록시 · 제3자 점수/원본 미사용 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+        Fenok 보조 신호 · 제3자 점수와 원문 데이터를 직접 쓰지 않습니다 · 기준일 {formatSignalAsOf(record.asOf)} · 커버리지{" "}
         {formatCoverage(coverage)}
       </p>
     </section>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import MetricHelp from "@/components/MetricHelp";
-import { formatPlainPercent, formatSignedPercent } from "@/lib/format";
+import { formatCurrencyCompact, formatPlainPercent, formatSignedPercent } from "@/lib/format";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -93,13 +93,8 @@ export function formatCompactMoney(value: unknown, currency: unknown = "USD"): s
   const v = finiteNumber(value);
   if (v === null) return "—";
   const code = normalizeCurrency(currency);
-  if (code === "KRW") {
-    const abs = Math.abs(v);
-    const prefix = v < 0 ? "-" : "";
-    const n = Math.abs(v);
-    if (abs >= 1_000_000_000_000) return `${prefix}₩${(n / 1_000_000_000_000).toFixed(n >= 10_000_000_000_000 ? 0 : 2)}조`;
-    if (abs >= 100_000_000) return `${prefix}₩${(n / 100_000_000).toFixed(n >= 1_000_000_000 ? 0 : 1)}억`;
-    return `${prefix}₩${Math.round(n).toLocaleString()}`;
+  if (code === "USD" || code === "KRW") {
+    return formatCurrencyCompact(v, code);
   }
   try {
     return new Intl.NumberFormat("en-US", {

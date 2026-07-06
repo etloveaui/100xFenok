@@ -584,7 +584,7 @@ function stockChartSummary(data: readonly CpChartDatum[], currency: string, rang
     .map((point) => (isFiniteNumber(point.close) ? point.close : null))
     .filter(isFiniteNumber);
   if (closes.length < 2) {
-    return `${range} 가격 캔들 ${closes.length.toLocaleString("ko-KR")}개 · OHLCV 데이터 대기`;
+    return `${range} 가격 데이터 ${closes.length.toLocaleString("ko-KR")}개 · ${DATA_STATE_LABELS.pending}`;
   }
   const first = closes[0];
   const last = closes[closes.length - 1];
@@ -3547,7 +3547,7 @@ export default function StockDetailClient({
                   range={stockChartRange}
                   height={420}
                   density="comfy"
-                  title={`${symbol} OHLCV`}
+                  title={`${symbol} 가격·거래량`}
                   summary={stockChartCopy}
                   headingLevel="h3"
                   data={rangedStockChartData}
