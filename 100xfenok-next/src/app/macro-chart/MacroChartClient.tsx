@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
-import { formatAsOf, freshnessDataState } from "@/lib/data-state";
+import { DATA_STATE_LABELS, formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
@@ -691,7 +691,7 @@ function explicitRightAxisTitle(definitions: readonly MacroSeriesDefinition[], a
         .map((definition) => unitLabel(definition.unit)),
     ),
   ];
-  if (units.length === 0) return "% / spread";
+  if (units.length === 0) return "% / 스프레드";
   if (units.length === 1) return units[0];
   return "보조축";
 }
@@ -1014,7 +1014,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        setLoadState({ status: "error", message: error instanceof Error ? error.message : "macro series load failed" });
+        setLoadState({ status: "error", message: error instanceof Error ? error.message : DATA_STATE_LABELS.error });
       });
     return () => {
       cancelled = true;
@@ -1906,13 +1906,13 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           visibleHiddenIds.length ? `${visibleHiddenIds.length}개 시리즈 숨김` : null,
           visibleAxisOverrides ? `${visibleAxisOverrides}개 축 고정` : null,
           formulas.length ? `${formulas.length}개 합성 시리즈` : null,
-          hasStooqSelection ? "시장 심볼은 owner Worker proxy 경유" : null,
+          hasStooqSelection ? "시장 심볼은 외부 데이터 경로를 경유합니다" : null,
           `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
           "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
           "URL로 선택값·기간·숨김·축 상태 공유 가능",
         ]}
       >
-        public data spine의 정적 JSON과 승인된 시장 심볼 proxy만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
+        공개 데이터 소스와 승인된 시장 심볼 데이터만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
       </DataProvenanceNote>
 
       <div className="cpw5-macro-cta-row">

@@ -27,7 +27,7 @@ import {
   type Portfolio,
   type Holding,
 } from "@/lib/portfolio";
-import { formatSignedPercent } from "@/lib/format";
+import { formatCurrency, formatPercent, formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey, normalizeForFilePath } from "@/lib/ticker";
 
@@ -78,14 +78,6 @@ async function fetchPrice(ticker: string): Promise<number | null> {
 
   pricePending.set(symbol, p);
   return p;
-}
-
-function fmt$(v: number): string {
-  return `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function fmtPct(v: number): string {
-  return formatSignedPercent(v, { digits: 2 });
 }
 
 function csvCell(value: unknown): string {
@@ -338,20 +330,20 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   function handleConnectionExport() {
     if (!active || holdingRows.length === 0) return;
     const header = [
-      "ticker",
-      "shares",
-      "avg_cost",
-      "price",
-      "market_value",
-      "connection_count",
-      "market_facts",
-      "filings",
-      "sec_13f",
-      "index_membership",
-      "single_stock_etfs",
-      "single_stock_etf_tickers",
-      "single_stock_etf_resolution_methods",
-      "single_stock_etf_resolution_sources",
+      "종목코드",
+      "보유주식수",
+      "평균매입가",
+      "현재가",
+      "평가금액",
+      "연결수",
+      "시세",
+      "공시",
+      "13F",
+      "지수편입",
+      "단일종목ETF",
+      "단일종목ETF티커",
+      "ETF분류방법",
+      "ETF분류출처",
     ];
     const rows = holdingRows.map((row) => {
       const flags = row.connection?.flags;
@@ -374,7 +366,8 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       ];
     });
     const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
-    downloadTextFile(`100xfenok-portfolio-connections-${new Date().toISOString().slice(0, 10)}.csv`, `${csv}\n`, "text/csv;charset=utf-8");
+    // BOM keeps Korean headers readable when Excel opens the UTF-8 CSV
+    downloadTextFile(`100xfenok-portfolio-connections-${new Date().toISOString().slice(0, 10)}.csv`, `\uFEFF${csv}\n`, "text/csv;charset=utf-8");
   }
 
   function handleImport() {
@@ -544,9 +537,9 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Kpi label="총 평가액" value={fmt$(grandTotal)} />
-        <Kpi label="총 손익" value={`${fmt$(totalGain)} (${fmtPct(totalGainPct)})`} valueClass={gainColor(totalGain)} />
-        <Kpi label="현금" value={fmt$(active?.cash ?? 0)} />
+        <Kpi label="총 평가액" value={formatCurrency(grandTotal, "USD")} />
+        <Kpi label="총 손익" value={`${formatCurrency(totalGain, "USD")} (${formatSignedPercent(totalGainPct, { digits: 2 })})`} valueClass={gainColor(totalGain)} />
+        <Kpi label="현금" value={formatCurrency(active?.cash ?? 0, "USD")} />
         <Kpi label="보유 종목" value={`${active?.holdings.length ?? 0}종목`} />
       </div>
 
@@ -671,7 +664,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             }}
             className="mt-2 text-sm font-bold text-slate-700 hover:text-brand-interactive"
           >
-            <span className="tabular-nums">{fmt$(active?.cash ?? 0)}</span> <span className="text-[10px] text-slate-400">편집</span>
+            <span className="tabular-nums">{formatCurrency(active?.cash ?? 0, "USD")}</span> <span className="text-[10px] text-slate-400">편집</span>
           </button>
         )}
       </div>
@@ -1024,7 +1017,7 @@ function PortfolioConnectionPanel({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {loading ? (
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-500">연결 인덱스 확인 중</span>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-500">연결 정보 확인 중</span>
           ) : (
             sourceBadges.map((badge) => (
               <DataStateBadge
@@ -1068,7 +1061,7 @@ function PortfolioConnectionPanel({
                     ) : null}
                   </div>
                   <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
-                    {missing ? "연결 인덱스에 없는 ticker입니다. 가격 캐시만 사용합니다." : row.connection?.label ?? "보유 종목 연결 확인"}
+                    {missing ? "연결된 종목 정보가 없어 시세 데이터만 표시합니다." : row.connection?.label ?? "보유 종목 연결 확인"}
                   </p>
                 </div>
                 <HoldingConnectionActions row={row} />
@@ -1162,26 +1155,26 @@ function MobileHoldingCard({
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">평단</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{fmt$(row.avg_cost)}</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{formatCurrency(row.avg_cost, "USD")}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">현재가</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.price != null ? fmt$(row.price) : "—"}</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.price != null ? formatCurrency(row.price, "USD") : "—"}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">평가액</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? fmt$(row.marketValue) : "—"}</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? formatCurrency(row.marketValue, "USD") : "—"}</p>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-2 text-sm">
         <span className={`orbitron font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-400"}`}>
-          {row.gain != null ? fmt$(row.gain) : "—"}
+          {row.gain != null ? formatCurrency(row.gain, "USD") : "—"}
         </span>
         <span className={`orbitron font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-400"}`}>
-          {row.gainPct != null ? fmtPct(row.gainPct) : "—"}
+          {row.gainPct != null ? formatSignedPercent(row.gainPct, { digits: 2 }) : "—"}
         </span>
         <span className="orbitron tabular-nums text-xs font-bold text-slate-500">
-          {row.weight != null ? `${(row.weight * 100).toFixed(1)}%` : "—"}
+          {row.weight != null ? formatPercent(row.weight, { digits: 1 }) : "—"}
         </span>
       </div>
     </article>
@@ -1228,22 +1221,22 @@ function HoldingsTable({
               {r.shares}
             </td>
             <td className="px-2 py-2 text-right orbitron tabular-nums text-slate-700">
-              {fmt$(r.avg_cost)}
+              {formatCurrency(r.avg_cost, "USD")}
             </td>
             <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-900">
-              {r.price != null ? fmt$(r.price) : "—"}
+              {r.price != null ? formatCurrency(r.price, "USD") : "—"}
             </td>
             <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-900">
-              {r.marketValue != null ? fmt$(r.marketValue) : "—"}
+              {r.marketValue != null ? formatCurrency(r.marketValue, "USD") : "—"}
             </td>
             <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-400"}`}>
-              {r.gain != null ? fmt$(r.gain) : "—"}
+              {r.gain != null ? formatCurrency(r.gain, "USD") : "—"}
             </td>
             <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-400"}`}>
-              {r.gainPct != null ? fmtPct(r.gainPct) : "—"}
+              {r.gainPct != null ? formatSignedPercent(r.gainPct, { digits: 2 }) : "—"}
             </td>
             <td className="px-2 py-2 text-right orbitron tabular-nums text-slate-500">
-              {r.weight != null ? `${(r.weight * 100).toFixed(1)}%` : "—"}
+              {r.weight != null ? formatPercent(r.weight, { digits: 1 }) : "—"}
             </td>
             {onDelete ? (
               <td className="px-2 py-2 text-right">
