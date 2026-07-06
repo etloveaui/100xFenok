@@ -8,8 +8,7 @@ import { getDesignVersionFromQuery } from "@/lib/design/version";
  * Mounts as a side-effect-only client component. Reads the `?v2=1` query
  * param (or NEXT_PUBLIC_DESIGN_V2 env override) and toggles
  * `body.design-v2`. The body class drives CSS rules that hide V1 chrome
- * wrappers, so V2 pages can render their own NavbarV2 / FooterTickerV2
- * without overlap.
+ * wrappers on routes that still support the legacy v2-v4 backdoors.
  */
 export default function DesignVersionToggle() {
   const searchParams = useSearchParams();
