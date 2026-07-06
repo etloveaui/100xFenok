@@ -99,7 +99,6 @@ const PRODUCT_LITERAL_ALLOWLIST = [
   { file: "src/components/dashboard/LiquidityCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (liquidity-flow), not a bare nav route" },
   { file: "src/components/dashboard/RiskAppetiteCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (sentiment-signal), not a bare nav route" },
   { file: "src/components/dashboard/StressMonitorCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (liquidity-stress), not a bare nav route" },
-  { file: "src/components/dashboard/HomeBentoGrid.tsx", literal: "/radar", reason: "radar deep-link query sentinel (sentiment-signal + liquidity-flow + banking-health), not a bare nav route" },
 
   // Design-studio preview files — excluded from SSOT enforcement
   { file: "src/components/HomeDesignPreview.tsx", literal: "/", reason: "design-studio preview, excluded from route SSOT" },
@@ -342,8 +341,6 @@ function assertRouteIaContracts(errors) {
   const shellSource = readAppSource("src/components/shell/AppShell.tsx");
   const nextConfigSource = readAppSource("next.config.ts");
   const homeRouteSource = readAppSource("src/app/page.tsx");
-  const homeV1Source = readAppSource("src/app/HomeV1Client.tsx");
-  const homeV5Source = readAppSource("src/app/HomeV5Client.tsx");
   const briefingPageSource = readAppSource("src/app/briefing/page.tsx");
   const nvdaFilingAliasSource = readAppSource("src/app/filings/nvda-10k/page.tsx");
   const workbenchSource = readAppSource("src/components/workbench/WorkbenchView.tsx");
@@ -397,19 +394,9 @@ function assertRouteIaContracts(errors) {
   );
 
   assertSourceTokens(homeRouteSource, [
-    "HomeV5Client",
-    "HomeV1Client",
+    "HomeCanvasPlusClient",
   ], "home route PRO IA", errors);
   assert(!homeRouteSource.includes("WorkbenchView"), "home route PRO IA: root must not render WorkbenchView directly", errors);
-
-  assertSourceTokens(homeV1Source, [
-    "data-home-search-first",
-    "data-home-feature-tile",
-  ], "Home V1 PRO IA", errors);
-  assertSourceTokens(homeV5Source, [
-    "data-home-search-first",
-    "data-home-feature-tile",
-  ], "Home V5 PRO IA", errors);
   assertSourceTokens(briefingPageSource, [
     "redirect(ROUTES.home)",
   ], "briefing alias PRO IA", errors);

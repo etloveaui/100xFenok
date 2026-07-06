@@ -116,7 +116,6 @@ function categoryForPath(relPath) {
     relPath === "src/styles/legacy-widgets.css" ||
     relPath === "src/styles/navigation.css" ||
     relPath === "src/styles/route-embed.css" ||
-    relPath === "src/styles/design-v3-terminal.css" ||
     relPath === "src/styles/cp-w4-screener.css" ||
     relPath === "src/styles/cp-w4-chart.css"
   ) {
