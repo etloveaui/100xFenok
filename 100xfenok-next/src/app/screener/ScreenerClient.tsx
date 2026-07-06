@@ -10,7 +10,7 @@ import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
-import { makeDataState } from "@/lib/data-state";
+import { formatDataDate, makeDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
@@ -152,34 +152,39 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "upsidePotentialScore", label: "상방 잠재력", align: "right" },
   { key: "downsidePressureScore", label: "하방 압력", align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
-  { key: "peForward", label: "Fwd PER", align: "right" },
-  { key: "epsForward", label: "Fwd EPS", align: "right" },
-  { key: "forwardPeFy1", label: "FY+1 PER", align: "right" },
-  { key: "forwardEpsFy1", label: "FY+1 EPS", align: "right" },
+  { key: "peForward", label: "예상 PER", align: "right" },
+  { key: "epsForward", label: "예상 EPS", align: "right" },
+  { key: "forwardPeFy1", label: "내년(FY+1) PER", align: "right" },
+  { key: "forwardEpsFy1", label: "내년(FY+1) EPS", align: "right" },
   { key: "revenueGrowthFy1", label: "매출+1", align: "right" },
   { key: "epsGrowthFy1", label: "EPS+1", align: "right" },
-  { key: "roeFy1", label: "FY+1 ROE", align: "right" },
-  { key: "operatingMarginFy1", label: "FY+1 OPM", align: "right" },
-  { key: "grossMarginFy1", label: "FY+1 GPM", align: "right" },
-  { key: "forwardPeFy2", label: "FY+2 PER", align: "right" },
-  { key: "forwardEpsFy2", label: "FY+2 EPS", align: "right" },
+  { key: "roeFy1", label: "내년(FY+1) ROE", align: "right" },
+  { key: "operatingMarginFy1", label: "내년(FY+1) OPM", align: "right" },
+  { key: "grossMarginFy1", label: "내년(FY+1) GPM", align: "right" },
+  { key: "forwardPeFy2", label: "2년차(FY+2) PER", align: "right" },
+  { key: "forwardEpsFy2", label: "2년차(FY+2) EPS", align: "right" },
   { key: "revenueGrowthFy2", label: "매출+2", align: "right" },
   { key: "epsGrowthFy2", label: "EPS+2", align: "right" },
-  { key: "roeFy2", label: "FY+2 ROE", align: "right" },
-  { key: "operatingMarginFy2", label: "FY+2 OPM", align: "right" },
-  { key: "grossMarginFy2", label: "FY+2 GPM", align: "right" },
-  { key: "forwardPeFy3", label: "FY+3 PER", align: "right" },
-  { key: "forwardEpsFy3", label: "FY+3 EPS", align: "right" },
+  { key: "roeFy2", label: "2년차(FY+2) ROE", align: "right" },
+  { key: "operatingMarginFy2", label: "2년차(FY+2) OPM", align: "right" },
+  { key: "grossMarginFy2", label: "2년차(FY+2) GPM", align: "right" },
+  { key: "forwardPeFy3", label: "3년차(FY+3) PER", align: "right" },
+  { key: "forwardEpsFy3", label: "3년차(FY+3) EPS", align: "right" },
   { key: "revenueGrowthFy3", label: "매출+3", align: "right" },
   { key: "epsGrowthFy3", label: "EPS+3", align: "right" },
-  { key: "roeFy3", label: "FY+3 ROE", align: "right" },
-  { key: "operatingMarginFy3", label: "FY+3 OPM", align: "right" },
-  { key: "grossMarginFy3", label: "FY+3 GPM", align: "right" },
+  { key: "roeFy3", label: "3년차(FY+3) ROE", align: "right" },
+  { key: "operatingMarginFy3", label: "3년차(FY+3) OPM", align: "right" },
+  { key: "grossMarginFy3", label: "3년차(FY+3) GPM", align: "right" },
   { key: "dividendTtm", label: "Div TTM", align: "right" },
   { key: "ret1y", label: "1Y", align: "right" },
   { key: "ret3y", label: "3Y", align: "right" },
   { key: "ret5y", label: "5Y", align: "right" },
 ];
+
+const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] as const;
+const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 상방·하방 프록시";
+const FENOK_SIGNAL_DISCLOSURE = "Fenok 파생 신호 · 투자 조언이 아닙니다";
+const FENOK_CONVICTION_DISCLOSURE = "Fenok 4개 신호 같은 비중 요약 · 투자 조언이 아닙니다";
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -247,7 +252,7 @@ function renderEstimateCell(
   return (
     <span
       className="inline-flex min-w-[58px] flex-col items-end gap-0.5 leading-none"
-      title={`FY+1~FY+3 추정치 ${completeness.label}`}
+      title={`${FISCAL_PERIOD_LABELS[0]}~${FISCAL_PERIOD_LABELS[2]} 추정치 ${completeness.label}`}
     >
       <span className={cx("orbitron tabular-nums", valueClass)}>{formatValue(value)}</span>
       {showGap ? (
@@ -279,6 +284,15 @@ function confidenceClass(label: string | null | undefined, lowEvidence: boolean)
 function formatCoverage(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "미확인";
   return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
+function formatCoverageLabel(value: number | null | undefined): string {
+  return `데이터 ${formatCoverage(value)}`;
+}
+
+function formatAsOfLabel(value: string | null | undefined): string | null {
+  const label = formatDataDate(value);
+  return label ? `기준 ${label}` : null;
 }
 
 function actionTone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
@@ -314,15 +328,12 @@ function fenokEdgeDirectionMark(direction: string | null | undefined): string {
 }
 
 function fenokEdgeTitle(stock: ScreenerStock): string {
-  const coverage = typeof stock.fenokSignalCoverageRatio === "number"
-    ? `coverage=${Math.round(stock.fenokSignalCoverageRatio * 100)}%`
-    : "coverage=unknown";
   return [
-    "Fenok 파생 upside/downside 프록시",
+    FENOK_EDGE_PROXY_LABEL,
     fenokEdgeDirectionLabel(stock.fenokEdgeDirection),
     confidenceText(stock.fenokSignalConfidence),
-    coverage,
-    stock.fenokSignalAsOf ? `as_of=${stock.fenokSignalAsOf}` : null,
+    formatCoverageLabel(stock.fenokSignalCoverageRatio),
+    formatAsOfLabel(stock.fenokSignalAsOf),
   ].filter(Boolean).join(" · ");
 }
 
@@ -362,7 +373,7 @@ function downsideRiskTone(score: number | null): string {
 }
 
 function convictionTooltip(stock: ScreenerStock): string {
-  const lines = ["Fenok 4-신호 동등가중 종합 · 매수권유 아님"];
+  const lines = [FENOK_CONVICTION_DISCLOSURE];
   const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
     const s = typeof score === "number" && Number.isFinite(score) ? Math.round(score) : "—";
     lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
@@ -371,10 +382,7 @@ function convictionTooltip(stock: ScreenerStock): string {
   push("성장", stock.growthScore, stock.growthDirection);
   push("기술/자금", stock.technicalFlowScore, stock.technicalFlowDirection);
   push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
-  const coverage = typeof stock.fenokSignalCoverageRatio === "number"
-    ? `coverage=${Math.round(stock.fenokSignalCoverageRatio * 100)}%`
-    : "coverage=unknown";
-  lines.push([confidenceText(stock.fenokSignalConfidence), coverage, stock.fenokSignalAsOf ? `as_of=${stock.fenokSignalAsOf}` : null].filter(Boolean).join(" · "));
+  lines.push([confidenceText(stock.fenokSignalConfidence), formatCoverageLabel(stock.fenokSignalCoverageRatio), formatAsOfLabel(stock.fenokSignalAsOf)].filter(Boolean).join(" · "));
   return lines.join("\n");
 }
 
@@ -614,7 +622,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
           <span className="inline-flex flex-wrap justify-end gap-1">
             <span
               className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
-              title="단기 Fenok 점수 · 매수권유 아님"
+              title="단기 Fenok 점수 · 투자 조언이 아닙니다"
               aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"}`}
             >
               <span aria-hidden="true">단기</span>
@@ -622,7 +630,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             </span>
             <span
               className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(longScore))}
-              title="장기 Fenok 점수 · 매수권유 아님"
+              title="장기 Fenok 점수 · 투자 조언이 아닙니다"
               aria-label={`장기 컨빅션 ${longScore ?? "정보 없음"}`}
             >
               <span aria-hidden="true">장기</span>
@@ -671,8 +679,8 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             ? stock.technicalFlowDirection
             : null;
       const titleSuffix = key === "durabilityProfitabilityScore"
-        ? `데이터 ${formatCoverage(stock.durabilityProfitabilityCoverage)} · Fenok 파생 신호 · 매수권유 아님`
-        : "Fenok 파생 신호 · 매수권유 아님";
+        ? `${formatCoverageLabel(stock.durabilityProfitabilityCoverage)} · ${FENOK_SIGNAL_DISCLOSURE}`
+        : FENOK_SIGNAL_DISCLOSURE;
       return (
         <span className="inline-flex min-w-[64px] justify-end">
           <span
@@ -694,7 +702,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
         <span className="inline-flex min-w-[64px] justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", downsideRiskTone(score))}
-            title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · Fenok 파생 신호 · 매수권유 아님`}
+            title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
             aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
             {score ?? "—"}
@@ -823,7 +831,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
   }
 }
 
-const ESTIMATE_PERIOD_LABELS = ["FY+1", "FY+2", "FY+3"] as const;
+const ESTIMATE_PERIOD_LABELS = FISCAL_PERIOD_LABELS;
 
 type MobileEstimateTrendRow = {
   label: string;
@@ -1974,7 +1982,7 @@ export default function ScreenerClient({
           },
         ]
       : []),
-    { active: Boolean(roeFy1Min), label: `FY+1 ROE ≥ ${roeFy1Min}%`, clear: () => setRoeFy1Min("") },
+    { active: Boolean(roeFy1Min), label: `${FISCAL_PERIOD_LABELS[0]} ROE ≥ ${roeFy1Min}%`, clear: () => setRoeFy1Min("") },
     { active: Boolean(ret3yMin), label: `3Y 수익률 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
     { active: Boolean(ret5yMin), label: `5Y 수익률 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
     { active: Boolean(revenueGrowthMin), label: `매출+1 ≥ ${revenueGrowthMin}%`, clear: () => setRevenueGrowthMin("") },
@@ -2760,7 +2768,7 @@ export default function ScreenerClient({
                     <input type="number" inputMode="decimal" value={roeMin} onChange={(event) => setRoeMin(event.target.value)} placeholder="예: 20" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">FY+1 ROE 최소 (%)</span>
+                    <span className="cp-screener-field__label">내년(FY+1) ROE 최소 (%)</span>
                     <input type="number" inputMode="decimal" value={roeFy1Min} onChange={(event) => setRoeFy1Min(event.target.value)} placeholder="예: 15" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
@@ -2786,7 +2794,7 @@ export default function ScreenerClient({
                       value={fenokEdgeMin}
                       onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
                       className="cp-screener-control"
-                      title="Fenok 파생 upside/downside 프록시"
+                      title={FENOK_EDGE_PROXY_LABEL}
                     >
                       <option value="">전체 Edge</option>
                       <option value="70">70 이상</option>
@@ -2800,7 +2808,7 @@ export default function ScreenerClient({
                       value={convictionMin}
                       onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
                       className="cp-screener-control"
-                      title="Fenok 4-신호 동등가중 종합 · 매수권유 아님"
+                      title={FENOK_CONVICTION_DISCLOSURE}
                     >
                       <option value="">전체 컨빅션</option>
                       <option value="70">70 이상</option>
@@ -3241,7 +3249,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">FY+1 ROE 최소 (%)</span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내년(FY+1) ROE 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3285,7 +3293,7 @@ export default function ScreenerClient({
                     value={fenokEdgeMin}
                     onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    title="Fenok 파생 upside/downside 프록시"
+                    title={FENOK_EDGE_PROXY_LABEL}
                   >
                     <option value="">전체 Edge</option>
                     <option value="70">70 이상</option>
@@ -3299,7 +3307,7 @@ export default function ScreenerClient({
                     value={convictionMin}
                     onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    title="Fenok 4-신호 동등가중 종합 · 매수권유 아님"
+                    title={FENOK_CONVICTION_DISCLOSURE}
                   >
                     <option value="">전체 컨빅션</option>
                     <option value="70">70 이상</option>

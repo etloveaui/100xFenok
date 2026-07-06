@@ -91,7 +91,7 @@ function buildEstimateReads(stock: ScreenerStock, context?: InterpretationContex
     reads.push({
       id: "peTrend",
       label: "PER 흐름",
-      text: `예상 PER은 FY+1 ${peFy1.toFixed(1)}배에서 FY+3 ${peFy3.toFixed(1)}배로 ${drop ? "낮아집니다" : rise ? "높아집니다" : "큰 변화가 없습니다"}.`,
+      text: `예상 PER은 내년(FY+1) ${peFy1.toFixed(1)}배에서 3년차(FY+3) ${peFy3.toFixed(1)}배로 ${drop ? "낮아집니다" : rise ? "높아집니다" : "큰 변화가 없습니다"}.`,
       shortText: `PER ${peFy1.toFixed(1)}→${peFy3.toFixed(1)}배`,
       tone: drop ? "positive" : rise ? "risk" : "neutral",
     });
@@ -116,7 +116,7 @@ function buildEstimateReads(stock: ScreenerStock, context?: InterpretationContex
     reads.push({
       id: "growthConsistency",
       label: "성장 지속성",
-      text: `FY+1~3 ${revText}, ${epsText}이며, 3개 연도 중 ${pairedPositiveYears}개 연도에서 매출과 EPS가 함께 플러스입니다.`,
+      text: `향후 3년(FY+1~FY+3) ${revText}, ${epsText}이며, 3개 연도 중 ${pairedPositiveYears}개 연도에서 매출과 EPS가 함께 플러스입니다.`,
       shortText: `성장 동시 플러스 ${pairedPositiveYears}/3`,
       tone,
     });
@@ -136,7 +136,7 @@ function buildEstimateReads(stock: ScreenerStock, context?: InterpretationContex
     reads.push({
       id: "revisionDirection",
       label: "EPS 수정",
-      text: `최근 주간 EPS 추정은 FY+1~3 중 상향 ${up}개, 하향 ${down}개로 ${direction}입니다${avgRevision !== null ? ` 평균 변화는 ${signedPercent(avgRevision, 2)}` : ""}.`,
+      text: `최근 주간 EPS 추정은 향후 3년(FY+1~FY+3) 중 상향 ${up}개, 하향 ${down}개로 ${direction}입니다${avgRevision !== null ? ` 평균 변화는 ${signedPercent(avgRevision, 2)}` : ""}.`,
       shortText: `EPS ${direction}`,
       tone: up >= 2 ? "positive" : down >= 2 ? "risk" : "watch",
     });
@@ -212,12 +212,12 @@ export function interpretStockMetrics(stock: ScreenerStock, context?: Interpreta
   if (pe !== null && pe > 0 && pe < 22 && roe !== null && roe >= 15 && epsGrowth !== null && epsGrowth >= 15) {
     const multiYearText =
       avgRevenueGrowth !== null && avgEpsGrowth !== null
-        ? ` FY+1~3 평균 매출 성장률 ${avgRevenueGrowth.toFixed(1)}%, EPS 성장률 ${avgEpsGrowth.toFixed(1)}%도 같이 확인됩니다.`
+        ? ` 향후 3년(FY+1~FY+3) 평균 매출 성장률 ${avgRevenueGrowth.toFixed(1)}%, EPS 성장률 ${avgEpsGrowth.toFixed(1)}%도 같이 확인됩니다.`
         : "";
     return withReads({
       badge: "저평가 우량 성장주",
       badgeClass: "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]",
-      text: `예상 PER ${pe.toFixed(1)}배, FY+1 ROE ${roe.toFixed(1)}%, 예상 EPS 성장률 ${epsGrowth.toFixed(1)}%가 함께 잡힙니다.${multiYearText} Feno 기준으로는 밸류 부담이 과하지 않은 성장·수익성 조합으로 먼저 읽을 수 있습니다.`,
+      text: `예상 PER ${pe.toFixed(1)}배, 내년(FY+1) ROE ${roe.toFixed(1)}%, 예상 EPS 성장률 ${epsGrowth.toFixed(1)}%가 함께 잡힙니다.${multiYearText} Feno 기준으로는 밸류 부담이 과하지 않은 성장·수익성 조합으로 먼저 읽을 수 있습니다.`,
     }, reads);
   }
 
@@ -236,7 +236,7 @@ export function interpretStockMetrics(stock: ScreenerStock, context?: Interpreta
     return withReads({
       badge: "3년 성장 가시성",
       badgeClass: "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]",
-      text: `${peTrend}FY+1~3 평균 매출 성장률 ${avgRevenueGrowth.toFixed(1)}%, EPS 성장률 ${avgEpsGrowth.toFixed(1)}%입니다. 단년 기저효과보다 3년 추정치가 이어지는지를 먼저 읽는 구간이며, ${roeText}`,
+      text: `${peTrend}향후 3년(FY+1~FY+3) 평균 매출 성장률 ${avgRevenueGrowth.toFixed(1)}%, EPS 성장률 ${avgEpsGrowth.toFixed(1)}%입니다. 단년 기저효과보다 3년 추정치가 이어지는지를 먼저 읽는 구간이며, ${roeText}`,
     }, reads);
   }
 
@@ -245,7 +245,7 @@ export function interpretStockMetrics(stock: ScreenerStock, context?: Interpreta
     return withReads({
       badge: "고배당 가치 우량주",
       badgeClass: "border-[var(--warn-border)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]",
-      text: `배당수익률 ${divYield.toFixed(1)}%, FY+1 ROE ${roe.toFixed(1)}%, 예상 PER ${pe.toFixed(1)}배 조합입니다. 배당 매력과 자본 효율이 같이 보이므로, 다음에는 배당 지속성과 현금흐름을 함께 확인하는 쪽이 좋습니다.`,
+      text: `배당수익률 ${divYield.toFixed(1)}%, 내년(FY+1) ROE ${roe.toFixed(1)}%, 예상 PER ${pe.toFixed(1)}배 조합입니다. 배당 매력과 자본 효율이 같이 보이므로, 다음에는 배당 지속성과 현금흐름을 함께 확인하는 쪽이 좋습니다.`,
     }, reads);
   }
 
@@ -263,7 +263,7 @@ export function interpretStockMetrics(stock: ScreenerStock, context?: Interpreta
     return withReads({
       badge: "안정적 현금 창출 기업",
       badgeClass: "border-[var(--c-info-border)] bg-[var(--c-info-soft)] text-[var(--c-info)]",
-      text: `FY+1 영업이익률 ${opm.toFixed(1)}%, ROE ${roe.toFixed(1)}%, 예상 PER ${pe.toFixed(1)}배입니다. 수익성과 가격 부담이 균형권에 있어, 현금흐름과 마진 유지 여부가 핵심 확인 포인트입니다.`,
+      text: `내년(FY+1) 영업이익률 ${opm.toFixed(1)}%, ROE ${roe.toFixed(1)}%, 예상 PER ${pe.toFixed(1)}배입니다. 수익성과 가격 부담이 균형권에 있어, 현금흐름과 마진 유지 여부가 핵심 확인 포인트입니다.`,
     }, reads);
   }
 

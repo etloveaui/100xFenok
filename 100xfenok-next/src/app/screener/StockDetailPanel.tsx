@@ -14,6 +14,17 @@ import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { makeDataState } from "@/lib/data-state";
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  formatDecimal,
+  formatInteger,
+  formatMultiple,
+  formatPlainPercent,
+  formatSignedDecimal,
+  formatSignedPercent,
+  type Currency,
+} from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 
@@ -67,12 +78,12 @@ function edgeLeadLabel(shortScore: number | null, longScore: number | null): str
 }
 
 function formatSignalCoverage(value: number | null | undefined): string {
-  if (!isFiniteNumber(value)) return "coverage 미확인";
-  return `coverage ${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+  if (!isFiniteNumber(value)) return "커버리지 미확인";
+  return `커버리지 ${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
 }
 
 function fenokTooltip(stock: ScreenerStock): string {
-  const lines = ["Fenok 4-신호 동일가중 종합 · 매수 권유 아님"];
+  const lines = ["Fenok 4개 신호 같은 비중 요약 · 투자 조언이 아닙니다"];
   const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
     const s = isFiniteNumber(score) ? Math.round(score) : "—";
     lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
@@ -102,6 +113,7 @@ const LABEL_TO_HELP_KEY: Record<string, FenokSignalHelpKey> = {
 export type NumberSeries = MaybeNumber[];
 export type EstimateSeries = { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
 const ESTIMATE_KEYS = ["fy1", "fy2", "fy3"] as const;
+const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] as const;
 const CHART_WIDTH = 300;
 const CHART_PAD_L = 44;
 const CHART_PAD_R = 30;
@@ -434,7 +446,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
     scoreKey: "volumeLiquidityTrendScore",
     directionKey: "volumeLiquidityTrendDirection",
     helpKey: "volumeLiquidityTrend",
-    tooltipNote: "로컬 OHLCV 프록시, 실제 주문 흐름 아님",
+    tooltipNote: "가격·거래량 데이터 기반 프록시, 실제 주문 흐름 아님",
   },
   {
     key: "shortTermRelativeStrength",
@@ -451,7 +463,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
     fullLabel: "옵션 활동 프록시",
     scoreKey: "netOptionsProxyScore",
     helpKey: "netOptionsProxy",
-    tooltipNote: "OCC 옵션 거래량 편향, 실제 플로우 아님",
+    tooltipNote: "미국 옵션청산회사(OCC) 공개 거래량으로 옵션 쏠림을 추정합니다. 실제 주문 흐름을 뜻하지 않습니다.",
   },
   {
     key: "offExchangeActivityProxy",
@@ -459,7 +471,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
     fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
-    tooltipNote: "FINRA 공개 데이터 파생, 다크풀/방향 신호 아님",
+    tooltipNote: "미국 금융산업규제청(FINRA) 공개 장외 거래 데이터로 만든 보조 신호입니다. 방향성 확정 신호가 아닙니다.",
   },
   {
     key: "shortPressureProxy",
@@ -677,7 +689,7 @@ function buildFiscalPoints(years: string[] | null | undefined, data: NumberSerie
       index,
     }))
     .filter((point): point is FiscalPoint => isFiniteNumber(point.value));
-  const estimateLabels = ESTIMATE_KEYS.map((key, index) => [key, `FY+${index + 1}`] as const);
+  const estimateLabels = ESTIMATE_KEYS.map((key, index) => [key, FISCAL_PERIOD_LABELS[index]] as const);
   const estimatePoints: FiscalPoint[] = [];
   estimateLabels.forEach(([key, label]) => {
     const value = normalizeEstimates(estimates)[key];
@@ -812,7 +824,7 @@ function buildScreenerThreeSecondVerdict({
       id: "growth",
       label: "성장",
       shortText: `동시 플러스 ${pairedPositiveYears}/3`,
-      text: `FY+1~3 중 ${pairedPositiveYears}개 연도에서 매출과 EPS가 함께 플러스입니다${epsAvg !== null ? `, EPS 평균 ${epsAvg.toFixed(1)}%` : ""}.`,
+      text: `향후 3년(FY+1~FY+3) 중 ${pairedPositiveYears}개 연도에서 매출과 EPS가 함께 플러스입니다${epsAvg !== null ? `, EPS 평균 ${formatPlainPercent(epsAvg, { digits: 1, fraction: false })}` : ""}.`,
       tone,
     });
   }
@@ -867,27 +879,23 @@ function buildScreenerThreeSecondVerdict({
 }
 
 function fmtPlainNumber(value: MaybeNumber, digits = 1): string {
-  return isFiniteNumber(value) ? value.toFixed(digits) : "—";
+  return formatDecimal(value, { digits });
 }
 
 function fmtSignedNumber(value: MaybeNumber, digits = 2): string {
-  if (!isFiniteNumber(value)) return "—";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
+  return formatSignedDecimal(value, { digits });
 }
 
 function fmtSignedPercentPoints(value: MaybeNumber, digits = 1): string {
-  if (!isFiniteNumber(value)) return "—";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
+  return formatSignedPercent(value, { digits, fraction: false });
 }
 
 function fmtSignedFractionPercent(value: MaybeNumber, digits = 1): string {
-  if (!isFiniteNumber(value)) return "—";
-  const pct = value * 100;
-  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+  return formatSignedPercent(value, { digits });
 }
 
 function fmtEps(value: MaybeNumber): string {
-  return isFiniteNumber(value) ? `$${value.toFixed(2)}` : "—";
+  return formatCurrency(value, "USD", { digits: 2 });
 }
 
 function toneText(value: MaybeNumber): string {
@@ -1154,14 +1162,16 @@ function sourceLabel(source?: string): string {
   return "확인 기준";
 }
 
+function sharedCurrency(currency: string): Currency | null {
+  if (currency === "KRW" || currency === "USD") return currency;
+  return null;
+}
+
 function fmtMarketMoney(value: number, currency = "USD"): string {
-  const sign = value < 0 ? "-" : "";
-  const abs = Math.abs(value);
-  const prefix = currency === "USD" ? "$" : `${currency} `;
-  if (abs >= 1_000_000_000_000) return `${sign}${prefix}${(abs / 1_000_000_000_000).toFixed(2)}T`;
-  if (abs >= 1_000_000_000) return `${sign}${prefix}${(abs / 1_000_000_000).toFixed(1)}B`;
-  if (abs >= 1_000_000) return `${sign}${prefix}${(abs / 1_000_000).toFixed(1)}M`;
-  return `${sign}${prefix}${abs.toFixed(abs >= 100 ? 0 : 2)}`;
+  const normalized = sharedCurrency(currency);
+  if (normalized) return formatCurrencyCompact(value, normalized);
+  const usdScaled = formatCurrencyCompact(value, "USD");
+  return `${currency} ${usdScaled.startsWith("$") ? usdScaled.slice(1) : usdScaled}`;
 }
 
 function formatMarketFact(key: string, fact: MarketFact | undefined, currency = "USD"): string {
@@ -1169,10 +1179,10 @@ function formatMarketFact(key: string, fact: MarketFact | undefined, currency = 
   if (typeof value === "number" && Number.isFinite(value)) {
     if (key === "price" || key === "previous_close" || key === "change") return fmtMarketMoney(value, currency);
     if (key === "market_cap" || key === "total_assets") return fmtMarketMoney(value, currency);
-    if (key === "change_pct" || key === "dividend_yield" || key === "expense_ratio") return `${value.toFixed(2)}%`;
-    if (key === "trailing_pe" || key === "forward_pe") return `${value.toFixed(1)}x`;
-    if (key === "beta") return value.toFixed(2);
-    return value.toLocaleString();
+    if (key === "change_pct" || key === "dividend_yield" || key === "expense_ratio") return formatPlainPercent(value, { digits: 2, fraction: false });
+    if (key === "trailing_pe" || key === "forward_pe") return formatMultiple(value, { digits: 1 });
+    if (key === "beta") return formatDecimal(value, { digits: 2 });
+    return formatInteger(value);
   }
   if (typeof value === "string" && value.trim()) return value;
   return "—";
@@ -1209,7 +1219,7 @@ function EtfBreakdownStrip({
           return (
             <span key={`${title}-${index}-${etfBreakdownLabel(row)}`} className="max-w-full rounded-full bg-[var(--c-panel)] px-2 py-0.5 text-[10px] font-bold text-[var(--c-ink-3)] ring-1 ring-[var(--c-line)]">
               <span className="inline-block max-w-[9rem] truncate align-bottom">{etfBreakdownLabel(row)}</span>
-              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-[var(--c-ink)]">{weight.toFixed(1)}%</span> : null}
+              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-[var(--c-ink)]">{formatPlainPercent(weight, { digits: 1, fraction: false })}</span> : null}
             </span>
           );
         })}
@@ -1243,9 +1253,13 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
   const { data, loading } = useMarketFacts(ticker);
   if (loading) {
     return (
-      <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3 text-sm font-semibold text-[var(--c-ink-3)]">
-        통합 데이터 확인 중…
-      </div>
+      <DataStateNotice
+        state={makeDataState({
+          status: "pending",
+          detail: "통합 데이터와 보조 지표를 확인하고 있습니다.",
+        })}
+        className="mt-4"
+      />
     );
   }
   if (!data) {
@@ -1363,10 +1377,10 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
                       )}
                     </td>
                     <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
-                      {isFiniteNumber(row.weight_pct) ? `${row.weight_pct.toFixed(2)}%` : "—"}
+                      {formatPlainPercent(row.weight_pct, { digits: 2, fraction: false })}
                     </td>
                     <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">
-                      {isFiniteNumber(row.shares) ? row.shares.toLocaleString() : "—"}
+                      {formatInteger(row.shares)}
                     </td>
                   </tr>
                 ))}
@@ -1802,9 +1816,9 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
   const weekly = detail.eps_consensus?.weekly;
   const changes = detail.eps_consensus?.weekly_change;
   const epsRows = [
-    { key: "fy1", label: "FY+1 EPS", series: weekly?.fy_plus_1 ?? [], change: changes?.fy_plus_1 },
-    { key: "fy2", label: "FY+2 EPS", series: weekly?.fy_plus_2 ?? [], change: changes?.fy_plus_2 },
-    { key: "fy3", label: "FY+3 EPS", series: weekly?.fy_plus_3 ?? [], change: changes?.fy_plus_3 },
+    { key: "fy1", label: `${FISCAL_PERIOD_LABELS[0]} EPS`, series: weekly?.fy_plus_1 ?? [], change: changes?.fy_plus_1 },
+    { key: "fy2", label: `${FISCAL_PERIOD_LABELS[1]} EPS`, series: weekly?.fy_plus_2 ?? [], change: changes?.fy_plus_2 },
+    { key: "fy3", label: `${FISCAL_PERIOD_LABELS[2]} EPS`, series: weekly?.fy_plus_3 ?? [], change: changes?.fy_plus_3 },
   ].filter((row) => row.series.length > 0);
   const historyRows = (detail.weekly_revision_history?.weekly_consensus_revision ?? [])
     .filter((row) => typeof row.date === "string")
@@ -1900,7 +1914,7 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">실적·예상치 상세</h4>
-        <span className="text-[10px] font-bold text-[var(--c-ink-4)]">FY-4 ~ FY+3 표준화 데이터</span>
+        <span className="text-[10px] font-bold text-[var(--c-ink-4)]">과거 4년~3년차(FY+3) 표준화 데이터</span>
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
         <table className="w-full min-w-[720px] text-[10px]">
@@ -1957,25 +1971,24 @@ function slickMetricRows(data: SlickStockData): SlickMetricPoint[] {
 }
 
 function fmtSlickMoney(value: MaybeNumber, digits = 2) {
-  return isFiniteNumber(value) ? `$${value.toFixed(digits)}` : "—";
+  return formatCurrency(value, "USD", { digits });
 }
 
 function fmtSlickMarketCap(value: MaybeNumber) {
   if (!isFiniteNumber(value)) return "—";
-  return value >= 1_000 ? `$${(value / 1_000).toFixed(2)}T` : `$${value.toFixed(1)}B`;
+  return formatCurrencyCompact(value * 1_000_000_000, "USD");
 }
 
 function fmtSlickMultiple(value: MaybeNumber) {
-  return isFiniteNumber(value) ? `${value.toFixed(1)}x` : "—";
+  return formatMultiple(value, { digits: 1 });
 }
 
 function fmtSlickYield(value: MaybeNumber) {
-  return isFiniteNumber(value) ? `${value.toFixed(2)}%` : "—";
+  return formatPlainPercent(value, { digits: 2, fraction: false });
 }
 
 function fmtSlickReturn(value: MaybeNumber) {
-  if (!isFiniteNumber(value)) return "—";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+  return formatSignedPercent(value, { digits: 1, fraction: false });
 }
 
 function fmtRelativeDelta(current: MaybeNumber, previous: MaybeNumber) {
@@ -2007,9 +2020,13 @@ export function PriceDividendHistoryDepth({
 
   if (loading) {
     return (
-      <div role="status" aria-busy="true" className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3 text-sm font-semibold text-[var(--c-ink-3)]">
-        가격·배당 히스토리 확인 중…
-      </div>
+      <DataStateNotice
+        state={makeDataState({
+          status: "pending",
+          detail: "가격·배당 히스토리를 확인하고 있습니다.",
+        })}
+        className="mt-4"
+      />
     );
   }
 
@@ -2063,7 +2080,7 @@ export function PriceDividendHistoryDepth({
           label: "배당률",
           value: fmtSlickYield(latestMetric.dividend_yield),
           delta: previousMetric && isFiniteNumber(latestMetric.dividend_yield) && isFiniteNumber(previousMetric.dividend_yield)
-            ? `${(latestMetric.dividend_yield - previousMetric.dividend_yield >= 0 ? "+" : "")}${(latestMetric.dividend_yield - previousMetric.dividend_yield).toFixed(2)}%p`
+            ? `${formatSignedPercent(latestMetric.dividend_yield - previousMetric.dividend_yield, { digits: 2, fraction: false })}p`
             : null,
         },
       ]
@@ -2286,10 +2303,10 @@ export function StockDetailBody({
                 color="var(--c-chart-eps)"
                 years={detail.years}
                 estimates={detail.per_share_estimates?.eps}
-                formatValue={(value) => `$${value.toFixed(2)}`}
+                formatValue={(value) => formatCurrency(value, "USD", { digits: 2 })}
               />
               <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
-                {latestEps != null ? `$${latestEps.toFixed(2)} (최신)` : "—"}
+                {latestEps != null ? `${fmtEps(latestEps)} (최신)` : "—"}
               </div>
             </>
           ) : (
@@ -2341,28 +2358,24 @@ function w4ScoreTone(score: number | null): "strong" | "balanced" | "watch" | "m
 }
 
 function w4FormatPrice(value: MaybeNumber): string {
-  return isFiniteNumber(value) ? `$${value.toFixed(2)}` : "—";
+  return formatCurrency(value, "USD", { digits: 2 });
 }
 
 function w4FormatMarketCap(mn: MaybeNumber): string {
   if (!isFiniteNumber(mn)) return "—";
-  if (mn >= 1_000_000) return `$${(mn / 1_000_000).toFixed(2)}T`;
-  if (mn >= 1_000) return `$${(mn / 1_000).toFixed(1)}B`;
-  return `$${Math.round(mn)}M`;
+  return formatCurrencyCompact(mn * 1_000_000, "USD");
 }
 
 function w4FormatRatio(value: MaybeNumber, digits = 1): string {
-  return isFiniteNumber(value) ? value.toFixed(digits) : "—";
+  return formatDecimal(value, { digits });
 }
 
 function w4FormatFractionPercent(value: MaybeNumber, digits = 2): string {
-  return isFiniteNumber(value) ? `${(value * 100).toFixed(digits)}%` : "—";
+  return formatPlainPercent(value, { digits });
 }
 
 function w4FormatSignedFractionPercent(value: MaybeNumber, digits = 1): string {
-  if (!isFiniteNumber(value)) return "—";
-  const pct = value * 100;
-  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+  return formatSignedPercent(value, { digits });
 }
 
 function w4DirectionEnglish(direction: string): string {
@@ -2489,7 +2502,7 @@ export default function StockDetailPanel({
         <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-2.5 shadow-[var(--sh-sm)] sm:p-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
-              Fenok 신호 한눈에 보기 · 매수 권유 아님
+              Fenok 신호 한눈에 보기 · 투자 조언이 아닙니다
             </span>
             <div className="flex flex-wrap items-center gap-1.5">
               <span
@@ -2567,7 +2580,7 @@ export default function StockDetailPanel({
               size="md"
             />
             <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
-              Fenok 파생 신호 · 매수 권유 아님
+              Fenok 파생 신호 · 투자 조언이 아닙니다
             </p>
             <div className="grid gap-4 lg:grid-cols-2">
               {hasShortTermSignal ? (
@@ -2672,9 +2685,9 @@ export default function StockDetailPanel({
           <section className="cpw4-edge-card" aria-label={`${stock.ticker} Fenok Edge`}>
             <div className="cpw4-edge-card__meta">
               <span className="cpw4-edge-kicker">
-                <span aria-hidden="true" /> FENOK EDGE · 매수 권유 아님
+                <span aria-hidden="true" /> Fenok Edge · 투자 조언이 아닙니다
               </span>
-              <span>{stock.fenokSignalAsOf ? `기준 ${stock.fenokSignalAsOf.slice(0, 10)}` : signalCoverage}</span>
+              <span>{stock.fenokSignalAsOf ? `기준일 ${stock.fenokSignalAsOf.slice(0, 10)}` : signalCoverage}</span>
             </div>
 
             <div className="cpw4-edge-identity">
