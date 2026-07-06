@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-07-05",
+  "last_updated": "2026-07-06",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -15,12 +15,12 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-06-29",
+      "updated": "2026-07-06",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 31,595 records, 2010-01-01 ~ 2026-06-28, 37 sections, 861 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
@@ -159,6 +159,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-07-06",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly update (2026-07-03 source): micro_sectors +1 section 과창판(STAR50, 311 rows from 2020-07-24); 31,943 records (+348), 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; DEC-275 floor preserved; source_summaries 2,404 non-null + 66 null; ISO-week dup drops=0.",
+      "breaking": false
+    },
     {
       "date": "2026-07-05",
       "folder": "global-scouter",
