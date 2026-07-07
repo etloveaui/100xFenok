@@ -1,6 +1,6 @@
 # Yardney Data
 
-> **Last Updated**: 2026-06-09
+> **Last Updated**: 2026-07-08
 > **Source**: Yardeni model workbook (`야데니모델.xlsx`)
 > **Frequency**: Weekly
 
@@ -10,13 +10,13 @@
 
 | File | Records | Date Range | Description |
 |------|---------|------------|-------------|
-| `yardney_model.json` | 1,872 | 1990-02-02 ~ 2026-06-05 | Moody's AAA/BAA spread, Bond PER, S&P 500 fair value, premium/discount |
+| `yardney_model.json` | 1,876 | 1990-02-02 ~ 2026-07-03 | Moody's AAA/BAA spread, Bond PER, S&P 500 fair value, premium/discount |
 
 ## Latest Record
 
 | Date | SPX | Fair Value | Premium |
 |------|-----|------------|---------|
-| 2026-06-05 | 7,383.74 | 6,284.32 | +17.49% |
+| 2026-07-03 | 7,483.24 | 6,381.29 | +17.27% |
 
 ## Update Policy
 
