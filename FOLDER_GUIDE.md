@@ -10,8 +10,10 @@
 | ------------------------------- | ------------------------------------------------------- |
 | `100xfenok-next/`               | 현재 공개 정본 Next/OpenNext 앱, Cloudflare Worker 배포 설정 |
 | `initBaseHref.js`               | 보존 HTML 페이지의 상대경로 보정용 공용 헬퍼. 루트 SPA shell은 아님 |
-| `AGENTS.md`                     | 전체 시스템 유지보수용 Codex 작업 기준 규칙 문서                          |
 | `README.md`                     | 프로젝트 개요, 실행 방법, agent 기준 안내 포함                          |
+| `llm-guide.html`                | 현재 라우트/운영 사실을 담은 LLM용 공개 사이트 가이드                    |
+| `robots.txt`                    | 크롤러 접근 정책의 소스 파일. Next public mirror와 함께 관리             |
+| `100x-fenok-logo.png`           | 보존 HTML/Next public mirror가 공유하는 브랜드 이미지                    |
 | `favicon.*`                     | 남은 정적/SEO용 자산 파일 모음                                      |
 | `tests/run-tests.js`            | 보존 콘텐츠 폴더 정합성 검증용 Node 기반 테스트 스크립트                  |
 
@@ -99,12 +101,6 @@
 | 항목           | 상태 | 설명                                              |
 | ------------ | ---- | ------------------------------------------------- |
 | *(none)* | 정리됨 | Legacy notification 잔여 파일은 canonical Worker 전환 후 삭제됨 |
-
----
-
-## 📁 /_verification_screenshots/
-
-UI 검증용 스크린샷 보관 폴더. 반응형 테스트(Mobile/Tablet/Desktop) 결과 저장.
 
 ---
 

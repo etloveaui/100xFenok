@@ -115,7 +115,7 @@ cd stock_analyzer
 npm install
 
 # 2. Python 환경 (CSV 변환용)
-pip install -r requirements.txt
+# 루트 requirements.txt는 퇴역했습니다. 필요한 패키지는 사용하는 변환 스크립트 기준으로 설치하세요.
 
 # 3. 개발 서버 실행
 python sw-server-fix.py
