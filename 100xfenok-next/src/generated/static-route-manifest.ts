@@ -8,6 +8,4 @@ export const POST_HTML_FILES = [
   "2025-06-22_playbook.html"
 ] as const;
 
-export const TRAVEL_HTML_FILES = [
-  "gangneung.html"
-] as const;
+export const TRAVEL_HTML_FILES = [] as const;

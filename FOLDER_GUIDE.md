@@ -23,11 +23,12 @@
 
 | 항목                              | 설명                                                |
 | ------------------------------- | ------------------------------------------------- |
-| `index.html`                    | Daily Wrap 리포트들의 목차 페이지                           |
-| `100x-daily-wrap-template.html` | 리포트 자동 생성을 위한 HTML 템플릿                            |
-| `*_100x-daily-wrap.html`        | 날짜별 리포트 파일 (예: `2025-07-02_100x-daily-wrap.html`) |
-| `_agent-prompts/`               | index.html 업데이트용 agent 문서 + 실행 프롬프트 보관            |
-| `daily-wrap/`                   | 리포트 본문 HTML 및 해당 기능 전용 agent 디렉토리 포함              |
+| `daily-wrap/`                   | Daily Wrap 보존 viewer, 날짜별 리포트 HTML, 템플릿, renderer/fetcher |
+| `daily-wrap/100x-daily-wrap-template.html` | 리포트 자동 생성을 위한 HTML 템플릿                |
+| `daily-wrap/*_100x-daily-wrap.html` | 날짜별 리포트 파일 (예: `2025-07-02_100x-daily-wrap.html`) |
+| `daily-wrap/data/`              | viewer/renderer용 날짜별 데이터 JSON                         |
+| `data/metadata/`                | Daily Wrap 아카이브 메타데이터 JSON                         |
+| `data/reports-index.json`       | Daily Wrap 아카이브 인덱스                                |
 
 ### 📁 /100x/daily-wrap/\_agent-prompts/
 

@@ -64,6 +64,8 @@ type LocalRateLimitEntry = {
 
 const STATIC_ASSET_PATH_PATTERN =
   /\.(?:avif|css|csv|gif|ico|jpe?g|js|json|map|mjs|png|svg|txt|webmanifest|webp|woff2?)$/i;
+const ADMIN_STATIC_FILE_PATH_PATTERN =
+  /\.(?:avif|css|csv|gif|gs|html?|ico|jpe?g|js|json|map|md|mjs|png|svg|txt|webmanifest|webp|woff2?)$/i;
 const ONE_MINUTE_MS = 60_000;
 const NOINDEX_HEADER_VALUE = "noindex, nofollow, noarchive";
 const localRateLimitStore = new Map<string, LocalRateLimitEntry>();
@@ -122,6 +124,14 @@ function isAdminPath(pathname: string): boolean {
 
 function isAdminApiPath(pathname: string): boolean {
   return pathname === "/api/admin" || pathname.startsWith("/api/admin/");
+}
+
+function isAdminStaticFilePath(pathname: string): boolean {
+  return pathname.startsWith("/admin/") && ADMIN_STATIC_FILE_PATH_PATTERN.test(pathname);
+}
+
+function isProtectedAdminStaticAssetPath(pathname: string): boolean {
+  return isAdminStaticFilePath(pathname) && !pathname.endsWith(".html");
 }
 
 function withNoindexHeader(response: NextResponse): NextResponse {
@@ -232,13 +242,22 @@ function rateLimitResponse(): NextResponse {
 
 function getAdminTrailingSlashRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
-  if (!isAdminPath(pathname) || pathname.endsWith("/")) {
+  if (!isAdminPath(pathname) || pathname.endsWith("/") || isAdminStaticFilePath(pathname)) {
     return null;
   }
 
   const targetUrl = request.nextUrl.clone();
   targetUrl.pathname = `${pathname}/`;
   return NextResponse.redirect(targetUrl, 308);
+}
+
+function getAdminGateRedirect(request: NextRequest): NextResponse {
+  const { pathname, search } = request.nextUrl;
+  const targetUrl = request.nextUrl.clone();
+  targetUrl.pathname = "/admin/";
+  targetUrl.search = "";
+  targetUrl.searchParams.set("redirect", `${pathname}${search}`);
+  return withNoindexHeader(NextResponse.redirect(targetUrl));
 }
 
 function normalizeAdminLegacyPath(pathname: string): string | null {
@@ -297,8 +316,19 @@ export async function middleware(request: NextRequest) {
 
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
   const normalizedTravelPath = normalizeLegacyTravelPath(pathname);
+  let authenticated: boolean | null = null;
+  const hasAdminSession = async () => {
+    if (authenticated === null) {
+      const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value ?? null;
+      authenticated = await verifyAdminSessionToken(token);
+    }
+    return authenticated;
+  };
 
   if (!normalizedAdminPath && !normalizedTravelPath) {
+    if (isProtectedAdminStaticAssetPath(pathname) && !(await hasAdminSession())) {
+      return getAdminGateRedirect(request);
+    }
     const response = NextResponse.next();
     return isAdminPath(pathname) || isAdminApiPath(pathname) ? withNoindexHeader(response) : response;
   }
@@ -316,13 +346,10 @@ export async function middleware(request: NextRequest) {
     targetUrl.searchParams.set("redirect", `${pathname}${search}`);
   }
 
-  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value ?? null;
-  const authenticated = await verifyAdminSessionToken(token);
-
   if (
     normalizedAdminPath &&
     request.nextUrl.searchParams.get("embed") === "1" &&
-    authenticated
+    (await hasAdminSession())
   ) {
     return withNoindexHeader(NextResponse.next());
   }
