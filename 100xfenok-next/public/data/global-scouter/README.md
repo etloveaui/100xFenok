@@ -166,7 +166,7 @@ global-scouter/
 ## Usage
 
 ```javascript
-const BASE = 'https://100xfenok.pages.dev/data/global-scouter';
+const BASE = 'https://100xfenok.etloveaui.workers.dev/data/global-scouter';
 
 // Get stock index
 const index = await fetch(`${BASE}/core/stocks_index.json`).then(r => r.json());

@@ -268,7 +268,7 @@ Interest coverage ratio to credit rating lookup tables.
    ```
 3. Copy 6 JSON files from `output/` to this folder and the Next public mirror
 4. Commit + push
-5. Verify fetch from `https://100xfenok.pages.dev/data/damodaran/`
+5. Verify fetch from `https://100xfenok.etloveaui.workers.dev/data/damodaran/`
 
 **Converter location**: `docs/products/converters/damodaran/` (v2.3.0)
 

@@ -166,7 +166,7 @@ Additional integrity guards:
 ### JavaScript (Frontend)
 
 ```javascript
-const BASE = 'https://100xfenok.pages.dev/data/slickcharts';
+const BASE = 'https://100xfenok.etloveaui.workers.dev/data/slickcharts';
 
 // Get Treasury rates
 const treasury = await fetch(`${BASE}/treasury.json`).then(r => r.json());
@@ -186,7 +186,7 @@ console.log(universe.stocks.length); // 516
 ```python
 import requests
 
-BASE = 'https://100xfenok.pages.dev/data/slickcharts'
+BASE = 'https://100xfenok.etloveaui.workers.dev/data/slickcharts'
 
 # Get S&P 500 returns history
 returns = requests.get(f'{BASE}/sp500-returns.json').json()

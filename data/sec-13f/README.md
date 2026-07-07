@@ -180,7 +180,7 @@ Stale investors are flagged in `summary.json` with `is_stale`, `latest_quarter`,
 ## Usage
 
 ```javascript
-const BASE = 'https://100xfenok.pages.dev/data/sec-13f';
+const BASE = 'https://100xfenok.etloveaui.workers.dev/data/sec-13f';
 
 // Get summary
 const summary = await fetch(`${BASE}/summary.json`).then(r => r.json());

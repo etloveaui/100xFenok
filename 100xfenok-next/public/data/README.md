@@ -78,14 +78,14 @@
 
 ## API Endpoints
 
-Base URL: `https://100xfenok.pages.dev/data/`
+Base URL: `https://100xfenok.etloveaui.workers.dev/data/`
 
 ```javascript
 // Example: Get S&P 500 holdings
-const sp500 = await fetch('https://100xfenok.pages.dev/data/slickcharts/sp500.json').then(r => r.json());
+const sp500 = await fetch('https://100xfenok.etloveaui.workers.dev/data/slickcharts/sp500.json').then(r => r.json());
 
 // Example: Get AAPL individual data
-const aapl = await fetch('https://100xfenok.pages.dev/data/slickcharts/stocks/AAPL.json').then(r => r.json());
+const aapl = await fetch('https://100xfenok.etloveaui.workers.dev/data/slickcharts/stocks/AAPL.json').then(r => r.json());
 ```
 
 ---
