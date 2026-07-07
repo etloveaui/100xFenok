@@ -1,17 +1,6 @@
 name: QA Visual
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "100xfenok-next/src/**"
-      - "100xfenok-next/public/**"
-      - "100xfenok-next/tests/visual/**"
-      - "100xfenok-next/playwright.visual.config.ts"
-      - "100xfenok-next/qa-baselines/visual/v6/**"
-      - "100xfenok-next/package.json"
-      - "100xfenok-next/package-lock.json"
-      - ".github/workflows/qa-visual.yml"
   workflow_dispatch: {}
 
 concurrency:
@@ -49,6 +38,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate build version
+        run: npm run build:version
 
       - name: Build app
         run: NEXT_BUILD_TARGET=cloudflare npx next build
