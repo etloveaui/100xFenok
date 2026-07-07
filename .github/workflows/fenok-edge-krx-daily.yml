@@ -141,7 +141,7 @@ jobs:
             100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update fenok edge krx daily data"
           for attempt in $(seq 1 5); do
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
             if git push; then
               exit 0
             fi
