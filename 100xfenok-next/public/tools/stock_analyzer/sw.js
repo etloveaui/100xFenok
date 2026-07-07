@@ -356,17 +356,6 @@ self.addEventListener('message', (event) => {
     event.ports[0].postMessage({ version: CACHE_NAME });
   }
   
-  if (event.data && event.data.type === 'CLEAR_CACHE') {
-    event.waitUntil(
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
-      }).then(() => {
-        event.ports[0].postMessage({ success: true });
-      })
-    );
-  }
 });
 
 console.log('🚀 Service Worker 로드 완료 - PWA 지원');

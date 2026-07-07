@@ -6,4 +6,4 @@
 
 | 폴더 | 상태 | 사유 |
 |------|------|------|
-| `onesignal/` | 중단 | 정적 페이지(GitHub Pages)에서 OneSignal 푸시 알림 불가. 서버 이전 시 재사용 예정. |
+| *(none)* | 정리됨 | Legacy notification 잔여 파일은 canonical Worker 전환 후 삭제됨. |

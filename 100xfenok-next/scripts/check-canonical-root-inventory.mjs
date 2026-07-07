@@ -240,14 +240,6 @@ function legacyHtmlClassification(legacyHtml) {
     const publicPath = publicPathFromFile(item.file);
     const baseItem = { ...item, public_path: publicPath };
     const route = iframeTargets.get(publicPath) ?? null;
-    if (publicPath === "/tools/stock_analyzer/CLEAR_CACHE.html") {
-      return {
-        ...baseItem,
-        class: "low_risk_retire_candidate",
-        route: "/tools/stock-analyzer",
-        reason: "cache helper page is not an iframe target; smoke stock-analyzer direct URL before redirect/delete",
-      };
-    }
     if (route) {
       return {
         ...baseItem,

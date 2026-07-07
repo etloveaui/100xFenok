@@ -315,27 +315,6 @@ function assertRank2DailyWrapRedirectContract(errors) {
   }
 }
 
-function assertClearCacheRetireRedirectContract(errors) {
-  const label = "low-risk CLEAR_CACHE retire redirect";
-  const redirectsPath = path.join(APP_ROOT, "public", "_redirects");
-  assert(fs.existsSync(redirectsPath), `${label}: public/_redirects is missing`, errors);
-  if (!fs.existsSync(redirectsPath)) return;
-
-  const lines = fs.readFileSync(redirectsPath, "utf8").split(/\r?\n/);
-  const source = "/tools/stock_analyzer/CLEAR_CACHE.html";
-  const destination = "/tools/stock-analyzer/";
-  const expectedRule = `${source} ${destination} 308`;
-  const anchorRule = "/100x/100x-main.html /100x/daily-wrap 308";
-  const ruleIndex = lines.indexOf(expectedRule);
-  const anchorIndex = lines.indexOf(anchorRule);
-
-  assert(ruleIndex !== -1, `${label}: missing _redirects rule ${expectedRule}`, errors);
-  assert(anchorIndex !== -1, `${label}: missing _redirects anchor ${anchorRule}`, errors);
-  if (ruleIndex !== -1 && anchorIndex !== -1) {
-    assert(ruleIndex === anchorIndex + 1, `${label}: ${expectedRule} must stay immediately after ${anchorRule}`, errors);
-  }
-}
-
 function assertRouteIaContracts(errors) {
   const productNavSource = readAppSource("src/lib/product-nav.ts");
   const shellSource = readAppSource("src/components/shell/AppShell.tsx");
@@ -454,7 +433,6 @@ for (const key of REQUIRED_ROUTE_KEYS) {
 assertRouteIaContracts(errors);
 assertRouteScopeClassificationAck(errors);
 assertRank2DailyWrapRedirectContract(errors);
-assertClearCacheRetireRedirectContract(errors);
 
 for (const routePattern of routeExports.appRoutePatterns ?? []) {
   const pagePath = routePatternPage(routePattern);
