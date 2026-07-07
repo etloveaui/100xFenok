@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-07-07T06:51:28.370Z",
+  "generated_at": "2026-07-07T07:13:32.504Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -14,7 +14,7 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-07-06T04:38:22.407Z",
+    "generated_at": "2026-07-07T07:13:11.454Z",
     "current_only": true,
     "total": 1064,
     "by_market": [
@@ -132,15 +132,15 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-07-06T04:38:23.977Z",
-          "age_hours": 26.22,
+          "generated_at": "2026-07-07T07:13:13.109Z",
+          "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": false,
           "generated_at": "2026-07-03T01:27:41.638Z",
-          "age_hours": 101.4,
+          "age_hours": 101.76,
           "max_age_hours": 48
         },
         {
@@ -183,8 +183,8 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-07-06T04:38:33.582Z",
-        "generated_age_hours": 26.22,
+        "generated_at": "2026-07-07T07:13:25.677Z",
+        "generated_age_hours": 0,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
         "daily_ready": true,
@@ -195,12 +195,12 @@
         "counts": {
           "source_scored_etf_count": 4484,
           "structural_candidate_count": 1572,
-          "selected_count": 117,
-          "fresh_selected_count": 117,
+          "selected_count": 116,
+          "fresh_selected_count": 116,
           "stale_selected_count": 0,
           "min_selected_count": 75,
           "selected_by_category": {
-            "Alternatives": 14,
+            "Alternatives": 13,
             "Asset Allocation": 10,
             "Commodity": 7,
             "Equity": 50,
@@ -453,31 +453,31 @@
         "label": "Current active stock scoring chain",
         "denominator": 1064,
         "stage": "PUBLIC",
-        "readiness_status": "ready",
-        "public_done_claim_allowed": true,
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": true,
-          "gated": true
+          "daily": false,
+          "gated": false
         },
-        "caveat": "The current active stock chain is public-scored and has Korea+US daily/gated source proof under the current S0 scope; HKEX/SSE/SZSE and US_CLASS mapping remain separate expansion work.",
+        "caveat": "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
         "blocking_evidence": {
           "evidence_origin": "derived_counts_only",
-          "daily_ready": true,
-          "gated_ready": true,
+          "daily_ready": false,
+          "gated_ready": false,
           "checks": [
             {
               "id": "krx_full_daily_source_ready",
-              "status": "ready",
-              "covered_count": 337,
+              "status": "blocked",
+              "covered_count": 0,
               "denominator": 337,
-              "missing_count": 0,
-              "source_date": "2026-07-06",
-              "age_days": 1,
+              "missing_count": 337,
+              "source_date": null,
+              "age_days": null,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
               "caveat": "Empty KRX calendar runs are not counted as issuer daily coverage."
@@ -607,7 +607,20 @@
               "next_action": "Build HKEX/SSE/SZSE daily-source workstream before claiming all active 1066 stocks as daily/gated."
             }
           ],
-          "blockers": [],
+          "blockers": [
+            {
+              "id": "krx_full_daily_source_ready",
+              "status": "blocked",
+              "covered_count": 0,
+              "denominator": 337,
+              "missing_count": 337,
+              "source_date": null,
+              "age_days": null,
+              "max_age_days": 4,
+              "eligibility_policy": "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
+              "caveat": "Empty KRX calendar runs are not counted as issuer daily coverage."
+            }
+          ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
         }
       },
@@ -670,15 +683,15 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-07-06T04:38:23.977Z",
-              "age_hours": 26.22,
+              "generated_at": "2026-07-07T07:13:13.109Z",
+              "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": false,
               "generated_at": "2026-07-03T01:27:41.638Z",
-              "age_hours": 101.4,
+              "age_hours": 101.76,
               "max_age_hours": 48
             },
             {
@@ -719,7 +732,7 @@
       {
         "id": "etf_core_daily_basket",
         "label": "ETF Core Daily Basket",
-        "denominator": 117,
+        "denominator": 116,
         "stage": "GATED_INTERNAL",
         "readiness_status": "not_ready",
         "public_done_claim_allowed": false,
@@ -736,8 +749,8 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-07-06T04:38:33.582Z",
-          "generated_age_hours": 26.22,
+          "generated_at": "2026-07-07T07:13:25.677Z",
+          "generated_age_hours": 0,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
           "daily_ready": true,
@@ -748,12 +761,12 @@
           "counts": {
             "source_scored_etf_count": 4484,
             "structural_candidate_count": 1572,
-            "selected_count": 117,
-            "fresh_selected_count": 117,
+            "selected_count": 116,
+            "fresh_selected_count": 116,
             "stale_selected_count": 0,
             "min_selected_count": 75,
             "selected_by_category": {
-              "Alternatives": 14,
+              "Alternatives": 13,
               "Asset Allocation": 10,
               "Commodity": 7,
               "Equity": 50,
@@ -795,9 +808,7 @@
       "completed_endpoint_calls": 31,
       "estimated_full_endpoint_calls": 7812,
       "latest_batch_manifest": "_private/admin/fenok-edge-korea/daily/krx_backfill_20260706/manifest.json",
-      "latest_batch_dates": [
-        "2026-07-06"
-      ],
+      "latest_batch_dates": [],
       "latest_batch_summary": {
         "total_files": 31,
         "success_files": 31,
@@ -809,28 +820,18 @@
       "caveat": "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date."
     },
     "us_252_reference_ticker_queue": {
-      "status": "started_bounded_supervised",
-      "completed_batches": 1,
+      "status": "not_started",
+      "completed_batches": 0,
       "total_batches": 51,
-      "completed_trading_dates": 5,
+      "completed_trading_dates": 0,
       "total_trading_dates": 252,
-      "completed_finra_requests": 5,
+      "completed_finra_requests": 0,
       "total_finra_requests": 252,
-      "completed_occ_side_requests": 80,
+      "completed_occ_side_requests": 0,
       "total_occ_side_requests": 4032,
-      "latest_batch_manifest": "_private/admin/fenok-flow/backfill/20260629-full252/manifests/us_daily_backfill_smoke_5d_20250702.json",
-      "latest_batch_dates": [
-        "20250626",
-        "20250627",
-        "20250630",
-        "20250701",
-        "20250702"
-      ],
-      "latest_batch_status_counts": {
-        "success": 10,
-        "partial_or_failed": 0,
-        "empty": 0
-      },
+      "latest_batch_manifest": null,
+      "latest_batch_dates": [],
+      "latest_batch_status_counts": null,
       "caveat": "This is 252-history progress for the 8 reference tickers only. It does not expand current active coverage beyond the existing computed US rows."
     }
   },
@@ -840,7 +841,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-07-07T06:51:28.370Z"
+        "generated_at": "2026-07-07T07:13:32.504Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -882,15 +883,15 @@
       },
       {
         "id": "etf_signal_summary_freshness",
-        "generated_at": "2026-07-06T04:38:23.977Z",
-        "age_hours": 26.22,
+        "generated_at": "2026-07-07T07:13:13.109Z",
+        "age_hours": 0.01,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-07-03T01:27:41.638Z",
-        "age_hours": 101.4,
+        "age_hours": 101.76,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 13,
@@ -909,10 +910,10 @@
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-07-06T04:38:33.582Z",
-        "age_hours": 26.22,
-        "selected_count": 117,
-        "fresh_selected_count": 117,
+        "generated_at": "2026-07-07T07:13:25.677Z",
+        "age_hours": 0,
+        "selected_count": 116,
+        "fresh_selected_count": 116,
         "stale_selected_count": 0,
         "status": "ready",
         "caveat": "This is the ETF service daily/gated target. Full ETF daily 1Y gaps stay in the separate rolling diagnostic/backfill lane."
