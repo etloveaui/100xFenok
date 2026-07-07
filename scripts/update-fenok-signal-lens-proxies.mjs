@@ -45,6 +45,7 @@ function parseArgs(argv) {
     optionsEligibleManifest: "",
     optionsBatchSize: "",
     optionsBatchIndex: "",
+    optionsBatchCount: "",
     optionsStartAfter: "",
     optionsMaxRequests: "",
     optionsFailThreshold: "",
@@ -84,6 +85,7 @@ function parseArgs(argv) {
     else if (arg === "--options-eligible-manifest") args.optionsEligibleManifest = next();
     else if (arg === "--options-batch-size") args.optionsBatchSize = next();
     else if (arg === "--options-batch-index") args.optionsBatchIndex = next();
+    else if (arg === "--options-batch-count") args.optionsBatchCount = next();
     else if (arg === "--options-start-after") args.optionsStartAfter = next();
     else if (arg === "--options-max-requests") args.optionsMaxRequests = next();
     else if (arg === "--options-fail-threshold") args.optionsFailThreshold = next();
@@ -161,22 +163,44 @@ function buildPlan(args) {
   }
 
   if (!args.skipOptions) {
-    const optionArgs = [
-      "scripts/fetch-fenok-occ-options-volume.mjs",
-      ...tickerArgs(args),
-      "--max-walkback-days",
-      args.optionsMaxWalkbackDays,
-      "--sleep-ms",
-      args.optionsSleepMs,
-    ];
-    if (args.optionsEligibleManifest) optionArgs.push("--eligible-manifest", args.optionsEligibleManifest);
-    if (args.optionsBatchSize) optionArgs.push("--batch-size", args.optionsBatchSize);
-    if (args.optionsBatchIndex) optionArgs.push("--batch-index", args.optionsBatchIndex);
-    if (args.optionsStartAfter) optionArgs.push("--start-after", args.optionsStartAfter);
-    if (args.optionsMaxRequests) optionArgs.push("--max-requests", args.optionsMaxRequests);
-    if (args.optionsFailThreshold) optionArgs.push("--fail-threshold", args.optionsFailThreshold);
-    if (args.noFetch) optionArgs.push("--no-fetch");
-    plan.push({ label: "OCC listed-options volume skew proxy", command: process.execPath, args: optionArgs });
+    const buildOccArgs = (batchIndex) => {
+      const optionArgs = [
+        "scripts/fetch-fenok-occ-options-volume.mjs",
+        ...tickerArgs(args),
+        "--max-walkback-days",
+        args.optionsMaxWalkbackDays,
+        "--sleep-ms",
+        args.optionsSleepMs,
+      ];
+      if (args.optionsEligibleManifest) optionArgs.push("--eligible-manifest", args.optionsEligibleManifest);
+      if (args.optionsBatchSize) optionArgs.push("--batch-size", args.optionsBatchSize);
+      if (batchIndex !== null && batchIndex !== "") optionArgs.push("--batch-index", String(batchIndex));
+      if (args.optionsStartAfter) optionArgs.push("--start-after", args.optionsStartAfter);
+      if (args.optionsMaxRequests) optionArgs.push("--max-requests", args.optionsMaxRequests);
+      if (args.optionsFailThreshold) optionArgs.push("--fail-threshold", args.optionsFailThreshold);
+      if (args.noFetch) optionArgs.push("--no-fetch");
+      return optionArgs;
+    };
+
+    const batchCount = Number.parseInt(args.optionsBatchCount || "", 10);
+    if (!args.optionsBatchIndex && args.optionsBatchSize && Number.isFinite(batchCount) && batchCount > 1) {
+      // Sequential same-run batches: the per-batch request budget guard stays
+      // intact while the full eligible universe is covered every run. This is
+      // the sanctioned alternative to raising --max-requests.
+      for (let i = 0; i < batchCount; i++) {
+        plan.push({
+          label: `OCC listed-options volume skew proxy (batch ${i + 1}/${batchCount})`,
+          command: process.execPath,
+          args: buildOccArgs(i),
+        });
+      }
+    } else {
+      plan.push({
+        label: "OCC listed-options volume skew proxy",
+        command: process.execPath,
+        args: buildOccArgs(args.optionsBatchIndex || null),
+      });
+    }
   }
 
   if (!args.skipNews) {
