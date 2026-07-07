@@ -261,9 +261,17 @@ function buildPayload({ yyyymmdd, sourceUrl, fetchedAt, rows }) {
 async function fetchText(url) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`FINRA fetch failed: ${response.status} ${response.statusText}`);
+    const error = new Error(`FINRA fetch failed: ${response.status} ${response.statusText}`);
+    error.httpStatus = response.status;
+    throw error;
   }
   return response.text();
+}
+
+function isMissingFileError(err) {
+  // FINRA's CDN answers 403 (not 404) for files that do not exist, e.g. market
+  // holidays inside the requested window or today's file before publication.
+  return err && (err.httpStatus === 403 || err.httpStatus === 404);
 }
 
 function sleep(ms) {
@@ -277,6 +285,7 @@ async function fetchTextWithRetry(url, { retries = DEFAULT_RETRIES, retryBackoff
       return await fetchText(url);
     } catch (err) {
       lastError = err;
+      if (isMissingFileError(err)) break;
       if (attempt >= retries) break;
       if (retryBackoffMs > 0) await sleep(retryBackoffMs);
     }
@@ -459,17 +468,33 @@ async function run(argv = process.argv.slice(2)) {
 
   const generatedAt = new Date().toISOString();
   const results = [];
+  const skippedDates = [];
   for (const yyyymmdd of dates) {
-    results.push(await collectRegshoDailyDate({
-      yyyymmdd,
-      inputFile: args.inputFile,
-      noFetch: args.noFetch,
-      noWrite: args.noWrite,
-      generatedAt,
-      retries: args.retries,
-      retryBackoffMs: args.retryBackoffMs,
-    }));
+    try {
+      results.push(await collectRegshoDailyDate({
+        yyyymmdd,
+        inputFile: args.inputFile,
+        noFetch: args.noFetch,
+        noWrite: args.noWrite,
+        generatedAt,
+        retries: args.retries,
+        retryBackoffMs: args.retryBackoffMs,
+      }));
+    } catch (err) {
+      if (!isMissingFileError(err)) throw err;
+      // Holiday or not-yet-published file inside the window: record and move on
+      // instead of failing the whole run (and with it the downstream data push).
+      skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
+      console.warn(`[finra-daily] skip ${yyyymmdd}: file not published (HTTP ${err.httpStatus})`);
+      continue;
+    }
     if (args.sleepMs > 0) await sleep(args.sleepMs);
+  }
+  if (results.length === 0 && dates.length > 0) {
+    throw new Error(
+      `FINRA fetch produced no data for any requested date (${dates[0]}..${dates[dates.length - 1]}); ` +
+      "all files missing — refusing to treat a fully-missing window as success.",
+    );
   }
 
   let manifestFile = null;
@@ -507,6 +532,7 @@ async function run(argv = process.argv.slice(2)) {
     date: results.length === 1 ? first.date : null,
     source_url: results.length === 1 ? first.source_url : null,
     manifest_file: manifestFile,
+    skipped_dates: skippedDates,
     outputs: results.map(({ payload, outputAbs, rawTextAbs, ...result }) => result),
   };
 }
