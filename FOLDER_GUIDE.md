@@ -1,6 +1,6 @@
 # FOLDER\_GUIDE.md – 100xFenok 프로젝트 폴더 구조 가이드
 
-본 문서는 GitHub Pages 기반 정적 SPA인 **100xFenok** 시스템의 폴더 구조와 각 디렉토리의 역할을 문서화한 가이드입니다. Codex 및 기타 AI 에이전트가 작업을 수행할 때 이 문서를 반드시 참고해야 하며, 사람이 구조를 이해하고 유지보수할 때도 이 문서를 기준으로 정리해야 합니다.
+본 문서는 **100xFenok** 시스템의 폴더 구조와 각 디렉토리의 역할을 문서화한 가이드입니다. 현재 공개 정본은 `100xfenok-next/`의 Next/OpenNext 앱이며, 과거 GitHub Pages iframe SPA 루트는 퇴역했습니다.
 
 ---
 
@@ -8,16 +8,12 @@
 
 | 항목                              | 설명                                                      |
 | ------------------------------- | ------------------------------------------------------- |
-| `index.html`                    | SPA 진입점 – `iframe#content-frame`으로 전체 구조 형성 |
-| `main.html`                     | 홈 콘텐츠 – What's New 카드/버튼 등 표시                           |
-| `loadPage.js`, `loadNav.js`     | SPA 페이지 로딩 로직, nav은 index/404에서만 사용 |
-| `initBaseHref.js`               | GitHub Pages/preview/로컬 경로를 자동 판단하여 `<base href>` 설정    |
-| `version.js`                    | `siteVersion` 값을 통해 캐시 무효화를 제어함                         |
+| `100xfenok-next/`               | 현재 공개 정본 Next/OpenNext 앱, Cloudflare Worker 배포 설정 |
+| `initBaseHref.js`               | 보존 HTML 페이지의 상대경로 보정용 공용 헬퍼. 루트 SPA shell은 아님 |
 | `AGENTS.md`                     | 전체 시스템 유지보수용 Codex 작업 기준 규칙 문서                          |
 | `README.md`                     | 프로젝트 개요, 실행 방법, agent 기준 안내 포함                          |
-| `favicon.*`, `site.webmanifest` | PWA 및 SEO용 자산 파일 모음 (SVG, ICO, PNG 등)                   |
-| `404.html`                      | 모든 잘못된 URL을 `index.html?path=` 로 돌려보내는 리다이렉터 |
-| `tests/run-tests.js`            | HTML 구조 정합성 검증용 Node 기반 테스트 스크립트                        |
+| `favicon.*`                     | 남은 정적/SEO용 자산 파일 모음                                      |
+| `tests/run-tests.js`            | 보존 콘텐츠 폴더 정합성 검증용 Node 기반 테스트 스크립트                  |
 
 ---
 
@@ -121,12 +117,12 @@ UI 검증용 스크린샷 보관 폴더. 반응형 테스트(Mobile/Tablet/Deskt
 
 ## 📌 폴더 구조 운영 원칙 요약
 
-1. 모든 콘텐츠 페이지는 `<script type="module" src="../initBaseHref.js"></script>`를 포함하고 `<body>` 시작부에 `<div id="nav"></div>`를 배치한다 (nav와 footer는 index.html/404.html에만 존재)
+1. 새 공개 shell, navigation, routing은 `100xfenok-next/`에서 구현한다.
 2. `_agent-prompts/` 폴더는 폴더별 기능 단위로만 존재해야 함
-3. `version.js`는 HTML/JS/CSS 수정 시 반드시 갱신
+3. 보존 HTML 폴더는 Next sync-static 입력으로 다루며, 루트 iframe SPA를 재생성하지 않는다.
 4. `_legacy/` 폴더에는 중단된 기능만 보관 (README.md로 상태 명시)
-5. favicon/og\:image는 모든 페이지에서 동일한 root 상대경로로 표시돼야 함
+5. favicon/og\:image는 현재 Next public 자산 기준으로 관리한다.
 
 ---
 
-*Last Updated: 2025-11-25*
+*Last Updated: 2026-07-07*

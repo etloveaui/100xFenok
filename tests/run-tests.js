@@ -13,12 +13,8 @@ assert(html.includes("'$' + fmt") && html.includes("fmt + '%'"), 'Tick format un
 // Test 3: arrow icons in summary table
 assert(html.includes('▲') && html.includes('▼'), 'Arrow icons missing');
 
-// Index page tests
-const indexHtml = fs.readFileSync('index.html', 'utf8');
-assert(indexHtml.includes('<title>FenoK Dashboard</title>'), 'Index title missing');
-assert(indexHtml.includes('meta name="description"'), 'Index meta description missing');
-assert(indexHtml.includes('<div id="nav">'), 'Nav container missing');
-assert(indexHtml.includes('<iframe id="content-frame"'), 'Content frame missing');
+// Legacy GitHub Pages SPA root has been retired; content folders remain as
+// static sources for the Next/OpenNext application.
 
 // IB calculator page tests
 const ibHtml = fs.readFileSync('ib/ib-total-guide-calculator.html', 'utf8');

@@ -1,10 +1,10 @@
 # FenoK Dashboard
 
-FenoK is a collection of investment dashboards and tools built as a simple Single Page Application. Navigation and content are served as static HTML so the project can be hosted from any static file server. The SPA has exactly one entry point: `index.html`.
+FenoK is a collection of investment dashboards and tools. The canonical public app is now the Next/OpenNext application in `100xfenok-next/`, served from Cloudflare Workers. The old GitHub Pages iframe SPA root has been retired.
 
-## Installation
+## Local Checks
 
-No build step is required. Clone the repository and serve the directory using a simple HTTP server. Opening the files directly from disk can trigger cross-origin issues and some CDN assets may not load. Start a local server such as `npx serve` or `python -m http.server` and then browse to `index.html`. Node is only required to run the small test suite.
+Root content folders are still kept as static sources and data inputs for the Next app. Run the small legacy-content smoke test from this directory when changing those folders.
 
 ```bash
 npm install       # only if tests require additional modules
@@ -19,33 +19,18 @@ node tests/run-tests.js
 /vr             VR system documentation and calculators
 /posts          Analysis posts
 /tools          Auxiliary tools (e.g., multichart)
-index.html      SPA entry containing the iframe loader
-404.html        Redirects any unknown URL to `index.html?path=...`
-version.js      Cache busting constant
+/100xfenok-next Canonical Next/OpenNext app and Cloudflare Worker config
 ```
 
-Only `index.html` and `404.html` include the site's navigation and footer. Every
-other page should remain content-only. Place
+The preserved static content is mirrored into `100xfenok-next/public/` by the
+Next app's sync pipeline. New public navigation and shell behavior should be
+implemented in `100xfenok-next/`, not by recreating a root `index.html` iframe
+shell.
 
-```html
-<script type="module" src="../initBaseHref.js"></script>
-```
+## Canonical App
 
-in the `<head>` (adjust `../` depth as needed) and begin the `<body>` with
-
-```html
-<div id="nav"></div>
-```
-
-as a placeholder for SPA compatibility.
-
-## Usage
-
-After starting a local server, open `index.html` in your browser to launch the application. All internal navigation uses the `?path=` query to load content pages. `404.html` performs a universal redirect so any deep link or broken URL is absorbed back into `index.html?path=...`.
-
-## Updating preview/
-
-The `preview/` folder serves a GitHub Pages preview of the site. After modifying pages or assets in the project root, copy the updated files here so the preview stays in sync. Typically this includes `index.html`, `main.html`, `version.js`, `site.webmanifest`, `404.html` and any updated icon files.
+Use `100xfenok-next/README.md` and `100xfenok-next/package.json` for local
+development, Cloudflare build, and deploy commands.
 
 ## Contributing
 

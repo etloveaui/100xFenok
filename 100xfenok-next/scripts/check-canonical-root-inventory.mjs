@@ -4,7 +4,7 @@
  *
  * Measures the current Next app route surface, legacy public HTML footprint,
  * bridge consumers, deploy wiring, and old-domain consumers without redirect,
- * deletion, deployment, or network calls.
+ * deployment, or network calls.
  */
 
 import fs from "node:fs";
@@ -1324,7 +1324,7 @@ function main() {
   if (legacyHtml.length === 0) errors.push("legacy HTML inventory is empty; re-check sync-static/public root before #296 decisions");
   if (routeEmbedConsumers.length === 0) errors.push("bridge consumer inventory is empty; #296 cannot prove current iframe surface");
   if (!deployInventory.deploy_worker_workflow) errors.push("deploy-worker workflow missing");
-  if (!deployInventory.github_pages_workflow) errors.push("GitHub Pages workflow missing");
+  if (deployInventory.github_pages_workflow) errors.push("GitHub Pages workflow still present after root SPA retirement");
   if (!deployInventory.wrangler_config) errors.push("wrangler config missing");
   if (Object.hasOwn(EXPECTED_IFRAME_SRC_BY_ROUTE, "/market")) {
     errors.push("/market must not be in the route-backed iframe catalog; it is a native /market-valuation bookmark route");
@@ -1419,7 +1419,7 @@ function main() {
   }
 
   const report = {
-    schema_version: "canonical-root-inventory/v0.1",
+    schema_version: "canonical-root-inventory/v0.2",
     generated_at: new Date().toISOString(),
     issue: "#296 legacy 100x -> Next canonical-root cleanup",
     network: "none",
@@ -1431,6 +1431,7 @@ function main() {
       route_embed_consumer_files: routeEmbedConsumers.length,
       legacy_public_file_exists_consumer_files: legacyExistsConsumers.length,
       workflow_files: workflows.length,
+      github_pages_workflow_retired: deployInventory.github_pages_workflow === null,
       old_url_consumer_files: oldUrlConsumerFiles.length,
       old_url_unresolved_requires_owner_triage: oldUrlClassification.unresolved_requires_owner_triage.length,
       old_url_owner_approval_required_before_url_change: oldUrlClassification.owner_approval_required_before_url_change.length,
@@ -1486,7 +1487,7 @@ function main() {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else if (report.ok) {
     console.log(
-      `[canonical-root-inventory] ok app_routes=${report.counts.app_routes} legacy_html=${report.counts.legacy_html_files} bridge_files=${report.counts.route_embed_consumer_files} old_url_files=${report.counts.old_url_consumer_files}`,
+      `[canonical-root-inventory] ok app_routes=${report.counts.app_routes} legacy_html=${report.counts.legacy_html_files} bridge_files=${report.counts.route_embed_consumer_files} pages_workflow=retired old_url_files=${report.counts.old_url_consumer_files}`,
     );
   } else {
     console.error("[canonical-root-inventory] FAIL");

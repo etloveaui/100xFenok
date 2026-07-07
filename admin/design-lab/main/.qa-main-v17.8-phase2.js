@@ -3,7 +3,7 @@
  * Phase 2 QA Script — v17.8-responsive.html bento widget migration
  *
  * Adapted 1:1 from source/100xFenok/100xfenok-next/.qa-hero-zone-v3.js (Phase 1 pattern).
- * Pass bar: 45/45 (36 bento-card + 3 a11y + 6 smoke).
+ * Pass bar: 43/43 (36 bento-card + 3 a11y + 4 smoke).
  *
  * Spec reference: docs/planning/254-phase2-widget-migration-spec.md §5
  *
@@ -24,13 +24,11 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:8000";
 
 const phase2Route = "/admin/design-lab/main/v17.8-responsive.html";
 
-// Spec §5.4 + Phase 2 page itself (6 adjacent-page regression smoke checks).
+// Spec §5.4 + Phase 2 page itself (post-root-SPA smoke checks).
 const smokeRoutes = [
-  { route: "/main.html", label: "legacy main (production baseline)" },
   { route: phase2Route, label: "Phase 2 design-lab prototype" },
-  { route: "/index.html?path=tools/asset/multichart.html", label: "Multichart SPA" },
-  { route: "/index.html?path=ib/ib-total-guide-calculator.html", label: "IB Helper SPA" },
-  { route: "/notification-control-panel-web.html", label: "admin notification-control" },
+  { route: "/tools/asset/multichart.html", label: "Multichart static source" },
+  { route: "/ib/ib-total-guide-calculator.html", label: "IB Helper static source" },
   { route: "/admin/design-lab/index.html", label: "design-lab index" },
 ];
 
@@ -370,7 +368,7 @@ async function runA11yCheck(browser, viewport) {
   return record;
 }
 
-// 6 smoke checks — adjacent-page regression, mobile viewport, console-error gate.
+// 4 smoke checks — adjacent-page regression, mobile viewport, console-error gate.
 async function runSmokeRoute(browser, routeConfig) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
@@ -427,7 +425,7 @@ async function runSmokeRoute(browser, routeConfig) {
     a11yResults.push(await runA11yCheck(browser, viewport));
   }
 
-  // 6 smoke checks
+  // 4 smoke checks
   for (const routeConfig of smokeRoutes) {
     smokeResults.push(await runSmokeRoute(browser, routeConfig));
   }
@@ -446,8 +444,8 @@ async function runSmokeRoute(browser, routeConfig) {
     counts: {
       bentoCardAssertions: bentoCardResults.length,    // 36
       a11yChecks: a11yResults.length,                   // 3
-      smokeChecks: smokeResults.length,                 // 6
-      total: bentoCardResults.length + a11yResults.length + smokeResults.length, // 45
+      smokeChecks: smokeResults.length,                 // 4
+      total: bentoCardResults.length + a11yResults.length + smokeResults.length, // 43
     },
     bentoPageResults,
     bentoCardResults,

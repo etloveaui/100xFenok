@@ -1,27 +1,14 @@
-# Admin Notification Cache Data
+# Admin Data
 
-> **Source**: GitHub repository tree
-> **Update**: Hourly
-> **Files**: 1
+> **Source**: repository-generated operational manifests
+> **Scope**: admin and data-readiness metadata
 
 ---
 
 ## Overview
 
-Cached folder listings for `notification-control-panel-web.html` so the browser can read same-origin JSON instead of calling the GitHub Contents API directly.
+This directory stores lightweight admin/readiness manifests that are safe to publish with the static data payload.
 
-## File Catalog
+The legacy GitHub Pages notification panel and its `notification-folders.json` cache were retired on 2026-07-07.
 
-| File | Description | Update |
-|------|-------------|--------|
-| `notification-folders.json` | Latest HTML file listings for Daily Wrap, Alpha Scout, and Strategic Briefing | Hourly |
-
-## Contract
-
-1. Consumers should read `data/admin/notification-folders.json` only.
-2. The file is pre-sorted with the newest HTML file first in each folder.
-3. Browser code must not call `api.github.com/repos/.../contents/` for notification folder discovery.
-
----
-
-*Last Updated: 2026-04-14*
+*Last Updated: 2026-07-07*
