@@ -765,7 +765,7 @@ class MacroDataFetcher {
   }
 
   /**
-   * 동적 base path (Cloudflare Pages, localhost, GitHub Pages 호환)
+   * 동적 base path (Worker/localhost/retired static-host 호환)
    */
   getBasePath() {
     return location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';

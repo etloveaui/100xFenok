@@ -32,8 +32,7 @@ const OpsConsole = (function() {
   ];
 
   const ACTION_WORKFLOWS = [
-    { label: 'Deploy Worker', name: 'Deploy Worker (Cloudflare)' },
-    { label: 'Deploy Pages', name: 'Deploy to GitHub Pages' }
+    { label: 'Deploy Worker', name: 'Deploy Worker (Cloudflare)' }
   ];
 
   const FRESHNESS_GUARD_WATCHLIST = [

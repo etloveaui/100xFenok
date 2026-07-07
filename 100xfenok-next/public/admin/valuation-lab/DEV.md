@@ -81,7 +81,7 @@ valuation-lab/
 | 4 | Formatters | 3h | ✅ | `shared/formatters.js` |
 | 5 | Pure Functions | 6h | ✅ | `shared/calculations.js` |
 | 6 | Constants | 2h | ✅ | `shared/constants.js` |
-| 7 | CDN 캐싱 | 0.5h | ✅ | (GitHub Pages 기본) |
+| 7 | CDN/edge 캐싱 | 0.5h | ✅ | Worker/static asset 기준 |
 | 8 | XSS/CSP 보안 | 3h | ✅ | `shared/security.js` |
 
 ### Layer 1A: 지표 (16h)

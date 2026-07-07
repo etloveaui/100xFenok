@@ -3,7 +3,7 @@
  * v2.0.0 - DEC-063: global-scouter 모듈화 + sec-13f 통합
  */
 
-// 동적 base path (Cloudflare Pages, localhost, GitHub Pages 호환)
+// 동적 base path (Worker/localhost/retired static-host 호환)
 const getBasePath = () => {
   const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
   const isCloudflare = location.hostname.endsWith('pages.dev') || location.hostname.endsWith('workers.dev');
