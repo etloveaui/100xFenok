@@ -13,7 +13,7 @@ type Calculator = {
 };
 
 const require = createRequire(import.meta.url);
-const IBCalculatorV1 = require("../public/ib-helper/js/calculator.js") as Calculator;
+const IBCalculatorV1 = require("../public/ib/ib-helper/js/calculator.js") as Calculator;
 
 const FIXED_NOW = "2026-06-27T12:00:00.000Z";
 const RealDate = Date;

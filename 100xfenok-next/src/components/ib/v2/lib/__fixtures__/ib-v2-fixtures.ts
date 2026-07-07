@@ -1,5 +1,5 @@
 // IB Helper V2 E2E Fixtures
-// V1 localStorage shapes per public/ib-helper/js/profile-manager.js
+// V1 localStorage shapes per public/ib/ib-helper/js/profile-manager.js
 // Key: ib_profiles (object), ib_daily_data_<profileId>_<symbol> (object)
 
 const TQQQ_40DIV_PROFILE_ID = "tqqq_solo_1710000000000";

@@ -7,11 +7,7 @@ function normalizeOrigin(origin: string): string {
 }
 
 export const siteOrigin = normalizeOrigin(
-  process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-    process.env.VERCEL_URL ||
-    DEFAULT_SITE_ORIGIN,
+  process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN,
 );
 
 export function canonicalPath(pathname: string): string {

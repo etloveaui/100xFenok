@@ -210,13 +210,6 @@ applyReplacements("public/ib/ib-helper/index.html", [
   ],
 ]);
 
-applyReplacements("public/ib-helper/index.html", [
-  [
-    '<p class="mt-2 text-xs text-gray-500">Google 로그인 시작 버튼은 임시 중지 상태입니다.</p>',
-    '<p class="mt-2 text-xs text-gray-500">Google 버튼 대신 이메일 로그인으로 시작해 주세요.</p>',
-  ],
-]);
-
 applyReplacements("public/alpha-scout/alpha-scout-main.html", [
   [
     `            let totalPages = 0;

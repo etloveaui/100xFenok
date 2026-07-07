@@ -166,17 +166,6 @@ const CONTRACT_FILES = [
       "schemaVersion !== 'quote.v1'",
     ],
   },
-  {
-    path: "public/ib-helper/apps-script/yahoo-quotes.gs",
-    required: [
-      "CNBC stays primary for IB Helper",
-      "QUOTE_GATEWAY_URL",
-      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
-      "function fetchFrom100xQuote(symbol)",
-      "100X_QUOTE+YAHOO_OHLC",
-      "schemaVersion !== 'quote.v1'",
-    ],
-  },
 ];
 
 function readRelative(relativePath) {

@@ -70,8 +70,8 @@ import {
 import { createMonaVnextConversationId, type MonaVnextTurn } from "@/features/mona-vnext/transcript/turnBoundary";
 import { hasStrictMonaVnextStopIntent } from "@/features/mona-vnext/transcript/intentHints";
 import { WindDownVnextShell } from "@/features/mona-vnext/ui/WindDownVnextShell";
+import { BUILD_VERSION } from "@/generated/build-version";
 
-const BUILD_VERSION = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 9) ?? "local-vnext";
 const DEFAULT_SETTINGS = {
   model: MONA_VNEXT_DEFAULT_GEMINI_MODEL,
   voiceName: "Kore" as const,

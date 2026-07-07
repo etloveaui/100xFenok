@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Noto_Sans_KR, Orbitron } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import DesignVersionToggle from "@/components/design/DesignVersionToggle";
 import { siteOrigin } from "@/lib/site-url";
@@ -28,10 +26,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
   variable: "--font-jetbrains-mono",
 });
-
-const enableVercelRUM = Boolean(
-  process.env.VERCEL === "1" || process.env.VERCEL_ENV,
-);
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
@@ -111,12 +105,6 @@ export default function RootLayout({
         <main id="main-content" tabIndex={-1} className="pt-safe-nav">
           {children}
         </main>
-        {enableVercelRUM ? (
-          <>
-            <Analytics mode="production" />
-            <SpeedInsights />
-          </>
-        ) : null}
       </body>
     </html>
   );

@@ -303,7 +303,7 @@ function assertRank2DailyWrapRedirectContract(errors) {
   const lines = fs.readFileSync(redirectsPath, "utf8").split(/\r?\n/);
   const source = "/100x/100x-main.html";
   const destination = "/100x/daily-wrap";
-  const expectedRule = `${source} ${destination} 307`;
+  const expectedRule = `${source} ${destination} 308`;
   const ibHelperRule = "/admin/ib-helper /admin/ib-helper/ 308";
   const ruleIndex = lines.indexOf(expectedRule);
   const ibHelperIndex = lines.indexOf(ibHelperRule);
@@ -324,8 +324,8 @@ function assertClearCacheRetireRedirectContract(errors) {
   const lines = fs.readFileSync(redirectsPath, "utf8").split(/\r?\n/);
   const source = "/tools/stock_analyzer/CLEAR_CACHE.html";
   const destination = "/tools/stock-analyzer/";
-  const expectedRule = `${source} ${destination} 307`;
-  const anchorRule = "/100x/100x-main.html /100x/daily-wrap 307";
+  const expectedRule = `${source} ${destination} 308`;
+  const anchorRule = "/100x/100x-main.html /100x/daily-wrap 308";
   const ruleIndex = lines.indexOf(expectedRule);
   const anchorIndex = lines.indexOf(anchorRule);
 

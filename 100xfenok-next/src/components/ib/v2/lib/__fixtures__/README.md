@@ -1,6 +1,6 @@
 # IB Helper V2 E2E Fixtures
 
-Source shapes verified against `public/ib-helper/js/profile-manager.js` (V1, production).
+Source shapes verified against `public/ib/ib-helper/js/profile-manager.js` (V1, production).
 
 ## Files
 
