@@ -3,9 +3,6 @@ import { JetBrains_Mono, Noto_Sans_KR, Orbitron } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import AppEnhancements from "@/components/AppEnhancements";
 import DesignVersionToggle from "@/components/design/DesignVersionToggle";
 import { siteOrigin } from "@/lib/site-url";
 import { Suspense } from "react";
@@ -111,16 +108,9 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <DesignVersionToggle />
         </Suspense>
-        <div data-v1-chrome="navbar">
-          <Navbar />
-        </div>
         <main id="main-content" tabIndex={-1} className="pt-safe-nav">
           {children}
         </main>
-        <div data-v1-chrome="footer">
-          <Footer />
-        </div>
-        <AppEnhancements />
         {enableVercelRUM ? (
           <>
             <Analytics mode="production" />
