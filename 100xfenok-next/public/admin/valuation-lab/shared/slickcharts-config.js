@@ -3,7 +3,7 @@
  * v1.0.0 - #155: Historical Returns & Dividends Integration
  */
 
-// Dynamic base path (Cloudflare Pages, localhost, GitHub Pages compatible)
+// Dynamic base path (Worker/localhost/retired static-host compatible)
 const getSlickBasePath = () => {
   const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
   const isCloudflare = location.hostname.endsWith('pages.dev') || location.hostname.endsWith('workers.dev');
