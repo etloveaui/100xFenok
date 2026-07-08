@@ -582,7 +582,12 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       growth: fy1Growth,
       growthFormula: "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
       derivationDepth: "source_anchored_or_one_step",
-      sourceConfidence: "source_anchored",
+      sourceConfidence: "source_snapshot_base_effect_sensitive",
+      growthBasis: "source_reported_eps_growth_snapshot",
+      growthUsage: "context_only_not_earnings_roll_forward",
+      growthNotes: [
+        "FY1 eps_growth is the source-reported analyst growth snapshot; it is base-effect sensitive and is not applied to the FY1 earnings_proxy anchor.",
+      ],
     },
     {
       period: "fy2",
@@ -590,6 +595,9 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       growthFormula: "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
       derivationDepth: "chained_roll_forward",
       sourceConfidence: "compounded_derived",
+      growthBasis: "forward_eps_ratio",
+      growthUsage: "earnings_path_roll_forward",
+      growthNotes: ["Forward EPS ratio used to roll the prior earnings_proxy into this period."],
     },
     {
       period: "fy3",
@@ -597,6 +605,9 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       growthFormula: "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
       derivationDepth: "chained_roll_forward",
       sourceConfidence: "compounded_derived",
+      growthBasis: "forward_eps_ratio",
+      growthUsage: "earnings_path_roll_forward",
+      growthNotes: ["Forward EPS ratio used to roll the prior earnings_proxy into this period."],
     },
   ];
   const rows = [];
@@ -614,16 +625,22 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       period: item.period,
       derivation_depth: item.derivationDepth,
       source_confidence: item.sourceConfidence,
+      growth_basis: item.growthBasis,
+      growth_usage: item.growthUsage,
       earnings_proxy: formulaValue({
         value: round(earningsProxy, 4),
         formula: item.period === "fy1" ? "benchmark_best_eps_anchor" : "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
         sources: [indexConfig.benchmarkFile, source],
+        notes: item.period === "fy1"
+          ? ["FY1 row anchors to benchmark_best_eps; row eps_growth is context-only and not multiplied into earnings_proxy."]
+          : ["Row eps_growth is applied before this period's earnings_proxy is calculated."],
       }),
       eps_growth: formulaValue({
         value: round(item.growth.value, 6),
         formula: item.growthFormula,
         sources: [source],
         coverage: item.growth,
+        notes: item.growthNotes,
       }),
       book_value_beginning: formulaValue({
         value: round(beginningBook, 4),
@@ -693,7 +710,8 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
     notes: [
       "Forecast grid is a source-tiered input grid, not a target price or fair-value output.",
       "FY labels are stock_action forward estimate buckets; calendar-year labels require a separate reporting-period contract.",
-      "PEG uses derived.explicit_eps_growth_3y as the canonical growth denominator; period eps_growth is informational path growth.",
+      "PEG uses derived.explicit_eps_growth_3y as the canonical growth denominator.",
+      "FY1 eps_growth is a source-reported context snapshot and is not used to roll earnings_proxy; FY2/FY3 eps_growth values are forward-EPS roll-forward ratios.",
     ],
   };
 }
@@ -1008,7 +1026,9 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     } else {
       const expectedPeriods = ["fy1", "fy2", "fy3"];
       const expectedDerivationDepth = ["source_anchored_or_one_step", "chained_roll_forward", "chained_roll_forward"];
-      const expectedSourceConfidence = ["source_anchored", "compounded_derived", "compounded_derived"];
+      const expectedSourceConfidence = ["source_snapshot_base_effect_sensitive", "compounded_derived", "compounded_derived"];
+      const expectedGrowthBasis = ["source_reported_eps_growth_snapshot", "forward_eps_ratio", "forward_eps_ratio"];
+      const expectedGrowthUsage = ["context_only_not_earnings_roll_forward", "earnings_path_roll_forward", "earnings_path_roll_forward"];
       const requiredForecastKeys = [
         "earnings_proxy",
         "eps_growth",
@@ -1034,6 +1054,12 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
         if (row?.source_confidence !== expectedSourceConfidence[rowIndex]) {
           errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.source_confidence: expected ${expectedSourceConfidence[rowIndex]}`);
         }
+        if (row?.growth_basis !== expectedGrowthBasis[rowIndex]) {
+          errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.growth_basis: expected ${expectedGrowthBasis[rowIndex]}`);
+        }
+        if (row?.growth_usage !== expectedGrowthUsage[rowIndex]) {
+          errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.growth_usage: expected ${expectedGrowthUsage[rowIndex]}`);
+        }
         for (const key of requiredForecastKeys) {
           const field = row?.[key];
           if (field?.source_tier !== "derived_formula") {
@@ -1048,6 +1074,13 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
         }
         if (!Array.isArray(row?.peg_ratio?.sources) || !row.peg_ratio.sources.includes("derived.explicit_eps_growth_3y")) {
           errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.peg_ratio: derived.explicit_eps_growth_3y source required`);
+        }
+        if (rowIndex === 0) {
+          const growthNotes = Array.isArray(row?.eps_growth?.notes) ? row.eps_growth.notes.join(" ") : "";
+          const earningsNotes = Array.isArray(row?.earnings_proxy?.notes) ? row.earnings_proxy.notes.join(" ") : "";
+          if (!/not applied|not used|not multiplied/i.test(`${growthNotes} ${earningsNotes}`)) {
+            errors.push(`${id}.forecast_grid_v1.fy1: eps_growth must disclose that it is not used to roll earnings_proxy`);
+          }
         }
         for (const key of ["eps_growth", "stock_action_weighted_roe"]) {
           const coverage = row?.[key]?.coverage?.covered_weight_ratio;

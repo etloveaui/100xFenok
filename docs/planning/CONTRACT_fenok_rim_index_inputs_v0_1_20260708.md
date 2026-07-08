@@ -27,8 +27,18 @@ Date: 2026-07-08
 - `peg_ratio` formula/sources must use `derived.explicit_eps_growth_3y` as the
   default denominator; any row-level growth denominator must be explicitly
   documented as a divergence.
+- `forecast_grid_v1.periods[fy1].eps_growth` is a source-reported analyst
+  growth snapshot, not an earnings-path roll-forward input. It must carry
+  `growth_basis=source_reported_eps_growth_snapshot` and
+  `growth_usage=context_only_not_earnings_roll_forward`, and the FY1
+  `earnings_proxy` must remain anchored to benchmark EPS.
 - FY2/FY3 roll-forward rows must carry `derivation_depth` and
-  `source_confidence` markers when they depend on prior derived rows.
+  `source_confidence` markers when they depend on prior derived rows. Their
+  `eps_growth` values must carry `growth_basis=forward_eps_ratio` and
+  `growth_usage=earnings_path_roll_forward`.
+- Any public UI/API consumer that reads RIM forecast-grid `eps_growth` must
+  gate display/usage on `growth_usage=earnings_path_roll_forward`. Context-only
+  rows such as FY1 must not be rendered as RIM path growth.
 
 ## Proxy Diagnostics
 
@@ -62,6 +72,7 @@ Date: 2026-07-08
 ```bash
 node scripts/test-build-rim-index.mjs
 node scripts/build-rim-index.mjs --check
+node 100xfenok-next/scripts/check-rim-index-consumer-growth-guard.mjs
 npm --prefix 100xfenok-next run qa:rim-index
 cmp data/computed/rim-index/inputs.json 100xfenok-next/public/data/computed/rim-index/inputs.json
 grep -n "0.0948\\|0.0998\\|0.059603\\|0.070707" scripts/build-*.mjs && exit 1 || true

@@ -78,8 +78,18 @@ for (const id of ["SPX", "NDX"]) {
     );
     assert.equal(
       row.source_confidence,
-      rowIndex === 0 ? "source_anchored" : "compounded_derived",
+      rowIndex === 0 ? "source_snapshot_base_effect_sensitive" : "compounded_derived",
       `${id}: source confidence`,
+    );
+    assert.equal(
+      row.growth_basis,
+      rowIndex === 0 ? "source_reported_eps_growth_snapshot" : "forward_eps_ratio",
+      `${id}: growth basis`,
+    );
+    assert.equal(
+      row.growth_usage,
+      rowIndex === 0 ? "context_only_not_earnings_roll_forward" : "earnings_path_roll_forward",
+      `${id}: growth usage`,
     );
     assert.equal(row.earnings_proxy.source_tier, "derived_formula", `${id}: earnings proxy tier`);
     assert.equal(row.book_value_ending.source_tier, "derived_formula", `${id}: book value ending tier`);
@@ -88,6 +98,15 @@ for (const id of ["SPX", "NDX"]) {
     assert.equal(row.peg_ratio.formula, "pe_ratio / (derived.explicit_eps_growth_3y * 100)", `${id}: PEG formula`);
     assert.ok(row.peg_ratio.sources.includes("derived.explicit_eps_growth_3y"), `${id}: PEG canonical source`);
     assert.notEqual(row.residual_income_proxy.value, null, `${id}: residual income proxy value`);
+    if (rowIndex === 0) {
+      assert.equal(row.earnings_proxy.formula, "benchmark_best_eps_anchor", `${id}: FY1 earnings proxy anchor`);
+      assert.match(row.eps_growth.formula, /estimateSnapshot\.epsGrowth\.fy1/, `${id}: FY1 source-reported growth formula`);
+      assert.match(row.eps_growth.notes.join(" "), /not applied/i, `${id}: FY1 eps growth caveat`);
+      assert.match(row.earnings_proxy.notes.join(" "), /not multiplied/i, `${id}: FY1 earnings proxy caveat`);
+    } else {
+      assert.match(row.eps_growth.formula, /forward_eps_fy\d \/ forward_eps_fy\d/, `${id}: forward ratio growth formula`);
+      assert.match(row.earnings_proxy.formula, /prior_period_earnings_proxy/, `${id}: roll-forward earnings proxy`);
+    }
   }
 }
 
