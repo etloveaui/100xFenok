@@ -165,6 +165,7 @@ jobs:
             data/computed/fenok_signal_lens_proxies*.json \
             data/computed/fenok_signals*.json \
             data/computed/fenok_etf_signals*.json \
+            data/computed/rim-index/inputs.json \
             data/computed/fenok_etf_core_daily_basket_summary.json \
             data/admin/fenok-edge-coverage-index.json \
             data/admin/fenok-edge-etf-daily1y-readiness.json \
@@ -172,6 +173,7 @@ jobs:
             data/admin/product-surface-coverage.json \
             100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
             100xfenok-next/public/data/admin/product-surface-coverage.json \
+            100xfenok-next/public/data/computed/rim-index/inputs.json \
             100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json \
             100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update fenok edge daily data"

@@ -97,6 +97,15 @@ DATASETS: tuple[DatasetSpec, ...] = (
         ("computed/market_structure_index",),
     ),
     DatasetSpec(
+        "computed.rim_index",
+        "computed/rim-index/*.json",
+        "computed/rim-index/*.json",
+        "scripts/build-rim-index.mjs",
+        "post benchmark/source refresh / manual RIM input rebuild",
+        "source-tiered RIM input payload derived from benchmarks, macro, Damodaran, SlickCharts, YF, and stock_action coverage",
+        ("computed/rim-index", "rim-index"),
+    ),
+    DatasetSpec(
         "stockanalysis.index_and_universe",
         "stockanalysis/index.json stockanalysis/etf_universe.json stockanalysis/classification/*.json stockanalysis/coverage/*.json",
         "stockanalysis/index.json stockanalysis/etf_universe.json stockanalysis/classification/*.json stockanalysis/coverage/*.json",
