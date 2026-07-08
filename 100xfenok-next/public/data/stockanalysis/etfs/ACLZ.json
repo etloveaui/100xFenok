@@ -1,19 +1,92 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ACLZ",
-  "fetched_at": "2026-06-30T14:34:48Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T22:45:00Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/ACLZ/holdings",
+    "overview": "/api/symbol/e/ACLZ/overview",
+    "quote": "/api/quotes/e/ACLZ",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/ACLZ/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/ACLZ/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/ACLZ/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/ACLZ/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/ACLZ/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/ACLZ/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "AXCELIS TECHNOLOGIES INC.-SWAP-CANT-L",
+        "weight_pct": 186.58,
+        "shares": 2981,
+        "raw": {
+          "no": 1,
+          "n": "AXCELIS TECHNOLOGIES INC.-SWAP-CANT-L",
+          "as": "186.58%",
+          "sh": "2,981"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 75.26,
+        "shares": 227813,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "75.26%",
+          "sh": "227,813"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 7.41,
+        "shares": 22437,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "7.41%",
+          "sh": "22,437"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.53,
+        "shares": 1595,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.53%",
+          "sh": "1,595"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -168.73,
+        "shares": 510718,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-168.73%",
+          "sh": "510,718"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-30T14:34:48Z",
+    "holding_count": 5,
+    "holdings_updated": "Jun 30, 2026",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
@@ -24,326 +97,1741 @@
       "confidence": "high"
     },
     "overview": {
-      "nav": 26.3067,
-      "expenseRatio": 0.45,
-      "provider_page": "Corgi Funds",
-      "category": "Trading--Leveraged Equity",
-      "legalType": "Exchange Traded Fund",
-      "description": "Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the underlying security equal to approximately two times its daily performance. It is non-diversified."
+      "aum": "$248.59K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "15,000",
+      "inception": "Jun 24, 2026",
+      "etf_website": "https://corgifunds.com/ACLZ"
     },
+    "performance": {},
     "quote": {
-      "p": 25.466100692749023,
-      "pd": 26.1065,
-      "c": -0.640399307250977,
-      "cp": -2.4530262856031144,
-      "u": "2026-06-30T14:34:48Z",
-      "ex": "yahoo_finance"
+      "p": 14.402,
+      "pd": 14.4,
+      "c": 0.77,
+      "cp": 5.67,
+      "cl": 13.63,
+      "cdr": 1,
+      "o": 14.4,
+      "h": 14.4,
+      "l": 14.4,
+      "v": 91.841,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 30.58,
+      "l52": 13.41,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 14.4,
+      "epd": 14.4,
+      "ec": 0,
+      "ecp": -0.01,
+      "eu": "Jul 8, 2026, 6:14 PM EDT",
+      "es": "After-hours",
+      "ets": 1783548848794.5186,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783550704187,
+      "symbol": "ACLZ",
+      "uid": "ACLZ"
     },
     "history": [
       {
-        "date": "2026-06-24",
-        "Open": 23.809999465942383,
-        "High": 24.260000228881836,
-        "Low": 23.34000015258789,
-        "Close": 24.260000228881836,
-        "Volume": 10600.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 26.1299991607666,
-        "High": 27.56999969482422,
-        "Low": 26.1299991607666,
-        "Close": 27.56999969482422,
-        "Volume": 400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 26.8799991607666,
-        "High": 26.8799991607666,
-        "Low": 25.399999618530273,
-        "Close": 25.469999313354492,
-        "Volume": 300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 26.110000610351562,
-        "High": 26.110000610351562,
-        "Low": 26.110000610351562,
-        "Close": 26.110000610351562,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 26.8799991607666,
-        "High": 26.10650062561035,
-        "Low": 26.10650062561035,
-        "Close": 25.466100692749023,
-        "Volume": 85.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 27.16,
+        "h": 27.17,
+        "l": 13.5,
+        "c": 13.63,
+        "a": 13.6298,
+        "v": 2461,
+        "ch": -54.97
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-24",
-          "Open": 23.809999465942383,
-          "High": 24.260000228881836,
-          "Low": 23.34000015258789,
-          "Close": 24.260000228881836,
-          "Volume": 10600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 13.5,
+          "h": 13.63,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 1064,
+          "ch": -11.74
         },
         {
-          "date": "2026-06-25",
-          "Open": 26.1299991607666,
-          "High": 27.56999969482422,
-          "Low": 26.1299991607666,
-          "Close": 27.56999969482422,
-          "Volume": 400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 15.443,
+          "h": 15.443,
+          "l": 15.443,
+          "c": 15.443,
+          "a": 15.4425,
+          "v": 65,
+          "ch": -7.11
         },
         {
-          "date": "2026-06-26",
-          "Open": 26.8799991607666,
-          "High": 26.8799991607666,
-          "Low": 25.399999618530273,
-          "Close": 25.469999313354492,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 22.88,
+          "h": 22.88,
+          "l": 16.28,
+          "c": 16.624,
+          "a": 16.6243,
+          "v": 908,
+          "ch": -37.68
         },
         {
-          "date": "2026-06-29",
-          "Open": 26.110000610351562,
-          "High": 26.110000610351562,
-          "Low": 26.110000610351562,
-          "Close": 26.110000610351562,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 26.674,
+          "c": 26.674,
+          "a": 26.6736,
+          "v": 424,
+          "ch": -11.87
         },
         {
-          "date": "2026-06-30",
-          "Open": 26.8799991607666,
-          "High": 26.10650062561035,
-          "Low": 26.10650062561035,
-          "Close": 25.466100692749023,
-          "Volume": 85.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 29.41,
+          "h": 30.58,
+          "l": 29.39,
+          "c": 30.266,
+          "a": 30.2657,
+          "v": 1475,
+          "ch": 15.93
+        },
+        {
+          "t": "2026-06-29",
+          "o": 26.107,
+          "h": 26.107,
+          "l": 26.107,
+          "c": 26.107,
+          "a": 26.1065,
+          "v": 874,
+          "ch": 2.51
+        },
+        {
+          "t": "2026-06-26",
+          "o": 26.88,
+          "h": 26.88,
+          "l": 25.4,
+          "c": 25.466,
+          "a": 25.4661,
+          "v": 275,
+          "ch": -7.62
+        },
+        {
+          "t": "2026-06-25",
+          "o": 26.13,
+          "h": 27.567,
+          "l": 26.13,
+          "c": 27.567,
+          "a": 27.5672,
+          "v": 398,
+          "ch": 13.63
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 15.443,
+          "h": 15.443,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 1129,
+          "ch": -18.01
+        },
+        {
+          "t": "2026-06-29",
+          "o": 26.107,
+          "h": 30.58,
+          "l": 16.28,
+          "c": 16.624,
+          "a": 16.6243,
+          "v": 3681,
+          "ch": -34.72
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 2461,
+          "ch": -54.97
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 15.443,
+          "h": 15.443,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 1129,
+          "ch": -18.01
+        },
+        {
+          "t": "2026-06-29",
+          "o": 26.107,
+          "h": 30.58,
+          "l": 16.28,
+          "c": 16.624,
+          "a": 16.6243,
+          "v": 3681,
+          "ch": -34.72
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 2461,
+          "ch": -54.97
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 2461,
+          "ch": -54.97
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Corgi ACLS 2x Daily ETF",
-        "longName": "Corgi ACLS 2x Daily ETF",
-        "currency": "USD",
-        "exchange": "BTS",
-        "fundFamily": "Corgi Funds",
-        "category": "Trading--Leveraged Equity",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 26.3067,
-        "netExpenseRatio": 0.45,
-        "previousClose": 26.1065,
-        "fiftyTwoWeekHigh": 27.57,
-        "fiftyTwoWeekLow": 23.34,
-        "fiftyTwoWeekChangePercent": 7.625723,
-        "averageVolume": 2850,
-        "averageVolume10days": 2850
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 26.10650062561035,
-        "dayLow": 26.10650062561035,
-        "exchange": "BTS",
-        "fiftyDayAverage": 25.852499961853027,
-        "lastPrice": 25.466100692749023,
-        "lastVolume": 85.0,
-        "open": 26.8799991607666,
-        "previousClose": 26.0,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 26.110000610351562,
-        "tenDayAverageVolume": 2850.0,
-        "threeMonthAverageVolume": 2850.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 25.852499961853027,
-        "yearChange": 0.07625722852497246,
-        "yearHigh": 27.56999969482422,
-        "yearLow": 23.34000015258789
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the underlying security equal to approximately two times its daily performance. It is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Trading--Leveraged Equity",
-          "family": "Corgi Funds",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "AXCELIS TECHNOLOGIES INC.-SWAP-CANT-L",
+          "as": "186.58%",
+          "sh": "2,981"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "75.26%",
+          "sh": "227,813"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "7.41%",
+          "sh": "22,437"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.53%",
+          "sh": "1,595"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-168.73%",
+          "sh": "510,718"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "aum": 248590.5
+      },
+      "date": "Jun 30, 2026",
+      "count": 5
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$248.59K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "15,000",
+      "ch1y": null,
+      "holdings": 5,
+      "inception": "Jun 24, 2026",
+      "chart": {
+        "expiration": 1783541279239,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "ACLZ": 0.0045,
-            "Category Average": 0.0
+            "t": 1783503000
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "ACLZ": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503060
           },
           {
-            "_index": "Total Net Assets",
-            "ACLZ": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "ACLZ": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503120
           },
           {
-            "_index": "Price/Book",
-            "ACLZ": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503180
           },
           {
-            "_index": "Price/Sales",
-            "ACLZ": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503240
           },
           {
-            "_index": "Price/Cashflow",
-            "ACLZ": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503300
           },
           {
-            "_index": "Median Market Cap",
-            "ACLZ": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503360
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "ACLZ": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "ACLZ": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503420
           },
           {
-            "_index": "Maturity",
-            "ACLZ": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503480
           },
           {
-            "_index": "Credit Quality",
-            "ACLZ": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503540
+          },
+          {
+            "t": 1783503600
+          },
+          {
+            "t": 1783503660
+          },
+          {
+            "t": 1783503720
+          },
+          {
+            "t": 1783503780
+          },
+          {
+            "t": 1783503840
+          },
+          {
+            "c": 13.63,
+            "o": 13.63,
+            "t": 1783503900
+          },
+          {
+            "c": 13.63,
+            "t": 1783503960
+          },
+          {
+            "t": 1783504019
+          },
+          {
+            "t": 1783504079
+          },
+          {
+            "t": 1783504139
+          },
+          {
+            "t": 1783504199
+          },
+          {
+            "t": 1783504259
+          },
+          {
+            "t": 1783504319
+          },
+          {
+            "t": 1783504379
+          },
+          {
+            "t": 1783504439
+          },
+          {
+            "t": 1783504499
+          },
+          {
+            "t": 1783504559
+          },
+          {
+            "t": 1783504619
+          },
+          {
+            "t": 1783504679
+          },
+          {
+            "t": 1783504739
+          },
+          {
+            "t": 1783504799
+          },
+          {
+            "t": 1783504859
+          },
+          {
+            "t": 1783504919
+          },
+          {
+            "t": 1783504979
+          },
+          {
+            "t": 1783505039
+          },
+          {
+            "t": 1783505099
+          },
+          {
+            "t": 1783505159
+          },
+          {
+            "t": 1783505219
+          },
+          {
+            "t": 1783505279
+          },
+          {
+            "t": 1783505339
+          },
+          {
+            "t": 1783505399
+          },
+          {
+            "t": 1783505459
+          },
+          {
+            "t": 1783505519
+          },
+          {
+            "t": 1783505579
+          },
+          {
+            "t": 1783505639
+          },
+          {
+            "t": 1783505699
+          },
+          {
+            "t": 1783505759
+          },
+          {
+            "t": 1783505819
+          },
+          {
+            "t": 1783505879
+          },
+          {
+            "t": 1783505939
+          },
+          {
+            "t": 1783505999
+          },
+          {
+            "t": 1783506059
+          },
+          {
+            "t": 1783506119
+          },
+          {
+            "t": 1783506179
+          },
+          {
+            "t": 1783506239
+          },
+          {
+            "t": 1783506299
+          },
+          {
+            "t": 1783506359
+          },
+          {
+            "t": 1783506419
+          },
+          {
+            "t": 1783506479
+          },
+          {
+            "t": 1783506539
+          },
+          {
+            "t": 1783506599
+          },
+          {
+            "t": 1783506659
+          },
+          {
+            "t": 1783506719
+          },
+          {
+            "t": 1783506779
+          },
+          {
+            "t": 1783506839
+          },
+          {
+            "t": 1783506899
+          },
+          {
+            "t": 1783506959
+          },
+          {
+            "t": 1783507019
+          },
+          {
+            "t": 1783507079
+          },
+          {
+            "t": 1783507139
+          },
+          {
+            "t": 1783507199
+          },
+          {
+            "t": 1783507259
+          },
+          {
+            "t": 1783507319
+          },
+          {
+            "t": 1783507379
+          },
+          {
+            "t": 1783507439
+          },
+          {
+            "t": 1783507499
+          },
+          {
+            "t": 1783507559
+          },
+          {
+            "t": 1783507619
+          },
+          {
+            "t": 1783507679
+          },
+          {
+            "t": 1783507739
+          },
+          {
+            "t": 1783507799
+          },
+          {
+            "t": 1783507859
+          },
+          {
+            "t": 1783507919
+          },
+          {
+            "t": 1783507979
+          },
+          {
+            "t": 1783508039
+          },
+          {
+            "t": 1783508099
+          },
+          {
+            "t": 1783508159
+          },
+          {
+            "t": 1783508219
+          },
+          {
+            "t": 1783508279
+          },
+          {
+            "t": 1783508339
+          },
+          {
+            "t": 1783508399
+          },
+          {
+            "t": 1783508459
+          },
+          {
+            "t": 1783508519
+          },
+          {
+            "t": 1783508579
+          },
+          {
+            "t": 1783508639
+          },
+          {
+            "t": 1783508699
+          },
+          {
+            "t": 1783508759
+          },
+          {
+            "t": 1783508819
+          },
+          {
+            "t": 1783508879
+          },
+          {
+            "t": 1783508939
+          },
+          {
+            "t": 1783508999
+          },
+          {
+            "t": 1783509059
+          },
+          {
+            "t": 1783509119
+          },
+          {
+            "t": 1783509179
+          },
+          {
+            "t": 1783509239
+          },
+          {
+            "t": 1783509299
+          },
+          {
+            "t": 1783509359
+          },
+          {
+            "t": 1783509419
+          },
+          {
+            "t": 1783509479
+          },
+          {
+            "t": 1783509539
+          },
+          {
+            "t": 1783509599
+          },
+          {
+            "t": 1783509659
+          },
+          {
+            "t": 1783509719
+          },
+          {
+            "t": 1783509779
+          },
+          {
+            "t": 1783509839
+          },
+          {
+            "t": 1783509899
+          },
+          {
+            "t": 1783509959
+          },
+          {
+            "t": 1783510019
+          },
+          {
+            "t": 1783510079
+          },
+          {
+            "t": 1783510139
+          },
+          {
+            "t": 1783510199
+          },
+          {
+            "t": 1783510259
+          },
+          {
+            "t": 1783510319
+          },
+          {
+            "t": 1783510379
+          },
+          {
+            "t": 1783510439
+          },
+          {
+            "t": 1783510499
+          },
+          {
+            "t": 1783510559
+          },
+          {
+            "t": 1783510619
+          },
+          {
+            "t": 1783510679
+          },
+          {
+            "t": 1783510739
+          },
+          {
+            "t": 1783510799
+          },
+          {
+            "t": 1783510859
+          },
+          {
+            "t": 1783510919
+          },
+          {
+            "t": 1783510979
+          },
+          {
+            "t": 1783511039
+          },
+          {
+            "t": 1783511099
+          },
+          {
+            "t": 1783511159
+          },
+          {
+            "t": 1783511219
+          },
+          {
+            "t": 1783511279
+          },
+          {
+            "t": 1783511339
+          },
+          {
+            "t": 1783511399
+          },
+          {
+            "t": 1783511459
+          },
+          {
+            "t": 1783511519
+          },
+          {
+            "t": 1783511579
+          },
+          {
+            "t": 1783511639
+          },
+          {
+            "t": 1783511699
+          },
+          {
+            "t": 1783511759
+          },
+          {
+            "t": 1783511819
+          },
+          {
+            "t": 1783511879
+          },
+          {
+            "t": 1783511939
+          },
+          {
+            "t": 1783511999
+          },
+          {
+            "t": 1783512059
+          },
+          {
+            "t": 1783512119
+          },
+          {
+            "t": 1783512179
+          },
+          {
+            "t": 1783512239
+          },
+          {
+            "t": 1783512299
+          },
+          {
+            "t": 1783512359
+          },
+          {
+            "t": 1783512419
+          },
+          {
+            "t": 1783512479
+          },
+          {
+            "t": 1783512539
+          },
+          {
+            "t": 1783512599
+          },
+          {
+            "t": 1783512659
+          },
+          {
+            "t": 1783512719
+          },
+          {
+            "t": 1783512779
+          },
+          {
+            "t": 1783512839
+          },
+          {
+            "t": 1783512899
+          },
+          {
+            "t": 1783512959
+          },
+          {
+            "t": 1783513019
+          },
+          {
+            "t": 1783513079
+          },
+          {
+            "t": 1783513139
+          },
+          {
+            "t": 1783513199
+          },
+          {
+            "t": 1783513259
+          },
+          {
+            "t": 1783513319
+          },
+          {
+            "t": 1783513379
+          },
+          {
+            "t": 1783513439
+          },
+          {
+            "t": 1783513499
+          },
+          {
+            "t": 1783513559
+          },
+          {
+            "t": 1783513619
+          },
+          {
+            "t": 1783513679
+          },
+          {
+            "t": 1783513739
+          },
+          {
+            "t": 1783513799
+          },
+          {
+            "t": 1783513859
+          },
+          {
+            "t": 1783513919
+          },
+          {
+            "t": 1783513979
+          },
+          {
+            "t": 1783514039
+          },
+          {
+            "t": 1783514099
+          },
+          {
+            "t": 1783514159
+          },
+          {
+            "t": 1783514219
+          },
+          {
+            "t": 1783514279
+          },
+          {
+            "t": 1783514339
+          },
+          {
+            "t": 1783514399
+          },
+          {
+            "t": 1783514459
+          },
+          {
+            "t": 1783514519
+          },
+          {
+            "t": 1783514579
+          },
+          {
+            "t": 1783514639
+          },
+          {
+            "t": 1783514699
+          },
+          {
+            "t": 1783514759
+          },
+          {
+            "t": 1783514819
+          },
+          {
+            "t": 1783514879
+          },
+          {
+            "t": 1783514939
+          },
+          {
+            "t": 1783514999
+          },
+          {
+            "t": 1783515059
+          },
+          {
+            "t": 1783515119
+          },
+          {
+            "t": 1783515179
+          },
+          {
+            "t": 1783515239
+          },
+          {
+            "t": 1783515299
+          },
+          {
+            "t": 1783515359
+          },
+          {
+            "t": 1783515419
+          },
+          {
+            "t": 1783515479
+          },
+          {
+            "t": 1783515539
+          },
+          {
+            "t": 1783515599
+          },
+          {
+            "t": 1783515659
+          },
+          {
+            "t": 1783515719
+          },
+          {
+            "t": 1783515779
+          },
+          {
+            "t": 1783515839
+          },
+          {
+            "t": 1783515899
+          },
+          {
+            "t": 1783515959
+          },
+          {
+            "t": 1783516019
+          },
+          {
+            "t": 1783516079
+          },
+          {
+            "t": 1783516139
+          },
+          {
+            "t": 1783516199
+          },
+          {
+            "t": 1783516259
+          },
+          {
+            "t": 1783516319
+          },
+          {
+            "t": 1783516379
+          },
+          {
+            "t": 1783516439
+          },
+          {
+            "t": 1783516499
+          },
+          {
+            "t": 1783516559
+          },
+          {
+            "t": 1783516619
+          },
+          {
+            "t": 1783516679
+          },
+          {
+            "t": 1783516739
+          },
+          {
+            "t": 1783516799
+          },
+          {
+            "t": 1783516859
+          },
+          {
+            "t": 1783516919
+          },
+          {
+            "t": 1783516979
+          },
+          {
+            "t": 1783517039
+          },
+          {
+            "t": 1783517099
+          },
+          {
+            "t": 1783517159
+          },
+          {
+            "t": 1783517219
+          },
+          {
+            "t": 1783517279
+          },
+          {
+            "t": 1783517339
+          },
+          {
+            "t": 1783517399
+          },
+          {
+            "t": 1783517459
+          },
+          {
+            "t": 1783517519
+          },
+          {
+            "t": 1783517579
+          },
+          {
+            "t": 1783517639
+          },
+          {
+            "t": 1783517699
+          },
+          {
+            "t": 1783517759
+          },
+          {
+            "t": 1783517819
+          },
+          {
+            "t": 1783517879
+          },
+          {
+            "t": 1783517939
+          },
+          {
+            "t": 1783517999
+          },
+          {
+            "t": 1783518059
+          },
+          {
+            "t": 1783518119
+          },
+          {
+            "t": 1783518179
+          },
+          {
+            "t": 1783518239
+          },
+          {
+            "t": 1783518299
+          },
+          {
+            "t": 1783518359
+          },
+          {
+            "t": 1783518419
+          },
+          {
+            "t": 1783518479
+          },
+          {
+            "t": 1783518539
+          },
+          {
+            "t": 1783518599
+          },
+          {
+            "t": 1783518659
+          },
+          {
+            "t": 1783518719
+          },
+          {
+            "t": 1783518779
+          },
+          {
+            "t": 1783518839
+          },
+          {
+            "t": 1783518899
+          },
+          {
+            "t": 1783518959
+          },
+          {
+            "t": 1783519019
+          },
+          {
+            "t": 1783519079
+          },
+          {
+            "t": 1783519139
+          },
+          {
+            "t": 1783519199
+          },
+          {
+            "t": 1783519259
+          },
+          {
+            "t": 1783519319
+          },
+          {
+            "t": 1783519379
+          },
+          {
+            "t": 1783519439
+          },
+          {
+            "t": 1783519499
+          },
+          {
+            "t": 1783519559
+          },
+          {
+            "t": 1783519619
+          },
+          {
+            "t": 1783519679
+          },
+          {
+            "t": 1783519739
+          },
+          {
+            "t": 1783519799
+          },
+          {
+            "t": 1783519859
+          },
+          {
+            "t": 1783519919
+          },
+          {
+            "t": 1783519979
+          },
+          {
+            "t": 1783520039
+          },
+          {
+            "t": 1783520099
+          },
+          {
+            "t": 1783520159
+          },
+          {
+            "t": 1783520219
+          },
+          {
+            "t": 1783520279
+          },
+          {
+            "t": 1783520339
+          },
+          {
+            "t": 1783520399
+          },
+          {
+            "t": 1783520459
+          },
+          {
+            "t": 1783520519
+          },
+          {
+            "t": 1783520579
+          },
+          {
+            "t": 1783520639
+          },
+          {
+            "t": 1783520699
+          },
+          {
+            "t": 1783520759
+          },
+          {
+            "t": 1783520819
+          },
+          {
+            "t": 1783520879
+          },
+          {
+            "t": 1783520939
+          },
+          {
+            "t": 1783520999
+          },
+          {
+            "t": 1783521059
+          },
+          {
+            "t": 1783521119
+          },
+          {
+            "t": 1783521179
+          },
+          {
+            "t": 1783521239
+          },
+          {
+            "t": 1783521299
+          },
+          {
+            "t": 1783521359
+          },
+          {
+            "t": 1783521419
+          },
+          {
+            "t": 1783521479
+          },
+          {
+            "t": 1783521539
+          },
+          {
+            "t": 1783521599
+          },
+          {
+            "t": 1783521659
+          },
+          {
+            "t": 1783521719
+          },
+          {
+            "t": 1783521779
+          },
+          {
+            "t": 1783521839
+          },
+          {
+            "t": 1783521899
+          },
+          {
+            "t": 1783521959
+          },
+          {
+            "t": 1783522019
+          },
+          {
+            "t": 1783522079
+          },
+          {
+            "t": 1783522139
+          },
+          {
+            "t": 1783522199
+          },
+          {
+            "t": 1783522259
+          },
+          {
+            "t": 1783522319
+          },
+          {
+            "t": 1783522379
+          },
+          {
+            "t": 1783522439
+          },
+          {
+            "t": 1783522499
+          },
+          {
+            "t": 1783522559
+          },
+          {
+            "t": 1783522619
+          },
+          {
+            "t": 1783522679
+          },
+          {
+            "t": 1783522739
+          },
+          {
+            "t": 1783522799
+          },
+          {
+            "t": 1783522859
+          },
+          {
+            "t": 1783522919
+          },
+          {
+            "t": 1783522979
+          },
+          {
+            "t": 1783523039
+          },
+          {
+            "t": 1783523099
+          },
+          {
+            "t": 1783523159
+          },
+          {
+            "t": 1783523219
+          },
+          {
+            "t": 1783523279
+          },
+          {
+            "t": 1783523339
+          },
+          {
+            "t": 1783523399
+          },
+          {
+            "t": 1783523459
+          },
+          {
+            "t": 1783523519
+          },
+          {
+            "t": 1783523579
+          },
+          {
+            "t": 1783523639
+          },
+          {
+            "t": 1783523699
+          },
+          {
+            "t": 1783523759
+          },
+          {
+            "t": 1783523819
+          },
+          {
+            "t": 1783523879
+          },
+          {
+            "t": 1783523939
+          },
+          {
+            "t": 1783523999
+          },
+          {
+            "t": 1783524059
+          },
+          {
+            "t": 1783524119
+          },
+          {
+            "t": 1783524179
+          },
+          {
+            "t": 1783524239
+          },
+          {
+            "t": 1783524299
+          },
+          {
+            "t": 1783524359
+          },
+          {
+            "t": 1783524419
+          },
+          {
+            "t": 1783524479
+          },
+          {
+            "t": 1783524539
+          },
+          {
+            "t": 1783524599
+          },
+          {
+            "t": 1783524659
+          },
+          {
+            "t": 1783524719
+          },
+          {
+            "t": 1783524779
+          },
+          {
+            "t": 1783524839
+          },
+          {
+            "t": 1783524899
+          },
+          {
+            "t": 1783524959
+          },
+          {
+            "t": 1783525019
+          },
+          {
+            "t": 1783525079
+          },
+          {
+            "t": 1783525139
+          },
+          {
+            "t": 1783525199
+          },
+          {
+            "t": 1783525259
+          },
+          {
+            "t": 1783525319
+          },
+          {
+            "t": 1783525379
+          },
+          {
+            "t": 1783525439
+          },
+          {
+            "t": 1783525499
+          },
+          {
+            "t": 1783525559
+          },
+          {
+            "t": 1783525619
+          },
+          {
+            "t": 1783525679
+          },
+          {
+            "t": 1783525739
+          },
+          {
+            "t": 1783525799
+          },
+          {
+            "t": 1783525859
+          },
+          {
+            "t": 1783525919
+          },
+          {
+            "t": 1783525979
+          },
+          {
+            "t": 1783526039
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
           }
         ]
       },
-      "history_1y": [
+      "description": "The Corgi ACLS 2x Daily ETF (ACLZ) is an exchange-traded fund that mostly invests in information technology equity. The fund provides 2x leveraged exposure, less fees and expenses, to the daily price movement for shares of Axcelis Technologies, Inc. (NASDAQ: ACLS), through derivatives such as swaps. ACLZ was launched on Jun 24, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "ACLZ"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/ACLZ",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jun 30, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "AXCELIS TECHNOLOGIES INC.-SWAP-CANT-L",
+            "as": "186.58%",
+            "sh": "2,981"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "75.26%",
+            "sh": "227,813"
+          },
+          {
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "7.41%",
+            "sh": "22,437"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "-0.53%",
+            "sh": "1,595"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-168.73%",
+            "sh": "510,718"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783613652941",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 30.266,
+        "priceMAX": 24.26
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 14.402,
+      "pd": 14.4,
+      "c": 0.77,
+      "cp": 5.67,
+      "cl": 13.63,
+      "cdr": 1,
+      "o": 14.4,
+      "h": 14.4,
+      "l": 14.4,
+      "v": 91.841,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 30.58,
+      "l52": 13.41,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 14.4,
+      "epd": 14.4,
+      "ec": 0,
+      "ecp": -0.01,
+      "eu": "Jul 8, 2026, 6:14 PM EDT",
+      "es": "After-hours",
+      "ets": 1783548848794.5186,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783550704187,
+      "symbol": "ACLZ",
+      "uid": "ACLZ"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 27.16,
+        "h": 27.17,
+        "l": 13.5,
+        "c": 13.63,
+        "a": 13.6298,
+        "v": 2461,
+        "ch": -54.97
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-24",
-          "Open": 23.809999465942383,
-          "High": 24.260000228881836,
-          "Low": 23.34000015258789,
-          "Close": 24.260000228881836,
-          "Volume": 10600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 13.5,
+          "h": 13.63,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 1064,
+          "ch": -11.74
         },
         {
-          "date": "2026-06-25",
-          "Open": 26.1299991607666,
-          "High": 27.56999969482422,
-          "Low": 26.1299991607666,
-          "Close": 27.56999969482422,
-          "Volume": 400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 15.443,
+          "h": 15.443,
+          "l": 15.443,
+          "c": 15.443,
+          "a": 15.4425,
+          "v": 65,
+          "ch": -7.11
         },
         {
-          "date": "2026-06-26",
-          "Open": 26.8799991607666,
-          "High": 26.8799991607666,
-          "Low": 25.399999618530273,
-          "Close": 25.469999313354492,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 22.88,
+          "h": 22.88,
+          "l": 16.28,
+          "c": 16.624,
+          "a": 16.6243,
+          "v": 908,
+          "ch": -37.68
         },
         {
-          "date": "2026-06-29",
-          "Open": 26.110000610351562,
-          "High": 26.110000610351562,
-          "Low": 26.110000610351562,
-          "Close": 26.110000610351562,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 26.674,
+          "c": 26.674,
+          "a": 26.6736,
+          "v": 424,
+          "ch": -11.87
         },
         {
-          "date": "2026-06-30",
-          "Open": 26.8799991607666,
-          "High": 26.10650062561035,
-          "Low": 26.10650062561035,
-          "Close": 25.466100692749023,
-          "Volume": 85.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 29.41,
+          "h": 30.58,
+          "l": 29.39,
+          "c": 30.266,
+          "a": 30.2657,
+          "v": 1475,
+          "ch": 15.93
+        },
+        {
+          "t": "2026-06-29",
+          "o": 26.107,
+          "h": 26.107,
+          "l": 26.107,
+          "c": 26.107,
+          "a": 26.1065,
+          "v": 874,
+          "ch": 2.51
+        },
+        {
+          "t": "2026-06-26",
+          "o": 26.88,
+          "h": 26.88,
+          "l": 25.4,
+          "c": 25.466,
+          "a": 25.4661,
+          "v": 275,
+          "ch": -7.62
+        },
+        {
+          "t": "2026-06-25",
+          "o": 26.13,
+          "h": 27.567,
+          "l": 26.13,
+          "c": 27.567,
+          "a": 27.5672,
+          "v": 398,
+          "ch": 13.63
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 15.443,
+          "h": 15.443,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 1129,
+          "ch": -18.01
+        },
+        {
+          "t": "2026-06-29",
+          "o": 26.107,
+          "h": 30.58,
+          "l": 16.28,
+          "c": 16.624,
+          "a": 16.6243,
+          "v": 3681,
+          "ch": -34.72
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 2461,
+          "ch": -54.97
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 15.443,
+          "h": 15.443,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 1129,
+          "ch": -18.01
+        },
+        {
+          "t": "2026-06-29",
+          "o": 26.107,
+          "h": 30.58,
+          "l": 16.28,
+          "c": 16.624,
+          "a": 16.6243,
+          "v": 3681,
+          "ch": -34.72
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 2461,
+          "ch": -54.97
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 27.16,
+          "h": 27.17,
+          "l": 13.5,
+          "c": 13.63,
+          "a": 13.6298,
+          "v": 2461,
+          "ch": -54.97
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

@@ -1,289 +1,621 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "COIX",
-  "fetched_at": "2026-06-30T14:33:53Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T22:44:47Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/COIX/holdings",
+    "overview": "/api/symbol/e/COIX/overview",
+    "quote": "/api/quotes/e/COIX",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/COIX/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/COIX/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/COIX/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/COIX/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/COIX/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/COIX/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "COINBASE GLOBAL INC.-SWAP-MREX-L",
+        "weight_pct": 192.62,
+        "shares": 3865,
+        "raw": {
+          "no": 1,
+          "n": "COINBASE GLOBAL INC.-SWAP-MREX-L",
+          "as": "192.62%",
+          "sh": "3,865"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 47.1,
+        "shares": 156395,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "47.10%",
+          "sh": "156,395"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 28.02,
+        "shares": 93040,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "28.02%",
+          "sh": "93,040"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.28,
+        "shares": 920,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.28%",
+          "sh": "920"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -167.46,
+        "shares": 556045,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-167.46%",
+          "sh": "556,045"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-30T14:33:53Z",
+    "holding_count": 5,
+    "holdings_updated": "Jul 2, 2026",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
       "is_inverse": false,
       "is_single_stock": true,
-      "underlying": "COIN",
+      "underlying": "the publicly-traded common",
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
     "overview": {
-      "nav": 28.2122,
-      "expenseRatio": 0.2,
-      "provider_page": "Corgi Funds",
-      "category": "Trading--Leveraged Equity",
-      "legalType": "Exchange Traded Fund",
-      "description": "Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified."
+      "aum": "$332.05K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "10,000",
+      "inception": "Jun 26, 2026",
+      "etf_website": "https://corgifunds.com/COIX"
     },
+    "performance": {},
     "quote": {
-      "p": 27.27199935913086,
-      "pd": 28.1639,
-      "c": -0.8919006408691423,
-      "cp": -3.1668222116579816,
-      "u": "2026-06-30T14:33:53Z",
-      "ex": "yahoo_finance"
+      "p": 30.8191,
+      "pd": 30.82,
+      "c": -1.6,
+      "cp": -4.95,
+      "cl": 32.42,
+      "cdr": -1,
+      "o": 31.1,
+      "h": 31.1,
+      "l": 30.82,
+      "v": 374.841,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 35.01,
+      "l52": 26.154,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 30.8191,
+      "epd": 30.82,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:10 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541402200.208,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783550691930,
+      "symbol": "COIX",
+      "uid": "COIX"
     },
     "history": [
       {
-        "date": "2026-06-26",
-        "Open": 26.969999313354492,
-        "High": 27.270000457763672,
-        "Low": 26.969999313354492,
-        "Close": 27.270000457763672,
-        "Volume": 9200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 28.15999984741211,
-        "High": 28.15999984741211,
-        "Low": 28.15999984741211,
-        "Close": 28.15999984741211,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 26.969999313354492,
-        "High": 28.16390037536621,
-        "Low": 28.16390037536621,
-        "Close": 27.27199935913086,
-        "Volume": 18.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 30.22,
+        "h": 35.01,
+        "l": 30.22,
+        "c": 32.423,
+        "a": 32.423,
+        "v": 8361,
+        "ch": 23.97
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-26",
-          "Open": 26.969999313354492,
-          "High": 27.270000457763672,
-          "Low": 26.969999313354492,
-          "Close": 27.270000457763672,
-          "Volume": 9200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 33.67,
+          "h": 33.67,
+          "l": 32.423,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 1940,
+          "ch": -6.31
         },
         {
-          "date": "2026-06-29",
-          "Open": 28.15999984741211,
-          "High": 28.15999984741211,
-          "Low": 28.15999984741211,
-          "Close": 28.15999984741211,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 32.55,
+          "h": 34.98,
+          "l": 32.55,
+          "c": 34.608,
+          "a": 34.6079,
+          "v": 3663,
+          "ch": 4.02
         },
         {
-          "date": "2026-06-30",
-          "Open": 26.969999313354492,
-          "High": 28.16390037536621,
-          "Low": 28.16390037536621,
-          "Close": 27.27199935913086,
-          "Volume": 18.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 35.01,
+          "h": 35.01,
+          "l": 33.271,
+          "c": 33.271,
+          "a": 33.2705,
+          "v": 1606,
+          "ch": 7.7
+        },
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 32.25,
+          "l": 30.22,
+          "c": 30.891,
+          "a": 30.8906,
+          "v": 1152,
+          "ch": 18.11
+        },
+        {
+          "t": "2026-06-30",
+          "o": 26.154,
+          "h": 26.154,
+          "l": 26.154,
+          "c": 26.154,
+          "a": 26.1543,
+          "v": 117,
+          "ch": -7.14
+        },
+        {
+          "t": "2026-06-29",
+          "o": 28.164,
+          "h": 28.164,
+          "l": 28.164,
+          "c": 28.164,
+          "a": 28.1639,
+          "v": 31,
+          "ch": 3.27
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 32.55,
+          "h": 34.98,
+          "l": 32.423,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 5603,
+          "ch": -2.55
+        },
+        {
+          "t": "2026-06-29",
+          "o": 28.164,
+          "h": 35.01,
+          "l": 26.154,
+          "c": 33.271,
+          "a": 33.2705,
+          "v": 2906,
+          "ch": 22
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 35.01,
+          "l": 30.22,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 8361,
+          "ch": 23.97
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 32.55,
+          "h": 34.98,
+          "l": 32.423,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 5603,
+          "ch": -2.55
+        },
+        {
+          "t": "2026-06-29",
+          "o": 28.164,
+          "h": 35.01,
+          "l": 26.154,
+          "c": 33.271,
+          "a": 33.2705,
+          "v": 2906,
+          "ch": 22
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 35.01,
+          "l": 30.22,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 8361,
+          "ch": 23.97
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 35.01,
+          "l": 30.22,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 8361,
+          "ch": 23.97
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Corgi COIN 2x Daily ETF",
-        "longName": "Corgi COIN 2x Daily ETF",
-        "currency": "USD",
-        "exchange": "BTS",
-        "fundFamily": "Corgi Funds",
-        "category": "Trading--Leveraged Equity",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 28.2122,
-        "netExpenseRatio": 0.2,
-        "previousClose": 28.1639,
-        "fiftyTwoWeekHigh": 28.1639,
-        "fiftyTwoWeekLow": 26.97,
-        "fiftyTwoWeekChangePercent": 3.2636642,
-        "averageVolume": 4650,
-        "averageVolume10days": 4650
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 28.16390037536621,
-        "dayLow": 28.16390037536621,
-        "exchange": "BTS",
-        "fiftyDayAverage": 27.71500015258789,
-        "lastPrice": 27.27199935913086,
-        "lastVolume": 18.0,
-        "open": 26.969999313354492,
-        "previousClose": 27.27199935913086,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 28.15999984741211,
-        "tenDayAverageVolume": 4650.0,
-        "threeMonthAverageVolume": 4650.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 27.71500015258789,
-        "yearChange": 0.032636574063388324,
-        "yearHigh": 28.15999984741211,
-        "yearLow": 26.969999313354492
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Trading--Leveraged Equity",
-          "family": "Corgi Funds",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "COINBASE GLOBAL INC.-SWAP-MREX-L",
+          "as": "192.62%",
+          "sh": "3,865"
         },
-        "fund_operations": [
-          {
-            "_index": "Annual Report Expense Ratio",
-            "COIX": 0.002,
-            "Category Average": 0.0
-          },
-          {
-            "_index": "Annual Holdings Turnover",
-            "COIX": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Total Net Assets",
-            "COIX": 0.0,
-            "Category Average": 0.0
-          }
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "47.10%",
+          "sh": "156,395"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "28.02%",
+          "sh": "93,040"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.28%",
+          "sh": "920"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-167.46%",
+          "sh": "556,045"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "aum": 332051
+      },
+      "date": "Jul 2, 2026",
+      "count": 5
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$332.05K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "10,000",
+      "ch1y": null,
+      "holdings": 5,
+      "inception": "Jun 26, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Corgi COIN 2x Daily ETF (COIX) is an exchange-traded fund that mostly invests in financials equity. The Corgi COIN 2x Daily ETF (the Fund) seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Coinbase Global, Inc. (NASDAQ: COIN) (Coinbase or the Underlying Security). COIX was launched on Jun 26, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
         ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "COIX": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Book",
-            "COIX": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Sales",
-            "COIX": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Cashflow",
-            "COIX": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Median Market Cap",
-            "COIX": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "3 Year Earnings Growth",
-            "COIX": "<NA>",
-            "Category Average": "<NA>"
-          }
+        [
+          "Region",
+          "North America"
         ],
-        "bond_holdings": [
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "COIX"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/COIX",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 2, 2026",
+        "top10": 100,
+        "holdings": [
           {
-            "_index": "Duration",
-            "COIX": "<NA>",
-            "Category Average": "<NA>"
+            "n": "COINBASE GLOBAL INC.-SWAP-MREX-L",
+            "as": "192.62%",
+            "sh": "3,865"
           },
           {
-            "_index": "Maturity",
-            "COIX": "<NA>",
-            "Category Average": "<NA>"
+            "n": "US DOLLARS",
+            "as": "47.10%",
+            "sh": "156,395"
           },
           {
-            "_index": "Credit Quality",
-            "COIX": "<NA>",
-            "Category Average": "<NA>"
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "28.02%",
+            "sh": "93,040"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "-0.28%",
+            "sh": "920"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-167.46%",
+            "sh": "556,045"
           }
         ]
       },
-      "history_1y": [
+      "dividendTable": [],
+      "news": {
+        "exp": "1783622593327",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 30.891,
+        "priceMAX": 27.272
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 30.8191,
+      "pd": 30.82,
+      "c": -1.6,
+      "cp": -4.95,
+      "cl": 32.42,
+      "cdr": -1,
+      "o": 31.1,
+      "h": 31.1,
+      "l": 30.82,
+      "v": 374.841,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 35.01,
+      "l52": 26.154,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 30.8191,
+      "epd": 30.82,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:10 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541402200.208,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783550691930,
+      "symbol": "COIX",
+      "uid": "COIX"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 30.22,
+        "h": 35.01,
+        "l": 30.22,
+        "c": 32.423,
+        "a": 32.423,
+        "v": 8361,
+        "ch": 23.97
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-26",
-          "Open": 26.969999313354492,
-          "High": 27.270000457763672,
-          "Low": 26.969999313354492,
-          "Close": 27.270000457763672,
-          "Volume": 9200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 33.67,
+          "h": 33.67,
+          "l": 32.423,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 1940,
+          "ch": -6.31
         },
         {
-          "date": "2026-06-29",
-          "Open": 28.15999984741211,
-          "High": 28.15999984741211,
-          "Low": 28.15999984741211,
-          "Close": 28.15999984741211,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 32.55,
+          "h": 34.98,
+          "l": 32.55,
+          "c": 34.608,
+          "a": 34.6079,
+          "v": 3663,
+          "ch": 4.02
         },
         {
-          "date": "2026-06-30",
-          "Open": 26.969999313354492,
-          "High": 28.16390037536621,
-          "Low": 28.16390037536621,
-          "Close": 27.27199935913086,
-          "Volume": 18.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 35.01,
+          "h": 35.01,
+          "l": 33.271,
+          "c": 33.271,
+          "a": 33.2705,
+          "v": 1606,
+          "ch": 7.7
+        },
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 32.25,
+          "l": 30.22,
+          "c": 30.891,
+          "a": 30.8906,
+          "v": 1152,
+          "ch": 18.11
+        },
+        {
+          "t": "2026-06-30",
+          "o": 26.154,
+          "h": 26.154,
+          "l": 26.154,
+          "c": 26.154,
+          "a": 26.1543,
+          "v": 117,
+          "ch": -7.14
+        },
+        {
+          "t": "2026-06-29",
+          "o": 28.164,
+          "h": 28.164,
+          "l": 28.164,
+          "c": 28.164,
+          "a": 28.1639,
+          "v": 31,
+          "ch": 3.27
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 32.55,
+          "h": 34.98,
+          "l": 32.423,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 5603,
+          "ch": -2.55
+        },
+        {
+          "t": "2026-06-29",
+          "o": 28.164,
+          "h": 35.01,
+          "l": 26.154,
+          "c": 33.271,
+          "a": 33.2705,
+          "v": 2906,
+          "ch": 22
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 35.01,
+          "l": 30.22,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 8361,
+          "ch": 23.97
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 32.55,
+          "h": 34.98,
+          "l": 32.423,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 5603,
+          "ch": -2.55
+        },
+        {
+          "t": "2026-06-29",
+          "o": 28.164,
+          "h": 35.01,
+          "l": 26.154,
+          "c": 33.271,
+          "a": 33.2705,
+          "v": 2906,
+          "ch": 22
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 35.01,
+          "l": 30.22,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 8361,
+          "ch": 23.97
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 30.22,
+          "h": 35.01,
+          "l": 30.22,
+          "c": 32.423,
+          "a": 32.423,
+          "v": 8361,
+          "ch": 23.97
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

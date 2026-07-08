@@ -1,379 +1,1956 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ENTL",
-  "fetched_at": "2026-06-30T14:35:13Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T22:45:20Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/ENTL/holdings",
+    "overview": "/api/symbol/e/ENTL/overview",
+    "quote": "/api/quotes/e/ENTL",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/ENTL/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/ENTL/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/ENTL/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/ENTL/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/ENTL/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/ENTL/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "ENTEGRIS INC.-SWAP-CLST-L",
+        "weight_pct": 118.25,
+        "shares": 1830,
+        "raw": {
+          "no": 1,
+          "n": "ENTEGRIS INC.-SWAP-CLST-L",
+          "as": "118.25%",
+          "sh": "1,830"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 69.56,
+        "shares": 193624,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "69.56%",
+          "sh": "193,624"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "ENTEGRIS INC.-SWAP-MREX-L",
+        "weight_pct": 47.82,
+        "shares": 740,
+        "raw": {
+          "no": 3,
+          "n": "ENTEGRIS INC.-SWAP-MREX-L",
+          "as": "47.82%",
+          "sh": "740"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "ENTEGRIS INC.-SWAP-CANT-L",
+        "weight_pct": 24.55,
+        "shares": 380,
+        "raw": {
+          "no": 4,
+          "n": "ENTEGRIS INC.-SWAP-CANT-L",
+          "as": "24.55%",
+          "sh": "380"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 20.19,
+        "shares": 56188,
+        "raw": {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "20.19%",
+          "sh": "56,188"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!MUTF/FXFXX",
+        "name": "First American Treasury Obligations Fund",
+        "weight_pct": 4.0,
+        "shares": 11147,
+        "raw": {
+          "no": 6,
+          "n": "First American Treasury Obligations Fund",
+          "s": "!mutf/FXFXX",
+          "as": "4.00%",
+          "sh": "11,147"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Cash Offset",
+        "weight_pct": -184.38,
+        "shares": 513201,
+        "raw": {
+          "no": 7,
+          "n": "Cash Offset",
+          "as": "-184.38%",
+          "sh": "513,201"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-30T14:35:13Z",
+    "holding_count": 7,
+    "holdings_updated": "Jun 30, 2026",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
       "is_inverse": false,
-      "is_single_stock": true,
-      "underlying": "ENTG",
+      "is_single_stock": false,
+      "underlying": null,
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
     "overview": {
-      "nav": 12.6238,
-      "expenseRatio": 0.75,
-      "provider_page": "Themes ETF Trust",
-      "category": "Trading--Leveraged Equity",
-      "legalType": "Exchange Traded Fund",
-      "description": "It invests at least 80% of its net assets (plus borrowings for investment purposes) in the Underlying Security and financial instruments with economic characteristics that, in combination, provide 200% daily leveraged exposure to the price of the Underlying Security, on a daily basis, consistent with the fund’s investment objective. The fund is non-diversified."
+      "aum": "$180.13K",
+      "expenseRatio": "0.75%",
+      "sharesOut": "25,000",
+      "inception": "Jun 23, 2026",
+      "etf_website": "https://leverageshares.com/us/etfs/leverage-shares-2x-long-entg-daily-etf/"
     },
+    "performance": {},
     "quote": {
-      "p": 11.1899995803833,
-      "pd": 12.4779,
-      "c": -1.2879004196166992,
-      "cp": -10.32145168351004,
-      "u": "2026-06-30T14:35:13Z",
-      "ex": "yahoo_finance"
+      "p": 8.105,
+      "pd": 8.11,
+      "c": 0.62,
+      "cp": 8.24,
+      "cl": 7.49,
+      "cdr": 1,
+      "o": 8.36,
+      "h": 8.38,
+      "l": 8.11,
+      "v": 1919,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 14.509,
+      "l52": 6.82,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 8.0311,
+      "epd": 8.03,
+      "ec": -0.07,
+      "ecp": -0.91,
+      "eu": "Jul 8, 2026, 6:30 PM EDT",
+      "es": "After-hours",
+      "ets": 1783549802771.185,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783550724105,
+      "symbol": "ENTL",
+      "uid": "ENTL"
     },
     "history": [
       {
-        "date": "2026-06-23",
-        "Open": 12.449999809265137,
-        "High": 12.729999542236328,
-        "Low": 12.229999542236328,
-        "Close": 12.649999618530273,
-        "Volume": 3100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-24",
-        "Open": 12.300000190734863,
-        "High": 12.84000015258789,
-        "Low": 12.119999885559082,
-        "Close": 12.75,
-        "Volume": 2400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 14.350000381469727,
-        "High": 14.510000228881836,
-        "Low": 13.180000305175781,
-        "Close": 13.510000228881836,
-        "Volume": 4500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 12.100000381469727,
-        "High": 12.100000381469727,
-        "Low": 11.039999961853027,
-        "Close": 11.1899995803833,
-        "Volume": 2900.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 11.600000381469727,
-        "High": 12.479999542236328,
-        "Low": 10.569999694824219,
-        "Close": 12.479999542236328,
-        "Volume": 7500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 12.800000190734863,
-        "High": 13.470000267028809,
-        "Low": 12.569999694824219,
-        "Close": 11.1899995803833,
-        "Volume": 5065.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 12.47,
+        "h": 12.58,
+        "l": 6.9,
+        "c": 7.488,
+        "a": 7.488,
+        "v": 27519,
+        "ch": -46.51
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-23",
-          "Open": 12.449999809265137,
-          "High": 12.729999542236328,
-          "Low": 12.229999542236328,
-          "Close": 12.649999618530273,
-          "Volume": 3100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 7.545,
+          "h": 7.545,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 8320,
+          "ch": -15.32
         },
         {
-          "date": "2026-06-24",
-          "Open": 12.300000190734863,
-          "High": 12.84000015258789,
-          "Low": 12.119999885559082,
-          "Close": 12.75,
-          "Volume": 2400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 9.57,
+          "h": 9.841,
+          "l": 8.842,
+          "c": 8.842,
+          "a": 8.8422,
+          "v": 2155,
+          "ch": -1.09
         },
         {
-          "date": "2026-06-25",
-          "Open": 14.350000381469727,
-          "High": 14.510000228881836,
-          "Low": 13.180000305175781,
-          "Close": 13.510000228881836,
-          "Volume": 4500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 11.6,
+          "h": 11.6,
+          "l": 8.67,
+          "c": 8.939,
+          "a": 8.9393,
+          "v": 8129.000000000001,
+          "ch": -23.3
         },
         {
-          "date": "2026-06-26",
-          "Open": 12.100000381469727,
-          "High": 12.100000381469727,
-          "Low": 11.039999961853027,
-          "Close": 11.1899995803833,
-          "Volume": 2900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 11.62,
+          "c": 11.656,
+          "a": 11.6556,
+          "v": 8915,
+          "ch": -16.75
         },
         {
-          "date": "2026-06-29",
-          "Open": 11.600000381469727,
-          "High": 12.479999542236328,
-          "Low": 10.569999694824219,
-          "Close": 12.479999542236328,
-          "Volume": 7500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 12.8,
+          "h": 14.17,
+          "l": 12.57,
+          "c": 14,
+          "a": 14,
+          "v": 17855,
+          "ch": 12.2
         },
         {
-          "date": "2026-06-30",
-          "Open": 12.800000190734863,
-          "High": 13.470000267028809,
-          "Low": 12.569999694824219,
-          "Close": 11.1899995803833,
-          "Volume": 5065.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 11.6,
+          "h": 12.478,
+          "l": 10.57,
+          "c": 12.478,
+          "a": 12.4779,
+          "v": 7544,
+          "ch": 11.51
+        },
+        {
+          "t": "2026-06-26",
+          "o": 12.095,
+          "h": 12.095,
+          "l": 11.04,
+          "c": 11.19,
+          "a": 11.19,
+          "v": 2883,
+          "ch": -17.2
+        },
+        {
+          "t": "2026-06-25",
+          "o": 14.35,
+          "h": 14.509,
+          "l": 13.18,
+          "c": 13.515,
+          "a": 13.5149,
+          "v": 4524,
+          "ch": 6.01
+        },
+        {
+          "t": "2026-06-24",
+          "o": 12.3,
+          "h": 12.839,
+          "l": 12.12,
+          "c": 12.749,
+          "a": 12.7489,
+          "v": 2512,
+          "ch": 0.76
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 9.57,
+          "h": 9.841,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 10475,
+          "ch": -16.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 11.6,
+          "h": 14.17,
+          "l": 8.67,
+          "c": 8.939,
+          "a": 8.9393,
+          "v": 42443,
+          "ch": -20.11
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 27519,
+          "ch": -46.51
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 9.57,
+          "h": 9.841,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 10475,
+          "ch": -16.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 11.6,
+          "h": 14.17,
+          "l": 8.67,
+          "c": 8.939,
+          "a": 8.9393,
+          "v": 42443,
+          "ch": -20.11
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 27519,
+          "ch": -46.51
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 27519,
+          "ch": -46.51
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Leverage Shares 2X Long ENTG Da",
-        "longName": "Leverage Shares 2X Long ENTG Daily ETF",
-        "currency": "USD",
-        "exchange": "BTS",
-        "fundFamily": "Themes ETF Trust",
-        "category": "Trading--Leveraged Equity",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 12.6238,
-        "netExpenseRatio": 0.75,
-        "previousClose": 12.4779,
-        "fiftyTwoWeekHigh": 14.51,
-        "fiftyTwoWeekLow": 10.57,
-        "fiftyTwoWeekChangePercent": -1.3438761,
-        "averageVolume": 4080,
-        "averageVolume10days": 4080
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 13.470000267028809,
-        "dayLow": 12.569999694824219,
-        "exchange": "BTS",
-        "fiftyDayAverage": 12.515999794006348,
-        "lastPrice": 11.1899995803833,
-        "lastVolume": 5065.0,
-        "open": 12.800000190734863,
-        "previousClose": 12.477899551391602,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 12.479999542236328,
-        "tenDayAverageVolume": 4080.0,
-        "threeMonthAverageVolume": 4080.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 12.515999794006348,
-        "yearChange": -0.013438741614262324,
-        "yearHigh": 14.510000228881836,
-        "yearLow": 10.569999694824219
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "It invests at least 80% of its net assets (plus borrowings for investment purposes) in the Underlying Security and financial instruments with economic characteristics that, in combination, provide 200% daily leveraged exposure to the price of the Underlying Security, on a daily basis, consistent with the fund’s investment objective. The fund is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Trading--Leveraged Equity",
-          "family": "Themes ETF Trust",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "ENTEGRIS INC.-SWAP-CLST-L",
+          "as": "118.25%",
+          "sh": "1,830"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "69.56%",
+          "sh": "193,624"
+        },
+        {
+          "no": 3,
+          "n": "ENTEGRIS INC.-SWAP-MREX-L",
+          "as": "47.82%",
+          "sh": "740"
+        },
+        {
+          "no": 4,
+          "n": "ENTEGRIS INC.-SWAP-CANT-L",
+          "as": "24.55%",
+          "sh": "380"
+        },
+        {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "20.19%",
+          "sh": "56,188"
+        },
+        {
+          "no": 6,
+          "n": "First American Treasury Obligations Fund",
+          "s": "!mutf/FXFXX",
+          "as": "4.00%",
+          "sh": "11,147"
+        },
+        {
+          "no": 7,
+          "n": "Cash Offset",
+          "as": "-184.38%",
+          "sh": "513,201"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "news": [
+        {
+          "t": "Leverage Shares by Themes Unveils Nine New 2X Single-Stock ETFs Tracking Key Players in the Technology Supply Chain",
+          "u": "https://www.prnewswire.com/news-releases/leverage-shares-by-themes-unveils-nine-new-2x-single-stock-etfs-tracking-key-players-in-the-technology-supply-chain-302807131.html",
+          "n": "PRNewsWire",
+          "d": "15 days ago"
+        }
+      ],
+      "infoBox": null,
+      "infoTable": {
+        "count": 7,
+        "top10": 100,
+        "assetClass": "Equity",
+        "aum": 180126
+      },
+      "date": "Jun 30, 2026",
+      "count": 7
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$180.13K",
+      "expenseRatio": "0.75%",
+      "sharesOut": "25,000",
+      "ch1y": null,
+      "holdings": 7,
+      "inception": "Jun 23, 2026",
+      "chart": {
+        "expiration": 1783551385446,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "ENTL": 0.0075,
-            "Category Average": 0.0
+            "t": 1783503000
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "ENTL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503060
           },
           {
-            "_index": "Total Net Assets",
-            "ENTL": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "ENTL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503120
           },
           {
-            "_index": "Price/Book",
-            "ENTL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503180
           },
           {
-            "_index": "Price/Sales",
-            "ENTL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503240
           },
           {
-            "_index": "Price/Cashflow",
-            "ENTL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503300
           },
           {
-            "_index": "Median Market Cap",
-            "ENTL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503360
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "ENTL": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "ENTL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503420
           },
           {
-            "_index": "Maturity",
-            "ENTL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503480
           },
           {
-            "_index": "Credit Quality",
-            "ENTL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503540
+          },
+          {
+            "t": 1783503600
+          },
+          {
+            "t": 1783503660
+          },
+          {
+            "t": 1783503720
+          },
+          {
+            "t": 1783503780
+          },
+          {
+            "t": 1783503840
+          },
+          {
+            "t": 1783503900
+          },
+          {
+            "t": 1783503960
+          },
+          {
+            "t": 1783504020
+          },
+          {
+            "t": 1783504080
+          },
+          {
+            "t": 1783504140
+          },
+          {
+            "t": 1783504200
+          },
+          {
+            "t": 1783504260
+          },
+          {
+            "t": 1783504320
+          },
+          {
+            "t": 1783504380
+          },
+          {
+            "t": 1783504440
+          },
+          {
+            "t": 1783504500
+          },
+          {
+            "t": 1783504560
+          },
+          {
+            "t": 1783504620
+          },
+          {
+            "t": 1783504680
+          },
+          {
+            "t": 1783504740
+          },
+          {
+            "t": 1783504800
+          },
+          {
+            "t": 1783504860
+          },
+          {
+            "t": 1783504920
+          },
+          {
+            "t": 1783504980
+          },
+          {
+            "t": 1783505040
+          },
+          {
+            "t": 1783505100
+          },
+          {
+            "t": 1783505160
+          },
+          {
+            "t": 1783505220
+          },
+          {
+            "t": 1783505280
+          },
+          {
+            "t": 1783505340
+          },
+          {
+            "t": 1783505400
+          },
+          {
+            "t": 1783505460
+          },
+          {
+            "t": 1783505520
+          },
+          {
+            "t": 1783505580
+          },
+          {
+            "t": 1783505640
+          },
+          {
+            "t": 1783505700
+          },
+          {
+            "t": 1783505760
+          },
+          {
+            "t": 1783505820
+          },
+          {
+            "t": 1783505880
+          },
+          {
+            "t": 1783505940
+          },
+          {
+            "t": 1783506000
+          },
+          {
+            "t": 1783506060
+          },
+          {
+            "t": 1783506120
+          },
+          {
+            "t": 1783506180
+          },
+          {
+            "t": 1783506240
+          },
+          {
+            "t": 1783506300
+          },
+          {
+            "t": 1783506360
+          },
+          {
+            "t": 1783506420
+          },
+          {
+            "t": 1783506480
+          },
+          {
+            "t": 1783506540
+          },
+          {
+            "t": 1783506600
+          },
+          {
+            "t": 1783506660
+          },
+          {
+            "t": 1783506720
+          },
+          {
+            "t": 1783506780
+          },
+          {
+            "t": 1783506840
+          },
+          {
+            "t": 1783506900
+          },
+          {
+            "t": 1783506960
+          },
+          {
+            "t": 1783507020
+          },
+          {
+            "t": 1783507080
+          },
+          {
+            "t": 1783507140
+          },
+          {
+            "t": 1783507200
+          },
+          {
+            "t": 1783507260
+          },
+          {
+            "t": 1783507320
+          },
+          {
+            "t": 1783507380
+          },
+          {
+            "t": 1783507440
+          },
+          {
+            "t": 1783507500
+          },
+          {
+            "t": 1783507560
+          },
+          {
+            "t": 1783507620
+          },
+          {
+            "t": 1783507680
+          },
+          {
+            "t": 1783507740
+          },
+          {
+            "t": 1783507800
+          },
+          {
+            "t": 1783507860
+          },
+          {
+            "t": 1783507920
+          },
+          {
+            "t": 1783507980
+          },
+          {
+            "t": 1783508040
+          },
+          {
+            "t": 1783508100
+          },
+          {
+            "t": 1783508160
+          },
+          {
+            "t": 1783508220
+          },
+          {
+            "t": 1783508280
+          },
+          {
+            "t": 1783508340
+          },
+          {
+            "t": 1783508400
+          },
+          {
+            "t": 1783508460
+          },
+          {
+            "t": 1783508520
+          },
+          {
+            "t": 1783508580
+          },
+          {
+            "t": 1783508640
+          },
+          {
+            "t": 1783508700
+          },
+          {
+            "t": 1783508760
+          },
+          {
+            "t": 1783508820
+          },
+          {
+            "t": 1783508880
+          },
+          {
+            "t": 1783508940
+          },
+          {
+            "t": 1783509000
+          },
+          {
+            "t": 1783509060
+          },
+          {
+            "t": 1783509120
+          },
+          {
+            "t": 1783509180
+          },
+          {
+            "t": 1783509240
+          },
+          {
+            "t": 1783509300
+          },
+          {
+            "t": 1783509360
+          },
+          {
+            "t": 1783509420
+          },
+          {
+            "t": 1783509480
+          },
+          {
+            "t": 1783509540
+          },
+          {
+            "t": 1783509600
+          },
+          {
+            "t": 1783509660
+          },
+          {
+            "t": 1783509720
+          },
+          {
+            "t": 1783509780
+          },
+          {
+            "t": 1783509840
+          },
+          {
+            "t": 1783509900
+          },
+          {
+            "t": 1783509960
+          },
+          {
+            "t": 1783510020
+          },
+          {
+            "t": 1783510080
+          },
+          {
+            "t": 1783510140
+          },
+          {
+            "t": 1783510200
+          },
+          {
+            "t": 1783510260
+          },
+          {
+            "t": 1783510320
+          },
+          {
+            "t": 1783510380
+          },
+          {
+            "t": 1783510440
+          },
+          {
+            "t": 1783510500
+          },
+          {
+            "t": 1783510560
+          },
+          {
+            "t": 1783510620
+          },
+          {
+            "t": 1783510680
+          },
+          {
+            "t": 1783510740
+          },
+          {
+            "t": 1783510800
+          },
+          {
+            "t": 1783510860
+          },
+          {
+            "t": 1783510920
+          },
+          {
+            "t": 1783510980
+          },
+          {
+            "t": 1783511040
+          },
+          {
+            "t": 1783511100
+          },
+          {
+            "t": 1783511160
+          },
+          {
+            "t": 1783511220
+          },
+          {
+            "t": 1783511280
+          },
+          {
+            "t": 1783511340
+          },
+          {
+            "t": 1783511400
+          },
+          {
+            "t": 1783511460
+          },
+          {
+            "t": 1783511520
+          },
+          {
+            "t": 1783511580
+          },
+          {
+            "t": 1783511640
+          },
+          {
+            "t": 1783511700
+          },
+          {
+            "t": 1783511760
+          },
+          {
+            "t": 1783511820
+          },
+          {
+            "t": 1783511880
+          },
+          {
+            "t": 1783511940
+          },
+          {
+            "t": 1783512000
+          },
+          {
+            "t": 1783512060
+          },
+          {
+            "t": 1783512120
+          },
+          {
+            "t": 1783512180
+          },
+          {
+            "t": 1783512240
+          },
+          {
+            "t": 1783512300
+          },
+          {
+            "t": 1783512360
+          },
+          {
+            "t": 1783512420
+          },
+          {
+            "t": 1783512480
+          },
+          {
+            "t": 1783512540
+          },
+          {
+            "t": 1783512600
+          },
+          {
+            "t": 1783512660
+          },
+          {
+            "t": 1783512720
+          },
+          {
+            "t": 1783512780
+          },
+          {
+            "t": 1783512840
+          },
+          {
+            "t": 1783512900
+          },
+          {
+            "t": 1783512960
+          },
+          {
+            "t": 1783513020
+          },
+          {
+            "t": 1783513080
+          },
+          {
+            "t": 1783513140
+          },
+          {
+            "t": 1783513200
+          },
+          {
+            "t": 1783513260
+          },
+          {
+            "t": 1783513320
+          },
+          {
+            "t": 1783513380
+          },
+          {
+            "t": 1783513440
+          },
+          {
+            "t": 1783513500
+          },
+          {
+            "t": 1783513560
+          },
+          {
+            "t": 1783513620
+          },
+          {
+            "t": 1783513680
+          },
+          {
+            "t": 1783513740
+          },
+          {
+            "t": 1783513800
+          },
+          {
+            "t": 1783513860
+          },
+          {
+            "t": 1783513920
+          },
+          {
+            "t": 1783513980
+          },
+          {
+            "t": 1783514040
+          },
+          {
+            "t": 1783514100
+          },
+          {
+            "t": 1783514160
+          },
+          {
+            "t": 1783514220
+          },
+          {
+            "t": 1783514280
+          },
+          {
+            "t": 1783514340
+          },
+          {
+            "t": 1783514400
+          },
+          {
+            "t": 1783514460
+          },
+          {
+            "t": 1783514520
+          },
+          {
+            "t": 1783514580
+          },
+          {
+            "t": 1783514640
+          },
+          {
+            "t": 1783514700
+          },
+          {
+            "t": 1783514760
+          },
+          {
+            "t": 1783514820
+          },
+          {
+            "t": 1783514880
+          },
+          {
+            "t": 1783514940
+          },
+          {
+            "t": 1783515000
+          },
+          {
+            "t": 1783515060
+          },
+          {
+            "t": 1783515120
+          },
+          {
+            "t": 1783515180
+          },
+          {
+            "t": 1783515240
+          },
+          {
+            "t": 1783515300
+          },
+          {
+            "t": 1783515360
+          },
+          {
+            "t": 1783515420
+          },
+          {
+            "t": 1783515480
+          },
+          {
+            "t": 1783515540
+          },
+          {
+            "t": 1783515600
+          },
+          {
+            "t": 1783515660
+          },
+          {
+            "t": 1783515720
+          },
+          {
+            "t": 1783515780
+          },
+          {
+            "t": 1783515840
+          },
+          {
+            "t": 1783515900
+          },
+          {
+            "t": 1783515960
+          },
+          {
+            "t": 1783516020
+          },
+          {
+            "t": 1783516080
+          },
+          {
+            "t": 1783516140
+          },
+          {
+            "t": 1783516200
+          },
+          {
+            "t": 1783516260
+          },
+          {
+            "t": 1783516320
+          },
+          {
+            "t": 1783516380
+          },
+          {
+            "t": 1783516440
+          },
+          {
+            "t": 1783516500
+          },
+          {
+            "t": 1783516560
+          },
+          {
+            "t": 1783516620
+          },
+          {
+            "t": 1783516680
+          },
+          {
+            "t": 1783516740
+          },
+          {
+            "t": 1783516800
+          },
+          {
+            "t": 1783516860
+          },
+          {
+            "t": 1783516920
+          },
+          {
+            "t": 1783516980
+          },
+          {
+            "t": 1783517040
+          },
+          {
+            "t": 1783517100
+          },
+          {
+            "t": 1783517160
+          },
+          {
+            "t": 1783517220
+          },
+          {
+            "t": 1783517280
+          },
+          {
+            "t": 1783517340
+          },
+          {
+            "t": 1783517400
+          },
+          {
+            "t": 1783517460
+          },
+          {
+            "t": 1783517520
+          },
+          {
+            "t": 1783517580
+          },
+          {
+            "t": 1783517640
+          },
+          {
+            "t": 1783517700
+          },
+          {
+            "t": 1783517760
+          },
+          {
+            "t": 1783517820
+          },
+          {
+            "t": 1783517880
+          },
+          {
+            "t": 1783517940
+          },
+          {
+            "t": 1783518000
+          },
+          {
+            "t": 1783518060
+          },
+          {
+            "t": 1783518120
+          },
+          {
+            "t": 1783518180
+          },
+          {
+            "t": 1783518240
+          },
+          {
+            "t": 1783518300
+          },
+          {
+            "t": 1783518360
+          },
+          {
+            "t": 1783518420
+          },
+          {
+            "t": 1783518480
+          },
+          {
+            "t": 1783518540
+          },
+          {
+            "t": 1783518600
+          },
+          {
+            "t": 1783518660
+          },
+          {
+            "t": 1783518720
+          },
+          {
+            "t": 1783518780
+          },
+          {
+            "t": 1783518840
+          },
+          {
+            "t": 1783518900
+          },
+          {
+            "t": 1783518960
+          },
+          {
+            "t": 1783519020
+          },
+          {
+            "t": 1783519080
+          },
+          {
+            "t": 1783519140
+          },
+          {
+            "t": 1783519200
+          },
+          {
+            "t": 1783519260
+          },
+          {
+            "t": 1783519320
+          },
+          {
+            "t": 1783519380
+          },
+          {
+            "t": 1783519440
+          },
+          {
+            "t": 1783519500
+          },
+          {
+            "t": 1783519560
+          },
+          {
+            "t": 1783519620
+          },
+          {
+            "t": 1783519680
+          },
+          {
+            "t": 1783519740
+          },
+          {
+            "t": 1783519800
+          },
+          {
+            "t": 1783519860
+          },
+          {
+            "t": 1783519920
+          },
+          {
+            "t": 1783519980
+          },
+          {
+            "t": 1783520040
+          },
+          {
+            "t": 1783520100
+          },
+          {
+            "t": 1783520160
+          },
+          {
+            "t": 1783520220
+          },
+          {
+            "t": 1783520280
+          },
+          {
+            "t": 1783520340
+          },
+          {
+            "t": 1783520400
+          },
+          {
+            "t": 1783520460
+          },
+          {
+            "t": 1783520520
+          },
+          {
+            "t": 1783520580
+          },
+          {
+            "t": 1783520640
+          },
+          {
+            "t": 1783520700
+          },
+          {
+            "t": 1783520760
+          },
+          {
+            "t": 1783520820
+          },
+          {
+            "t": 1783520880
+          },
+          {
+            "t": 1783520940
+          },
+          {
+            "t": 1783521000
+          },
+          {
+            "t": 1783521060
+          },
+          {
+            "t": 1783521120
+          },
+          {
+            "t": 1783521180
+          },
+          {
+            "t": 1783521240
+          },
+          {
+            "t": 1783521300
+          },
+          {
+            "t": 1783521360
+          },
+          {
+            "t": 1783521420
+          },
+          {
+            "t": 1783521480
+          },
+          {
+            "t": 1783521540
+          },
+          {
+            "t": 1783521600
+          },
+          {
+            "t": 1783521660
+          },
+          {
+            "t": 1783521720
+          },
+          {
+            "t": 1783521780
+          },
+          {
+            "t": 1783521840
+          },
+          {
+            "t": 1783521900
+          },
+          {
+            "t": 1783521960
+          },
+          {
+            "t": 1783522020
+          },
+          {
+            "t": 1783522080
+          },
+          {
+            "t": 1783522140
+          },
+          {
+            "t": 1783522200
+          },
+          {
+            "t": 1783522260
+          },
+          {
+            "t": 1783522320
+          },
+          {
+            "t": 1783522380
+          },
+          {
+            "t": 1783522440
+          },
+          {
+            "t": 1783522500
+          },
+          {
+            "t": 1783522560
+          },
+          {
+            "t": 1783522620
+          },
+          {
+            "t": 1783522680
+          },
+          {
+            "t": 1783522740
+          },
+          {
+            "t": 1783522800
+          },
+          {
+            "t": 1783522860
+          },
+          {
+            "t": 1783522920
+          },
+          {
+            "t": 1783522980
+          },
+          {
+            "t": 1783523040
+          },
+          {
+            "t": 1783523100
+          },
+          {
+            "t": 1783523160
+          },
+          {
+            "t": 1783523220
+          },
+          {
+            "t": 1783523280
+          },
+          {
+            "t": 1783523340
+          },
+          {
+            "t": 1783523400
+          },
+          {
+            "t": 1783523460
+          },
+          {
+            "t": 1783523520
+          },
+          {
+            "t": 1783523580
+          },
+          {
+            "t": 1783523640
+          },
+          {
+            "t": 1783523700
+          },
+          {
+            "t": 1783523760
+          },
+          {
+            "t": 1783523820
+          },
+          {
+            "t": 1783523880
+          },
+          {
+            "t": 1783523940
+          },
+          {
+            "t": 1783524000
+          },
+          {
+            "t": 1783524060
+          },
+          {
+            "t": 1783524120
+          },
+          {
+            "t": 1783524180
+          },
+          {
+            "t": 1783524240
+          },
+          {
+            "t": 1783524300
+          },
+          {
+            "c": 8.355,
+            "o": 8.355,
+            "t": 1783524360
+          },
+          {
+            "c": 8.375,
+            "t": 1783524420
+          },
+          {
+            "c": null,
+            "t": 1783524480
+          },
+          {
+            "c": 8.29,
+            "t": 1783524540
+          },
+          {
+            "c": null,
+            "t": 1783524600
+          },
+          {
+            "c": null,
+            "t": 1783524660
+          },
+          {
+            "c": null,
+            "t": 1783524720
+          },
+          {
+            "c": null,
+            "t": 1783524780
+          },
+          {
+            "c": null,
+            "t": 1783524840
+          },
+          {
+            "c": null,
+            "t": 1783524900
+          },
+          {
+            "c": null,
+            "t": 1783524960
+          },
+          {
+            "c": null,
+            "t": 1783525020
+          },
+          {
+            "c": null,
+            "t": 1783525080
+          },
+          {
+            "c": null,
+            "t": 1783525140
+          },
+          {
+            "c": null,
+            "t": 1783525200
+          },
+          {
+            "c": null,
+            "t": 1783525260
+          },
+          {
+            "c": null,
+            "t": 1783525320
+          },
+          {
+            "c": 8.125,
+            "t": 1783525380
+          },
+          {
+            "c": null,
+            "t": 1783525440
+          },
+          {
+            "c": null,
+            "t": 1783525500
+          },
+          {
+            "c": null,
+            "t": 1783525560
+          },
+          {
+            "c": null,
+            "t": 1783525620
+          },
+          {
+            "c": null,
+            "t": 1783525680
+          },
+          {
+            "c": null,
+            "t": 1783525740
+          },
+          {
+            "c": null,
+            "t": 1783525800
+          },
+          {
+            "c": null,
+            "t": 1783525860
+          },
+          {
+            "c": 8.031,
+            "t": 1783525920
+          },
+          {
+            "t": 1783525979
+          },
+          {
+            "t": 1783526039
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
           }
         ]
       },
-      "history_1y": [
+      "description": "The Leverage Shares 2X Long ENTG Daily ETF (ENTL) is an exchange-traded fund that mostly invests in information technology equity. The fund aims to provide 2x leveraged exposure to the daily price movement of Entegris, Inc. (NASDAQ: ENTG) stock, less fees and expenses ENTL was launched on Jun 23, 2026 and is issued by Leverage Shares.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "ENTL"
+        ],
+        [
+          "Provider",
+          "Leverage Shares"
+        ]
+      ],
+      "etf_website": "https://leverageshares.com/us/etfs/leverage-shares-2x-long-entg-daily-etf/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 7,
+        "updated": "Jun 30, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "ENTEGRIS INC.-SWAP-CLST-L",
+            "as": "118.25%",
+            "sh": "1,830"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "69.56%",
+            "sh": "193,624"
+          },
+          {
+            "n": "ENTEGRIS INC.-SWAP-MREX-L",
+            "as": "47.82%",
+            "sh": "740"
+          },
+          {
+            "n": "ENTEGRIS INC.-SWAP-CANT-L",
+            "as": "24.55%",
+            "sh": "380"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "20.19%",
+            "sh": "56,188"
+          },
+          {
+            "n": "First American Treasury Obligations Fund",
+            "s": "!mutf/FXFXX",
+            "as": "4.00%",
+            "sh": "11,147"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-184.38%",
+            "sh": "513,201"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783557548675",
+        "data": [
+          {
+            "url": "https://www.prnewswire.com/news-releases/leverage-shares-by-themes-unveils-nine-new-2x-single-stock-etfs-tracking-key-players-in-the-technology-supply-chain-302807131.html",
+            "img": "https://cdn.snapi.dev/images/v1/6/n/4/press19-3767399.jpg",
+            "title": "Leverage Shares by Themes Unveils Nine New 2X Single-Stock ETFs Tracking Key Players in the Technology Supply Chain",
+            "text": "GREENWICH, Conn., June 23, 2026 /PRNewswire/ -- Leverage Shares by Themes is pleased to announce the launch of nine new 2X single-stock leveraged ETFs, available for trading beginning June 23, 2026.",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#ASTG",
+              "#CDNG",
+              "#FOMG",
+              "#FPSX",
+              "#GFSG",
+              "#HPEL",
+              "#MTSG"
+            ],
+            "time": "Jun 23, 2026, 9:00 AM EDT",
+            "ago": "15 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 14,
+        "priceMAX": 12.653
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 8.105,
+      "pd": 8.11,
+      "c": 0.62,
+      "cp": 8.24,
+      "cl": 7.49,
+      "cdr": 1,
+      "o": 8.36,
+      "h": 8.38,
+      "l": 8.11,
+      "v": 1919,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 14.509,
+      "l52": 6.82,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 8.0311,
+      "epd": 8.03,
+      "ec": -0.07,
+      "ecp": -0.91,
+      "eu": "Jul 8, 2026, 6:30 PM EDT",
+      "es": "After-hours",
+      "ets": 1783549802771.185,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783550724105,
+      "symbol": "ENTL",
+      "uid": "ENTL"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 12.47,
+        "h": 12.58,
+        "l": 6.9,
+        "c": 7.488,
+        "a": 7.488,
+        "v": 27519,
+        "ch": -46.51
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-23",
-          "Open": 12.449999809265137,
-          "High": 12.729999542236328,
-          "Low": 12.229999542236328,
-          "Close": 12.649999618530273,
-          "Volume": 3100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 7.545,
+          "h": 7.545,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 8320,
+          "ch": -15.32
         },
         {
-          "date": "2026-06-24",
-          "Open": 12.300000190734863,
-          "High": 12.84000015258789,
-          "Low": 12.119999885559082,
-          "Close": 12.75,
-          "Volume": 2400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 9.57,
+          "h": 9.841,
+          "l": 8.842,
+          "c": 8.842,
+          "a": 8.8422,
+          "v": 2155,
+          "ch": -1.09
         },
         {
-          "date": "2026-06-25",
-          "Open": 14.350000381469727,
-          "High": 14.510000228881836,
-          "Low": 13.180000305175781,
-          "Close": 13.510000228881836,
-          "Volume": 4500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 11.6,
+          "h": 11.6,
+          "l": 8.67,
+          "c": 8.939,
+          "a": 8.9393,
+          "v": 8129.000000000001,
+          "ch": -23.3
         },
         {
-          "date": "2026-06-26",
-          "Open": 12.100000381469727,
-          "High": 12.100000381469727,
-          "Low": 11.039999961853027,
-          "Close": 11.1899995803833,
-          "Volume": 2900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 11.62,
+          "c": 11.656,
+          "a": 11.6556,
+          "v": 8915,
+          "ch": -16.75
         },
         {
-          "date": "2026-06-29",
-          "Open": 11.600000381469727,
-          "High": 12.479999542236328,
-          "Low": 10.569999694824219,
-          "Close": 12.479999542236328,
-          "Volume": 7500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 12.8,
+          "h": 14.17,
+          "l": 12.57,
+          "c": 14,
+          "a": 14,
+          "v": 17855,
+          "ch": 12.2
         },
         {
-          "date": "2026-06-30",
-          "Open": 12.800000190734863,
-          "High": 13.470000267028809,
-          "Low": 12.569999694824219,
-          "Close": 11.1899995803833,
-          "Volume": 5065.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 11.6,
+          "h": 12.478,
+          "l": 10.57,
+          "c": 12.478,
+          "a": 12.4779,
+          "v": 7544,
+          "ch": 11.51
+        },
+        {
+          "t": "2026-06-26",
+          "o": 12.095,
+          "h": 12.095,
+          "l": 11.04,
+          "c": 11.19,
+          "a": 11.19,
+          "v": 2883,
+          "ch": -17.2
+        },
+        {
+          "t": "2026-06-25",
+          "o": 14.35,
+          "h": 14.509,
+          "l": 13.18,
+          "c": 13.515,
+          "a": 13.5149,
+          "v": 4524,
+          "ch": 6.01
+        },
+        {
+          "t": "2026-06-24",
+          "o": 12.3,
+          "h": 12.839,
+          "l": 12.12,
+          "c": 12.749,
+          "a": 12.7489,
+          "v": 2512,
+          "ch": 0.76
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 9.57,
+          "h": 9.841,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 10475,
+          "ch": -16.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 11.6,
+          "h": 14.17,
+          "l": 8.67,
+          "c": 8.939,
+          "a": 8.9393,
+          "v": 42443,
+          "ch": -20.11
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 27519,
+          "ch": -46.51
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 9.57,
+          "h": 9.841,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 10475,
+          "ch": -16.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 11.6,
+          "h": 14.17,
+          "l": 8.67,
+          "c": 8.939,
+          "a": 8.9393,
+          "v": 42443,
+          "ch": -20.11
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 27519,
+          "ch": -46.51
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 12.47,
+          "h": 12.58,
+          "l": 6.9,
+          "c": 7.488,
+          "a": 7.488,
+          "v": 27519,
+          "ch": -46.51
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

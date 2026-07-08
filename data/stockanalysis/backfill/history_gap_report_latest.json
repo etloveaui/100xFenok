@@ -1,12 +1,12 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-07-03T01:27:41.638Z",
+  "generated_at": "2026-07-08T22:48:42.374Z",
   "required_history_periods": [
     "monthly_3y",
     "monthly_5y"
   ],
-  "primary_stockanalysis_detail_files": 4601,
-  "complete_required_history": 4588,
+  "primary_stockanalysis_detail_files": 4635,
+  "complete_required_history": 4622,
   "missing_required_history": 13,
   "fetchable_required_history": 0,
   "inception_limited_required_history": 13,
@@ -312,32 +312,32 @@
         "inception_date": "2025-12-11"
       },
       {
+        "ticker": "AAAD",
+        "missing": [],
+        "fetchable_missing": [],
+        "inception_limited_missing": [],
+        "inception_date": "2026-06-01"
+      },
+      {
         "ticker": "AADR",
         "missing": [],
         "fetchable_missing": [],
         "inception_limited_missing": [],
         "inception_date": "2010-07-20"
-      },
-      {
-        "ticker": "AAEQ",
-        "missing": [],
-        "fetchable_missing": [],
-        "inception_limited_missing": [],
-        "inception_date": "2025-12-09"
       }
     ]
   },
   "daily_1y_gap": {
     "min_rows": 200,
-    "detail_files_scanned": 5363,
-    "complete": 4152,
-    "missing": 1211,
-    "fetchable": 447,
-    "inception_limited": 764,
+    "detail_files_scanned": 5429,
+    "complete": 4154,
+    "missing": 1275,
+    "fetchable": 477,
+    "inception_limited": 798,
     "fetchable_breakdown": {
       "counts": {
         "stockanalysis_short_rows": 21,
-        "yahoo_fallback_short_rows": 426
+        "yahoo_fallback_short_rows": 456
       },
       "samples": {
         "stockanalysis_short_rows": [
@@ -356,13 +356,13 @@
           "AAAP",
           "AAOX",
           "AAPB",
+          "AAPE",
           "AAPX",
           "ACGO",
-          "ACLZ",
-          "ACMM",
+          "ACHX",
           "ADIU",
-          "AEHG",
-          "AIX"
+          "AIX",
+          "AMEI"
         ]
       }
     },
@@ -405,6 +405,18 @@
           "detail_status": "yf_fallback"
         },
         {
+          "ticker": "AAPE",
+          "actual_rows": 1,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": null,
+          "daily_1y_gap_source": "yahoo_fallback_short_rows",
+          "source_provider": "yahoo_finance",
+          "detail_status": "yf_fallback"
+        },
+        {
           "ticker": "AAPX",
           "actual_rows": 0,
           "fetchable_missing": [
@@ -429,19 +441,7 @@
           "detail_status": "yf_fallback"
         },
         {
-          "ticker": "ACLZ",
-          "actual_rows": 5,
-          "fetchable_missing": [
-            "daily_1y"
-          ],
-          "inception_limited_missing": [],
-          "inception_date": null,
-          "daily_1y_gap_source": "yahoo_fallback_short_rows",
-          "source_provider": "yahoo_finance",
-          "detail_status": "yf_fallback"
-        },
-        {
-          "ticker": "ACMM",
+          "ticker": "ACHX",
           "actual_rows": 5,
           "fetchable_missing": [
             "daily_1y"
@@ -465,7 +465,7 @@
           "detail_status": "yf_fallback"
         },
         {
-          "ticker": "AEHG",
+          "ticker": "AIX",
           "actual_rows": 3,
           "fetchable_missing": [
             "daily_1y"
@@ -477,8 +477,8 @@
           "detail_status": "yf_fallback"
         },
         {
-          "ticker": "AIX",
-          "actual_rows": 3,
+          "ticker": "AMEI",
+          "actual_rows": 5,
           "fetchable_missing": [
             "daily_1y"
           ],
@@ -498,6 +498,17 @@
             "daily_1y"
           ],
           "inception_date": "2025-12-11",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "AAAD",
+          "actual_rows": 22,
+          "fetchable_missing": [],
+          "inception_limited_missing": [
+            "daily_1y"
+          ],
+          "inception_date": "2026-06-01",
           "source_provider": "stockanalysis",
           "detail_status": null
         },
@@ -588,17 +599,6 @@
           "inception_date": "2025-11-20",
           "source_provider": "stockanalysis",
           "detail_status": null
-        },
-        {
-          "ticker": "ACKY",
-          "actual_rows": 195,
-          "fetchable_missing": [],
-          "inception_limited_missing": [
-            "daily_1y"
-          ],
-          "inception_date": "2025-09-09",
-          "source_provider": "stockanalysis",
-          "detail_status": null
         }
       ],
       "complete": [
@@ -628,26 +628,26 @@
       "scored_etf_count": 4484,
       "complete": 3703,
       "missing": 781,
-      "fetchable": 241,
-      "inception_limited": 540,
+      "fetchable": 234,
+      "inception_limited": 547,
       "fetchable_breakdown": {
         "counts": {
-          "missing_external_quote_type_mismatch": 54,
+          "missing_external_quote_type_mismatch": 46,
           "stockanalysis_short_rows": 18,
-          "yahoo_fallback_short_rows": 169
+          "yahoo_fallback_short_rows": 170
         },
         "samples": {
           "missing_external_quote_type_mismatch": [
-            "AAAD",
             "ACII",
             "ACYQ",
-            "ADDS",
             "AFGR",
             "AMHI",
             "BAVA",
-            "BD",
-            "BRSM",
-            "CLNK"
+            "CLNK",
+            "CLOO",
+            "CRIB",
+            "EDGQ",
+            "EDGX"
           ],
           "stockanalysis_short_rows": [
             "AMUN",
@@ -678,14 +678,6 @@
       "samples": {
         "fetchable": [
           {
-            "ticker": "AAAD",
-            "actual_rows": 0,
-            "missing_file": true,
-            "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-            "pending_consecutive_failures": 6,
-            "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-          },
-          {
             "ticker": "AAAP",
             "actual_rows": 6,
             "fetchable_missing": [
@@ -714,32 +706,24 @@
             "actual_rows": 0,
             "missing_file": true,
             "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-            "pending_consecutive_failures": 6,
-            "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
+            "pending_consecutive_failures": 7,
+            "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
           },
           {
             "ticker": "ACYQ",
             "actual_rows": 0,
             "missing_file": true,
             "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-            "pending_consecutive_failures": 3,
-            "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-          },
-          {
-            "ticker": "ADDS",
-            "actual_rows": 0,
-            "missing_file": true,
-            "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-            "pending_consecutive_failures": 6,
-            "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
+            "pending_consecutive_failures": 4,
+            "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
           },
           {
             "ticker": "AFGR",
             "actual_rows": 0,
             "missing_file": true,
             "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-            "pending_consecutive_failures": 6,
-            "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
+            "pending_consecutive_failures": 7,
+            "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
           },
           {
             "ticker": "AMEI",
@@ -776,6 +760,26 @@
             "daily_1y_gap_source": "yahoo_fallback_short_rows",
             "source_provider": "yahoo_finance",
             "detail_status": "yf_fallback"
+          },
+          {
+            "ticker": "AMHI",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+            "pending_consecutive_failures": 4,
+            "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+          },
+          {
+            "ticker": "AMUN",
+            "actual_rows": 172,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "1986-03-17",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null
           }
         ],
         "inception_limited": [
@@ -787,6 +791,17 @@
               "daily_1y"
             ],
             "inception_date": "2025-12-11",
+            "source_provider": "stockanalysis",
+            "detail_status": null
+          },
+          {
+            "ticker": "AAAD",
+            "actual_rows": 22,
+            "fetchable_missing": [],
+            "inception_limited_missing": [
+              "daily_1y"
+            ],
+            "inception_date": "2026-06-01",
             "source_provider": "stockanalysis",
             "detail_status": null
           },
@@ -877,17 +892,6 @@
             "inception_date": "2025-10-16",
             "source_provider": "stockanalysis",
             "detail_status": null
-          },
-          {
-            "ticker": "ACSV",
-            "actual_rows": 168,
-            "fetchable_missing": [],
-            "inception_limited_missing": [
-              "daily_1y"
-            ],
-            "inception_date": "2025-10-16",
-            "source_provider": "stockanalysis",
-            "detail_status": null
           }
         ],
         "complete": [
@@ -917,7 +921,7 @@
     "caveat": "StockAnalysis ETF detail daily 1Y continuity is required; fetchable daily 1Y gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block by themselves."
   },
   "incremental_plan": {
-    "generated_at": "2026-07-03T01:27:29Z",
+    "generated_at": "2026-07-08T22:48:28Z",
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
