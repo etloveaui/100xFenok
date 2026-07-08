@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-07-07T07:13:32.504Z",
+  "generated_at": "2026-07-08T04:23:11.191Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -9,7 +9,7 @@
     "private_artifact_paths_included": false
   },
   "active_scoring_universe": {
-    "generated_at": "2026-07-07T07:13:11.454Z",
+    "generated_at": "2026-07-08T04:23:00.020Z",
     "current_only": true,
     "total": 1064,
     "by_market": [
@@ -89,15 +89,15 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-07-07T07:13:13.109Z",
-          "age_hours": 0.01,
+          "generated_at": "2026-07-08T04:23:01.387Z",
+          "age_hours": 0,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": false,
           "generated_at": "2026-07-03T01:27:41.638Z",
-          "age_hours": 101.76,
+          "age_hours": 122.92,
           "max_age_hours": 48
         },
         {
@@ -288,31 +288,31 @@
         "label": "Current active stock scoring chain",
         "denominator": 1064,
         "stage": "PUBLIC",
-        "readiness_status": "not_ready",
-        "public_done_claim_allowed": false,
+        "readiness_status": "ready",
+        "public_done_claim_allowed": true,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": false,
-          "gated": false
+          "daily": true,
+          "gated": true
         },
-        "caveat": "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
+        "caveat": "The current active stock chain is public-scored and has Korea+US daily/gated source proof under the current S0 scope; HKEX/SSE/SZSE and US_CLASS mapping remain separate expansion work.",
         "blocking_evidence": {
           "evidence_origin": "derived_counts_only",
-          "daily_ready": false,
-          "gated_ready": false,
+          "daily_ready": true,
+          "gated_ready": true,
           "checks": [
             {
               "id": "krx_full_daily_source_ready",
-              "status": "blocked",
-              "covered_count": 0,
+              "status": "ready",
+              "covered_count": 337,
               "denominator": 337,
-              "missing_count": 337,
-              "source_date": null,
-              "age_days": null,
+              "missing_count": 0,
+              "source_date": "2026-07-06",
+              "age_days": 2,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
               "caveat": "Empty KRX calendar runs are not counted as issuer daily coverage."
@@ -324,7 +324,7 @@
               "denominator": 578,
               "missing_count": 0,
               "source_date": "2026-07-06",
-              "age_days": 1,
+              "age_days": 2,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=US; US_CLASS foreign/class rows stay in active US bucket but are excluded from FINRA plain-US readiness until mapped or rebucketed.",
               "excluded_us_class_count": 58,
@@ -365,7 +365,7 @@
               "denominator": 578,
               "missing_count": 0,
               "source_date": "2026-07-06",
-              "age_days": 1,
+              "age_days": 2,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
               "derived_gap_breakdown": {
@@ -442,20 +442,7 @@
               "next_action": "Build HKEX/SSE/SZSE daily-source workstream before claiming all active 1066 stocks as daily/gated."
             }
           ],
-          "blockers": [
-            {
-              "id": "krx_full_daily_source_ready",
-              "status": "blocked",
-              "covered_count": 0,
-              "denominator": 337,
-              "missing_count": 337,
-              "source_date": null,
-              "age_days": null,
-              "max_age_days": 4,
-              "eligibility_policy": "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
-              "caveat": "Empty KRX calendar runs are not counted as issuer daily coverage."
-            }
-          ],
+          "blockers": [],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
         }
       },
@@ -518,15 +505,15 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-07-07T07:13:13.109Z",
-              "age_hours": 0.01,
+              "generated_at": "2026-07-08T04:23:01.387Z",
+              "age_hours": 0,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": false,
               "generated_at": "2026-07-03T01:27:41.638Z",
-              "age_hours": 101.76,
+              "age_hours": 122.92,
               "max_age_hours": 48
             },
             {
@@ -584,7 +571,7 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-07-07T07:13:25.677Z",
+          "generated_at": "2026-07-08T04:23:08.446Z",
           "generated_age_hours": 0,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
@@ -641,25 +628,25 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-07-07T07:13:32.504Z"
+        "generated_at": "2026-07-08T04:23:11.191Z"
       },
       {
         "id": "korea_counted_source_date",
         "source_date": "2026-07-06",
-        "age_days": 1,
+        "age_days": 2,
         "status": "ready",
         "caveat": "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date."
       },
       {
         "id": "us_flow_source_date",
         "source_date": "2026-07-06",
-        "age_days": 1,
+        "age_days": 2,
         "status": "ready"
       },
       {
         "id": "us_occ_source_date",
         "source_date": "2026-07-06",
-        "age_days": 1,
+        "age_days": 2,
         "status": "ready"
       },
       {
@@ -683,15 +670,15 @@
       },
       {
         "id": "etf_signal_summary_freshness",
-        "generated_at": "2026-07-07T07:13:13.109Z",
-        "age_hours": 0.01,
+        "generated_at": "2026-07-08T04:23:01.387Z",
+        "age_hours": 0,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-07-03T01:27:41.638Z",
-        "age_hours": 101.76,
+        "age_hours": 122.92,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 13,
@@ -710,7 +697,7 @@
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-07-07T07:13:25.677Z",
+        "generated_at": "2026-07-08T04:23:08.446Z",
         "age_hours": 0,
         "selected_count": 116,
         "fresh_selected_count": 116,

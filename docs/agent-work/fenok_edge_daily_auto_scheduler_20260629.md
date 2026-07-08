@@ -193,8 +193,9 @@ Acceptance criteria for the governor:
 
 - Fenok Edge daily rebuilds `data/admin/fenok-edge-coverage-index.json` after FINRA/OCC proxy refresh.
 - Fenok Edge KRX daily updates `data/admin/fenok-edge-korea-krx-daily-index.json`, then rebuilds `data/admin/fenok-edge-coverage-index.json`.
-- Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`.
+- Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`, which rebuilds `data/computed/rim-index/inputs.json` and its Next public mirror.
 - YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
+- `qa:fenok-edge-readiness` includes `qa:rim-index`, a no-fetch RIM input contract check that forbids public `fair_value` / `target_price` output and blocks KOSPI from using DGS10 as a fallback.
 - `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
 - `qa:fenok-edge-readiness` also includes `qa:fenok-s0-source-gaps`, a no-fetch S0 source-gap audit that classifies FINRA/OCC missing rows into collection candidates vs universe-mapping policy work.
 - `qa:fenok-edge-readiness` includes `qa:fenok-occ-options`, a no-fetch unit/plan test for OCC selector, request budget, and no-record availability evidence handling.
