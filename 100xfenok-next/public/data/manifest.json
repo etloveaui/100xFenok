@@ -86,13 +86,13 @@
       "description": "Index holdings, returns, individual stocks"
     },
     "yardney": {
-      "version": "1.1.0",
+      "version": "1.2.0",
       "updated": "2026-07-08",
       "update_frequency": "weekly",
-      "source": "Yardeni model workbook (public no-raw-yield payload)",
+      "source": "Feno Yardeni: official FRED WAAA/WBAA + Bloomberg-sourced 100x benchmark S&P 500 price/EPS",
       "file_count": 1,
       "schema": false,
-      "description": "Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,876 records through 2026-07-03."
+      "description": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03."
     },
     "computed": {
       "version": "1.0.0",
@@ -159,6 +159,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-07-08",
+      "folder": "yardney",
+      "version": "1.2.0",
+      "change": "Feno Yardeni transition: rebuilt yardney_model.json from official FRED WAAA/WBAA plus the existing Bloomberg-sourced 100x benchmark S&P 500 price/EPS; preserved 1,026 pre-benchmark seed records through 2009-12-25, computed 862 records from 2010-01-01 through 2026-07-03, total 1,888 records; latest fair value 6,421.44 and premium +16.54%; public schema remains slim.",
+      "breaking": false
+    },
     {
       "date": "2026-07-08",
       "folder": "yardney",
@@ -736,10 +743,10 @@
     {
       "name": "yardney",
       "path": "/data/yardney/",
-      "schemaVersion": "1.1.0",
+      "schemaVersion": "1.2.0",
       "fileCount": 1,
       "lastUpdated": "2026-07-08",
-      "notes": "Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,876 records through 2026-07-03."
+      "notes": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03."
     },
     {
       "name": "catalog",

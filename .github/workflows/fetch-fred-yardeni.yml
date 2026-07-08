@@ -1,0 +1,64 @@
+# Feno Yardeni weekly valuation model.
+# Builds public-safe Yardeni fields from FRED WAAA/WBAA plus 100x benchmark
+# S&P 500 price/EPS. Raw FRED bond-yield components stay under _private/.
+
+name: Fetch FRED Yardeni Data
+
+on:
+  schedule:
+    # UTC Saturday 10:00 = KST Saturday 19:00, after the weekly FRED print.
+    - cron: '0 10 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+
+concurrency:
+  group: fetch-fred-yardeni-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch-fred-yardeni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test Feno Yardeni builder
+        run: node scripts/test-build-feno-yardeni-model.mjs
+
+      - name: Build Feno Yardeni model from FRED
+        run: node scripts/build-feno-yardeni-model.mjs --fetch
+
+      - name: Validate public payload
+        run: node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
+
+      - name: Commit and push Feno Yardeni data
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/yardney/yardney_model.json \
+            100xfenok-next/public/data/yardney/yardney_model.json
+          git diff --staged --quiet || git commit -m "chore: update Feno Yardeni data"
+          for attempt in $(seq 1 5); do
+            git pull --rebase --autostash origin main
+            if git push; then
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1
