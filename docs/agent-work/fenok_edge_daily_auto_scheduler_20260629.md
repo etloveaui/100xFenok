@@ -76,6 +76,7 @@ Non-negotiable handoff contents for the next main pane:
   - Adds a KST Mon-Fri 19:30 KRX Open API private daily refresh.
   - Scheduled runs start from the latest settled KRX date (`T-1` weekday) and auto-walk back up to 5 calendar days when required issuer daily rows are still empty. Each candidate stays bounded to one `basDd`, 31 endpoints, max 40 calls, concurrency 2, 250ms sleep, and fail threshold 0.
   - Raw KRX payloads stay under `_private/admin`; the tracked bridge index stores only counts and private path references.
+  - The KRX lane now stages the regenerated `data/computed/rim-index/inputs.json` and Next public mirror so a successful KRX bridge refresh also publishes the latest KOSPI RIM input-only state.
 
 ## Load-aware Collection Lane
 
@@ -198,6 +199,7 @@ Acceptance criteria for the governor:
 - Fenok Edge daily rebuilds `data/admin/fenok-edge-coverage-index.json` after FINRA/OCC proxy refresh.
 - Fenok Edge KRX daily updates `data/admin/fenok-edge-korea-krx-daily-index.json`, then rebuilds `data/admin/fenok-edge-coverage-index.json`.
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`, which rebuilds `data/computed/rim-index/inputs.json` and its Next public mirror.
+- RIM QA accepts both valid KOSPI operating states: `backlog_blocked` when no KRX bridge is available in the checkout, and `secondary_input_only` with KRX exact weights/KTS 10Y when the bridge is present.
 - YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
 - `qa:fenok-edge-readiness` includes `qa:rim-index`, a no-fetch RIM input contract check that forbids public `fair_value` / `target_price` output and blocks KOSPI from using DGS10 as a fallback.
 - `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
