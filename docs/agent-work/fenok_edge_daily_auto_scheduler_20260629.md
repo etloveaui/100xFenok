@@ -60,6 +60,7 @@ Non-negotiable handoff contents for the next main pane:
   - The default stock universe now includes both `global-scouter/stocks/detail/*.json` and `market_facts` rows where `asset_type=stock`; this keeps S1 stock candidates in the daily history/price accumulation lane without promoting them into public stock scores.
   - `stockanalysis_etfs=true` adds the full StockAnalysis ETF universe/screener candidate set so ETF daily history gaps can be filled by rotating shards.
   - After YF-derived market facts/audit rebuild, the workflow now rebuilds the local full `fenok_signals.json` plus the public `fenok_signals_summary.json` mirror before the dual-hexagon gate runs.
+  - The workflow participates in the shared `fenok-data-writer-${{ github.ref }}` queue and uses the same 5-attempt rebase/push retry loop as the generated-data writers, so it does not race overlapping data commits.
   - Manual dispatch still keeps the existing full/profile/limit/shard controls.
 - `.github/workflows/fetch-fred-yardeni.yml`
   - Weekly FRED Yardeni rebuild remains the canonical Feno Yardeni lane: public payload keeps only `date/spx/eps/bond_per/fair_value/premium_pct`, while raw FRED bond-yield components stay under `_private/admin/yardney`.
@@ -68,15 +69,18 @@ Non-negotiable handoff contents for the next main pane:
   - Adds a KST Tue-Sat bounded Core Basket/surface refresh lane after the YF window.
   - Scheduled runs disable stock financial statements, full ETF universe discovery, and universe backfill.
   - Scheduled runs keep incremental ETF backfill on, capped at 40 ETF details, with Core Basket priority tickers, core surfaces, and 0.5 second sleep.
+  - The workflow participates in the shared `fenok-data-writer-${{ github.ref }}` queue because it regenerates the same coverage/readiness/static-route artifacts as the Edge daily lanes.
 - `.github/workflows/fenok-edge-daily.yml`
   - Adds a KST Tue-Sat 09:30 FINRA/OCC derived-proxy refresh.
   - FINRA defaults to a 7-day-to-yesterday window to tolerate holidays and source lag.
   - OCC runs sequential same-run batches with default `250` tickers x `5` batches. The per-batch request budget stays within `1500` because the default candidate window can require up to 3 dates x 2 option sides.
+  - Shares `fenok-data-writer-${{ github.ref }}` with KRX/YF/StockAnalysis/FRED Banking/Update Manifest so overlapping generated JSON commits serialize before the commit/push step.
 - `.github/workflows/fenok-edge-krx-daily.yml`
   - Adds a KST Mon-Fri 19:30 KRX Open API private daily refresh.
   - Scheduled runs start from the latest settled KRX date (`T-1` weekday) and auto-walk back up to 5 calendar days when required issuer daily rows are still empty. Each candidate stays bounded to one `basDd`, 31 endpoints, max 40 calls, concurrency 2, 250ms sleep, and fail threshold 0.
   - Raw KRX payloads stay under `_private/admin`; the tracked bridge index stores only counts and private path references.
   - The KRX lane now stages the regenerated `data/computed/rim-index/inputs.json` and Next public mirror so a successful KRX bridge refresh also publishes the latest KOSPI RIM input-only state.
+  - Shares the same `fenok-data-writer-${{ github.ref }}` queue as Fenok Edge daily to prevent KRX bridge commits and FINRA/OCC commits from rebasing over conflicting regenerated artifacts.
 
 ## Load-aware Collection Lane
 
@@ -198,6 +202,7 @@ Acceptance criteria for the governor:
 
 - Fenok Edge daily rebuilds `data/admin/fenok-edge-coverage-index.json` after FINRA/OCC proxy refresh.
 - Fenok Edge KRX daily updates `data/admin/fenok-edge-korea-krx-daily-index.json`, then rebuilds `data/admin/fenok-edge-coverage-index.json`.
+- Generated-data writers that touch overlapping Fenok Edge artifacts are serialized by the shared `fenok-data-writer-${{ github.ref }}` concurrency group. This was added after run `28981832204` proved that separate Edge/KRX queues can both pass data rebuilds but fail at commit time with real generated-JSON rebase conflicts. The fix commit `2556a02882` passed workflow YAML validation in run `28982488893`.
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`, which rebuilds `data/computed/rim-index/inputs.json` and its Next public mirror.
 - RIM QA accepts both valid KOSPI operating states: `backlog_blocked` when no KRX bridge is available in the checkout, and `secondary_input_only` with KRX exact weights/KTS 10Y when the bridge is present.
 - YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
