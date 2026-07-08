@@ -748,7 +748,7 @@
             if (password === '100x') {
                 closeAdminModal();
                 showToast('관리자 인증 성공! 이동 중...');
-                setTimeout(() => { window.location.href = '../../index.html'; }, 1000);
+                setTimeout(() => { window.location.href = '/admin'; }, 1000);
             } else {
                 showToast('비밀번호가 틀렸습니다');
                 document.getElementById('admin-password').value = '';

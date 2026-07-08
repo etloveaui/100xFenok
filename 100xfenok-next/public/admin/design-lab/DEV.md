@@ -21,8 +21,7 @@
 ## 3. 폴더 구조
 
 - `index.html`: Design Lab 대시보드 (작업 목록, 링크)
-- `main/`: 메인 페이지(`source/100xFenok/index.html`) 실험실
-- `widgets/`: 위젯들 실험실
+- `main/`: retired root home 시안 보관 및 비교 실험실
 - `components/`: 버튼, 헤더 등 공통 요소 실험실
 - `screenshots/`: 벤치마킹하거나 현재 상태를 캡처한 이미지들
 
