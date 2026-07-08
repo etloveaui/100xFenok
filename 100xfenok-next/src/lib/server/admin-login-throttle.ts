@@ -76,10 +76,11 @@ export function registerAdminLoginFailure(
     return throttleResult(current, now);
   }
 
-  const withinWindow = Boolean(current && current.resetAt > now);
-  const failedCount = withinWindow ? current.failedCount + 1 : 1;
+  const activeAttempt = current && current.resetAt > now ? current : undefined;
+  const failedCount = activeAttempt ? activeAttempt.failedCount + 1 : 1;
   const lockedUntil = failedCount >= ADMIN_LOGIN_MAX_FAILURES ? now + ADMIN_LOGIN_LOCK_MS : 0;
-  const resetAt = lockedUntil || (withinWindow ? current.resetAt : now + ADMIN_LOGIN_LOCK_MS);
+  const resetAt =
+    lockedUntil > 0 ? lockedUntil : activeAttempt ? activeAttempt.resetAt : now + ADMIN_LOGIN_LOCK_MS;
 
   const nextAttempt = {
     failedCount,
