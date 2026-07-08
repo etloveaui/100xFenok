@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-07-08T03:54:01.585Z",
+  "generated_at": "2026-07-08T11:22:37.117Z",
   "as_of": "2026-07-08",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -99,14 +99,14 @@
       "overallLabel": "RISING",
       "m2YoY": 6.11,
       "m2Total": 23052.3,
-      "netLiquidity": 5945,
+      "netLiquidity": 5943.2,
       "netLiquidityDelta": 94.1,
       "weeklyNetFlow": 94.1,
-      "stablecoinMcap": 307.32538176546996,
+      "stablecoinMcap": 307.64458002994,
       "scM2Ratio": 1.33,
       "walcl": 6724.6,
       "tga": 776.8,
-      "rrp": 2.7,
+      "rrp": 4.5,
       "netFlow": 94.1,
       "components": {
         "m2_yoy": {
@@ -128,9 +128,9 @@
       "metrics": {
         "m2_yoy_pct": 6.11,
         "m2_total_b": 23052.3,
-        "net_liquidity_b": 5945,
+        "net_liquidity_b": 5943.2,
         "weekly_net_flow_b": 94.1,
-        "stablecoin_mcap_b": 307.3,
+        "stablecoin_mcap_b": 307.6,
         "sc_m2_ratio_pct": 1.33
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
@@ -147,7 +147,7 @@
       "overallLabel": "Caution",
       "tier1": {
         "status": "normal",
-        "value": -1,
+        "value": -2,
         "unit": "bp"
       },
       "tier2": {
@@ -156,11 +156,11 @@
         "unit": "%"
       },
       "metrics": {
-        "sofr_iorb_spread_bp": -1,
+        "sofr_iorb_spread_bp": -2,
         "reserves_gdp_pct": 9.3
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-07-07",
+      "as_of": "2026-07-08",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
