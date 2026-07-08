@@ -120,3 +120,26 @@ jobs:
           QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
           QA_STOCKANALYSIS_RETRIES: 3
           QA_STOCKANALYSIS_RETRY_DELAY_MS: 10000
+
+      - name: Smoke route iframe public contract
+        working-directory: 100xfenok-next
+        run: npm run qa:route-iframe-contract
+        env:
+          QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
+          QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
+          QA_ROUTE_IFRAME_SCOPE: public
+
+      - name: Smoke route iframe admin contract
+        working-directory: 100xfenok-next
+        run: |
+          if [ -z "${QA_ADMIN_PASSWORD:-}" ] && [ -z "${QA_ADMIN_SESSION_COOKIE:-}" ]; then
+            echo "::notice::Skipping admin route iframe smoke: set QA_ADMIN_PASSWORD or QA_ADMIN_SESSION_COOKIE to enable gated admin iframe verification."
+            exit 0
+          fi
+          npm run qa:route-iframe-contract
+        env:
+          QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
+          QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
+          QA_ROUTE_IFRAME_SCOPE: admin
+          QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
+          QA_ADMIN_SESSION_COOKIE: ${{ secrets.QA_ADMIN_SESSION_COOKIE }}

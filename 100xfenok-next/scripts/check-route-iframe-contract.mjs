@@ -16,6 +16,7 @@ function parseArgs(argv) {
   const args = {
     baseUrl: process.env.QA_BASE_URL ?? process.env.QA_ROUTE_IFRAME_BASE_URL ?? DEFAULT_BASE_URL,
     json: false,
+    scope: process.env.QA_ROUTE_IFRAME_SCOPE ?? "all",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -33,10 +34,25 @@ function parseArgs(argv) {
       args.baseUrl = arg.slice("--base-url=".length);
       continue;
     }
+    if (arg === "--scope") {
+      args.scope = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--scope=")) {
+      args.scope = arg.slice("--scope=".length);
+      continue;
+    }
     throw new Error(`unknown argument: ${arg}`);
   }
 
   return args;
+}
+
+function normalizeScope(rawScope) {
+  const scope = String(rawScope ?? "all").trim().toLowerCase();
+  if (scope === "all" || scope === "public" || scope === "admin") return scope;
+  throw new Error(`unknown scope: ${rawScope}`);
 }
 
 function normalizeBaseUrl(rawBaseUrl) {
@@ -135,6 +151,10 @@ function expectedEmbedSrc(targetPath) {
   return `${targetPath}${glue}embed=1`;
 }
 
+function isAdminRoute(route) {
+  return route === "/admin" || route.startsWith("/admin/");
+}
+
 function normalizePathAndSearch(src, baseUrl) {
   const url = new URL(src.replaceAll("&amp;", "&"), baseUrl);
   return `${url.pathname}${url.search}`;
@@ -168,13 +188,24 @@ function fail(errors, report, json) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const scope = normalizeScope(args.scope);
   const baseUrl = normalizeBaseUrl(args.baseUrl);
   assertLocalBaseUrl(baseUrl);
-  const adminCookie = await fetchAdminSessionCookie(baseUrl);
+  const adminCookie = scope === "public" ? "" : await fetchAdminSessionCookie(baseUrl);
 
   const rows = [];
   const errors = [];
-  const entries = Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE);
+  const allEntries = Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE);
+  const entries = allEntries.filter(([route]) => {
+    const adminRoute = isAdminRoute(route);
+    if (scope === "public") return !adminRoute;
+    if (scope === "admin") return adminRoute;
+    return true;
+  });
+
+  if (entries.length === 0) {
+    throw new Error(`route iframe scope selected zero routes: ${scope}`);
+  }
 
   for (const [route, expectedTarget] of entries) {
     try {
@@ -214,8 +245,10 @@ async function main() {
   const report = {
     ok: errors.length === 0,
     base_url: baseUrl.origin,
+    scope,
     admin_cookie: Boolean(adminCookie),
     routes_checked: entries.length,
+    routes_total: allEntries.length,
     rows,
     errors,
   };
@@ -224,7 +257,7 @@ async function main() {
   if (args.json) {
     printJson(report);
   } else {
-    console.log(`[qa:route-iframe-contract] OK routes=${entries.length} base=${baseUrl.origin}`);
+    console.log(`[qa:route-iframe-contract] OK scope=${scope} routes=${entries.length} base=${baseUrl.origin}`);
   }
 }
 
