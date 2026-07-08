@@ -391,7 +391,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       caveat: "Do not use the local YF-only count as the ETF readiness blocker unless the product contract changes; it currently over-selects versus the exact StockAnalysis continuity blocker.",
     },
     bounded_batches: {
-      can_drive_bounded_ticker_batches: historyGapCountOk && coverageCountOk && dailyCheckCountOk && equationOk,
+      can_drive_bounded_ticker_batches: coverageCountOk && dailyCheckCountOk && equationOk,
       default_batch_size: batchSize,
       batch_count: Math.ceil(tickers.length / batchSize),
       command_template: "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
@@ -418,16 +418,14 @@ export function buildEtfDaily1yReadiness() {
   const fetchablePlan = buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex });
 
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
-  const denominator = asNumber(
-    scored.scored_etf_count,
-    asNumber(signalSummary?.coverage?.scored_public_etf, asArray(signalSummary?.rows).length),
-  );
-  const daily1yComplete = asNumber(scored.complete);
-  const daily1yFetchable = asNumber(scored.fetchable);
-  const inceptionLimited = asNumber(scored.inception_limited);
-  const daily1yMissing = asNumber(scored.missing, daily1yFetchable + inceptionLimited);
+  const denominator = asNumber(fetchablePlan.counts.scored_etf_count);
+  const daily1yComplete = asNumber(fetchablePlan.counts.complete);
+  const daily1yFetchable = asNumber(fetchablePlan.counts.fetchable);
+  const inceptionLimited = asNumber(fetchablePlan.counts.inception_limited);
+  const daily1yMissing = asNumber(fetchablePlan.counts.missing, daily1yFetchable + inceptionLimited);
   const equationTotal = daily1yComplete + daily1yFetchable + inceptionLimited;
-  const countEquationOk = equationTotal === denominator
+  const countEquationOk = fetchablePlan.counts.equation_ok === true
+    && equationTotal === denominator
     && daily1yMissing === daily1yFetchable + inceptionLimited;
   const summaryRows = asArray(signalSummary?.rows).length;
   const summaryCountOk = summaryRows === denominator;
@@ -479,12 +477,6 @@ export function buildEtfDaily1yReadiness() {
       detail: "fetchable plan complete+fetchable+inception_limited does not match scored ETF denominator",
     });
   }
-  if (!fetchablePlan.counts.matches_history_gap_report) {
-    errors.push({
-      id: "fetchable_plan_history_gap_match",
-      detail: "fetchable plan exact rows differ from history-gap scored ETF counts",
-    });
-  }
   if (!fetchablePlan.counts.matches_coverage_index || !fetchablePlan.counts.matches_coverage_index_daily_check) {
     errors.push({
       id: "fetchable_plan_coverage_index_match",
@@ -522,7 +514,7 @@ export function buildEtfDaily1yReadiness() {
       daily_1y_missing: daily1yMissing,
       daily_1y_fetchable: daily1yFetchable,
       inception_limited_daily_1y_gap: inceptionLimited,
-      fetchable_breakdown: scored.fetchable_breakdown ?? fetchablePlan.fetchable_breakdown,
+      fetchable_breakdown: fetchablePlan.fetchable_breakdown,
       etf_no_fetchable_daily_1y_gap: daily1yFetchable,
       count_equation: "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap == denominator",
       count_equation_ok: countEquationOk,
@@ -544,11 +536,15 @@ export function buildEtfDaily1yReadiness() {
       coverage_index_daily_check_count_ok: dailyCheckCountOk,
       coverage_index_fetchable_daily_1y_gap: readiness?.counts?.fetchable_daily_1y_gap ?? null,
       coverage_index_inception_limited_daily_1y_gap: readiness?.counts?.inception_limited_daily_1y_gap ?? null,
+      history_gap_report_count_ok: fetchablePlan.counts.matches_history_gap_report,
+      history_gap_report_scored_etf_count: asNumber(scored.scored_etf_count),
+      history_gap_report_fetchable_daily_1y_gap: asNumber(scored.fetchable),
+      history_gap_report_inception_limited_daily_1y_gap: asNumber(scored.inception_limited),
     },
     samples: {
-      fetchable: compactRows(scored.samples?.fetchable),
-      inception_limited: compactRows(scored.samples?.inception_limited),
-      complete: compactRows(scored.samples?.complete).slice(0, 5),
+      fetchable: compactRows(fetchablePlan.rows),
+      inception_limited: compactRows(fetchablePlan.samples?.inception_limited),
+      complete: compactRows(fetchablePlan.samples?.complete).slice(0, 5),
     },
     exact_fetchable_plan: {
       output: FETCHABLE_PLAN_REL_PATH,

@@ -32,7 +32,7 @@ assert.equal(plan.counts.complete, readiness.daily_1y_complete);
 assert.equal(plan.counts.fetchable, readiness.daily_1y_fetchable);
 assert.equal(plan.counts.inception_limited, readiness.inception_limited_daily_1y_gap);
 assert.equal(plan.counts.equation_ok, true);
-assert.equal(plan.counts.matches_history_gap_report, true);
+assert.equal(typeof plan.counts.matches_history_gap_report, "boolean");
 assert.equal(plan.counts.matches_coverage_index, true);
 assert.equal(plan.counts.matches_coverage_index_daily_check, true);
 assert.equal(plan.tickers.length, readiness.daily_1y_fetchable);

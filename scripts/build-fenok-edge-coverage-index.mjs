@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
+import { buildScoredEtfDaily1yFetchablePlan } from "./write-fenok-etf-daily1y-readiness.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -404,6 +405,11 @@ const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
 const etfHistoryGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", {});
 const etfCoreDailyBasket = readJson("data/admin/fenok-etf-core-daily-basket.json", {});
 const priorIndex = readJson("data/admin/fenok-edge-coverage-index.json", {});
+const etfDaily1yExactPlan = buildScoredEtfDaily1yFetchablePlan({
+  signalSummary: etfSignals,
+  historyGap: etfHistoryGap,
+  coverageIndex: null,
+});
 const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
 const activeScoringTotal = universeRows.length;
 const etfScoredPublic = Number(etfSignals?.coverage?.scored_public_etf) || 0;
@@ -531,8 +537,13 @@ function computeEtfReadinessEvidence() {
   const inceptionLimitedGap = Number(etfHistoryGap.inception_limited_required_history) || 0;
   const daily1yGap = asObject(etfHistoryGap.daily_1y_gap);
   const scoredDaily1yGap = asObject(daily1yGap.scored_etfs);
-  const fetchableDaily1yGap = Number(scoredDaily1yGap.fetchable) || 0;
-  const inceptionLimitedDaily1yGap = Number(scoredDaily1yGap.inception_limited) || 0;
+  const fetchableDaily1yGap = Number(etfDaily1yExactPlan.counts?.fetchable) || 0;
+  const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.inception_limited) || 0;
+  const historyGapDaily1yMatches = (
+    Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)
+    && Number(scoredDaily1yGap.fetchable) === fetchableDaily1yGap
+    && Number(scoredDaily1yGap.inception_limited) === inceptionLimitedDaily1yGap
+  );
   const publicReady = Boolean(etfSignalGate.public_surface_proof?.ready && etfScoredPublic > 0);
   const dailyChecks = [
     {
@@ -562,6 +573,7 @@ function computeEtfReadinessEvidence() {
       ok: fetchableDaily1yGap === 0,
       fetchable_daily_1y_gap: fetchableDaily1yGap,
       inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
+      history_gap_report_match: historyGapDaily1yMatches,
       claim_scope: "full_scored_etf_universe_diagnostic",
       service_gate: false,
       caveat: "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; fetchable gaps keep only the full-universe diagnostic lane daily=false.",
@@ -593,6 +605,7 @@ function computeEtfReadinessEvidence() {
       inception_limited_required_history: inceptionLimitedGap,
       fetchable_daily_1y_gap: fetchableDaily1yGap,
       inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
+      history_gap_report_match: historyGapDaily1yMatches,
     },
   };
 }
@@ -1221,8 +1234,9 @@ const index = {
       {
         id: "etf_daily_1y_gap",
         generated_at: etfHistoryGap.generated_at ?? null,
-        fetchable_daily_1y_gap: Number(etfHistoryGap.daily_1y_gap?.scored_etfs?.fetchable) || 0,
-        inception_limited_daily_1y_gap: Number(etfHistoryGap.daily_1y_gap?.scored_etfs?.inception_limited) || 0,
+        fetchable_daily_1y_gap: etfReadinessEvidence.counts.fetchable_daily_1y_gap,
+        inception_limited_daily_1y_gap: etfReadinessEvidence.counts.inception_limited_daily_1y_gap,
+        history_gap_report_match: etfReadinessEvidence.counts.history_gap_report_match,
         status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_daily_1y_gap")?.ok ? "ready" : "blocked_fetchable_daily_gap",
         claim_scope: "full_scored_etf_universe_diagnostic",
         service_gate: false,

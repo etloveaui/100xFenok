@@ -131,7 +131,7 @@ export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null) {
     if (!Array.isArray(shard.tickers)) errors.push(`shard ${shard.shard ?? "?"} missing tickers`);
     else if (shard.tickers.length > SHARD_SIZE) errors.push(`shard ${shard.shard ?? "?"} exceeds ${SHARD_SIZE}`);
   }
-  for (const key of ["source_count_equation_ok", "source_matches_history_gap_report", "source_matches_coverage_index", "source_matches_coverage_index_daily_check"]) {
+  for (const key of ["source_count_equation_ok", "source_matches_coverage_index", "source_matches_coverage_index_daily_check"]) {
     if (payload?.counts?.[key] !== true) errors.push(`${key} must be true`);
   }
 
