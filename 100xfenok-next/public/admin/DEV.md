@@ -17,8 +17,6 @@
 ```
 admin/
 ├── DEV.md           ← This file
-├── index.html       ← Admin dashboard
-├── api-test.html    ← Apps Script API test
 ├── shared/          ← ★ Unified shared modules (NEW 2026-01-20)
 │   ├── config/      # ManifestLoader
 │   ├── core/        # CacheManager, DataManager, Formatters
@@ -37,31 +35,15 @@ admin/
 
 ## 진입 방식
 
-| 단계 | 설명 |
-|------|------|
-| 1 | 메인 페이지 푸터의 `alive` 텍스트 클릭 |
-| 2 | 비밀번호 모달 표시 (커스텀 UI, 마스킹) |
-| 3 | SHA-256 해시 비교 → 인증 성공 시 `admin/index.html` 이동 |
-| 4 | sessionStorage에 세션 저장 (탭 닫으면 만료) |
+The legacy root admin shell, Apps Script API test page, and GA stats page were
+retired on 2026-07-08. Use the authenticated Next admin hub at `/admin`.
 
 ---
 
 ## 인증 로직
 
-```javascript
-// 비밀번호 해시 비교
-const inputHash = await sha256(inputPassword);
-const storedHash = '...'; // SHA-256 해시값
-if (inputHash === storedHash) {
-  sessionStorage.setItem('admin_auth', 'true');
-  window.location.href = 'admin/index.html';
-}
-```
-
-**보안**:
-- URL 직접 접근 시에도 인증 체크
-- sessionStorage 사용 (브라우저 탭 닫으면 만료)
-- 비밀번호는 해시로만 저장 (평문 없음)
+Current admin access is owned by the Next.js admin session gate. Do not restore
+the retired static root shell as an auth entry point.
 
 ---
 
@@ -96,7 +78,7 @@ if (inputHash === storedHash) {
 | 기능 | 상태 | 설명 |
 |------|------|------|
 | Telegram 알림 | ✅ 완료 | 기존 페이지 연결 |
-| API Test | ✅ 완료 | Apps Script 연동 테스트 |
+| API Test | 🧹 retired | 2026-07-08 root admin cleanup |
 | Market Radar | ✅ 완료 | S&P 500, NASDAQ 차트 (MA 토글, 스마트 기간 선택) |
 | 설정 | ⏳ 예정 | Coming soon |
 
@@ -117,7 +99,7 @@ if (inputHash === storedHash) {
 - [x] 비밀번호 인증 (SHA-256)
 - [x] 대시보드 UI
 - [x] Telegram 연결
-- [x] API Test 페이지
+- [x] API Test 페이지 (retired 2026-07-08)
 
 ### Phase 2: 확장 (대기)
 - [ ] 설정 페이지

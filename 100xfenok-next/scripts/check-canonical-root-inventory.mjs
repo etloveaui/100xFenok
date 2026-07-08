@@ -522,7 +522,7 @@ function ownerFamilyForHighRisk(row) {
       id: "admin_root_legacy",
       owner_route: "/admin",
       owner_area: "admin_root",
-      first_action: "preserve admin root legacy shell until admin route smoke and owner approval",
+      first_action: "retired 2026-07-08; do not restore the static admin root shell unless owner re-approves",
     });
   }
   if (pathName.startsWith("/admin/personal/")) {

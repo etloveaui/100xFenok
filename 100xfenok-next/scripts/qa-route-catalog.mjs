@@ -79,8 +79,6 @@ export const PLAYWRIGHT_ROUTES = [
   "/admin/valuation-lab",
   "/admin/stark-lab",
   "/admin/ib-helper",
-  "/admin/stats",
-  "/admin/api-test",
   "/tools/stock-analyzer",
   "/tools/stock-analyzer/native",
   "/this-route-should-not-exist",
@@ -116,8 +114,6 @@ export const EXPECTED_IFRAME_ROUTES = new Set([
   "/admin/valuation-lab",
   "/admin/stark-lab",
   "/admin/ib-helper",
-  "/admin/stats",
-  "/admin/api-test",
   "/tools/stock-analyzer",
 ]);
 
@@ -139,7 +135,5 @@ export const EXPECTED_IFRAME_SRC_BY_ROUTE = {
   "/admin/valuation-lab": "/admin/valuation-lab/index.html",
   "/admin/stark-lab": "/admin/stark-lab/index.html",
   "/admin/ib-helper": "/ib/ib-helper/index.html",
-  "/admin/stats": "/admin/stats.html",
-  "/admin/api-test": "/admin/api-test.html",
   "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
 };

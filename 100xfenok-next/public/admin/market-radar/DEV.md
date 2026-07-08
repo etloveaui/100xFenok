@@ -156,7 +156,7 @@ admin/market-radar/
 - [x] 스마트 드롭다운 기간 선택
 - [x] YTD, 특정 연도, 커스텀 범위
 - [x] 모바일 최적화
-- [x] admin/index.html 등록
+- [x] `/admin/market-radar` owner route 등록 (`admin/index.html` shell retired 2026-07-08)
 
 ### Phase 2: 확장 (진행 중)
 - [x] 데이터 자동 수집 파이프라인 ✅ (#77, DEC-076)
