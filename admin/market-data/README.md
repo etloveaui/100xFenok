@@ -1,6 +1,7 @@
 # 100x Market Data - Apps Script
 
-Real-time market data service for 100xFenok main page (v17.8).
+Retired market data Apps Script service for the former 100xFenok main page
+v17.8 plan.
 
 > **Architecture**: Standalone GAS project + Dedicated Google Sheet
 > **Not related to**: IB Helper GAS (separate project)
@@ -176,6 +177,9 @@ Real-time market data service for 100xFenok main page (v17.8).
 
 ## Related
 
-- **Master Plan**: `docs/planning/main-v17.8-rebuild-master.md`
+- **Status**: preserved as a retired admin/GAS reference; the v17.8 main-page
+  plan was superseded by the Next.js Bento home on Cloudflare Workers.
+- **Tracking**: platform docs `docs/BACKLOG.md` #284 and
+  `docs/planning/main-v17.8-rebuild-master.md` track the master-plan drift.
 - **IB Helper GAS**: `ib/ib-helper/apps-script/` (separate project, do not mix)
 - **Market Radar GAS**: `admin/market-radar/scripts/` (trigger-only, no WebApp)

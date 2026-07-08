@@ -101,9 +101,9 @@ valuation-lab/
 
 | # | 기능 | 공수 | 파일 |
 |---|------|------|------|
-| 17 | 신호등 | 4h | `signal-light.html` |
-| 18 | 1문장 해석 | 2h | `one-liner.html` |
-| 19 | 분위수 차트 | 4h | `percentile.html` |
+| 17 | 신호등 | 4h | `card.html` embedded section |
+| 18 | 1문장 해석 | 2h | `card.html` embedded section |
+| 19 | 분위수 차트 | 4h | `card.html` embedded section |
 | 20 | Valuation Card 2.0 | 8h | `card.html` (Index + Stock + Industry Comparison) |
 
 ---
@@ -162,7 +162,7 @@ valuation-lab/
 ### 통합/맞춤
 
 - `expansion/dashboard.html` (A~E 요약 대시보드)
-- `expansion/custom-screener.html` (가중치 기반 스크리너)
+- `expansion/dashboard.html` (A~E 요약 대시보드; custom-screener remains a future idea, not a live file)
 - `expansion/benchmarks-explorer.html` (Multi-Index Comparison Tool) ✅ (2026-01-21)
   - **Features**: Index Screener + Sparkline + Time Series Comparison
   - **Data**: 6 JSON files, 36 indices × 829 weeks = 29,592 data points
@@ -173,7 +173,8 @@ valuation-lab/
 ### Damodaran
 
 - `expansion/damodaran-explorer.html` (산업 · 국가 · ERP 히스토리 · ratings explorer) ✅ v2.3.0
-- `expansion/composite-report.html` (Composite 리포트) ✅ v2.0.0
+- Composite 리포트: no standalone live file; use `expansion/dashboard.html` /
+  `expansion/damodaran-explorer.html` until a replacement file is approved.
 
 **v2.3.0 Expansion (2026-06-05)**: `industry_metrics_regions.json` added
 - Path: `/data/damodaran/industry_metrics_regions.json`
@@ -222,9 +223,9 @@ valuation-lab/
 
 | # | 컴포넌트 | 파일 |
 |---|----------|------|
-| 17 | SignalLight | `signal-light.html` |
-| 18 | OneLiner | `one-liner.html` |
-| 19 | PercentileChart | `percentile.html` |
+| 17 | SignalLight | `card.html` embedded section |
+| 18 | OneLiner | `card.html` embedded section |
+| 19 | PercentileChart | `card.html` embedded section |
 | 20 | ValuationCard | `card.html` |
 
 ### 신호등 기준

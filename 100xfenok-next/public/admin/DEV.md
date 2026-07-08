@@ -25,8 +25,8 @@ admin/
 ├── valuation-lab/   ← Valuation analysis tools
 ├── data-lab/        ← Data management dashboard
 ├── design-lab/      ← Design experiments
-└── market-radar/    ← Market index charts (S&P 500, NASDAQ)
-    └── charts/
+└── market-radar/    ← Combo/sentiment admin surface; detailed charts live under tools/macro-monitor
+    └── charts/      ← admin gallery/remap only
 ```
 
 > **shared/ Details**: See `admin/shared/README.md`

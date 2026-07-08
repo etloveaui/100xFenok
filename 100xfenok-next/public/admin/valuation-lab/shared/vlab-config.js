@@ -34,7 +34,7 @@ const VLAB_CONFIG = {
       ],
       expansions: [
         { href: 'expansion/regime-presets.html', label: '국면 프리셋' },
-        { href: 'expansion/composite-report.html', label: 'Composite' }
+        { href: 'expansion/dashboard.html', label: 'Dashboard' }
       ]
     },
 
