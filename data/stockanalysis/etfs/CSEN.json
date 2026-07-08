@@ -1,149 +1,397 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "CSEN",
-  "fetched_at": "2026-06-29T23:52:25Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T23:51:56Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/CSEN/holdings",
+    "overview": "/api/symbol/e/CSEN/overview",
+    "quote": "/api/quotes/e/CSEN",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/CSEN/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/CSEN/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/CSEN/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/CSEN/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/CSEN/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/CSEN/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "COP",
         "name": "ConocoPhillips",
-        "weight_pct": 7.622529999999999,
+        "weight_pct": 7.62,
+        "shares": 86889,
         "raw": {
-          "_index": "COP",
-          "Name": "ConocoPhillips",
-          "Holding Percent": 0.0762253
+          "no": 1,
+          "n": "ConocoPhillips",
+          "s": "$COP",
+          "as": "7.62%",
+          "sh": "86,889"
         }
       },
       {
         "rank": 2,
         "symbol": "XOM",
-        "name": "Exxon Mobil Corp",
-        "weight_pct": 7.0744299999999996,
+        "name": "ExxonMobil Holdings Corporation",
+        "weight_pct": 7.07,
+        "shares": 62741,
         "raw": {
-          "_index": "XOM",
-          "Name": "Exxon Mobil Corp",
-          "Holding Percent": 0.0707443
+          "no": 2,
+          "n": "ExxonMobil Holdings Corporation",
+          "s": "$XOM",
+          "as": "7.07%",
+          "sh": "62,741"
         }
       },
       {
         "rank": 3,
-        "symbol": "SU.TO",
-        "name": "Suncor Energy Inc",
-        "weight_pct": 6.09406,
+        "symbol": "!TSX/SU",
+        "name": "Suncor Energy Inc.",
+        "weight_pct": 6.09,
+        "shares": 138634,
         "raw": {
-          "_index": "SU.TO",
-          "Name": "Suncor Energy Inc",
-          "Holding Percent": 0.0609406
+          "no": 3,
+          "n": "Suncor Energy Inc.",
+          "s": "!tsx/SU",
+          "as": "6.09%",
+          "sh": "138,634"
         }
       },
       {
         "rank": 4,
         "symbol": "VLO",
-        "name": "Valero Energy Corp",
-        "weight_pct": 4.666830200000001,
+        "name": "Valero Energy Corporation",
+        "weight_pct": 4.67,
+        "shares": 28420,
         "raw": {
-          "_index": "VLO",
-          "Name": "Valero Energy Corp",
-          "Holding Percent": 0.046668302
+          "no": 4,
+          "n": "Valero Energy Corporation",
+          "s": "$VLO",
+          "as": "4.67%",
+          "sh": "28,420"
         }
       },
       {
         "rank": 5,
-        "symbol": "CVE.TO",
-        "name": "Cenovus Energy Inc",
-        "weight_pct": 4.3340996,
+        "symbol": "!TSX/CVE",
+        "name": "Cenovus Energy Inc.",
+        "weight_pct": 4.33,
+        "shares": 245717,
         "raw": {
-          "_index": "CVE.TO",
-          "Name": "Cenovus Energy Inc",
-          "Holding Percent": 0.043340996
+          "no": 5,
+          "n": "Cenovus Energy Inc.",
+          "s": "!tsx/CVE",
+          "as": "4.33%",
+          "sh": "245,717"
         }
       },
       {
         "rank": 6,
         "symbol": "SLB",
-        "name": "SLB Ltd",
-        "weight_pct": 4.0896103,
+        "name": "SLB N.V.",
+        "weight_pct": 4.09,
+        "shares": 119741,
         "raw": {
-          "_index": "SLB",
-          "Name": "SLB Ltd",
-          "Holding Percent": 0.040896103
+          "no": 6,
+          "n": "SLB N.V.",
+          "s": "$SLB",
+          "as": "4.09%",
+          "sh": "119,741"
         }
       },
       {
         "rank": 7,
         "symbol": "ET",
         "name": "Energy Transfer LP",
-        "weight_pct": 4.0219404,
+        "weight_pct": 4.02,
+        "shares": 313558,
         "raw": {
-          "_index": "ET",
-          "Name": "Energy Transfer LP",
-          "Holding Percent": 0.040219404
+          "no": 7,
+          "n": "Energy Transfer LP",
+          "s": "$ET",
+          "as": "4.02%",
+          "sh": "313,558"
         }
       },
       {
         "rank": 8,
-        "symbol": "TRP.TO",
-        "name": "TC Energy Corp",
-        "weight_pct": 3.6798499999999996,
+        "symbol": "!TSX/TRP",
+        "name": "TC Energy Corporation",
+        "weight_pct": 3.68,
+        "shares": 88422,
         "raw": {
-          "_index": "TRP.TO",
-          "Name": "TC Energy Corp",
-          "Holding Percent": 0.0367985
+          "no": 8,
+          "n": "TC Energy Corporation",
+          "s": "!tsx/TRP",
+          "as": "3.68%",
+          "sh": "88,422"
         }
       },
       {
         "rank": 9,
-        "symbol": "TTE.PA",
+        "symbol": "!EPA/TTE",
         "name": "TotalEnergies SE",
-        "weight_pct": 3.6766600000000005,
+        "weight_pct": 3.68,
+        "shares": 60280,
         "raw": {
-          "_index": "TTE.PA",
-          "Name": "TotalEnergies SE",
-          "Holding Percent": 0.0367666
+          "no": 9,
+          "n": "TotalEnergies SE",
+          "s": "!epa/TTE",
+          "as": "3.68%",
+          "sh": "60,280"
         }
       },
       {
         "rank": 10,
         "symbol": "FSLR",
-        "name": "First Solar Inc",
-        "weight_pct": 3.4992900000000002,
+        "name": "First Solar, Inc.",
+        "weight_pct": 3.5,
+        "shares": 26692,
         "raw": {
-          "_index": "FSLR",
-          "Name": "First Solar Inc",
-          "Holding Percent": 0.0349929
+          "no": 10,
+          "n": "First Solar, Inc.",
+          "s": "$FSLR",
+          "as": "3.50%",
+          "sh": "26,692"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "WMB",
+        "name": "The Williams Companies, Inc.",
+        "weight_pct": 3.32,
+        "shares": 68715,
+        "raw": {
+          "no": 11,
+          "n": "The Williams Companies, Inc.",
+          "s": "$WMB",
+          "as": "3.32%",
+          "sh": "68,715"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "NXT",
+        "name": "Nextpower Inc.",
+        "weight_pct": 3.3,
+        "shares": 41177,
+        "raw": {
+          "no": 12,
+          "n": "Nextpower Inc.",
+          "s": "$NXT",
+          "as": "3.30%",
+          "sh": "41,177"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "TRGP",
+        "name": "Targa Resources Corp.",
+        "weight_pct": 3.13,
+        "shares": 18809,
+        "raw": {
+          "no": 13,
+          "n": "Targa Resources Corp.",
+          "s": "$TRGP",
+          "as": "3.13%",
+          "sh": "18,809"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!CPH/ORSTED",
+        "name": "Ørsted A/S",
+        "weight_pct": 2.99,
+        "shares": 181382,
+        "raw": {
+          "no": 14,
+          "n": "Ørsted A/S",
+          "s": "!cph/ORSTED",
+          "as": "2.99%",
+          "sh": "181,382"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "CCJ",
+        "name": "Cameco Corporation",
+        "weight_pct": 2.44,
+        "shares": 33815,
+        "raw": {
+          "no": 15,
+          "n": "Cameco Corporation",
+          "s": "$CCJ",
+          "as": "2.44%",
+          "sh": "33,815"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "NEE",
+        "name": "NextEra Energy, Inc.",
+        "weight_pct": 2.32,
+        "shares": 37570,
+        "raw": {
+          "no": 16,
+          "n": "NextEra Energy, Inc.",
+          "s": "$NEE",
+          "as": "2.32%",
+          "sh": "37,570"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!BIT/ENI",
+        "name": "Eni S.p.A.",
+        "weight_pct": 2.29,
+        "shares": 120954,
+        "raw": {
+          "no": 17,
+          "n": "Eni S.p.A.",
+          "s": "!bit/ENI",
+          "as": "2.29%",
+          "sh": "120,954"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!ETR/RWE",
+        "name": "RWE Aktiengesellschaft",
+        "weight_pct": 2.18,
+        "shares": 48738,
+        "raw": {
+          "no": 18,
+          "n": "RWE Aktiengesellschaft",
+          "s": "!etr/RWE",
+          "as": "2.18%",
+          "sh": "48,738"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "PBR",
+        "name": "Petróleo Brasileiro S.A. - Petrobras",
+        "weight_pct": 2.14,
+        "shares": 155481,
+        "raw": {
+          "no": 19,
+          "n": "Petróleo Brasileiro S.A. - Petrobras",
+          "s": "$PBR",
+          "as": "2.14%",
+          "sh": "155,481"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "PWR",
+        "name": "Quanta Services, Inc.",
+        "weight_pct": 2.07,
+        "shares": 5671,
+        "raw": {
+          "no": 20,
+          "n": "Quanta Services, Inc.",
+          "s": "$PWR",
+          "as": "2.07%",
+          "sh": "5,671"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "MTZ",
+        "name": "MasTec, Inc.",
+        "weight_pct": 2.03,
+        "shares": 9495,
+        "raw": {
+          "no": 21,
+          "n": "MasTec, Inc.",
+          "s": "$MTZ",
+          "as": "2.03%",
+          "sh": "9,495"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!OTC/SMERY",
+        "name": "Siemens Energy AG",
+        "weight_pct": 2.0,
+        "shares": 17440,
+        "raw": {
+          "no": 22,
+          "n": "Siemens Energy AG",
+          "s": "!otc/SMERY",
+          "as": "2.00%",
+          "sh": "17,440"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!CPH/VWS",
+        "name": "Vestas Wind Systems A/S",
+        "weight_pct": 1.91,
+        "shares": 95282,
+        "raw": {
+          "no": 23,
+          "n": "Vestas Wind Systems A/S",
+          "s": "!cph/VWS",
+          "as": "1.91%",
+          "sh": "95,282"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "!BME/IBE",
+        "name": "Iberdrola, S.A.",
+        "weight_pct": 1.85,
+        "shares": 121744,
+        "raw": {
+          "no": 24,
+          "n": "Iberdrola, S.A.",
+          "s": "!bme/IBE",
+          "as": "1.85%",
+          "sh": "121,744"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "DVN",
+        "name": "Devon Energy Corporation",
+        "weight_pct": 1.65,
+        "shares": 49263,
+        "raw": {
+          "no": 25,
+          "n": "Devon Energy Corporation",
+          "s": "$DVN",
+          "as": "1.65%",
+          "sh": "49,263"
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.0055,
-      "stockPosition": 0.9944,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.0,
-      "consumer_cyclical": 0.0,
-      "basic_materials": 0.0,
-      "consumer_defensive": 0.0,
-      "technology": 0.084300004,
-      "communication_services": 0.0,
-      "financial_services": 0.0,
-      "utilities": 0.1109,
-      "industrials": 0.090299994,
-      "energy": 0.71459997,
-      "healthcare": 0.0
-    },
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Energy",
+        "w": 71.44
+      },
+      {
+        "n": "Utilities",
+        "w": 11.09
+      },
+      {
+        "n": "Industrials",
+        "w": 9.03
+      },
+      {
+        "n": "Technology",
+        "w": 8.44
+      }
+    ],
     "countries": null,
-    "holding_count": 10,
-    "holdings_updated": "2026-06-29T23:52:25Z",
+    "holding_count": 46,
+    "holdings_updated": "Mar 31, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -154,563 +402,2243 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": 165959264.0,
-      "nav": 23.7886,
-      "expenseRatio": 0.8,
-      "dividendYield": 1.83,
-      "beta": 0.4,
-      "provider_page": "Cohen & Steers",
-      "category": "Equity Energy",
-      "legalType": "Exchange Traded Fund",
-      "description": "The fund will invest at least 80% of its net assets in equity securities of energy companies, including traditional, alternative, renewable and clean-energy companies, natural resource companies, utilities, and companies in associated businesses. The fund may invest in equity securities of Energy and Energy- Related Companies of any market capitalization. It is non-diversified."
+      "aum": "$173.29M",
+      "expenseRatio": "0.80%",
+      "sharesOut": "7.43M",
+      "dividendYield": "0.33%",
+      "inception": "Jun 12, 2026",
+      "etf_website": "https://www.cohenandsteers.com/funds/future-of-energy-active-etf/#overview"
     },
+    "performance": {},
     "quote": {
-      "p": 23.738399505615234,
-      "pd": 23.77,
-      "c": -0.0316004943847652,
-      "cp": -0.13294276139993774,
-      "u": "2026-06-29T23:52:25Z",
-      "ex": "yahoo_finance"
+      "p": 23.885,
+      "pd": 23.89,
+      "c": 0.27,
+      "cp": 1.14,
+      "cl": 23.61,
+      "cdr": 1,
+      "o": 23.91,
+      "h": 23.91,
+      "l": 23.73,
+      "v": 12360.4909,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 24.74,
+      "l52": 23.24,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 23.885,
+      "epd": 23.89,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700008.99,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554720873,
+      "symbol": "CSEN",
+      "uid": "CSEN"
     },
     "history": [
       {
-        "date": "2026-06-15",
-        "Open": 24.600000381469727,
-        "High": 24.739999771118164,
-        "Low": 24.549999237060547,
-        "Close": 24.65999984741211,
-        "Volume": 9200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-16",
-        "Open": 24.5,
-        "High": 24.6299991607666,
-        "Low": 23.989999771118164,
-        "Close": 24.34000015258789,
-        "Volume": 127400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-17",
-        "Open": 24.25,
-        "High": 24.420000076293945,
-        "Low": 23.90999984741211,
-        "Close": 24.1200008392334,
-        "Volume": 60100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-18",
-        "Open": 24.209999084472656,
-        "High": 24.209999084472656,
-        "Low": 23.829999923706055,
-        "Close": 24.06999969482422,
-        "Volume": 36500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-22",
-        "Open": 24.09000015258789,
-        "High": 24.450000762939453,
-        "Low": 24.09000015258789,
-        "Close": 24.420000076293945,
-        "Volume": 21700.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-23",
-        "Open": 24.1299991607666,
-        "High": 24.350000381469727,
-        "Low": 24.1299991607666,
-        "Close": 24.239999771118164,
-        "Volume": 17200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-24",
-        "Open": 23.829999923706055,
-        "High": 23.860000610351562,
-        "Low": 23.65999984741211,
-        "Close": 23.719999313354492,
-        "Volume": 21000.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 23.850000381469727,
-        "High": 24.030000686645508,
-        "Low": 23.850000381469727,
-        "Close": 24.010000228881836,
-        "Volume": 210800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 23.899999618530273,
-        "High": 23.979999542236328,
-        "Low": 23.75,
-        "Close": 23.799999237060547,
-        "Volume": 24800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 23.790000915527344,
-        "High": 23.86359977722168,
-        "Low": 23.69890022277832,
-        "Close": 23.738399505615234,
-        "Volume": 8327.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 23.41,
+        "h": 23.67,
+        "l": 23.24,
+        "c": 23.615,
+        "a": 23.6148,
+        "v": 72990,
+        "ch": -0.16
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-15",
-          "Open": 24.600000381469727,
-          "High": 24.739999771118164,
-          "Low": 24.549999237060547,
-          "Close": 24.65999984741211,
-          "Volume": 9200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 23.55,
+          "h": 23.67,
+          "l": 23.4,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 24442,
+          "ch": 0.35
         },
         {
-          "date": "2026-06-16",
-          "Open": 24.5,
-          "High": 24.6299991607666,
-          "Low": 23.989999771118164,
-          "Close": 24.34000015258789,
-          "Volume": 127400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 23.37,
+          "h": 23.67,
+          "l": 23.37,
+          "c": 23.532,
+          "a": 23.5324,
+          "v": 18062,
+          "ch": 0.89
         },
         {
-          "date": "2026-06-17",
-          "Open": 24.25,
-          "High": 24.420000076293945,
-          "Low": 23.90999984741211,
-          "Close": 24.1200008392334,
-          "Volume": 60100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 23.495,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.325,
+          "a": 23.3245,
+          "v": 5209,
+          "ch": -0.06
         },
         {
-          "date": "2026-06-18",
-          "Open": 24.209999084472656,
-          "High": 24.209999084472656,
-          "Low": 23.829999923706055,
-          "Close": 24.06999969482422,
-          "Volume": 36500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.531,
+          "l": 23.32,
+          "c": 23.338,
+          "a": 23.3375,
+          "v": 25277,
+          "ch": -1.33
         },
         {
-          "date": "2026-06-22",
-          "Open": 24.09000015258789,
-          "High": 24.450000762939453,
-          "Low": 24.09000015258789,
-          "Close": 24.420000076293945,
-          "Volume": 21700.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 23.948,
+          "h": 23.948,
+          "l": 23.63,
+          "c": 23.653,
+          "a": 23.6531,
+          "v": 14492,
+          "ch": -0.36
         },
         {
-          "date": "2026-06-23",
-          "Open": 24.1299991607666,
-          "High": 24.350000381469727,
-          "Low": 24.1299991607666,
-          "Close": 24.239999771118164,
-          "Volume": 17200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 23.79,
+          "h": 23.864,
+          "l": 23.699,
+          "c": 23.738,
+          "a": 23.7384,
+          "v": 8331,
+          "ch": 0.08
         },
         {
-          "date": "2026-06-24",
-          "Open": 23.829999923706055,
-          "High": 23.860000610351562,
-          "Low": 23.65999984741211,
-          "Close": 23.719999313354492,
-          "Volume": 21000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 23.9,
+          "h": 23.98,
+          "l": 23.75,
+          "c": 23.8,
+          "a": 23.7195,
+          "v": 24768,
+          "ch": -0.86
         },
         {
-          "date": "2026-06-25",
-          "Open": 23.850000381469727,
-          "High": 24.030000686645508,
-          "Low": 23.850000381469727,
-          "Close": 24.010000228881836,
-          "Volume": 210800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 23.85,
+          "h": 24.03,
+          "l": 23.85,
+          "c": 24.005,
+          "a": 23.924309,
+          "v": 210779,
+          "ch": 1.22
         },
         {
-          "date": "2026-06-26",
-          "Open": 23.899999618530273,
-          "High": 23.979999542236328,
-          "Low": 23.75,
-          "Close": 23.799999237060547,
-          "Volume": 24800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 23.83,
+          "h": 23.855,
+          "l": 23.66,
+          "c": 23.715,
+          "a": 23.635284,
+          "v": 21046,
+          "ch": -2.17
         },
         {
-          "date": "2026-06-29",
-          "Open": 23.790000915527344,
-          "High": 23.86359977722168,
-          "Low": 23.69890022277832,
-          "Close": 23.738399505615234,
-          "Volume": 8327.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 24.13,
+          "h": 24.348,
+          "l": 24.13,
+          "c": 24.241,
+          "a": 24.159915,
+          "v": 17179,
+          "ch": -0.73
+        },
+        {
+          "t": "2026-06-22",
+          "o": 24.09,
+          "h": 24.449,
+          "l": 24.09,
+          "c": 24.419,
+          "a": 24.336818,
+          "v": 21698,
+          "ch": 1.47
+        },
+        {
+          "t": "2026-06-18",
+          "o": 24.21,
+          "h": 24.21,
+          "l": 23.83,
+          "c": 24.066,
+          "a": 23.985204,
+          "v": 36481,
+          "ch": -0.21
+        },
+        {
+          "t": "2026-06-17",
+          "o": 24.25,
+          "h": 24.415,
+          "l": 23.91,
+          "c": 24.116,
+          "a": 24.035335,
+          "v": 60058,
+          "ch": -0.92
+        },
+        {
+          "t": "2026-06-16",
+          "o": 24.5,
+          "h": 24.63,
+          "l": 23.99,
+          "c": 24.339,
+          "a": 24.257386,
+          "v": 127376.99999999999,
+          "ch": -1.3
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 23.37,
+          "h": 23.67,
+          "l": 23.37,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 42504,
+          "ch": 1.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 23.79,
+          "h": 23.948,
+          "l": 23.24,
+          "c": 23.325,
+          "a": 23.3245,
+          "v": 53309,
+          "ch": -1.67
+        },
+        {
+          "t": "2026-06-22",
+          "o": 24.09,
+          "h": 24.449,
+          "l": 23.66,
+          "c": 23.8,
+          "a": 23.7195,
+          "v": 295470,
+          "ch": -1.11
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 72990,
+          "ch": -0.16
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 23.37,
+          "h": 23.67,
+          "l": 23.37,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 42504,
+          "ch": 1.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 23.79,
+          "h": 23.948,
+          "l": 23.24,
+          "c": 23.325,
+          "a": 23.3245,
+          "v": 53309,
+          "ch": -1.67
+        },
+        {
+          "t": "2026-06-22",
+          "o": 24.09,
+          "h": 24.449,
+          "l": 23.66,
+          "c": 23.8,
+          "a": 23.7195,
+          "v": 295470,
+          "ch": -1.11
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 72990,
+          "ch": -0.16
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 72990,
+          "ch": -0.16
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Cohen & Steers Future of Energy Active ETF",
-        "longName": "Cohen & Steers Future of Energy Active ETF",
-        "currency": "USD",
-        "exchange": "NGM",
-        "fundFamily": "Cohen & Steers",
-        "category": "Equity Energy",
-        "legalType": "Exchange Traded Fund",
-        "totalAssets": 165959264,
-        "netAssets": 165959264.0,
-        "navPrice": 23.7886,
-        "yield": 0.0183,
-        "ytdReturn": 33.28542,
-        "beta3Year": 0.4,
-        "netExpenseRatio": 0.8,
-        "threeYearAverageReturn": 0.2239794,
-        "fiveYearAverageReturn": 0.1742935,
-        "previousClose": 23.77,
-        "fiftyTwoWeekHigh": 24.74,
-        "fiftyTwoWeekLow": 23.66,
-        "fiftyTwoWeekChangePercent": -3.487432,
-        "averageVolume": 58744,
-        "averageVolume10days": 58744,
-        "dividendYield": 1.83
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 23.86359977722168,
-        "dayLow": 23.69890022277832,
-        "exchange": "NGM",
-        "fiftyDayAverage": 24.15333324008518,
-        "lastPrice": 23.738399505615234,
-        "lastVolume": 8327.0,
-        "open": 23.790000915527344,
-        "previousClose": 23.7995,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 23.799999237060547,
-        "tenDayAverageVolume": 58744.0,
-        "threeMonthAverageVolume": 58744.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 24.15333324008518,
-        "yearChange": -0.03487431531520522,
-        "yearHigh": 24.739999771118164,
-        "yearLow": 23.65999984741211
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "The fund will invest at least 80% of its net assets in equity securities of energy companies, including traditional, alternative, renewable and clean-energy companies, natural resource companies, utilities, and companies in associated businesses. The fund may invest in equity securities of Energy and Energy- Related Companies of any market capitalization. It is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Equity Energy",
-          "family": "Cohen & Steers",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "ConocoPhillips",
+          "s": "$COP",
+          "as": "7.62%",
+          "sh": "86,889"
         },
-        "fund_operations": [
-          {
-            "_index": "Annual Report Expense Ratio",
-            "CSEN": 0.008,
-            "Category Average": 0.0092652
-          },
-          {
-            "_index": "Annual Holdings Turnover",
-            "CSEN": 1.15,
-            "Category Average": 0.5106
-          },
-          {
-            "_index": "Total Net Assets",
-            "CSEN": 60258.71,
-            "Category Average": 60258.71
-          }
-        ],
-        "asset_classes": {
-          "cashPosition": 0.0055,
-          "stockPosition": 0.9944,
-          "bondPosition": 0.0,
-          "preferredPosition": 0.0,
-          "convertiblePosition": 0.0,
-          "otherPosition": 0.0
+        {
+          "no": 2,
+          "n": "ExxonMobil Holdings Corporation",
+          "s": "$XOM",
+          "as": "7.07%",
+          "sh": "62,741"
         },
-        "top_holdings": [
-          {
-            "_index": "COP",
-            "Name": "ConocoPhillips",
-            "Holding Percent": 0.0762253
-          },
-          {
-            "_index": "XOM",
-            "Name": "Exxon Mobil Corp",
-            "Holding Percent": 0.0707443
-          },
-          {
-            "_index": "SU.TO",
-            "Name": "Suncor Energy Inc",
-            "Holding Percent": 0.0609406
-          },
-          {
-            "_index": "VLO",
-            "Name": "Valero Energy Corp",
-            "Holding Percent": 0.046668302
-          },
-          {
-            "_index": "CVE.TO",
-            "Name": "Cenovus Energy Inc",
-            "Holding Percent": 0.043340996
-          },
-          {
-            "_index": "SLB",
-            "Name": "SLB Ltd",
-            "Holding Percent": 0.040896103
-          },
-          {
-            "_index": "ET",
-            "Name": "Energy Transfer LP",
-            "Holding Percent": 0.040219404
-          },
-          {
-            "_index": "TRP.TO",
-            "Name": "TC Energy Corp",
-            "Holding Percent": 0.0367985
-          },
-          {
-            "_index": "TTE.PA",
-            "Name": "TotalEnergies SE",
-            "Holding Percent": 0.0367666
-          },
-          {
-            "_index": "FSLR",
-            "Name": "First Solar Inc",
-            "Holding Percent": 0.0349929
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "CSEN": 0.04666,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Book",
-            "CSEN": 0.37203,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Sales",
-            "CSEN": 0.51866,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Cashflow",
-            "CSEN": 0.10111,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Median Market Cap",
-            "CSEN": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "3 Year Earnings Growth",
-            "CSEN": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "CSEN": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Maturity",
-            "CSEN": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Credit Quality",
-            "CSEN": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_ratings": {
-          "us_government": 0.0
+        {
+          "no": 3,
+          "n": "Suncor Energy Inc.",
+          "s": "!tsx/SU",
+          "as": "6.09%",
+          "sh": "138,634"
         },
-        "sector_weightings": {
-          "realestate": 0.0,
-          "consumer_cyclical": 0.0,
-          "basic_materials": 0.0,
-          "consumer_defensive": 0.0,
-          "technology": 0.084300004,
-          "communication_services": 0.0,
-          "financial_services": 0.0,
-          "utilities": 0.1109,
-          "industrials": 0.090299994,
-          "energy": 0.71459997,
-          "healthcare": 0.0
+        {
+          "no": 4,
+          "n": "Valero Energy Corporation",
+          "s": "$VLO",
+          "as": "4.67%",
+          "sh": "28,420"
+        },
+        {
+          "no": 5,
+          "n": "Cenovus Energy Inc.",
+          "s": "!tsx/CVE",
+          "as": "4.33%",
+          "sh": "245,717"
+        },
+        {
+          "no": 6,
+          "n": "SLB N.V.",
+          "s": "$SLB",
+          "as": "4.09%",
+          "sh": "119,741"
+        },
+        {
+          "no": 7,
+          "n": "Energy Transfer LP",
+          "s": "$ET",
+          "as": "4.02%",
+          "sh": "313,558"
+        },
+        {
+          "no": 8,
+          "n": "TC Energy Corporation",
+          "s": "!tsx/TRP",
+          "as": "3.68%",
+          "sh": "88,422"
+        },
+        {
+          "no": 9,
+          "n": "TotalEnergies SE",
+          "s": "!epa/TTE",
+          "as": "3.68%",
+          "sh": "60,280"
+        },
+        {
+          "no": 10,
+          "n": "First Solar, Inc.",
+          "s": "$FSLR",
+          "as": "3.50%",
+          "sh": "26,692"
+        },
+        {
+          "no": 11,
+          "n": "The Williams Companies, Inc.",
+          "s": "$WMB",
+          "as": "3.32%",
+          "sh": "68,715"
+        },
+        {
+          "no": 12,
+          "n": "Nextpower Inc.",
+          "s": "$NXT",
+          "as": "3.30%",
+          "sh": "41,177"
+        },
+        {
+          "no": 13,
+          "n": "Targa Resources Corp.",
+          "s": "$TRGP",
+          "as": "3.13%",
+          "sh": "18,809"
+        },
+        {
+          "no": 14,
+          "n": "Ørsted A/S",
+          "s": "!cph/ORSTED",
+          "as": "2.99%",
+          "sh": "181,382"
+        },
+        {
+          "no": 15,
+          "n": "Cameco Corporation",
+          "s": "$CCJ",
+          "as": "2.44%",
+          "sh": "33,815"
+        },
+        {
+          "no": 16,
+          "n": "NextEra Energy, Inc.",
+          "s": "$NEE",
+          "as": "2.32%",
+          "sh": "37,570"
+        },
+        {
+          "no": 17,
+          "n": "Eni S.p.A.",
+          "s": "!bit/ENI",
+          "as": "2.29%",
+          "sh": "120,954"
+        },
+        {
+          "no": 18,
+          "n": "RWE Aktiengesellschaft",
+          "s": "!etr/RWE",
+          "as": "2.18%",
+          "sh": "48,738"
+        },
+        {
+          "no": 19,
+          "n": "Petróleo Brasileiro S.A. - Petrobras",
+          "s": "$PBR",
+          "as": "2.14%",
+          "sh": "155,481"
+        },
+        {
+          "no": 20,
+          "n": "Quanta Services, Inc.",
+          "s": "$PWR",
+          "as": "2.07%",
+          "sh": "5,671"
+        },
+        {
+          "no": 21,
+          "n": "MasTec, Inc.",
+          "s": "$MTZ",
+          "as": "2.03%",
+          "sh": "9,495"
+        },
+        {
+          "no": 22,
+          "n": "Siemens Energy AG",
+          "s": "!otc/SMERY",
+          "as": "2.00%",
+          "sh": "17,440"
+        },
+        {
+          "no": 23,
+          "n": "Vestas Wind Systems A/S",
+          "s": "!cph/VWS",
+          "as": "1.91%",
+          "sh": "95,282"
+        },
+        {
+          "no": 24,
+          "n": "Iberdrola, S.A.",
+          "s": "!bme/IBE",
+          "as": "1.85%",
+          "sh": "121,744"
+        },
+        {
+          "no": 25,
+          "n": "Devon Energy Corporation",
+          "s": "$DVN",
+          "as": "1.65%",
+          "sh": "49,263"
         }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Energy",
+          "w": 71.44
+        },
+        {
+          "n": "Utilities",
+          "w": 11.09
+        },
+        {
+          "n": "Industrials",
+          "w": 9.03
+        },
+        {
+          "n": "Technology",
+          "w": 8.44
+        }
+      ],
+      "countries": null,
+      "infoBox": "CSEN is an equity ETF with a total of 46 individual holdings. The top holdings are ConocoPhillips stock at 7.62%, ExxonMobil Holdings at 7.07%, Suncor Energy at 6.09%, Valero Energy at 4.67%, and Cenovus Energy at 4.33%.",
+      "infoTable": {
+        "count": 46,
+        "top10": 48.76,
+        "assetClass": "Equity",
+        "aum": 173289840
       },
-      "history_1y": [
+      "date": "Mar 31, 2026",
+      "count": 46
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$173.29M",
+      "expenseRatio": "0.80%",
+      "sharesOut": "7.43M",
+      "dps": "$0.08",
+      "dividendYield": "0.33%",
+      "exDivDate": "Jun 29, 2026",
+      "ch1y": null,
+      "holdings": 46,
+      "inception": "Jun 12, 2026",
+      "chart": {
+        "expiration": 1783440206232,
+        "data": [
+          {
+            "c": 23.625,
+            "o": 23.65,
+            "t": 1783416600
+          },
+          {
+            "c": null,
+            "t": 1783416660
+          },
+          {
+            "c": null,
+            "t": 1783416720
+          },
+          {
+            "c": null,
+            "t": 1783416780
+          },
+          {
+            "c": null,
+            "t": 1783416840
+          },
+          {
+            "c": null,
+            "t": 1783416900
+          },
+          {
+            "c": null,
+            "t": 1783416960
+          },
+          {
+            "c": null,
+            "t": 1783417020
+          },
+          {
+            "c": null,
+            "t": 1783417080
+          },
+          {
+            "c": null,
+            "t": 1783417140
+          },
+          {
+            "c": null,
+            "t": 1783417200
+          },
+          {
+            "c": null,
+            "t": 1783417260
+          },
+          {
+            "c": null,
+            "t": 1783417320
+          },
+          {
+            "c": null,
+            "t": 1783417380
+          },
+          {
+            "c": null,
+            "t": 1783417440
+          },
+          {
+            "c": null,
+            "t": 1783417500
+          },
+          {
+            "c": null,
+            "t": 1783417560
+          },
+          {
+            "c": null,
+            "t": 1783417620
+          },
+          {
+            "c": null,
+            "t": 1783417680
+          },
+          {
+            "c": null,
+            "t": 1783417740
+          },
+          {
+            "c": null,
+            "t": 1783417800
+          },
+          {
+            "c": null,
+            "t": 1783417860
+          },
+          {
+            "c": null,
+            "t": 1783417920
+          },
+          {
+            "c": null,
+            "t": 1783417980
+          },
+          {
+            "c": null,
+            "t": 1783418040
+          },
+          {
+            "c": null,
+            "t": 1783418100
+          },
+          {
+            "c": null,
+            "t": 1783418160
+          },
+          {
+            "c": null,
+            "t": 1783418220
+          },
+          {
+            "c": null,
+            "t": 1783418280
+          },
+          {
+            "c": null,
+            "t": 1783418340
+          },
+          {
+            "c": null,
+            "t": 1783418400
+          },
+          {
+            "c": null,
+            "t": 1783418460
+          },
+          {
+            "c": 23.535,
+            "t": 1783418520
+          },
+          {
+            "c": null,
+            "t": 1783418580
+          },
+          {
+            "c": null,
+            "t": 1783418640
+          },
+          {
+            "c": null,
+            "t": 1783418700
+          },
+          {
+            "c": null,
+            "t": 1783418760
+          },
+          {
+            "c": 23.55,
+            "t": 1783418820
+          },
+          {
+            "c": null,
+            "t": 1783418880
+          },
+          {
+            "c": null,
+            "t": 1783418940
+          },
+          {
+            "c": 23.47,
+            "t": 1783419000
+          },
+          {
+            "c": 23.485,
+            "t": 1783419060
+          },
+          {
+            "c": null,
+            "t": 1783419120
+          },
+          {
+            "c": null,
+            "t": 1783419180
+          },
+          {
+            "c": 23.48,
+            "t": 1783419240
+          },
+          {
+            "c": 23.42,
+            "t": 1783419300
+          },
+          {
+            "c": null,
+            "t": 1783419360
+          },
+          {
+            "c": null,
+            "t": 1783419420
+          },
+          {
+            "c": 23.45,
+            "t": 1783419480
+          },
+          {
+            "c": null,
+            "t": 1783419540
+          },
+          {
+            "c": null,
+            "t": 1783419600
+          },
+          {
+            "c": null,
+            "t": 1783419660
+          },
+          {
+            "c": null,
+            "t": 1783419720
+          },
+          {
+            "c": null,
+            "t": 1783419780
+          },
+          {
+            "c": null,
+            "t": 1783419840
+          },
+          {
+            "c": 23.47,
+            "t": 1783419900
+          },
+          {
+            "c": null,
+            "t": 1783419960
+          },
+          {
+            "c": null,
+            "t": 1783420020
+          },
+          {
+            "c": null,
+            "t": 1783420080
+          },
+          {
+            "c": null,
+            "t": 1783420140
+          },
+          {
+            "c": null,
+            "t": 1783420200
+          },
+          {
+            "c": null,
+            "t": 1783420260
+          },
+          {
+            "c": null,
+            "t": 1783420320
+          },
+          {
+            "c": null,
+            "t": 1783420380
+          },
+          {
+            "c": null,
+            "t": 1783420440
+          },
+          {
+            "c": null,
+            "t": 1783420500
+          },
+          {
+            "c": null,
+            "t": 1783420560
+          },
+          {
+            "c": null,
+            "t": 1783420620
+          },
+          {
+            "c": null,
+            "t": 1783420680
+          },
+          {
+            "c": 23.5,
+            "t": 1783420740
+          },
+          {
+            "c": null,
+            "t": 1783420800
+          },
+          {
+            "c": 23.447,
+            "t": 1783420860
+          },
+          {
+            "c": null,
+            "t": 1783420920
+          },
+          {
+            "c": 23.441,
+            "t": 1783420980
+          },
+          {
+            "c": null,
+            "t": 1783421040
+          },
+          {
+            "c": null,
+            "t": 1783421100
+          },
+          {
+            "c": null,
+            "t": 1783421160
+          },
+          {
+            "c": null,
+            "t": 1783421220
+          },
+          {
+            "c": null,
+            "t": 1783421280
+          },
+          {
+            "c": null,
+            "t": 1783421340
+          },
+          {
+            "c": null,
+            "t": 1783421400
+          },
+          {
+            "c": null,
+            "t": 1783421460
+          },
+          {
+            "c": null,
+            "t": 1783421520
+          },
+          {
+            "c": null,
+            "t": 1783421580
+          },
+          {
+            "c": null,
+            "t": 1783421640
+          },
+          {
+            "c": null,
+            "t": 1783421700
+          },
+          {
+            "c": null,
+            "t": 1783421760
+          },
+          {
+            "c": null,
+            "t": 1783421820
+          },
+          {
+            "c": null,
+            "t": 1783421880
+          },
+          {
+            "c": 23.5,
+            "t": 1783421940
+          },
+          {
+            "c": 23.441,
+            "t": 1783422000
+          },
+          {
+            "c": null,
+            "t": 1783422060
+          },
+          {
+            "c": null,
+            "t": 1783422120
+          },
+          {
+            "c": null,
+            "t": 1783422180
+          },
+          {
+            "c": null,
+            "t": 1783422240
+          },
+          {
+            "c": null,
+            "t": 1783422300
+          },
+          {
+            "c": null,
+            "t": 1783422360
+          },
+          {
+            "c": null,
+            "t": 1783422420
+          },
+          {
+            "c": null,
+            "t": 1783422480
+          },
+          {
+            "c": null,
+            "t": 1783422540
+          },
+          {
+            "c": null,
+            "t": 1783422600
+          },
+          {
+            "c": null,
+            "t": 1783422660
+          },
+          {
+            "c": null,
+            "t": 1783422720
+          },
+          {
+            "c": null,
+            "t": 1783422780
+          },
+          {
+            "c": null,
+            "t": 1783422840
+          },
+          {
+            "c": null,
+            "t": 1783422900
+          },
+          {
+            "c": 23.465,
+            "t": 1783422960
+          },
+          {
+            "c": null,
+            "t": 1783423020
+          },
+          {
+            "c": null,
+            "t": 1783423080
+          },
+          {
+            "c": null,
+            "t": 1783423140
+          },
+          {
+            "c": null,
+            "t": 1783423200
+          },
+          {
+            "c": null,
+            "t": 1783423260
+          },
+          {
+            "c": null,
+            "t": 1783423320
+          },
+          {
+            "c": null,
+            "t": 1783423380
+          },
+          {
+            "c": null,
+            "t": 1783423440
+          },
+          {
+            "c": null,
+            "t": 1783423500
+          },
+          {
+            "c": null,
+            "t": 1783423560
+          },
+          {
+            "c": null,
+            "t": 1783423620
+          },
+          {
+            "c": null,
+            "t": 1783423680
+          },
+          {
+            "c": null,
+            "t": 1783423740
+          },
+          {
+            "c": null,
+            "t": 1783423800
+          },
+          {
+            "c": null,
+            "t": 1783423860
+          },
+          {
+            "c": null,
+            "t": 1783423920
+          },
+          {
+            "c": null,
+            "t": 1783423980
+          },
+          {
+            "c": null,
+            "t": 1783424040
+          },
+          {
+            "c": 23.4,
+            "t": 1783424100
+          },
+          {
+            "c": null,
+            "t": 1783424160
+          },
+          {
+            "c": null,
+            "t": 1783424220
+          },
+          {
+            "c": null,
+            "t": 1783424280
+          },
+          {
+            "c": null,
+            "t": 1783424340
+          },
+          {
+            "c": null,
+            "t": 1783424400
+          },
+          {
+            "c": null,
+            "t": 1783424460
+          },
+          {
+            "c": null,
+            "t": 1783424520
+          },
+          {
+            "c": null,
+            "t": 1783424580
+          },
+          {
+            "c": null,
+            "t": 1783424640
+          },
+          {
+            "c": null,
+            "t": 1783424700
+          },
+          {
+            "c": null,
+            "t": 1783424760
+          },
+          {
+            "c": null,
+            "t": 1783424820
+          },
+          {
+            "c": 23.458,
+            "t": 1783424880
+          },
+          {
+            "t": 1783424939
+          },
+          {
+            "t": 1783424999
+          },
+          {
+            "t": 1783425059
+          },
+          {
+            "t": 1783425119
+          },
+          {
+            "t": 1783425179
+          },
+          {
+            "t": 1783425239
+          },
+          {
+            "t": 1783425299
+          },
+          {
+            "t": 1783425359
+          },
+          {
+            "t": 1783425419
+          },
+          {
+            "t": 1783425479
+          },
+          {
+            "t": 1783425539
+          },
+          {
+            "t": 1783425599
+          },
+          {
+            "t": 1783425659
+          },
+          {
+            "t": 1783425719
+          },
+          {
+            "t": 1783425779
+          },
+          {
+            "t": 1783425839
+          },
+          {
+            "t": 1783425899
+          },
+          {
+            "t": 1783425959
+          },
+          {
+            "t": 1783426019
+          },
+          {
+            "t": 1783426079
+          },
+          {
+            "t": 1783426139
+          },
+          {
+            "t": 1783426199
+          },
+          {
+            "t": 1783426259
+          },
+          {
+            "t": 1783426319
+          },
+          {
+            "t": 1783426379
+          },
+          {
+            "t": 1783426439
+          },
+          {
+            "t": 1783426499
+          },
+          {
+            "t": 1783426559
+          },
+          {
+            "t": 1783426619
+          },
+          {
+            "t": 1783426679
+          },
+          {
+            "t": 1783426739
+          },
+          {
+            "t": 1783426799
+          },
+          {
+            "t": 1783426859
+          },
+          {
+            "t": 1783426919
+          },
+          {
+            "t": 1783426979
+          },
+          {
+            "t": 1783427039
+          },
+          {
+            "t": 1783427099
+          },
+          {
+            "t": 1783427159
+          },
+          {
+            "t": 1783427219
+          },
+          {
+            "t": 1783427279
+          },
+          {
+            "t": 1783427339
+          },
+          {
+            "t": 1783427399
+          },
+          {
+            "t": 1783427459
+          },
+          {
+            "t": 1783427519
+          },
+          {
+            "t": 1783427579
+          },
+          {
+            "t": 1783427639
+          },
+          {
+            "t": 1783427699
+          },
+          {
+            "t": 1783427759
+          },
+          {
+            "t": 1783427819
+          },
+          {
+            "t": 1783427879
+          },
+          {
+            "t": 1783427939
+          },
+          {
+            "t": 1783427999
+          },
+          {
+            "t": 1783428059
+          },
+          {
+            "t": 1783428119
+          },
+          {
+            "t": 1783428179
+          },
+          {
+            "t": 1783428239
+          },
+          {
+            "t": 1783428299
+          },
+          {
+            "t": 1783428359
+          },
+          {
+            "t": 1783428419
+          },
+          {
+            "t": 1783428479
+          },
+          {
+            "t": 1783428539
+          },
+          {
+            "t": 1783428599
+          },
+          {
+            "t": 1783428659
+          },
+          {
+            "t": 1783428719
+          },
+          {
+            "t": 1783428779
+          },
+          {
+            "t": 1783428839
+          },
+          {
+            "t": 1783428899
+          },
+          {
+            "t": 1783428959
+          },
+          {
+            "t": 1783429019
+          },
+          {
+            "t": 1783429079
+          },
+          {
+            "t": 1783429139
+          },
+          {
+            "t": 1783429199
+          },
+          {
+            "t": 1783429259
+          },
+          {
+            "t": 1783429319
+          },
+          {
+            "t": 1783429379
+          },
+          {
+            "t": 1783429439
+          },
+          {
+            "t": 1783429499
+          },
+          {
+            "t": 1783429559
+          },
+          {
+            "t": 1783429619
+          },
+          {
+            "t": 1783429679
+          },
+          {
+            "t": 1783429739
+          },
+          {
+            "t": 1783429799
+          },
+          {
+            "t": 1783429859
+          },
+          {
+            "t": 1783429919
+          },
+          {
+            "t": 1783429979
+          },
+          {
+            "t": 1783430039
+          },
+          {
+            "t": 1783430099
+          },
+          {
+            "t": 1783430159
+          },
+          {
+            "t": 1783430219
+          },
+          {
+            "t": 1783430279
+          },
+          {
+            "t": 1783430339
+          },
+          {
+            "t": 1783430399
+          },
+          {
+            "t": 1783430459
+          },
+          {
+            "t": 1783430519
+          },
+          {
+            "t": 1783430579
+          },
+          {
+            "t": 1783430639
+          },
+          {
+            "t": 1783430699
+          },
+          {
+            "t": 1783430759
+          },
+          {
+            "t": 1783430819
+          },
+          {
+            "t": 1783430879
+          },
+          {
+            "t": 1783430939
+          },
+          {
+            "t": 1783430999
+          },
+          {
+            "t": 1783431059
+          },
+          {
+            "t": 1783431119
+          },
+          {
+            "t": 1783431179
+          },
+          {
+            "t": 1783431239
+          },
+          {
+            "t": 1783431299
+          },
+          {
+            "t": 1783431359
+          },
+          {
+            "t": 1783431419
+          },
+          {
+            "t": 1783431479
+          },
+          {
+            "t": 1783431539
+          },
+          {
+            "t": 1783431599
+          },
+          {
+            "t": 1783431659
+          },
+          {
+            "t": 1783431719
+          },
+          {
+            "t": 1783431779
+          },
+          {
+            "t": 1783431839
+          },
+          {
+            "t": 1783431899
+          },
+          {
+            "t": 1783431959
+          },
+          {
+            "t": 1783432019
+          },
+          {
+            "t": 1783432079
+          },
+          {
+            "t": 1783432139
+          },
+          {
+            "t": 1783432199
+          },
+          {
+            "t": 1783432259
+          },
+          {
+            "t": 1783432319
+          },
+          {
+            "t": 1783432379
+          },
+          {
+            "t": 1783432439
+          },
+          {
+            "t": 1783432499
+          },
+          {
+            "t": 1783432559
+          },
+          {
+            "t": 1783432619
+          },
+          {
+            "t": 1783432679
+          },
+          {
+            "t": 1783432739
+          },
+          {
+            "t": 1783432799
+          },
+          {
+            "t": 1783432859
+          },
+          {
+            "t": 1783432919
+          },
+          {
+            "t": 1783432979
+          },
+          {
+            "t": 1783433039
+          },
+          {
+            "t": 1783433099
+          },
+          {
+            "t": 1783433159
+          },
+          {
+            "t": 1783433219
+          },
+          {
+            "t": 1783433279
+          },
+          {
+            "t": 1783433339
+          },
+          {
+            "t": 1783433399
+          },
+          {
+            "t": 1783433459
+          },
+          {
+            "t": 1783433519
+          },
+          {
+            "t": 1783433579
+          },
+          {
+            "t": 1783433639
+          },
+          {
+            "t": 1783433699
+          },
+          {
+            "t": 1783433759
+          },
+          {
+            "t": 1783433819
+          },
+          {
+            "t": 1783433879
+          },
+          {
+            "t": 1783433939
+          },
+          {
+            "t": 1783433999
+          },
+          {
+            "t": 1783434059
+          },
+          {
+            "t": 1783434119
+          },
+          {
+            "t": 1783434179
+          },
+          {
+            "t": 1783434239
+          },
+          {
+            "t": 1783434299
+          },
+          {
+            "t": 1783434359
+          },
+          {
+            "t": 1783434419
+          },
+          {
+            "t": 1783434479
+          },
+          {
+            "t": 1783434539
+          },
+          {
+            "t": 1783434599
+          },
+          {
+            "t": 1783434659
+          },
+          {
+            "t": 1783434719
+          },
+          {
+            "t": 1783434779
+          },
+          {
+            "t": 1783434839
+          },
+          {
+            "t": 1783434899
+          },
+          {
+            "t": 1783434959
+          },
+          {
+            "t": 1783435019
+          },
+          {
+            "t": 1783435079
+          },
+          {
+            "t": 1783435139
+          },
+          {
+            "t": 1783435199
+          },
+          {
+            "t": 1783435259
+          },
+          {
+            "t": 1783435319
+          },
+          {
+            "t": 1783435379
+          },
+          {
+            "t": 1783435439
+          },
+          {
+            "t": 1783435499
+          },
+          {
+            "t": 1783435559
+          },
+          {
+            "t": 1783435619
+          },
+          {
+            "t": 1783435679
+          },
+          {
+            "t": 1783435739
+          },
+          {
+            "t": 1783435799
+          },
+          {
+            "t": 1783435859
+          },
+          {
+            "t": 1783435919
+          },
+          {
+            "t": 1783435979
+          },
+          {
+            "t": 1783436039
+          },
+          {
+            "t": 1783436099
+          },
+          {
+            "t": 1783436159
+          },
+          {
+            "t": 1783436219
+          },
+          {
+            "t": 1783436279
+          },
+          {
+            "t": 1783436339
+          },
+          {
+            "t": 1783436399
+          },
+          {
+            "t": 1783436459
+          },
+          {
+            "t": 1783436519
+          },
+          {
+            "t": 1783436579
+          },
+          {
+            "t": 1783436639
+          },
+          {
+            "t": 1783436699
+          },
+          {
+            "t": 1783436759
+          },
+          {
+            "t": 1783436819
+          },
+          {
+            "t": 1783436879
+          },
+          {
+            "t": 1783436939
+          },
+          {
+            "t": 1783436999
+          },
+          {
+            "t": 1783437059
+          },
+          {
+            "t": 1783437119
+          },
+          {
+            "t": 1783437179
+          },
+          {
+            "t": 1783437239
+          },
+          {
+            "t": 1783437299
+          },
+          {
+            "t": 1783437359
+          },
+          {
+            "t": 1783437419
+          },
+          {
+            "t": 1783437479
+          },
+          {
+            "t": 1783437539
+          },
+          {
+            "t": 1783437599
+          },
+          {
+            "t": 1783437659
+          },
+          {
+            "t": 1783437719
+          },
+          {
+            "t": 1783437779
+          },
+          {
+            "t": 1783437839
+          },
+          {
+            "t": 1783437899
+          },
+          {
+            "t": 1783437959
+          },
+          {
+            "t": 1783438019
+          },
+          {
+            "t": 1783438079
+          },
+          {
+            "t": 1783438139
+          },
+          {
+            "t": 1783438199
+          },
+          {
+            "t": 1783438259
+          },
+          {
+            "t": 1783438319
+          },
+          {
+            "t": 1783438379
+          },
+          {
+            "t": 1783438439
+          },
+          {
+            "t": 1783438499
+          },
+          {
+            "t": 1783438559
+          },
+          {
+            "t": 1783438619
+          },
+          {
+            "t": 1783438679
+          },
+          {
+            "t": 1783438739
+          },
+          {
+            "t": 1783438799
+          },
+          {
+            "t": 1783438859
+          },
+          {
+            "t": 1783438919
+          },
+          {
+            "t": 1783438979
+          },
+          {
+            "t": 1783439039
+          },
+          {
+            "t": 1783439099
+          },
+          {
+            "t": 1783439159
+          },
+          {
+            "t": 1783439219
+          },
+          {
+            "t": 1783439279
+          },
+          {
+            "t": 1783439339
+          },
+          {
+            "t": 1783439399
+          },
+          {
+            "t": 1783439459
+          },
+          {
+            "t": 1783439519
+          },
+          {
+            "t": 1783439579
+          },
+          {
+            "t": 1783439639
+          },
+          {
+            "t": 1783439699
+          },
+          {
+            "t": 1783439759
+          },
+          {
+            "t": 1783439819
+          },
+          {
+            "t": 1783439879
+          },
+          {
+            "t": 1783439939
+          },
+          {
+            "t": 1783439999
+          },
+          {
+            "t": 1783440000
+          }
+        ]
+      },
+      "description": "The Cohen & Steers Future of Energy Active ETF (CSEN) is an exchange-traded fund that mostly invests in energy equity. The fund is an actively managed, high-conviction approach to investing in energy companies across the full value chain. The ETF that contains exposure to both traditional and alternative energy companies. CSEN was launched on Jun 12, 2026 and is issued by Cohen & Steers.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "CSEN"
+        ],
+        [
+          "Provider",
+          "Cohen & Steers"
+        ]
+      ],
+      "etf_website": "https://www.cohenandsteers.com/funds/future-of-energy-active-etf/#overview",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 46,
+        "updated": "Mar 31, 2026",
+        "top10": 48.76,
+        "holdings": [
+          {
+            "n": "ConocoPhillips",
+            "s": "$COP",
+            "as": "7.62%",
+            "sh": "86,889"
+          },
+          {
+            "n": "ExxonMobil Holdings Corporation",
+            "s": "$XOM",
+            "as": "7.07%",
+            "sh": "62,741"
+          },
+          {
+            "n": "Suncor Energy Inc.",
+            "s": "!tsx/SU",
+            "as": "6.09%",
+            "sh": "138,634"
+          },
+          {
+            "n": "Valero Energy Corporation",
+            "s": "$VLO",
+            "as": "4.67%",
+            "sh": "28,420"
+          },
+          {
+            "n": "Cenovus Energy Inc.",
+            "s": "!tsx/CVE",
+            "as": "4.33%",
+            "sh": "245,717"
+          },
+          {
+            "n": "SLB N.V.",
+            "s": "$SLB",
+            "as": "4.09%",
+            "sh": "119,741"
+          },
+          {
+            "n": "Energy Transfer LP",
+            "s": "$ET",
+            "as": "4.02%",
+            "sh": "313,558"
+          },
+          {
+            "n": "TC Energy Corporation",
+            "s": "!tsx/TRP",
+            "as": "3.68%",
+            "sh": "88,422"
+          },
+          {
+            "n": "TotalEnergies SE",
+            "s": "!epa/TTE",
+            "as": "3.68%",
+            "sh": "60,280"
+          },
+          {
+            "n": "First Solar, Inc.",
+            "s": "$FSLR",
+            "as": "3.50%",
+            "sh": "26,692"
+          }
+        ]
+      },
+      "dividendTable": [
         {
-          "date": "2026-06-15",
-          "Open": 24.600000381469727,
-          "High": 24.739999771118164,
-          "Low": 24.549999237060547,
-          "Close": 24.65999984741211,
-          "Volume": 9200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "dt": "2026-06-29",
+          "amt": 0.08,
+          "pay": "2026-06-30"
+        }
+      ],
+      "news": {
+        "exp": "1783392144805",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 23.653,
+        "priceMAX": 24.66
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 23.885,
+      "pd": 23.89,
+      "c": 0.27,
+      "cp": 1.14,
+      "cl": 23.61,
+      "cdr": 1,
+      "o": 23.91,
+      "h": 23.91,
+      "l": 23.73,
+      "v": 12360.4909,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 24.74,
+      "l52": 23.24,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 23.885,
+      "epd": 23.89,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700008.99,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554720873,
+      "symbol": "CSEN",
+      "uid": "CSEN"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 23.41,
+        "h": 23.67,
+        "l": 23.24,
+        "c": 23.615,
+        "a": 23.6148,
+        "v": 72990,
+        "ch": -0.16
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-07",
+          "o": 23.55,
+          "h": 23.67,
+          "l": 23.4,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 24442,
+          "ch": 0.35
         },
         {
-          "date": "2026-06-16",
-          "Open": 24.5,
-          "High": 24.6299991607666,
-          "Low": 23.989999771118164,
-          "Close": 24.34000015258789,
-          "Volume": 127400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 23.37,
+          "h": 23.67,
+          "l": 23.37,
+          "c": 23.532,
+          "a": 23.5324,
+          "v": 18062,
+          "ch": 0.89
         },
         {
-          "date": "2026-06-17",
-          "Open": 24.25,
-          "High": 24.420000076293945,
-          "Low": 23.90999984741211,
-          "Close": 24.1200008392334,
-          "Volume": 60100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 23.495,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.325,
+          "a": 23.3245,
+          "v": 5209,
+          "ch": -0.06
         },
         {
-          "date": "2026-06-18",
-          "Open": 24.209999084472656,
-          "High": 24.209999084472656,
-          "Low": 23.829999923706055,
-          "Close": 24.06999969482422,
-          "Volume": 36500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.531,
+          "l": 23.32,
+          "c": 23.338,
+          "a": 23.3375,
+          "v": 25277,
+          "ch": -1.33
         },
         {
-          "date": "2026-06-22",
-          "Open": 24.09000015258789,
-          "High": 24.450000762939453,
-          "Low": 24.09000015258789,
-          "Close": 24.420000076293945,
-          "Volume": 21700.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 23.948,
+          "h": 23.948,
+          "l": 23.63,
+          "c": 23.653,
+          "a": 23.6531,
+          "v": 14492,
+          "ch": -0.36
         },
         {
-          "date": "2026-06-23",
-          "Open": 24.1299991607666,
-          "High": 24.350000381469727,
-          "Low": 24.1299991607666,
-          "Close": 24.239999771118164,
-          "Volume": 17200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 23.79,
+          "h": 23.864,
+          "l": 23.699,
+          "c": 23.738,
+          "a": 23.7384,
+          "v": 8331,
+          "ch": 0.08
         },
         {
-          "date": "2026-06-24",
-          "Open": 23.829999923706055,
-          "High": 23.860000610351562,
-          "Low": 23.65999984741211,
-          "Close": 23.719999313354492,
-          "Volume": 21000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 23.9,
+          "h": 23.98,
+          "l": 23.75,
+          "c": 23.8,
+          "a": 23.7195,
+          "v": 24768,
+          "ch": -0.86
         },
         {
-          "date": "2026-06-25",
-          "Open": 23.850000381469727,
-          "High": 24.030000686645508,
-          "Low": 23.850000381469727,
-          "Close": 24.010000228881836,
-          "Volume": 210800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 23.85,
+          "h": 24.03,
+          "l": 23.85,
+          "c": 24.005,
+          "a": 23.924309,
+          "v": 210779,
+          "ch": 1.22
         },
         {
-          "date": "2026-06-26",
-          "Open": 23.899999618530273,
-          "High": 23.979999542236328,
-          "Low": 23.75,
-          "Close": 23.799999237060547,
-          "Volume": 24800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 23.83,
+          "h": 23.855,
+          "l": 23.66,
+          "c": 23.715,
+          "a": 23.635284,
+          "v": 21046,
+          "ch": -2.17
         },
         {
-          "date": "2026-06-29",
-          "Open": 23.790000915527344,
-          "High": 23.86359977722168,
-          "Low": 23.69890022277832,
-          "Close": 23.738399505615234,
-          "Volume": 8327.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 24.13,
+          "h": 24.348,
+          "l": 24.13,
+          "c": 24.241,
+          "a": 24.159915,
+          "v": 17179,
+          "ch": -0.73
+        },
+        {
+          "t": "2026-06-22",
+          "o": 24.09,
+          "h": 24.449,
+          "l": 24.09,
+          "c": 24.419,
+          "a": 24.336818,
+          "v": 21698,
+          "ch": 1.47
+        },
+        {
+          "t": "2026-06-18",
+          "o": 24.21,
+          "h": 24.21,
+          "l": 23.83,
+          "c": 24.066,
+          "a": 23.985204,
+          "v": 36481,
+          "ch": -0.21
+        },
+        {
+          "t": "2026-06-17",
+          "o": 24.25,
+          "h": 24.415,
+          "l": 23.91,
+          "c": 24.116,
+          "a": 24.035335,
+          "v": 60058,
+          "ch": -0.92
+        },
+        {
+          "t": "2026-06-16",
+          "o": 24.5,
+          "h": 24.63,
+          "l": 23.99,
+          "c": 24.339,
+          "a": 24.257386,
+          "v": 127376.99999999999,
+          "ch": -1.3
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 23.37,
+          "h": 23.67,
+          "l": 23.37,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 42504,
+          "ch": 1.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 23.79,
+          "h": 23.948,
+          "l": 23.24,
+          "c": 23.325,
+          "a": 23.3245,
+          "v": 53309,
+          "ch": -1.67
+        },
+        {
+          "t": "2026-06-22",
+          "o": 24.09,
+          "h": 24.449,
+          "l": 23.66,
+          "c": 23.8,
+          "a": 23.7195,
+          "v": 295470,
+          "ch": -1.11
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 72990,
+          "ch": -0.16
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 23.37,
+          "h": 23.67,
+          "l": 23.37,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 42504,
+          "ch": 1.24
+        },
+        {
+          "t": "2026-06-29",
+          "o": 23.79,
+          "h": 23.948,
+          "l": 23.24,
+          "c": 23.325,
+          "a": 23.3245,
+          "v": 53309,
+          "ch": -1.67
+        },
+        {
+          "t": "2026-06-22",
+          "o": 24.09,
+          "h": 24.449,
+          "l": 23.66,
+          "c": 23.8,
+          "a": 23.7195,
+          "v": 295470,
+          "ch": -1.11
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 72990,
+          "ch": -0.16
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 23.41,
+          "h": 23.67,
+          "l": 23.24,
+          "c": 23.615,
+          "a": 23.6148,
+          "v": 72990,
+          "ch": -0.16
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

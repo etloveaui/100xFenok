@@ -1,19 +1,378 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "GEQ",
-  "fetched_at": "2026-06-18T12:38:20Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T23:52:44Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/GEQ/holdings",
+    "overview": "/api/symbol/e/GEQ/overview",
+    "quote": "/api/quotes/e/GEQ",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/GEQ/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/GEQ/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/GEQ/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/GEQ/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/GEQ/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/GEQ/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 3.58,
+        "shares": 25052,
+        "raw": {
+          "no": 1,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "3.58%",
+          "sh": "25,052"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "#IVV",
+        "name": "iShares Core S&P 500 ETF",
+        "weight_pct": 3.29,
+        "shares": 9042,
+        "raw": {
+          "no": 2,
+          "n": "iShares Core S&P 500 ETF",
+          "s": "#IVV",
+          "as": "3.29%",
+          "sh": "9,042"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 3.03,
+        "shares": 16245,
+        "raw": {
+          "no": 3,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "3.03%",
+          "sh": "16,245"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 2.7,
+        "shares": 28108,
+        "raw": {
+          "no": 4,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "2.70%",
+          "sh": "28,108"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "State Street® SPDR® S&P 500® ETF",
+        "weight_pct": 2.49,
+        "shares": 6872,
+        "raw": {
+          "no": 5,
+          "n": "State Street® SPDR® S&P 500® ETF",
+          "as": "2.49%",
+          "sh": "6,872"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "GOOG",
+        "name": "Alphabet Inc.",
+        "weight_pct": 2.45,
+        "shares": 14103,
+        "raw": {
+          "no": 6,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "2.45%",
+          "sh": "14,103"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 2.19,
+        "shares": 18668,
+        "raw": {
+          "no": 7,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "2.19%",
+          "sh": "18,668"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "KLAC",
+        "name": "KLA Corporation",
+        "weight_pct": 2.11,
+        "shares": 16340,
+        "raw": {
+          "no": 8,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "2.11%",
+          "sh": "16,340"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 1.86,
+        "shares": 10385,
+        "raw": {
+          "no": 9,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "1.86%",
+          "sh": "10,385"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 1.76,
+        "shares": 10054,
+        "raw": {
+          "no": 10,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "1.76%",
+          "sh": "10,054"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight_pct": 1.69,
+        "shares": 10397,
+        "raw": {
+          "no": 11,
+          "n": "JPMorgan Chase & Co.",
+          "s": "$JPM",
+          "as": "1.69%",
+          "sh": "10,397"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "#ACWV",
+        "name": "iShares MSCI Global Min Vol Factor ETF",
+        "weight_pct": 1.66,
+        "shares": 28263,
+        "raw": {
+          "no": 12,
+          "n": "iShares MSCI Global Min Vol Factor ETF",
+          "s": "#ACWV",
+          "as": "1.66%",
+          "sh": "28,263"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "#MDY",
+        "name": "State Street SPDR S&P MIDCAP 400 ETF Trust",
+        "weight_pct": 1.39,
+        "shares": 4095,
+        "raw": {
+          "no": 13,
+          "n": "State Street SPDR S&P MIDCAP 400 ETF Trust",
+          "s": "#MDY",
+          "as": "1.39%",
+          "sh": "4,095"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight_pct": 1.21,
+        "shares": 2089,
+        "raw": {
+          "no": 14,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "1.21%",
+          "sh": "2,089"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "V",
+        "name": "Visa Inc.",
+        "weight_pct": 1.17,
+        "shares": 6887,
+        "raw": {
+          "no": 15,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "1.17%",
+          "sh": "6,887"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "#VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "weight_pct": 1.12,
+        "shares": 3376,
+        "raw": {
+          "no": 16,
+          "n": "Vanguard S&P 500 ETF",
+          "s": "#VOO",
+          "as": "1.12%",
+          "sh": "3,376"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "#SPLV",
+        "name": "Invesco S&P 500 Low Volatility ETF",
+        "weight_pct": 1.1,
+        "shares": 30122,
+        "raw": {
+          "no": 17,
+          "n": "Invesco S&P 500 Low Volatility ETF",
+          "s": "#SPLV",
+          "as": "1.10%",
+          "sh": "30,122"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "#IWR",
+        "name": "iShares Russell Midcap ETF",
+        "weight_pct": 1.05,
+        "shares": 19584,
+        "raw": {
+          "no": 18,
+          "n": "iShares Russell Midcap ETF",
+          "s": "#IWR",
+          "as": "1.05%",
+          "sh": "19,584"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "CAT",
+        "name": "Caterpillar Inc.",
+        "weight_pct": 0.94,
+        "shares": 1944,
+        "raw": {
+          "no": 19,
+          "n": "Caterpillar Inc.",
+          "s": "$CAT",
+          "as": "0.94%",
+          "sh": "1,944"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "FICO",
+        "name": "Fair Isaac Corporation",
+        "weight_pct": 0.93,
+        "shares": 1588,
+        "raw": {
+          "no": 20,
+          "n": "Fair Isaac Corporation",
+          "s": "$FICO",
+          "as": "0.93%",
+          "sh": "1,588"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight_pct": 0.9,
+        "shares": 2858,
+        "raw": {
+          "no": 21,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "0.90%",
+          "sh": "2,858"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "TSM",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 0.9,
+        "shares": 4158,
+        "raw": {
+          "no": 22,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "0.90%",
+          "sh": "4,158"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "TDG",
+        "name": "TransDigm Group Incorporated",
+        "weight_pct": 0.88,
+        "shares": 1383,
+        "raw": {
+          "no": 23,
+          "n": "TransDigm Group Incorporated",
+          "s": "$TDG",
+          "as": "0.88%",
+          "sh": "1,383"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "DE",
+        "name": "Deere & Company",
+        "weight_pct": 0.86,
+        "shares": 2815,
+        "raw": {
+          "no": 24,
+          "n": "Deere & Company",
+          "s": "$DE",
+          "as": "0.86%",
+          "sh": "2,815"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 0.84,
+        "shares": 14703,
+        "raw": {
+          "no": 25,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "0.84%",
+          "sh": "14,703"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-18T12:38:20Z",
+    "holding_count": 740,
+    "holdings_updated": "Jul 1, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -24,312 +383,2575 @@
       "confidence": "high"
     },
     "overview": {
-      "nav": 50.4039,
-      "expenseRatio": 0.27,
-      "provider_page": "Cambria Investment Management",
-      "category": "Global Large-Stock Blend",
-      "legalType": "Exchange Traded Fund",
-      "description": "The fund will predominantly invest in securities of large capitalization companies (i.e., generally those that have a market capitalization of $8 billion or greater), but may also include securities of mid- or small-capitalization companies. It invests without limit in foreign securities and any country, including countries with developing or emerging markets."
+      "aum": "$206.07M",
+      "expenseRatio": "0.29%",
+      "peRatio": "27.66",
+      "sharesOut": "4.03M",
+      "provider_page": "cambria",
+      "etf_website": "https://www.cambriafunds.com/geq"
     },
+    "performance": {},
     "quote": {
-      "p": 50.43000030517578,
-      "pd": 50.94,
-      "c": -0.5099996948242165,
-      "cp": -1.0011772572128317,
-      "u": "2026-06-18T12:38:20Z",
-      "ex": "yahoo_finance"
+      "p": 50.9309,
+      "pd": 50.93,
+      "c": -0.21,
+      "cp": -0.41,
+      "cl": 51.14,
+      "cdr": -1,
+      "o": 50.93,
+      "h": 50.93,
+      "l": 50.93,
+      "v": 13.254,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 51.575,
+      "l52": 49.29,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 50.9309,
+      "epd": 50.93,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700012.5527,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554768016,
+      "symbol": "GEQ",
+      "uid": "GEQ"
     },
     "history": [
       {
-        "date": "2026-06-09",
-        "Open": 50.75,
-        "High": 50.75,
-        "Low": 50.04999923706055,
-        "Close": 50.04999923706055,
-        "Volume": 200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-10",
-        "Open": 49.36000061035156,
-        "High": 49.36000061035156,
-        "Low": 49.36000061035156,
-        "Close": 49.36000061035156,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-11",
-        "Open": 49.54999923706055,
-        "High": 50.209999084472656,
-        "Low": 49.54999923706055,
-        "Close": 50.209999084472656,
-        "Volume": 2900.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-12",
-        "Open": 50.380001068115234,
-        "High": 50.380001068115234,
-        "Low": 50.380001068115234,
-        "Close": 50.380001068115234,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-15",
-        "Open": 50.59000015258789,
-        "High": 51.11000061035156,
-        "Low": 49.290000915527344,
-        "Close": 51.11000061035156,
-        "Volume": 40000.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-16",
-        "Open": 51.25,
-        "High": 51.25,
-        "Low": 50.939998626708984,
-        "Close": 50.97999954223633,
-        "Volume": 59800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-17",
-        "Open": 50.720001220703125,
-        "High": 50.720001220703125,
-        "Low": 50.43000030517578,
-        "Close": 50.43000030517578,
-        "Volume": 1500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 51.12,
+        "h": 51.575,
+        "l": 50.8,
+        "c": 51.142,
+        "a": 51.1417,
+        "v": 12431,
+        "ch": -0.01
       }
-    ]
-  },
-  "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Cambria Global EW 2 ETF",
-        "longName": "Cambria Global EW 2 ETF",
-        "currency": "USD",
-        "exchange": "NGM",
-        "fundFamily": "Cambria Investment Management",
-        "category": "Global Large-Stock Blend",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 50.4039,
-        "netExpenseRatio": 0.27,
-        "previousClose": 50.94,
-        "fiftyTwoWeekHigh": 51.25,
-        "fiftyTwoWeekLow": 49.29,
-        "fiftyTwoWeekChangePercent": 0.75924397,
-        "averageVolume": 14942,
-        "averageVolume10days": 14942
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 50.720001220703125,
-        "dayLow": 50.43000030517578,
-        "exchange": "NGM",
-        "fiftyDayAverage": 50.36000006539481,
-        "lastPrice": 50.43000030517578,
-        "lastVolume": 1500.0,
-        "open": 50.720001220703125,
-        "previousClose": 50.9777,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 50.97999954223633,
-        "tenDayAverageVolume": 14942.0,
-        "threeMonthAverageVolume": 14942.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 50.36000006539481,
-        "yearChange": 0.007592429049106854,
-        "yearHigh": 51.25,
-        "yearLow": 49.290000915527344
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "The fund will predominantly invest in securities of large capitalization companies (i.e., generally those that have a market capitalization of $8 billion or greater), but may also include securities of mid- or small-capitalization companies. It invests without limit in foreign securities and any country, including countries with developing or emerging markets.",
-        "fund_overview": {
-          "categoryName": "Global Large-Stock Blend",
-          "family": "Cambria Investment Management",
-          "legalType": "Exchange Traded Fund"
-        },
-        "fund_operations": [
-          {
-            "_index": "Annual Report Expense Ratio",
-            "GEQ": 0.0027,
-            "Category Average": 0.0093474
-          },
-          {
-            "_index": "Annual Holdings Turnover",
-            "GEQ": 0.0,
-            "Category Average": 0.4889
-          },
-          {
-            "_index": "Total Net Assets",
-            "GEQ": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "GEQ": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Book",
-            "GEQ": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Sales",
-            "GEQ": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Cashflow",
-            "GEQ": 0.0,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Median Market Cap",
-            "GEQ": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "3 Year Earnings Growth",
-            "GEQ": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "GEQ": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Maturity",
-            "GEQ": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Credit Quality",
-            "GEQ": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ]
-      },
-      "history_1y": [
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-09",
-          "Open": 50.75,
-          "High": 50.75,
-          "Low": 50.04999923706055,
-          "Close": 50.04999923706055,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 51.142,
+          "h": 51.142,
+          "l": 51.142,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 13,
+          "ch": -0.73
         },
         {
-          "date": "2026-06-10",
-          "Open": 49.36000061035156,
-          "High": 49.36000061035156,
-          "Low": 49.36000061035156,
-          "Close": 49.36000061035156,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 51.575,
+          "h": 51.575,
+          "l": 51.519,
+          "c": 51.519,
+          "a": 51.5188,
+          "v": 765,
+          "ch": 0.71
         },
         {
-          "date": "2026-06-11",
-          "Open": 49.54999923706055,
-          "High": 50.209999084472656,
-          "Low": 49.54999923706055,
-          "Close": 50.209999084472656,
-          "Volume": 2900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 51.1,
+          "h": 51.157,
+          "l": 51.1,
+          "c": 51.157,
+          "a": 51.1567,
+          "v": 114,
+          "ch": 0.07
         },
         {
-          "date": "2026-06-12",
-          "Open": 50.380001068115234,
-          "High": 50.380001068115234,
-          "Low": 50.380001068115234,
-          "Close": 50.380001068115234,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.122,
+          "l": 50.8,
+          "c": 51.122,
+          "a": 51.122,
+          "v": 11539,
+          "ch": -0.05
         },
         {
-          "date": "2026-06-15",
-          "Open": 50.59000015258789,
-          "High": 51.11000061035156,
-          "Low": 49.290000915527344,
-          "Close": 51.11000061035156,
-          "Volume": 40000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 51.146,
+          "h": 51.146,
+          "l": 51.146,
+          "c": 51.146,
+          "a": 51.1462,
+          "v": 14,
+          "ch": 0.53
         },
         {
-          "date": "2026-06-16",
-          "Open": 51.25,
-          "High": 51.25,
-          "Low": 50.939998626708984,
-          "Close": 50.97999954223633,
-          "Volume": 59800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 50.84,
+          "h": 50.877,
+          "l": 50.84,
+          "c": 50.877,
+          "a": 50.8769,
+          "v": 366,
+          "ch": 1.05
         },
         {
-          "date": "2026-06-17",
-          "Open": 50.720001220703125,
-          "High": 50.720001220703125,
-          "Low": 50.43000030517578,
-          "Close": 50.43000030517578,
-          "Volume": 1500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 50.25,
+          "h": 50.349,
+          "l": 50.25,
+          "c": 50.349,
+          "a": 50.3485,
+          "v": 1021.9999999999999,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-06-25",
+          "o": 49.82,
+          "h": 50.3,
+          "l": 49.81,
+          "c": 50.3,
+          "a": 50.2995,
+          "v": 56906,
+          "ch": 0.24
+        },
+        {
+          "t": "2026-06-24",
+          "o": 49.99,
+          "h": 50.177,
+          "l": 49.98,
+          "c": 50.177,
+          "a": 50.1772,
+          "v": 3249,
+          "ch": -0.02
+        },
+        {
+          "t": "2026-06-23",
+          "o": 50.187,
+          "h": 50.187,
+          "l": 50.187,
+          "c": 50.187,
+          "a": 50.187,
+          "v": 52,
+          "ch": -1.19
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.791,
+          "h": 50.791,
+          "l": 50.791,
+          "c": 50.791,
+          "a": 50.7911,
+          "v": 6,
+          "ch": -0.33
+        },
+        {
+          "t": "2026-06-18",
+          "o": 50.81,
+          "h": 50.961,
+          "l": 50.81,
+          "c": 50.961,
+          "a": 50.961,
+          "v": 1782,
+          "ch": 1.05
+        },
+        {
+          "t": "2026-06-17",
+          "o": 50.72,
+          "h": 50.72,
+          "l": 50.429,
+          "c": 50.429,
+          "a": 50.4294,
+          "v": 1488,
+          "ch": -1.08
+        },
+        {
+          "t": "2026-06-16",
+          "o": 51.25,
+          "h": 51.25,
+          "l": 50.94,
+          "c": 50.978,
+          "a": 50.9777,
+          "v": 59780,
+          "ch": -0.26
+        },
+        {
+          "t": "2026-06-15",
+          "o": 50.59,
+          "h": 51.113,
+          "l": 49.29,
+          "c": 51.113,
+          "a": 51.1126,
+          "v": 40017,
+          "ch": 1.46
+        },
+        {
+          "t": "2026-06-12",
+          "o": 50.378,
+          "h": 50.378,
+          "l": 50.378,
+          "c": 50.378,
+          "a": 50.3782,
+          "v": 3,
+          "ch": 0.34
+        },
+        {
+          "t": "2026-06-11",
+          "o": 49.55,
+          "h": 50.209,
+          "l": 49.55,
+          "c": 50.209,
+          "a": 50.2086,
+          "v": 2764,
+          "ch": 1.71
+        },
+        {
+          "t": "2026-06-10",
+          "o": 49.363,
+          "h": 49.363,
+          "l": 49.363,
+          "c": 49.363,
+          "a": 49.3633,
+          "v": 1,
+          "ch": -1.36
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.575,
+          "h": 51.575,
+          "l": 51.142,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 778,
+          "ch": -0.03
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.84,
+          "h": 51.157,
+          "l": 50.8,
+          "c": 51.157,
+          "a": 51.1567,
+          "v": 12033,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.791,
+          "h": 50.791,
+          "l": 49.81,
+          "c": 50.349,
+          "a": 50.3485,
+          "v": 61235,
+          "ch": -1.2
+        },
+        {
+          "t": "2026-06-15",
+          "o": 50.59,
+          "h": 51.25,
+          "l": 49.29,
+          "c": 50.961,
+          "a": 50.961,
+          "v": 103067,
+          "ch": 1.16
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.575,
+          "l": 50.8,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 12431,
+          "ch": -0.01
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.575,
+          "h": 51.575,
+          "l": 51.142,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 778,
+          "ch": -0.03
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.84,
+          "h": 51.157,
+          "l": 50.8,
+          "c": 51.157,
+          "a": 51.1567,
+          "v": 12033,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.791,
+          "h": 50.791,
+          "l": 49.81,
+          "c": 50.349,
+          "a": 50.3485,
+          "v": 61235,
+          "ch": -1.2
+        },
+        {
+          "t": "2026-06-15",
+          "o": 50.59,
+          "h": 51.25,
+          "l": 49.29,
+          "c": 50.961,
+          "a": 50.961,
+          "v": 103067,
+          "ch": 1.16
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.575,
+          "l": 50.8,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 12431,
+          "ch": -0.01
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.575,
+          "l": 50.8,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 12431,
+          "ch": -0.01
         }
       ]
     }
   },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  "raw": {
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "3.58%",
+          "sh": "25,052"
+        },
+        {
+          "no": 2,
+          "n": "iShares Core S&P 500 ETF",
+          "s": "#IVV",
+          "as": "3.29%",
+          "sh": "9,042"
+        },
+        {
+          "no": 3,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "3.03%",
+          "sh": "16,245"
+        },
+        {
+          "no": 4,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "2.70%",
+          "sh": "28,108"
+        },
+        {
+          "no": 5,
+          "n": "State Street® SPDR® S&P 500® ETF",
+          "as": "2.49%",
+          "sh": "6,872"
+        },
+        {
+          "no": 6,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "2.45%",
+          "sh": "14,103"
+        },
+        {
+          "no": 7,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "2.19%",
+          "sh": "18,668"
+        },
+        {
+          "no": 8,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "2.11%",
+          "sh": "16,340"
+        },
+        {
+          "no": 9,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "1.86%",
+          "sh": "10,385"
+        },
+        {
+          "no": 10,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "1.76%",
+          "sh": "10,054"
+        },
+        {
+          "no": 11,
+          "n": "JPMorgan Chase & Co.",
+          "s": "$JPM",
+          "as": "1.69%",
+          "sh": "10,397"
+        },
+        {
+          "no": 12,
+          "n": "iShares MSCI Global Min Vol Factor ETF",
+          "s": "#ACWV",
+          "as": "1.66%",
+          "sh": "28,263"
+        },
+        {
+          "no": 13,
+          "n": "State Street SPDR S&P MIDCAP 400 ETF Trust",
+          "s": "#MDY",
+          "as": "1.39%",
+          "sh": "4,095"
+        },
+        {
+          "no": 14,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "1.21%",
+          "sh": "2,089"
+        },
+        {
+          "no": 15,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "1.17%",
+          "sh": "6,887"
+        },
+        {
+          "no": 16,
+          "n": "Vanguard S&P 500 ETF",
+          "s": "#VOO",
+          "as": "1.12%",
+          "sh": "3,376"
+        },
+        {
+          "no": 17,
+          "n": "Invesco S&P 500 Low Volatility ETF",
+          "s": "#SPLV",
+          "as": "1.10%",
+          "sh": "30,122"
+        },
+        {
+          "no": 18,
+          "n": "iShares Russell Midcap ETF",
+          "s": "#IWR",
+          "as": "1.05%",
+          "sh": "19,584"
+        },
+        {
+          "no": 19,
+          "n": "Caterpillar Inc.",
+          "s": "$CAT",
+          "as": "0.94%",
+          "sh": "1,944"
+        },
+        {
+          "no": 20,
+          "n": "Fair Isaac Corporation",
+          "s": "$FICO",
+          "as": "0.93%",
+          "sh": "1,588"
+        },
+        {
+          "no": 21,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "0.90%",
+          "sh": "2,858"
+        },
+        {
+          "no": 22,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "0.90%",
+          "sh": "4,158"
+        },
+        {
+          "no": 23,
+          "n": "TransDigm Group Incorporated",
+          "s": "$TDG",
+          "as": "0.88%",
+          "sh": "1,383"
+        },
+        {
+          "no": 24,
+          "n": "Deere & Company",
+          "s": "$DE",
+          "as": "0.86%",
+          "sh": "2,815"
+        },
+        {
+          "no": 25,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "0.84%",
+          "sh": "14,703"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "news": [
+        {
+          "t": "Cambria Expands 351 Exchange ETF Lineup with Launch of Cambria Global EW 2 ETF (GEQ)",
+          "u": "https://www.businesswire.com/news/home/20260408401051/en/Cambria-Expands-351-Exchange-ETF-Lineup-with-Launch-of-Cambria-Global-EW-2-ETF-GEQ/",
+          "n": "Business Wire",
+          "d": "3 months ago"
+        }
+      ],
+      "infoBox": "GEQ is an equity ETF with a total of 740 individual holdings. The top holdings are Apple stock at 3.58%, iShares Core S&P 500 ETF at 3.29%, Microsoft at 3.03%, NVIDIA at 2.70%, and State Street® SPDR® S&P 500® ETF at 2.49%.",
+      "infoTable": {
+        "count": 740,
+        "top10": 25.47,
+        "assetClass": "Equity",
+        "aum": 206065940,
+        "peRatio": 27.65873
+      },
+      "date": "Jul 1, 2026",
+      "count": 740
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$206.07M",
+      "expenseRatio": "0.29%",
+      "peRatio": "27.66",
+      "sharesOut": "4.03M",
+      "ch1y": null,
+      "holdings": 740,
+      "chart": {
+        "expiration": null,
+        "data": [
+          {
+            "c": 46.03,
+            "o": 46.03,
+            "t": 1783503000
+          },
+          {
+            "c": null,
+            "t": 1783503060
+          },
+          {
+            "c": null,
+            "t": 1783503120
+          },
+          {
+            "c": null,
+            "t": 1783503180
+          },
+          {
+            "c": null,
+            "t": 1783503240
+          },
+          {
+            "c": null,
+            "t": 1783503300
+          },
+          {
+            "c": null,
+            "t": 1783503360
+          },
+          {
+            "c": null,
+            "t": 1783503420
+          },
+          {
+            "c": 50.42,
+            "t": 1783503480
+          },
+          {
+            "c": null,
+            "t": 1783503540
+          },
+          {
+            "c": null,
+            "t": 1783503600
+          },
+          {
+            "c": null,
+            "t": 1783503660
+          },
+          {
+            "c": null,
+            "t": 1783503720
+          },
+          {
+            "c": null,
+            "t": 1783503780
+          },
+          {
+            "c": null,
+            "t": 1783503840
+          },
+          {
+            "c": null,
+            "t": 1783503900
+          },
+          {
+            "c": null,
+            "t": 1783503960
+          },
+          {
+            "c": null,
+            "t": 1783504020
+          },
+          {
+            "c": null,
+            "t": 1783504080
+          },
+          {
+            "c": null,
+            "t": 1783504140
+          },
+          {
+            "c": null,
+            "t": 1783504200
+          },
+          {
+            "c": null,
+            "t": 1783504260
+          },
+          {
+            "c": null,
+            "t": 1783504320
+          },
+          {
+            "c": null,
+            "t": 1783504380
+          },
+          {
+            "c": null,
+            "t": 1783504440
+          },
+          {
+            "c": null,
+            "t": 1783504500
+          },
+          {
+            "c": null,
+            "t": 1783504560
+          },
+          {
+            "c": null,
+            "t": 1783504620
+          },
+          {
+            "c": null,
+            "t": 1783504680
+          },
+          {
+            "c": null,
+            "t": 1783504740
+          },
+          {
+            "c": 51.34,
+            "t": 1783504800
+          },
+          {
+            "c": null,
+            "t": 1783504860
+          },
+          {
+            "c": null,
+            "t": 1783504920
+          },
+          {
+            "c": null,
+            "t": 1783504980
+          },
+          {
+            "c": null,
+            "t": 1783505040
+          },
+          {
+            "c": null,
+            "t": 1783505100
+          },
+          {
+            "c": null,
+            "t": 1783505160
+          },
+          {
+            "c": 51.33,
+            "t": 1783505220
+          },
+          {
+            "c": null,
+            "t": 1783505280
+          },
+          {
+            "c": null,
+            "t": 1783505340
+          },
+          {
+            "c": null,
+            "t": 1783505400
+          },
+          {
+            "c": null,
+            "t": 1783505460
+          },
+          {
+            "c": null,
+            "t": 1783505520
+          },
+          {
+            "c": null,
+            "t": 1783505580
+          },
+          {
+            "c": null,
+            "t": 1783505640
+          },
+          {
+            "c": null,
+            "t": 1783505700
+          },
+          {
+            "c": 51.22,
+            "t": 1783505760
+          },
+          {
+            "c": null,
+            "t": 1783505820
+          },
+          {
+            "c": null,
+            "t": 1783505880
+          },
+          {
+            "c": null,
+            "t": 1783505940
+          },
+          {
+            "c": null,
+            "t": 1783506000
+          },
+          {
+            "c": null,
+            "t": 1783506060
+          },
+          {
+            "c": null,
+            "t": 1783506120
+          },
+          {
+            "c": null,
+            "t": 1783506180
+          },
+          {
+            "c": null,
+            "t": 1783506240
+          },
+          {
+            "c": null,
+            "t": 1783506300
+          },
+          {
+            "c": null,
+            "t": 1783506360
+          },
+          {
+            "c": null,
+            "t": 1783506420
+          },
+          {
+            "c": null,
+            "t": 1783506480
+          },
+          {
+            "c": null,
+            "t": 1783506540
+          },
+          {
+            "c": null,
+            "t": 1783506600
+          },
+          {
+            "c": null,
+            "t": 1783506660
+          },
+          {
+            "c": null,
+            "t": 1783506720
+          },
+          {
+            "c": null,
+            "t": 1783506780
+          },
+          {
+            "c": null,
+            "t": 1783506840
+          },
+          {
+            "c": null,
+            "t": 1783506900
+          },
+          {
+            "c": null,
+            "t": 1783506960
+          },
+          {
+            "c": null,
+            "t": 1783507020
+          },
+          {
+            "c": null,
+            "t": 1783507080
+          },
+          {
+            "c": null,
+            "t": 1783507140
+          },
+          {
+            "c": null,
+            "t": 1783507200
+          },
+          {
+            "c": null,
+            "t": 1783507260
+          },
+          {
+            "c": null,
+            "t": 1783507320
+          },
+          {
+            "c": null,
+            "t": 1783507380
+          },
+          {
+            "c": null,
+            "t": 1783507440
+          },
+          {
+            "c": null,
+            "t": 1783507500
+          },
+          {
+            "c": null,
+            "t": 1783507560
+          },
+          {
+            "c": null,
+            "t": 1783507620
+          },
+          {
+            "c": null,
+            "t": 1783507680
+          },
+          {
+            "c": null,
+            "t": 1783507740
+          },
+          {
+            "c": null,
+            "t": 1783507800
+          },
+          {
+            "c": null,
+            "t": 1783507860
+          },
+          {
+            "c": null,
+            "t": 1783507920
+          },
+          {
+            "c": null,
+            "t": 1783507980
+          },
+          {
+            "c": null,
+            "t": 1783508040
+          },
+          {
+            "c": null,
+            "t": 1783508100
+          },
+          {
+            "c": null,
+            "t": 1783508160
+          },
+          {
+            "c": null,
+            "t": 1783508220
+          },
+          {
+            "c": null,
+            "t": 1783508280
+          },
+          {
+            "c": null,
+            "t": 1783508340
+          },
+          {
+            "c": null,
+            "t": 1783508400
+          },
+          {
+            "c": null,
+            "t": 1783508460
+          },
+          {
+            "c": null,
+            "t": 1783508520
+          },
+          {
+            "c": null,
+            "t": 1783508580
+          },
+          {
+            "c": null,
+            "t": 1783508640
+          },
+          {
+            "c": null,
+            "t": 1783508700
+          },
+          {
+            "c": null,
+            "t": 1783508760
+          },
+          {
+            "c": null,
+            "t": 1783508820
+          },
+          {
+            "c": null,
+            "t": 1783508880
+          },
+          {
+            "c": null,
+            "t": 1783508940
+          },
+          {
+            "c": null,
+            "t": 1783509000
+          },
+          {
+            "c": null,
+            "t": 1783509060
+          },
+          {
+            "c": null,
+            "t": 1783509120
+          },
+          {
+            "c": null,
+            "t": 1783509180
+          },
+          {
+            "c": null,
+            "t": 1783509240
+          },
+          {
+            "c": null,
+            "t": 1783509300
+          },
+          {
+            "c": null,
+            "t": 1783509360
+          },
+          {
+            "c": null,
+            "t": 1783509420
+          },
+          {
+            "c": null,
+            "t": 1783509480
+          },
+          {
+            "c": null,
+            "t": 1783509540
+          },
+          {
+            "c": null,
+            "t": 1783509600
+          },
+          {
+            "c": null,
+            "t": 1783509660
+          },
+          {
+            "c": null,
+            "t": 1783509720
+          },
+          {
+            "c": null,
+            "t": 1783509780
+          },
+          {
+            "c": null,
+            "t": 1783509840
+          },
+          {
+            "c": null,
+            "t": 1783509900
+          },
+          {
+            "c": null,
+            "t": 1783509960
+          },
+          {
+            "c": null,
+            "t": 1783510020
+          },
+          {
+            "c": null,
+            "t": 1783510080
+          },
+          {
+            "c": null,
+            "t": 1783510140
+          },
+          {
+            "c": null,
+            "t": 1783510200
+          },
+          {
+            "c": null,
+            "t": 1783510260
+          },
+          {
+            "c": null,
+            "t": 1783510320
+          },
+          {
+            "c": null,
+            "t": 1783510380
+          },
+          {
+            "c": null,
+            "t": 1783510440
+          },
+          {
+            "c": null,
+            "t": 1783510500
+          },
+          {
+            "c": null,
+            "t": 1783510560
+          },
+          {
+            "c": null,
+            "t": 1783510620
+          },
+          {
+            "c": null,
+            "t": 1783510680
+          },
+          {
+            "c": null,
+            "t": 1783510740
+          },
+          {
+            "c": null,
+            "t": 1783510800
+          },
+          {
+            "c": null,
+            "t": 1783510860
+          },
+          {
+            "c": null,
+            "t": 1783510920
+          },
+          {
+            "c": null,
+            "t": 1783510980
+          },
+          {
+            "c": null,
+            "t": 1783511040
+          },
+          {
+            "c": null,
+            "t": 1783511100
+          },
+          {
+            "c": null,
+            "t": 1783511160
+          },
+          {
+            "c": null,
+            "t": 1783511220
+          },
+          {
+            "c": null,
+            "t": 1783511280
+          },
+          {
+            "c": null,
+            "t": 1783511340
+          },
+          {
+            "c": null,
+            "t": 1783511400
+          },
+          {
+            "c": null,
+            "t": 1783511460
+          },
+          {
+            "c": null,
+            "t": 1783511520
+          },
+          {
+            "c": null,
+            "t": 1783511580
+          },
+          {
+            "c": null,
+            "t": 1783511640
+          },
+          {
+            "c": null,
+            "t": 1783511700
+          },
+          {
+            "c": null,
+            "t": 1783511760
+          },
+          {
+            "c": null,
+            "t": 1783511820
+          },
+          {
+            "c": null,
+            "t": 1783511880
+          },
+          {
+            "c": null,
+            "t": 1783511940
+          },
+          {
+            "c": null,
+            "t": 1783512000
+          },
+          {
+            "c": null,
+            "t": 1783512060
+          },
+          {
+            "c": null,
+            "t": 1783512120
+          },
+          {
+            "c": null,
+            "t": 1783512180
+          },
+          {
+            "c": null,
+            "t": 1783512240
+          },
+          {
+            "c": null,
+            "t": 1783512300
+          },
+          {
+            "c": null,
+            "t": 1783512360
+          },
+          {
+            "c": null,
+            "t": 1783512420
+          },
+          {
+            "c": null,
+            "t": 1783512480
+          },
+          {
+            "c": null,
+            "t": 1783512540
+          },
+          {
+            "c": null,
+            "t": 1783512600
+          },
+          {
+            "c": null,
+            "t": 1783512660
+          },
+          {
+            "c": null,
+            "t": 1783512720
+          },
+          {
+            "c": null,
+            "t": 1783512780
+          },
+          {
+            "c": null,
+            "t": 1783512840
+          },
+          {
+            "c": null,
+            "t": 1783512900
+          },
+          {
+            "c": null,
+            "t": 1783512960
+          },
+          {
+            "c": null,
+            "t": 1783513020
+          },
+          {
+            "c": null,
+            "t": 1783513080
+          },
+          {
+            "c": null,
+            "t": 1783513140
+          },
+          {
+            "c": null,
+            "t": 1783513200
+          },
+          {
+            "c": null,
+            "t": 1783513260
+          },
+          {
+            "c": null,
+            "t": 1783513320
+          },
+          {
+            "c": null,
+            "t": 1783513380
+          },
+          {
+            "c": null,
+            "t": 1783513440
+          },
+          {
+            "c": null,
+            "t": 1783513500
+          },
+          {
+            "c": null,
+            "t": 1783513560
+          },
+          {
+            "c": null,
+            "t": 1783513620
+          },
+          {
+            "c": null,
+            "t": 1783513680
+          },
+          {
+            "c": null,
+            "t": 1783513740
+          },
+          {
+            "c": null,
+            "t": 1783513800
+          },
+          {
+            "c": null,
+            "t": 1783513860
+          },
+          {
+            "c": null,
+            "t": 1783513920
+          },
+          {
+            "c": null,
+            "t": 1783513980
+          },
+          {
+            "c": null,
+            "t": 1783514040
+          },
+          {
+            "c": null,
+            "t": 1783514100
+          },
+          {
+            "c": null,
+            "t": 1783514160
+          },
+          {
+            "c": null,
+            "t": 1783514220
+          },
+          {
+            "c": null,
+            "t": 1783514280
+          },
+          {
+            "c": null,
+            "t": 1783514340
+          },
+          {
+            "c": null,
+            "t": 1783514400
+          },
+          {
+            "c": null,
+            "t": 1783514460
+          },
+          {
+            "c": null,
+            "t": 1783514520
+          },
+          {
+            "c": null,
+            "t": 1783514580
+          },
+          {
+            "c": null,
+            "t": 1783514640
+          },
+          {
+            "c": null,
+            "t": 1783514700
+          },
+          {
+            "c": null,
+            "t": 1783514760
+          },
+          {
+            "c": null,
+            "t": 1783514820
+          },
+          {
+            "c": null,
+            "t": 1783514880
+          },
+          {
+            "c": null,
+            "t": 1783514940
+          },
+          {
+            "c": null,
+            "t": 1783515000
+          },
+          {
+            "c": null,
+            "t": 1783515060
+          },
+          {
+            "c": null,
+            "t": 1783515120
+          },
+          {
+            "c": null,
+            "t": 1783515180
+          },
+          {
+            "c": null,
+            "t": 1783515240
+          },
+          {
+            "c": null,
+            "t": 1783515300
+          },
+          {
+            "c": null,
+            "t": 1783515360
+          },
+          {
+            "c": null,
+            "t": 1783515420
+          },
+          {
+            "c": null,
+            "t": 1783515480
+          },
+          {
+            "c": null,
+            "t": 1783515540
+          },
+          {
+            "c": null,
+            "t": 1783515600
+          },
+          {
+            "c": null,
+            "t": 1783515660
+          },
+          {
+            "c": null,
+            "t": 1783515720
+          },
+          {
+            "c": null,
+            "t": 1783515780
+          },
+          {
+            "c": null,
+            "t": 1783515840
+          },
+          {
+            "c": null,
+            "t": 1783515900
+          },
+          {
+            "c": null,
+            "t": 1783515960
+          },
+          {
+            "c": null,
+            "t": 1783516020
+          },
+          {
+            "c": null,
+            "t": 1783516080
+          },
+          {
+            "c": null,
+            "t": 1783516140
+          },
+          {
+            "c": null,
+            "t": 1783516200
+          },
+          {
+            "c": null,
+            "t": 1783516260
+          },
+          {
+            "c": null,
+            "t": 1783516320
+          },
+          {
+            "c": null,
+            "t": 1783516380
+          },
+          {
+            "c": null,
+            "t": 1783516440
+          },
+          {
+            "c": null,
+            "t": 1783516500
+          },
+          {
+            "c": null,
+            "t": 1783516560
+          },
+          {
+            "c": null,
+            "t": 1783516620
+          },
+          {
+            "c": null,
+            "t": 1783516680
+          },
+          {
+            "c": null,
+            "t": 1783516740
+          },
+          {
+            "c": null,
+            "t": 1783516800
+          },
+          {
+            "c": null,
+            "t": 1783516860
+          },
+          {
+            "c": null,
+            "t": 1783516920
+          },
+          {
+            "c": null,
+            "t": 1783516980
+          },
+          {
+            "c": null,
+            "t": 1783517040
+          },
+          {
+            "c": null,
+            "t": 1783517100
+          },
+          {
+            "c": null,
+            "t": 1783517160
+          },
+          {
+            "c": null,
+            "t": 1783517220
+          },
+          {
+            "c": null,
+            "t": 1783517280
+          },
+          {
+            "c": null,
+            "t": 1783517340
+          },
+          {
+            "c": null,
+            "t": 1783517400
+          },
+          {
+            "c": null,
+            "t": 1783517460
+          },
+          {
+            "c": null,
+            "t": 1783517520
+          },
+          {
+            "c": null,
+            "t": 1783517580
+          },
+          {
+            "c": null,
+            "t": 1783517640
+          },
+          {
+            "c": null,
+            "t": 1783517700
+          },
+          {
+            "c": null,
+            "t": 1783517760
+          },
+          {
+            "c": null,
+            "t": 1783517820
+          },
+          {
+            "c": null,
+            "t": 1783517880
+          },
+          {
+            "c": null,
+            "t": 1783517940
+          },
+          {
+            "c": null,
+            "t": 1783518000
+          },
+          {
+            "c": null,
+            "t": 1783518060
+          },
+          {
+            "c": null,
+            "t": 1783518120
+          },
+          {
+            "c": null,
+            "t": 1783518180
+          },
+          {
+            "c": null,
+            "t": 1783518240
+          },
+          {
+            "c": null,
+            "t": 1783518300
+          },
+          {
+            "c": null,
+            "t": 1783518360
+          },
+          {
+            "c": null,
+            "t": 1783518420
+          },
+          {
+            "c": null,
+            "t": 1783518480
+          },
+          {
+            "c": null,
+            "t": 1783518540
+          },
+          {
+            "c": null,
+            "t": 1783518600
+          },
+          {
+            "c": null,
+            "t": 1783518660
+          },
+          {
+            "c": null,
+            "t": 1783518720
+          },
+          {
+            "c": null,
+            "t": 1783518780
+          },
+          {
+            "c": null,
+            "t": 1783518840
+          },
+          {
+            "c": null,
+            "t": 1783518900
+          },
+          {
+            "c": null,
+            "t": 1783518960
+          },
+          {
+            "c": null,
+            "t": 1783519020
+          },
+          {
+            "c": null,
+            "t": 1783519080
+          },
+          {
+            "c": null,
+            "t": 1783519140
+          },
+          {
+            "c": null,
+            "t": 1783519200
+          },
+          {
+            "c": null,
+            "t": 1783519260
+          },
+          {
+            "c": null,
+            "t": 1783519320
+          },
+          {
+            "c": null,
+            "t": 1783519380
+          },
+          {
+            "c": null,
+            "t": 1783519440
+          },
+          {
+            "c": null,
+            "t": 1783519500
+          },
+          {
+            "c": null,
+            "t": 1783519560
+          },
+          {
+            "c": null,
+            "t": 1783519620
+          },
+          {
+            "c": null,
+            "t": 1783519680
+          },
+          {
+            "c": null,
+            "t": 1783519740
+          },
+          {
+            "c": null,
+            "t": 1783519800
+          },
+          {
+            "c": null,
+            "t": 1783519860
+          },
+          {
+            "c": null,
+            "t": 1783519920
+          },
+          {
+            "c": null,
+            "t": 1783519980
+          },
+          {
+            "c": null,
+            "t": 1783520040
+          },
+          {
+            "c": null,
+            "t": 1783520100
+          },
+          {
+            "c": null,
+            "t": 1783520160
+          },
+          {
+            "c": null,
+            "t": 1783520220
+          },
+          {
+            "c": null,
+            "t": 1783520280
+          },
+          {
+            "c": null,
+            "t": 1783520340
+          },
+          {
+            "c": null,
+            "t": 1783520400
+          },
+          {
+            "c": null,
+            "t": 1783520460
+          },
+          {
+            "c": null,
+            "t": 1783520520
+          },
+          {
+            "c": null,
+            "t": 1783520580
+          },
+          {
+            "c": null,
+            "t": 1783520640
+          },
+          {
+            "c": null,
+            "t": 1783520700
+          },
+          {
+            "c": null,
+            "t": 1783520760
+          },
+          {
+            "c": null,
+            "t": 1783520820
+          },
+          {
+            "c": null,
+            "t": 1783520880
+          },
+          {
+            "c": null,
+            "t": 1783520940
+          },
+          {
+            "c": null,
+            "t": 1783521000
+          },
+          {
+            "c": null,
+            "t": 1783521060
+          },
+          {
+            "c": null,
+            "t": 1783521120
+          },
+          {
+            "c": null,
+            "t": 1783521180
+          },
+          {
+            "c": null,
+            "t": 1783521240
+          },
+          {
+            "c": null,
+            "t": 1783521300
+          },
+          {
+            "c": null,
+            "t": 1783521360
+          },
+          {
+            "c": null,
+            "t": 1783521420
+          },
+          {
+            "c": null,
+            "t": 1783521480
+          },
+          {
+            "c": null,
+            "t": 1783521540
+          },
+          {
+            "c": null,
+            "t": 1783521600
+          },
+          {
+            "c": null,
+            "t": 1783521660
+          },
+          {
+            "c": null,
+            "t": 1783521720
+          },
+          {
+            "c": null,
+            "t": 1783521780
+          },
+          {
+            "c": null,
+            "t": 1783521840
+          },
+          {
+            "c": null,
+            "t": 1783521900
+          },
+          {
+            "c": null,
+            "t": 1783521960
+          },
+          {
+            "c": null,
+            "t": 1783522020
+          },
+          {
+            "c": null,
+            "t": 1783522080
+          },
+          {
+            "c": null,
+            "t": 1783522140
+          },
+          {
+            "c": null,
+            "t": 1783522200
+          },
+          {
+            "c": null,
+            "t": 1783522260
+          },
+          {
+            "c": null,
+            "t": 1783522320
+          },
+          {
+            "c": null,
+            "t": 1783522380
+          },
+          {
+            "c": null,
+            "t": 1783522440
+          },
+          {
+            "c": null,
+            "t": 1783522500
+          },
+          {
+            "c": null,
+            "t": 1783522560
+          },
+          {
+            "c": null,
+            "t": 1783522620
+          },
+          {
+            "c": null,
+            "t": 1783522680
+          },
+          {
+            "c": null,
+            "t": 1783522740
+          },
+          {
+            "c": null,
+            "t": 1783522800
+          },
+          {
+            "c": null,
+            "t": 1783522860
+          },
+          {
+            "c": null,
+            "t": 1783522920
+          },
+          {
+            "c": null,
+            "t": 1783522980
+          },
+          {
+            "c": null,
+            "t": 1783523040
+          },
+          {
+            "c": null,
+            "t": 1783523100
+          },
+          {
+            "c": null,
+            "t": 1783523160
+          },
+          {
+            "c": null,
+            "t": 1783523220
+          },
+          {
+            "c": null,
+            "t": 1783523280
+          },
+          {
+            "c": null,
+            "t": 1783523340
+          },
+          {
+            "c": null,
+            "t": 1783523400
+          },
+          {
+            "c": null,
+            "t": 1783523460
+          },
+          {
+            "c": null,
+            "t": 1783523520
+          },
+          {
+            "c": null,
+            "t": 1783523580
+          },
+          {
+            "c": null,
+            "t": 1783523640
+          },
+          {
+            "c": null,
+            "t": 1783523700
+          },
+          {
+            "c": null,
+            "t": 1783523760
+          },
+          {
+            "c": null,
+            "t": 1783523820
+          },
+          {
+            "c": null,
+            "t": 1783523880
+          },
+          {
+            "c": null,
+            "t": 1783523940
+          },
+          {
+            "c": null,
+            "t": 1783524000
+          },
+          {
+            "c": null,
+            "t": 1783524060
+          },
+          {
+            "c": null,
+            "t": 1783524120
+          },
+          {
+            "c": null,
+            "t": 1783524180
+          },
+          {
+            "c": 50.925,
+            "t": 1783524240
+          },
+          {
+            "t": 1783524299
+          },
+          {
+            "t": 1783524359
+          },
+          {
+            "t": 1783524419
+          },
+          {
+            "t": 1783524479
+          },
+          {
+            "t": 1783524539
+          },
+          {
+            "t": 1783524599
+          },
+          {
+            "t": 1783524659
+          },
+          {
+            "t": 1783524719
+          },
+          {
+            "t": 1783524779
+          },
+          {
+            "t": 1783524839
+          },
+          {
+            "t": 1783524899
+          },
+          {
+            "t": 1783524959
+          },
+          {
+            "t": 1783525019
+          },
+          {
+            "t": 1783525079
+          },
+          {
+            "t": 1783525139
+          },
+          {
+            "t": 1783525199
+          },
+          {
+            "t": 1783525259
+          },
+          {
+            "t": 1783525319
+          },
+          {
+            "t": 1783525379
+          },
+          {
+            "t": 1783525439
+          },
+          {
+            "t": 1783525499
+          },
+          {
+            "t": 1783525559
+          },
+          {
+            "t": 1783525619
+          },
+          {
+            "t": 1783525679
+          },
+          {
+            "t": 1783525739
+          },
+          {
+            "t": 1783525799
+          },
+          {
+            "t": 1783525859
+          },
+          {
+            "t": 1783525919
+          },
+          {
+            "t": 1783525979
+          },
+          {
+            "t": 1783526039
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
+          }
+        ]
+      },
+      "description": "The Cambria Global EW 2 ETF (GEQ) is an exchange-traded fund that mostly invests in large cap equity. The fund provides diversified exposure to global equities through an actively managed portfolio concentrated on large-cap companies. It offered initial investors a way to diversify taxable holdings via a 351 exchange.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "GEQ"
+        ],
+        [
+          "Provider",
+          "Cambria"
+        ]
+      ],
+      "etf_website": "https://www.cambriafunds.com/geq",
+      "provider_page": "cambria",
+      "holdingsTable": {
+        "count": 740,
+        "updated": "Jul 1, 2026",
+        "top10": 25.47,
+        "holdings": [
+          {
+            "n": "Apple Inc.",
+            "s": "$AAPL",
+            "as": "3.58%",
+            "sh": "25,052"
+          },
+          {
+            "n": "iShares Core S&P 500 ETF",
+            "s": "#IVV",
+            "as": "3.29%",
+            "sh": "9,042"
+          },
+          {
+            "n": "Microsoft Corporation",
+            "s": "$MSFT",
+            "as": "3.03%",
+            "sh": "16,245"
+          },
+          {
+            "n": "NVIDIA Corporation",
+            "s": "$NVDA",
+            "as": "2.70%",
+            "sh": "28,108"
+          },
+          {
+            "n": "State Street® SPDR® S&P 500® ETF",
+            "as": "2.49%",
+            "sh": "6,872"
+          },
+          {
+            "n": "Alphabet Inc.",
+            "s": "$GOOG",
+            "as": "2.45%",
+            "sh": "14,103"
+          },
+          {
+            "n": "Amazon.com, Inc.",
+            "s": "$AMZN",
+            "as": "2.19%",
+            "sh": "18,668"
+          },
+          {
+            "n": "KLA Corporation",
+            "s": "$KLAC",
+            "as": "2.11%",
+            "sh": "16,340"
+          },
+          {
+            "n": "Broadcom Inc.",
+            "s": "$AVGO",
+            "as": "1.86%",
+            "sh": "10,385"
+          },
+          {
+            "n": "Alphabet Inc.",
+            "s": "$GOOGL",
+            "as": "1.76%",
+            "sh": "10,054"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783571675299",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260408401051/en/Cambria-Expands-351-Exchange-ETF-Lineup-with-Launch-of-Cambria-Global-EW-2-ETF-GEQ/",
+            "img": "https://cdn.snapi.dev/images/v1/3/4/x/press3-3623099.jpg",
+            "title": "Cambria Expands 351 Exchange ETF Lineup with Launch of Cambria Global EW 2 ETF (GEQ)",
+            "text": "MANHATTAN BEACH, Calif.--(BUSINESS WIRE)---- $GEQ #351Exchange--Cambria Investment Management, an innovator in quantitative investment strategies and tax-aware solutions, and ETF Architect, a trusted ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "time": "Apr 8, 2026, 9:00 AM EDT",
+            "ago": "3 months ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 51.146,
+        "priceMAX": 50.046
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 50.9309,
+      "pd": 50.93,
+      "c": -0.21,
+      "cp": -0.41,
+      "cl": 51.14,
+      "cdr": -1,
+      "o": 50.93,
+      "h": 50.93,
+      "l": 50.93,
+      "v": 13.254,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 51.575,
+      "l52": 49.29,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 50.9309,
+      "epd": 50.93,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700012.5527,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554768016,
+      "symbol": "GEQ",
+      "uid": "GEQ"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 51.12,
+        "h": 51.575,
+        "l": 50.8,
+        "c": 51.142,
+        "a": 51.1417,
+        "v": 12431,
+        "ch": -0.01
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-07",
+          "o": 51.142,
+          "h": 51.142,
+          "l": 51.142,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 13,
+          "ch": -0.73
+        },
+        {
+          "t": "2026-07-06",
+          "o": 51.575,
+          "h": 51.575,
+          "l": 51.519,
+          "c": 51.519,
+          "a": 51.5188,
+          "v": 765,
+          "ch": 0.71
+        },
+        {
+          "t": "2026-07-02",
+          "o": 51.1,
+          "h": 51.157,
+          "l": 51.1,
+          "c": 51.157,
+          "a": 51.1567,
+          "v": 114,
+          "ch": 0.07
+        },
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.122,
+          "l": 50.8,
+          "c": 51.122,
+          "a": 51.122,
+          "v": 11539,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-06-30",
+          "o": 51.146,
+          "h": 51.146,
+          "l": 51.146,
+          "c": 51.146,
+          "a": 51.1462,
+          "v": 14,
+          "ch": 0.53
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.84,
+          "h": 50.877,
+          "l": 50.84,
+          "c": 50.877,
+          "a": 50.8769,
+          "v": 366,
+          "ch": 1.05
+        },
+        {
+          "t": "2026-06-26",
+          "o": 50.25,
+          "h": 50.349,
+          "l": 50.25,
+          "c": 50.349,
+          "a": 50.3485,
+          "v": 1021.9999999999999,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-06-25",
+          "o": 49.82,
+          "h": 50.3,
+          "l": 49.81,
+          "c": 50.3,
+          "a": 50.2995,
+          "v": 56906,
+          "ch": 0.24
+        },
+        {
+          "t": "2026-06-24",
+          "o": 49.99,
+          "h": 50.177,
+          "l": 49.98,
+          "c": 50.177,
+          "a": 50.1772,
+          "v": 3249,
+          "ch": -0.02
+        },
+        {
+          "t": "2026-06-23",
+          "o": 50.187,
+          "h": 50.187,
+          "l": 50.187,
+          "c": 50.187,
+          "a": 50.187,
+          "v": 52,
+          "ch": -1.19
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.791,
+          "h": 50.791,
+          "l": 50.791,
+          "c": 50.791,
+          "a": 50.7911,
+          "v": 6,
+          "ch": -0.33
+        },
+        {
+          "t": "2026-06-18",
+          "o": 50.81,
+          "h": 50.961,
+          "l": 50.81,
+          "c": 50.961,
+          "a": 50.961,
+          "v": 1782,
+          "ch": 1.05
+        },
+        {
+          "t": "2026-06-17",
+          "o": 50.72,
+          "h": 50.72,
+          "l": 50.429,
+          "c": 50.429,
+          "a": 50.4294,
+          "v": 1488,
+          "ch": -1.08
+        },
+        {
+          "t": "2026-06-16",
+          "o": 51.25,
+          "h": 51.25,
+          "l": 50.94,
+          "c": 50.978,
+          "a": 50.9777,
+          "v": 59780,
+          "ch": -0.26
+        },
+        {
+          "t": "2026-06-15",
+          "o": 50.59,
+          "h": 51.113,
+          "l": 49.29,
+          "c": 51.113,
+          "a": 51.1126,
+          "v": 40017,
+          "ch": 1.46
+        },
+        {
+          "t": "2026-06-12",
+          "o": 50.378,
+          "h": 50.378,
+          "l": 50.378,
+          "c": 50.378,
+          "a": 50.3782,
+          "v": 3,
+          "ch": 0.34
+        },
+        {
+          "t": "2026-06-11",
+          "o": 49.55,
+          "h": 50.209,
+          "l": 49.55,
+          "c": 50.209,
+          "a": 50.2086,
+          "v": 2764,
+          "ch": 1.71
+        },
+        {
+          "t": "2026-06-10",
+          "o": 49.363,
+          "h": 49.363,
+          "l": 49.363,
+          "c": 49.363,
+          "a": 49.3633,
+          "v": 1,
+          "ch": -1.36
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.575,
+          "h": 51.575,
+          "l": 51.142,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 778,
+          "ch": -0.03
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.84,
+          "h": 51.157,
+          "l": 50.8,
+          "c": 51.157,
+          "a": 51.1567,
+          "v": 12033,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.791,
+          "h": 50.791,
+          "l": 49.81,
+          "c": 50.349,
+          "a": 50.3485,
+          "v": 61235,
+          "ch": -1.2
+        },
+        {
+          "t": "2026-06-15",
+          "o": 50.59,
+          "h": 51.25,
+          "l": 49.29,
+          "c": 50.961,
+          "a": 50.961,
+          "v": 103067,
+          "ch": 1.16
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.575,
+          "l": 50.8,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 12431,
+          "ch": -0.01
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.575,
+          "h": 51.575,
+          "l": 51.142,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 778,
+          "ch": -0.03
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.84,
+          "h": 51.157,
+          "l": 50.8,
+          "c": 51.157,
+          "a": 51.1567,
+          "v": 12033,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.791,
+          "h": 50.791,
+          "l": 49.81,
+          "c": 50.349,
+          "a": 50.3485,
+          "v": 61235,
+          "ch": -1.2
+        },
+        {
+          "t": "2026-06-15",
+          "o": 50.59,
+          "h": 51.25,
+          "l": 49.29,
+          "c": 50.961,
+          "a": 50.961,
+          "v": 103067,
+          "ch": 1.16
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.575,
+          "l": 50.8,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 12431,
+          "ch": -0.01
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.12,
+          "h": 51.575,
+          "l": 50.8,
+          "c": 51.142,
+          "a": 51.1417,
+          "v": 12431,
+          "ch": -0.01
+        }
+      ]
+    }
+  }
 }

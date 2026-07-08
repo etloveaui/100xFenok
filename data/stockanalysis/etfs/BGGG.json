@@ -1,149 +1,409 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "BGGG",
-  "fetched_at": "2026-06-30T23:54:21Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T23:51:09Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/BGGG/holdings",
+    "overview": "/api/symbol/e/BGGG/overview",
+    "quote": "/api/quotes/e/BGGG",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/BGGG/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/BGGG/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/BGGG/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/BGGG/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/BGGG/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/BGGG/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "AMZN",
-        "name": "Amazon.com Inc",
-        "weight_pct": 6.73879,
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 6.74,
+        "shares": 167187,
         "raw": {
-          "_index": "AMZN",
-          "Name": "Amazon.com Inc",
-          "Holding Percent": 0.0673879
+          "no": 1,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "6.74%",
+          "sh": "167,187"
         }
       },
       {
         "rank": 2,
         "symbol": "NVDA",
-        "name": "NVIDIA Corp",
-        "weight_pct": 6.71847,
+        "name": "NVIDIA Corporation",
+        "weight_pct": 6.72,
+        "shares": 199054,
         "raw": {
-          "_index": "NVDA",
-          "Name": "NVIDIA Corp",
-          "Holding Percent": 0.0671847
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "6.72%",
+          "sh": "199,054"
         }
       },
       {
         "rank": 3,
-        "symbol": "ASML.AS",
-        "name": "ASML Holding NV",
-        "weight_pct": 5.9127600000000005,
+        "symbol": "!AMS/ASML",
+        "name": "ASML Holding N.V.",
+        "weight_pct": 5.91,
+        "shares": 23692,
         "raw": {
-          "_index": "ASML.AS",
-          "Name": "ASML Holding NV",
-          "Holding Percent": 0.0591276
+          "no": 3,
+          "n": "ASML Holding N.V.",
+          "s": "!ams/ASML",
+          "as": "5.91%",
+          "sh": "23,692"
         }
       },
       {
         "rank": 4,
         "symbol": "NET",
-        "name": "Cloudflare Inc",
-        "weight_pct": 4.78502,
+        "name": "Cloudflare, Inc.",
+        "weight_pct": 4.79,
+        "shares": 119825,
         "raw": {
-          "_index": "NET",
-          "Name": "Cloudflare Inc",
-          "Holding Percent": 0.0478502
+          "no": 4,
+          "n": "Cloudflare, Inc.",
+          "s": "$NET",
+          "as": "4.79%",
+          "sh": "119,825"
         }
       },
       {
         "rank": 5,
-        "symbol": "2330.TW",
-        "name": "Taiwan Semiconductor Manufacturing Co Ltd",
-        "weight_pct": 4.570670000000001,
+        "symbol": "!TPE/2330",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 4.57,
+        "shares": 429000,
         "raw": {
-          "_index": "2330.TW",
-          "Name": "Taiwan Semiconductor Manufacturing Co Ltd",
-          "Holding Percent": 0.0457067
+          "no": 5,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "4.57%",
+          "sh": "429,000"
         }
       },
       {
         "rank": 6,
         "symbol": "APP",
-        "name": "AppLovin Corp Ordinary Shares - Class A",
-        "weight_pct": 4.3228403,
+        "name": "AppLovin Corporation",
+        "weight_pct": 4.32,
+        "shares": 56122,
         "raw": {
-          "_index": "APP",
-          "Name": "AppLovin Corp Ordinary Shares - Class A",
-          "Holding Percent": 0.043228403
+          "no": 6,
+          "n": "AppLovin Corporation",
+          "s": "$APP",
+          "as": "4.32%",
+          "sh": "56,122"
         }
       },
       {
         "rank": 7,
-        "symbol": "0700.HK",
-        "name": "Tencent Holdings Ltd",
-        "weight_pct": 3.68934,
+        "symbol": "!HKG/0700",
+        "name": "Tencent Holdings Limited",
+        "weight_pct": 3.69,
+        "shares": 308800,
         "raw": {
-          "_index": "0700.HK",
-          "Name": "Tencent Holdings Ltd",
-          "Holding Percent": 0.0368934
+          "no": 7,
+          "n": "Tencent Holdings Limited",
+          "s": "!hkg/0700",
+          "as": "3.69%",
+          "sh": "308,800"
         }
       },
       {
         "rank": 8,
         "symbol": "NU",
-        "name": "Nu Holdings Ltd Ordinary Shares Class A",
-        "weight_pct": 3.3905,
+        "name": "Nu Holdings Ltd.",
+        "weight_pct": 3.39,
+        "shares": 1219143,
         "raw": {
-          "_index": "NU",
-          "Name": "Nu Holdings Ltd Ordinary Shares Class A",
-          "Holding Percent": 0.033905
+          "no": 8,
+          "n": "Nu Holdings Ltd.",
+          "s": "$NU",
+          "as": "3.39%",
+          "sh": "1,219,143"
         }
       },
       {
         "rank": 9,
         "symbol": "PDD",
-        "name": "PDD Holdings Inc ADR",
-        "weight_pct": 3.19882,
+        "name": "PDD Holdings Inc.",
+        "weight_pct": 3.2,
+        "shares": 161760,
         "raw": {
-          "_index": "PDD",
-          "Name": "PDD Holdings Inc ADR",
-          "Holding Percent": 0.0319882
+          "no": 9,
+          "n": "PDD Holdings Inc.",
+          "s": "$PDD",
+          "as": "3.20%",
+          "sh": "161,760"
         }
       },
       {
         "rank": 10,
         "symbol": "SPOT",
-        "name": "Spotify Technology SA",
-        "weight_pct": 3.17423,
+        "name": "Spotify Technology S.A.",
+        "weight_pct": 3.17,
+        "shares": 33824,
         "raw": {
-          "_index": "SPOT",
-          "Name": "Spotify Technology SA",
-          "Holding Percent": 0.0317423
+          "no": 10,
+          "n": "Spotify Technology S.A.",
+          "s": "$SPOT",
+          "as": "3.17%",
+          "sh": "33,824"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "MELI",
+        "name": "MercadoLibre, Inc.",
+        "weight_pct": 2.98,
+        "shares": 8912,
+        "raw": {
+          "no": 11,
+          "n": "MercadoLibre, Inc.",
+          "s": "$MELI",
+          "as": "2.98%",
+          "sh": "8,912"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "IOT",
+        "name": "Samsara Inc.",
+        "weight_pct": 2.74,
+        "shares": 446190,
+        "raw": {
+          "no": 12,
+          "n": "Samsara Inc.",
+          "s": "$IOT",
+          "as": "2.74%",
+          "sh": "446,190"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "RKLB",
+        "name": "Rocket Lab Corporation",
+        "weight_pct": 2.69,
+        "shares": 216563,
+        "raw": {
+          "no": 13,
+          "n": "Rocket Lab Corporation",
+          "s": "$RKLB",
+          "as": "2.69%",
+          "sh": "216,563"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "CPNG",
+        "name": "Coupang, Inc.",
+        "weight_pct": 2.63,
+        "shares": 718823,
+        "raw": {
+          "no": 14,
+          "n": "Coupang, Inc.",
+          "s": "$CPNG",
+          "as": "2.63%",
+          "sh": "718,823"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "ISRG",
+        "name": "Intuitive Surgical, Inc.",
+        "weight_pct": 2.6,
+        "shares": 29159,
+        "raw": {
+          "no": 15,
+          "n": "Intuitive Surgical, Inc.",
+          "s": "$ISRG",
+          "as": "2.60%",
+          "sh": "29,159"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!SHE/300750",
+        "name": "Contemporary Amperex Technology Co., Limited",
+        "weight_pct": 2.48,
+        "shares": 220160,
+        "raw": {
+          "no": 16,
+          "n": "Contemporary Amperex Technology Co., Limited",
+          "s": "!she/300750",
+          "as": "2.48%",
+          "sh": "220,160"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "SHOP",
+        "name": "Shopify Inc.",
+        "weight_pct": 2.39,
+        "shares": 104203,
+        "raw": {
+          "no": 17,
+          "n": "Shopify Inc.",
+          "s": "$SHOP",
+          "as": "2.39%",
+          "sh": "104,203"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "SE",
+        "name": "Sea Limited",
+        "weight_pct": 2.34,
+        "shares": 146128,
+        "raw": {
+          "no": 18,
+          "n": "Sea Limited",
+          "s": "$SE",
+          "as": "2.34%",
+          "sh": "146,128"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!EPA/RMS",
+        "name": "Hermès International Société en commandite par actions",
+        "weight_pct": 2.22,
+        "shares": 6180,
+        "raw": {
+          "no": 19,
+          "n": "Hermès International Société en commandite par actions",
+          "s": "!epa/RMS",
+          "as": "2.22%",
+          "sh": "6,180"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "RDDT",
+        "name": "Reddit, Inc.",
+        "weight_pct": 2.18,
+        "shares": 83657,
+        "raw": {
+          "no": 20,
+          "n": "Reddit, Inc.",
+          "s": "$RDDT",
+          "as": "2.18%",
+          "sh": "83,657"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!HKG/3690",
+        "name": "Meituan",
+        "weight_pct": 2.1,
+        "shares": 1027090,
+        "raw": {
+          "no": 21,
+          "n": "Meituan",
+          "s": "!hkg/3690",
+          "as": "2.10%",
+          "sh": "1,027,090"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!HKG/6160",
+        "name": "BeOne Medicines AG",
+        "weight_pct": 2.06,
+        "shares": 487018,
+        "raw": {
+          "no": 22,
+          "n": "BeOne Medicines AG",
+          "s": "!hkg/6160",
+          "as": "2.06%",
+          "sh": "487,018"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!AMS/ADYEN",
+        "name": "Adyen N.V.",
+        "weight_pct": 2.02,
+        "shares": 10641,
+        "raw": {
+          "no": 23,
+          "n": "Adyen N.V.",
+          "s": "!ams/ADYEN",
+          "as": "2.02%",
+          "sh": "10,641"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "!SHA/600519",
+        "name": "Kweichow Moutai Co., Ltd.",
+        "weight_pct": 1.94,
+        "shares": 47700,
+        "raw": {
+          "no": 24,
+          "n": "Kweichow Moutai Co., Ltd.",
+          "s": "!sha/600519",
+          "as": "1.94%",
+          "sh": "47,700"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "AXON",
+        "name": "Axon Enterprise, Inc.",
+        "weight_pct": 1.92,
+        "shares": 23407,
+        "raw": {
+          "no": 25,
+          "n": "Axon Enterprise, Inc.",
+          "s": "$AXON",
+          "as": "1.92%",
+          "sh": "23,407"
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.016,
-      "stockPosition": 0.984,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.0,
-      "consumer_cyclical": 0.27899998,
-      "basic_materials": 0.0,
-      "consumer_defensive": 0.0294,
-      "technology": 0.3218,
-      "communication_services": 0.1732,
-      "financial_services": 0.0345,
-      "utilities": 0.0,
-      "industrials": 0.0959,
-      "energy": 0.0,
-      "healthcare": 0.066300005
-    },
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 32.19
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 27.89
+      },
+      {
+        "n": "Communication Services",
+        "w": 17.32
+      },
+      {
+        "n": "Industrials",
+        "w": 9.59
+      },
+      {
+        "n": "Healthcare",
+        "w": 6.63
+      },
+      {
+        "n": "Financials",
+        "w": 3.45
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 2.94
+      }
+    ],
     "countries": null,
-    "holding_count": 10,
-    "holdings_updated": "2026-06-30T23:54:21Z",
+    "holding_count": 39,
+    "holdings_updated": "Mar 31, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -154,893 +414,2825 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": 395033024.0,
-      "nav": 34.67,
-      "expenseRatio": 0.7,
-      "dividendYield": 0.0,
-      "beta": 1.35,
-      "provider_page": "Baillie Gifford Funds",
-      "category": "Global Large-Stock Growth",
-      "legalType": "Exchange Traded Fund",
-      "description": "The fund invests at least 80% of its net assets in equity securities. While the portfolio managers are not constrained by geographic limitations, it ordinarily invests in securities of issuers located in at least six different countries. In addition, under normal circumstances, the fund will invest at least 40% of its total assets in securities of companies located outside the U.S. when market conditions are favorable, but, when market conditions are not favorable, will invest at least 30% of its total assets in companies located outside the U.S. -null-. It is non-diversified."
+      "expenseRatio": "0.70%",
+      "sharesOut": "9.56M",
+      "inception": "Jun 10, 2014",
+      "etf_website": "https://www.bailliegifford.com/en/usa/institutional-investor/funds/baillie-gifford-long-term-global-growth-etf/?share-class=61715-BGGG"
+    },
+    "performance": {
+      "tr1m": 2.058
     },
     "quote": {
-      "p": 35.260799407958984,
-      "pd": 34.625,
-      "c": 0.6357994079589844,
-      "cp": 1.8362437774988718,
-      "u": "2026-06-30T23:54:21Z",
-      "ex": "yahoo_finance"
+      "p": 35.7519,
+      "pd": 35.75,
+      "c": -0.01,
+      "cp": -0.02,
+      "cl": 35.76,
+      "cdr": -1,
+      "o": 35.61,
+      "h": 35.75,
+      "l": 35.05,
+      "v": 38337.5791,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 36.705,
+      "l52": 32.71,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 35.7519,
+      "epd": 35.75,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700012.8853,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554673551,
+      "symbol": "BGGG",
+      "uid": "BGGG"
     },
     "history": [
       {
-        "date": "2026-06-01",
-        "Open": 36.29999923706055,
-        "High": 36.709999084472656,
-        "Low": 36.29999923706055,
-        "Close": 36.599998474121094,
-        "Volume": 2400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-02",
-        "Open": 36.560001373291016,
-        "High": 36.560001373291016,
-        "Low": 36.220001220703125,
-        "Close": 36.31999969482422,
-        "Volume": 71600.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-03",
-        "Open": 36.0,
-        "High": 36.0,
-        "Low": 35.41999816894531,
-        "Close": 35.61000061035156,
-        "Volume": 50600.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-04",
-        "Open": 35.47999954223633,
-        "High": 36.119998931884766,
-        "Low": 35.47999954223633,
-        "Close": 35.939998626708984,
-        "Volume": 31800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-05",
-        "Open": 35.65999984741211,
-        "High": 35.65999984741211,
-        "Low": 34.38999938964844,
-        "Close": 34.459999084472656,
-        "Volume": 38800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-08",
-        "Open": 34.849998474121094,
-        "High": 34.959999084472656,
-        "Low": 34.790000915527344,
-        "Close": 34.81999969482422,
-        "Volume": 25500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-09",
-        "Open": 34.970001220703125,
-        "High": 35.279998779296875,
-        "Low": 33.88999938964844,
-        "Close": 34.4900016784668,
-        "Volume": 30400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-10",
-        "Open": 34.09000015258789,
-        "High": 34.33000183105469,
-        "Low": 33.619998931884766,
-        "Close": 33.619998931884766,
-        "Volume": 84300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-11",
-        "Open": 33.439998626708984,
-        "High": 34.380001068115234,
-        "Low": 33.439998626708984,
-        "Close": 34.349998474121094,
-        "Volume": 70100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-12",
-        "Open": 34.279998779296875,
-        "High": 34.47999954223633,
-        "Low": 34.0099983215332,
-        "Close": 34.33000183105469,
-        "Volume": 35000.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-15",
-        "Open": 34.97999954223633,
-        "High": 35.5,
-        "Low": 34.97999954223633,
-        "Close": 35.36000061035156,
-        "Volume": 43600.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-16",
-        "Open": 35.290000915527344,
-        "High": 35.290000915527344,
-        "Low": 34.90999984741211,
-        "Close": 35.0099983215332,
-        "Volume": 70700.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-17",
-        "Open": 35.189998626708984,
-        "High": 35.33000183105469,
-        "Low": 34.380001068115234,
-        "Close": 34.43000030517578,
-        "Volume": 57900.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-18",
-        "Open": 34.93000030517578,
-        "High": 34.93000030517578,
-        "Low": 34.5099983215332,
-        "Close": 34.81999969482422,
-        "Volume": 67200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-22",
-        "Open": 34.68000030517578,
-        "High": 34.81999969482422,
-        "Low": 34.150001525878906,
-        "Close": 34.16999816894531,
-        "Volume": 1034800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-23",
-        "Open": 33.380001068115234,
-        "High": 33.93000030517578,
-        "Low": 33.380001068115234,
-        "Close": 33.59000015258789,
-        "Volume": 47300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-24",
-        "Open": 33.29999923706055,
-        "High": 33.709999084472656,
-        "Low": 32.900001525878906,
-        "Close": 33.43000030517578,
-        "Volume": 85300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 33.59000015258789,
-        "High": 33.59000015258789,
-        "Low": 32.84000015258789,
-        "Close": 33.0,
-        "Volume": 79800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 32.900001525878906,
-        "High": 33.720001220703125,
-        "Low": 32.709999084472656,
-        "Close": 33.689998626708984,
-        "Volume": 69500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 34.2599983215332,
-        "High": 34.66999816894531,
-        "Low": 34.2599983215332,
-        "Close": 34.66999816894531,
-        "Volume": 34600.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 34.779998779296875,
-        "High": 35.27000045776367,
-        "Low": 34.775001525878906,
-        "Close": 35.260799407958984,
-        "Volume": 24003.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 35.83,
+        "h": 36.24,
+        "l": 35.36,
+        "c": 35.76,
+        "a": 35.76,
+        "v": 190938,
+        "ch": 1.42
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-01",
-          "Open": 36.29999923706055,
-          "High": 36.709999084472656,
-          "Low": 36.29999923706055,
-          "Close": 36.599998474121094,
-          "Volume": 2400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 36.01,
+          "h": 36.24,
+          "l": 35.57,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 71755,
+          "ch": -1.07
         },
         {
-          "date": "2026-06-02",
-          "Open": 36.560001373291016,
-          "High": 36.560001373291016,
-          "Low": 36.220001220703125,
-          "Close": 36.31999969482422,
-          "Volume": 71600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 35.87,
+          "h": 36.22,
+          "l": 35.84,
+          "c": 36.148,
+          "a": 36.1478,
+          "v": 61900,
+          "ch": 1.71
         },
         {
-          "date": "2026-06-03",
-          "Open": 36.0,
-          "High": 36.0,
-          "Low": 35.41999816894531,
-          "Close": 35.61000061035156,
-          "Volume": 50600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 35.61,
+          "h": 35.98,
+          "l": 35.36,
+          "c": 35.54,
+          "a": 35.5399,
+          "v": 17454,
+          "ch": -0.34
         },
         {
-          "date": "2026-06-04",
-          "Open": 35.47999954223633,
-          "High": 36.119998931884766,
-          "Low": 35.47999954223633,
-          "Close": 35.939998626708984,
-          "Volume": 31800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.02,
+          "l": 35.635,
+          "c": 35.661,
+          "a": 35.6612,
+          "v": 39829,
+          "ch": 1.14
         },
         {
-          "date": "2026-06-05",
-          "Open": 35.65999984741211,
-          "High": 35.65999984741211,
-          "Low": 34.38999938964844,
-          "Close": 34.459999084472656,
-          "Volume": 38800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 34.78,
+          "h": 35.27,
+          "l": 34.73,
+          "c": 35.261,
+          "a": 35.2608,
+          "v": 23807,
+          "ch": 1.71
         },
         {
-          "date": "2026-06-08",
-          "Open": 34.849998474121094,
-          "High": 34.959999084472656,
-          "Low": 34.790000915527344,
-          "Close": 34.81999969482422,
-          "Volume": 25500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 34.26,
+          "h": 34.669,
+          "l": 34.26,
+          "c": 34.669,
+          "a": 34.6687,
+          "v": 34592,
+          "ch": 2.9
         },
         {
-          "date": "2026-06-09",
-          "Open": 34.970001220703125,
-          "High": 35.279998779296875,
-          "Low": 33.88999938964844,
-          "Close": 34.4900016784668,
-          "Volume": 30400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 32.9,
+          "h": 33.72,
+          "l": 32.71,
+          "c": 33.692,
+          "a": 33.6919,
+          "v": 69509,
+          "ch": 2.09
         },
         {
-          "date": "2026-06-10",
-          "Open": 34.09000015258789,
-          "High": 34.33000183105469,
-          "Low": 33.619998931884766,
-          "Close": 33.619998931884766,
-          "Volume": 84300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 33.59,
+          "h": 33.59,
+          "l": 32.84,
+          "c": 33.001,
+          "a": 33.0007,
+          "v": 79799,
+          "ch": -1.29
         },
         {
-          "date": "2026-06-11",
-          "Open": 33.439998626708984,
-          "High": 34.380001068115234,
-          "Low": 33.439998626708984,
-          "Close": 34.349998474121094,
-          "Volume": 70100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 33.3,
+          "h": 33.705,
+          "l": 32.895,
+          "c": 33.43,
+          "a": 33.4304,
+          "v": 85339,
+          "ch": -0.48
         },
         {
-          "date": "2026-06-12",
-          "Open": 34.279998779296875,
-          "High": 34.47999954223633,
-          "Low": 34.0099983215332,
-          "Close": 34.33000183105469,
-          "Volume": 35000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 33.38,
+          "h": 33.93,
+          "l": 33.38,
+          "c": 33.593,
+          "a": 33.593,
+          "v": 47277,
+          "ch": -1.7
         },
         {
-          "date": "2026-06-15",
-          "Open": 34.97999954223633,
-          "High": 35.5,
-          "Low": 34.97999954223633,
-          "Close": 35.36000061035156,
-          "Volume": 43600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-22",
+          "o": 34.68,
+          "h": 34.82,
+          "l": 34.155,
+          "c": 34.175,
+          "a": 34.1746,
+          "v": 1034773,
+          "ch": -1.86
         },
         {
-          "date": "2026-06-16",
-          "Open": 35.290000915527344,
-          "High": 35.290000915527344,
-          "Low": 34.90999984741211,
-          "Close": 35.0099983215332,
-          "Volume": 70700.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-18",
+          "o": 34.93,
+          "h": 34.93,
+          "l": 34.505,
+          "c": 34.824,
+          "a": 34.8237,
+          "v": 67224,
+          "ch": 1.15
         },
         {
-          "date": "2026-06-17",
-          "Open": 35.189998626708984,
-          "High": 35.33000183105469,
-          "Low": 34.380001068115234,
-          "Close": 34.43000030517578,
-          "Volume": 57900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-17",
+          "o": 35.19,
+          "h": 35.33,
+          "l": 34.38,
+          "c": 34.429,
+          "a": 34.4288,
+          "v": 57910,
+          "ch": -1.65
         },
         {
-          "date": "2026-06-18",
-          "Open": 34.93000030517578,
-          "High": 34.93000030517578,
-          "Low": 34.5099983215332,
-          "Close": 34.81999969482422,
-          "Volume": 67200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-16",
+          "o": 35.29,
+          "h": 35.29,
+          "l": 34.91,
+          "c": 35.008,
+          "a": 35.0077,
+          "v": 70661,
+          "ch": -0.98
         },
         {
-          "date": "2026-06-22",
-          "Open": 34.68000030517578,
-          "High": 34.81999969482422,
-          "Low": 34.150001525878906,
-          "Close": 34.16999816894531,
-          "Volume": 1034800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-15",
+          "o": 34.98,
+          "h": 35.502,
+          "l": 34.98,
+          "c": 35.356,
+          "a": 35.3558,
+          "v": 43587,
+          "ch": 2.98
         },
         {
-          "date": "2026-06-23",
-          "Open": 33.380001068115234,
-          "High": 33.93000030517578,
-          "Low": 33.380001068115234,
-          "Close": 33.59000015258789,
-          "Volume": 47300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-12",
+          "o": 34.28,
+          "h": 34.48,
+          "l": 34.01,
+          "c": 34.333,
+          "a": 34.3325,
+          "v": 35006,
+          "ch": -0.05
         },
         {
-          "date": "2026-06-24",
-          "Open": 33.29999923706055,
-          "High": 33.709999084472656,
-          "Low": 32.900001525878906,
-          "Close": 33.43000030517578,
-          "Volume": 85300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-11",
+          "o": 33.44,
+          "h": 34.375,
+          "l": 33.44,
+          "c": 34.35,
+          "a": 34.35,
+          "v": 70130,
+          "ch": 2.16
         },
         {
-          "date": "2026-06-25",
-          "Open": 33.59000015258789,
-          "High": 33.59000015258789,
-          "Low": 32.84000015258789,
-          "Close": 33.0,
-          "Volume": 79800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-10",
+          "o": 34.09,
+          "h": 34.33,
+          "l": 33.623,
+          "c": 33.623,
+          "a": 33.6232,
+          "v": 84257,
+          "ch": -2.5
         },
         {
-          "date": "2026-06-26",
-          "Open": 32.900001525878906,
-          "High": 33.720001220703125,
-          "Low": 32.709999084472656,
-          "Close": 33.689998626708984,
-          "Volume": 69500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-09",
+          "o": 34.97,
+          "h": 35.28,
+          "l": 33.89,
+          "c": 34.485,
+          "a": 34.485,
+          "v": 30396,
+          "ch": -0.97
         },
         {
-          "date": "2026-06-29",
-          "Open": 34.2599983215332,
-          "High": 34.66999816894531,
-          "Low": 34.2599983215332,
-          "Close": 34.66999816894531,
-          "Volume": 34600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-08",
+          "o": 34.85,
+          "h": 34.96,
+          "l": 34.79,
+          "c": 34.822,
+          "a": 34.8224,
+          "v": 25467,
+          "ch": 1.06
         },
         {
-          "date": "2026-06-30",
-          "Open": 34.779998779296875,
-          "High": 35.27000045776367,
-          "Low": 34.775001525878906,
-          "Close": 35.260799407958984,
-          "Volume": 24003.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-05",
+          "o": 35.66,
+          "h": 35.66,
+          "l": 34.39,
+          "c": 34.456,
+          "a": 34.4558,
+          "v": 38821,
+          "ch": -4.13
+        },
+        {
+          "t": "2026-06-04",
+          "o": 35.48,
+          "h": 36.12,
+          "l": 35.48,
+          "c": 35.939,
+          "a": 35.9389,
+          "v": 31759.000000000004,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-06-03",
+          "o": 36,
+          "h": 36,
+          "l": 35.42,
+          "c": 35.611,
+          "a": 35.611,
+          "v": 50647,
+          "ch": -1.95
+        },
+        {
+          "t": "2026-06-02",
+          "o": 36.56,
+          "h": 36.56,
+          "l": 36.22,
+          "c": 36.319,
+          "a": 36.3189,
+          "v": 71571,
+          "ch": -0.76
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 35.87,
+          "h": 36.24,
+          "l": 35.57,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 133655,
+          "ch": 0.62
+        },
+        {
+          "t": "2026-06-29",
+          "o": 34.26,
+          "h": 36.02,
+          "l": 34.26,
+          "c": 35.54,
+          "a": 35.5399,
+          "v": 115682,
+          "ch": 5.48
+        },
+        {
+          "t": "2026-06-22",
+          "o": 34.68,
+          "h": 34.82,
+          "l": 32.71,
+          "c": 33.692,
+          "a": 33.6919,
+          "v": 1316697,
+          "ch": -3.25
+        },
+        {
+          "t": "2026-06-15",
+          "o": 34.98,
+          "h": 35.502,
+          "l": 34.38,
+          "c": 34.824,
+          "a": 34.8237,
+          "v": 239382,
+          "ch": 1.43
+        },
+        {
+          "t": "2026-06-08",
+          "o": 34.85,
+          "h": 35.28,
+          "l": 33.44,
+          "c": 34.333,
+          "a": 34.3325,
+          "v": 245256,
+          "ch": -0.36
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.24,
+          "l": 35.36,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 190938,
+          "ch": 1.42
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 35.87,
+          "h": 36.24,
+          "l": 35.57,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 133655,
+          "ch": 0.62
+        },
+        {
+          "t": "2026-06-29",
+          "o": 34.26,
+          "h": 36.02,
+          "l": 34.26,
+          "c": 35.54,
+          "a": 35.5399,
+          "v": 115682,
+          "ch": 5.48
+        },
+        {
+          "t": "2026-06-22",
+          "o": 34.68,
+          "h": 34.82,
+          "l": 32.71,
+          "c": 33.692,
+          "a": 33.6919,
+          "v": 1316697,
+          "ch": -3.25
+        },
+        {
+          "t": "2026-06-15",
+          "o": 34.98,
+          "h": 35.502,
+          "l": 34.38,
+          "c": 34.824,
+          "a": 34.8237,
+          "v": 239382,
+          "ch": 1.43
+        },
+        {
+          "t": "2026-06-08",
+          "o": 34.85,
+          "h": 35.28,
+          "l": 33.44,
+          "c": 34.333,
+          "a": 34.3325,
+          "v": 245256,
+          "ch": -0.36
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.24,
+          "l": 35.36,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 190938,
+          "ch": 1.42
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.24,
+          "l": 35.36,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 190938,
+          "ch": 1.42
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Baillie Gifford Long Term Globa",
-        "longName": "Baillie Gifford Long Term Global Growth ETF",
-        "currency": "USD",
-        "exchange": "NGM",
-        "fundFamily": "Baillie Gifford Funds",
-        "category": "Global Large-Stock Growth",
-        "legalType": "Exchange Traded Fund",
-        "totalAssets": 395033024,
-        "netAssets": 395033024.0,
-        "navPrice": 34.67,
-        "yield": 0.0,
-        "ytdReturn": -6.51499,
-        "beta3Year": 1.35,
-        "netExpenseRatio": 0.7,
-        "threeYearAverageReturn": 0.121159695,
-        "fiveYearAverageReturn": -0.0264269,
-        "previousClose": 34.625,
-        "fiftyTwoWeekHigh": 36.71,
-        "fiftyTwoWeekLow": 32.71,
-        "fiftyTwoWeekChangePercent": -5.273223,
-        "averageVolume": 101560,
-        "averageVolume10days": 159070,
-        "dividendYield": 0.0
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 35.27000045776367,
-        "dayLow": 34.775001525878906,
-        "exchange": "NGM",
-        "fiftyDayAverage": 34.63549957275391,
-        "lastPrice": 35.260799407958984,
-        "lastVolume": 24003.0,
-        "open": 34.779998779296875,
-        "previousClose": 34.6687,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 34.66999816894531,
-        "tenDayAverageVolume": 159070.0,
-        "threeMonthAverageVolume": 101560.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 34.63549957275391,
-        "yearChange": -0.052732250973737994,
-        "yearHigh": 36.709999084472656,
-        "yearLow": 32.709999084472656
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "The fund invests at least 80% of its net assets in equity securities. While the portfolio managers are not constrained by geographic limitations, it ordinarily invests in securities of issuers located in at least six different countries. In addition, under normal circumstances, the fund will invest at least 40% of its total assets in securities of companies located outside the U.S. when market conditions are favorable, but, when market conditions are not favorable, will invest at least 30% of its total assets in companies located outside the U.S. -null-. It is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Global Large-Stock Growth",
-          "family": "Baillie Gifford Funds",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "6.74%",
+          "sh": "167,187"
         },
-        "fund_operations": [
-          {
-            "_index": "Annual Report Expense Ratio",
-            "BGGG": 0.0069999998,
-            "Category Average": 0.0108699
-          },
-          {
-            "_index": "Annual Holdings Turnover",
-            "BGGG": 0.22,
-            "Category Average": 0.5229
-          },
-          {
-            "_index": "Total Net Assets",
-            "BGGG": 143927.9,
-            "Category Average": 143927.9
-          }
-        ],
-        "asset_classes": {
-          "cashPosition": 0.016,
-          "stockPosition": 0.984,
-          "bondPosition": 0.0,
-          "preferredPosition": 0.0,
-          "convertiblePosition": 0.0,
-          "otherPosition": 0.0
+        {
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "6.72%",
+          "sh": "199,054"
         },
-        "top_holdings": [
-          {
-            "_index": "AMZN",
-            "Name": "Amazon.com Inc",
-            "Holding Percent": 0.0673879
-          },
-          {
-            "_index": "NVDA",
-            "Name": "NVIDIA Corp",
-            "Holding Percent": 0.0671847
-          },
-          {
-            "_index": "ASML.AS",
-            "Name": "ASML Holding NV",
-            "Holding Percent": 0.0591276
-          },
-          {
-            "_index": "NET",
-            "Name": "Cloudflare Inc",
-            "Holding Percent": 0.0478502
-          },
-          {
-            "_index": "2330.TW",
-            "Name": "Taiwan Semiconductor Manufacturing Co Ltd",
-            "Holding Percent": 0.0457067
-          },
-          {
-            "_index": "APP",
-            "Name": "AppLovin Corp Ordinary Shares - Class A",
-            "Holding Percent": 0.043228403
-          },
-          {
-            "_index": "0700.HK",
-            "Name": "Tencent Holdings Ltd",
-            "Holding Percent": 0.0368934
-          },
-          {
-            "_index": "NU",
-            "Name": "Nu Holdings Ltd Ordinary Shares Class A",
-            "Holding Percent": 0.033905
-          },
-          {
-            "_index": "PDD",
-            "Name": "PDD Holdings Inc ADR",
-            "Holding Percent": 0.0319882
-          },
-          {
-            "_index": "SPOT",
-            "Name": "Spotify Technology SA",
-            "Holding Percent": 0.0317423
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "BGGG": 0.03271,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Book",
-            "BGGG": 0.1322,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Sales",
-            "BGGG": 0.19471,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Price/Cashflow",
-            "BGGG": 0.04965,
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Median Market Cap",
-            "BGGG": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "3 Year Earnings Growth",
-            "BGGG": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "BGGG": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Maturity",
-            "BGGG": "<NA>",
-            "Category Average": "<NA>"
-          },
-          {
-            "_index": "Credit Quality",
-            "BGGG": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_ratings": {
-          "us_government": 0.0
+        {
+          "no": 3,
+          "n": "ASML Holding N.V.",
+          "s": "!ams/ASML",
+          "as": "5.91%",
+          "sh": "23,692"
         },
-        "sector_weightings": {
-          "realestate": 0.0,
-          "consumer_cyclical": 0.27899998,
-          "basic_materials": 0.0,
-          "consumer_defensive": 0.0294,
-          "technology": 0.3218,
-          "communication_services": 0.1732,
-          "financial_services": 0.0345,
-          "utilities": 0.0,
-          "industrials": 0.0959,
-          "energy": 0.0,
-          "healthcare": 0.066300005
+        {
+          "no": 4,
+          "n": "Cloudflare, Inc.",
+          "s": "$NET",
+          "as": "4.79%",
+          "sh": "119,825"
+        },
+        {
+          "no": 5,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "4.57%",
+          "sh": "429,000"
+        },
+        {
+          "no": 6,
+          "n": "AppLovin Corporation",
+          "s": "$APP",
+          "as": "4.32%",
+          "sh": "56,122"
+        },
+        {
+          "no": 7,
+          "n": "Tencent Holdings Limited",
+          "s": "!hkg/0700",
+          "as": "3.69%",
+          "sh": "308,800"
+        },
+        {
+          "no": 8,
+          "n": "Nu Holdings Ltd.",
+          "s": "$NU",
+          "as": "3.39%",
+          "sh": "1,219,143"
+        },
+        {
+          "no": 9,
+          "n": "PDD Holdings Inc.",
+          "s": "$PDD",
+          "as": "3.20%",
+          "sh": "161,760"
+        },
+        {
+          "no": 10,
+          "n": "Spotify Technology S.A.",
+          "s": "$SPOT",
+          "as": "3.17%",
+          "sh": "33,824"
+        },
+        {
+          "no": 11,
+          "n": "MercadoLibre, Inc.",
+          "s": "$MELI",
+          "as": "2.98%",
+          "sh": "8,912"
+        },
+        {
+          "no": 12,
+          "n": "Samsara Inc.",
+          "s": "$IOT",
+          "as": "2.74%",
+          "sh": "446,190"
+        },
+        {
+          "no": 13,
+          "n": "Rocket Lab Corporation",
+          "s": "$RKLB",
+          "as": "2.69%",
+          "sh": "216,563"
+        },
+        {
+          "no": 14,
+          "n": "Coupang, Inc.",
+          "s": "$CPNG",
+          "as": "2.63%",
+          "sh": "718,823"
+        },
+        {
+          "no": 15,
+          "n": "Intuitive Surgical, Inc.",
+          "s": "$ISRG",
+          "as": "2.60%",
+          "sh": "29,159"
+        },
+        {
+          "no": 16,
+          "n": "Contemporary Amperex Technology Co., Limited",
+          "s": "!she/300750",
+          "as": "2.48%",
+          "sh": "220,160"
+        },
+        {
+          "no": 17,
+          "n": "Shopify Inc.",
+          "s": "$SHOP",
+          "as": "2.39%",
+          "sh": "104,203"
+        },
+        {
+          "no": 18,
+          "n": "Sea Limited",
+          "s": "$SE",
+          "as": "2.34%",
+          "sh": "146,128"
+        },
+        {
+          "no": 19,
+          "n": "Hermès International Société en commandite par actions",
+          "s": "!epa/RMS",
+          "as": "2.22%",
+          "sh": "6,180"
+        },
+        {
+          "no": 20,
+          "n": "Reddit, Inc.",
+          "s": "$RDDT",
+          "as": "2.18%",
+          "sh": "83,657"
+        },
+        {
+          "no": 21,
+          "n": "Meituan",
+          "s": "!hkg/3690",
+          "as": "2.10%",
+          "sh": "1,027,090"
+        },
+        {
+          "no": 22,
+          "n": "BeOne Medicines AG",
+          "s": "!hkg/6160",
+          "as": "2.06%",
+          "sh": "487,018"
+        },
+        {
+          "no": 23,
+          "n": "Adyen N.V.",
+          "s": "!ams/ADYEN",
+          "as": "2.02%",
+          "sh": "10,641"
+        },
+        {
+          "no": 24,
+          "n": "Kweichow Moutai Co., Ltd.",
+          "s": "!sha/600519",
+          "as": "1.94%",
+          "sh": "47,700"
+        },
+        {
+          "no": 25,
+          "n": "Axon Enterprise, Inc.",
+          "s": "$AXON",
+          "as": "1.92%",
+          "sh": "23,407"
         }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 32.19
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 27.89
+        },
+        {
+          "n": "Communication Services",
+          "w": 17.32
+        },
+        {
+          "n": "Industrials",
+          "w": 9.59
+        },
+        {
+          "n": "Healthcare",
+          "w": 6.63
+        },
+        {
+          "n": "Financials",
+          "w": 3.45
+        },
+        {
+          "n": "Consumer Staples",
+          "w": 2.94
+        }
+      ],
+      "countries": null,
+      "news": [
+        {
+          "t": "Baillie Gifford Debuts Suite of Active Growth ETFs",
+          "u": "https://www.etftrends.com/equity-etf-content-hub/baillie-gifford-debuts-suite-of-active-growth-etfs/",
+          "n": "ETF Trends",
+          "d": "5 weeks ago"
+        },
+        {
+          "t": "Baillie Gifford Launches U.S. ETF Suite, Expanding Access to Active Growth Strategies",
+          "u": "https://www.businesswire.com/news/home/20260603451209/en/Baillie-Gifford-Launches-U.S.-ETF-Suite-Expanding-Access-to-Active-Growth-Strategies/",
+          "n": "Business Wire",
+          "d": "5 weeks ago"
+        }
+      ],
+      "infoBox": "BGGG is an equity ETF with a total of 39 individual holdings. The top holdings are Amazon.com stock at 6.74%, NVIDIA at 6.72%, ASML Holding at 5.91%, Cloudflare at 4.79%, and Taiwan Semiconductor Manufacturing Company at 4.57%.",
+      "infoTable": {
+        "count": 39,
+        "top10": 46.5,
+        "assetClass": "Equity"
       },
-      "history_1y": [
+      "date": "Mar 31, 2026",
+      "count": 39
+    },
+    "overview": {
+      "type": "etf",
+      "expenseRatio": "0.70%",
+      "sharesOut": "9.56M",
+      "ch1y": null,
+      "holdings": 39,
+      "inception": "Jun 10, 2014",
+      "chart": {
+        "expiration": 1783550737402,
+        "data": [
+          {
+            "t": 1783503000
+          },
+          {
+            "c": 35.51,
+            "o": 35.48,
+            "t": 1783503060
+          },
+          {
+            "c": null,
+            "t": 1783503120
+          },
+          {
+            "c": 35.56,
+            "t": 1783503180
+          },
+          {
+            "c": 35.52,
+            "t": 1783503240
+          },
+          {
+            "c": null,
+            "t": 1783503300
+          },
+          {
+            "c": null,
+            "t": 1783503360
+          },
+          {
+            "c": null,
+            "t": 1783503420
+          },
+          {
+            "c": null,
+            "t": 1783503480
+          },
+          {
+            "c": null,
+            "t": 1783503540
+          },
+          {
+            "c": null,
+            "t": 1783503600
+          },
+          {
+            "c": null,
+            "t": 1783503660
+          },
+          {
+            "c": null,
+            "t": 1783503720
+          },
+          {
+            "c": null,
+            "t": 1783503780
+          },
+          {
+            "c": null,
+            "t": 1783503840
+          },
+          {
+            "c": null,
+            "t": 1783503900
+          },
+          {
+            "c": 35.57,
+            "t": 1783503960
+          },
+          {
+            "c": null,
+            "t": 1783504020
+          },
+          {
+            "c": null,
+            "t": 1783504080
+          },
+          {
+            "c": null,
+            "t": 1783504140
+          },
+          {
+            "c": null,
+            "t": 1783504200
+          },
+          {
+            "c": null,
+            "t": 1783504260
+          },
+          {
+            "c": null,
+            "t": 1783504320
+          },
+          {
+            "c": null,
+            "t": 1783504380
+          },
+          {
+            "c": null,
+            "t": 1783504440
+          },
+          {
+            "c": null,
+            "t": 1783504500
+          },
+          {
+            "c": null,
+            "t": 1783504560
+          },
+          {
+            "c": null,
+            "t": 1783504620
+          },
+          {
+            "c": null,
+            "t": 1783504680
+          },
+          {
+            "c": null,
+            "t": 1783504740
+          },
+          {
+            "c": null,
+            "t": 1783504800
+          },
+          {
+            "c": null,
+            "t": 1783504860
+          },
+          {
+            "c": null,
+            "t": 1783504920
+          },
+          {
+            "c": 35.395,
+            "t": 1783504980
+          },
+          {
+            "c": null,
+            "t": 1783505040
+          },
+          {
+            "c": 35.465,
+            "t": 1783505100
+          },
+          {
+            "c": 35.42,
+            "t": 1783505160
+          },
+          {
+            "c": 35.47,
+            "t": 1783505220
+          },
+          {
+            "c": null,
+            "t": 1783505280
+          },
+          {
+            "c": 35.45,
+            "t": 1783505340
+          },
+          {
+            "c": null,
+            "t": 1783505400
+          },
+          {
+            "c": 35.42,
+            "t": 1783505460
+          },
+          {
+            "c": 35.345,
+            "t": 1783505520
+          },
+          {
+            "c": null,
+            "t": 1783505580
+          },
+          {
+            "c": 35.31,
+            "t": 1783505640
+          },
+          {
+            "c": null,
+            "t": 1783505700
+          },
+          {
+            "c": null,
+            "t": 1783505760
+          },
+          {
+            "c": 35.33,
+            "t": 1783505820
+          },
+          {
+            "c": 35.37,
+            "t": 1783505880
+          },
+          {
+            "c": null,
+            "t": 1783505940
+          },
+          {
+            "c": null,
+            "t": 1783506000
+          },
+          {
+            "c": null,
+            "t": 1783506060
+          },
+          {
+            "c": null,
+            "t": 1783506120
+          },
+          {
+            "c": null,
+            "t": 1783506180
+          },
+          {
+            "c": null,
+            "t": 1783506240
+          },
+          {
+            "c": null,
+            "t": 1783506300
+          },
+          {
+            "c": null,
+            "t": 1783506360
+          },
+          {
+            "c": null,
+            "t": 1783506420
+          },
+          {
+            "c": null,
+            "t": 1783506480
+          },
+          {
+            "c": null,
+            "t": 1783506540
+          },
+          {
+            "c": null,
+            "t": 1783506600
+          },
+          {
+            "c": null,
+            "t": 1783506660
+          },
+          {
+            "c": 35.4,
+            "t": 1783506720
+          },
+          {
+            "c": null,
+            "t": 1783506780
+          },
+          {
+            "c": null,
+            "t": 1783506840
+          },
+          {
+            "c": null,
+            "t": 1783506900
+          },
+          {
+            "c": null,
+            "t": 1783506960
+          },
+          {
+            "c": null,
+            "t": 1783507020
+          },
+          {
+            "c": null,
+            "t": 1783507080
+          },
+          {
+            "c": null,
+            "t": 1783507140
+          },
+          {
+            "c": null,
+            "t": 1783507200
+          },
+          {
+            "c": null,
+            "t": 1783507260
+          },
+          {
+            "c": null,
+            "t": 1783507320
+          },
+          {
+            "c": null,
+            "t": 1783507380
+          },
+          {
+            "c": null,
+            "t": 1783507440
+          },
+          {
+            "c": null,
+            "t": 1783507500
+          },
+          {
+            "c": null,
+            "t": 1783507560
+          },
+          {
+            "c": null,
+            "t": 1783507620
+          },
+          {
+            "c": null,
+            "t": 1783507680
+          },
+          {
+            "c": null,
+            "t": 1783507740
+          },
+          {
+            "c": null,
+            "t": 1783507800
+          },
+          {
+            "c": null,
+            "t": 1783507860
+          },
+          {
+            "c": null,
+            "t": 1783507920
+          },
+          {
+            "c": null,
+            "t": 1783507980
+          },
+          {
+            "c": null,
+            "t": 1783508040
+          },
+          {
+            "c": null,
+            "t": 1783508100
+          },
+          {
+            "c": null,
+            "t": 1783508160
+          },
+          {
+            "c": null,
+            "t": 1783508220
+          },
+          {
+            "c": null,
+            "t": 1783508280
+          },
+          {
+            "c": null,
+            "t": 1783508340
+          },
+          {
+            "c": null,
+            "t": 1783508400
+          },
+          {
+            "c": null,
+            "t": 1783508460
+          },
+          {
+            "c": null,
+            "t": 1783508520
+          },
+          {
+            "c": null,
+            "t": 1783508580
+          },
+          {
+            "c": null,
+            "t": 1783508640
+          },
+          {
+            "c": null,
+            "t": 1783508700
+          },
+          {
+            "c": 35.31,
+            "t": 1783508760
+          },
+          {
+            "c": null,
+            "t": 1783508820
+          },
+          {
+            "c": null,
+            "t": 1783508880
+          },
+          {
+            "c": null,
+            "t": 1783508940
+          },
+          {
+            "c": null,
+            "t": 1783509000
+          },
+          {
+            "c": null,
+            "t": 1783509060
+          },
+          {
+            "c": null,
+            "t": 1783509120
+          },
+          {
+            "c": null,
+            "t": 1783509180
+          },
+          {
+            "c": null,
+            "t": 1783509240
+          },
+          {
+            "c": null,
+            "t": 1783509300
+          },
+          {
+            "c": null,
+            "t": 1783509360
+          },
+          {
+            "c": null,
+            "t": 1783509420
+          },
+          {
+            "c": null,
+            "t": 1783509480
+          },
+          {
+            "c": null,
+            "t": 1783509540
+          },
+          {
+            "c": null,
+            "t": 1783509600
+          },
+          {
+            "c": null,
+            "t": 1783509660
+          },
+          {
+            "c": 35.265,
+            "t": 1783509720
+          },
+          {
+            "c": null,
+            "t": 1783509780
+          },
+          {
+            "c": null,
+            "t": 1783509840
+          },
+          {
+            "c": null,
+            "t": 1783509900
+          },
+          {
+            "c": null,
+            "t": 1783509960
+          },
+          {
+            "c": null,
+            "t": 1783510020
+          },
+          {
+            "c": null,
+            "t": 1783510080
+          },
+          {
+            "c": null,
+            "t": 1783510140
+          },
+          {
+            "c": null,
+            "t": 1783510200
+          },
+          {
+            "c": null,
+            "t": 1783510260
+          },
+          {
+            "c": null,
+            "t": 1783510320
+          },
+          {
+            "c": null,
+            "t": 1783510380
+          },
+          {
+            "c": null,
+            "t": 1783510440
+          },
+          {
+            "c": null,
+            "t": 1783510500
+          },
+          {
+            "c": null,
+            "t": 1783510560
+          },
+          {
+            "c": null,
+            "t": 1783510620
+          },
+          {
+            "c": null,
+            "t": 1783510680
+          },
+          {
+            "c": null,
+            "t": 1783510740
+          },
+          {
+            "c": null,
+            "t": 1783510800
+          },
+          {
+            "c": null,
+            "t": 1783510860
+          },
+          {
+            "c": null,
+            "t": 1783510920
+          },
+          {
+            "c": 35.24,
+            "t": 1783510980
+          },
+          {
+            "c": null,
+            "t": 1783511040
+          },
+          {
+            "c": 35.19,
+            "t": 1783511100
+          },
+          {
+            "c": 35.22,
+            "t": 1783511160
+          },
+          {
+            "c": null,
+            "t": 1783511220
+          },
+          {
+            "c": null,
+            "t": 1783511280
+          },
+          {
+            "c": null,
+            "t": 1783511340
+          },
+          {
+            "c": null,
+            "t": 1783511400
+          },
+          {
+            "c": 35.225,
+            "t": 1783511460
+          },
+          {
+            "c": null,
+            "t": 1783511520
+          },
+          {
+            "c": null,
+            "t": 1783511580
+          },
+          {
+            "c": null,
+            "t": 1783511640
+          },
+          {
+            "c": null,
+            "t": 1783511700
+          },
+          {
+            "c": 35.16,
+            "t": 1783511760
+          },
+          {
+            "c": null,
+            "t": 1783511820
+          },
+          {
+            "c": null,
+            "t": 1783511880
+          },
+          {
+            "c": null,
+            "t": 1783511940
+          },
+          {
+            "c": null,
+            "t": 1783512000
+          },
+          {
+            "c": null,
+            "t": 1783512060
+          },
+          {
+            "c": null,
+            "t": 1783512120
+          },
+          {
+            "c": null,
+            "t": 1783512180
+          },
+          {
+            "c": null,
+            "t": 1783512240
+          },
+          {
+            "c": null,
+            "t": 1783512300
+          },
+          {
+            "c": null,
+            "t": 1783512360
+          },
+          {
+            "c": null,
+            "t": 1783512420
+          },
+          {
+            "c": null,
+            "t": 1783512480
+          },
+          {
+            "c": null,
+            "t": 1783512540
+          },
+          {
+            "c": null,
+            "t": 1783512600
+          },
+          {
+            "c": null,
+            "t": 1783512660
+          },
+          {
+            "c": 35.165,
+            "t": 1783512720
+          },
+          {
+            "c": null,
+            "t": 1783512780
+          },
+          {
+            "c": null,
+            "t": 1783512840
+          },
+          {
+            "c": 35.31,
+            "t": 1783512900
+          },
+          {
+            "c": null,
+            "t": 1783512960
+          },
+          {
+            "c": null,
+            "t": 1783513020
+          },
+          {
+            "c": null,
+            "t": 1783513080
+          },
+          {
+            "c": null,
+            "t": 1783513140
+          },
+          {
+            "c": null,
+            "t": 1783513200
+          },
+          {
+            "c": 35.35,
+            "t": 1783513260
+          },
+          {
+            "c": null,
+            "t": 1783513320
+          },
+          {
+            "c": null,
+            "t": 1783513380
+          },
+          {
+            "c": null,
+            "t": 1783513440
+          },
+          {
+            "c": 35.23,
+            "t": 1783513500
+          },
+          {
+            "c": 35.36,
+            "t": 1783513560
+          },
+          {
+            "c": null,
+            "t": 1783513620
+          },
+          {
+            "c": null,
+            "t": 1783513680
+          },
+          {
+            "c": null,
+            "t": 1783513740
+          },
+          {
+            "c": null,
+            "t": 1783513800
+          },
+          {
+            "c": null,
+            "t": 1783513860
+          },
+          {
+            "c": null,
+            "t": 1783513920
+          },
+          {
+            "c": null,
+            "t": 1783513980
+          },
+          {
+            "c": null,
+            "t": 1783514040
+          },
+          {
+            "c": null,
+            "t": 1783514100
+          },
+          {
+            "c": null,
+            "t": 1783514160
+          },
+          {
+            "c": null,
+            "t": 1783514220
+          },
+          {
+            "c": null,
+            "t": 1783514280
+          },
+          {
+            "c": 35.34,
+            "t": 1783514340
+          },
+          {
+            "c": 35.48,
+            "t": 1783514400
+          },
+          {
+            "c": null,
+            "t": 1783514460
+          },
+          {
+            "c": null,
+            "t": 1783514520
+          },
+          {
+            "c": null,
+            "t": 1783514580
+          },
+          {
+            "c": null,
+            "t": 1783514640
+          },
+          {
+            "c": null,
+            "t": 1783514700
+          },
+          {
+            "c": null,
+            "t": 1783514760
+          },
+          {
+            "c": null,
+            "t": 1783514820
+          },
+          {
+            "c": null,
+            "t": 1783514880
+          },
+          {
+            "c": null,
+            "t": 1783514940
+          },
+          {
+            "c": null,
+            "t": 1783515000
+          },
+          {
+            "c": null,
+            "t": 1783515060
+          },
+          {
+            "c": null,
+            "t": 1783515120
+          },
+          {
+            "c": null,
+            "t": 1783515180
+          },
+          {
+            "c": null,
+            "t": 1783515240
+          },
+          {
+            "c": null,
+            "t": 1783515300
+          },
+          {
+            "c": null,
+            "t": 1783515360
+          },
+          {
+            "c": null,
+            "t": 1783515420
+          },
+          {
+            "c": null,
+            "t": 1783515480
+          },
+          {
+            "c": null,
+            "t": 1783515540
+          },
+          {
+            "c": null,
+            "t": 1783515600
+          },
+          {
+            "c": null,
+            "t": 1783515660
+          },
+          {
+            "c": null,
+            "t": 1783515720
+          },
+          {
+            "c": null,
+            "t": 1783515780
+          },
+          {
+            "c": null,
+            "t": 1783515840
+          },
+          {
+            "c": null,
+            "t": 1783515900
+          },
+          {
+            "c": null,
+            "t": 1783515960
+          },
+          {
+            "c": null,
+            "t": 1783516020
+          },
+          {
+            "c": 35.45,
+            "t": 1783516080
+          },
+          {
+            "c": null,
+            "t": 1783516140
+          },
+          {
+            "c": null,
+            "t": 1783516200
+          },
+          {
+            "c": null,
+            "t": 1783516260
+          },
+          {
+            "c": null,
+            "t": 1783516320
+          },
+          {
+            "c": null,
+            "t": 1783516380
+          },
+          {
+            "c": null,
+            "t": 1783516440
+          },
+          {
+            "c": null,
+            "t": 1783516500
+          },
+          {
+            "c": null,
+            "t": 1783516560
+          },
+          {
+            "c": null,
+            "t": 1783516620
+          },
+          {
+            "c": null,
+            "t": 1783516680
+          },
+          {
+            "c": null,
+            "t": 1783516740
+          },
+          {
+            "c": 35.5,
+            "t": 1783516800
+          },
+          {
+            "c": 35.5,
+            "t": 1783516860
+          },
+          {
+            "c": 35.539,
+            "t": 1783516920
+          },
+          {
+            "c": 35.51,
+            "t": 1783516980
+          },
+          {
+            "c": null,
+            "t": 1783517040
+          },
+          {
+            "c": null,
+            "t": 1783517100
+          },
+          {
+            "c": null,
+            "t": 1783517160
+          },
+          {
+            "c": null,
+            "t": 1783517220
+          },
+          {
+            "c": null,
+            "t": 1783517280
+          },
+          {
+            "c": 35.47,
+            "t": 1783517340
+          },
+          {
+            "c": null,
+            "t": 1783517400
+          },
+          {
+            "c": null,
+            "t": 1783517460
+          },
+          {
+            "c": null,
+            "t": 1783517520
+          },
+          {
+            "c": null,
+            "t": 1783517580
+          },
+          {
+            "c": null,
+            "t": 1783517640
+          },
+          {
+            "c": null,
+            "t": 1783517700
+          },
+          {
+            "c": null,
+            "t": 1783517760
+          },
+          {
+            "c": null,
+            "t": 1783517820
+          },
+          {
+            "c": null,
+            "t": 1783517880
+          },
+          {
+            "c": null,
+            "t": 1783517940
+          },
+          {
+            "c": null,
+            "t": 1783518000
+          },
+          {
+            "c": null,
+            "t": 1783518060
+          },
+          {
+            "c": null,
+            "t": 1783518120
+          },
+          {
+            "c": null,
+            "t": 1783518180
+          },
+          {
+            "c": null,
+            "t": 1783518240
+          },
+          {
+            "c": null,
+            "t": 1783518300
+          },
+          {
+            "c": null,
+            "t": 1783518360
+          },
+          {
+            "c": null,
+            "t": 1783518420
+          },
+          {
+            "c": null,
+            "t": 1783518480
+          },
+          {
+            "c": null,
+            "t": 1783518540
+          },
+          {
+            "c": null,
+            "t": 1783518600
+          },
+          {
+            "c": null,
+            "t": 1783518660
+          },
+          {
+            "c": null,
+            "t": 1783518720
+          },
+          {
+            "c": null,
+            "t": 1783518780
+          },
+          {
+            "c": null,
+            "t": 1783518840
+          },
+          {
+            "c": null,
+            "t": 1783518900
+          },
+          {
+            "c": null,
+            "t": 1783518960
+          },
+          {
+            "c": null,
+            "t": 1783519020
+          },
+          {
+            "c": null,
+            "t": 1783519080
+          },
+          {
+            "c": null,
+            "t": 1783519140
+          },
+          {
+            "c": 35.48,
+            "t": 1783519200
+          },
+          {
+            "c": 35.54,
+            "t": 1783519260
+          },
+          {
+            "c": null,
+            "t": 1783519320
+          },
+          {
+            "c": null,
+            "t": 1783519380
+          },
+          {
+            "c": 35.55,
+            "t": 1783519440
+          },
+          {
+            "c": null,
+            "t": 1783519500
+          },
+          {
+            "c": null,
+            "t": 1783519560
+          },
+          {
+            "c": null,
+            "t": 1783519620
+          },
+          {
+            "c": null,
+            "t": 1783519680
+          },
+          {
+            "c": null,
+            "t": 1783519740
+          },
+          {
+            "c": null,
+            "t": 1783519800
+          },
+          {
+            "c": null,
+            "t": 1783519860
+          },
+          {
+            "c": null,
+            "t": 1783519920
+          },
+          {
+            "c": null,
+            "t": 1783519980
+          },
+          {
+            "c": null,
+            "t": 1783520040
+          },
+          {
+            "c": null,
+            "t": 1783520100
+          },
+          {
+            "c": null,
+            "t": 1783520160
+          },
+          {
+            "c": null,
+            "t": 1783520220
+          },
+          {
+            "c": null,
+            "t": 1783520280
+          },
+          {
+            "c": null,
+            "t": 1783520340
+          },
+          {
+            "c": 35.55,
+            "t": 1783520400
+          },
+          {
+            "c": null,
+            "t": 1783520460
+          },
+          {
+            "c": null,
+            "t": 1783520520
+          },
+          {
+            "c": null,
+            "t": 1783520580
+          },
+          {
+            "c": null,
+            "t": 1783520640
+          },
+          {
+            "c": null,
+            "t": 1783520700
+          },
+          {
+            "c": null,
+            "t": 1783520760
+          },
+          {
+            "c": null,
+            "t": 1783520820
+          },
+          {
+            "c": null,
+            "t": 1783520880
+          },
+          {
+            "c": null,
+            "t": 1783520940
+          },
+          {
+            "c": null,
+            "t": 1783521000
+          },
+          {
+            "c": null,
+            "t": 1783521060
+          },
+          {
+            "c": null,
+            "t": 1783521120
+          },
+          {
+            "c": null,
+            "t": 1783521180
+          },
+          {
+            "c": null,
+            "t": 1783521240
+          },
+          {
+            "c": 35.54,
+            "t": 1783521300
+          },
+          {
+            "c": null,
+            "t": 1783521360
+          },
+          {
+            "c": null,
+            "t": 1783521420
+          },
+          {
+            "c": null,
+            "t": 1783521480
+          },
+          {
+            "c": null,
+            "t": 1783521540
+          },
+          {
+            "c": null,
+            "t": 1783521600
+          },
+          {
+            "c": null,
+            "t": 1783521660
+          },
+          {
+            "c": null,
+            "t": 1783521720
+          },
+          {
+            "c": null,
+            "t": 1783521780
+          },
+          {
+            "c": null,
+            "t": 1783521840
+          },
+          {
+            "c": null,
+            "t": 1783521900
+          },
+          {
+            "c": null,
+            "t": 1783521960
+          },
+          {
+            "c": null,
+            "t": 1783522020
+          },
+          {
+            "c": null,
+            "t": 1783522080
+          },
+          {
+            "c": null,
+            "t": 1783522140
+          },
+          {
+            "c": null,
+            "t": 1783522200
+          },
+          {
+            "c": null,
+            "t": 1783522260
+          },
+          {
+            "c": null,
+            "t": 1783522320
+          },
+          {
+            "c": null,
+            "t": 1783522380
+          },
+          {
+            "c": null,
+            "t": 1783522440
+          },
+          {
+            "c": 35.62,
+            "t": 1783522500
+          },
+          {
+            "c": null,
+            "t": 1783522560
+          },
+          {
+            "c": null,
+            "t": 1783522620
+          },
+          {
+            "c": null,
+            "t": 1783522680
+          },
+          {
+            "c": null,
+            "t": 1783522740
+          },
+          {
+            "c": 35.67,
+            "t": 1783522800
+          },
+          {
+            "c": null,
+            "t": 1783522860
+          },
+          {
+            "c": null,
+            "t": 1783522920
+          },
+          {
+            "c": null,
+            "t": 1783522980
+          },
+          {
+            "c": null,
+            "t": 1783523040
+          },
+          {
+            "c": null,
+            "t": 1783523100
+          },
+          {
+            "c": null,
+            "t": 1783523160
+          },
+          {
+            "c": null,
+            "t": 1783523220
+          },
+          {
+            "c": null,
+            "t": 1783523280
+          },
+          {
+            "c": null,
+            "t": 1783523340
+          },
+          {
+            "c": null,
+            "t": 1783523400
+          },
+          {
+            "c": 35.64,
+            "t": 1783523460
+          },
+          {
+            "c": null,
+            "t": 1783523520
+          },
+          {
+            "c": 35.67,
+            "t": 1783523580
+          },
+          {
+            "c": null,
+            "t": 1783523640
+          },
+          {
+            "c": null,
+            "t": 1783523700
+          },
+          {
+            "c": 35.6,
+            "t": 1783523760
+          },
+          {
+            "c": null,
+            "t": 1783523820
+          },
+          {
+            "c": null,
+            "t": 1783523880
+          },
+          {
+            "c": 35.6,
+            "t": 1783523940
+          },
+          {
+            "c": null,
+            "t": 1783524000
+          },
+          {
+            "c": null,
+            "t": 1783524060
+          },
+          {
+            "c": null,
+            "t": 1783524120
+          },
+          {
+            "c": null,
+            "t": 1783524180
+          },
+          {
+            "c": null,
+            "t": 1783524240
+          },
+          {
+            "c": null,
+            "t": 1783524300
+          },
+          {
+            "c": null,
+            "t": 1783524360
+          },
+          {
+            "c": null,
+            "t": 1783524420
+          },
+          {
+            "c": null,
+            "t": 1783524480
+          },
+          {
+            "c": null,
+            "t": 1783524540
+          },
+          {
+            "c": null,
+            "t": 1783524600
+          },
+          {
+            "c": 35.54,
+            "t": 1783524660
+          },
+          {
+            "c": null,
+            "t": 1783524720
+          },
+          {
+            "c": null,
+            "t": 1783524780
+          },
+          {
+            "c": null,
+            "t": 1783524840
+          },
+          {
+            "c": null,
+            "t": 1783524900
+          },
+          {
+            "c": null,
+            "t": 1783524960
+          },
+          {
+            "c": null,
+            "t": 1783525020
+          },
+          {
+            "c": null,
+            "t": 1783525080
+          },
+          {
+            "c": null,
+            "t": 1783525140
+          },
+          {
+            "c": null,
+            "t": 1783525200
+          },
+          {
+            "c": null,
+            "t": 1783525260
+          },
+          {
+            "c": null,
+            "t": 1783525320
+          },
+          {
+            "c": null,
+            "t": 1783525380
+          },
+          {
+            "c": null,
+            "t": 1783525440
+          },
+          {
+            "c": null,
+            "t": 1783525500
+          },
+          {
+            "c": null,
+            "t": 1783525560
+          },
+          {
+            "c": null,
+            "t": 1783525620
+          },
+          {
+            "c": null,
+            "t": 1783525680
+          },
+          {
+            "c": null,
+            "t": 1783525740
+          },
+          {
+            "c": null,
+            "t": 1783525800
+          },
+          {
+            "c": null,
+            "t": 1783525860
+          },
+          {
+            "c": null,
+            "t": 1783525920
+          },
+          {
+            "c": null,
+            "t": 1783525980
+          },
+          {
+            "c": null,
+            "t": 1783526040
+          },
+          {
+            "c": null,
+            "t": 1783526100
+          },
+          {
+            "c": null,
+            "t": 1783526160
+          },
+          {
+            "c": null,
+            "t": 1783526220
+          },
+          {
+            "c": 35.71,
+            "t": 1783526280
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
+          }
+        ]
+      },
+      "description": "The Baillie Gifford Long Term Global Growth ETF (BGGG) is an exchange-traded fund that mostly invests in total market equity. The fund is an actively managed global equity ETF that invests in companies the adviser believes have strong long-term growth potential. The fund maintains a concentrated portfolio of growth-oriented businesses across developed and emerging markets and typically holds investments for extended periods. BGGG was launched on Jun 10, 2014 and is issued by Baillie Gifford Funds.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "BGGG"
+        ],
+        [
+          "Provider",
+          "Baillie Gifford Funds"
+        ]
+      ],
+      "etf_website": "https://www.bailliegifford.com/en/usa/institutional-investor/funds/baillie-gifford-long-term-global-growth-etf/?share-class=61715-BGGG",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 39,
+        "updated": "Mar 31, 2026",
+        "top10": 46.5,
+        "holdings": [
+          {
+            "n": "Amazon.com, Inc.",
+            "s": "$AMZN",
+            "as": "6.74%",
+            "sh": "167,187"
+          },
+          {
+            "n": "NVIDIA Corporation",
+            "s": "$NVDA",
+            "as": "6.72%",
+            "sh": "199,054"
+          },
+          {
+            "n": "ASML Holding N.V.",
+            "s": "!ams/ASML",
+            "as": "5.91%",
+            "sh": "23,692"
+          },
+          {
+            "n": "Cloudflare, Inc.",
+            "s": "$NET",
+            "as": "4.79%",
+            "sh": "119,825"
+          },
+          {
+            "n": "Taiwan Semiconductor Manufacturing Company Limited",
+            "s": "!tpe/2330",
+            "as": "4.57%",
+            "sh": "429,000"
+          },
+          {
+            "n": "AppLovin Corporation",
+            "s": "$APP",
+            "as": "4.32%",
+            "sh": "56,122"
+          },
+          {
+            "n": "Tencent Holdings Limited",
+            "s": "!hkg/0700",
+            "as": "3.69%",
+            "sh": "308,800"
+          },
+          {
+            "n": "Nu Holdings Ltd.",
+            "s": "$NU",
+            "as": "3.39%",
+            "sh": "1,219,143"
+          },
+          {
+            "n": "PDD Holdings Inc.",
+            "s": "$PDD",
+            "as": "3.20%",
+            "sh": "161,760"
+          },
+          {
+            "n": "Spotify Technology S.A.",
+            "s": "$SPOT",
+            "as": "3.17%",
+            "sh": "33,824"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783560372839",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/baillie-gifford-debuts-suite-of-active-growth-etfs/",
+            "img": "https://cdn.snapi.dev/images/v1/x/a/a/etf30-3735583.jpg",
+            "title": "Baillie Gifford Debuts Suite of Active Growth ETFs",
+            "text": "On Wednesday, June 3, Baillie Gifford made its foray into the world of U.S. ETFs with the launch of its first suite of actively managed ETFs. Each new fund provides a different approach to equity expo...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#BGCG",
+              "#BGEG",
+              "#BGIA"
+            ],
+            "time": "Jun 3, 2026, 5:21 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260603451209/en/Baillie-Gifford-Launches-U.S.-ETF-Suite-Expanding-Access-to-Active-Growth-Strategies/",
+            "img": "https://cdn.snapi.dev/images/v1/7/s/b/press19-3734709.jpg",
+            "title": "Baillie Gifford Launches U.S. ETF Suite, Expanding Access to Active Growth Strategies",
+            "text": "NEW YORK--(BUSINESS WIRE)--Baillie Gifford, the independent global investment manager, today announced the launch of its first actively managed ETF suite in the United States, giving investors a flexi...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "#BGCG",
+              "#BGEG",
+              "#BGIA"
+            ],
+            "time": "Jun 3, 2026, 9:00 AM EDT",
+            "ago": "5 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 35.261,
+        "price1m": 34.456,
+        "priceMAX": 36.599
+      },
+      "performance": {
+        "tr1m": 2.058
+      }
+    },
+    "quote": {
+      "p": 35.7519,
+      "pd": 35.75,
+      "c": -0.01,
+      "cp": -0.02,
+      "cl": 35.76,
+      "cdr": -1,
+      "o": 35.61,
+      "h": 35.75,
+      "l": 35.05,
+      "v": 38337.5791,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 36.705,
+      "l52": 32.71,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 35.7519,
+      "epd": 35.75,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700012.8853,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554673551,
+      "symbol": "BGGG",
+      "uid": "BGGG"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 35.83,
+        "h": 36.24,
+        "l": 35.36,
+        "c": 35.76,
+        "a": 35.76,
+        "v": 190938,
+        "ch": 1.42
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-01",
-          "Open": 36.29999923706055,
-          "High": 36.709999084472656,
-          "Low": 36.29999923706055,
-          "Close": 36.599998474121094,
-          "Volume": 2400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 36.01,
+          "h": 36.24,
+          "l": 35.57,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 71755,
+          "ch": -1.07
         },
         {
-          "date": "2026-06-02",
-          "Open": 36.560001373291016,
-          "High": 36.560001373291016,
-          "Low": 36.220001220703125,
-          "Close": 36.31999969482422,
-          "Volume": 71600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 35.87,
+          "h": 36.22,
+          "l": 35.84,
+          "c": 36.148,
+          "a": 36.1478,
+          "v": 61900,
+          "ch": 1.71
         },
         {
-          "date": "2026-06-03",
-          "Open": 36.0,
-          "High": 36.0,
-          "Low": 35.41999816894531,
-          "Close": 35.61000061035156,
-          "Volume": 50600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 35.61,
+          "h": 35.98,
+          "l": 35.36,
+          "c": 35.54,
+          "a": 35.5399,
+          "v": 17454,
+          "ch": -0.34
         },
         {
-          "date": "2026-06-04",
-          "Open": 35.47999954223633,
-          "High": 36.119998931884766,
-          "Low": 35.47999954223633,
-          "Close": 35.939998626708984,
-          "Volume": 31800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.02,
+          "l": 35.635,
+          "c": 35.661,
+          "a": 35.6612,
+          "v": 39829,
+          "ch": 1.14
         },
         {
-          "date": "2026-06-05",
-          "Open": 35.65999984741211,
-          "High": 35.65999984741211,
-          "Low": 34.38999938964844,
-          "Close": 34.459999084472656,
-          "Volume": 38800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 34.78,
+          "h": 35.27,
+          "l": 34.73,
+          "c": 35.261,
+          "a": 35.2608,
+          "v": 23807,
+          "ch": 1.71
         },
         {
-          "date": "2026-06-08",
-          "Open": 34.849998474121094,
-          "High": 34.959999084472656,
-          "Low": 34.790000915527344,
-          "Close": 34.81999969482422,
-          "Volume": 25500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 34.26,
+          "h": 34.669,
+          "l": 34.26,
+          "c": 34.669,
+          "a": 34.6687,
+          "v": 34592,
+          "ch": 2.9
         },
         {
-          "date": "2026-06-09",
-          "Open": 34.970001220703125,
-          "High": 35.279998779296875,
-          "Low": 33.88999938964844,
-          "Close": 34.4900016784668,
-          "Volume": 30400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 32.9,
+          "h": 33.72,
+          "l": 32.71,
+          "c": 33.692,
+          "a": 33.6919,
+          "v": 69509,
+          "ch": 2.09
         },
         {
-          "date": "2026-06-10",
-          "Open": 34.09000015258789,
-          "High": 34.33000183105469,
-          "Low": 33.619998931884766,
-          "Close": 33.619998931884766,
-          "Volume": 84300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 33.59,
+          "h": 33.59,
+          "l": 32.84,
+          "c": 33.001,
+          "a": 33.0007,
+          "v": 79799,
+          "ch": -1.29
         },
         {
-          "date": "2026-06-11",
-          "Open": 33.439998626708984,
-          "High": 34.380001068115234,
-          "Low": 33.439998626708984,
-          "Close": 34.349998474121094,
-          "Volume": 70100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 33.3,
+          "h": 33.705,
+          "l": 32.895,
+          "c": 33.43,
+          "a": 33.4304,
+          "v": 85339,
+          "ch": -0.48
         },
         {
-          "date": "2026-06-12",
-          "Open": 34.279998779296875,
-          "High": 34.47999954223633,
-          "Low": 34.0099983215332,
-          "Close": 34.33000183105469,
-          "Volume": 35000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 33.38,
+          "h": 33.93,
+          "l": 33.38,
+          "c": 33.593,
+          "a": 33.593,
+          "v": 47277,
+          "ch": -1.7
         },
         {
-          "date": "2026-06-15",
-          "Open": 34.97999954223633,
-          "High": 35.5,
-          "Low": 34.97999954223633,
-          "Close": 35.36000061035156,
-          "Volume": 43600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-22",
+          "o": 34.68,
+          "h": 34.82,
+          "l": 34.155,
+          "c": 34.175,
+          "a": 34.1746,
+          "v": 1034773,
+          "ch": -1.86
         },
         {
-          "date": "2026-06-16",
-          "Open": 35.290000915527344,
-          "High": 35.290000915527344,
-          "Low": 34.90999984741211,
-          "Close": 35.0099983215332,
-          "Volume": 70700.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-18",
+          "o": 34.93,
+          "h": 34.93,
+          "l": 34.505,
+          "c": 34.824,
+          "a": 34.8237,
+          "v": 67224,
+          "ch": 1.15
         },
         {
-          "date": "2026-06-17",
-          "Open": 35.189998626708984,
-          "High": 35.33000183105469,
-          "Low": 34.380001068115234,
-          "Close": 34.43000030517578,
-          "Volume": 57900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-17",
+          "o": 35.19,
+          "h": 35.33,
+          "l": 34.38,
+          "c": 34.429,
+          "a": 34.4288,
+          "v": 57910,
+          "ch": -1.65
         },
         {
-          "date": "2026-06-18",
-          "Open": 34.93000030517578,
-          "High": 34.93000030517578,
-          "Low": 34.5099983215332,
-          "Close": 34.81999969482422,
-          "Volume": 67200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-16",
+          "o": 35.29,
+          "h": 35.29,
+          "l": 34.91,
+          "c": 35.008,
+          "a": 35.0077,
+          "v": 70661,
+          "ch": -0.98
         },
         {
-          "date": "2026-06-22",
-          "Open": 34.68000030517578,
-          "High": 34.81999969482422,
-          "Low": 34.150001525878906,
-          "Close": 34.16999816894531,
-          "Volume": 1034800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-15",
+          "o": 34.98,
+          "h": 35.502,
+          "l": 34.98,
+          "c": 35.356,
+          "a": 35.3558,
+          "v": 43587,
+          "ch": 2.98
         },
         {
-          "date": "2026-06-23",
-          "Open": 33.380001068115234,
-          "High": 33.93000030517578,
-          "Low": 33.380001068115234,
-          "Close": 33.59000015258789,
-          "Volume": 47300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-12",
+          "o": 34.28,
+          "h": 34.48,
+          "l": 34.01,
+          "c": 34.333,
+          "a": 34.3325,
+          "v": 35006,
+          "ch": -0.05
         },
         {
-          "date": "2026-06-24",
-          "Open": 33.29999923706055,
-          "High": 33.709999084472656,
-          "Low": 32.900001525878906,
-          "Close": 33.43000030517578,
-          "Volume": 85300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-11",
+          "o": 33.44,
+          "h": 34.375,
+          "l": 33.44,
+          "c": 34.35,
+          "a": 34.35,
+          "v": 70130,
+          "ch": 2.16
         },
         {
-          "date": "2026-06-25",
-          "Open": 33.59000015258789,
-          "High": 33.59000015258789,
-          "Low": 32.84000015258789,
-          "Close": 33.0,
-          "Volume": 79800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-10",
+          "o": 34.09,
+          "h": 34.33,
+          "l": 33.623,
+          "c": 33.623,
+          "a": 33.6232,
+          "v": 84257,
+          "ch": -2.5
         },
         {
-          "date": "2026-06-26",
-          "Open": 32.900001525878906,
-          "High": 33.720001220703125,
-          "Low": 32.709999084472656,
-          "Close": 33.689998626708984,
-          "Volume": 69500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-09",
+          "o": 34.97,
+          "h": 35.28,
+          "l": 33.89,
+          "c": 34.485,
+          "a": 34.485,
+          "v": 30396,
+          "ch": -0.97
         },
         {
-          "date": "2026-06-29",
-          "Open": 34.2599983215332,
-          "High": 34.66999816894531,
-          "Low": 34.2599983215332,
-          "Close": 34.66999816894531,
-          "Volume": 34600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-08",
+          "o": 34.85,
+          "h": 34.96,
+          "l": 34.79,
+          "c": 34.822,
+          "a": 34.8224,
+          "v": 25467,
+          "ch": 1.06
         },
         {
-          "date": "2026-06-30",
-          "Open": 34.779998779296875,
-          "High": 35.27000045776367,
-          "Low": 34.775001525878906,
-          "Close": 35.260799407958984,
-          "Volume": 24003.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-05",
+          "o": 35.66,
+          "h": 35.66,
+          "l": 34.39,
+          "c": 34.456,
+          "a": 34.4558,
+          "v": 38821,
+          "ch": -4.13
+        },
+        {
+          "t": "2026-06-04",
+          "o": 35.48,
+          "h": 36.12,
+          "l": 35.48,
+          "c": 35.939,
+          "a": 35.9389,
+          "v": 31759.000000000004,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-06-03",
+          "o": 36,
+          "h": 36,
+          "l": 35.42,
+          "c": 35.611,
+          "a": 35.611,
+          "v": 50647,
+          "ch": -1.95
+        },
+        {
+          "t": "2026-06-02",
+          "o": 36.56,
+          "h": 36.56,
+          "l": 36.22,
+          "c": 36.319,
+          "a": 36.3189,
+          "v": 71571,
+          "ch": -0.76
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 35.87,
+          "h": 36.24,
+          "l": 35.57,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 133655,
+          "ch": 0.62
+        },
+        {
+          "t": "2026-06-29",
+          "o": 34.26,
+          "h": 36.02,
+          "l": 34.26,
+          "c": 35.54,
+          "a": 35.5399,
+          "v": 115682,
+          "ch": 5.48
+        },
+        {
+          "t": "2026-06-22",
+          "o": 34.68,
+          "h": 34.82,
+          "l": 32.71,
+          "c": 33.692,
+          "a": 33.6919,
+          "v": 1316697,
+          "ch": -3.25
+        },
+        {
+          "t": "2026-06-15",
+          "o": 34.98,
+          "h": 35.502,
+          "l": 34.38,
+          "c": 34.824,
+          "a": 34.8237,
+          "v": 239382,
+          "ch": 1.43
+        },
+        {
+          "t": "2026-06-08",
+          "o": 34.85,
+          "h": 35.28,
+          "l": 33.44,
+          "c": 34.333,
+          "a": 34.3325,
+          "v": 245256,
+          "ch": -0.36
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.24,
+          "l": 35.36,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 190938,
+          "ch": 1.42
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 35.87,
+          "h": 36.24,
+          "l": 35.57,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 133655,
+          "ch": 0.62
+        },
+        {
+          "t": "2026-06-29",
+          "o": 34.26,
+          "h": 36.02,
+          "l": 34.26,
+          "c": 35.54,
+          "a": 35.5399,
+          "v": 115682,
+          "ch": 5.48
+        },
+        {
+          "t": "2026-06-22",
+          "o": 34.68,
+          "h": 34.82,
+          "l": 32.71,
+          "c": 33.692,
+          "a": 33.6919,
+          "v": 1316697,
+          "ch": -3.25
+        },
+        {
+          "t": "2026-06-15",
+          "o": 34.98,
+          "h": 35.502,
+          "l": 34.38,
+          "c": 34.824,
+          "a": 34.8237,
+          "v": 239382,
+          "ch": 1.43
+        },
+        {
+          "t": "2026-06-08",
+          "o": 34.85,
+          "h": 35.28,
+          "l": 33.44,
+          "c": 34.333,
+          "a": 34.3325,
+          "v": 245256,
+          "ch": -0.36
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.24,
+          "l": 35.36,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 190938,
+          "ch": 1.42
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 35.83,
+          "h": 36.24,
+          "l": 35.36,
+          "c": 35.76,
+          "a": 35.76,
+          "v": 190938,
+          "ch": 1.42
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

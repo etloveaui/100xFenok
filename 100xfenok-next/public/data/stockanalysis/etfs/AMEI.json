@@ -1,19 +1,403 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "AMEI",
-  "fetched_at": "2026-06-30T23:53:44Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T23:50:45Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/AMEI/holdings",
+    "overview": "/api/symbol/e/AMEI/overview",
+    "quote": "/api/quotes/e/AMEI",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/AMEI/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/AMEI/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/AMEI/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/AMEI/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/AMEI/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/AMEI/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "TSM",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 11.64,
+        "shares": 853,
+        "raw": {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "11.64%",
+          "sh": "853"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight_pct": 10.3,
+        "shares": 270,
+        "raw": {
+          "no": 2,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "10.30%",
+          "sh": "270"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Us Dollars",
+        "weight_pct": 7.92,
+        "shares": 252124,
+        "raw": {
+          "no": 3,
+          "n": "Us Dollars",
+          "as": "7.92%",
+          "sh": "252,124"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "ROK",
+        "name": "Rockwell Automation, Inc.",
+        "weight_pct": 5.69,
+        "shares": 384,
+        "raw": {
+          "no": 4,
+          "n": "Rockwell Automation, Inc.",
+          "s": "$ROK",
+          "as": "5.69%",
+          "sh": "384"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 5.17,
+        "shares": 421,
+        "raw": {
+          "no": 5,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "5.17%",
+          "sh": "421"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "GWW",
+        "name": "W.W. Grainger, Inc.",
+        "weight_pct": 4.56,
+        "shares": 108,
+        "raw": {
+          "no": 6,
+          "n": "W.W. Grainger, Inc.",
+          "s": "$GWW",
+          "as": "4.56%",
+          "sh": "108"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 4.35,
+        "shares": 384,
+        "raw": {
+          "no": 7,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "4.35%",
+          "sh": "384"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 3.82,
+        "shares": 1080,
+        "raw": {
+          "no": 8,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "3.82%",
+          "sh": "1,080"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "ITW",
+        "name": "Illinois Tool Works Inc.",
+        "weight_pct": 3.19,
+        "shares": 372,
+        "raw": {
+          "no": 9,
+          "n": "Illinois Tool Works Inc.",
+          "s": "$ITW",
+          "as": "3.19%",
+          "sh": "372"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "JCI",
+        "name": "Johnson Controls International plc",
+        "weight_pct": 3.13,
+        "shares": 708,
+        "raw": {
+          "no": 10,
+          "n": "Johnson Controls International plc",
+          "s": "$JCI",
+          "as": "3.13%",
+          "sh": "708"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "LIN",
+        "name": "Linde plc",
+        "weight_pct": 2.89,
+        "shares": 168,
+        "raw": {
+          "no": 11,
+          "n": "Linde plc",
+          "s": "$LIN",
+          "as": "2.89%",
+          "sh": "168"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 2.87,
+        "shares": 312,
+        "raw": {
+          "no": 12,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "2.87%",
+          "sh": "312"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight_pct": 2.39,
+        "shares": 289,
+        "raw": {
+          "no": 13,
+          "n": "Johnson & Johnson",
+          "s": "$JNJ",
+          "as": "2.39%",
+          "sh": "289"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "UL",
+        "name": "Unilever PLC",
+        "weight_pct": 2.38,
+        "shares": 1213,
+        "raw": {
+          "no": 14,
+          "n": "Unilever PLC",
+          "s": "$UL",
+          "as": "2.38%",
+          "sh": "1,213"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!EPA/SU",
+        "name": "Schneider Electric S.E.",
+        "weight_pct": 2.33,
+        "shares": 235,
+        "raw": {
+          "no": 15,
+          "n": "Schneider Electric S.E.",
+          "s": "!epa/SU",
+          "as": "2.33%",
+          "sh": "235"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "FERG",
+        "name": "Ferguson Enterprises Inc.",
+        "weight_pct": 2.26,
+        "shares": 312,
+        "raw": {
+          "no": 16,
+          "n": "Ferguson Enterprises Inc.",
+          "s": "$FERG",
+          "as": "2.26%",
+          "sh": "312"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!TSX/CNR",
+        "name": "Canadian National Railway Company",
+        "weight_pct": 2.11,
+        "shares": 552,
+        "raw": {
+          "no": 17,
+          "n": "Canadian National Railway Company",
+          "s": "!tsx/CNR",
+          "as": "2.11%",
+          "sh": "552"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight_pct": 1.98,
+        "shares": 241,
+        "raw": {
+          "no": 18,
+          "n": "AbbVie Inc.",
+          "s": "$ABBV",
+          "as": "1.98%",
+          "sh": "241"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "APD",
+        "name": "Air Products and Chemicals, Inc.",
+        "weight_pct": 1.94,
+        "shares": 196,
+        "raw": {
+          "no": 19,
+          "n": "Air Products and Chemicals, Inc.",
+          "s": "$APD",
+          "as": "1.94%",
+          "sh": "196"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "NVSN.MX",
+        "name": "Novartis AG ADR",
+        "weight_pct": 1.93,
+        "shares": 384,
+        "raw": {
+          "no": 20,
+          "n": "Novartis AG ADR",
+          "s": "NVSN.MX",
+          "as": "1.93%",
+          "sh": "384"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!TYO/6301",
+        "name": "Komatsu Ltd.",
+        "weight_pct": 1.87,
+        "shares": 1500,
+        "raw": {
+          "no": 21,
+          "n": "Komatsu Ltd.",
+          "s": "!tyo/6301",
+          "as": "1.87%",
+          "sh": "1,500"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "CRH",
+        "name": "CRH plc",
+        "weight_pct": 1.82,
+        "shares": 539,
+        "raw": {
+          "no": 22,
+          "n": "CRH plc",
+          "s": "$CRH",
+          "as": "1.82%",
+          "sh": "539"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "CL",
+        "name": "Colgate-Palmolive Company",
+        "weight_pct": 1.72,
+        "shares": 576,
+        "raw": {
+          "no": 23,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "1.72%",
+          "sh": "576"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "!TYO/7974",
+        "name": "Nintendo Co., Ltd.",
+        "weight_pct": 1.67,
+        "shares": 1200,
+        "raw": {
+          "no": 24,
+          "n": "Nintendo Co., Ltd.",
+          "s": "!tyo/7974",
+          "as": "1.67%",
+          "sh": "1,200"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "UPS",
+        "name": "United Parcel Service, Inc.",
+        "weight_pct": 1.57,
+        "shares": 452,
+        "raw": {
+          "no": 25,
+          "n": "United Parcel Service, Inc.",
+          "s": "$UPS",
+          "as": "1.57%",
+          "sh": "452"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 32.75
+      },
+      {
+        "n": "Industrials",
+        "w": 29.63
+      },
+      {
+        "n": "Healthcare",
+        "w": 18.91
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 9.17
+      },
+      {
+        "n": "Materials",
+        "w": 7.38
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 2.16
+      }
+    ],
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-30T23:53:44Z",
+    "holding_count": 32,
+    "holdings_updated": "Jul 2, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -24,326 +408,2329 @@
       "confidence": "high"
     },
     "overview": {
-      "nav": 26.07,
-      "expenseRatio": 0.76,
-      "provider_page": "Saturna Capital Corporation",
-      "category": "Large Value",
-      "legalType": "Exchange Traded Fund",
-      "description": "The fund, under normal circumstances, to invest at least 80% of its total net assets in income-producing equity securities, primarily dividend-paying common stocks. It invests primarily in dividend-paying common stocks, including foreign stocks. Investment decisions are made in accordance with Islamic principles. Generally, Islamic principles require that investors share in profit and loss, that they receive no usury or interest, and that they do not invest in a business that is prohibited by Islamic principles. It is non-diversified."
+      "aum": "$3.13M",
+      "expenseRatio": "0.76%",
+      "sharesOut": "120,000",
+      "inception": "Jun 24, 2026",
+      "etf_website": "https://www.saturna.com/products/amana-equity-income-etf"
     },
+    "performance": {},
     "quote": {
-      "p": 26.340700149536133,
-      "pd": 26.12,
-      "c": 0.22070014953613182,
-      "cp": 0.844946973721791,
-      "u": "2026-06-30T23:53:44Z",
-      "ex": "yahoo_finance"
+      "p": 25.9919,
+      "pd": 25.99,
+      "c": -0.13,
+      "cp": -0.48,
+      "cl": 26.12,
+      "cdr": -1,
+      "o": 26.09,
+      "h": 26.11,
+      "l": 25.96,
+      "v": 4811.492,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 26.41,
+      "l52": 25.519,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 25.9919,
+      "epd": 25.99,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700013.253,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554649291,
+      "symbol": "AMEI",
+      "uid": "AMEI"
     },
     "history": [
       {
-        "date": "2026-06-24",
-        "Open": 25.68000030517578,
-        "High": 25.68000030517578,
-        "Low": 25.520000457763672,
-        "Close": 25.520000457763672,
-        "Volume": 42100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 25.799999237060547,
-        "High": 25.799999237060547,
-        "Low": 25.670000076293945,
-        "Close": 25.670000076293945,
-        "Volume": 10800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 25.770000457763672,
-        "High": 25.799999237060547,
-        "Low": 25.770000457763672,
-        "Close": 25.799999237060547,
-        "Volume": 8100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 25.979999542236328,
-        "High": 26.1200008392334,
-        "Low": 25.84000015258789,
-        "Close": 26.079999923706055,
-        "Volume": 6500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 26.31999969482422,
-        "High": 26.340700149536133,
-        "Low": 26.31999969482422,
-        "Close": 26.340700149536133,
-        "Volume": 5247.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 26.3,
+        "h": 26.32,
+        "l": 26.034,
+        "c": 26.117,
+        "a": 26.1171,
+        "v": 21740,
+        "ch": -0.85
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-24",
-          "Open": 25.68000030517578,
-          "High": 25.68000030517578,
-          "Low": 25.520000457763672,
-          "Close": 25.520000457763672,
-          "Volume": 42100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 26.28,
+          "h": 26.28,
+          "l": 26.117,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 4658,
+          "ch": -0.77
         },
         {
-          "date": "2026-06-25",
-          "Open": 25.799999237060547,
-          "High": 25.799999237060547,
-          "Low": 25.670000076293945,
-          "Close": 25.670000076293945,
-          "Volume": 10800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 26.27,
+          "h": 26.32,
+          "l": 26.27,
+          "c": 26.32,
+          "a": 26.3196,
+          "v": 4331,
+          "ch": 0.77
         },
         {
-          "date": "2026-06-26",
-          "Open": 25.770000457763672,
-          "High": 25.799999237060547,
-          "Low": 25.770000457763672,
-          "Close": 25.799999237060547,
-          "Volume": 8100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 26.08,
+          "h": 26.118,
+          "l": 26.034,
+          "c": 26.118,
+          "a": 26.1178,
+          "v": 7549,
+          "ch": 0.11
         },
         {
-          "date": "2026-06-29",
-          "Open": 25.979999542236328,
-          "High": 26.1200008392334,
-          "Low": 25.84000015258789,
-          "Close": 26.079999923706055,
-          "Volume": 6500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.3,
+          "l": 26.09,
+          "c": 26.09,
+          "a": 26.09,
+          "v": 5202,
+          "ch": -0.95
         },
         {
-          "date": "2026-06-30",
-          "Open": 26.31999969482422,
-          "High": 26.340700149536133,
-          "Low": 26.31999969482422,
-          "Close": 26.340700149536133,
-          "Volume": 5247.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 26.32,
+          "h": 26.41,
+          "l": 26.32,
+          "c": 26.341,
+          "a": 26.3407,
+          "v": 5247,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.975,
+          "h": 26.12,
+          "l": 25.84,
+          "c": 26.078,
+          "a": 26.0783,
+          "v": 6519,
+          "ch": 1.09
+        },
+        {
+          "t": "2026-06-26",
+          "o": 25.77,
+          "h": 25.797,
+          "l": 25.77,
+          "c": 25.797,
+          "a": 25.7974,
+          "v": 8082.000000000001,
+          "ch": 0.5
+        },
+        {
+          "t": "2026-06-25",
+          "o": 25.8,
+          "h": 25.8,
+          "l": 25.668,
+          "c": 25.668,
+          "a": 25.6679,
+          "v": 10836,
+          "ch": 0.58
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 26.27,
+          "h": 26.32,
+          "l": 26.117,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 8989,
+          "ch": 0
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.975,
+          "h": 26.41,
+          "l": 25.84,
+          "c": 26.118,
+          "a": 26.1178,
+          "v": 24517,
+          "ch": 1.24
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.32,
+          "l": 26.034,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 21740,
+          "ch": -0.85
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 26.27,
+          "h": 26.32,
+          "l": 26.117,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 8989,
+          "ch": 0
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.975,
+          "h": 26.41,
+          "l": 25.84,
+          "c": 26.118,
+          "a": 26.1178,
+          "v": 24517,
+          "ch": 1.24
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.32,
+          "l": 26.034,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 21740,
+          "ch": -0.85
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.32,
+          "l": 26.034,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 21740,
+          "ch": -0.85
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Amana Equity Income ETF",
-        "longName": "Amana Equity Income ETF",
-        "currency": "USD",
-        "exchange": "NGM",
-        "fundFamily": "Saturna Capital Corporation",
-        "category": "Large Value",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 26.07,
-        "netExpenseRatio": 0.76,
-        "previousClose": 26.12,
-        "fiftyTwoWeekHigh": 26.3407,
-        "fiftyTwoWeekLow": 25.52,
-        "fiftyTwoWeekChangePercent": 2.194357,
-        "averageVolume": 16875,
-        "averageVolume10days": 16875
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 26.340700149536133,
-        "dayLow": 26.31999969482422,
-        "exchange": "NGM",
-        "fiftyDayAverage": 25.767499923706055,
-        "lastPrice": 26.340700149536133,
-        "lastVolume": 5247.0,
-        "open": 26.31999969482422,
-        "previousClose": 26.0783,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 26.079999923706055,
-        "tenDayAverageVolume": 16875.0,
-        "threeMonthAverageVolume": 16875.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 25.767499923706055,
-        "yearChange": 0.021943552347077653,
-        "yearHigh": 26.1200008392334,
-        "yearLow": 25.520000457763672
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "The fund, under normal circumstances, to invest at least 80% of its total net assets in income-producing equity securities, primarily dividend-paying common stocks. It invests primarily in dividend-paying common stocks, including foreign stocks. Investment decisions are made in accordance with Islamic principles. Generally, Islamic principles require that investors share in profit and loss, that they receive no usury or interest, and that they do not invest in a business that is prohibited by Islamic principles. It is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Large Value",
-          "family": "Saturna Capital Corporation",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "11.64%",
+          "sh": "853"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "10.30%",
+          "sh": "270"
+        },
+        {
+          "no": 3,
+          "n": "Us Dollars",
+          "as": "7.92%",
+          "sh": "252,124"
+        },
+        {
+          "no": 4,
+          "n": "Rockwell Automation, Inc.",
+          "s": "$ROK",
+          "as": "5.69%",
+          "sh": "384"
+        },
+        {
+          "no": 5,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "5.17%",
+          "sh": "421"
+        },
+        {
+          "no": 6,
+          "n": "W.W. Grainger, Inc.",
+          "s": "$GWW",
+          "as": "4.56%",
+          "sh": "108"
+        },
+        {
+          "no": 7,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "4.35%",
+          "sh": "384"
+        },
+        {
+          "no": 8,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "3.82%",
+          "sh": "1,080"
+        },
+        {
+          "no": 9,
+          "n": "Illinois Tool Works Inc.",
+          "s": "$ITW",
+          "as": "3.19%",
+          "sh": "372"
+        },
+        {
+          "no": 10,
+          "n": "Johnson Controls International plc",
+          "s": "$JCI",
+          "as": "3.13%",
+          "sh": "708"
+        },
+        {
+          "no": 11,
+          "n": "Linde plc",
+          "s": "$LIN",
+          "as": "2.89%",
+          "sh": "168"
+        },
+        {
+          "no": 12,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "2.87%",
+          "sh": "312"
+        },
+        {
+          "no": 13,
+          "n": "Johnson & Johnson",
+          "s": "$JNJ",
+          "as": "2.39%",
+          "sh": "289"
+        },
+        {
+          "no": 14,
+          "n": "Unilever PLC",
+          "s": "$UL",
+          "as": "2.38%",
+          "sh": "1,213"
+        },
+        {
+          "no": 15,
+          "n": "Schneider Electric S.E.",
+          "s": "!epa/SU",
+          "as": "2.33%",
+          "sh": "235"
+        },
+        {
+          "no": 16,
+          "n": "Ferguson Enterprises Inc.",
+          "s": "$FERG",
+          "as": "2.26%",
+          "sh": "312"
+        },
+        {
+          "no": 17,
+          "n": "Canadian National Railway Company",
+          "s": "!tsx/CNR",
+          "as": "2.11%",
+          "sh": "552"
+        },
+        {
+          "no": 18,
+          "n": "AbbVie Inc.",
+          "s": "$ABBV",
+          "as": "1.98%",
+          "sh": "241"
+        },
+        {
+          "no": 19,
+          "n": "Air Products and Chemicals, Inc.",
+          "s": "$APD",
+          "as": "1.94%",
+          "sh": "196"
+        },
+        {
+          "no": 20,
+          "n": "Novartis AG ADR",
+          "s": "NVSN.MX",
+          "as": "1.93%",
+          "sh": "384"
+        },
+        {
+          "no": 21,
+          "n": "Komatsu Ltd.",
+          "s": "!tyo/6301",
+          "as": "1.87%",
+          "sh": "1,500"
+        },
+        {
+          "no": 22,
+          "n": "CRH plc",
+          "s": "$CRH",
+          "as": "1.82%",
+          "sh": "539"
+        },
+        {
+          "no": 23,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "1.72%",
+          "sh": "576"
+        },
+        {
+          "no": 24,
+          "n": "Nintendo Co., Ltd.",
+          "s": "!tyo/7974",
+          "as": "1.67%",
+          "sh": "1,200"
+        },
+        {
+          "no": 25,
+          "n": "United Parcel Service, Inc.",
+          "s": "$UPS",
+          "as": "1.57%",
+          "sh": "452"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 32.75
+        },
+        {
+          "n": "Industrials",
+          "w": 29.63
+        },
+        {
+          "n": "Healthcare",
+          "w": 18.91
+        },
+        {
+          "n": "Consumer Staples",
+          "w": 9.17
+        },
+        {
+          "n": "Materials",
+          "w": 7.38
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 2.16
+        }
+      ],
+      "countries": null,
+      "infoBox": "AMEI is an equity ETF with a total of 32 individual holdings. The top holdings are Taiwan Semiconductor Manufacturing Company stock at 11.64%, Eli Lilly and Company at 10.30%, Us Dollars at 7.92%, Rockwell Automation at 5.69%, and Microsoft at 5.17%.",
+      "infoTable": {
+        "count": 32,
+        "top10": 59.77,
+        "assetClass": "Equity",
+        "aum": 3134306.2
+      },
+      "date": "Jul 2, 2026",
+      "count": 32
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$3.13M",
+      "expenseRatio": "0.76%",
+      "sharesOut": "120,000",
+      "ch1y": null,
+      "holdings": 32,
+      "inception": "Jun 24, 2026",
+      "chart": {
+        "expiration": 1783553532437,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "AMEI": 0.0076,
-            "Category Average": 0.0084701
+            "c": 25.24,
+            "o": 25.24,
+            "t": 1783503000
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "AMEI": 0.0,
-            "Category Average": 0.5701
+            "c": null,
+            "t": 1783503060
           },
           {
-            "_index": "Total Net Assets",
-            "AMEI": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "AMEI": 0.0,
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503120
           },
           {
-            "_index": "Price/Book",
-            "AMEI": 0.0,
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503180
           },
           {
-            "_index": "Price/Sales",
-            "AMEI": 0.0,
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503240
           },
           {
-            "_index": "Price/Cashflow",
-            "AMEI": 0.0,
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503300
           },
           {
-            "_index": "Median Market Cap",
-            "AMEI": "<NA>",
-            "Category Average": "<NA>"
+            "c": 25.945,
+            "t": 1783503360
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "AMEI": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "AMEI": "<NA>",
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503420
           },
           {
-            "_index": "Maturity",
-            "AMEI": "<NA>",
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503480
           },
           {
-            "_index": "Credit Quality",
-            "AMEI": "<NA>",
-            "Category Average": "<NA>"
+            "c": null,
+            "t": 1783503540
+          },
+          {
+            "c": null,
+            "t": 1783503600
+          },
+          {
+            "c": null,
+            "t": 1783503660
+          },
+          {
+            "c": null,
+            "t": 1783503720
+          },
+          {
+            "c": null,
+            "t": 1783503780
+          },
+          {
+            "c": null,
+            "t": 1783503840
+          },
+          {
+            "c": null,
+            "t": 1783503900
+          },
+          {
+            "c": null,
+            "t": 1783503960
+          },
+          {
+            "c": null,
+            "t": 1783504020
+          },
+          {
+            "c": null,
+            "t": 1783504080
+          },
+          {
+            "c": null,
+            "t": 1783504140
+          },
+          {
+            "c": null,
+            "t": 1783504200
+          },
+          {
+            "c": null,
+            "t": 1783504260
+          },
+          {
+            "c": null,
+            "t": 1783504320
+          },
+          {
+            "c": null,
+            "t": 1783504380
+          },
+          {
+            "c": null,
+            "t": 1783504440
+          },
+          {
+            "c": null,
+            "t": 1783504500
+          },
+          {
+            "c": null,
+            "t": 1783504560
+          },
+          {
+            "c": null,
+            "t": 1783504620
+          },
+          {
+            "c": null,
+            "t": 1783504680
+          },
+          {
+            "c": null,
+            "t": 1783504740
+          },
+          {
+            "c": null,
+            "t": 1783504800
+          },
+          {
+            "c": null,
+            "t": 1783504860
+          },
+          {
+            "c": null,
+            "t": 1783504920
+          },
+          {
+            "c": null,
+            "t": 1783504980
+          },
+          {
+            "c": null,
+            "t": 1783505040
+          },
+          {
+            "c": null,
+            "t": 1783505100
+          },
+          {
+            "c": 25.985,
+            "t": 1783505160
+          },
+          {
+            "c": null,
+            "t": 1783505220
+          },
+          {
+            "c": null,
+            "t": 1783505280
+          },
+          {
+            "c": null,
+            "t": 1783505340
+          },
+          {
+            "c": null,
+            "t": 1783505400
+          },
+          {
+            "c": null,
+            "t": 1783505460
+          },
+          {
+            "c": null,
+            "t": 1783505520
+          },
+          {
+            "c": null,
+            "t": 1783505580
+          },
+          {
+            "c": null,
+            "t": 1783505640
+          },
+          {
+            "c": null,
+            "t": 1783505700
+          },
+          {
+            "c": 25.99,
+            "t": 1783505760
+          },
+          {
+            "c": null,
+            "t": 1783505820
+          },
+          {
+            "c": null,
+            "t": 1783505880
+          },
+          {
+            "c": null,
+            "t": 1783505940
+          },
+          {
+            "c": null,
+            "t": 1783506000
+          },
+          {
+            "c": null,
+            "t": 1783506060
+          },
+          {
+            "c": null,
+            "t": 1783506120
+          },
+          {
+            "c": null,
+            "t": 1783506180
+          },
+          {
+            "c": null,
+            "t": 1783506240
+          },
+          {
+            "c": null,
+            "t": 1783506300
+          },
+          {
+            "c": 25.995,
+            "t": 1783506360
+          },
+          {
+            "c": 26.02,
+            "t": 1783506420
+          },
+          {
+            "c": null,
+            "t": 1783506480
+          },
+          {
+            "c": null,
+            "t": 1783506540
+          },
+          {
+            "c": null,
+            "t": 1783506600
+          },
+          {
+            "c": null,
+            "t": 1783506660
+          },
+          {
+            "c": null,
+            "t": 1783506720
+          },
+          {
+            "c": null,
+            "t": 1783506780
+          },
+          {
+            "c": null,
+            "t": 1783506840
+          },
+          {
+            "c": null,
+            "t": 1783506900
+          },
+          {
+            "c": null,
+            "t": 1783506960
+          },
+          {
+            "c": null,
+            "t": 1783507020
+          },
+          {
+            "c": null,
+            "t": 1783507080
+          },
+          {
+            "c": null,
+            "t": 1783507140
+          },
+          {
+            "c": null,
+            "t": 1783507200
+          },
+          {
+            "c": null,
+            "t": 1783507260
+          },
+          {
+            "c": null,
+            "t": 1783507320
+          },
+          {
+            "c": null,
+            "t": 1783507380
+          },
+          {
+            "c": null,
+            "t": 1783507440
+          },
+          {
+            "c": null,
+            "t": 1783507500
+          },
+          {
+            "c": null,
+            "t": 1783507560
+          },
+          {
+            "c": null,
+            "t": 1783507620
+          },
+          {
+            "c": null,
+            "t": 1783507680
+          },
+          {
+            "c": null,
+            "t": 1783507740
+          },
+          {
+            "c": null,
+            "t": 1783507800
+          },
+          {
+            "c": null,
+            "t": 1783507860
+          },
+          {
+            "c": null,
+            "t": 1783507920
+          },
+          {
+            "c": null,
+            "t": 1783507980
+          },
+          {
+            "c": null,
+            "t": 1783508040
+          },
+          {
+            "c": null,
+            "t": 1783508100
+          },
+          {
+            "c": null,
+            "t": 1783508160
+          },
+          {
+            "c": null,
+            "t": 1783508220
+          },
+          {
+            "c": null,
+            "t": 1783508280
+          },
+          {
+            "c": null,
+            "t": 1783508340
+          },
+          {
+            "c": null,
+            "t": 1783508400
+          },
+          {
+            "c": null,
+            "t": 1783508460
+          },
+          {
+            "c": null,
+            "t": 1783508520
+          },
+          {
+            "c": null,
+            "t": 1783508580
+          },
+          {
+            "c": null,
+            "t": 1783508640
+          },
+          {
+            "c": null,
+            "t": 1783508700
+          },
+          {
+            "c": null,
+            "t": 1783508760
+          },
+          {
+            "c": null,
+            "t": 1783508820
+          },
+          {
+            "c": null,
+            "t": 1783508880
+          },
+          {
+            "c": null,
+            "t": 1783508940
+          },
+          {
+            "c": null,
+            "t": 1783509000
+          },
+          {
+            "c": null,
+            "t": 1783509060
+          },
+          {
+            "c": null,
+            "t": 1783509120
+          },
+          {
+            "c": null,
+            "t": 1783509180
+          },
+          {
+            "c": null,
+            "t": 1783509240
+          },
+          {
+            "c": null,
+            "t": 1783509300
+          },
+          {
+            "c": null,
+            "t": 1783509360
+          },
+          {
+            "c": null,
+            "t": 1783509420
+          },
+          {
+            "c": null,
+            "t": 1783509480
+          },
+          {
+            "c": null,
+            "t": 1783509540
+          },
+          {
+            "c": null,
+            "t": 1783509600
+          },
+          {
+            "c": null,
+            "t": 1783509660
+          },
+          {
+            "c": null,
+            "t": 1783509720
+          },
+          {
+            "c": 25.895,
+            "t": 1783509780
+          },
+          {
+            "c": null,
+            "t": 1783509840
+          },
+          {
+            "c": null,
+            "t": 1783509900
+          },
+          {
+            "c": null,
+            "t": 1783509960
+          },
+          {
+            "c": null,
+            "t": 1783510020
+          },
+          {
+            "c": null,
+            "t": 1783510080
+          },
+          {
+            "c": null,
+            "t": 1783510140
+          },
+          {
+            "c": null,
+            "t": 1783510200
+          },
+          {
+            "c": null,
+            "t": 1783510260
+          },
+          {
+            "c": null,
+            "t": 1783510320
+          },
+          {
+            "c": null,
+            "t": 1783510380
+          },
+          {
+            "c": null,
+            "t": 1783510440
+          },
+          {
+            "c": null,
+            "t": 1783510500
+          },
+          {
+            "c": null,
+            "t": 1783510560
+          },
+          {
+            "c": null,
+            "t": 1783510620
+          },
+          {
+            "c": null,
+            "t": 1783510680
+          },
+          {
+            "c": null,
+            "t": 1783510740
+          },
+          {
+            "c": null,
+            "t": 1783510800
+          },
+          {
+            "c": null,
+            "t": 1783510860
+          },
+          {
+            "c": null,
+            "t": 1783510920
+          },
+          {
+            "c": null,
+            "t": 1783510980
+          },
+          {
+            "c": null,
+            "t": 1783511040
+          },
+          {
+            "c": null,
+            "t": 1783511100
+          },
+          {
+            "c": null,
+            "t": 1783511160
+          },
+          {
+            "c": null,
+            "t": 1783511220
+          },
+          {
+            "c": null,
+            "t": 1783511280
+          },
+          {
+            "c": null,
+            "t": 1783511340
+          },
+          {
+            "c": null,
+            "t": 1783511400
+          },
+          {
+            "c": null,
+            "t": 1783511460
+          },
+          {
+            "c": null,
+            "t": 1783511520
+          },
+          {
+            "c": null,
+            "t": 1783511580
+          },
+          {
+            "c": null,
+            "t": 1783511640
+          },
+          {
+            "c": null,
+            "t": 1783511700
+          },
+          {
+            "c": null,
+            "t": 1783511760
+          },
+          {
+            "c": null,
+            "t": 1783511820
+          },
+          {
+            "c": null,
+            "t": 1783511880
+          },
+          {
+            "c": null,
+            "t": 1783511940
+          },
+          {
+            "c": null,
+            "t": 1783512000
+          },
+          {
+            "c": null,
+            "t": 1783512060
+          },
+          {
+            "c": null,
+            "t": 1783512120
+          },
+          {
+            "c": null,
+            "t": 1783512180
+          },
+          {
+            "c": null,
+            "t": 1783512240
+          },
+          {
+            "c": null,
+            "t": 1783512300
+          },
+          {
+            "c": null,
+            "t": 1783512360
+          },
+          {
+            "c": null,
+            "t": 1783512420
+          },
+          {
+            "c": null,
+            "t": 1783512480
+          },
+          {
+            "c": null,
+            "t": 1783512540
+          },
+          {
+            "c": null,
+            "t": 1783512600
+          },
+          {
+            "c": null,
+            "t": 1783512660
+          },
+          {
+            "c": null,
+            "t": 1783512720
+          },
+          {
+            "c": null,
+            "t": 1783512780
+          },
+          {
+            "c": null,
+            "t": 1783512840
+          },
+          {
+            "c": null,
+            "t": 1783512900
+          },
+          {
+            "c": null,
+            "t": 1783512960
+          },
+          {
+            "c": null,
+            "t": 1783513020
+          },
+          {
+            "c": null,
+            "t": 1783513080
+          },
+          {
+            "c": null,
+            "t": 1783513140
+          },
+          {
+            "c": null,
+            "t": 1783513200
+          },
+          {
+            "c": null,
+            "t": 1783513260
+          },
+          {
+            "c": null,
+            "t": 1783513320
+          },
+          {
+            "c": null,
+            "t": 1783513380
+          },
+          {
+            "c": null,
+            "t": 1783513440
+          },
+          {
+            "c": null,
+            "t": 1783513500
+          },
+          {
+            "c": null,
+            "t": 1783513560
+          },
+          {
+            "c": null,
+            "t": 1783513620
+          },
+          {
+            "c": null,
+            "t": 1783513680
+          },
+          {
+            "c": null,
+            "t": 1783513740
+          },
+          {
+            "c": null,
+            "t": 1783513800
+          },
+          {
+            "c": null,
+            "t": 1783513860
+          },
+          {
+            "c": null,
+            "t": 1783513920
+          },
+          {
+            "c": null,
+            "t": 1783513980
+          },
+          {
+            "c": null,
+            "t": 1783514040
+          },
+          {
+            "c": null,
+            "t": 1783514100
+          },
+          {
+            "c": null,
+            "t": 1783514160
+          },
+          {
+            "c": null,
+            "t": 1783514220
+          },
+          {
+            "c": null,
+            "t": 1783514280
+          },
+          {
+            "c": null,
+            "t": 1783514340
+          },
+          {
+            "c": null,
+            "t": 1783514400
+          },
+          {
+            "c": null,
+            "t": 1783514460
+          },
+          {
+            "c": null,
+            "t": 1783514520
+          },
+          {
+            "c": null,
+            "t": 1783514580
+          },
+          {
+            "c": null,
+            "t": 1783514640
+          },
+          {
+            "c": null,
+            "t": 1783514700
+          },
+          {
+            "c": null,
+            "t": 1783514760
+          },
+          {
+            "c": null,
+            "t": 1783514820
+          },
+          {
+            "c": null,
+            "t": 1783514880
+          },
+          {
+            "c": null,
+            "t": 1783514940
+          },
+          {
+            "c": null,
+            "t": 1783515000
+          },
+          {
+            "c": null,
+            "t": 1783515060
+          },
+          {
+            "c": null,
+            "t": 1783515120
+          },
+          {
+            "c": null,
+            "t": 1783515180
+          },
+          {
+            "c": null,
+            "t": 1783515240
+          },
+          {
+            "c": null,
+            "t": 1783515300
+          },
+          {
+            "c": null,
+            "t": 1783515360
+          },
+          {
+            "c": null,
+            "t": 1783515420
+          },
+          {
+            "c": null,
+            "t": 1783515480
+          },
+          {
+            "c": null,
+            "t": 1783515540
+          },
+          {
+            "c": null,
+            "t": 1783515600
+          },
+          {
+            "c": null,
+            "t": 1783515660
+          },
+          {
+            "c": null,
+            "t": 1783515720
+          },
+          {
+            "c": null,
+            "t": 1783515780
+          },
+          {
+            "c": null,
+            "t": 1783515840
+          },
+          {
+            "c": null,
+            "t": 1783515900
+          },
+          {
+            "c": null,
+            "t": 1783515960
+          },
+          {
+            "c": null,
+            "t": 1783516020
+          },
+          {
+            "c": null,
+            "t": 1783516080
+          },
+          {
+            "c": null,
+            "t": 1783516140
+          },
+          {
+            "c": null,
+            "t": 1783516200
+          },
+          {
+            "c": null,
+            "t": 1783516260
+          },
+          {
+            "c": null,
+            "t": 1783516320
+          },
+          {
+            "c": null,
+            "t": 1783516380
+          },
+          {
+            "c": null,
+            "t": 1783516440
+          },
+          {
+            "c": null,
+            "t": 1783516500
+          },
+          {
+            "c": null,
+            "t": 1783516560
+          },
+          {
+            "c": null,
+            "t": 1783516620
+          },
+          {
+            "c": 26.09,
+            "t": 1783516680
+          },
+          {
+            "c": null,
+            "t": 1783516740
+          },
+          {
+            "c": null,
+            "t": 1783516800
+          },
+          {
+            "c": null,
+            "t": 1783516860
+          },
+          {
+            "c": null,
+            "t": 1783516920
+          },
+          {
+            "c": null,
+            "t": 1783516980
+          },
+          {
+            "c": 26.11,
+            "t": 1783517040
+          },
+          {
+            "c": null,
+            "t": 1783517100
+          },
+          {
+            "c": null,
+            "t": 1783517160
+          },
+          {
+            "c": null,
+            "t": 1783517220
+          },
+          {
+            "c": null,
+            "t": 1783517280
+          },
+          {
+            "c": null,
+            "t": 1783517340
+          },
+          {
+            "c": null,
+            "t": 1783517400
+          },
+          {
+            "c": null,
+            "t": 1783517460
+          },
+          {
+            "c": null,
+            "t": 1783517520
+          },
+          {
+            "c": null,
+            "t": 1783517580
+          },
+          {
+            "c": null,
+            "t": 1783517640
+          },
+          {
+            "c": null,
+            "t": 1783517700
+          },
+          {
+            "c": null,
+            "t": 1783517760
+          },
+          {
+            "c": null,
+            "t": 1783517820
+          },
+          {
+            "c": null,
+            "t": 1783517880
+          },
+          {
+            "c": null,
+            "t": 1783517940
+          },
+          {
+            "c": null,
+            "t": 1783518000
+          },
+          {
+            "c": null,
+            "t": 1783518060
+          },
+          {
+            "c": null,
+            "t": 1783518120
+          },
+          {
+            "c": null,
+            "t": 1783518180
+          },
+          {
+            "c": null,
+            "t": 1783518240
+          },
+          {
+            "c": null,
+            "t": 1783518300
+          },
+          {
+            "c": null,
+            "t": 1783518360
+          },
+          {
+            "c": null,
+            "t": 1783518420
+          },
+          {
+            "c": null,
+            "t": 1783518480
+          },
+          {
+            "c": null,
+            "t": 1783518540
+          },
+          {
+            "c": null,
+            "t": 1783518600
+          },
+          {
+            "c": null,
+            "t": 1783518660
+          },
+          {
+            "c": null,
+            "t": 1783518720
+          },
+          {
+            "c": null,
+            "t": 1783518780
+          },
+          {
+            "c": null,
+            "t": 1783518840
+          },
+          {
+            "c": null,
+            "t": 1783518900
+          },
+          {
+            "c": null,
+            "t": 1783518960
+          },
+          {
+            "c": null,
+            "t": 1783519020
+          },
+          {
+            "c": null,
+            "t": 1783519080
+          },
+          {
+            "c": null,
+            "t": 1783519140
+          },
+          {
+            "c": null,
+            "t": 1783519200
+          },
+          {
+            "c": null,
+            "t": 1783519260
+          },
+          {
+            "c": 26.07,
+            "t": 1783519320
+          },
+          {
+            "c": null,
+            "t": 1783519380
+          },
+          {
+            "c": null,
+            "t": 1783519440
+          },
+          {
+            "c": null,
+            "t": 1783519500
+          },
+          {
+            "c": null,
+            "t": 1783519560
+          },
+          {
+            "c": null,
+            "t": 1783519620
+          },
+          {
+            "c": null,
+            "t": 1783519680
+          },
+          {
+            "c": null,
+            "t": 1783519740
+          },
+          {
+            "c": null,
+            "t": 1783519800
+          },
+          {
+            "c": null,
+            "t": 1783519860
+          },
+          {
+            "c": null,
+            "t": 1783519920
+          },
+          {
+            "c": null,
+            "t": 1783519980
+          },
+          {
+            "c": null,
+            "t": 1783520040
+          },
+          {
+            "c": null,
+            "t": 1783520100
+          },
+          {
+            "c": null,
+            "t": 1783520160
+          },
+          {
+            "c": null,
+            "t": 1783520220
+          },
+          {
+            "c": null,
+            "t": 1783520280
+          },
+          {
+            "c": null,
+            "t": 1783520340
+          },
+          {
+            "c": null,
+            "t": 1783520400
+          },
+          {
+            "c": null,
+            "t": 1783520460
+          },
+          {
+            "c": null,
+            "t": 1783520520
+          },
+          {
+            "c": null,
+            "t": 1783520580
+          },
+          {
+            "c": null,
+            "t": 1783520640
+          },
+          {
+            "c": null,
+            "t": 1783520700
+          },
+          {
+            "c": null,
+            "t": 1783520760
+          },
+          {
+            "c": null,
+            "t": 1783520820
+          },
+          {
+            "c": null,
+            "t": 1783520880
+          },
+          {
+            "c": null,
+            "t": 1783520940
+          },
+          {
+            "c": null,
+            "t": 1783521000
+          },
+          {
+            "c": null,
+            "t": 1783521060
+          },
+          {
+            "c": null,
+            "t": 1783521120
+          },
+          {
+            "c": null,
+            "t": 1783521180
+          },
+          {
+            "c": null,
+            "t": 1783521240
+          },
+          {
+            "c": null,
+            "t": 1783521300
+          },
+          {
+            "c": null,
+            "t": 1783521360
+          },
+          {
+            "c": null,
+            "t": 1783521420
+          },
+          {
+            "c": null,
+            "t": 1783521480
+          },
+          {
+            "c": null,
+            "t": 1783521540
+          },
+          {
+            "c": null,
+            "t": 1783521600
+          },
+          {
+            "c": null,
+            "t": 1783521660
+          },
+          {
+            "c": null,
+            "t": 1783521720
+          },
+          {
+            "c": null,
+            "t": 1783521780
+          },
+          {
+            "c": null,
+            "t": 1783521840
+          },
+          {
+            "c": null,
+            "t": 1783521900
+          },
+          {
+            "c": null,
+            "t": 1783521960
+          },
+          {
+            "c": null,
+            "t": 1783522020
+          },
+          {
+            "c": null,
+            "t": 1783522080
+          },
+          {
+            "c": null,
+            "t": 1783522140
+          },
+          {
+            "c": null,
+            "t": 1783522200
+          },
+          {
+            "c": null,
+            "t": 1783522260
+          },
+          {
+            "c": null,
+            "t": 1783522320
+          },
+          {
+            "c": null,
+            "t": 1783522380
+          },
+          {
+            "c": null,
+            "t": 1783522440
+          },
+          {
+            "c": 25.98,
+            "t": 1783522500
+          },
+          {
+            "c": null,
+            "t": 1783522560
+          },
+          {
+            "c": null,
+            "t": 1783522620
+          },
+          {
+            "c": null,
+            "t": 1783522680
+          },
+          {
+            "c": null,
+            "t": 1783522740
+          },
+          {
+            "c": null,
+            "t": 1783522800
+          },
+          {
+            "c": null,
+            "t": 1783522860
+          },
+          {
+            "c": null,
+            "t": 1783522920
+          },
+          {
+            "c": null,
+            "t": 1783522980
+          },
+          {
+            "c": null,
+            "t": 1783523040
+          },
+          {
+            "c": null,
+            "t": 1783523100
+          },
+          {
+            "c": null,
+            "t": 1783523160
+          },
+          {
+            "c": null,
+            "t": 1783523220
+          },
+          {
+            "c": null,
+            "t": 1783523280
+          },
+          {
+            "c": null,
+            "t": 1783523340
+          },
+          {
+            "c": null,
+            "t": 1783523400
+          },
+          {
+            "c": null,
+            "t": 1783523460
+          },
+          {
+            "c": 25.96,
+            "t": 1783523520
+          },
+          {
+            "c": null,
+            "t": 1783523580
+          },
+          {
+            "c": null,
+            "t": 1783523640
+          },
+          {
+            "c": null,
+            "t": 1783523700
+          },
+          {
+            "c": null,
+            "t": 1783523760
+          },
+          {
+            "c": null,
+            "t": 1783523820
+          },
+          {
+            "c": null,
+            "t": 1783523880
+          },
+          {
+            "c": null,
+            "t": 1783523940
+          },
+          {
+            "c": null,
+            "t": 1783524000
+          },
+          {
+            "c": null,
+            "t": 1783524060
+          },
+          {
+            "c": null,
+            "t": 1783524120
+          },
+          {
+            "c": null,
+            "t": 1783524180
+          },
+          {
+            "c": null,
+            "t": 1783524240
+          },
+          {
+            "c": null,
+            "t": 1783524300
+          },
+          {
+            "c": null,
+            "t": 1783524360
+          },
+          {
+            "c": null,
+            "t": 1783524420
+          },
+          {
+            "c": null,
+            "t": 1783524480
+          },
+          {
+            "c": null,
+            "t": 1783524540
+          },
+          {
+            "c": null,
+            "t": 1783524600
+          },
+          {
+            "c": null,
+            "t": 1783524660
+          },
+          {
+            "c": null,
+            "t": 1783524720
+          },
+          {
+            "c": null,
+            "t": 1783524780
+          },
+          {
+            "c": null,
+            "t": 1783524840
+          },
+          {
+            "c": null,
+            "t": 1783524900
+          },
+          {
+            "c": null,
+            "t": 1783524960
+          },
+          {
+            "c": null,
+            "t": 1783525020
+          },
+          {
+            "c": null,
+            "t": 1783525080
+          },
+          {
+            "c": null,
+            "t": 1783525140
+          },
+          {
+            "c": null,
+            "t": 1783525200
+          },
+          {
+            "c": null,
+            "t": 1783525260
+          },
+          {
+            "c": null,
+            "t": 1783525320
+          },
+          {
+            "c": null,
+            "t": 1783525380
+          },
+          {
+            "c": null,
+            "t": 1783525440
+          },
+          {
+            "c": null,
+            "t": 1783525500
+          },
+          {
+            "c": null,
+            "t": 1783525560
+          },
+          {
+            "c": null,
+            "t": 1783525620
+          },
+          {
+            "c": null,
+            "t": 1783525680
+          },
+          {
+            "c": null,
+            "t": 1783525740
+          },
+          {
+            "c": null,
+            "t": 1783525800
+          },
+          {
+            "c": null,
+            "t": 1783525860
+          },
+          {
+            "c": null,
+            "t": 1783525920
+          },
+          {
+            "c": null,
+            "t": 1783525980
+          },
+          {
+            "c": 25.985,
+            "t": 1783526040
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
           }
         ]
       },
-      "history_1y": [
+      "description": "The Amana Equity Income ETF (AMEI) is an exchange-traded fund that mostly invests in total market equity. The fund is an actively managed portfolio of dividend-paying stocks globally, of companies considered to be compliant with Islamic principles. The ETF seeks to provide current income. AMEI was launched on Jun 24, 2026 and is issued by Amana.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "AMEI"
+        ],
+        [
+          "Provider",
+          "Amana"
+        ]
+      ],
+      "etf_website": "https://www.saturna.com/products/amana-equity-income-etf",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 32,
+        "updated": "Jul 2, 2026",
+        "top10": 59.77,
+        "holdings": [
+          {
+            "n": "Taiwan Semiconductor Manufacturing Company Limited",
+            "s": "$TSM",
+            "as": "11.64%",
+            "sh": "853"
+          },
+          {
+            "n": "Eli Lilly and Company",
+            "s": "$LLY",
+            "as": "10.30%",
+            "sh": "270"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "7.92%",
+            "sh": "252,124"
+          },
+          {
+            "n": "Rockwell Automation, Inc.",
+            "s": "$ROK",
+            "as": "5.69%",
+            "sh": "384"
+          },
+          {
+            "n": "Microsoft Corporation",
+            "s": "$MSFT",
+            "as": "5.17%",
+            "sh": "421"
+          },
+          {
+            "n": "W.W. Grainger, Inc.",
+            "s": "$GWW",
+            "as": "4.56%",
+            "sh": "108"
+          },
+          {
+            "n": "Broadcom Inc.",
+            "s": "$AVGO",
+            "as": "4.35%",
+            "sh": "384"
+          },
+          {
+            "n": "Cisco Systems, Inc.",
+            "s": "$CSCO",
+            "as": "3.82%",
+            "sh": "1,080"
+          },
+          {
+            "n": "Illinois Tool Works Inc.",
+            "s": "$ITW",
+            "as": "3.19%",
+            "sh": "372"
+          },
+          {
+            "n": "Johnson Controls International plc",
+            "s": "$JCI",
+            "as": "3.13%",
+            "sh": "708"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783598627015",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 26.341,
+        "priceMAX": 25.519
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 25.9919,
+      "pd": 25.99,
+      "c": -0.13,
+      "cp": -0.48,
+      "cl": 26.12,
+      "cdr": -1,
+      "o": 26.09,
+      "h": 26.11,
+      "l": 25.96,
+      "v": 4811.492,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 26.41,
+      "l52": 25.519,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 25.9919,
+      "epd": 25.99,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1783541700013.253,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554649291,
+      "symbol": "AMEI",
+      "uid": "AMEI"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 26.3,
+        "h": 26.32,
+        "l": 26.034,
+        "c": 26.117,
+        "a": 26.1171,
+        "v": 21740,
+        "ch": -0.85
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-24",
-          "Open": 25.68000030517578,
-          "High": 25.68000030517578,
-          "Low": 25.520000457763672,
-          "Close": 25.520000457763672,
-          "Volume": 42100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 26.28,
+          "h": 26.28,
+          "l": 26.117,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 4658,
+          "ch": -0.77
         },
         {
-          "date": "2026-06-25",
-          "Open": 25.799999237060547,
-          "High": 25.799999237060547,
-          "Low": 25.670000076293945,
-          "Close": 25.670000076293945,
-          "Volume": 10800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 26.27,
+          "h": 26.32,
+          "l": 26.27,
+          "c": 26.32,
+          "a": 26.3196,
+          "v": 4331,
+          "ch": 0.77
         },
         {
-          "date": "2026-06-26",
-          "Open": 25.770000457763672,
-          "High": 25.799999237060547,
-          "Low": 25.770000457763672,
-          "Close": 25.799999237060547,
-          "Volume": 8100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 26.08,
+          "h": 26.118,
+          "l": 26.034,
+          "c": 26.118,
+          "a": 26.1178,
+          "v": 7549,
+          "ch": 0.11
         },
         {
-          "date": "2026-06-29",
-          "Open": 25.979999542236328,
-          "High": 26.1200008392334,
-          "Low": 25.84000015258789,
-          "Close": 26.079999923706055,
-          "Volume": 6500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.3,
+          "l": 26.09,
+          "c": 26.09,
+          "a": 26.09,
+          "v": 5202,
+          "ch": -0.95
         },
         {
-          "date": "2026-06-30",
-          "Open": 26.31999969482422,
-          "High": 26.340700149536133,
-          "Low": 26.31999969482422,
-          "Close": 26.340700149536133,
-          "Volume": 5247.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 26.32,
+          "h": 26.41,
+          "l": 26.32,
+          "c": 26.341,
+          "a": 26.3407,
+          "v": 5247,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.975,
+          "h": 26.12,
+          "l": 25.84,
+          "c": 26.078,
+          "a": 26.0783,
+          "v": 6519,
+          "ch": 1.09
+        },
+        {
+          "t": "2026-06-26",
+          "o": 25.77,
+          "h": 25.797,
+          "l": 25.77,
+          "c": 25.797,
+          "a": 25.7974,
+          "v": 8082.000000000001,
+          "ch": 0.5
+        },
+        {
+          "t": "2026-06-25",
+          "o": 25.8,
+          "h": 25.8,
+          "l": 25.668,
+          "c": 25.668,
+          "a": 25.6679,
+          "v": 10836,
+          "ch": 0.58
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 26.27,
+          "h": 26.32,
+          "l": 26.117,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 8989,
+          "ch": 0
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.975,
+          "h": 26.41,
+          "l": 25.84,
+          "c": 26.118,
+          "a": 26.1178,
+          "v": 24517,
+          "ch": 1.24
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.32,
+          "l": 26.034,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 21740,
+          "ch": -0.85
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 26.27,
+          "h": 26.32,
+          "l": 26.117,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 8989,
+          "ch": 0
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.975,
+          "h": 26.41,
+          "l": 25.84,
+          "c": 26.118,
+          "a": 26.1178,
+          "v": 24517,
+          "ch": 1.24
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.32,
+          "l": 26.034,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 21740,
+          "ch": -0.85
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 26.3,
+          "h": 26.32,
+          "l": 26.034,
+          "c": 26.117,
+          "a": 26.1171,
+          "v": 21740,
+          "ch": -0.85
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

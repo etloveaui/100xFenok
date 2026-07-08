@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BTCK",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T23:57:36Z",
+  "generated_at": "2026-07-08T23:53:30Z",
   "identity": {
     "name": "7RCC Spot Bitcoin And Carbon Credit Futures ETF",
     "exchange": "PCX",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 23.14900016784668,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 23.43,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-30T23:54:56Z",
+      "fetched_at": "2026-07-08T23:51:31Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 23.14900016784668,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 23.43,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T23:54:56Z",
+          "fetched_at": "2026-07-08T23:51:31Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 23.115,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 23.43,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T23:54:56Z",
+          "fetched_at": "2026-07-08T23:51:31Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.03400016784668125,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-30T23:54:56Z",
+      "fetched_at": "2026-07-08T23:51:31Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": 0.03400016784668125,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 0,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T23:54:56Z",
+          "fetched_at": "2026-07-08T23:51:31Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.14709135992507572,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-30T23:54:56Z",
+      "fetched_at": "2026-07-08T23:51:31Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,32 @@
       ],
       "candidates": [
         {
-          "value": 0.14709135992507572,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 0,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T23:54:56Z",
+          "fetched_at": "2026-07-08T23:51:31Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 1420000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-08T23:51:31Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1420000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-08T23:51:31Z",
           "confidence": "observed"
         }
       ],
@@ -134,34 +156,36 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.68,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 0.44,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-30T23:54:56Z",
+          "fetched_at": "2026-07-08T23:51:31Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 2
     },
-    "return_3m": {
-      "value": 0.1254296174767907,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-06-30T23:54:56Z",
-      "confidence": "derived",
+    "return_1m": {
+      "value": 1.736,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-08T23:51:31Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
-        "stockanalysis.detail.history"
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
-          "value": 0.1254296174767907,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-06-30T23:54:56Z",
-          "confidence": "derived",
+          "value": 1.736,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-08T23:51:31Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -229,9 +253,84 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-06-30T23:54:56Z",
-    "top_holdings": [],
+    "holdings_count": 6,
+    "holdings_updated": "Jul 6, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Bitcoin",
+        "weight_pct": 79.23,
+        "shares": 1828,
+        "raw": {
+          "no": 1,
+          "n": "Bitcoin",
+          "as": "79.23%",
+          "sh": "1,828"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "MO12",
+        "name": "Ecx Emission Dec26",
+        "weight_pct": 20.18,
+        "shares": 3,
+        "raw": {
+          "no": 2,
+          "n": "Ecx Emission Dec26",
+          "s": "MO12",
+          "as": "20.18%",
+          "sh": "3"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "US BANK MMDA - USBGFS 9",
+        "weight_pct": 18.4,
+        "shares": 270567,
+        "raw": {
+          "no": 3,
+          "n": "US BANK MMDA - USBGFS 9",
+          "as": "18.40%",
+          "sh": "270,567"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "EURO",
+        "weight_pct": 0.74,
+        "shares": 9520,
+        "raw": {
+          "no": 4,
+          "n": "EURO",
+          "as": "0.74%",
+          "sh": "9,520"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 0.5,
+        "shares": 10801,
+        "raw": {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "0.50%",
+          "sh": "10,801"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Cash Offset",
+        "weight_pct": -19.05,
+        "shares": 280151,
+        "raw": {
+          "no": 6,
+          "n": "Cash Offset",
+          "as": "-19.05%",
+          "sh": "280,151"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
@@ -249,15 +348,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/BTCK.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/BTCK.json",
+    "stockanalysis": "stockanalysis/etfs/BTCK.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

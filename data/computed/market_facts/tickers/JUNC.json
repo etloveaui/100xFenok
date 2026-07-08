@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "JUNC",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-08T23:53:30Z",
   "identity": {
     "name": "Corgi U.S. Equities 10% Structured Buffer ETF - June Series",
     "exchange": "BTS",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 24.8543,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 24.8548,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:58:46Z",
+      "fetched_at": "2026-07-08T23:53:15Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 24.8543,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 24.8548,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:58:46Z",
+          "fetched_at": "2026-07-08T23:53:15Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 24.8897,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 24.85,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:58:46Z",
+          "fetched_at": "2026-07-08T23:53:15Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.03540000000000276,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.05,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:58:46Z",
+      "fetched_at": "2026-07-08T23:53:15Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": -0.03540000000000276,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.05,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:58:46Z",
+          "fetched_at": "2026-07-08T23:53:15Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -0.14222750776426699,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.21,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:58:46Z",
+      "fetched_at": "2026-07-08T23:53:15Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,32 @@
       ],
       "candidates": [
         {
-          "value": -0.14222750776426699,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.21,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:58:46Z",
+          "fetched_at": "2026-07-08T23:53:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 1240000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-08T23:53:15Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1240000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-08T23:53:15Z",
           "confidence": "observed"
         }
       ],
@@ -135,33 +157,35 @@
         },
         {
           "value": 0.3,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:58:46Z",
+          "fetched_at": "2026-07-08T23:53:15Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 2
     },
-    "return_3m": {
-      "value": 1.2611857888714044,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-07-01T23:58:46Z",
-      "confidence": "derived",
+    "return_1m": {
+      "value": 0.9161,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-08T23:53:15Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
-        "stockanalysis.detail.history"
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
-          "value": 1.2611857888714044,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-07-01T23:58:46Z",
-          "confidence": "derived",
+          "value": 0.9161,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-08T23:53:15Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -229,9 +253,110 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-07-01T23:58:46Z",
-    "top_holdings": [],
+    "holdings_count": 8,
+    "holdings_updated": "Jul 2, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Option On State Street® Spdr® S&P 500® Etf May27",
+        "weight_pct": 154.7,
+        "shares": 16,
+        "raw": {
+          "no": 1,
+          "n": "Option On State Street® Spdr® S&P 500® Etf May27",
+          "as": "154.70%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "T.0.5 05.31.27",
+        "name": "United States Treasury Notes 0.5%",
+        "weight_pct": 17.9,
+        "shares": 230000,
+        "raw": {
+          "no": 2,
+          "n": "United States Treasury Notes 0.5%",
+          "s": "T.0.5 05.31.27",
+          "as": "17.90%",
+          "sh": "230,000"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Option On State Street® Spdr® S&P 500® Etf May27",
+        "weight_pct": 11.15,
+        "shares": 16,
+        "raw": {
+          "no": 3,
+          "n": "Option On State Street® Spdr® S&P 500® Etf May27",
+          "as": "11.15%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 3.56,
+        "shares": 44262,
+        "raw": {
+          "no": 4,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "3.56%",
+          "sh": "44,262"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.01,
+        "shares": 185,
+        "raw": {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.01%",
+          "sh": "185"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Option On State Street® Spdr® S&P 500® Etf May27",
+        "weight_pct": -2.29,
+        "shares": 16,
+        "raw": {
+          "no": 6,
+          "n": "Option On State Street® Spdr® S&P 500® Etf May27",
+          "as": "-2.29%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Option On State Street® Spdr® S&P 500® Etf May27",
+        "weight_pct": -6.25,
+        "shares": 16,
+        "raw": {
+          "no": 7,
+          "n": "Option On State Street® Spdr® S&P 500® Etf May27",
+          "as": "-6.25%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "Cash Offset",
+        "weight_pct": -78.75,
+        "shares": 980124,
+        "raw": {
+          "no": 8,
+          "n": "Cash Offset",
+          "as": "-78.75%",
+          "sh": "980,124"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
@@ -249,15 +374,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/JUNC.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/JUNC.json",
+    "stockanalysis": "stockanalysis/etfs/JUNC.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

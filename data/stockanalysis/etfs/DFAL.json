@@ -1,19 +1,380 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "DFAL",
-  "fetched_at": "2026-06-30T23:55:48Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-08T23:52:05Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/DFAL/holdings",
+    "overview": "/api/symbol/e/DFAL/overview",
+    "quote": "/api/quotes/e/DFAL",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/DFAL/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/DFAL/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/DFAL/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/DFAL/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/DFAL/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/DFAL/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "#IWY",
+        "name": "iShares Russell Top 200 Growth ETF",
+        "weight_pct": 19.55,
+        "shares": 735384,
+        "raw": {
+          "no": 1,
+          "n": "iShares Russell Top 200 Growth ETF",
+          "s": "#IWY",
+          "as": "19.55%",
+          "sh": "735,384"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "#IWX",
+        "name": "iShares Russell Top 200 Value ETF",
+        "weight_pct": 15.69,
+        "shares": 1556363,
+        "raw": {
+          "no": 2,
+          "n": "iShares Russell Top 200 Value ETF",
+          "s": "#IWX",
+          "as": "15.69%",
+          "sh": "1,556,363"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "#DFUV",
+        "name": "Dimensional US Marketwide Value ETF",
+        "weight_pct": 11.43,
+        "shares": 2221850,
+        "raw": {
+          "no": 3,
+          "n": "Dimensional US Marketwide Value ETF",
+          "s": "#DFUV",
+          "as": "11.43%",
+          "sh": "2,221,850"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "#DFAC",
+        "name": "Dimensional U.S. Core Equity 2 ETF",
+        "weight_pct": 9.95,
+        "shares": 2396988,
+        "raw": {
+          "no": 4,
+          "n": "Dimensional U.S. Core Equity 2 ETF",
+          "s": "#DFAC",
+          "as": "9.95%",
+          "sh": "2,396,988"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "#IWS",
+        "name": "iShares Russell Mid-Cap Value ETF",
+        "weight_pct": 6.76,
+        "shares": 433565,
+        "raw": {
+          "no": 5,
+          "n": "iShares Russell Mid-Cap Value ETF",
+          "s": "#IWS",
+          "as": "6.76%",
+          "sh": "433,565"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "#DFAT",
+        "name": "Dimensional U.S. Targeted Value ETF",
+        "weight_pct": 3.91,
+        "shares": 598992,
+        "raw": {
+          "no": 6,
+          "n": "Dimensional U.S. Targeted Value ETF",
+          "s": "#DFAT",
+          "as": "3.91%",
+          "sh": "598,992"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "#IWP",
+        "name": "iShares Russell Mid-Cap Growth ETF",
+        "weight_pct": 3.05,
+        "shares": 227157,
+        "raw": {
+          "no": 7,
+          "n": "iShares Russell Mid-Cap Growth ETF",
+          "s": "#IWP",
+          "as": "3.05%",
+          "sh": "227,157"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "#AAUS",
+        "name": "Alpha Architect US Equity ETF",
+        "weight_pct": 2.7,
+        "shares": 481424,
+        "raw": {
+          "no": 8,
+          "n": "Alpha Architect US Equity ETF",
+          "s": "#AAUS",
+          "as": "2.70%",
+          "sh": "481,424"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 2.17,
+        "shares": 74919,
+        "raw": {
+          "no": 9,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "2.17%",
+          "sh": "74,919"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 1.59,
+        "shares": 47094,
+        "raw": {
+          "no": 10,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "1.59%",
+          "sh": "47,094"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 1.33,
+        "shares": 72866,
+        "raw": {
+          "no": 11,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "1.33%",
+          "sh": "72,866"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 1.25,
+        "shares": 33996,
+        "raw": {
+          "no": 12,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "1.25%",
+          "sh": "33,996"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 0.68,
+        "shares": 29793,
+        "raw": {
+          "no": 13,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "0.68%",
+          "sh": "29,793"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "GOOG",
+        "name": "Alphabet Inc.",
+        "weight_pct": 0.5,
+        "shares": 14822,
+        "raw": {
+          "no": 14,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "0.50%",
+          "sh": "14,822"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "UAL",
+        "name": "United Airlines Holdings, Inc.",
+        "weight_pct": 0.49,
+        "shares": 38894,
+        "raw": {
+          "no": 15,
+          "n": "United Airlines Holdings, Inc.",
+          "s": "$UAL",
+          "as": "0.49%",
+          "sh": "38,894"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "#DFAU",
+        "name": "Dimensional US Core Equity Market ETF",
+        "weight_pct": 0.48,
+        "shares": 100201,
+        "raw": {
+          "no": 16,
+          "n": "Dimensional US Core Equity Market ETF",
+          "s": "#DFAU",
+          "as": "0.48%",
+          "sh": "100,201"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "weight_pct": 0.48,
+        "shares": 9792,
+        "raw": {
+          "no": 17,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "0.48%",
+          "sh": "9,792"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "GM",
+        "name": "General Motors Company",
+        "weight_pct": 0.4,
+        "shares": 55447,
+        "raw": {
+          "no": 18,
+          "n": "General Motors Company",
+          "s": "$GM",
+          "as": "0.40%",
+          "sh": "55,447"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight_pct": 0.37,
+        "shares": 3281,
+        "raw": {
+          "no": 19,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "0.37%",
+          "sh": "3,281"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "UNM",
+        "name": "Unum Group",
+        "weight_pct": 0.37,
+        "shares": 42358,
+        "raw": {
+          "no": 20,
+          "n": "Unum Group",
+          "s": "$UNM",
+          "as": "0.37%",
+          "sh": "42,358"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "V",
+        "name": "Visa Inc.",
+        "weight_pct": 0.35,
+        "shares": 10391,
+        "raw": {
+          "no": 21,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "0.35%",
+          "sh": "10,391"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "AMG",
+        "name": "Affiliated Managers Group, Inc.",
+        "weight_pct": 0.35,
+        "shares": 10910,
+        "raw": {
+          "no": 22,
+          "n": "Affiliated Managers Group, Inc.",
+          "s": "$AMG",
+          "as": "0.35%",
+          "sh": "10,910"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 0.33,
+        "shares": 9896,
+        "raw": {
+          "no": 23,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "0.33%",
+          "sh": "9,896"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "R",
+        "name": "Ryder System, Inc.",
+        "weight_pct": 0.32,
+        "shares": 13117,
+        "raw": {
+          "no": 24,
+          "n": "Ryder System, Inc.",
+          "s": "$R",
+          "as": "0.32%",
+          "sh": "13,117"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "#IVV",
+        "name": "iShares Core S&P 500 ETF",
+        "weight_pct": 0.31,
+        "shares": 4390,
+        "raw": {
+          "no": 25,
+          "n": "iShares Core S&P 500 ETF",
+          "s": "#IVV",
+          "as": "0.31%",
+          "sh": "4,390"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-30T23:55:48Z",
+    "holding_count": 702,
+    "holdings_updated": "Jul 2, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -24,356 +385,2237 @@
       "confidence": "high"
     },
     "overview": {
-      "nav": 49.49,
-      "expenseRatio": 0.12,
-      "provider_page": "Dimensional Fund Advisors",
-      "category": "Large Blend",
-      "legalType": "Exchange Traded Fund",
-      "description": "As a non-fundamental policy, under normal circumstances, the Portfolio will invest at least 80% of its net assets in equity securities of large cap U.S. companies."
+      "aum": "$1.07B",
+      "expenseRatio": "0.12%",
+      "sharesOut": "21.28M",
+      "inception": "Jun 18, 2026",
+      "provider_page": "dimensional",
+      "etf_website": "https://www.dimensional.com/us-en/funds/dfal/us-large-cap-core-equity-market-etf"
     },
+    "performance": {},
     "quote": {
-      "p": 50.35020065307617,
-      "pd": 49.9475,
-      "c": 0.40270065307617386,
-      "cp": 0.8062478664120805,
-      "u": "2026-06-30T23:55:48Z",
-      "ex": "yahoo_finance"
+      "p": 50.0537,
+      "pd": 50.05,
+      "c": -0.22,
+      "cp": -0.44,
+      "cl": 50.27,
+      "cdr": -1,
+      "o": 49.91,
+      "h": 50.05,
+      "l": 49.75,
+      "v": 13277,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 50.6,
+      "l52": 49.381,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 50.0537,
+      "epd": 50.05,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 6:30 PM EDT",
+      "es": "After-hours",
+      "ets": 1783549802370.024,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554729805,
+      "symbol": "DFAL",
+      "uid": "DFAL"
     },
     "history": [
       {
-        "date": "2026-06-23",
-        "Open": 49.59000015258789,
-        "High": 49.59000015258789,
-        "Low": 49.439998626708984,
-        "Close": 49.439998626708984,
-        "Volume": 700.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-24",
-        "Open": 49.380001068115234,
-        "High": 49.380001068115234,
-        "Low": 49.380001068115234,
-        "Close": 49.380001068115234,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 49.560001373291016,
-        "High": 49.560001373291016,
-        "Low": 49.43000030517578,
-        "Close": 49.45000076293945,
-        "Volume": 1000.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 49.56999969482422,
-        "High": 49.56999969482422,
-        "Low": 49.43000030517578,
-        "Close": 49.560001373291016,
-        "Volume": 4300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 49.75,
-        "High": 49.95000076293945,
-        "Low": 49.7400016784668,
-        "Close": 49.95000076293945,
-        "Volume": 9200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 50.119998931884766,
-        "High": 50.35020065307617,
-        "Low": 50.119998931884766,
-        "Close": 50.35020065307617,
-        "Volume": 10968.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 50.35,
+        "h": 50.6,
+        "l": 49.96,
+        "c": 50.275,
+        "a": 50.2748,
+        "v": 99489,
+        "ch": -0.15
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-23",
-          "Open": 49.59000015258789,
-          "High": 49.59000015258789,
-          "Low": 49.439998626708984,
-          "Close": 49.439998626708984,
-          "Volume": 700.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 50.29,
+          "h": 50.3,
+          "l": 50.2,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 8198,
+          "ch": -0.49
         },
         {
-          "date": "2026-06-24",
-          "Open": 49.380001068115234,
-          "High": 49.380001068115234,
-          "Low": 49.380001068115234,
-          "Close": 49.380001068115234,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 50.47,
+          "h": 50.56,
+          "l": 50.432,
+          "c": 50.523,
+          "a": 50.5225,
+          "v": 27726,
+          "ch": 0.72
         },
         {
-          "date": "2026-06-25",
-          "Open": 49.560001373291016,
-          "High": 49.560001373291016,
-          "Low": 49.43000030517578,
-          "Close": 49.45000076293945,
-          "Volume": 1000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 50.5,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.163,
+          "a": 50.1633,
+          "v": 53221,
+          "ch": -0.1
         },
         {
-          "date": "2026-06-26",
-          "Open": 49.56999969482422,
-          "High": 49.56999969482422,
-          "Low": 49.43000030517578,
-          "Close": 49.560001373291016,
-          "Volume": 4300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.43,
+          "l": 50.215,
+          "c": 50.215,
+          "a": 50.2146,
+          "v": 10344,
+          "ch": -0.27
         },
         {
-          "date": "2026-06-29",
-          "Open": 49.75,
-          "High": 49.95000076293945,
-          "Low": 49.7400016784668,
-          "Close": 49.95000076293945,
-          "Volume": 9200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 50.12,
+          "h": 50.35,
+          "l": 50.12,
+          "c": 50.35,
+          "a": 50.3502,
+          "v": 10968,
+          "ch": 0.81
         },
         {
-          "date": "2026-06-30",
-          "Open": 50.119998931884766,
-          "High": 50.35020065307617,
-          "Low": 50.119998931884766,
-          "Close": 50.35020065307617,
-          "Volume": 10968.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 49.75,
+          "h": 49.948,
+          "l": 49.74,
+          "c": 49.948,
+          "a": 49.9475,
+          "v": 9214,
+          "ch": 0.78
+        },
+        {
+          "t": "2026-06-26",
+          "o": 49.57,
+          "h": 49.57,
+          "l": 49.43,
+          "c": 49.56,
+          "a": 49.5598,
+          "v": 4332,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-06-25",
+          "o": 49.56,
+          "h": 49.56,
+          "l": 49.43,
+          "c": 49.45,
+          "a": 49.4497,
+          "v": 1027,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-06-24",
+          "o": 49.381,
+          "h": 49.381,
+          "l": 49.381,
+          "c": 49.381,
+          "a": 49.3812,
+          "v": 21,
+          "ch": -0.11
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 50.47,
+          "h": 50.56,
+          "l": 50.2,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 35924,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-06-29",
+          "o": 49.75,
+          "h": 50.6,
+          "l": 49.74,
+          "c": 50.163,
+          "a": 50.1633,
+          "v": 83747,
+          "ch": 1.22
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 99489,
+          "ch": -0.15
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 50.47,
+          "h": 50.56,
+          "l": 50.2,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 35924,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-06-29",
+          "o": 49.75,
+          "h": 50.6,
+          "l": 49.74,
+          "c": 50.163,
+          "a": 50.1633,
+          "v": 83747,
+          "ch": 1.22
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 99489,
+          "ch": -0.15
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 99489,
+          "ch": -0.15
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Dimensional US Large Cap Core E",
-        "longName": "Dimensional US Large Cap Core Equity Market ETF",
-        "currency": "USD",
-        "exchange": "BTS",
-        "fundFamily": "Dimensional Fund Advisors",
-        "category": "Large Blend",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 49.49,
-        "netExpenseRatio": 0.12,
-        "previousClose": 49.9475,
-        "fiftyTwoWeekHigh": 50.3502,
-        "fiftyTwoWeekLow": 49.4375,
-        "fiftyTwoWeekChangePercent": 0.0,
-        "averageVolume": 709,
-        "averageVolume10days": 709
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 50.35020065307617,
-        "dayLow": 50.119998931884766,
-        "exchange": "BTS",
-        "fiftyDayAverage": 49.556000518798825,
-        "lastPrice": 50.35020065307617,
-        "lastVolume": 10968.0,
-        "open": 50.119998931884766,
-        "previousClose": 49.9474983215332,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 49.95000076293945,
-        "tenDayAverageVolume": 3060.0,
-        "threeMonthAverageVolume": 3060.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 49.556000518798825,
-        "yearChange": 0.010315577475662594,
-        "yearHigh": 49.95000076293945,
-        "yearLow": 49.380001068115234
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "As a non-fundamental policy, under normal circumstances, the Portfolio will invest at least 80% of its net assets in equity securities of large cap U.S. companies.",
-        "fund_overview": {
-          "categoryName": "Large Blend",
-          "family": "Dimensional Fund Advisors",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "iShares Russell Top 200 Growth ETF",
+          "s": "#IWY",
+          "as": "19.55%",
+          "sh": "735,384"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "iShares Russell Top 200 Value ETF",
+          "s": "#IWX",
+          "as": "15.69%",
+          "sh": "1,556,363"
+        },
+        {
+          "no": 3,
+          "n": "Dimensional US Marketwide Value ETF",
+          "s": "#DFUV",
+          "as": "11.43%",
+          "sh": "2,221,850"
+        },
+        {
+          "no": 4,
+          "n": "Dimensional U.S. Core Equity 2 ETF",
+          "s": "#DFAC",
+          "as": "9.95%",
+          "sh": "2,396,988"
+        },
+        {
+          "no": 5,
+          "n": "iShares Russell Mid-Cap Value ETF",
+          "s": "#IWS",
+          "as": "6.76%",
+          "sh": "433,565"
+        },
+        {
+          "no": 6,
+          "n": "Dimensional U.S. Targeted Value ETF",
+          "s": "#DFAT",
+          "as": "3.91%",
+          "sh": "598,992"
+        },
+        {
+          "no": 7,
+          "n": "iShares Russell Mid-Cap Growth ETF",
+          "s": "#IWP",
+          "as": "3.05%",
+          "sh": "227,157"
+        },
+        {
+          "no": 8,
+          "n": "Alpha Architect US Equity ETF",
+          "s": "#AAUS",
+          "as": "2.70%",
+          "sh": "481,424"
+        },
+        {
+          "no": 9,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "2.17%",
+          "sh": "74,919"
+        },
+        {
+          "no": 10,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "1.59%",
+          "sh": "47,094"
+        },
+        {
+          "no": 11,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "1.33%",
+          "sh": "72,866"
+        },
+        {
+          "no": 12,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "1.25%",
+          "sh": "33,996"
+        },
+        {
+          "no": 13,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "0.68%",
+          "sh": "29,793"
+        },
+        {
+          "no": 14,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "0.50%",
+          "sh": "14,822"
+        },
+        {
+          "no": 15,
+          "n": "United Airlines Holdings, Inc.",
+          "s": "$UAL",
+          "as": "0.49%",
+          "sh": "38,894"
+        },
+        {
+          "no": 16,
+          "n": "Dimensional US Core Equity Market ETF",
+          "s": "#DFAU",
+          "as": "0.48%",
+          "sh": "100,201"
+        },
+        {
+          "no": 17,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "0.48%",
+          "sh": "9,792"
+        },
+        {
+          "no": 18,
+          "n": "General Motors Company",
+          "s": "$GM",
+          "as": "0.40%",
+          "sh": "55,447"
+        },
+        {
+          "no": 19,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "0.37%",
+          "sh": "3,281"
+        },
+        {
+          "no": 20,
+          "n": "Unum Group",
+          "s": "$UNM",
+          "as": "0.37%",
+          "sh": "42,358"
+        },
+        {
+          "no": 21,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "0.35%",
+          "sh": "10,391"
+        },
+        {
+          "no": 22,
+          "n": "Affiliated Managers Group, Inc.",
+          "s": "$AMG",
+          "as": "0.35%",
+          "sh": "10,910"
+        },
+        {
+          "no": 23,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "0.33%",
+          "sh": "9,896"
+        },
+        {
+          "no": 24,
+          "n": "Ryder System, Inc.",
+          "s": "$R",
+          "as": "0.32%",
+          "sh": "13,117"
+        },
+        {
+          "no": 25,
+          "n": "iShares Core S&P 500 ETF",
+          "s": "#IVV",
+          "as": "0.31%",
+          "sh": "4,390"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "infoBox": "DFAL is an equity ETF with a total of 702 individual holdings.",
+      "infoTable": {
+        "count": 702,
+        "top10": 76.8,
+        "assetClass": "Equity",
+        "aum": 1067946200
+      },
+      "date": "Jul 2, 2026",
+      "count": 702
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$1.07B",
+      "expenseRatio": "0.12%",
+      "sharesOut": "21.28M",
+      "ch1y": null,
+      "holdings": 702,
+      "inception": "Jun 18, 2026",
+      "chart": {
+        "expiration": 1783554686078,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "DFAL": 0.0011999999,
-            "Category Average": 0.0072176997
+            "t": 1783503000
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "DFAL": 0.0,
-            "Category Average": 0.9461
+            "t": 1783503060
           },
           {
-            "_index": "Total Net Assets",
-            "DFAL": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "DFAL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503120
           },
           {
-            "_index": "Price/Book",
-            "DFAL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503180
           },
           {
-            "_index": "Price/Sales",
-            "DFAL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503240
           },
           {
-            "_index": "Price/Cashflow",
-            "DFAL": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503300
           },
           {
-            "_index": "Median Market Cap",
-            "DFAL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503360
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "DFAL": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "DFAL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503420
           },
           {
-            "_index": "Maturity",
-            "DFAL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503480
           },
           {
-            "_index": "Credit Quality",
-            "DFAL": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503540
+          },
+          {
+            "t": 1783503600
+          },
+          {
+            "t": 1783503660
+          },
+          {
+            "t": 1783503720
+          },
+          {
+            "t": 1783503780
+          },
+          {
+            "t": 1783503840
+          },
+          {
+            "t": 1783503900
+          },
+          {
+            "t": 1783503960
+          },
+          {
+            "t": 1783504020
+          },
+          {
+            "t": 1783504080
+          },
+          {
+            "t": 1783504140
+          },
+          {
+            "t": 1783504200
+          },
+          {
+            "t": 1783504260
+          },
+          {
+            "t": 1783504320
+          },
+          {
+            "t": 1783504380
+          },
+          {
+            "t": 1783504440
+          },
+          {
+            "t": 1783504500
+          },
+          {
+            "t": 1783504560
+          },
+          {
+            "t": 1783504620
+          },
+          {
+            "t": 1783504680
+          },
+          {
+            "t": 1783504740
+          },
+          {
+            "t": 1783504800
+          },
+          {
+            "t": 1783504860
+          },
+          {
+            "t": 1783504920
+          },
+          {
+            "t": 1783504980
+          },
+          {
+            "t": 1783505040
+          },
+          {
+            "t": 1783505100
+          },
+          {
+            "t": 1783505160
+          },
+          {
+            "t": 1783505220
+          },
+          {
+            "t": 1783505280
+          },
+          {
+            "t": 1783505340
+          },
+          {
+            "t": 1783505400
+          },
+          {
+            "t": 1783505460
+          },
+          {
+            "t": 1783505520
+          },
+          {
+            "t": 1783505580
+          },
+          {
+            "t": 1783505640
+          },
+          {
+            "t": 1783505700
+          },
+          {
+            "t": 1783505760
+          },
+          {
+            "t": 1783505820
+          },
+          {
+            "t": 1783505880
+          },
+          {
+            "t": 1783505940
+          },
+          {
+            "t": 1783506000
+          },
+          {
+            "t": 1783506060
+          },
+          {
+            "t": 1783506120
+          },
+          {
+            "t": 1783506180
+          },
+          {
+            "t": 1783506240
+          },
+          {
+            "t": 1783506300
+          },
+          {
+            "t": 1783506360
+          },
+          {
+            "t": 1783506420
+          },
+          {
+            "t": 1783506480
+          },
+          {
+            "t": 1783506540
+          },
+          {
+            "t": 1783506600
+          },
+          {
+            "t": 1783506660
+          },
+          {
+            "t": 1783506720
+          },
+          {
+            "t": 1783506780
+          },
+          {
+            "t": 1783506840
+          },
+          {
+            "t": 1783506900
+          },
+          {
+            "t": 1783506960
+          },
+          {
+            "c": 49.91,
+            "o": 49.91,
+            "t": 1783507020
+          },
+          {
+            "c": null,
+            "t": 1783507080
+          },
+          {
+            "c": null,
+            "t": 1783507140
+          },
+          {
+            "c": null,
+            "t": 1783507200
+          },
+          {
+            "c": null,
+            "t": 1783507260
+          },
+          {
+            "c": null,
+            "t": 1783507320
+          },
+          {
+            "c": null,
+            "t": 1783507380
+          },
+          {
+            "c": null,
+            "t": 1783507440
+          },
+          {
+            "c": null,
+            "t": 1783507500
+          },
+          {
+            "c": 49.81,
+            "t": 1783507560
+          },
+          {
+            "c": null,
+            "t": 1783507620
+          },
+          {
+            "c": null,
+            "t": 1783507680
+          },
+          {
+            "c": null,
+            "t": 1783507740
+          },
+          {
+            "c": null,
+            "t": 1783507800
+          },
+          {
+            "c": null,
+            "t": 1783507860
+          },
+          {
+            "c": null,
+            "t": 1783507920
+          },
+          {
+            "c": null,
+            "t": 1783507980
+          },
+          {
+            "c": null,
+            "t": 1783508040
+          },
+          {
+            "c": null,
+            "t": 1783508100
+          },
+          {
+            "c": null,
+            "t": 1783508160
+          },
+          {
+            "c": null,
+            "t": 1783508220
+          },
+          {
+            "c": null,
+            "t": 1783508280
+          },
+          {
+            "c": null,
+            "t": 1783508340
+          },
+          {
+            "c": null,
+            "t": 1783508400
+          },
+          {
+            "c": null,
+            "t": 1783508460
+          },
+          {
+            "c": null,
+            "t": 1783508520
+          },
+          {
+            "c": null,
+            "t": 1783508580
+          },
+          {
+            "c": null,
+            "t": 1783508640
+          },
+          {
+            "c": null,
+            "t": 1783508700
+          },
+          {
+            "c": null,
+            "t": 1783508760
+          },
+          {
+            "c": null,
+            "t": 1783508820
+          },
+          {
+            "c": null,
+            "t": 1783508880
+          },
+          {
+            "c": null,
+            "t": 1783508940
+          },
+          {
+            "c": null,
+            "t": 1783509000
+          },
+          {
+            "c": null,
+            "t": 1783509060
+          },
+          {
+            "c": null,
+            "t": 1783509120
+          },
+          {
+            "c": null,
+            "t": 1783509180
+          },
+          {
+            "c": null,
+            "t": 1783509240
+          },
+          {
+            "c": null,
+            "t": 1783509300
+          },
+          {
+            "c": null,
+            "t": 1783509360
+          },
+          {
+            "c": null,
+            "t": 1783509420
+          },
+          {
+            "c": null,
+            "t": 1783509480
+          },
+          {
+            "c": null,
+            "t": 1783509540
+          },
+          {
+            "c": null,
+            "t": 1783509600
+          },
+          {
+            "c": null,
+            "t": 1783509660
+          },
+          {
+            "c": null,
+            "t": 1783509720
+          },
+          {
+            "c": null,
+            "t": 1783509780
+          },
+          {
+            "c": null,
+            "t": 1783509840
+          },
+          {
+            "c": null,
+            "t": 1783509900
+          },
+          {
+            "c": null,
+            "t": 1783509960
+          },
+          {
+            "c": null,
+            "t": 1783510020
+          },
+          {
+            "c": null,
+            "t": 1783510080
+          },
+          {
+            "c": null,
+            "t": 1783510140
+          },
+          {
+            "c": null,
+            "t": 1783510200
+          },
+          {
+            "c": null,
+            "t": 1783510260
+          },
+          {
+            "c": null,
+            "t": 1783510320
+          },
+          {
+            "c": null,
+            "t": 1783510380
+          },
+          {
+            "c": null,
+            "t": 1783510440
+          },
+          {
+            "c": null,
+            "t": 1783510500
+          },
+          {
+            "c": null,
+            "t": 1783510560
+          },
+          {
+            "c": null,
+            "t": 1783510620
+          },
+          {
+            "c": null,
+            "t": 1783510680
+          },
+          {
+            "c": null,
+            "t": 1783510740
+          },
+          {
+            "c": null,
+            "t": 1783510800
+          },
+          {
+            "c": null,
+            "t": 1783510860
+          },
+          {
+            "c": null,
+            "t": 1783510920
+          },
+          {
+            "c": null,
+            "t": 1783510980
+          },
+          {
+            "c": null,
+            "t": 1783511040
+          },
+          {
+            "c": null,
+            "t": 1783511100
+          },
+          {
+            "c": null,
+            "t": 1783511160
+          },
+          {
+            "c": null,
+            "t": 1783511220
+          },
+          {
+            "c": null,
+            "t": 1783511280
+          },
+          {
+            "c": null,
+            "t": 1783511340
+          },
+          {
+            "c": null,
+            "t": 1783511400
+          },
+          {
+            "c": null,
+            "t": 1783511460
+          },
+          {
+            "c": null,
+            "t": 1783511520
+          },
+          {
+            "c": null,
+            "t": 1783511580
+          },
+          {
+            "c": null,
+            "t": 1783511640
+          },
+          {
+            "c": null,
+            "t": 1783511700
+          },
+          {
+            "c": null,
+            "t": 1783511760
+          },
+          {
+            "c": null,
+            "t": 1783511820
+          },
+          {
+            "c": 49.75,
+            "t": 1783511880
+          },
+          {
+            "c": null,
+            "t": 1783511940
+          },
+          {
+            "c": null,
+            "t": 1783512000
+          },
+          {
+            "c": null,
+            "t": 1783512060
+          },
+          {
+            "c": null,
+            "t": 1783512120
+          },
+          {
+            "c": null,
+            "t": 1783512180
+          },
+          {
+            "c": null,
+            "t": 1783512240
+          },
+          {
+            "c": null,
+            "t": 1783512300
+          },
+          {
+            "c": null,
+            "t": 1783512360
+          },
+          {
+            "c": null,
+            "t": 1783512420
+          },
+          {
+            "c": null,
+            "t": 1783512480
+          },
+          {
+            "c": null,
+            "t": 1783512540
+          },
+          {
+            "c": null,
+            "t": 1783512600
+          },
+          {
+            "c": null,
+            "t": 1783512660
+          },
+          {
+            "c": null,
+            "t": 1783512720
+          },
+          {
+            "c": null,
+            "t": 1783512780
+          },
+          {
+            "c": null,
+            "t": 1783512840
+          },
+          {
+            "c": null,
+            "t": 1783512900
+          },
+          {
+            "c": null,
+            "t": 1783512960
+          },
+          {
+            "c": null,
+            "t": 1783513020
+          },
+          {
+            "c": null,
+            "t": 1783513080
+          },
+          {
+            "c": null,
+            "t": 1783513140
+          },
+          {
+            "c": null,
+            "t": 1783513200
+          },
+          {
+            "c": null,
+            "t": 1783513260
+          },
+          {
+            "c": null,
+            "t": 1783513320
+          },
+          {
+            "c": null,
+            "t": 1783513380
+          },
+          {
+            "c": null,
+            "t": 1783513440
+          },
+          {
+            "c": null,
+            "t": 1783513500
+          },
+          {
+            "c": null,
+            "t": 1783513560
+          },
+          {
+            "c": null,
+            "t": 1783513620
+          },
+          {
+            "c": null,
+            "t": 1783513680
+          },
+          {
+            "c": null,
+            "t": 1783513740
+          },
+          {
+            "c": null,
+            "t": 1783513800
+          },
+          {
+            "c": null,
+            "t": 1783513860
+          },
+          {
+            "c": null,
+            "t": 1783513920
+          },
+          {
+            "c": null,
+            "t": 1783513980
+          },
+          {
+            "c": null,
+            "t": 1783514040
+          },
+          {
+            "c": null,
+            "t": 1783514100
+          },
+          {
+            "c": null,
+            "t": 1783514160
+          },
+          {
+            "c": null,
+            "t": 1783514220
+          },
+          {
+            "c": null,
+            "t": 1783514280
+          },
+          {
+            "c": null,
+            "t": 1783514340
+          },
+          {
+            "c": null,
+            "t": 1783514400
+          },
+          {
+            "c": null,
+            "t": 1783514460
+          },
+          {
+            "c": null,
+            "t": 1783514520
+          },
+          {
+            "c": null,
+            "t": 1783514580
+          },
+          {
+            "c": null,
+            "t": 1783514640
+          },
+          {
+            "c": null,
+            "t": 1783514700
+          },
+          {
+            "c": null,
+            "t": 1783514760
+          },
+          {
+            "c": null,
+            "t": 1783514820
+          },
+          {
+            "c": null,
+            "t": 1783514880
+          },
+          {
+            "c": null,
+            "t": 1783514940
+          },
+          {
+            "c": null,
+            "t": 1783515000
+          },
+          {
+            "c": null,
+            "t": 1783515060
+          },
+          {
+            "c": null,
+            "t": 1783515120
+          },
+          {
+            "c": null,
+            "t": 1783515180
+          },
+          {
+            "c": null,
+            "t": 1783515240
+          },
+          {
+            "c": null,
+            "t": 1783515300
+          },
+          {
+            "c": null,
+            "t": 1783515360
+          },
+          {
+            "c": null,
+            "t": 1783515420
+          },
+          {
+            "c": null,
+            "t": 1783515480
+          },
+          {
+            "c": null,
+            "t": 1783515540
+          },
+          {
+            "c": null,
+            "t": 1783515600
+          },
+          {
+            "c": null,
+            "t": 1783515660
+          },
+          {
+            "c": null,
+            "t": 1783515720
+          },
+          {
+            "c": null,
+            "t": 1783515780
+          },
+          {
+            "c": null,
+            "t": 1783515840
+          },
+          {
+            "c": null,
+            "t": 1783515900
+          },
+          {
+            "c": null,
+            "t": 1783515960
+          },
+          {
+            "c": null,
+            "t": 1783516020
+          },
+          {
+            "c": null,
+            "t": 1783516080
+          },
+          {
+            "c": null,
+            "t": 1783516140
+          },
+          {
+            "c": null,
+            "t": 1783516200
+          },
+          {
+            "c": null,
+            "t": 1783516260
+          },
+          {
+            "c": null,
+            "t": 1783516320
+          },
+          {
+            "c": null,
+            "t": 1783516380
+          },
+          {
+            "c": null,
+            "t": 1783516440
+          },
+          {
+            "c": null,
+            "t": 1783516500
+          },
+          {
+            "c": null,
+            "t": 1783516560
+          },
+          {
+            "c": null,
+            "t": 1783516620
+          },
+          {
+            "c": null,
+            "t": 1783516680
+          },
+          {
+            "c": null,
+            "t": 1783516740
+          },
+          {
+            "c": null,
+            "t": 1783516800
+          },
+          {
+            "c": null,
+            "t": 1783516860
+          },
+          {
+            "c": null,
+            "t": 1783516920
+          },
+          {
+            "c": null,
+            "t": 1783516980
+          },
+          {
+            "c": null,
+            "t": 1783517040
+          },
+          {
+            "c": null,
+            "t": 1783517100
+          },
+          {
+            "c": null,
+            "t": 1783517160
+          },
+          {
+            "c": null,
+            "t": 1783517220
+          },
+          {
+            "c": null,
+            "t": 1783517280
+          },
+          {
+            "c": null,
+            "t": 1783517340
+          },
+          {
+            "c": null,
+            "t": 1783517400
+          },
+          {
+            "c": null,
+            "t": 1783517460
+          },
+          {
+            "c": null,
+            "t": 1783517520
+          },
+          {
+            "c": null,
+            "t": 1783517580
+          },
+          {
+            "c": null,
+            "t": 1783517640
+          },
+          {
+            "c": null,
+            "t": 1783517700
+          },
+          {
+            "c": null,
+            "t": 1783517760
+          },
+          {
+            "c": null,
+            "t": 1783517820
+          },
+          {
+            "c": null,
+            "t": 1783517880
+          },
+          {
+            "c": null,
+            "t": 1783517940
+          },
+          {
+            "c": null,
+            "t": 1783518000
+          },
+          {
+            "c": null,
+            "t": 1783518060
+          },
+          {
+            "c": null,
+            "t": 1783518120
+          },
+          {
+            "c": null,
+            "t": 1783518180
+          },
+          {
+            "c": null,
+            "t": 1783518240
+          },
+          {
+            "c": null,
+            "t": 1783518300
+          },
+          {
+            "c": null,
+            "t": 1783518360
+          },
+          {
+            "c": null,
+            "t": 1783518420
+          },
+          {
+            "c": null,
+            "t": 1783518480
+          },
+          {
+            "c": null,
+            "t": 1783518540
+          },
+          {
+            "c": null,
+            "t": 1783518600
+          },
+          {
+            "c": null,
+            "t": 1783518660
+          },
+          {
+            "c": null,
+            "t": 1783518720
+          },
+          {
+            "c": null,
+            "t": 1783518780
+          },
+          {
+            "c": null,
+            "t": 1783518840
+          },
+          {
+            "c": null,
+            "t": 1783518900
+          },
+          {
+            "c": null,
+            "t": 1783518960
+          },
+          {
+            "c": null,
+            "t": 1783519020
+          },
+          {
+            "c": null,
+            "t": 1783519080
+          },
+          {
+            "c": null,
+            "t": 1783519140
+          },
+          {
+            "c": null,
+            "t": 1783519200
+          },
+          {
+            "c": null,
+            "t": 1783519260
+          },
+          {
+            "c": null,
+            "t": 1783519320
+          },
+          {
+            "c": 50.05,
+            "t": 1783519380
+          },
+          {
+            "c": null,
+            "t": 1783519440
+          },
+          {
+            "c": null,
+            "t": 1783519500
+          },
+          {
+            "c": null,
+            "t": 1783519560
+          },
+          {
+            "c": null,
+            "t": 1783519620
+          },
+          {
+            "c": null,
+            "t": 1783519680
+          },
+          {
+            "c": null,
+            "t": 1783519740
+          },
+          {
+            "c": null,
+            "t": 1783519800
+          },
+          {
+            "c": null,
+            "t": 1783519860
+          },
+          {
+            "c": null,
+            "t": 1783519920
+          },
+          {
+            "c": null,
+            "t": 1783519980
+          },
+          {
+            "c": null,
+            "t": 1783520040
+          },
+          {
+            "c": null,
+            "t": 1783520100
+          },
+          {
+            "c": null,
+            "t": 1783520160
+          },
+          {
+            "c": null,
+            "t": 1783520220
+          },
+          {
+            "c": null,
+            "t": 1783520280
+          },
+          {
+            "c": null,
+            "t": 1783520340
+          },
+          {
+            "c": null,
+            "t": 1783520400
+          },
+          {
+            "c": null,
+            "t": 1783520460
+          },
+          {
+            "c": null,
+            "t": 1783520520
+          },
+          {
+            "c": null,
+            "t": 1783520580
+          },
+          {
+            "c": null,
+            "t": 1783520640
+          },
+          {
+            "c": null,
+            "t": 1783520700
+          },
+          {
+            "c": null,
+            "t": 1783520760
+          },
+          {
+            "c": null,
+            "t": 1783520820
+          },
+          {
+            "c": null,
+            "t": 1783520880
+          },
+          {
+            "c": null,
+            "t": 1783520940
+          },
+          {
+            "c": null,
+            "t": 1783521000
+          },
+          {
+            "c": 50.01,
+            "t": 1783521060
+          },
+          {
+            "c": null,
+            "t": 1783521120
+          },
+          {
+            "c": null,
+            "t": 1783521180
+          },
+          {
+            "c": null,
+            "t": 1783521240
+          },
+          {
+            "c": null,
+            "t": 1783521300
+          },
+          {
+            "c": null,
+            "t": 1783521360
+          },
+          {
+            "c": null,
+            "t": 1783521420
+          },
+          {
+            "c": null,
+            "t": 1783521480
+          },
+          {
+            "c": null,
+            "t": 1783521540
+          },
+          {
+            "c": null,
+            "t": 1783521600
+          },
+          {
+            "c": null,
+            "t": 1783521660
+          },
+          {
+            "c": null,
+            "t": 1783521720
+          },
+          {
+            "c": null,
+            "t": 1783521780
+          },
+          {
+            "c": null,
+            "t": 1783521840
+          },
+          {
+            "c": null,
+            "t": 1783521900
+          },
+          {
+            "c": null,
+            "t": 1783521960
+          },
+          {
+            "c": null,
+            "t": 1783522020
+          },
+          {
+            "c": null,
+            "t": 1783522080
+          },
+          {
+            "c": null,
+            "t": 1783522140
+          },
+          {
+            "c": null,
+            "t": 1783522200
+          },
+          {
+            "c": null,
+            "t": 1783522260
+          },
+          {
+            "c": null,
+            "t": 1783522320
+          },
+          {
+            "c": null,
+            "t": 1783522380
+          },
+          {
+            "c": null,
+            "t": 1783522440
+          },
+          {
+            "c": null,
+            "t": 1783522500
+          },
+          {
+            "c": null,
+            "t": 1783522560
+          },
+          {
+            "c": null,
+            "t": 1783522620
+          },
+          {
+            "c": null,
+            "t": 1783522680
+          },
+          {
+            "c": null,
+            "t": 1783522740
+          },
+          {
+            "c": null,
+            "t": 1783522800
+          },
+          {
+            "c": null,
+            "t": 1783522860
+          },
+          {
+            "c": null,
+            "t": 1783522920
+          },
+          {
+            "c": null,
+            "t": 1783522980
+          },
+          {
+            "c": null,
+            "t": 1783523040
+          },
+          {
+            "c": null,
+            "t": 1783523100
+          },
+          {
+            "c": null,
+            "t": 1783523160
+          },
+          {
+            "c": null,
+            "t": 1783523220
+          },
+          {
+            "c": null,
+            "t": 1783523280
+          },
+          {
+            "c": null,
+            "t": 1783523340
+          },
+          {
+            "c": null,
+            "t": 1783523400
+          },
+          {
+            "c": null,
+            "t": 1783523460
+          },
+          {
+            "c": null,
+            "t": 1783523520
+          },
+          {
+            "c": null,
+            "t": 1783523580
+          },
+          {
+            "c": null,
+            "t": 1783523640
+          },
+          {
+            "c": null,
+            "t": 1783523700
+          },
+          {
+            "c": null,
+            "t": 1783523760
+          },
+          {
+            "c": null,
+            "t": 1783523820
+          },
+          {
+            "c": null,
+            "t": 1783523880
+          },
+          {
+            "c": null,
+            "t": 1783523940
+          },
+          {
+            "c": null,
+            "t": 1783524000
+          },
+          {
+            "c": null,
+            "t": 1783524060
+          },
+          {
+            "c": null,
+            "t": 1783524120
+          },
+          {
+            "c": null,
+            "t": 1783524180
+          },
+          {
+            "c": null,
+            "t": 1783524240
+          },
+          {
+            "c": null,
+            "t": 1783524300
+          },
+          {
+            "c": null,
+            "t": 1783524360
+          },
+          {
+            "c": null,
+            "t": 1783524420
+          },
+          {
+            "c": null,
+            "t": 1783524480
+          },
+          {
+            "c": null,
+            "t": 1783524540
+          },
+          {
+            "c": null,
+            "t": 1783524600
+          },
+          {
+            "c": 50.054,
+            "t": 1783524660
+          },
+          {
+            "t": 1783524719
+          },
+          {
+            "t": 1783524779
+          },
+          {
+            "t": 1783524839
+          },
+          {
+            "t": 1783524899
+          },
+          {
+            "t": 1783524959
+          },
+          {
+            "t": 1783525019
+          },
+          {
+            "t": 1783525079
+          },
+          {
+            "t": 1783525139
+          },
+          {
+            "t": 1783525199
+          },
+          {
+            "t": 1783525259
+          },
+          {
+            "t": 1783525319
+          },
+          {
+            "t": 1783525379
+          },
+          {
+            "t": 1783525439
+          },
+          {
+            "t": 1783525499
+          },
+          {
+            "t": 1783525559
+          },
+          {
+            "t": 1783525619
+          },
+          {
+            "t": 1783525679
+          },
+          {
+            "t": 1783525739
+          },
+          {
+            "t": 1783525799
+          },
+          {
+            "t": 1783525859
+          },
+          {
+            "t": 1783525919
+          },
+          {
+            "t": 1783525979
+          },
+          {
+            "t": 1783526039
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
           }
         ]
       },
-      "history_1y": [
+      "description": "The Dimensional US Large Cap Core Equity Market ETF (DFAL) is an exchange-traded fund that mostly invests in large cap equity. DFAL.L is an actively managed ETF that invests primarily in a broad range of US large-cap firms. The fund aims for long-term capital growth. DFAL was launched on Jun 18, 2026 and is issued by Dimensional.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "DFAL"
+        ],
+        [
+          "Provider",
+          "Dimensional"
+        ]
+      ],
+      "etf_website": "https://www.dimensional.com/us-en/funds/dfal/us-large-cap-core-equity-market-etf",
+      "provider_page": "dimensional",
+      "holdingsTable": {
+        "count": 702,
+        "updated": "Jul 2, 2026",
+        "top10": 76.8,
+        "holdings": [
+          {
+            "n": "iShares Russell Top 200 Growth ETF",
+            "s": "#IWY",
+            "as": "19.55%",
+            "sh": "735,384"
+          },
+          {
+            "n": "iShares Russell Top 200 Value ETF",
+            "s": "#IWX",
+            "as": "15.69%",
+            "sh": "1,556,363"
+          },
+          {
+            "n": "Dimensional US Marketwide Value ETF",
+            "s": "#DFUV",
+            "as": "11.43%",
+            "sh": "2,221,850"
+          },
+          {
+            "n": "Dimensional U.S. Core Equity 2 ETF",
+            "s": "#DFAC",
+            "as": "9.95%",
+            "sh": "2,396,988"
+          },
+          {
+            "n": "iShares Russell Mid-Cap Value ETF",
+            "s": "#IWS",
+            "as": "6.76%",
+            "sh": "433,565"
+          },
+          {
+            "n": "Dimensional U.S. Targeted Value ETF",
+            "s": "#DFAT",
+            "as": "3.91%",
+            "sh": "598,992"
+          },
+          {
+            "n": "iShares Russell Mid-Cap Growth ETF",
+            "s": "#IWP",
+            "as": "3.05%",
+            "sh": "227,157"
+          },
+          {
+            "n": "Alpha Architect US Equity ETF",
+            "s": "#AAUS",
+            "as": "2.70%",
+            "sh": "481,424"
+          },
+          {
+            "n": "Apple Inc.",
+            "s": "$AAPL",
+            "as": "2.17%",
+            "sh": "74,919"
+          },
+          {
+            "n": "Alphabet Inc.",
+            "s": "$GOOGL",
+            "as": "1.59%",
+            "sh": "47,094"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783598670239",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 50.35,
+        "priceMAX": 49.438
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 50.0537,
+      "pd": 50.05,
+      "c": -0.22,
+      "cp": -0.44,
+      "cl": 50.27,
+      "cdr": -1,
+      "o": 49.91,
+      "h": 50.05,
+      "l": 49.75,
+      "v": 13277,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 50.6,
+      "l52": 49.381,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 50.0537,
+      "epd": 50.05,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 8, 2026, 6:30 PM EDT",
+      "es": "After-hours",
+      "ets": 1783549802370.024,
+      "etd": "2026-07-08",
+      "epv": null,
+      "days": 0,
+      "exp": 1783554729805,
+      "symbol": "DFAL",
+      "uid": "DFAL"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 50.35,
+        "h": 50.6,
+        "l": 49.96,
+        "c": 50.275,
+        "a": 50.2748,
+        "v": 99489,
+        "ch": -0.15
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-23",
-          "Open": 49.59000015258789,
-          "High": 49.59000015258789,
-          "Low": 49.439998626708984,
-          "Close": 49.439998626708984,
-          "Volume": 700.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 50.29,
+          "h": 50.3,
+          "l": 50.2,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 8198,
+          "ch": -0.49
         },
         {
-          "date": "2026-06-24",
-          "Open": 49.380001068115234,
-          "High": 49.380001068115234,
-          "Low": 49.380001068115234,
-          "Close": 49.380001068115234,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 50.47,
+          "h": 50.56,
+          "l": 50.432,
+          "c": 50.523,
+          "a": 50.5225,
+          "v": 27726,
+          "ch": 0.72
         },
         {
-          "date": "2026-06-25",
-          "Open": 49.560001373291016,
-          "High": 49.560001373291016,
-          "Low": 49.43000030517578,
-          "Close": 49.45000076293945,
-          "Volume": 1000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 50.5,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.163,
+          "a": 50.1633,
+          "v": 53221,
+          "ch": -0.1
         },
         {
-          "date": "2026-06-26",
-          "Open": 49.56999969482422,
-          "High": 49.56999969482422,
-          "Low": 49.43000030517578,
-          "Close": 49.560001373291016,
-          "Volume": 4300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.43,
+          "l": 50.215,
+          "c": 50.215,
+          "a": 50.2146,
+          "v": 10344,
+          "ch": -0.27
         },
         {
-          "date": "2026-06-29",
-          "Open": 49.75,
-          "High": 49.95000076293945,
-          "Low": 49.7400016784668,
-          "Close": 49.95000076293945,
-          "Volume": 9200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 50.12,
+          "h": 50.35,
+          "l": 50.12,
+          "c": 50.35,
+          "a": 50.3502,
+          "v": 10968,
+          "ch": 0.81
         },
         {
-          "date": "2026-06-30",
-          "Open": 50.119998931884766,
-          "High": 50.35020065307617,
-          "Low": 50.119998931884766,
-          "Close": 50.35020065307617,
-          "Volume": 10968.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 49.75,
+          "h": 49.948,
+          "l": 49.74,
+          "c": 49.948,
+          "a": 49.9475,
+          "v": 9214,
+          "ch": 0.78
+        },
+        {
+          "t": "2026-06-26",
+          "o": 49.57,
+          "h": 49.57,
+          "l": 49.43,
+          "c": 49.56,
+          "a": 49.5598,
+          "v": 4332,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-06-25",
+          "o": 49.56,
+          "h": 49.56,
+          "l": 49.43,
+          "c": 49.45,
+          "a": 49.4497,
+          "v": 1027,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-06-24",
+          "o": 49.381,
+          "h": 49.381,
+          "l": 49.381,
+          "c": 49.381,
+          "a": 49.3812,
+          "v": 21,
+          "ch": -0.11
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 50.47,
+          "h": 50.56,
+          "l": 50.2,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 35924,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-06-29",
+          "o": 49.75,
+          "h": 50.6,
+          "l": 49.74,
+          "c": 50.163,
+          "a": 50.1633,
+          "v": 83747,
+          "ch": 1.22
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 99489,
+          "ch": -0.15
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 50.47,
+          "h": 50.56,
+          "l": 50.2,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 35924,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-06-29",
+          "o": 49.75,
+          "h": 50.6,
+          "l": 49.74,
+          "c": 50.163,
+          "a": 50.1633,
+          "v": 83747,
+          "ch": 1.22
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 99489,
+          "ch": -0.15
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 50.35,
+          "h": 50.6,
+          "l": 49.96,
+          "c": 50.275,
+          "a": 50.2748,
+          "v": 99489,
+          "ch": -0.15
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }
