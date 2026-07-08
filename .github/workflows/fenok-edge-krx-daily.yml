@@ -27,6 +27,10 @@ on:
         description: 'KRX weekday count'
         required: false
         default: '1'
+      krx_walkback_days:
+        description: 'Auto mode: retry previous dates when issuer daily rows are empty'
+        required: false
+        default: '5'
       krx_concurrency:
         description: 'Bounded KRX request concurrency'
         required: false
@@ -74,6 +78,7 @@ jobs:
           INPUT_NO_FETCH: ${{ github.event.inputs.no_fetch || 'false' }}
           INPUT_KRX_END_DATE: ${{ github.event.inputs.krx_end_date || '' }}
           INPUT_KRX_DAYS: ${{ github.event.inputs.krx_days || '1' }}
+          INPUT_KRX_WALKBACK_DAYS: ${{ github.event.inputs.krx_walkback_days || '5' }}
           INPUT_KRX_CONCURRENCY: ${{ github.event.inputs.krx_concurrency || '2' }}
           INPUT_KRX_MAX_CALLS: ${{ github.event.inputs.krx_max_calls || '40' }}
           INPUT_KRX_SLEEP_MS: ${{ github.event.inputs.krx_sleep_ms || '250' }}
@@ -82,10 +87,16 @@ jobs:
         shell: bash
         run: |
           KRX_END_DATE="${INPUT_KRX_END_DATE:-$(TZ=Asia/Seoul date -d '1 day ago' +%Y%m%d)}"
+          if [ -n "$INPUT_KRX_END_DATE" ]; then
+            KRX_AUTO_WALKBACK_DAYS=0
+          else
+            KRX_AUTO_WALKBACK_DAYS="${INPUT_KRX_WALKBACK_DAYS:-5}"
+          fi
           {
             echo "krx_end_date=$KRX_END_DATE"
             echo "krx_days=${INPUT_KRX_DAYS:-1}"
             echo "krx_run_id=krx_daily_${KRX_END_DATE}"
+            echo "krx_auto_walkback_days=$KRX_AUTO_WALKBACK_DAYS"
             echo "krx_concurrency=${INPUT_KRX_CONCURRENCY:-2}"
             echo "krx_max_calls=${INPUT_KRX_MAX_CALLS:-40}"
             echo "krx_sleep_ms=${INPUT_KRX_SLEEP_MS:-250}"
@@ -101,9 +112,7 @@ jobs:
         shell: bash
         run: |
           ARGS=(
-            "--end-date" "${{ steps.window.outputs.krx_end_date }}"
             "--days" "${{ steps.window.outputs.krx_days }}"
-            "--run-id" "${{ steps.window.outputs.krx_run_id }}"
             "--concurrency" "${{ steps.window.outputs.krx_concurrency }}"
             "--max-calls" "${{ steps.window.outputs.krx_max_calls }}"
             "--sleep-ms" "${{ steps.window.outputs.krx_sleep_ms }}"
@@ -113,7 +122,24 @@ jobs:
           if [ "${FENOK_KRX_PLAN_ONLY:-false}" = "true" ]; then ARGS+=("--plan-only"); fi
           if [ "${FENOK_KRX_NO_FETCH:-false}" = "true" ]; then ARGS+=("--no-fetch"); fi
           if [ "${FENOK_KRX_ALLOW_EMPTY_DAILY:-false}" = "true" ]; then ARGS+=("--allow-empty-daily"); fi
-          node scripts/fetch-fenok-krx-daily-private.mjs "${ARGS[@]}"
+          BASE_END="${{ steps.window.outputs.krx_end_date }}"
+          WALKBACK_DAYS="${{ steps.window.outputs.krx_auto_walkback_days }}"
+          BASE_ISO="${BASE_END:0:4}-${BASE_END:4:2}-${BASE_END:6:2}"
+          for offset in $(seq 0 "$WALKBACK_DAYS"); do
+            CANDIDATE="$(date -u -d "${BASE_ISO} -${offset} day" +%Y%m%d)"
+            RUN_ID="krx_daily_${CANDIDATE}"
+            echo "Trying KRX basDd=${CANDIDATE} (offset=${offset}/${WALKBACK_DAYS})"
+            if node scripts/fetch-fenok-krx-daily-private.mjs \
+              "--end-date" "$CANDIDATE" \
+              "--run-id" "$RUN_ID" \
+              "${ARGS[@]}"; then
+              echo "Resolved KRX basDd=${CANDIDATE}"
+              exit 0
+            fi
+            echo "::warning::KRX basDd=${CANDIDATE} failed validation; trying previous date if available"
+          done
+          echo "KRX fetch failed for ${BASE_END} and ${WALKBACK_DAYS} walkback day(s)"
+          exit 1
 
       - name: Rebuild Fenok Edge public-safe derivatives
         if: ${{ env.FENOK_KRX_PLAN_ONLY != 'true' }}

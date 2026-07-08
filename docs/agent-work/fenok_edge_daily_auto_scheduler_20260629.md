@@ -74,7 +74,7 @@ Non-negotiable handoff contents for the next main pane:
   - OCC runs sequential same-run batches with default `250` tickers x `5` batches. The per-batch request budget stays within `1500` because the default candidate window can require up to 3 dates x 2 option sides.
 - `.github/workflows/fenok-edge-krx-daily.yml`
   - Adds a KST Mon-Fri 19:30 KRX Open API private daily refresh.
-  - Scheduled runs default to the latest settled KRX date (`T-1` weekday), one `basDd`, 31 endpoints, max 40 calls, concurrency 2, 250ms sleep, and fail threshold 0. Same-day issuer rows are not treated as reliable at the evening schedule time.
+  - Scheduled runs start from the latest settled KRX date (`T-1` weekday) and auto-walk back up to 5 calendar days when required issuer daily rows are still empty. Each candidate stays bounded to one `basDd`, 31 endpoints, max 40 calls, concurrency 2, 250ms sleep, and fail threshold 0.
   - Raw KRX payloads stay under `_private/admin`; the tracked bridge index stores only counts and private path references.
 
 ## Load-aware Collection Lane
