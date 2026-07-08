@@ -89,11 +89,23 @@ function shouldSkipBotProtection(pathname: string): boolean {
 }
 
 function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
+  const cfConnectingIp = request.headers.get("cf-connecting-ip")?.trim();
+  if (cfConnectingIp) return cfConnectingIp;
+
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (forwardedFor) return forwardedFor;
+
+  const fallbackMaterial = [
+    request.headers.get("host")?.trim() || "no-host",
+    request.headers.get("user-agent")?.trim() || "no-user-agent",
+    request.headers.get("accept-language")?.trim() || "no-language",
+  ].join("|");
+  let hash = 2166136261;
+  for (let i = 0; i < fallbackMaterial.length; i += 1) {
+    hash ^= fallbackMaterial.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `fallback:${(hash >>> 0).toString(36)}`;
 }
 
 function isLocalHostRequest(request: NextRequest): boolean {
@@ -201,11 +213,7 @@ function passesLocalRateLimit(tier: RateLimitTier, now = Date.now()): boolean {
 
 async function passesRateLimit(request: NextRequest): Promise<boolean> {
   const { pathname } = request.nextUrl;
-  if (
-    shouldSkipBotProtection(pathname) ||
-    isAdminPath(pathname) ||
-    isAdminApiPath(pathname)
-  ) {
+  if (shouldSkipBotProtection(pathname)) {
     return true;
   }
 
@@ -242,7 +250,12 @@ function rateLimitResponse(): NextResponse {
 
 function getAdminTrailingSlashRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
-  if (!isAdminPath(pathname) || pathname.endsWith("/") || isAdminStaticFilePath(pathname)) {
+  if (
+    isAdminApiPath(pathname) ||
+    !isAdminPath(pathname) ||
+    pathname.endsWith("/") ||
+    isAdminStaticFilePath(pathname)
+  ) {
     return null;
   }
 

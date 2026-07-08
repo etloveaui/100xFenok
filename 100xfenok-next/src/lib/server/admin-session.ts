@@ -1,5 +1,7 @@
 export const ADMIN_SESSION_COOKIE = "fenok_admin_session";
-export const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+export const ADMIN_SESSION_DEFAULT_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+export const ADMIN_SESSION_MAX_TTL_MS = ADMIN_SESSION_DEFAULT_TTL_MS;
+export const ADMIN_SESSION_TTL_MS = ADMIN_SESSION_DEFAULT_TTL_MS;
 
 const DEFAULT_ADMIN_PASSWORD_HASH =
   "8736ca6f3957409305f60068e93215c85f8751e4dcdc9303832b325a72c7789f";
@@ -8,6 +10,7 @@ const DEFAULT_ADMIN_SESSION_SECRET =
 
 type AdminSessionPayload = {
   exp: number;
+  iat: number;
   v: 1;
 };
 
@@ -35,6 +38,31 @@ export function isLocalAdminBypassEnabled(): boolean {
 
 export function isAdminAuthConfigured(): boolean {
   return Boolean(getAdminPasswordHash() && getAdminSessionSecret());
+}
+
+function finitePositiveNumber(value: string | undefined): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function getAdminSessionTtlMs(): number {
+  const configuredHours = finitePositiveNumber(process.env.NEXT_ADMIN_SESSION_TTL_HOURS);
+  if (!configuredHours) return ADMIN_SESSION_DEFAULT_TTL_MS;
+  return Math.min(
+    Math.round(configuredHours * 60 * 60 * 1000),
+    ADMIN_SESSION_MAX_TTL_MS,
+  );
+}
+
+export function getAdminSessionRevokedBeforeMs(): number {
+  const configuredMs = finitePositiveNumber(process.env.NEXT_ADMIN_SESSION_REVOKED_BEFORE_MS);
+  if (configuredMs) return Math.floor(configuredMs);
+
+  const configuredIso = process.env.NEXT_ADMIN_SESSION_REVOKED_BEFORE;
+  if (!configuredIso) return 0;
+  const parsed = Date.parse(configuredIso);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
 function bytesToHex(buffer: ArrayBuffer): string {
@@ -97,9 +125,14 @@ function parsePayload(encoded: string): AdminSessionPayload | null {
     if (typeof parsed.exp !== "number" || !Number.isFinite(parsed.exp)) {
       return null;
     }
+    const issuedAt =
+      typeof parsed.iat === "number" && Number.isFinite(parsed.iat)
+        ? parsed.iat
+        : 0;
     return {
       v: 1,
       exp: parsed.exp,
+      iat: issuedAt,
     };
   } catch {
     return null;
@@ -132,9 +165,11 @@ export async function createAdminSessionToken(
   if (!secret) {
     throw new Error("ADMIN_AUTH_NOT_CONFIGURED");
   }
+  const ttlMs = getAdminSessionTtlMs();
   const payload: AdminSessionPayload = {
     v: 1,
-    exp: now + ADMIN_SESSION_TTL_MS,
+    iat: now,
+    exp: now + ttlMs,
   };
   const encodedPayload = serializePayload(payload);
   const signature = await hmacHex(encodedPayload, secret);
@@ -153,6 +188,8 @@ export async function verifyAdminSessionToken(
 
   const payload = parsePayload(encodedPayload);
   if (!payload || payload.exp <= now) return false;
+  const revokedBeforeMs = getAdminSessionRevokedBeforeMs();
+  if (revokedBeforeMs > 0 && payload.iat < revokedBeforeMs) return false;
   const secret = getAdminSessionSecret();
   if (!secret) return false;
 
@@ -172,12 +209,14 @@ export async function verifyAdminSessionToken(
   return diff === 0;
 }
 
-export function getAdminSessionCookieOptions() {
+export function getAdminSessionCookieOptions(now = Date.now()) {
+  const ttlMs = getAdminSessionTtlMs();
   return {
     httpOnly: true,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    expires: new Date(Date.now() + ADMIN_SESSION_TTL_MS),
+    expires: new Date(now + ttlMs),
+    maxAge: Math.floor(ttlMs / 1000),
   };
 }

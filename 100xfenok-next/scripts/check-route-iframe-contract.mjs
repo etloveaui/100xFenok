@@ -64,10 +64,44 @@ function withTimeout(operation, label) {
   });
 }
 
-async function fetchRouteHtml(baseUrl, route) {
+async function fetchAdminSessionCookie(baseUrl) {
+  const password = process.env.QA_ADMIN_PASSWORD;
+  if (!password) return process.env.QA_ADMIN_SESSION_COOKIE ?? "";
+
+  const response = await withTimeout(
+    (signal) => fetch(new URL("/api/admin/session/", baseUrl), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+      redirect: "manual",
+      signal,
+    }),
+    "POST /api/admin/session/",
+  );
+  if (!response.ok) {
+    throw new Error(`admin session login returned ${response.status}`);
+  }
+
+  const setCookie = response.headers.get("set-cookie") ?? "";
+  const match = setCookie.match(/\bfenok_admin_session=[^;]+/);
+  if (!match) {
+    throw new Error("admin session login did not return fenok_admin_session cookie");
+  }
+  return match[0];
+}
+
+function requestHeaders(cookieHeader) {
+  return cookieHeader ? { Cookie: cookieHeader } : {};
+}
+
+async function fetchRouteHtml(baseUrl, route, cookieHeader) {
   const url = new URL(route, baseUrl);
   const response = await withTimeout(
-    (signal) => fetch(url, { redirect: "follow", signal }),
+    (signal) => fetch(url, {
+      headers: requestHeaders(cookieHeader),
+      redirect: "follow",
+      signal,
+    }),
     `GET ${route}`,
   );
   const text = await response.text();
@@ -78,10 +112,15 @@ async function fetchRouteHtml(baseUrl, route) {
   };
 }
 
-async function fetchAssetStatus(baseUrl, iframeSrc) {
+async function fetchAssetStatus(baseUrl, iframeSrc, cookieHeader) {
   const url = new URL(iframeSrc.replaceAll("&amp;", "&"), baseUrl);
   const response = await withTimeout(
-    (signal) => fetch(url, { method: "HEAD", redirect: "manual", signal }),
+    (signal) => fetch(url, {
+      method: "HEAD",
+      headers: requestHeaders(cookieHeader),
+      redirect: "manual",
+      signal,
+    }),
     `HEAD ${url.pathname}${url.search}`,
   );
   return response.status;
@@ -131,6 +170,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const baseUrl = normalizeBaseUrl(args.baseUrl);
   assertLocalBaseUrl(baseUrl);
+  const adminCookie = await fetchAdminSessionCookie(baseUrl);
 
   const rows = [];
   const errors = [];
@@ -138,7 +178,7 @@ async function main() {
 
   for (const [route, expectedTarget] of entries) {
     try {
-      const routeResponse = await fetchRouteHtml(baseUrl, route);
+      const routeResponse = await fetchRouteHtml(baseUrl, route, adminCookie);
       const iframeSrc = firstIframeSrc(routeResponse.text);
       const row = {
         route,
@@ -161,7 +201,7 @@ async function main() {
       }
 
       errors.push(...checkIframeTarget(baseUrl, route, expectedTarget, iframeSrc));
-      const assetStatus = await fetchAssetStatus(baseUrl, iframeSrc);
+      const assetStatus = await fetchAssetStatus(baseUrl, iframeSrc, adminCookie);
       row.asset_status = assetStatus;
       if (assetStatus < 200 || assetStatus >= 300) {
         errors.push(`${route}: iframe asset returned ${assetStatus}`);
@@ -174,6 +214,7 @@ async function main() {
   const report = {
     ok: errors.length === 0,
     base_url: baseUrl.origin,
+    admin_cookie: Boolean(adminCookie),
     routes_checked: entries.length,
     rows,
     errors,

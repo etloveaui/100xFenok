@@ -1,7 +1,14 @@
-/* eslint-disable no-console */
 import { chromium } from "playwright";
+import { existsSync } from "node:fs";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:4173";
+const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
+const browserExecutablePath =
+  process.env.QA_CHROMIUM_EXECUTABLE_PATH ||
+  process.env.CHROME_PATH ||
+  (existsSync("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+    ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    : "");
 const routes = (process.env.QA_MARKET_CHART_ROUTES || "/market-valuation,/market-valuation/structure")
   .split(",")
   .map((route) => route.trim())
@@ -26,8 +33,18 @@ async function inspectRoute(page, route) {
 
   const chartGroups = page.locator('[role="group"][aria-label*="방향키"]');
   const statusRegions = page.locator('[role="status"][aria-atomic="true"]');
-  const groupCount = await chartGroups.count();
-  const statusCount = await statusRegions.count();
+  const allGroupCount = await chartGroups.count();
+  const visibleGroupIndexes = [];
+  for (let index = 0; index < allGroupCount; index += 1) {
+    if (await chartGroups.nth(index).isVisible()) visibleGroupIndexes.push(index);
+  }
+  const allStatusCount = await statusRegions.count();
+  const visibleStatusIndexes = [];
+  for (let index = 0; index < allStatusCount; index += 1) {
+    if (await statusRegions.nth(index).isVisible()) visibleStatusIndexes.push(index);
+  }
+  const groupCount = visibleGroupIndexes.length;
+  const statusCount = visibleStatusIndexes.length;
   const failures = [];
 
   if (response?.status() !== 200) {
@@ -43,9 +60,12 @@ async function inspectRoute(page, route) {
   const sampleCount = Math.min(groupCount, 3);
   const samples = [];
   for (let index = 0; index < sampleCount; index += 1) {
-    const group = chartGroups.nth(index);
+    const group = chartGroups.nth(visibleGroupIndexes[index]);
     const canvas = group.locator('canvas[role="img"][aria-label]');
-    const relatedStatus = statusRegions.nth(Math.min(index, Math.max(statusCount - 1, 0)));
+    const statusIndex = statusCount > 0
+      ? visibleStatusIndexes[Math.min(index, statusCount - 1)]
+      : 0;
+    const relatedStatus = statusRegions.nth(statusIndex);
     const canvasCount = await canvas.count();
     const before = await readText(relatedStatus);
 
@@ -100,7 +120,11 @@ async function main() {
     throw new Error("No market chart routes configured.");
   }
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    ...(browserChannel ? { channel: browserChannel } : {}),
+    ...(browserExecutablePath ? { executablePath: browserExecutablePath } : {}),
+  });
   const context = await browser.newContext({
     viewport: { width: 1280, height: 900 },
   });

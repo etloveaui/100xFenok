@@ -15,6 +15,15 @@ export type AdminLoginThrottleResult = {
 
 const loginAttempts = new Map<string, AdminLoginAttempt>();
 
+function stableClientKeyHash(value: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 function pruneExpiredLoginAttempts(now: number): void {
   for (const [clientKey, attempt] of loginAttempts) {
     if (attempt.resetAt <= now && attempt.lockedUntil <= now) {
@@ -48,15 +57,20 @@ function throttleResult(attempt: AdminLoginAttempt | undefined, now: number): Ad
 
 export function getAdminLoginClientKey(request: Request): string {
   const cfConnectingIp = request.headers.get("cf-connecting-ip")?.trim();
-  if (cfConnectingIp) return cfConnectingIp;
+  if (cfConnectingIp) return `ip:${cfConnectingIp}`;
 
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  if (forwardedFor) return forwardedFor;
+  if (forwardedFor) return `ip:${forwardedFor}`;
 
   const realIp = request.headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
+  if (realIp) return `ip:${realIp}`;
 
-  return "unknown";
+  const fallbackMaterial = [
+    request.headers.get("host")?.trim() || "no-host",
+    request.headers.get("user-agent")?.trim() || "no-user-agent",
+    request.headers.get("accept-language")?.trim() || "no-language",
+  ].join("|");
+  return `fallback:${stableClientKeyHash(fallbackMaterial)}`;
 }
 
 export function checkAdminLoginThrottle(

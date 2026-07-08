@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { webcrypto } from "node:crypto";
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
@@ -17,6 +18,7 @@ const middlewarePath = path.join(appRoot, "middleware.ts");
 const liveBenchPagePath = path.join(appRoot, "src/app/live-bench/page.tsx");
 const adminAuthWorkflowPath = path.join(root, ".github/workflows/admin-auth-guards.yml");
 const adminStaticAuthGuardPath = path.join(appRoot, "scripts/test-admin-static-auth-guard.mjs");
+const wranglerConfigPath = path.join(appRoot, "wrangler.jsonc");
 
 class TestCustomEvent {
   constructor(type, init = {}) {
@@ -97,6 +99,7 @@ function loadServerTsModule(sourcePath, env = {}) {
     btoa(value) {
       return Buffer.from(value, "binary").toString("base64");
     },
+    crypto: webcrypto,
     exports: {},
     module: { exports: {} },
     process: { env },
@@ -325,6 +328,62 @@ function assertProductionDefaultAdminAuthIsDisabled() {
   assert.equal(developmentModule.isAdminAuthConfigured(), true);
 }
 
+async function assertAdminSessionPolicy() {
+  const env = {
+    NODE_ENV: "production",
+    NEXT_ADMIN_PASSWORD_HASH: "0".repeat(64),
+    NEXT_ADMIN_SESSION_SECRET: "test-admin-session-secret",
+    NEXT_ADMIN_SESSION_TTL_HOURS: "2",
+  };
+  const session = loadServerTsModule(adminSessionPath, env);
+  assert.equal(
+    session.getAdminSessionTtlMs(),
+    2 * 60 * 60 * 1000,
+    "admin session TTL must be configurable by NEXT_ADMIN_SESSION_TTL_HOURS",
+  );
+  assert.equal(
+    session.getAdminSessionRevokedBeforeMs(),
+    0,
+    "admin session revocation cutoff must default to disabled",
+  );
+
+  const issuedAt = 1_000_000;
+  const token = await session.createAdminSessionToken(issuedAt);
+  assert.equal(await session.verifyAdminSessionToken(token, issuedAt + 1), true);
+  assert.equal(
+    await session.verifyAdminSessionToken(token, issuedAt + 2 * 60 * 60 * 1000 + 1),
+    false,
+    "admin session token must expire at the configured TTL",
+  );
+
+  const revoked = loadServerTsModule(adminSessionPath, {
+    ...env,
+    NEXT_ADMIN_SESSION_REVOKED_BEFORE_MS: String(issuedAt + 1),
+  });
+  const oldToken = await revoked.createAdminSessionToken(issuedAt);
+  assert.equal(
+    await revoked.verifyAdminSessionToken(oldToken, issuedAt + 2),
+    false,
+    "admin session tokens issued before the revocation cutoff must be rejected",
+  );
+  const newToken = await revoked.createAdminSessionToken(issuedAt + 2);
+  assert.equal(
+    await revoked.verifyAdminSessionToken(newToken, issuedAt + 3),
+    true,
+    "admin session tokens issued after the revocation cutoff must remain valid",
+  );
+
+  const tooLong = loadServerTsModule(adminSessionPath, {
+    ...env,
+    NEXT_ADMIN_SESSION_TTL_HOURS: "9999",
+  });
+  assert.equal(
+    tooLong.getAdminSessionTtlMs(),
+    tooLong.ADMIN_SESSION_MAX_TTL_MS,
+    "admin session TTL must be capped to the maximum policy window",
+  );
+}
+
 function assertAdminLoginThrottle() {
   const throttle = loadServerTsModule(adminLoginThrottlePath, { NODE_ENV: "test" });
   const clientKey = `admin-auth-guard-${Date.now()}`;
@@ -354,7 +413,21 @@ function assertAdminLoginThrottle() {
   const request = new Request("https://example.test/admin", {
     headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" },
   });
-  assert.equal(throttle.getAdminLoginClientKey(request), "203.0.113.10");
+  assert.equal(throttle.getAdminLoginClientKey(request), "ip:203.0.113.10");
+
+  const fallbackRequest = new Request("https://example.test/admin", {
+    headers: { "user-agent": "Fenok Owner Smoke/1.0" },
+  });
+  const fallbackKey = throttle.getAdminLoginClientKey(fallbackRequest);
+  assert.notEqual(
+    fallbackKey,
+    "unknown",
+    "missing IP headers must not collapse every request into one shared unknown bucket",
+  );
+  assert(
+    fallbackKey.startsWith("fallback:"),
+    "missing IP headers must use a bounded fallback client key",
+  );
 }
 
 function assertAdminSessionRouteUsesServerThrottle() {
@@ -376,6 +449,37 @@ function assertAdminSessionRouteUsesServerThrottle() {
   );
 }
 
+function assertAdminRateLimitPolicy() {
+  const middleware = fs.readFileSync(middlewarePath, "utf8");
+  const wrangler = fs.readFileSync(wranglerConfigPath, "utf8");
+  assert(
+    /"name"\s*:\s*"RL_ADMIN"/.test(wrangler),
+    "wrangler config must keep the RL_ADMIN rate-limit binding name",
+  );
+  assert(
+    middleware.includes('bindingName: "RL_ADMIN"'),
+    "middleware must route admin paths through RL_ADMIN",
+  );
+  const trailingSlashRedirect = middleware.slice(
+    middleware.indexOf("function getAdminTrailingSlashRedirect"),
+    middleware.indexOf("function getAdminGateRedirect"),
+  );
+  assert(
+    trailingSlashRedirect.includes("isAdminApiPath(pathname)"),
+    "admin API routes must not be redirected to trailing-slash paths before auth POST/DELETE",
+  );
+
+  const passesRateLimitPrefix = middleware.slice(
+    middleware.indexOf("async function passesRateLimit"),
+    middleware.indexOf("const tier = getRateLimitTier"),
+  );
+  assert(
+    !passesRateLimitPrefix.includes("isAdminPath(pathname)") &&
+      !passesRateLimitPrefix.includes("isAdminApiPath(pathname)"),
+    "admin paths must not bypass the middleware rate-limit gate",
+  );
+}
+
 function assertAdminAuthWorkflowTracksServerFiles() {
   const workflow = fs.readFileSync(adminAuthWorkflowPath, "utf8");
   for (const requiredPath of [
@@ -385,6 +489,7 @@ function assertAdminAuthWorkflowTracksServerFiles() {
     "100xfenok-next/scripts/test-admin-static-auth-guard.mjs",
     "100xfenok-next/src/lib/server/admin-login-throttle.ts",
     "100xfenok-next/src/lib/server/admin-session.ts",
+    "100xfenok-next/wrangler.jsonc",
   ]) {
     assert(
       workflow.includes(requiredPath),
@@ -398,8 +503,10 @@ assertAdminVerifyLockout();
 assertFooterDoesNotAutoRefreshAdminSession();
 assertAdminLiveIsNotPublicRewrite();
 assertProductionDefaultAdminAuthIsDisabled();
+await assertAdminSessionPolicy();
 assertAdminLoginThrottle();
 assertAdminSessionRouteUsesServerThrottle();
+assertAdminRateLimitPolicy();
 assertAdminAuthWorkflowTracksServerFiles();
 
 console.log("admin auth guards passed");

@@ -85,10 +85,11 @@ export async function POST(request: Request) {
     { authenticated: true },
     { headers: NO_STORE_HEADERS },
   );
+  const now = Date.now();
   response.cookies.set(
     ADMIN_SESSION_COOKIE,
-    await createAdminSessionToken(),
-    getAdminSessionCookieOptions(),
+    await createAdminSessionToken(now),
+    getAdminSessionCookieOptions(now),
   );
   return response;
 }

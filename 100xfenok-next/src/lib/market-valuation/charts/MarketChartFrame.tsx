@@ -230,8 +230,8 @@ export function MarketChartFrame({
     <figure
       className={
         bare
-          ? "min-w-0"
-          : "min-w-0 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm"
+          ? "grid min-w-0 gap-0"
+          : "grid min-w-0 gap-0 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm"
       }
     >
       {(title || showRanges) && (
