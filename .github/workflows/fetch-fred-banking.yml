@@ -24,6 +24,13 @@ on:
 env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
+permissions:
+  contents: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   fetch-fred-data:
     runs-on: ubuntu-latest
@@ -319,5 +326,13 @@ jobs:
             100xfenok-next/public/data/macro/fred-banking-*.json \
             100xfenok-next/public/data/computed/rim-index/inputs.json
           git diff --staged --quiet || git commit -m "chore: update FRED banking data"
-          git pull --rebase origin main
-          git push
+          for attempt in $(seq 1 5); do
+            git pull --rebase --autostash origin main
+            if git push; then
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

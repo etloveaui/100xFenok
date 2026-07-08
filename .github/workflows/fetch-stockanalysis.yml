@@ -94,6 +94,13 @@ on:
         required: false
         default: '0.25'
 
+permissions:
+  contents: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   fetch-stockanalysis:
     runs-on: ubuntu-latest

@@ -35,7 +35,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: update-manifest
+  group: fenok-data-writer-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
