@@ -14,19 +14,19 @@ type AdminSessionPayload = {
 function getAdminPasswordHash(): string {
   const configured = process.env.NEXT_ADMIN_PASSWORD_HASH;
   if (configured) return configured;
-  if (allowDefaultAdminAuth()) return DEFAULT_ADMIN_PASSWORD_HASH;
+  if (isDefaultAdminAuthAllowed()) return DEFAULT_ADMIN_PASSWORD_HASH;
   return "";
 }
 
 function getAdminSessionSecret(): string {
   const configured = process.env.NEXT_ADMIN_SESSION_SECRET;
   if (configured) return configured;
-  if (allowDefaultAdminAuth()) return DEFAULT_ADMIN_SESSION_SECRET;
+  if (isDefaultAdminAuthAllowed()) return DEFAULT_ADMIN_SESSION_SECRET;
   return "";
 }
 
-function allowDefaultAdminAuth(): boolean {
-  return process.env.NODE_ENV !== "production" || process.env.NEXT_ADMIN_ALLOW_DEFAULTS === "1";
+export function isDefaultAdminAuthAllowed(): boolean {
+  return process.env.NODE_ENV !== "production";
 }
 
 export function isLocalAdminBypassEnabled(): boolean {

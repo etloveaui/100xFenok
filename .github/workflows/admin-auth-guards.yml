@@ -4,18 +4,30 @@ on:
   push:
     branches: [main]
     paths:
+      - '100xfenok-next/src/app/api/admin/session/route.ts'
       - '100xfenok-next/src/lib/client/admin-auth.ts'
+      - '100xfenok-next/src/lib/server/admin-login-throttle.ts'
+      - '100xfenok-next/src/lib/server/admin-session.ts'
+      - '100xfenok-next/src/components/AdminAccessGate.tsx'
+      - '100xfenok-next/src/components/footer/AdminAuthModal.tsx'
       - '100xfenok-next/src/components/Footer.tsx'
       - '100xfenok-next/middleware.ts'
       - '100xfenok-next/src/app/live-bench/page.tsx'
+      - '100xfenok-next/scripts/test-admin-static-auth-guard.mjs'
       - 'scripts/ops/test-admin-auth-guards.mjs'
       - '.github/workflows/admin-auth-guards.yml'
   pull_request:
     paths:
+      - '100xfenok-next/src/app/api/admin/session/route.ts'
       - '100xfenok-next/src/lib/client/admin-auth.ts'
+      - '100xfenok-next/src/lib/server/admin-login-throttle.ts'
+      - '100xfenok-next/src/lib/server/admin-session.ts'
+      - '100xfenok-next/src/components/AdminAccessGate.tsx'
+      - '100xfenok-next/src/components/footer/AdminAuthModal.tsx'
       - '100xfenok-next/src/components/Footer.tsx'
       - '100xfenok-next/middleware.ts'
       - '100xfenok-next/src/app/live-bench/page.tsx'
+      - '100xfenok-next/scripts/test-admin-static-auth-guard.mjs'
       - 'scripts/ops/test-admin-auth-guards.mjs'
       - '.github/workflows/admin-auth-guards.yml'
   workflow_dispatch:

@@ -3,8 +3,8 @@ export const ADMIN_AUTH_CHANGE_EVENT = "fenok:admin-auth-change";
 export const ADMIN_VERIFY_STATE_EVENT = "fenok:admin-verify-state";
 export const ADMIN_VERIFY_FAIL_COUNT_KEY = "adminVerifyFailCount";
 export const ADMIN_VERIFY_LOCK_UNTIL_KEY = "adminVerifyLockUntil";
-export const ADMIN_MAX_FAILURES = 1;
-export const ADMIN_VERIFY_LOCK_MS = 0;
+export const ADMIN_MAX_FAILURES = 3;
+export const ADMIN_VERIFY_LOCK_MS = 3000;
 
 let lastKnownAdminAuthenticated: boolean | null = null;
 
@@ -87,13 +87,23 @@ export function getAdminVerifyLockRemainingMs(now = Date.now()): number {
   const storage = getSessionStorage();
   if (!storage) return 0;
 
+  let lockUntil = 0;
   try {
-    storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+    lockUntil = Number(storage.getItem(ADMIN_VERIFY_LOCK_UNTIL_KEY) || "0");
   } catch {
-    // Ignore storage cleanup failures.
+    return 0;
   }
-  void now;
-  return 0;
+
+  const remainingMs = Number.isFinite(lockUntil) ? Math.max(0, lockUntil - now) : 0;
+  if (remainingMs <= 0) {
+    try {
+      storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+      if (lockUntil > 0) storage.removeItem(ADMIN_VERIFY_FAIL_COUNT_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
+  }
+  return remainingMs;
 }
 
 export function clearAdminVerifyState(): void {
@@ -114,20 +124,38 @@ export function clearAdminVerifyState(): void {
 }
 
 export function registerAdminVerifyFailure(now = Date.now()): AdminVerifyFailureState {
+  const remainingMs = getAdminVerifyLockRemainingMs(now);
+  if (remainingMs > 0) {
+    const lockedState = {
+      locked: true,
+      remainingMs,
+      failCount: getAdminVerifyFailCount(),
+    };
+    dispatchAdminEvent(ADMIN_VERIFY_STATE_EVENT, lockedState);
+    return lockedState;
+  }
+
   const storage = getSessionStorage();
+  const failCount = getAdminVerifyFailCount() + 1;
+  const locked = failCount >= ADMIN_MAX_FAILURES;
+  const lockUntil = locked ? now + ADMIN_VERIFY_LOCK_MS : 0;
   if (storage) {
     try {
-      storage.removeItem(ADMIN_VERIFY_FAIL_COUNT_KEY);
-      storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+      storage.setItem(ADMIN_VERIFY_FAIL_COUNT_KEY, String(failCount));
+      if (locked) {
+        storage.setItem(ADMIN_VERIFY_LOCK_UNTIL_KEY, String(lockUntil));
+      } else {
+        storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+      }
     } catch {
-      // Ignore storage cleanup failures.
+      // Ignore storage failures; event state still reflects this attempt.
     }
   }
-  void now;
+
   const nextState = {
-    locked: false,
-    remainingMs: 0,
-    failCount: 1,
+    locked,
+    remainingMs: locked ? ADMIN_VERIFY_LOCK_MS : 0,
+    failCount,
   };
   dispatchAdminEvent(ADMIN_VERIFY_STATE_EVENT, nextState);
   return nextState;

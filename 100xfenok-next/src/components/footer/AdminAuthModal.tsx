@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   ADMIN_MAX_FAILURES,
+  ADMIN_VERIFY_LOCK_MS,
   clearAdminVerifyState,
   getAdminVerifyLockRemainingMs,
   registerAdminVerifyFailure,
@@ -130,7 +131,7 @@ export default function AdminAuthModal({
             setLockRemainingMs(r);
             if (r <= 0) clearLockTimer();
           }, 200);
-          showToast('Access denied · 3초 후 재시도');
+          showToast(`Access denied · ${Math.ceil(ADMIN_VERIFY_LOCK_MS / 1000)}초 후 재시도`);
         } else {
           showToast(`Access denied (${failureState.failCount}/${ADMIN_MAX_FAILURES})`);
         }

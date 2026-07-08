@@ -6,7 +6,9 @@ import { createJiti } from "jiti";
 import { NextRequest } from "next/server.js";
 
 process.env.NODE_ENV = "production";
-process.env.NEXT_ADMIN_ALLOW_DEFAULTS = "1";
+process.env.NEXT_ADMIN_PASSWORD_HASH =
+  "8736ca6f3957409305f60068e93215c85f8751e4dcdc9303832b325a72c7789f";
+process.env.NEXT_ADMIN_SESSION_SECRET = "fenok-admin-static-auth-guard";
 
 const jiti = createJiti(path.join(process.cwd(), "_admin-static-auth-test.js"), {
   alias: { "@": path.join(process.cwd(), "src") },
