@@ -204,6 +204,7 @@ Acceptance criteria for the governor:
 - Fenok Edge KRX daily updates `data/admin/fenok-edge-korea-krx-daily-index.json`, then rebuilds `data/admin/fenok-edge-coverage-index.json`.
 - Generated-data writers that touch overlapping Fenok Edge artifacts are serialized by the shared `fenok-data-writer-${{ github.ref }}` concurrency group. This was added after run `28981832204` proved that separate Edge/KRX queues can both pass data rebuilds but fail at commit time with real generated-JSON rebase conflicts. The fix commit `2556a02882` passed workflow YAML validation in run `28982488893`.
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`, which rebuilds `data/computed/rim-index/inputs.json` and its Next public mirror.
+- Bot-authored generated-data commits do not reliably start a new deploy run on their own. Worker publication for those commits is covered by the scheduled `Deploy Worker (Cloudflare)` run or by an explicit `workflow_dispatch` after the data-writer queue settles.
 - RIM QA accepts both valid KOSPI operating states: `backlog_blocked` when no KRX bridge is available in the checkout, and `secondary_input_only` with KRX exact weights/KTS 10Y when the bridge is present.
 - YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
 - `qa:fenok-edge-readiness` includes `qa:rim-index`, a no-fetch RIM input contract check that forbids public `fair_value` / `target_price` output and blocks KOSPI from using DGS10 as a fallback.
