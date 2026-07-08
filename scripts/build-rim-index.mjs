@@ -11,6 +11,9 @@ const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 const SCHEMA_VERSION = "rim_index_inputs.v1";
 const DEFAULT_OUTPUT = "computed/rim-index/inputs.json";
 const DEFAULT_MIN_COVERED_WEIGHT = 0.75;
+const KOSPI_KRX_BRIDGE_FILE = "admin/fenok-edge-korea-krx-daily-index.json";
+const KOSPI_KRX_WEIGHT_KEY = "kospi_krx_mktcap";
+const KOSPI_INPUT_FRESHNESS_MAX_DAYS = 2;
 const ASSUMPTION_VERSION = "rim-assumptions-20260708";
 const REVIEWED_AT = "2026-07-08";
 
@@ -87,9 +90,10 @@ const PROXY_CONSTITUENT_CANDIDATES = {
     proxyTicker: "EWY",
     source: "stockanalysis/etfs/EWY.json",
     exactIndexSubstitute: false,
+    diagnosticStatus: "rejected_not_kospi_benchmark",
     notes: [
-      "iShares MSCI South Korea ETF holdings are a proxy candidate only, not official KOSPI constituent weights.",
-      "KRX holding symbols are normalized for diagnostics only; public KOSPI RIM still requires an explicit proxy label or official KOSPI weights.",
+      "iShares MSCI South Korea ETF holdings are MSCI Korea ETF holdings, not KOSPI constituent weights.",
+      "Do not use EWY for KOSPI RIM when KRX KOSPI market-cap source files are available.",
     ],
   },
   SOX: {
@@ -120,8 +124,33 @@ function readJson(absPath) {
   return JSON.parse(fs.readFileSync(absPath, "utf8"));
 }
 
+function readOptionalJson(absPath) {
+  if (!fs.existsSync(absPath)) return null;
+  return readJson(absPath);
+}
+
 function readDataJson(relPath, root = dataRoot) {
   return readJson(path.join(root, relPath));
+}
+
+function dataRootToRepoRoot(dataRootForReads) {
+  return path.resolve(dataRootForReads, "..");
+}
+
+function toPosixPath(inputPath) {
+  return String(inputPath ?? "").split(path.sep).join("/");
+}
+
+function parseKrxDate(dateValue) {
+  const compact = String(dateValue ?? "").replaceAll("-", "");
+  return /^\d{8}$/.test(compact) ? compact : null;
+}
+
+function daysBetweenIsoDates(startDate, endDate) {
+  const start = Date.parse(`${startDate}T00:00:00Z`);
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  return Math.round((end - start) / 86400000);
 }
 
 function writeJson(relPath, payload, roots) {
@@ -225,6 +254,124 @@ function loadKr10y(macroPayload) {
     value: round(value / 100, 8),
     date: row.date,
     raw_value_percent: value,
+  };
+}
+
+function loadKrxBridge(dataRootForReads) {
+  const bridgePath = path.join(dataRootForReads, KOSPI_KRX_BRIDGE_FILE);
+  const bridge = readOptionalJson(bridgePath);
+  if (!bridge?.private_artifacts?.raw_root || !bridge?.as_of) return null;
+  const dateKey = parseKrxDate(bridge.as_of);
+  if (!dateKey) return null;
+  const repoRootForReads = dataRootToRepoRoot(dataRootForReads);
+  return {
+    bridge,
+    bridge_source: KOSPI_KRX_BRIDGE_FILE,
+    repo_root: repoRootForReads,
+    raw_root_rel: toPosixPath(bridge.private_artifacts.raw_root),
+    as_of: bridge.as_of,
+    date_key: dateKey,
+    raw_public: bridge.raw_public === true,
+    license_or_terms_note: bridge.license_or_terms_note ?? null,
+  };
+}
+
+function krxPrivatePath(bridgeInfo, ...parts) {
+  const relPath = toPosixPath(path.posix.join(bridgeInfo.raw_root_rel, ...parts));
+  return {
+    relPath,
+    absPath: path.join(bridgeInfo.repo_root, relPath),
+  };
+}
+
+function loadKrxKospiMarketCapWeights(dataRootForReads, generatedAt) {
+  const bridgeInfo = loadKrxBridge(dataRootForReads);
+  if (!bridgeInfo) return null;
+  const sourcePath = krxPrivatePath(
+    bridgeInfo,
+    "core_stock_index",
+    "stk_bydd_trd",
+    `${bridgeInfo.date_key}.json`,
+  );
+  const payload = readOptionalJson(sourcePath.absPath);
+  const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+  const kospiRows = rows
+    .filter((row) => row?.MKT_NM === "KOSPI")
+    .map((row) => ({
+      code: String(row?.ISU_CD ?? "").trim().toUpperCase(),
+      name: String(row?.ISU_NM ?? "").trim(),
+      close_price: numberOrNull(row?.TDD_CLSPRC),
+      listed_shares: numberOrNull(row?.LIST_SHRS),
+      market_cap: numberOrNull(row?.MKTCAP),
+    }))
+    .filter((row) => row.code && finite(row.market_cap) && row.market_cap > 0);
+  const totalMktCap = kospiRows.reduce((sum, row) => sum + row.market_cap, 0);
+  if (!finite(totalMktCap) || totalMktCap <= 0) return null;
+  const generatedDate = String(generatedAt ?? "").slice(0, 10);
+  const ageDays = daysBetweenIsoDates(bridgeInfo.as_of, generatedDate);
+  return {
+    source: sourcePath.relPath,
+    bridge_source: bridgeInfo.bridge_source,
+    source_field: "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
+    as_of: bridgeInfo.as_of,
+    raw_public: bridgeInfo.raw_public,
+    license_or_terms_note: bridgeInfo.license_or_terms_note,
+    row_count: kospiRows.length,
+    total_market_cap: totalMktCap,
+    denominator: {
+      method: "issuer_level_market_cap_sum",
+      label: "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
+      unit: "KRW",
+      value: totalMktCap,
+    },
+    freshness: {
+      generated_at_date: generatedDate || null,
+      calendar_age_days: ageDays,
+      max_input_freshness_days: KOSPI_INPUT_FRESHNESS_MAX_DAYS,
+      status: finite(ageDays) && ageDays <= KOSPI_INPUT_FRESHNESS_MAX_DAYS
+        ? "fresh_enough_for_input_slice"
+        : "refresh_recommended",
+    },
+    rows: kospiRows.map((row) => ({
+      ...row,
+      weight: row.market_cap / totalMktCap,
+      weight_pct: (row.market_cap / totalMktCap) * 100,
+    })),
+  };
+}
+
+function loadKrxKorea10y(dataRootForReads) {
+  const bridgeInfo = loadKrxBridge(dataRootForReads);
+  if (!bridgeInfo) return null;
+  const sourcePath = krxPrivatePath(
+    bridgeInfo,
+    "bond_commodity_esg",
+    "kts_bydd_trd",
+    `${bridgeInfo.date_key}.json`,
+  );
+  const payload = readOptionalJson(sourcePath.absPath);
+  const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+  const candidates = rows
+    .map((row) => ({
+      row,
+      yieldPercent: numberOrNull(row?.CLSPRC_YD),
+      term: String(row?.BND_EXP_TP_NM ?? "").trim(),
+      benchmarkType: String(row?.GOVBND_ISU_TP_NM ?? "").trim(),
+      name: String(row?.ISU_NM ?? "").trim(),
+    }))
+    .filter((item) => item.term === "10" && item.benchmarkType === "지표" && finite(item.yieldPercent) && item.yieldPercent > 0)
+    .sort((a, b) => Number(a.name.includes("물가")) - Number(b.name.includes("물가")));
+  const selected = candidates.find((item) => !item.name.includes("물가")) ?? candidates[0];
+  if (!selected) return null;
+  return {
+    value: round(selected.yieldPercent / 100, 8),
+    date: bridgeInfo.as_of,
+    raw_value_percent: selected.yieldPercent,
+    source: sourcePath.relPath,
+    source_field: `OutBlock_1[ISU_NM=${selected.name},BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100`,
+    label: "KRX KTS 10Y benchmark government bond yield",
+    raw_public: bridgeInfo.raw_public,
+    license_or_terms_note: bridgeInfo.license_or_terms_note,
   };
 }
 
@@ -381,6 +528,39 @@ function stockActionRowsForIndex(stockActionPayload, indexKey) {
     .filter(({ indexWeight }) => finite(numberOrNull(indexWeight?.weight)) && numberOrNull(indexWeight.weight) > 0);
 }
 
+function stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights) {
+  if (!krxWeights?.rows?.length) {
+    return { indexRows: [], denominatorRows: [], missingSample: [] };
+  }
+  const lookup = stockActionLookup(stockActionPayload);
+  const denominatorRows = [];
+  const indexRows = [];
+  const missingSample = [];
+  for (const krxRow of krxWeights.rows) {
+    const indexWeight = {
+      index: KOSPI_KRX_WEIGHT_KEY,
+      weight: krxRow.weight_pct,
+      source_weight_unit: "percent",
+    };
+    denominatorRows.push({
+      row: {
+        symbol: krxRow.code,
+        ticker_normalized: krxRow.code,
+        company: krxRow.name,
+      },
+      indexWeight,
+      krxRow,
+    });
+    const stockActionRow = lookup.get(krxRow.code);
+    if (stockActionRow) {
+      indexRows.push({ row: stockActionRow, indexWeight, krxRow });
+    } else if (missingSample.length < 10) {
+      missingSample.push(`${krxRow.code}:${krxRow.name}`);
+    }
+  }
+  return { indexRows, denominatorRows, missingSample };
+}
+
 function weightedMetric(indexRows, metricFn, { denominatorRows = indexRows, missingLimit = 10 } = {}) {
   const denominatorWeight = denominatorRows.reduce((sum, { indexWeight }) => sum + numberOrNull(indexWeight.weight), 0);
   let coveredWeight = 0;
@@ -481,9 +661,9 @@ function proxyConstituentCandidateDiagnostics(stockActionPayload, dataRootForRea
       forward_eps_fy1_fy3_weight: round(forwardWeight, 4),
       forward_eps_fy1_fy3_weight_ratio: round(forwardWeightRatio, 6),
       min_public_card_weight_ratio: DEFAULT_MIN_COVERED_WEIGHT,
-      diagnostic_status: config.exactIndexSubstitute
+      diagnostic_status: config.diagnosticStatus ?? (config.exactIndexSubstitute
         ? "exact_candidate"
-        : (forwardWeightRatio >= DEFAULT_MIN_COVERED_WEIGHT ? "proxy_financials_coverage_ready_exact_index_blocked" : "proxy_coverage_below_threshold"),
+        : (forwardWeightRatio >= DEFAULT_MIN_COVERED_WEIGHT ? "proxy_financials_coverage_ready_exact_index_blocked" : "proxy_coverage_below_threshold")),
       missing_sample: missingSample,
       notes: config.notes,
     };
@@ -491,7 +671,54 @@ function proxyConstituentCandidateDiagnostics(stockActionPayload, dataRootForRea
   return diagnostics;
 }
 
-function koreaCoverageDiagnostics(stockActionPayload) {
+function krxKospiWeightDiagnostics(stockActionPayload, krxWeights) {
+  if (!krxWeights) return null;
+  const joined = stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights);
+  const denominatorOptions = { denominatorRows: joined.denominatorRows };
+  const matched = weightedMetric(joined.indexRows, () => 1, denominatorOptions);
+  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const forwardGrowth = weightedMetric(joined.indexRows, (row) => {
+    const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
+    const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
+    return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0
+      ? Math.exp(Math.log(fy3 / fy1) / 2) - 1
+      : null;
+  }, denominatorOptions);
+  return {
+    index_key: KOSPI_KRX_WEIGHT_KEY,
+    source_tier: "exact_index_weight_source",
+    source: krxWeights.source,
+    bridge_source: krxWeights.bridge_source,
+    source_field: krxWeights.source_field,
+    as_of: krxWeights.as_of,
+    raw_public: krxWeights.raw_public,
+    license_or_terms_note: krxWeights.license_or_terms_note,
+    krx_rows: krxWeights.row_count,
+    total_market_cap: krxWeights.total_market_cap,
+    denominator: krxWeights.denominator,
+    freshness: krxWeights.freshness,
+    matched_stock_action_rows: joined.indexRows.length,
+    matched_weight_ratio: matched.covered_weight_ratio,
+    dividend_yield_rows: dividendYield.covered_rows,
+    dividend_yield_weight_ratio: dividendYield.covered_weight_ratio,
+    weighted_dividend_yield: round(dividendYield.value, 8),
+    forward_eps_fy1_fy3_rows: forwardGrowth.covered_rows,
+    forward_eps_fy1_fy3_weight_ratio: forwardGrowth.covered_weight_ratio,
+    weighted_forward_eps_3y_cagr: round(forwardGrowth.value, 6),
+    min_public_card_weight_ratio: DEFAULT_MIN_COVERED_WEIGHT,
+    public_status: forwardGrowth.covered_weight_ratio >= DEFAULT_MIN_COVERED_WEIGHT
+      ? "krx_exact_weights_financials_coverage_ready"
+      : "krx_exact_weights_financials_coverage_below_threshold",
+    missing_sample: joined.missingSample,
+    notes: [
+      "KOSPI weights use KRX issuer-level MKTCAP / total KOSPI MKTCAP, not ETF proxy holdings.",
+      "The current denominator is the KOSPI stock-daily issuer MKTCAP sum, matching the KOSPI including foreign shares aggregate.",
+      "Raw KRX rows stay private/admin; public payload carries derived coverage and private path references only.",
+    ],
+  };
+}
+
+function koreaCoverageDiagnostics(stockActionPayload, krxWeights = null) {
   const rows = Array.isArray(stockActionPayload?.rows) ? stockActionPayload.rows : [];
   const koreaRows = rows.filter((row) => row?.marketScope === "korea");
   const forwardRows = koreaRows.filter((row) => {
@@ -507,10 +734,15 @@ function koreaCoverageDiagnostics(stockActionPayload) {
     forward_eps_fy1_fy3_rows: forwardRows.length,
     market_cap_forward_rows: marketCapForwardRows.length,
     kospi_index_weight_rows: kospiWeightRows.length,
-    public_status: kospiWeightRows.length > 0 ? "candidate_ready" : "blocked_missing_kospi_index_weights",
+    krx_kospi_weights: krxKospiWeightDiagnostics(stockActionPayload, krxWeights),
+    public_status: krxWeights
+      ? "krx_exact_weights_available"
+      : (kospiWeightRows.length > 0 ? "candidate_ready" : "blocked_missing_kospi_index_weights"),
     notes: [
-      "Korea forward estimates exist, but official KOSPI index weights are required before public KOSPI RIM output.",
-      "A market-cap weighted Korea proxy is technically possible but must be owner-approved and proxy-labeled.",
+      krxWeights
+        ? "KRX KOSPI market-cap weights are available; EWY is not used for KOSPI RIM inputs."
+        : "Korea forward estimates exist, but KRX KOSPI index weights are required before public KOSPI RIM output.",
+      "KOSPI RIM publication still depends on freshness and KRX raw-data terms review.",
     ],
   };
 }
@@ -538,36 +770,119 @@ function buildStockActionPayoutRatio(indexConfig, benchmarkRow, stockActionPaylo
   });
 }
 
-function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payoutRatioField, costOfEquityValue, explicitEpsGrowth3yField) {
-  const indexRows = stockActionRowsForIndex(stockActionPayload, indexConfig.slickchartsIndex);
-  const source = "computed/stock_action_index.json";
-  const fy1Growth = weightedMetric(indexRows, (row) => {
+function buildKrxKospiPayoutRatio(indexConfig, benchmarkRow, stockActionPayload, krxWeights) {
+  const joined = stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights);
+  const denominatorOptions = { denominatorRows: joined.denominatorRows };
+  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
+  const payoutRatio = finite(dividendYield.value) && earningsYield > 0
+    ? dividendYield.value / earningsYield
+    : null;
+  return derivedValue({
+    value: round(payoutRatio, 6),
+    formula: "krx_kospi_mktcap_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+    sources: ["computed/stock_action_index.json", krxWeights.source, indexConfig.benchmarkFile],
+    coverage: {
+      stock_action_source_date: stockActionPayload?.source_date ?? null,
+      index_key: KOSPI_KRX_WEIGHT_KEY,
+      krx_weight_as_of: krxWeights.as_of,
+      krx_weight_source: krxWeights.source,
+      raw_public: krxWeights.raw_public,
+      weighted_dividend_yield: round(dividendYield.value, 8),
+      benchmark_as_of: benchmarkRow.date,
+      benchmark_earnings_yield: round(earningsYield, 8),
+      unmatched_krx_sample: joined.missingSample,
+      ...dividendYield,
+    },
+    notes: [
+      "KRX KOSPI issuer market-cap weights are used directly; EWY/MSCI Korea ETF holdings are not used.",
+      "Raw KRX rows stay private/admin; output is an input-only derived field, not a fair value.",
+    ],
+  });
+}
+
+function buildKrxKospiForwardEpsGrowth(
+  indexConfig,
+  stockActionPayload,
+  krxWeights,
+  minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT,
+) {
+  const joined = stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights);
+  const denominatorOptions = { denominatorRows: joined.denominatorRows };
+  const growth = weightedMetric(joined.indexRows, (row) => {
+    const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
+    const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
+    return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0
+      ? Math.exp(Math.log(fy3 / fy1) / 2) - 1
+      : null;
+  }, denominatorOptions);
+  return derivedValue({
+    value: round(growth.value, 6),
+    formula: "krx_kospi_mktcap_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+    sources: ["computed/stock_action_index.json", krxWeights.source],
+    coverage: {
+      stock_action_source_date: stockActionPayload?.source_date ?? null,
+      index_key: KOSPI_KRX_WEIGHT_KEY,
+      krx_weight_as_of: krxWeights.as_of,
+      krx_weight_source: krxWeights.source,
+      raw_public: krxWeights.raw_public,
+      min_covered_weight_ratio: minCoveredWeight,
+      unmatched_krx_sample: joined.missingSample,
+      ...growth,
+    },
+    notes: [
+      "Not a live index-level consensus field; KRX exact market-cap weights are combined with stock_action forward EPS snapshots.",
+      "KRX daily latest pull may need refresh before public card promotion.",
+    ],
+  });
+}
+
+function buildForecastGrid(
+  indexConfig,
+  benchmarkRow,
+  stockActionPayload,
+  payoutRatioField,
+  costOfEquityValue,
+  explicitEpsGrowth3yField,
+  {
+    indexRows = null,
+    denominatorRows = null,
+    indexKey = indexConfig.slickchartsIndex,
+    sourceRefs = ["computed/stock_action_index.json"],
+    publicStatus = "ready_inputs_only_no_fair_value",
+    indexDiagnostics = null,
+    notes = [],
+  } = {},
+) {
+  const rowsForGrid = indexRows ?? stockActionRowsForIndex(stockActionPayload, indexKey);
+  const metricOptions = denominatorRows ? { denominatorRows } : {};
+  const fy1Growth = weightedMetric(rowsForGrid, (row) => {
     const value = numberOrNull(row?.estimateSnapshot?.epsGrowth?.fy1);
     return finite(value) ? value / 100 : null;
-  });
-  const fy12Growth = weightedMetric(indexRows, (row) => {
+  }, metricOptions);
+  const fy12Growth = weightedMetric(rowsForGrid, (row) => {
     const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
     const fy2 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy2);
     return finite(fy1) && fy1 > 0 && finite(fy2) && fy2 > 0 ? (fy2 / fy1) - 1 : null;
-  });
-  const fy23Growth = weightedMetric(indexRows, (row) => {
+  }, metricOptions);
+  const fy23Growth = weightedMetric(rowsForGrid, (row) => {
     const fy2 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy2);
     const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
     return finite(fy2) && fy2 > 0 && finite(fy3) && fy3 > 0 ? (fy3 / fy2) - 1 : null;
-  });
+  }, metricOptions);
   const weightedRoe = {
-    fy1: weightedMetric(indexRows, (row) => {
+    fy1: weightedMetric(rowsForGrid, (row) => {
       const value = numberOrNull(row?.profitabilitySnapshot?.roe?.fy1);
       return finite(value) ? value / 100 : null;
-    }),
-    fy2: weightedMetric(indexRows, (row) => {
+    }, metricOptions),
+    fy2: weightedMetric(rowsForGrid, (row) => {
       const value = numberOrNull(row?.profitabilitySnapshot?.roe?.fy2);
       return finite(value) ? value / 100 : null;
-    }),
-    fy3: weightedMetric(indexRows, (row) => {
+    }, metricOptions),
+    fy3: weightedMetric(rowsForGrid, (row) => {
       const value = numberOrNull(row?.profitabilitySnapshot?.roe?.fy3);
       return finite(value) ? value / 100 : null;
-    }),
+    }, metricOptions),
   };
   const payoutRatio = numberOrNull(payoutRatioField?.value);
   const retentionRatio = finite(payoutRatio) ? Math.max(0, 1 - payoutRatio) : null;
@@ -630,7 +945,7 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       earnings_proxy: formulaValue({
         value: round(earningsProxy, 4),
         formula: item.period === "fy1" ? "benchmark_best_eps_anchor" : "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
-        sources: [indexConfig.benchmarkFile, source],
+        sources: [indexConfig.benchmarkFile, ...sourceRefs],
         notes: item.period === "fy1"
           ? ["FY1 row anchors to benchmark_best_eps; row eps_growth is context-only and not multiplied into earnings_proxy."]
           : ["Row eps_growth is applied before this period's earnings_proxy is calculated."],
@@ -638,7 +953,7 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       eps_growth: formulaValue({
         value: round(item.growth.value, 6),
         formula: item.growthFormula,
-        sources: [source],
+        sources: sourceRefs,
         coverage: item.growth,
         notes: item.growthNotes,
       }),
@@ -660,7 +975,7 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
       stock_action_weighted_roe: formulaValue({
         value: round(weightedRoe[item.period].value, 6),
         formula: `weighted_average(stock_action.profitabilitySnapshot.roe.${item.period}) / 100`,
-        sources: [source],
+        sources: sourceRefs,
         coverage: weightedRoe[item.period],
       }),
       payout_ratio: formulaValue({
@@ -700,18 +1015,20 @@ function buildForecastGrid(indexConfig, benchmarkRow, stockActionPayload, payout
   }
   return {
     schema_version: "forecast_grid_v1",
-    public_status: "ready_inputs_only_no_fair_value",
+    public_status: publicStatus,
     periods: rows,
     coverage: {
       stock_action_source_date: stockActionPayload?.source_date ?? null,
       stock_action_generated_at: stockActionPayload?.generated_at ?? null,
-      index_diagnostics: stockActionIndexDiagnostics(stockActionPayload, indexConfig.slickchartsIndex),
+      index_key: indexKey,
+      index_diagnostics: indexDiagnostics ?? stockActionIndexDiagnostics(stockActionPayload, indexKey),
     },
     notes: [
       "Forecast grid is a source-tiered input grid, not a target price or fair-value output.",
       "FY labels are stock_action forward estimate buckets; calendar-year labels require a separate reporting-period contract.",
       "PEG uses derived.explicit_eps_growth_3y as the canonical growth denominator.",
       "FY1 eps_growth is a source-reported context snapshot and is not used to roll earnings_proxy; FY2/FY3 eps_growth values are forward-EPS roll-forward ratios.",
+      ...notes,
     ],
   };
 }
@@ -849,21 +1166,22 @@ function buildSecondaryIndex(indexConfig, context) {
   const benchmarkRow = latestBenchmarkRow(benchmarkPayload, indexConfig.benchmarkSection, indexConfig.benchmarkFile);
   const observed = buildBenchmarkObservedInputs(indexConfig, benchmarkRow);
   if (indexConfig.id === "KOSPI") {
-    if (context.kr10y) {
+    const krRiskFree = context.kr10y ?? context.krxKr10y;
+    if (krRiskFree) {
       observed.risk_free_rate = observedValue({
-        value: context.kr10y.value,
-        source: "macro/fred-banking-daily.json",
-        sourceField: "series.IRLTLT01KRM156N[-1].value / 100",
-        asOf: context.kr10y.date,
-        label: "Korea 10Y Government Bond Yield",
+        value: krRiskFree.value,
+        source: krRiskFree.source ?? "macro/fred-banking-daily.json",
+        sourceField: krRiskFree.source_field ?? "series.IRLTLT01KRM156N[-1].value / 100",
+        asOf: krRiskFree.date,
+        label: krRiskFree.label ?? "Korea 10Y Government Bond Yield",
       });
+      if (typeof krRiskFree.raw_public === "boolean") observed.risk_free_rate.raw_public = krRiskFree.raw_public;
+      if (krRiskFree.license_or_terms_note) observed.risk_free_rate.license_or_terms_note = krRiskFree.license_or_terms_note;
     } else {
       observed.risk_free_rate = blockedValue({
-        reason: "KR10Y source is solved via FRED/OECD IRLTLT01KRM156N but not present in local 100x data yet.",
+        reason: "KR10Y source is not present in local 100x macro data and no KRX KTS 10Y bridge source was found.",
         candidate: {
-          source: "FRED/OECD",
-          series_id: "IRLTLT01KRM156N",
-          frequency: "monthly",
+          sources: ["FRED/OECD IRLTLT01KRM156N", "KRX KTS 10Y benchmark government bond yield"],
           note: "Collect before any public KOSPI RIM output; do not reuse DGS10.",
         },
         sourceTier: "blocked_not_wired",
@@ -876,6 +1194,88 @@ function buildSecondaryIndex(indexConfig, context) {
       asOf: context.erpPayload?.metadata?.source_date ?? null,
       label: "Damodaran Korea ERP",
     });
+    if (context.krxKospiWeights) {
+      const joined = stockActionRowsForKrxKospiWeights(context.stockActionPayload, context.krxKospiWeights);
+      const payoutRatio = buildKrxKospiPayoutRatio(indexConfig, benchmarkRow, context.stockActionPayload, context.krxKospiWeights);
+      const explicitEpsGrowth3y = buildKrxKospiForwardEpsGrowth(
+        indexConfig,
+        context.stockActionPayload,
+        context.krxKospiWeights,
+        context.minCoveredWeight,
+      );
+      const costOfEquityValue = krRiskFree && finite(observed.equity_risk_premium.value)
+        ? krRiskFree.value + observed.equity_risk_premium.value
+        : null;
+      const blockers = [];
+      if (!krRiskFree) {
+        blockers.push({
+          code: "country_risk_free_source_missing",
+          severity: "public_blocker",
+        });
+      }
+      if (context.krxKospiWeights.freshness?.status === "refresh_recommended") {
+        blockers.push({
+          code: "krx_kospi_daily_refresh_recommended",
+          severity: "freshness_blocker",
+        });
+      }
+      if (context.krxKospiWeights.raw_public !== true) {
+        blockers.push({
+          code: "krx_raw_terms_publication_review_needed",
+          severity: "policy_blocker",
+        });
+      }
+      return {
+        id: indexConfig.id,
+        label: indexConfig.label,
+        role: "secondary_input_only",
+        public_status: blockers.length
+          ? "input_only_krx_exact_weights_with_caveats"
+          : "ready_inputs_and_forecast_grid",
+        observed,
+        derived: {
+          book_value: buildBookValue(benchmarkRow),
+          payout_ratio: payoutRatio,
+          explicit_eps_growth_3y: explicitEpsGrowth3y,
+          cost_of_equity: finite(costOfEquityValue)
+            ? derivedValue({
+              value: round(costOfEquityValue, 8),
+              formula: "risk_free_rate + equity_risk_premium",
+              sources: ["observed.risk_free_rate", "observed.equity_risk_premium"],
+              notes: ["KOSPI uses Korea risk-free inputs only; DGS10 fallback is forbidden."],
+            })
+            : blockedValue({
+              reason: "Cost of equity requires Korea risk-free rate and Korea ERP.",
+            }),
+          forecast_grid_v1: finite(costOfEquityValue)
+            ? buildForecastGrid(
+              indexConfig,
+              benchmarkRow,
+              context.stockActionPayload,
+              payoutRatio,
+              costOfEquityValue,
+              explicitEpsGrowth3y,
+              {
+                indexRows: joined.indexRows,
+                denominatorRows: joined.denominatorRows,
+                indexKey: KOSPI_KRX_WEIGHT_KEY,
+                sourceRefs: ["computed/stock_action_index.json", context.krxKospiWeights.source],
+                publicStatus: "input_only_krx_exact_weights_no_fair_value",
+                indexDiagnostics: krxKospiWeightDiagnostics(context.stockActionPayload, context.krxKospiWeights),
+                notes: [
+                  "KOSPI forecast grid uses KRX MKTCAP weights and stock_action financial snapshots.",
+                  "Promotion to public card should wait for fresh KRX daily pull and raw-data terms review.",
+                ],
+              },
+            )
+            : blockedValue({
+              reason: "Forecast grid requires a finite Korea cost of equity.",
+            }),
+        },
+        assumptions: {},
+        blockers,
+      };
+    }
   }
   return {
     id: indexConfig.id,
@@ -944,6 +1344,8 @@ export function buildRimIndexInputs({
     benchmarkPayloads,
     dgs10: loadDgs10(macroPayload),
     kr10y: loadKr10y(macroPayload),
+    krxKr10y: loadKrxKorea10y(originalDataRoot),
+    krxKospiWeights: loadKrxKospiMarketCapWeights(originalDataRoot, generatedAt),
     usErp: loadUsErp(erpPayload),
     erpPayload,
     stockActionPayload: readFrom("computed/stock_action_index.json"),
@@ -964,16 +1366,18 @@ export function buildRimIndexInputs({
       no_public_single_target: true,
       no_kospi_dgs10_fallback: true,
       source_tier_required: true,
-      forecast_grid_v1_scope: "SPX_NDX_inputs_only",
+      forecast_grid_v1_scope: "SPX_NDX_plus_KOSPI_when_krx_exact_weights_available_inputs_only",
       primary_indices: PRIMARY_INDICES.map((item) => item.id),
       secondary_or_backlog_indices: SECONDARY_INDICES.map((item) => item.id),
+      kospi_weight_method: "KRX KOSPI issuer MKTCAP / total KOSPI MKTCAP when available",
+      kospi_etf_proxy_policy: "EWY/MSCI Korea is diagnostics-only and must not be used as KOSPI RIM weights",
     },
     indices,
     coverage_diagnostics: {
       stock_action: {
         SPX: stockActionIndexDiagnostics(context.stockActionPayload, "sp500"),
         NDX: stockActionIndexDiagnostics(context.stockActionPayload, "nasdaq100"),
-        KOSPI: koreaCoverageDiagnostics(context.stockActionPayload),
+        KOSPI: koreaCoverageDiagnostics(context.stockActionPayload, context.krxKospiWeights),
       },
       proxy_constituent_candidates: proxyConstituentCandidateDiagnostics(context.stockActionPayload, originalDataRoot),
     },
@@ -1097,7 +1501,7 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     kospiRiskFree?.source_field,
     kospiRiskFree?.candidate?.series_id,
   ].filter(Boolean).join(" ");
-  if (kospiRiskFree?.source === "macro/fred-banking-daily.json" || /\bDGS10\b/i.test(kospiRiskFreeSourceFields)) {
+  if (/\bDGS10\b/i.test(kospiRiskFreeSourceFields)) {
     errors.push("KOSPI must not use DGS10 as risk_free_rate");
   }
   const forbidden = scanForbiddenKeys(payload);

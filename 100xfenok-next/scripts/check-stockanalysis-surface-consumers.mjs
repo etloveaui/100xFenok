@@ -8,14 +8,16 @@ const PUBLIC_CONSUMERS_PATH = `${ROOT}/public/data/stockanalysis/surface_consume
 const SOURCE_CONSUMERS_PATH = `${ROOT}/../data/stockanalysis/surface_consumers.json`;
 
 const CODE_FILES = [
-  `${ROOT}/src/app/market/events/MarketEventsClient.tsx`,
-  `${ROOT}/src/app/sectors/IndustryMapPanel.tsx`,
-  `${ROOT}/src/app/etfs/EtfSurfaceSnapshotCard.tsx`,
-  `${ROOT}/src/app/etfs/new/NewEtfsList.tsx`,
-  `${ROOT}/src/app/api/data/stockanalysis/etf-universe/route.ts`,
-  `${ROOT}/src/app/api/data/stockanalysis/etf-snapshot/route.ts`,
-  `${ROOT}/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`,
-  `${ROOT}/src/app/api/data/stockanalysis/ticker/[ticker]/surfaces/route.ts`,
+  "src/app/market/events/MarketEventsClient.tsx",
+  "src/app/sectors/IndustryMapPanel.tsx",
+  "src/app/etfs/EtfHeroPanel.tsx",
+  "src/app/etfs/EtfUnifiedTable.tsx",
+  "src/app/etfs/etfSurfaceData.ts",
+  "src/app/etfs/new/NewEtfsList.tsx",
+  "src/app/api/data/stockanalysis/etf-universe/route.ts",
+  "src/app/api/data/stockanalysis/etf-snapshot/route.ts",
+  "src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts",
+  "src/app/api/data/stockanalysis/ticker/[ticker]/surfaces/route.ts",
 ];
 
 const ROUTE_CONTRACTS = {
@@ -41,10 +43,17 @@ const ROUTE_CONTRACTS = {
   "/etfs": {
     files: [
       "src/app/etfs/page.tsx",
+      "src/app/etfs/EtfHeroPanel.tsx",
+      "src/app/etfs/EtfUnifiedTable.tsx",
+      "src/app/etfs/etfSurfaceData.ts",
       "src/app/explore/EtfUniverseCard.tsx",
       "src/app/api/data/stockanalysis/etf-universe/route.ts",
-      "src/app/etfs/EtfSurfaceSnapshotCard.tsx",
       "src/app/api/data/stockanalysis/etf-snapshot/route.ts",
+    ],
+    contains: [
+      ["src/app/etfs/EtfHeroPanel.tsx", "loadEtfSnapshot"],
+      ["src/app/etfs/EtfUnifiedTable.tsx", "loadEtfUniverse"],
+      ["src/app/etfs/etfSurfaceData.ts", "/api/data/stockanalysis/etf-snapshot"],
     ],
   },
   "/etfs/new": {
@@ -166,7 +175,12 @@ for (const surface of indexSurfaces) {
 }
 
 const referencedByCode = new Set();
-for (const file of CODE_FILES) {
+for (const relPath of CODE_FILES) {
+  const file = pathOf(relPath);
+  if (!existsSync(file)) {
+    errors.push(`code reference file missing ${relPath}`);
+    continue;
+  }
   const text = readFileSync(file, "utf8");
   for (const surface of indexSurfaces) {
     if (text.includes(`"${surface}"`) || text.includes(`/${surface}`)) {

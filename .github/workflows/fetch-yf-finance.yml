@@ -159,6 +159,10 @@ jobs:
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
 
+      - name: Rebuild Fenok signal summary mirrors
+        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        run: node scripts/build-fenok-signals.mjs
+
       - name: Mirror to public
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: |
@@ -184,7 +188,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/yf data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/manifest.json
+          git add data/yf data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/computed/fenok_signals.json data/computed/fenok_signals_summary.json data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/computed/fenok_signals_summary.json 100xfenok-next/public/data/manifest.json
           git diff --staged --quiet || git commit -m "chore: update yf finance data"
           git pull --rebase origin main
           git push

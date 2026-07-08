@@ -20,8 +20,13 @@ Date: 2026-07-08
 - Public JSON must not contain `fair_value` or `target_price`.
 - Every observed, derived, blocked, or assumed field must expose `source_tier`.
 - SPX and NDX are the first public-ready input/forecast-grid slices.
-- CCMP, KOSPI, and SOX stay secondary/backlog until source coverage and public-product blockers are closed.
-- KOSPI must use Korea 10Y (`IRLTLT01KRM156N`) when available and must never fall back to US DGS10.
+- KOSPI may expose secondary input-only fields when KRX exact market-cap
+  weights are available. Public card promotion still requires freshness and
+  KRX raw-data terms review.
+- CCMP and SOX stay secondary/backlog until source coverage and public-product
+  blockers are closed.
+- KOSPI must use Korea risk-free inputs (`IRLTLT01KRM156N` when available, or
+  KRX KTS nominal 10Y when wired) and must never fall back to US DGS10.
 - Screenshots/workbook cells are discovery evidence only; builder code must not
   hardcode their numeric values.
 - `peg_ratio` formula/sources must use `derived.explicit_eps_growth_3y` as the
@@ -49,13 +54,25 @@ Date: 2026-07-08
   - CCMP: `ONEQ` via `stockanalysis/etfs/ONEQ.json`; below the 0.75 public-card
     coverage threshold.
   - KOSPI: `EWY` via `stockanalysis/etfs/EWY.json`; KRX symbols are normalized
-    for diagnostics and currently clear the 0.75 financial-coverage threshold,
-    but this is still an MSCI Korea ETF proxy, not official KOSPI weights.
+    for diagnostics only. EWY is an MSCI Korea ETF proxy and must not be used
+    as KOSPI RIM weights when KRX KOSPI market-cap rows are available.
   - SOX: `SOXX` via `stockanalysis/etfs/SOXX.json`; clears the coverage
     threshold but remains a semiconductor ETF proxy, not literal PHLX SOX.
 - Proxy coverage may guide backlog work, but UI/public labels must preserve the
   proxy caveat until the exact index source is wired or the owner approves a
   proxy-labeled product.
+
+## KOSPI KRX Inputs
+
+- KOSPI weights use KRX issuer-level `MKTCAP / sum(MKTCAP)` from the private
+  stock-daily source referenced by `data/admin/fenok-edge-korea-krx-daily-index.json`.
+- Current denominator is the KOSPI stock-daily issuer `MKTCAP` sum, matching the
+  KOSPI including foreign shares aggregate in `kospi_dd_trd`.
+- Raw KRX rows remain private/admin. Public payloads may expose derived scalar
+  values, coverage, and private path references, but must not redistribute raw
+  rows without terms review.
+- KRX KTS nominal 10Y may provide Korea risk-free input when FRED/OECD KR10Y is
+  absent. Inflation-linked 10Y rows must be filtered out.
 
 ## Automation
 

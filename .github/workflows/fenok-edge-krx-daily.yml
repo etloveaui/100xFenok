@@ -6,7 +6,8 @@ name: Fenok Edge KRX Daily Data
 
 on:
   schedule:
-    # KST Mon-Fri 19:30, after the regular Korea cash-market close window.
+    # KST Mon-Fri 19:30. Fetch the latest settled KRX date (T-1 weekday)
+    # because same-day issuer rows are not reliably complete in the Open API.
     - cron: '30 10 * * 1-5'
   workflow_dispatch:
     inputs:
@@ -80,7 +81,7 @@ jobs:
           INPUT_ALLOW_EMPTY_DAILY: ${{ github.event.inputs.allow_empty_daily || 'false' }}
         shell: bash
         run: |
-          KRX_END_DATE="${INPUT_KRX_END_DATE:-$(TZ=Asia/Seoul date +%Y%m%d)}"
+          KRX_END_DATE="${INPUT_KRX_END_DATE:-$(TZ=Asia/Seoul date -d '1 day ago' +%Y%m%d)}"
           {
             echo "krx_end_date=$KRX_END_DATE"
             echo "krx_days=${INPUT_KRX_DAYS:-1}"

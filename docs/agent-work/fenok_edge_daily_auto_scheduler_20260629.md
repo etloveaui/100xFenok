@@ -59,7 +59,11 @@ Non-negotiable handoff contents for the next main pane:
   - Scheduled runs override the manual defaults to `etf` profile, 6 rolling shards, 140 tickers per scheduled run, 1 second sleep, `max_age_hours=18`, `history_gaps_only=true`, and `stockanalysis_etfs=true`.
   - The default stock universe now includes both `global-scouter/stocks/detail/*.json` and `market_facts` rows where `asset_type=stock`; this keeps S1 stock candidates in the daily history/price accumulation lane without promoting them into public stock scores.
   - `stockanalysis_etfs=true` adds the full StockAnalysis ETF universe/screener candidate set so ETF daily history gaps can be filled by rotating shards.
+  - After YF-derived market facts/audit rebuild, the workflow now rebuilds the local full `fenok_signals.json` plus the public `fenok_signals_summary.json` mirror before the dual-hexagon gate runs.
   - Manual dispatch still keeps the existing full/profile/limit/shard controls.
+- `.github/workflows/fetch-fred-yardeni.yml`
+  - Weekly FRED Yardeni rebuild remains the canonical Feno Yardeni lane: public payload keeps only `date/spx/eps/bond_per/fair_value/premium_pct`, while raw FRED bond-yield components stay under `_private/admin/yardney`.
+  - `scripts/build-feno-yardeni-model.mjs --check` now ignores run-generated `meta.generated_at` drift and fails only on substantive public payload differences.
 - `.github/workflows/fetch-stockanalysis.yml`
   - Adds a KST Tue-Sat bounded Core Basket/surface refresh lane after the YF window.
   - Scheduled runs disable stock financial statements, full ETF universe discovery, and universe backfill.
@@ -67,10 +71,10 @@ Non-negotiable handoff contents for the next main pane:
 - `.github/workflows/fenok-edge-daily.yml`
   - Adds a KST Tue-Sat 09:30 FINRA/OCC derived-proxy refresh.
   - FINRA defaults to a 7-day-to-yesterday window to tolerate holidays and source lag.
-  - OCC rotates through eligible tickers using `GITHUB_RUN_NUMBER % occ_batch_count`, defaulting to 50 tickers across 13 batches.
+  - OCC runs sequential same-run batches with default `250` tickers x `5` batches. The per-batch request budget stays within `1500` because the default candidate window can require up to 3 dates x 2 option sides.
 - `.github/workflows/fenok-edge-krx-daily.yml`
   - Adds a KST Mon-Fri 19:30 KRX Open API private daily refresh.
-  - Scheduled runs default to one `basDd`, 31 endpoints, max 40 calls, concurrency 2, 250ms sleep, and fail threshold 0.
+  - Scheduled runs default to the latest settled KRX date (`T-1` weekday), one `basDd`, 31 endpoints, max 40 calls, concurrency 2, 250ms sleep, and fail threshold 0. Same-day issuer rows are not treated as reliable at the evening schedule time.
   - Raw KRX payloads stay under `_private/admin`; the tracked bridge index stores only counts and private path references.
 
 ## Load-aware Collection Lane

@@ -116,16 +116,37 @@ assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.prox
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.exact_index_substitute, false);
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.resolved_weight_ratio < 0.75);
 
-assert.equal(payload.indices.KOSPI.role, "backlog_blocked");
-assert.equal(payload.indices.KOSPI.observed.risk_free_rate.source_tier, "blocked_not_wired");
-assert.notEqual(payload.indices.KOSPI.observed.risk_free_rate.source, "macro/fred-banking-daily.json");
+assert.equal(payload.indices.KOSPI.role, "secondary_input_only");
+assert.equal(payload.indices.KOSPI.public_status, "input_only_krx_exact_weights_with_caveats");
+assert.equal(payload.indices.KOSPI.observed.risk_free_rate.source_tier, "observed_source");
+assert.match(payload.indices.KOSPI.observed.risk_free_rate.source, /kts_bydd_trd\/20260706\.json/);
+assert.equal(payload.indices.KOSPI.observed.risk_free_rate.value, 0.04203);
 assert.doesNotMatch(String(payload.indices.KOSPI.observed.risk_free_rate.source_field ?? ""), /DGS10/);
-assert.ok(payload.indices.KOSPI.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
+assert.ok(!payload.indices.KOSPI.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
+assert.ok(!payload.indices.KOSPI.blockers.some((blocker) => blocker.code === "country_risk_free_source_solved_not_wired"));
+assert.ok(payload.indices.KOSPI.blockers.some((blocker) => blocker.code === "krx_raw_terms_publication_review_needed"));
+assert.equal(payload.indices.KOSPI.derived.payout_ratio.source_tier, "derived_formula");
+assert.equal(payload.indices.KOSPI.derived.explicit_eps_growth_3y.source_tier, "derived_formula");
+assert.equal(payload.indices.KOSPI.derived.cost_of_equity.source_tier, "derived_formula");
+assert.ok(payload.indices.KOSPI.derived.payout_ratio.coverage.covered_weight_ratio >= 0.75);
+assert.ok(payload.indices.KOSPI.derived.explicit_eps_growth_3y.coverage.covered_weight_ratio >= 0.75);
+assert.equal(payload.indices.KOSPI.derived.forecast_grid_v1.schema_version, "forecast_grid_v1");
+assert.equal(payload.indices.KOSPI.derived.forecast_grid_v1.public_status, "input_only_krx_exact_weights_no_fair_value");
+assert.equal(payload.indices.KOSPI.derived.forecast_grid_v1.periods.length, 3);
 assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.kospi_index_weight_rows, 0);
 assert.ok(payload.coverage_diagnostics.stock_action.KOSPI.forward_eps_fy1_fy3_rows > 0);
-assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.public_status, "blocked_missing_kospi_index_weights");
+assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.public_status, "krx_exact_weights_available");
+assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.source_tier, "exact_index_weight_source");
+assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.krx_rows, 945);
+assert.equal(
+  payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.denominator.label,
+  "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
+);
+assert.ok(payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.matched_weight_ratio >= 0.9);
+assert.ok(payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.forward_eps_fy1_fy3_weight_ratio >= 0.75);
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.proxy_ticker, "EWY");
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.exact_index_substitute, false);
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.diagnostic_status, "rejected_not_kospi_benchmark");
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.resolved_weight_ratio >= 0.75);
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.forward_eps_fy1_fy3_weight_ratio >= 0.75);
 
@@ -140,6 +161,7 @@ try {
   assert.equal(kospiRiskFree.source, "macro/fred-banking-daily.json");
   assert.equal(kospiRiskFree.source_field, "series.IRLTLT01KRM156N[-1].value / 100");
   assert.equal(kospiRiskFree.value, 0.0333);
+  assert.equal(validateRimIndexInputs(payloadWithKr10y).ok, true);
   assert.ok(!payloadWithKr10y.indices.KOSPI.blockers.some((blocker) => blocker.code === "country_risk_free_source_solved_not_wired"));
   assert.ok(payloadWithKr10y.indices.KOSPI.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
 } finally {

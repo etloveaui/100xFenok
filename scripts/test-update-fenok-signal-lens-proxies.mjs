@@ -126,4 +126,34 @@ import {
   assert.ok(!optionStep.args.includes("--reference-only"));
 }
 
+{
+  const args = parseArgs([
+    "--skip-finra-collector",
+    "--skip-flow",
+    "--skip-news",
+    "--skip-lens",
+    "--options-all-eligible",
+    "--options-batch-size",
+    "250",
+    "--options-batch-count",
+    "5",
+    "--options-max-requests",
+    "1500",
+    "--options-max-walkback-days",
+    "2",
+  ]);
+  const plan = buildPlan(args);
+  assert.equal(plan.length, 5);
+  assert.equal(plan[0].label, "OCC listed-options volume skew proxy (batch 1/5)");
+  for (const [index, step] of plan.entries()) {
+    assert.equal(step.label, `OCC listed-options volume skew proxy (batch ${index + 1}/5)`);
+    assert.ok(step.args.includes("--batch-size"));
+    assert.ok(step.args.includes("250"));
+    assert.ok(step.args.includes("--batch-index"));
+    assert.ok(step.args.includes(String(index)));
+    assert.ok(step.args.includes("--max-requests"));
+    assert.ok(step.args.includes("1500"));
+  }
+}
+
 console.log("test-update-fenok-signal-lens-proxies: ok");

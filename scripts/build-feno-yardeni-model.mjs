@@ -61,6 +61,17 @@ function writeJson(filePath, payload) {
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
+function stablePublicPayloadForCheck(payload) {
+  if (!payload || typeof payload !== "object") return payload;
+  return {
+    ...payload,
+    meta: {
+      ...(payload.meta ?? {}),
+      generated_at: null,
+    },
+  };
+}
+
 function sortedUnique(records, label) {
   const seen = new Set();
   let previous = "";
@@ -420,7 +431,7 @@ async function main() {
 
   if (args.check) {
     const current = fs.existsSync(args.output) ? JSON.parse(fs.readFileSync(args.output, "utf8")) : null;
-    if (JSON.stringify(current) !== JSON.stringify(publicPayload)) {
+    if (JSON.stringify(stablePublicPayloadForCheck(current)) !== JSON.stringify(stablePublicPayloadForCheck(publicPayload))) {
       throw new Error(`${path.relative(repoRoot, args.output)} is not up to date`);
     }
   }

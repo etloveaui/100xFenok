@@ -29,11 +29,11 @@ on:
       occ_batch_size:
         description: 'OCC eligible ticker batch size'
         required: false
-        default: '375'
+        default: '250'
       occ_batch_count:
         description: 'OCC sequential same-run batch count'
         required: false
-        default: '3'
+        default: '5'
       occ_batch_index:
         description: 'Optional OCC batch index override'
         required: false
@@ -77,11 +77,12 @@ jobs:
           INPUT_NO_FETCH: ${{ github.event.inputs.no_fetch || 'false' }}
           INPUT_FINRA_FROM: ${{ github.event.inputs.finra_from || '' }}
           INPUT_FINRA_TO: ${{ github.event.inputs.finra_to || '' }}
-          # Sequential same-run batches (375 x 3 covers ~770 eligible with the
-          # 1500-request guard intact per batch). An explicit occ_batch_index
+          # Sequential same-run batches keep the 1500-request guard intact per
+          # batch: 250 tickers x up to 3 candidate dates x 2 sides = 1500.
+          # An explicit occ_batch_index
           # dispatch input still forces the legacy single-batch mode.
-          INPUT_OCC_BATCH_SIZE: ${{ github.event.inputs.occ_batch_size || '375' }}
-          INPUT_OCC_BATCH_COUNT: ${{ github.event.inputs.occ_batch_count || '3' }}
+          INPUT_OCC_BATCH_SIZE: ${{ github.event.inputs.occ_batch_size || '250' }}
+          INPUT_OCC_BATCH_COUNT: ${{ github.event.inputs.occ_batch_count || '5' }}
           INPUT_OCC_BATCH_INDEX: ${{ github.event.inputs.occ_batch_index || '' }}
           INPUT_OCC_MAX_REQUESTS: ${{ github.event.inputs.occ_max_requests || '1500' }}
           INPUT_OCC_FAIL_THRESHOLD: ${{ github.event.inputs.occ_fail_threshold || '25' }}
@@ -133,7 +134,7 @@ jobs:
             "--options-max-requests" "$OCC_MAX_REQUESTS"
             "--options-fail-threshold" "$OCC_FAIL_THRESHOLD"
             "--options-sleep-ms" "$OCC_SLEEP_MS"
-            "--options-max-walkback-days" "3"
+            "--options-max-walkback-days" "2"
           )
           if [ -n "$OCC_BATCH_INDEX" ]; then
             ARGS+=("--options-batch-index" "$OCC_BATCH_INDEX")
