@@ -73,6 +73,36 @@ const SECONDARY_INDICES = [
   },
 ];
 
+const PROXY_CONSTITUENT_CANDIDATES = {
+  CCMP: {
+    proxyTicker: "ONEQ",
+    source: "stockanalysis/etfs/ONEQ.json",
+    exactIndexSubstitute: false,
+    notes: [
+      "Fidelity Nasdaq Composite ETF holdings are a proxy candidate only, not official Nasdaq Composite constituent weights.",
+      "Top holding coverage is below the primary public-card threshold, so exact CCMP blockers remain.",
+    ],
+  },
+  KOSPI: {
+    proxyTicker: "EWY",
+    source: "stockanalysis/etfs/EWY.json",
+    exactIndexSubstitute: false,
+    notes: [
+      "iShares MSCI South Korea ETF holdings are a proxy candidate only, not official KOSPI constituent weights.",
+      "KRX holding symbols are normalized for diagnostics only; public KOSPI RIM still requires an explicit proxy label or official KOSPI weights.",
+    ],
+  },
+  SOX: {
+    proxyTicker: "SOXX",
+    source: "stockanalysis/etfs/SOXX.json",
+    exactIndexSubstitute: false,
+    notes: [
+      "iShares Semiconductor ETF holdings are a proxy candidate only, not literal PHLX Semiconductor Index weights.",
+      "High proxy coverage does not remove the SOX identity-mapping blocker.",
+    ],
+  },
+};
+
 function finite(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -320,6 +350,27 @@ function stockActionBySymbol(payload) {
   return new Map(rows.map((row) => [String(row.symbol ?? row.ticker_normalized ?? "").toUpperCase(), row]));
 }
 
+function addStockActionLookupKey(map, key, row) {
+  const normalized = String(key ?? "").trim().toUpperCase();
+  if (normalized) map.set(normalized, row);
+}
+
+function stockActionLookup(payload) {
+  const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+  const map = new Map();
+  for (const row of rows) {
+    addStockActionLookupKey(map, row?.symbol, row);
+    addStockActionLookupKey(map, row?.ticker_normalized, row);
+    const ticker = String(row?.ticker_normalized ?? "").trim().toUpperCase();
+    if (/^\d{6}$/.test(ticker)) {
+      addStockActionLookupKey(map, `!KRX/${ticker}`, row);
+      addStockActionLookupKey(map, `${ticker}.KS`, row);
+      addStockActionLookupKey(map, `${ticker}.KQ`, row);
+    }
+  }
+  return map;
+}
+
 function stockActionRowsForIndex(stockActionPayload, indexKey) {
   const rows = Array.isArray(stockActionPayload?.rows) ? stockActionPayload.rows : [];
   return rows
@@ -373,6 +424,71 @@ function stockActionIndexDiagnostics(stockActionPayload, indexKey) {
     forward_eps_fy1_fy3_rows: forwardRows.length,
     forward_eps_fy1_fy3_weight: round(forwardRows.reduce((sum, { indexWeight }) => sum + numberOrNull(indexWeight.weight), 0), 4),
   };
+}
+
+function hasForwardEpsFy1Fy3(row) {
+  const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
+  const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
+  return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0;
+}
+
+function proxyConstituentCandidateDiagnostics(stockActionPayload, dataRootForReads) {
+  const lookup = stockActionLookup(stockActionPayload);
+  const diagnostics = {};
+  for (const [indexId, config] of Object.entries(PROXY_CONSTITUENT_CANDIDATES)) {
+    const payload = readDataJson(config.source, dataRootForReads);
+    const holdings = Array.isArray(payload?.normalized?.holdings) ? payload.normalized.holdings : [];
+    let reportedWeight = 0;
+    let resolvedWeight = 0;
+    let resolvedRows = 0;
+    let forwardWeight = 0;
+    let forwardRows = 0;
+    const missingSample = [];
+    for (const holding of holdings) {
+      const symbol = String(holding?.symbol ?? "").trim().toUpperCase();
+      const weight = numberOrNull(holding?.weight_pct ?? holding?.weight);
+      if (!finite(weight) || weight <= 0) continue;
+      reportedWeight += weight;
+      const row = lookup.get(symbol);
+      if (row) {
+        resolvedWeight += weight;
+        resolvedRows += 1;
+        if (hasForwardEpsFy1Fy3(row)) {
+          forwardWeight += weight;
+          forwardRows += 1;
+        }
+      } else if (missingSample.length < 10) {
+        missingSample.push(symbol || "(blank)");
+      }
+    }
+    const resolvedWeightRatio = resolvedWeight / 100;
+    const forwardWeightRatio = forwardWeight / 100;
+    diagnostics[indexId] = {
+      proxy_ticker: config.proxyTicker,
+      source: config.source,
+      source_tier: "proxy_diagnostic",
+      exact_index_substitute: config.exactIndexSubstitute,
+      fetched_at: payload?.fetched_at ?? null,
+      holdings_updated: payload?.normalized?.holdings_updated ?? null,
+      reported_holding_count: payload?.normalized?.holding_count ?? holdings.length,
+      sampled_holding_rows: holdings.length,
+      reported_weight_total: round(reportedWeight, 4),
+      resolved_rows: resolvedRows,
+      resolved_weight: round(resolvedWeight, 4),
+      resolved_weight_ratio: round(resolvedWeightRatio, 6),
+      resolved_weight_ratio_of_reported_holdings: reportedWeight > 0 ? round(resolvedWeight / reportedWeight, 6) : null,
+      forward_eps_fy1_fy3_rows: forwardRows,
+      forward_eps_fy1_fy3_weight: round(forwardWeight, 4),
+      forward_eps_fy1_fy3_weight_ratio: round(forwardWeightRatio, 6),
+      min_public_card_weight_ratio: DEFAULT_MIN_COVERED_WEIGHT,
+      diagnostic_status: config.exactIndexSubstitute
+        ? "exact_candidate"
+        : (forwardWeightRatio >= DEFAULT_MIN_COVERED_WEIGHT ? "proxy_financials_coverage_ready_exact_index_blocked" : "proxy_coverage_below_threshold"),
+      missing_sample: missingSample,
+      notes: config.notes,
+    };
+  }
+  return diagnostics;
 }
 
 function koreaCoverageDiagnostics(stockActionPayload) {
@@ -841,6 +957,7 @@ export function buildRimIndexInputs({
         NDX: stockActionIndexDiagnostics(context.stockActionPayload, "nasdaq100"),
         KOSPI: koreaCoverageDiagnostics(context.stockActionPayload),
       },
+      proxy_constituent_candidates: proxyConstituentCandidateDiagnostics(context.stockActionPayload, originalDataRoot),
     },
   };
   payload.source_tier_counts = collectSourceTierCounts(payload);

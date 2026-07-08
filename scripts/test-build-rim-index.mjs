@@ -26,7 +26,7 @@ function writeJson(absPath, payload) {
 
 function makeKr10yFixture() {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-"));
-  for (const dir of ["benchmarks", "computed", "damodaran", "slickcharts", "yf"]) {
+  for (const dir of ["benchmarks", "computed", "damodaran", "slickcharts", "stockanalysis", "yf"]) {
     fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
   }
   const macroPayload = readJson(path.join(dataRoot, "macro/fred-banking-daily.json"));
@@ -93,6 +93,9 @@ for (const id of ["SPX", "NDX"]) {
 
 assert.equal(payload.indices.CCMP.role, "secondary_input_only");
 assert.ok(payload.indices.CCMP.blockers.some((blocker) => blocker.code === "missing_named_constituent_weight_path"));
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.proxy_ticker, "ONEQ");
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.exact_index_substitute, false);
+assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.resolved_weight_ratio < 0.75);
 
 assert.equal(payload.indices.KOSPI.role, "backlog_blocked");
 assert.equal(payload.indices.KOSPI.observed.risk_free_rate.source_tier, "blocked_not_wired");
@@ -102,6 +105,10 @@ assert.ok(payload.indices.KOSPI.blockers.some((blocker) => blocker.code === "mis
 assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.kospi_index_weight_rows, 0);
 assert.ok(payload.coverage_diagnostics.stock_action.KOSPI.forward_eps_fy1_fy3_rows > 0);
 assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.public_status, "blocked_missing_kospi_index_weights");
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.proxy_ticker, "EWY");
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.exact_index_substitute, false);
+assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.resolved_weight_ratio >= 0.75);
+assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.KOSPI.forward_eps_fy1_fy3_weight_ratio >= 0.75);
 
 const fixtureRoot = makeKr10yFixture();
 try {
@@ -125,6 +132,9 @@ assert.ok(
   payload.indices.SOX.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified"),
 );
 assert.ok(payload.indices.SOX.blockers.some((blocker) => blocker.code === "missing_sox_constituent_weight_path"));
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.proxy_ticker, "SOXX");
+assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.exact_index_substitute, false);
+assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.resolved_weight_ratio >= 0.75);
 
 const publicText = JSON.stringify(payload);
 assert.equal(publicText.includes('"fair_value"'), false);

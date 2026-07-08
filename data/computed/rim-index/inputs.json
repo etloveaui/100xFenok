@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-07-08T12:55:37.490Z",
+  "generated_at": "2026-07-08T13:12:45.195Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -131,10 +131,10 @@
           },
           "qa": {
             "formula": "index-weighted YF payoutRatio cross-check",
-            "value": 0.264948,
+            "value": 0.265045,
             "total_weight": 99.97,
-            "covered_weight": 98.37,
-            "covered_weight_ratio": 0.983995,
+            "covered_weight": 98.41,
+            "covered_weight_ratio": 0.984395,
             "missing_sample": [
               "ABBV",
               "HONA",
@@ -1589,6 +1589,91 @@
           "A market-cap weighted Korea proxy is technically possible but must be owner-approved and proxy-labeled."
         ]
       }
+    },
+    "proxy_constituent_candidates": {
+      "CCMP": {
+        "proxy_ticker": "ONEQ",
+        "source": "stockanalysis/etfs/ONEQ.json",
+        "source_tier": "proxy_diagnostic",
+        "exact_index_substitute": false,
+        "fetched_at": "2026-06-19T09:30:18Z",
+        "holdings_updated": "Jun 10, 2026",
+        "reported_holding_count": 1035,
+        "sampled_holding_rows": 25,
+        "reported_weight_total": 72.75,
+        "resolved_rows": 24,
+        "resolved_weight": 70.14,
+        "resolved_weight_ratio": 0.7014,
+        "resolved_weight_ratio_of_reported_holdings": 0.964124,
+        "forward_eps_fy1_fy3_rows": 23,
+        "forward_eps_fy1_fy3_weight": 69.12,
+        "forward_eps_fy1_fy3_weight_ratio": 0.6912,
+        "min_public_card_weight_ratio": 0.75,
+        "diagnostic_status": "proxy_coverage_below_threshold",
+        "missing_sample": [
+          "(blank)"
+        ],
+        "notes": [
+          "Fidelity Nasdaq Composite ETF holdings are a proxy candidate only, not official Nasdaq Composite constituent weights.",
+          "Top holding coverage is below the primary public-card threshold, so exact CCMP blockers remain."
+        ]
+      },
+      "KOSPI": {
+        "proxy_ticker": "EWY",
+        "source": "stockanalysis/etfs/EWY.json",
+        "source_tier": "proxy_diagnostic",
+        "exact_index_substitute": false,
+        "fetched_at": "2026-06-19T08:54:44Z",
+        "holdings_updated": "Jun 17, 2026",
+        "reported_holding_count": 88,
+        "sampled_holding_rows": 25,
+        "reported_weight_total": 76.7,
+        "resolved_rows": 23,
+        "resolved_weight": 75.06,
+        "resolved_weight_ratio": 0.7506,
+        "resolved_weight_ratio_of_reported_holdings": 0.978618,
+        "forward_eps_fy1_fy3_rows": 23,
+        "forward_eps_fy1_fy3_weight": 75.06,
+        "forward_eps_fy1_fy3_weight_ratio": 0.7506,
+        "min_public_card_weight_ratio": 0.75,
+        "diagnostic_status": "proxy_financials_coverage_ready_exact_index_blocked",
+        "missing_sample": [
+          "USD",
+          "!KRX/000810"
+        ],
+        "notes": [
+          "iShares MSCI South Korea ETF holdings are a proxy candidate only, not official KOSPI constituent weights.",
+          "KRX holding symbols are normalized for diagnostics only; public KOSPI RIM still requires an explicit proxy label or official KOSPI weights."
+        ]
+      },
+      "SOX": {
+        "proxy_ticker": "SOXX",
+        "source": "stockanalysis/etfs/SOXX.json",
+        "source_tier": "proxy_diagnostic",
+        "exact_index_substitute": false,
+        "fetched_at": "2026-06-26T04:40:52Z",
+        "holdings_updated": "Jun 23, 2026",
+        "reported_holding_count": 34,
+        "sampled_holding_rows": 25,
+        "reported_weight_total": 96.27,
+        "resolved_rows": 23,
+        "resolved_weight": 94.09,
+        "resolved_weight_ratio": 0.9409,
+        "resolved_weight_ratio_of_reported_holdings": 0.977355,
+        "forward_eps_fy1_fy3_rows": 23,
+        "forward_eps_fy1_fy3_weight": 94.09,
+        "forward_eps_fy1_fy3_weight_ratio": 0.9409,
+        "min_public_card_weight_ratio": 0.75,
+        "diagnostic_status": "proxy_financials_coverage_ready_exact_index_blocked",
+        "missing_sample": [
+          "ASX",
+          "UMC"
+        ],
+        "notes": [
+          "iShares Semiconductor ETF holdings are a proxy candidate only, not literal PHLX Semiconductor Index weights.",
+          "High proxy coverage does not remove the SOX identity-mapping blocker."
+        ]
+      }
     }
   },
   "source_tier_counts": {
@@ -1596,6 +1681,7 @@
     "derived_formula": 85,
     "house_assumption": 4,
     "blocked_missing_source": 6,
-    "blocked_not_wired": 1
+    "blocked_not_wired": 1,
+    "proxy_diagnostic": 3
   }
 }
