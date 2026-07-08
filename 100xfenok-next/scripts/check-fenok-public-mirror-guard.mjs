@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
+const repoRoot = path.resolve(appRoot, "..");
 const publicDataRoot = path.join(appRoot, "public", "data");
+const canonicalDataRoot = path.join(repoRoot, "data");
 
 const forbiddenPatterns = [
   /^admin\/fenok-s1-stock-promotion-gate-plan\.json$/,
@@ -31,6 +33,24 @@ const forbiddenRawPatterns = [
   /(^|\/)(finra|occ|apewisdom|gdelt|reddit|social)(\/|_)/i,
 ];
 
+const forbiddenYardneyRawKeys = new Set([
+  "moodys_aaa",
+  "moodys_baa",
+  "spread_avg",
+  "raw_moodys_aaa",
+  "raw_moodys_baa",
+  "fred_aaa",
+  "fred_baa",
+  "waaa",
+  "wbaa",
+  "WAAA",
+  "WBAA",
+  "aaa_yield",
+  "baa_yield",
+  "corporate_aaa",
+  "corporate_baa",
+]);
+
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
   const out = [];
@@ -50,7 +70,39 @@ const files = walk(publicDataRoot).map(toRel);
 const violations = files.filter((rel) => (
   forbiddenPatterns.some((pattern) => pattern.test(rel)) ||
   forbiddenRawPatterns.some((pattern) => pattern.test(rel))
-));
+)).map((rel) => `public/data/${rel}`);
+const yardneyRawKeyHits = new Map();
+
+function recordYardneyRawKeyHit(rel, key) {
+  const fileHits = yardneyRawKeyHits.get(rel) ?? new Map();
+  fileHits.set(key, (fileHits.get(key) ?? 0) + 1);
+  yardneyRawKeyHits.set(rel, fileHits);
+}
+
+function scanYardneyRawKeys(root, displayPrefix) {
+  for (const abs of walk(path.join(root, "yardney"))) {
+    if (!abs.endsWith(".json")) continue;
+    const rel = path.relative(root, abs).split(path.sep).join("/");
+    const text = fs.readFileSync(abs, "utf8");
+    const rawKeyMatches = text.matchAll(/"([^"]+)"\s*:/g);
+    for (const match of rawKeyMatches) {
+      const key = match[1];
+      if (forbiddenYardneyRawKeys.has(key)) {
+        recordYardneyRawKeyHit(`${displayPrefix}/${rel}`, key);
+      }
+    }
+  }
+}
+
+scanYardneyRawKeys(publicDataRoot, "public/data");
+scanYardneyRawKeys(canonicalDataRoot, "data");
+
+for (const [rel, keyHits] of [...yardneyRawKeyHits.entries()].sort()) {
+  for (const [key, count] of [...keyHits.entries()].sort()) {
+    violations.push(`${rel}: forbidden Yardney raw bond-yield key "${key}" (${count} occurrence${count === 1 ? "" : "s"})`);
+  }
+}
+
 const edgeCoverageMirrorPath = path.join(publicDataRoot, "admin", "fenok-edge-coverage-index.json");
 
 if (fs.existsSync(edgeCoverageMirrorPath)) {
@@ -81,7 +133,7 @@ if (fs.existsSync(edgeCoverageMirrorPath)) {
 
 if (violations.length > 0) {
   console.error("[fenok-public-mirror-guard] forbidden public files:");
-  for (const rel of violations) console.error(`- public/data/${rel}`);
+  for (const rel of violations) console.error(`- ${rel}`);
   process.exit(1);
 }
 

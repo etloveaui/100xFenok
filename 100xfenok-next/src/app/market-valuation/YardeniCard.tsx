@@ -6,9 +6,6 @@ import { formatAsOf, isStaleAsOf } from "@/lib/market-valuation/freshness";
 
 interface YardneyRow {
   date: string;
-  moodys_aaa?: number | null;
-  moodys_baa?: number | null;
-  spread_avg?: number | null;
   spx: number;
   eps?: number | null;
   bond_per?: number | null;
@@ -158,7 +155,7 @@ export default function YardeniCard() {
           야데니 모델 (채권 PER)
         </h2>
         <p className="mt-1 text-[11px] leading-5 text-[var(--c-ink-3)]">
-          회사채 금리로 계산한 채권 PER × EPS = 주식 적정가. 국채·회사채 대비
+          채권 PER × EPS = 주식 적정가. 국채·회사채 대비
           주식이 비싼지 보는 잣대.
         </p>
       </div>
@@ -242,13 +239,12 @@ export default function YardeniCard() {
             <span className="text-[var(--c-ink-3)]">적정가</span>
             <span>최고 {fmtIndex(chart.maxV)}</span>
           </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-5">
+          <div className="mt-3 grid gap-2 sm:grid-cols-4">
             {[
               ["EPS", `$${fmtNum(active.eps, 2)}`],
               ["채권 PER", `${fmtNum(active.bond_per, 1)}x`],
-              ["AAA", `${fmtNum(active.moodys_aaa, 2)}%`],
-              ["BAA", `${fmtNum(active.moodys_baa, 2)}%`],
-              ["평균 스프레드", `${fmtNum(active.spread_avg, 2)}%`],
+              ["프리미엄", `${fmtNum(active.premium_pct, 1)}%`],
+              ["기준일", formatAsOf(active.date) ?? "—"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{label}</p>
@@ -266,7 +262,7 @@ export default function YardeniCard() {
       ) : null}
 
       <p className="mt-3 text-[9px] font-semibold text-[var(--c-ink-4)]">
-        Moody&apos;s AAA·BAA 스프레드 기반 · 주간 · 참고용 · 기준 {formatAsOf(latest.date) ?? "—"}
+        Yardeni Bond PER 파생값 · 주간 · 참고용 · 기준 {formatAsOf(latest.date) ?? "—"}
       </p>
     </div>
   );

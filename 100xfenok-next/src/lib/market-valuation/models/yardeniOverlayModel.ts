@@ -23,9 +23,6 @@ export interface YardeniOverlayLatest {
   premiumPct: number | null;
   eps: number | null;
   bondPer: number | null;
-  moodysAaa: number | null;
-  moodysBaa: number | null;
-  spreadAvg: number | null;
   premiumPercentile: number | null;
 }
 
@@ -67,9 +64,6 @@ export async function yardeniOverlayModel(
     premiumPct,
     eps: numberField(last, "eps"),
     bondPer: numberField(last, "bond_per"),
-    moodysAaa: numberField(last, "moodys_aaa"),
-    moodysBaa: numberField(last, "moodys_baa"),
-    spreadAvg: numberField(last, "spread_avg"),
     premiumPercentile: percentile(series, premiumPct),
   };
 

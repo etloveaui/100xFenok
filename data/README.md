@@ -21,7 +21,7 @@
 | [sec-13f/](sec-13f/README.md) | 77 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
 | [slickcharts/](slickcharts/README.md) | 568 | Daily/Weekly/Monthly | SlickCharts.com |
-| [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
+| [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook (public no-raw-yield payload) |
 | [yf/](yf/README.md) | 1,100 | Weekly / on-demand | Yahoo Finance |
 
 ---
@@ -38,7 +38,7 @@
 - Benchmarks latest: 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections (micro_sectors +과창판 STAR50), 862 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
-- Yardney: S&P 500 fair value model, 1,876 weekly records, latest 2026-07-03 fair value 6,381.29 and premium +17.27%
+- Yardney: S&P 500 fair value model, 1,876 weekly public valuation records, latest 2026-07-03 fair value 6,381.29 and premium +17.27%; raw bond-yield components are excluded from public payloads
 
 - 60 tracked investors' 13F holdings across 30 quarters through 2026-Q1 where filed
 - Current-quarter analytics cohort: 57/60 investors; `einhorn`, `scion`, and `vanguard` are stale-excluded until fresh filings arrive

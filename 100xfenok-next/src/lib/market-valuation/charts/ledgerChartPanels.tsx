@@ -257,7 +257,7 @@ export function YardeniOverlayChartPanel() {
             Yardeni Bond PER
           </h2>
           <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-            S&P 500과 회사채 금리 기반 적정가를 같은 축에서 비교합니다.
+            S&P 500과 Yardeni Bond PER 기반 적정가를 같은 축에서 비교합니다.
           </p>
         </div>
         <div className="shrink-0 text-right">
@@ -278,7 +278,7 @@ export function YardeniOverlayChartPanel() {
           { id: "MAX", label: "전체" },
         ]}
         defaultRangeId="5Y"
-        footnote={`야데니 원천 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
+        footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
       />
 
       <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-5">
@@ -286,8 +286,8 @@ export function YardeniOverlayChartPanel() {
           ["S&P 500", fmtIndex(model?.latest.spx ?? null)],
           ["적정가", fmtIndex(model?.latest.fairValue ?? null)],
           ["프리미엄", fmtMetric(model?.latest.premiumPct ?? null, 1, "%")],
+          ["EPS", fmtMetric(model?.latest.eps ?? null, 2, "")],
           ["Bond PER", fmtMetric(model?.latest.bondPer ?? null, 1, "x")],
-          ["Spread avg", fmtMetric(model?.latest.spreadAvg ?? null, 2, "%")],
         ].map(([label, value]) => (
           <div key={label} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
             <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">

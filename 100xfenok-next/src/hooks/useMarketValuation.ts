@@ -975,7 +975,7 @@ export function useMarketValuation(): MarketValuationResult {
 
       const dataSources = [
         sourceFromManifest("benchmarks", "Bloomberg Benchmarks", "지수 P/E·P/B·ROE·EPS 역사 밴드와 변화 분해", manifest),
-        sourceFromManifest("yardney", "Yardeni Bond PER", "회사채 금리 기반 S&P 500 적정가와 프리미엄", manifest),
+        sourceFromManifest("yardney", "Yardeni Bond PER", "S&P 500 적정가와 프리미엄 파생값", manifest),
         sourceFromManifest("damodaran", "Damodaran ERP", "주식위험프리미엄과 금리 대비 요구수익률 앵커", manifest),
         sourceFromManifest("macro", "Macro/FRED/PMI", "PMI·ISM·OECD CLI 성장 펄스", manifest),
         sourceFromManifest("computed", "Computed Signals", "유동성·스트레스·은행·센티먼트 가공 신호", manifest),

@@ -284,9 +284,6 @@ function selectYardeniSeries(payload: unknown): SeriesPoint[] {
         "premium_pct",
         "eps",
         "bond_per",
-        "moodys_aaa",
-        "moodys_baa",
-        "spread_avg",
       ] as const) {
         const value = record[key];
         if (typeof value === "number" && Number.isFinite(value)) point[key] = value;
