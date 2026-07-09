@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-korea-krx-bridge/v1",
-  "generated_at": "2026-07-08T23:06:47.027Z",
+  "generated_at": "2026-07-09T02:35:04.834Z",
   "market": "Korea",
   "source": "KRX_OPEN_API",
   "raw_public": false,
@@ -12,8 +12,8 @@
     "source_date_min": "2026-07-08",
     "source_date_max": "2026-07-08",
     "date_count": 1,
-    "fetched_at": "2026-07-08T23:06:14.192Z",
-    "completed_at": "2026-07-08T23:06:47.026Z"
+    "fetched_at": "2026-07-09T02:33:44.358Z",
+    "completed_at": "2026-07-09T02:35:04.831Z"
   },
   "feno_data_read": {
     "category": "admin",
@@ -129,10 +129,10 @@
     "max_calls_per_run": 40,
     "status": "within_budget",
     "concurrency_default": 2,
-    "concurrency_used": 2,
+    "concurrency_used": 1,
     "sleep_ms_between_attempts": 250,
     "timeout_ms_default": 30000,
-    "timeout_ms_used": 30000,
+    "timeout_ms_used": 90000,
     "credential_source": "KRX_OPEN_API_AUTH_KEY env only"
   },
   "daily_command": "KRX_END_DATE=YYYYMMDD KRX_DAYS=1 KRX_RUN_ID=krx_daily_YYYYMMDD KRX_BRIDGE_INDEX=data/admin/fenok-edge-korea-krx-daily-index.json node scripts/fetch-fenok-krx-daily-private.mjs",
