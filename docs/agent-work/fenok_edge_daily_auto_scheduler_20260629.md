@@ -56,11 +56,12 @@ Non-negotiable handoff contents for the next main pane:
 
 - `.github/workflows/fetch-yf-finance.yml`
   - Adds a KST Tue-Sat bounded ETF history-gap cross-check/backfill lane after the US close.
-  - The KST Tue-Sat stock schedule covers the full normalized stock candidate universe each scheduled run, but executes it as 5 bounded shards capped at 260 candidates each. The default daily profile refreshes price/history/fast-info fields, merges non-null values into existing heavier payloads, keeps `stocks_only=true`, `max_age_hours=18`, 45 seconds per ticker attempt, and 1 retry. Manual `full` dispatch remains a recovery/backfill tool, not the daily operating shape.
+  - The KST Tue-Sat stock schedule covers the full normalized stock candidate universe each scheduled run, but executes it as 5 bounded shards capped at 260 candidates each. The default daily profile refreshes price/history/fast-info fields, merges non-null values into existing heavier payloads, keeps `stocks_only=true`, `max_age_hours=18`, 45 seconds per ticker attempt, and 1 retry. Manual dispatch can run the same all-shard daily lane with `daily_all_shards=true`; manual `full` dispatch remains a recovery/backfill tool, not the daily operating shape.
   - Scheduled runs override the manual defaults to `etf` profile, 6 rolling shards, 140 tickers per scheduled run, 1 second sleep, `max_age_hours=18`, `history_gaps_only=true`, and `stockanalysis_etfs=true`.
   - The default stock universe now includes both `global-scouter/stocks/detail/*.json` and `market_facts` rows where `asset_type=stock`; this keeps S1 stock candidates in the daily history/price accumulation lane without promoting them into public stock scores.
   - `stockanalysis_etfs=true` adds the full StockAnalysis ETF universe/screener candidate set so ETF daily history gaps can be filled by rotating shards.
   - After YF-derived market facts/audit rebuild, the workflow now rebuilds the local full `fenok_signals.json` plus the public `fenok_signals_summary.json` mirror before the dual-hexagon gate runs.
+  - YF and StockAnalysis market-facts writers rebuild `data/computed/rim-index/inputs.json` and its Next public mirror before readiness QA, so `qa:rim-index` cannot fail on stale RIM inputs after fresh market data writes.
   - The workflow participates in the shared `fenok-data-writer-${{ github.ref }}` queue and uses the same 5-attempt rebase/push retry loop as the generated-data writers, so it does not race overlapping data commits.
   - YF JSON writes sanitize non-finite Yahoo values before writing and use `allow_nan=false` so `Infinity` / `NaN` cannot break the Node rebuild steps that parse the generated payloads.
   - Manual dispatch still keeps the existing full/profile/limit/shard controls.
