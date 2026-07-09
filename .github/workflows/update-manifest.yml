@@ -43,6 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required for git push (manifest.json update)
+      actions: write   # Required to dispatch Worker deploy after bot-authored commits
 
     steps:
       - name: Checkout repository
@@ -175,3 +176,9 @@ jobs:
       - name: No changes needed
         if: steps.check.outputs.changed == 'false'
         run: echo "manifest.json already up to date — nothing to commit"
+
+      - name: Dispatch Worker deploy for generated-data commit
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-worker.yml --ref main
