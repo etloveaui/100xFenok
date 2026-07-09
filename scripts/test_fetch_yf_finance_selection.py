@@ -112,6 +112,29 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
 
         self.assertEqual(selected, ["SHORT", "MISSING", "EMPTY"])
 
+    def test_stable_json_removes_non_finite_numbers(self) -> None:
+        text = self.fetcher.stable_json(
+            {
+                "valid": 1,
+                "drop_inf": float("inf"),
+                "nested": {
+                    "drop_negative_inf": -float("inf"),
+                    "keep": 2,
+                },
+                "rows": [
+                    {"drop_nan": float("nan"), "keep": 3},
+                ],
+            }
+        )
+
+        self.assertNotIn("Infinity", text)
+        self.assertNotIn("NaN", text)
+        payload = json.loads(text)
+        self.assertEqual(payload["valid"], 1.0)
+        self.assertNotIn("drop_inf", payload)
+        self.assertEqual(payload["nested"], {"keep": 2.0})
+        self.assertEqual(payload["rows"], [{"keep": 3.0}])
+
     def test_plan_only_prints_resolved_plan_without_fetching_or_writing_summary(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
         write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "BIG", "aum": "10B"}]})

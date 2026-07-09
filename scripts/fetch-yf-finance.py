@@ -22,6 +22,7 @@ Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 import argparse
 from datetime import datetime, timezone
 import json
+import math
 from numbers import Number
 import re
 import sys
@@ -153,8 +154,11 @@ def clean_value(value):
             pass
     if isinstance(value, bool):
         return value
+    if isinstance(value, int):
+        return value
     if isinstance(value, Number):
-        return float(value)
+        number = float(value)
+        return number if math.isfinite(number) else None
     if isinstance(value, (str, int)):
         return value
     if isinstance(value, dict):
@@ -172,6 +176,13 @@ def clean_dict(values):
         if clean is not None:
             out[str(key)] = clean
     return out or None
+
+
+def stable_json(payload, **kwargs):
+    kwargs.setdefault("ensure_ascii", False)
+    kwargs.setdefault("allow_nan", False)
+    kwargs.setdefault("default", str)
+    return json.dumps(clean_value(payload), **kwargs)
 
 
 def curated_statement(df, items, periods):
@@ -704,7 +715,7 @@ def write_empty_summary(profile, args, candidate_count, reason):
         "empty_reason": reason,
         "errors": [],
     }
-    (OUT_DIR / "_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
 
 
 def plan_summary(args, tickers, candidate_count):
@@ -760,7 +771,7 @@ def main():
         tickers = tickers[: args.limit]
 
     if args.plan_only:
-        print(json.dumps(plan_summary(args, tickers, candidate_count), ensure_ascii=False, indent=2))
+        print(stable_json(plan_summary(args, tickers, candidate_count), indent=2))
         return
 
     if not tickers:
@@ -798,7 +809,7 @@ def main():
                 "data": data,
             }
             out_path.write_text(
-                json.dumps(payload, separators=(",", ":"), default=str),
+                stable_json(payload, separators=(",", ":")),
                 encoding="utf-8",
             )
             size_kb = round(out_path.stat().st_size / 1024, 1)
@@ -830,7 +841,7 @@ def main():
         "candidate_count_before_filters": candidate_count,
         "errors": errors,
     }
-    (OUT_DIR / "_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
     print(f"\n[summary] ok={len(ok)} failed={len(errors)} total={total_s}s")
     if errors:
         sys.exit(2 if len(errors) > len(tickers) * 0.1 else 0)
