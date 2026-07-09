@@ -639,7 +639,7 @@ function weightedMetric(indexRows, metricFn, { denominatorRows = indexRows, miss
     }
   }
   return {
-    value: coveredWeight > 0 ? round(weighted / coveredWeight, 12) : null,
+    value: coveredWeight > 0 ? round(weighted / coveredWeight, 9) : null,
     covered_rows: coveredRows,
     total_rows: denominatorRows.length,
     total_weight: round(denominatorWeight, 4),
