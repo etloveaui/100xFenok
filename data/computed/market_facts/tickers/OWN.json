@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "OWN",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Inside Ownership 100 ETF",
     "exchange": "BTS",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 24.43000030517578,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 24.3883,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:59:24Z",
+      "fetched_at": "2026-07-09T09:23:18Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 24.43000030517578,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 24.3883,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:24Z",
+          "fetched_at": "2026-07-09T09:23:18Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 24.17,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 24.39,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:24Z",
+          "fetched_at": "2026-07-09T09:23:18Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.26000030517577954,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.11,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:59:24Z",
+      "fetched_at": "2026-07-09T09:23:18Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": 0.26000030517577954,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.11,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:24Z",
+          "fetched_at": "2026-07-09T09:23:18Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 1.0757149572849793,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.46,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:59:24Z",
+      "fetched_at": "2026-07-09T09:23:18Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,32 @@
       ],
       "candidates": [
         {
-          "value": 1.0757149572849793,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.46,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:24Z",
+          "fetched_at": "2026-07-09T09:23:18Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 1960000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:23:18Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1960000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:23:18Z",
           "confidence": "observed"
         }
       ],
@@ -135,33 +157,35 @@
         },
         {
           "value": 0.49,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:24Z",
+          "fetched_at": "2026-07-09T09:23:18Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 2
     },
-    "return_3m": {
-      "value": 3.869046894987323,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-01",
-      "fetched_at": "2026-07-01T23:59:24Z",
-      "confidence": "derived",
+    "return_1m": {
+      "value": 0.9867,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:23:18Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
-        "stockanalysis.detail.history"
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
-          "value": 3.869046894987323,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-01",
-          "fetched_at": "2026-07-01T23:59:24Z",
-          "confidence": "derived",
+          "value": 0.9867,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:23:18Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -229,141 +253,403 @@
     }
   },
   "etf": {
-    "holdings_count": 10,
-    "holdings_updated": "2026-07-01T23:59:24Z",
+    "holdings_count": 100,
+    "holdings_updated": "Jul 6, 2026",
     "top_holdings": [
       {
         "rank": 1,
-        "symbol": "DGX",
-        "name": "Quest Diagnostics Inc",
-        "weight_pct": 7.56473,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 12.08,
+        "shares": 874,
         "raw": {
-          "_index": "DGX",
-          "Name": "Quest Diagnostics Inc",
-          "Holding Percent": 0.0756473
+          "no": 1,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "12.08%",
+          "sh": "874"
         }
       },
       {
         "rank": 2,
-        "symbol": "DG",
-        "name": "Dollar General Corp",
-        "weight_pct": 7.093030000000001,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 10.3,
+        "shares": 1397,
         "raw": {
-          "_index": "DG",
-          "Name": "Dollar General Corp",
-          "Holding Percent": 0.0709303
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "10.30%",
+          "sh": "1,397"
         }
       },
       {
         "rank": 3,
-        "symbol": "LEN",
-        "name": "Lennar Corp Class A",
-        "weight_pct": 6.51481,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 8.33,
+        "shares": 905,
         "raw": {
-          "_index": "LEN",
-          "Name": "Lennar Corp Class A",
-          "Holding Percent": 0.0651481
+          "no": 3,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "8.33%",
+          "sh": "905"
         }
       },
       {
         "rank": 4,
-        "symbol": "LYV",
-        "name": "Live Nation Entertainment Inc",
-        "weight_pct": 5.68397,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 5.8,
+        "shares": 256,
         "raw": {
-          "_index": "LYV",
-          "Name": "Live Nation Entertainment Inc",
-          "Holding Percent": 0.0568397
+          "no": 4,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "5.80%",
+          "sh": "256"
         }
       },
       {
         "rank": 5,
-        "symbol": "CVS",
-        "name": "CVS Health Corp",
-        "weight_pct": 5.6806996,
+        "symbol": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight_pct": 5.65,
+        "shares": 357,
         "raw": {
-          "_index": "CVS",
-          "Name": "CVS Health Corp",
-          "Holding Percent": 0.056806996
+          "no": 5,
+          "n": "Tesla, Inc.",
+          "s": "$TSLA",
+          "as": "5.65%",
+          "sh": "357"
         }
       },
       {
         "rank": 6,
-        "symbol": "HWM",
-        "name": "Howmet Aerospace Inc",
-        "weight_pct": 5.66549,
+        "symbol": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight_pct": 4.34,
+        "shares": 227,
         "raw": {
-          "_index": "HWM",
-          "Name": "Howmet Aerospace Inc",
-          "Holding Percent": 0.0566549
+          "no": 6,
+          "n": "Berkshire Hathaway Inc.",
+          "s": "$BRK.B",
+          "as": "4.34%",
+          "sh": "227"
         }
       },
       {
         "rank": 7,
-        "symbol": "BAC",
-        "name": "Bank of America Corp",
-        "weight_pct": 5.6600098,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 2.96,
+        "shares": 210,
         "raw": {
-          "_index": "BAC",
-          "Name": "Bank of America Corp",
-          "Holding Percent": 0.056600098
+          "no": 7,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "2.96%",
+          "sh": "210"
         }
       },
       {
         "rank": 8,
-        "symbol": "RL",
-        "name": "Ralph Lauren Corp Class A",
-        "weight_pct": 5.52686,
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
+        "weight_pct": 2.29,
+        "shares": 422,
         "raw": {
-          "_index": "RL",
-          "Name": "Ralph Lauren Corp Class A",
-          "Holding Percent": 0.0552686
+          "no": 8,
+          "n": "Oracle Corporation",
+          "s": "$ORCL",
+          "as": "2.29%",
+          "sh": "422"
         }
       },
       {
         "rank": 9,
-        "symbol": "MRNA",
-        "name": "Moderna Inc",
-        "weight_pct": 5.4948103,
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "weight_pct": 1.93,
+        "shares": 386,
         "raw": {
-          "_index": "MRNA",
-          "Name": "Moderna Inc",
-          "Holding Percent": 0.054948103
+          "no": 9,
+          "n": "Palantir Technologies Inc.",
+          "s": "$PLTR",
+          "as": "1.93%",
+          "sh": "386"
         }
       },
       {
         "rank": 10,
-        "symbol": "MSI",
-        "name": "Motorola Solutions Inc",
-        "weight_pct": 5.4444097,
+        "symbol": "DELL",
+        "name": "Dell Technologies Inc.",
+        "weight_pct": 1.46,
+        "shares": 94,
         "raw": {
-          "_index": "MSI",
-          "Name": "Motorola Solutions Inc",
-          "Holding Percent": 0.054444097
+          "no": 10,
+          "n": "Dell Technologies Inc.",
+          "s": "$DELL",
+          "as": "1.46%",
+          "sh": "94"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "APP",
+        "name": "AppLovin Corporation",
+        "weight_pct": 1.23,
+        "shares": 60,
+        "raw": {
+          "no": 11,
+          "n": "AppLovin Corporation",
+          "s": "$APP",
+          "as": "1.23%",
+          "sh": "60"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "SCHW",
+        "name": "The Charles Schwab Corporation",
+        "weight_pct": 1.21,
+        "shares": 320,
+        "raw": {
+          "no": 12,
+          "n": "The Charles Schwab Corporation",
+          "s": "$SCHW",
+          "as": "1.21%",
+          "sh": "320"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "DHR",
+        "name": "Danaher Corporation",
+        "weight_pct": 1.05,
+        "shares": 144,
+        "raw": {
+          "no": 13,
+          "n": "Danaher Corporation",
+          "s": "$DHR",
+          "as": "1.05%",
+          "sh": "144"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "BX",
+        "name": "Blackstone Inc.",
+        "weight_pct": 1.03,
+        "shares": 222,
+        "raw": {
+          "no": 14,
+          "n": "Blackstone Inc.",
+          "s": "$BX",
+          "as": "1.03%",
+          "sh": "222"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "SYK",
+        "name": "Stryker Corporation",
+        "weight_pct": 0.94,
+        "shares": 77,
+        "raw": {
+          "no": 15,
+          "n": "Stryker Corporation",
+          "s": "$SYK",
+          "as": "0.94%",
+          "sh": "77"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight_pct": 0.9,
+        "shares": 144,
+        "raw": {
+          "no": 16,
+          "n": "Salesforce, Inc.",
+          "s": "$CRM",
+          "as": "0.90%",
+          "sh": "144"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "FTNT",
+        "name": "Fortinet, Inc.",
+        "weight_pct": 0.89,
+        "shares": 145,
+        "raw": {
+          "no": 17,
+          "n": "Fortinet, Inc.",
+          "s": "$FTNT",
+          "as": "0.89%",
+          "sh": "145"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "UBER",
+        "name": "Uber Technologies, Inc.",
+        "weight_pct": 0.87,
+        "shares": 319,
+        "raw": {
+          "no": 18,
+          "n": "Uber Technologies, Inc.",
+          "s": "$UBER",
+          "as": "0.87%",
+          "sh": "319"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ANET",
+        "name": "Arista Networks, Inc.",
+        "weight_pct": 0.86,
+        "shares": 132,
+        "raw": {
+          "no": 19,
+          "n": "Arista Networks, Inc.",
+          "s": "$ANET",
+          "as": "0.86%",
+          "sh": "132"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "MAR",
+        "name": "Marriott International, Inc.",
+        "weight_pct": 0.83,
+        "shares": 58,
+        "raw": {
+          "no": 20,
+          "n": "Marriott International, Inc.",
+          "s": "$MAR",
+          "as": "0.83%",
+          "sh": "58"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "MNST",
+        "name": "Monster Beverage Corporation",
+        "weight_pct": 0.77,
+        "shares": 210,
+        "raw": {
+          "no": 21,
+          "n": "Monster Beverage Corporation",
+          "s": "$MNST",
+          "as": "0.77%",
+          "sh": "210"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "CRWD",
+        "name": "CrowdStrike Holdings, Inc.",
+        "weight_pct": 0.74,
+        "shares": 99,
+        "raw": {
+          "no": 22,
+          "n": "CrowdStrike Holdings, Inc.",
+          "s": "$CRWD",
+          "as": "0.74%",
+          "sh": "99"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "ABNB",
+        "name": "Airbnb, Inc.",
+        "weight_pct": 0.74,
+        "shares": 132,
+        "raw": {
+          "no": 23,
+          "n": "Airbnb, Inc.",
+          "s": "$ABNB",
+          "as": "0.74%",
+          "sh": "132"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "HOOD",
+        "name": "Robinhood Markets, Inc.",
+        "weight_pct": 0.7,
+        "shares": 159,
+        "raw": {
+          "no": 24,
+          "n": "Robinhood Markets, Inc.",
+          "s": "$HOOD",
+          "as": "0.70%",
+          "sh": "159"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight_pct": 0.7,
+        "shares": 245,
+        "raw": {
+          "no": 25,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "0.70%",
+          "sh": "245"
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.0,
-      "stockPosition": 1.0,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.0,
-      "consumer_cyclical": 0.1204,
-      "basic_materials": 0.0517,
-      "consumer_defensive": 0.0709,
-      "technology": 0.14819999,
-      "communication_services": 0.1101,
-      "financial_services": 0.16,
-      "utilities": 0.0,
-      "industrials": 0.101,
-      "energy": 0.0,
-      "healthcare": 0.2376
-    },
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 31.19
+      },
+      {
+        "n": "Communication Services",
+        "w": 21.51
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 19.83
+      },
+      {
+        "n": "Financials",
+        "w": 12.95
+      },
+      {
+        "n": "Industrials",
+        "w": 4.62
+      },
+      {
+        "n": "Healthcare",
+        "w": 4.23
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 2.3
+      },
+      {
+        "n": "Energy",
+        "w": 1.41
+      },
+      {
+        "n": "Real Estate",
+        "w": 1.25
+      },
+      {
+        "n": "Materials",
+        "w": 0.71
+      }
+    ],
     "countries": null,
     "classification": {
       "is_leveraged": false,
@@ -379,15 +665,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/OWN.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/OWN.json",
+    "stockanalysis": "stockanalysis/etfs/OWN.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

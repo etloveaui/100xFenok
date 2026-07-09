@@ -906,10 +906,13 @@ const Renderer = (function() {
     const planGeneratedAt = incrementalPlan?.generated_at || auditIncremental?.plan_generated_at || '-';
     const hasIncrementalFile = Boolean(incremental) || auditIncremental?.proof_file_exists === true;
     const hasPlanFile = Boolean(incrementalPlan) || auditIncremental?.plan_file_exists === true;
+    const noActionablePlan = Number(auditCounts.no_actionable_plan || 0) === 1 || (hasPlanFile && planSelected === 0 && planHistoryGap === 0);
     const hasRunEvidence = Boolean(auditIncremental?.has_run_evidence) || hasIncrementalFile || selected > 0 || fallbackOk > 0 || fallbackCoverage > 0;
     const auditStatus = auditIncremental?.status || (hasRunEvidence ? 'observed' : 'waiting');
     const status = auditStatus === 'pass' ? 'pass' : 'warn';
-    const code = hasRunEvidence
+    const code = noActionablePlan
+      ? '보강 대상 0개'
+      : hasRunEvidence
       ? `${Formatters.formatNumber(selected, 0)}개 선택`
       : hasPlanFile
       ? `${Formatters.formatNumber(planSelected, 0)}개 계획`
@@ -954,6 +957,9 @@ const Renderer = (function() {
   function renderHistoryGapPreflightAudit(report) {
     if (!report) return '';
     const missing = Number(report.missing_required_history || 0);
+    const fetchable = Number(report.fetchable_required_history || 0);
+    const inceptionLimited = Number(report.inception_limited_required_history || 0);
+    const terminalLimited = Number(report.terminal_limited_required_history || 0);
     const complete = Number(report.complete_required_history || 0);
     const total = Number(report.primary_stockanalysis_detail_files || 0);
     const missingByPeriod = report.missing_by_period || {};
@@ -964,15 +970,18 @@ const Renderer = (function() {
 
     return renderMarketAuditCard({
       title: 'ETF 히스토리 사전 점검',
-      status: missing === 0 && planMatches ? 'pass' : 'warn',
-      code: missing > 0
-        ? `${Formatters.formatNumber(missing, 0)}개 보강 필요`
-        : '완료',
+      status: fetchable === 0 && planMatches ? 'pass' : 'warn',
+      code: fetchable > 0
+        ? `${Formatters.formatNumber(fetchable, 0)}개 보강 필요`
+        : '즉시 보강 대상 0개',
       rows: [
         ['생성일', escapeHtml(report.generated_at || '-').slice(0, 10)],
         ['직접 스캔', `${Formatters.formatNumber(total, 0)}개`],
         ['3Y/5Y 완료', complete],
-        ['보강 필요', missing],
+        ['전체 누락', missing],
+        ['보강 필요', fetchable],
+        ['상장일 제한', inceptionLimited],
+        ['제공사 제한', terminalLimited],
         ['커버리지', `${Formatters.formatNumber(report.coverage_pct || 0, 2)}%`],
         ['월간 3년 누락', missingByPeriod.monthly_3y],
         ['월간 5년 누락', missingByPeriod.monthly_5y],

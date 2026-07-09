@@ -1,19 +1,376 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "TRUO",
-  "fetched_at": "2026-06-30T12:36:33Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-09T09:25:02Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/TRUO/holdings",
+    "overview": "/api/symbol/e/TRUO/overview",
+    "quote": "/api/quotes/e/TRUO",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/TRUO/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/TRUO/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/TRUO/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/TRUO/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/TRUO/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/TRUO/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "State Street®CnsmrStpSelSectSPDR®ETF",
+        "weight_pct": 40.02,
+        "shares": 1206,
+        "raw": {
+          "no": 1,
+          "n": "State Street®CnsmrStpSelSectSPDR®ETF",
+          "as": "40.02%",
+          "sh": "1,206"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "WMT",
+        "name": "Walmart Inc.",
+        "weight_pct": 12.1,
+        "shares": 277,
+        "raw": {
+          "no": 2,
+          "n": "Walmart Inc.",
+          "s": "$WMT",
+          "as": "12.10%",
+          "sh": "277"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "COST",
+        "name": "Costco Wholesale Corporation",
+        "weight_pct": 10.4,
+        "shares": 28,
+        "raw": {
+          "no": 3,
+          "n": "Costco Wholesale Corporation",
+          "s": "$COST",
+          "as": "10.40%",
+          "sh": "28"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "PG",
+        "name": "The Procter & Gamble Company",
+        "weight_pct": 8.69,
+        "shares": 147,
+        "raw": {
+          "no": 4,
+          "n": "The Procter & Gamble Company",
+          "s": "$PG",
+          "as": "8.69%",
+          "sh": "147"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "KO",
+        "name": "The Coca-Cola Company",
+        "weight_pct": 8.02,
+        "shares": 244,
+        "raw": {
+          "no": 5,
+          "n": "The Coca-Cola Company",
+          "s": "$KO",
+          "as": "8.02%",
+          "sh": "244"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "PM",
+        "name": "Philip Morris International Inc.",
+        "weight_pct": 6.97,
+        "shares": 98,
+        "raw": {
+          "no": 6,
+          "n": "Philip Morris International Inc.",
+          "s": "$PM",
+          "as": "6.97%",
+          "sh": "98"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight_pct": 4.84,
+        "shares": 86,
+        "raw": {
+          "no": 7,
+          "n": "PepsiCo, Inc.",
+          "s": "$PEP",
+          "as": "4.84%",
+          "sh": "86"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "MO",
+        "name": "Altria Group, Inc.",
+        "weight_pct": 2.1,
+        "shares": 74,
+        "raw": {
+          "no": 8,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "2.10%",
+          "sh": "74"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "CL",
+        "name": "Colgate-Palmolive Company",
+        "weight_pct": 0.67,
+        "shares": 18,
+        "raw": {
+          "no": 9,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "0.67%",
+          "sh": "18"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "MDLZ",
+        "name": "Mondelez International, Inc.",
+        "weight_pct": 0.64,
+        "shares": 27,
+        "raw": {
+          "no": 10,
+          "n": "Mondelez International, Inc.",
+          "s": "$MDLZ",
+          "as": "0.64%",
+          "sh": "27"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "CASY",
+        "name": "Casey's General Stores, Inc.",
+        "weight_pct": 0.62,
+        "shares": 2,
+        "raw": {
+          "no": 11,
+          "n": "Casey's General Stores, Inc.",
+          "s": "$CASY",
+          "as": "0.62%",
+          "sh": "2"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "MNST",
+        "name": "Monster Beverage Corporation",
+        "weight_pct": 0.5,
+        "shares": 13,
+        "raw": {
+          "no": 12,
+          "n": "Monster Beverage Corporation",
+          "s": "$MNST",
+          "as": "0.50%",
+          "sh": "13"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "TGT",
+        "name": "Target Corporation",
+        "weight_pct": 0.41,
+        "shares": 8,
+        "raw": {
+          "no": 13,
+          "n": "Target Corporation",
+          "s": "$TGT",
+          "as": "0.41%",
+          "sh": "8"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Us Dollar",
+        "weight_pct": 0.37,
+        "shares": 945,
+        "raw": {
+          "no": 14,
+          "n": "Us Dollar",
+          "as": "0.37%",
+          "sh": "945"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "KDP",
+        "name": "Keurig Dr Pepper Inc.",
+        "weight_pct": 0.33,
+        "shares": 25,
+        "raw": {
+          "no": 15,
+          "n": "Keurig Dr Pepper Inc.",
+          "s": "$KDP",
+          "as": "0.33%",
+          "sh": "25"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SYY",
+        "name": "Sysco Corporation",
+        "weight_pct": 0.3,
+        "shares": 9,
+        "raw": {
+          "no": 16,
+          "n": "Sysco Corporation",
+          "s": "$SYY",
+          "as": "0.30%",
+          "sh": "9"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "KVUE",
+        "name": "Kenvue Inc.",
+        "weight_pct": 0.27,
+        "shares": 35,
+        "raw": {
+          "no": 17,
+          "n": "Kenvue Inc.",
+          "s": "$KVUE",
+          "as": "0.27%",
+          "sh": "35"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ADM",
+        "name": "Archer-Daniels-Midland Company",
+        "weight_pct": 0.27,
+        "shares": 9,
+        "raw": {
+          "no": 18,
+          "n": "Archer-Daniels-Midland Company",
+          "s": "$ADM",
+          "as": "0.27%",
+          "sh": "9"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "KMB",
+        "name": "Kimberly-Clark Corporation",
+        "weight_pct": 0.27,
+        "shares": 6,
+        "raw": {
+          "no": 19,
+          "n": "Kimberly-Clark Corporation",
+          "s": "$KMB",
+          "as": "0.27%",
+          "sh": "6"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "KR",
+        "name": "The Kroger Co.",
+        "weight_pct": 0.25,
+        "shares": 11,
+        "raw": {
+          "no": 20,
+          "n": "The Kroger Co.",
+          "s": "$KR",
+          "as": "0.25%",
+          "sh": "11"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "HSY",
+        "name": "The Hershey Company",
+        "weight_pct": 0.21,
+        "shares": 3,
+        "raw": {
+          "no": 21,
+          "n": "The Hershey Company",
+          "s": "$HSY",
+          "as": "0.21%",
+          "sh": "3"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "DG",
+        "name": "Dollar General Corporation",
+        "weight_pct": 0.18,
+        "shares": 4,
+        "raw": {
+          "no": 22,
+          "n": "Dollar General Corporation",
+          "s": "$DG",
+          "as": "0.18%",
+          "sh": "4"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "STZ",
+        "name": "Constellation Brands, Inc.",
+        "weight_pct": 0.16,
+        "shares": 3,
+        "raw": {
+          "no": 23,
+          "n": "Constellation Brands, Inc.",
+          "s": "$STZ",
+          "as": "0.16%",
+          "sh": "3"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "KHC",
+        "name": "The Kraft Heinz Company",
+        "weight_pct": 0.16,
+        "shares": 16,
+        "raw": {
+          "no": 24,
+          "n": "The Kraft Heinz Company",
+          "s": "$KHC",
+          "as": "0.16%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CHD",
+        "name": "Church & Dwight Co., Inc.",
+        "weight_pct": 0.15,
+        "shares": 4,
+        "raw": {
+          "no": 25,
+          "n": "Church & Dwight Co., Inc.",
+          "s": "$CHD",
+          "as": "0.15%",
+          "sh": "4"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-06-30T12:36:33Z",
+    "holding_count": 38,
+    "holdings_updated": "Jul 3, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -24,716 +381,2506 @@
       "confidence": "high"
     },
     "overview": {
-      "nav": 25.49,
-      "expenseRatio": 0.14,
-      "provider_page": "VanEck",
-      "category": "Consumer Defensive",
-      "legalType": "Exchange Traded Fund",
-      "description": "The fund is an actively managed exchange-traded fund that seeks to achieve its investment objective by investing, under normal market circumstances, at least 80% of its total assets in equity securities of consumer staples-related companies or instruments that provide exposure to consumer staples-related companies as determined by the Adviser. For purposes of this policy, the term “assets” means net assets plus the amount of any borrowings for investment purposes. The fund is non-diversified."
+      "aum": "$254.20K",
+      "expenseRatio": "0.14%",
+      "sharesOut": "10,000",
+      "inception": "Jun 2, 2026",
+      "provider_page": "vaneck",
+      "etf_website": "https://www.vaneck.com/us/en/etf-mutual-fund-finder/etfs/?InvType=etf&AssetClass=c,nr,mi,t,ue,cb,ei,ib,mb,fr,c-ra,c-da,c-g&Funds=emf,grf,iigf,mwmf,embf,ccif&ShareClass=a,c,i,y,z&tab=ov&Sort=name&SortDesc=true"
+    },
+    "performance": {
+      "tr1m": 1.056
     },
     "quote": {
-      "p": 25.5,
-      "pd": 25.65,
-      "c": -0.14999999999999858,
-      "cp": -0.5847953216374214,
-      "u": "2026-06-30T12:36:33Z",
-      "ex": "yahoo_finance"
+      "p": 25.5623,
+      "pd": 25.56,
+      "c": -0.11,
+      "cp": -0.42,
+      "cl": 25.67,
+      "cdr": -1,
+      "o": 25.73,
+      "h": 25.73,
+      "l": 25.56,
+      "v": 391,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 25.93,
+      "l52": 24.857,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1783541700013.1938,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783589108340,
+      "symbol": "TRUO",
+      "uid": "TRUO"
     },
     "history": [
       {
-        "date": "2026-06-03",
-        "Open": 25.059999465942383,
-        "High": 25.059999465942383,
-        "Low": 24.8799991607666,
-        "Close": 24.8799991607666,
-        "Volume": 800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-04",
-        "Open": 24.860000610351562,
-        "High": 24.860000610351562,
-        "Low": 24.860000610351562,
-        "Close": 24.860000610351562,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-05",
-        "Open": 25.299999237060547,
-        "High": 25.299999237060547,
-        "Low": 25.299999237060547,
-        "Close": 25.299999237060547,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-08",
-        "Open": 25.25,
-        "High": 25.25,
-        "Low": 25.170000076293945,
-        "Close": 25.200000762939453,
-        "Volume": 7400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-09",
-        "Open": 25.239999771118164,
-        "High": 25.450000762939453,
-        "Low": 25.149999618530273,
-        "Close": 25.450000762939453,
-        "Volume": 3800.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-10",
-        "Open": 25.850000381469727,
-        "High": 25.899999618530273,
-        "Low": 25.850000381469727,
-        "Close": 25.899999618530273,
-        "Volume": 300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-11",
-        "Open": 25.93000030517578,
-        "High": 25.93000030517578,
-        "Low": 25.770000457763672,
-        "Close": 25.770000457763672,
-        "Volume": 300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-12",
-        "Open": 25.90999984741211,
-        "High": 25.920000076293945,
-        "Low": 25.90999984741211,
-        "Close": 25.920000076293945,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-15",
-        "Open": 25.700000762939453,
-        "High": 25.81999969482422,
-        "Low": 25.700000762939453,
-        "Close": 25.81999969482422,
-        "Volume": 200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-16",
-        "Open": 25.90999984741211,
-        "High": 25.90999984741211,
-        "Low": 25.90999984741211,
-        "Close": 25.90999984741211,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-17",
-        "Open": 25.3700008392334,
-        "High": 25.3700008392334,
-        "Low": 25.3700008392334,
-        "Close": 25.3700008392334,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-18",
-        "Open": 25.260000228881836,
-        "High": 25.260000228881836,
-        "Low": 25.260000228881836,
-        "Close": 25.260000228881836,
-        "Volume": 0.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-22",
-        "Open": 25.190000534057617,
-        "High": 25.190000534057617,
-        "Low": 25.040000915527344,
-        "Close": 25.040000915527344,
-        "Volume": 1400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-23",
-        "Open": 25.450000762939453,
-        "High": 25.520000457763672,
-        "Low": 25.450000762939453,
-        "Close": 25.520000457763672,
-        "Volume": 300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-24",
-        "Open": 25.6200008392334,
-        "High": 25.6200008392334,
-        "Low": 25.6200008392334,
-        "Close": 25.6200008392334,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 25.360000610351562,
-        "High": 25.360000610351562,
-        "Low": 25.360000610351562,
-        "Close": 25.360000610351562,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 25.649999618530273,
-        "High": 25.649999618530273,
-        "Low": 25.6200008392334,
-        "Close": 25.6200008392334,
-        "Volume": 300.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 25.5,
-        "High": 25.5,
-        "Low": 25.5,
-        "Close": 25.5,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 24.95,
+        "h": 25.73,
+        "l": 24.95,
+        "c": 25.562,
+        "a": 25.5623,
+        "v": 619,
+        "ch": 1.77
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-03",
-          "Open": 25.059999465942383,
-          "High": 25.059999465942383,
-          "Low": 24.8799991607666,
-          "Close": 24.8799991607666,
-          "Volume": 800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-08",
+          "o": 25.73,
+          "h": 25.73,
+          "l": 25.562,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 391,
+          "ch": -0.4
         },
         {
-          "date": "2026-06-04",
-          "Open": 24.860000610351562,
-          "High": 24.860000610351562,
-          "Low": 24.860000610351562,
-          "Close": 24.860000610351562,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 25.666,
+          "h": 25.666,
+          "l": 25.666,
+          "c": 25.666,
+          "a": 25.6655,
+          "v": 6,
+          "ch": 0.99
         },
         {
-          "date": "2026-06-05",
-          "Open": 25.299999237060547,
-          "High": 25.299999237060547,
-          "Low": 25.299999237060547,
-          "Close": 25.299999237060547,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 25.415,
+          "h": 25.415,
+          "l": 25.415,
+          "c": 25.415,
+          "a": 25.4149,
+          "v": 7,
+          "ch": -0.86
         },
         {
-          "date": "2026-06-08",
-          "Open": 25.25,
-          "High": 25.25,
-          "Low": 25.170000076293945,
-          "Close": 25.200000762939453,
-          "Volume": 7400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 25.635,
+          "h": 25.635,
+          "l": 25.635,
+          "c": 25.635,
+          "a": 25.6352,
+          "v": 8,
+          "ch": 2.43
         },
         {
-          "date": "2026-06-09",
-          "Open": 25.239999771118164,
-          "High": 25.450000762939453,
-          "Low": 25.149999618530273,
-          "Close": 25.450000762939453,
-          "Volume": 3800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.026,
+          "l": 24.95,
+          "c": 25.026,
+          "a": 25.0262,
+          "v": 207,
+          "ch": -0.36
         },
         {
-          "date": "2026-06-10",
-          "Open": 25.850000381469727,
-          "High": 25.899999618530273,
-          "Low": 25.850000381469727,
-          "Close": 25.899999618530273,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 25.18,
+          "h": 25.18,
+          "l": 25.118,
+          "c": 25.118,
+          "a": 25.1177,
+          "v": 257,
+          "ch": -1.51
         },
         {
-          "date": "2026-06-11",
-          "Open": 25.93000030517578,
-          "High": 25.93000030517578,
-          "Low": 25.770000457763672,
-          "Close": 25.770000457763672,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 25.502,
+          "h": 25.502,
+          "l": 25.502,
+          "c": 25.502,
+          "a": 25.5017,
+          "v": 9,
+          "ch": -0.46
         },
         {
-          "date": "2026-06-12",
-          "Open": 25.90999984741211,
-          "High": 25.920000076293945,
-          "Low": 25.90999984741211,
-          "Close": 25.920000076293945,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 25.65,
+          "h": 25.65,
+          "l": 25.62,
+          "c": 25.62,
+          "a": 25.6201,
+          "v": 252,
+          "ch": 1.02
         },
         {
-          "date": "2026-06-15",
-          "Open": 25.700000762939453,
-          "High": 25.81999969482422,
-          "Low": 25.700000762939453,
-          "Close": 25.81999969482422,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.36,
+          "c": 25.36,
+          "a": 25.3602,
+          "v": 40,
+          "ch": -1.02
         },
         {
-          "date": "2026-06-16",
-          "Open": 25.90999984741211,
-          "High": 25.90999984741211,
-          "Low": 25.90999984741211,
-          "Close": 25.90999984741211,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 25.622,
+          "h": 25.622,
+          "l": 25.622,
+          "c": 25.622,
+          "a": 25.6217,
+          "v": 3,
+          "ch": 0.4
         },
         {
-          "date": "2026-06-17",
-          "Open": 25.3700008392334,
-          "High": 25.3700008392334,
-          "Low": 25.3700008392334,
-          "Close": 25.3700008392334,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 25.45,
+          "h": 25.519,
+          "l": 25.45,
+          "c": 25.519,
+          "a": 25.5188,
+          "v": 317,
+          "ch": 1.92
         },
         {
-          "date": "2026-06-18",
-          "Open": 25.260000228881836,
-          "High": 25.260000228881836,
-          "Low": 25.260000228881836,
-          "Close": 25.260000228881836,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-22",
+          "o": 25.19,
+          "h": 25.19,
+          "l": 25.039,
+          "c": 25.039,
+          "a": 25.0385,
+          "v": 1366,
+          "ch": -0.88
         },
         {
-          "date": "2026-06-22",
-          "Open": 25.190000534057617,
-          "High": 25.190000534057617,
-          "Low": 25.040000915527344,
-          "Close": 25.040000915527344,
-          "Volume": 1400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-18",
+          "o": 25.261,
+          "h": 25.261,
+          "l": 25.261,
+          "c": 25.261,
+          "a": 25.2613,
+          "v": 0,
+          "ch": -0.42
         },
         {
-          "date": "2026-06-23",
-          "Open": 25.450000762939453,
-          "High": 25.520000457763672,
-          "Low": 25.450000762939453,
-          "Close": 25.520000457763672,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-17",
+          "o": 25.368,
+          "h": 25.368,
+          "l": 25.368,
+          "c": 25.368,
+          "a": 25.3683,
+          "v": 2,
+          "ch": -2.1
         },
         {
-          "date": "2026-06-24",
-          "Open": 25.6200008392334,
-          "High": 25.6200008392334,
-          "Low": 25.6200008392334,
-          "Close": 25.6200008392334,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-16",
+          "o": 25.912,
+          "h": 25.912,
+          "l": 25.912,
+          "c": 25.912,
+          "a": 25.9123,
+          "v": 12,
+          "ch": 0.34
         },
         {
-          "date": "2026-06-25",
-          "Open": 25.360000610351562,
-          "High": 25.360000610351562,
-          "Low": 25.360000610351562,
-          "Close": 25.360000610351562,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-15",
+          "o": 25.7,
+          "h": 25.824,
+          "l": 25.7,
+          "c": 25.824,
+          "a": 25.8243,
+          "v": 207,
+          "ch": -0.37
         },
         {
-          "date": "2026-06-26",
-          "Open": 25.649999618530273,
-          "High": 25.649999618530273,
-          "Low": 25.6200008392334,
-          "Close": 25.6200008392334,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-12",
+          "o": 25.91,
+          "h": 25.92,
+          "l": 25.91,
+          "c": 25.92,
+          "a": 25.9197,
+          "v": 125,
+          "ch": 0.59
         },
         {
-          "date": "2026-06-29",
-          "Open": 25.5,
-          "High": 25.5,
-          "Low": 25.5,
-          "Close": 25.5,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-11",
+          "o": 25.93,
+          "h": 25.93,
+          "l": 25.767,
+          "c": 25.767,
+          "a": 25.7665,
+          "v": 306,
+          "ch": -0.51
+        },
+        {
+          "t": "2026-06-10",
+          "o": 25.85,
+          "h": 25.898,
+          "l": 25.85,
+          "c": 25.898,
+          "a": 25.8975,
+          "v": 335,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-06-09",
+          "o": 25.24,
+          "h": 25.45,
+          "l": 25.145,
+          "c": 25.45,
+          "a": 25.4502,
+          "v": 3844,
+          "ch": 0.98
+        },
+        {
+          "t": "2026-06-08",
+          "o": 25.25,
+          "h": 25.25,
+          "l": 25.17,
+          "c": 25.202,
+          "a": 25.2021,
+          "v": 7400,
+          "ch": -0.37
+        },
+        {
+          "t": "2026-06-05",
+          "o": 25.295,
+          "h": 25.295,
+          "l": 25.295,
+          "c": 25.295,
+          "a": 25.2953,
+          "v": 4,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-06-04",
+          "o": 24.857,
+          "h": 24.857,
+          "l": 24.857,
+          "c": 24.857,
+          "a": 24.857,
+          "v": 2,
+          "ch": -0.1
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 25.415,
+          "h": 25.73,
+          "l": 25.415,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 404,
+          "ch": -0.28
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.502,
+          "h": 25.635,
+          "l": 24.95,
+          "c": 25.635,
+          "a": 25.6352,
+          "v": 481,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-06-22",
+          "o": 25.19,
+          "h": 25.65,
+          "l": 25.039,
+          "c": 25.62,
+          "a": 25.6201,
+          "v": 1978,
+          "ch": 1.42
+        },
+        {
+          "t": "2026-06-15",
+          "o": 25.7,
+          "h": 25.912,
+          "l": 25.261,
+          "c": 25.261,
+          "a": 25.2613,
+          "v": 221,
+          "ch": -2.54
+        },
+        {
+          "t": "2026-06-08",
+          "o": 25.25,
+          "h": 25.93,
+          "l": 25.145,
+          "c": 25.92,
+          "a": 25.9197,
+          "v": 12010,
+          "ch": 2.47
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.73,
+          "l": 24.95,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 619,
+          "ch": 1.77
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 25.415,
+          "h": 25.73,
+          "l": 25.415,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 404,
+          "ch": -0.28
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.502,
+          "h": 25.635,
+          "l": 24.95,
+          "c": 25.635,
+          "a": 25.6352,
+          "v": 481,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-06-22",
+          "o": 25.19,
+          "h": 25.65,
+          "l": 25.039,
+          "c": 25.62,
+          "a": 25.6201,
+          "v": 1978,
+          "ch": 1.42
+        },
+        {
+          "t": "2026-06-15",
+          "o": 25.7,
+          "h": 25.912,
+          "l": 25.261,
+          "c": 25.261,
+          "a": 25.2613,
+          "v": 221,
+          "ch": -2.54
+        },
+        {
+          "t": "2026-06-08",
+          "o": 25.25,
+          "h": 25.93,
+          "l": 25.145,
+          "c": 25.92,
+          "a": 25.9197,
+          "v": 12010,
+          "ch": 2.47
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.73,
+          "l": 24.95,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 619,
+          "ch": 1.77
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.73,
+          "l": 24.95,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 619,
+          "ch": 1.77
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "VanEck Consumer Staples TruSect",
-        "longName": "Vaneck Consumer Staples TruSector ETF",
-        "currency": "USD",
-        "exchange": "NGM",
-        "fundFamily": "VanEck",
-        "category": "Consumer Defensive",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 25.49,
-        "netExpenseRatio": 0.14,
-        "previousClose": 25.65,
-        "fiftyTwoWeekHigh": 25.93,
-        "fiftyTwoWeekLow": 24.86,
-        "fiftyTwoWeekChangePercent": 2.491963,
-        "averageVolume": 866,
-        "averageVolume10days": 270
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 25.5,
-        "dayLow": 25.5,
-        "exchange": "NGM",
-        "fiftyDayAverage": 25.461111386617024,
-        "lastPrice": 25.5,
-        "lastVolume": 100.0,
-        "open": 25.5,
-        "previousClose": 25.6201,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 25.6200008392334,
-        "tenDayAverageVolume": 270.0,
-        "threeMonthAverageVolume": 866.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 25.461111386617024,
-        "yearChange": 0.024919648719726684,
-        "yearHigh": 25.93000030517578,
-        "yearLow": 24.860000610351562
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "The fund is an actively managed exchange-traded fund that seeks to achieve its investment objective by investing, under normal market circumstances, at least 80% of its total assets in equity securities of consumer staples-related companies or instruments that provide exposure to consumer staples-related companies as determined by the Adviser. For purposes of this policy, the term “assets” means net assets plus the amount of any borrowings for investment purposes. The fund is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Consumer Defensive",
-          "family": "VanEck",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "State Street®CnsmrStpSelSectSPDR®ETF",
+          "as": "40.02%",
+          "sh": "1,206"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "Walmart Inc.",
+          "s": "$WMT",
+          "as": "12.10%",
+          "sh": "277"
+        },
+        {
+          "no": 3,
+          "n": "Costco Wholesale Corporation",
+          "s": "$COST",
+          "as": "10.40%",
+          "sh": "28"
+        },
+        {
+          "no": 4,
+          "n": "The Procter & Gamble Company",
+          "s": "$PG",
+          "as": "8.69%",
+          "sh": "147"
+        },
+        {
+          "no": 5,
+          "n": "The Coca-Cola Company",
+          "s": "$KO",
+          "as": "8.02%",
+          "sh": "244"
+        },
+        {
+          "no": 6,
+          "n": "Philip Morris International Inc.",
+          "s": "$PM",
+          "as": "6.97%",
+          "sh": "98"
+        },
+        {
+          "no": 7,
+          "n": "PepsiCo, Inc.",
+          "s": "$PEP",
+          "as": "4.84%",
+          "sh": "86"
+        },
+        {
+          "no": 8,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "2.10%",
+          "sh": "74"
+        },
+        {
+          "no": 9,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "0.67%",
+          "sh": "18"
+        },
+        {
+          "no": 10,
+          "n": "Mondelez International, Inc.",
+          "s": "$MDLZ",
+          "as": "0.64%",
+          "sh": "27"
+        },
+        {
+          "no": 11,
+          "n": "Casey's General Stores, Inc.",
+          "s": "$CASY",
+          "as": "0.62%",
+          "sh": "2"
+        },
+        {
+          "no": 12,
+          "n": "Monster Beverage Corporation",
+          "s": "$MNST",
+          "as": "0.50%",
+          "sh": "13"
+        },
+        {
+          "no": 13,
+          "n": "Target Corporation",
+          "s": "$TGT",
+          "as": "0.41%",
+          "sh": "8"
+        },
+        {
+          "no": 14,
+          "n": "Us Dollar",
+          "as": "0.37%",
+          "sh": "945"
+        },
+        {
+          "no": 15,
+          "n": "Keurig Dr Pepper Inc.",
+          "s": "$KDP",
+          "as": "0.33%",
+          "sh": "25"
+        },
+        {
+          "no": 16,
+          "n": "Sysco Corporation",
+          "s": "$SYY",
+          "as": "0.30%",
+          "sh": "9"
+        },
+        {
+          "no": 17,
+          "n": "Kenvue Inc.",
+          "s": "$KVUE",
+          "as": "0.27%",
+          "sh": "35"
+        },
+        {
+          "no": 18,
+          "n": "Archer-Daniels-Midland Company",
+          "s": "$ADM",
+          "as": "0.27%",
+          "sh": "9"
+        },
+        {
+          "no": 19,
+          "n": "Kimberly-Clark Corporation",
+          "s": "$KMB",
+          "as": "0.27%",
+          "sh": "6"
+        },
+        {
+          "no": 20,
+          "n": "The Kroger Co.",
+          "s": "$KR",
+          "as": "0.25%",
+          "sh": "11"
+        },
+        {
+          "no": 21,
+          "n": "The Hershey Company",
+          "s": "$HSY",
+          "as": "0.21%",
+          "sh": "3"
+        },
+        {
+          "no": 22,
+          "n": "Dollar General Corporation",
+          "s": "$DG",
+          "as": "0.18%",
+          "sh": "4"
+        },
+        {
+          "no": 23,
+          "n": "Constellation Brands, Inc.",
+          "s": "$STZ",
+          "as": "0.16%",
+          "sh": "3"
+        },
+        {
+          "no": 24,
+          "n": "The Kraft Heinz Company",
+          "s": "$KHC",
+          "as": "0.16%",
+          "sh": "16"
+        },
+        {
+          "no": 25,
+          "n": "Church & Dwight Co., Inc.",
+          "s": "$CHD",
+          "as": "0.15%",
+          "sh": "4"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "news": [
+        {
+          "t": "VanEck Adds Consumer Staples (TRUO) and Industrials (TRUI) to TruSector ETF Suite",
+          "u": "https://www.businesswire.com/news/home/20260603424680/en/VanEck%C2%A0Adds-Consumer-Staples-TRUO-and-Industrials-TRUI-to-TruSector-ETF-Suite/",
+          "n": "Business Wire",
+          "d": "5 weeks ago"
+        }
+      ],
+      "infoBox": "TRUO is an equity ETF with a total of 38 individual holdings. The top holdings are State Street®CnsmrStpSelSectSPDR®ETF stock at 40.02%, Walmart at 12.10%, Costco Wholesale at 10.40%, The Procter & Gamble Company at 8.69%, and The Coca-Cola Company at 8.02%.",
+      "infoTable": {
+        "count": 38,
+        "top10": 94.45,
+        "assetClass": "Equity",
+        "aum": 254196.5
+      },
+      "date": "Jul 3, 2026",
+      "count": 38
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$254.20K",
+      "expenseRatio": "0.14%",
+      "sharesOut": "10,000",
+      "ch1y": null,
+      "holdings": 38,
+      "inception": "Jun 2, 2026",
+      "chart": {
+        "expiration": 1783534681927,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "TRUO": 0.0014,
-            "Category Average": 0.0073669
+            "t": 1783503000
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "TRUO": 0.0,
-            "Category Average": 0.2629
+            "t": 1783503060
           },
           {
-            "_index": "Total Net Assets",
-            "TRUO": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "TRUO": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503120
           },
           {
-            "_index": "Price/Book",
-            "TRUO": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503180
           },
           {
-            "_index": "Price/Sales",
-            "TRUO": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503240
           },
           {
-            "_index": "Price/Cashflow",
-            "TRUO": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503300
           },
           {
-            "_index": "Median Market Cap",
-            "TRUO": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503360
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "TRUO": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "TRUO": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503420
           },
           {
-            "_index": "Maturity",
-            "TRUO": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503480
           },
           {
-            "_index": "Credit Quality",
-            "TRUO": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503540
+          },
+          {
+            "t": 1783503600
+          },
+          {
+            "t": 1783503660
+          },
+          {
+            "t": 1783503720
+          },
+          {
+            "t": 1783503780
+          },
+          {
+            "t": 1783503840
+          },
+          {
+            "t": 1783503900
+          },
+          {
+            "t": 1783503960
+          },
+          {
+            "t": 1783504020
+          },
+          {
+            "t": 1783504080
+          },
+          {
+            "t": 1783504140
+          },
+          {
+            "t": 1783504200
+          },
+          {
+            "t": 1783504260
+          },
+          {
+            "t": 1783504320
+          },
+          {
+            "t": 1783504380
+          },
+          {
+            "t": 1783504440
+          },
+          {
+            "t": 1783504500
+          },
+          {
+            "t": 1783504560
+          },
+          {
+            "t": 1783504620
+          },
+          {
+            "t": 1783504680
+          },
+          {
+            "t": 1783504740
+          },
+          {
+            "t": 1783504800
+          },
+          {
+            "t": 1783504860
+          },
+          {
+            "t": 1783504920
+          },
+          {
+            "t": 1783504980
+          },
+          {
+            "t": 1783505040
+          },
+          {
+            "t": 1783505100
+          },
+          {
+            "t": 1783505160
+          },
+          {
+            "t": 1783505220
+          },
+          {
+            "t": 1783505280
+          },
+          {
+            "t": 1783505340
+          },
+          {
+            "t": 1783505400
+          },
+          {
+            "t": 1783505460
+          },
+          {
+            "c": 25.73,
+            "o": 25.73,
+            "t": 1783505520
+          },
+          {
+            "c": 25.73,
+            "t": 1783505580
+          },
+          {
+            "c": null,
+            "t": 1783505640
+          },
+          {
+            "c": null,
+            "t": 1783505700
+          },
+          {
+            "c": null,
+            "t": 1783505760
+          },
+          {
+            "c": null,
+            "t": 1783505820
+          },
+          {
+            "c": null,
+            "t": 1783505880
+          },
+          {
+            "c": null,
+            "t": 1783505940
+          },
+          {
+            "c": null,
+            "t": 1783506000
+          },
+          {
+            "c": null,
+            "t": 1783506060
+          },
+          {
+            "c": null,
+            "t": 1783506120
+          },
+          {
+            "c": null,
+            "t": 1783506180
+          },
+          {
+            "c": null,
+            "t": 1783506240
+          },
+          {
+            "c": null,
+            "t": 1783506300
+          },
+          {
+            "c": null,
+            "t": 1783506360
+          },
+          {
+            "c": null,
+            "t": 1783506420
+          },
+          {
+            "c": null,
+            "t": 1783506480
+          },
+          {
+            "c": null,
+            "t": 1783506540
+          },
+          {
+            "c": null,
+            "t": 1783506600
+          },
+          {
+            "c": null,
+            "t": 1783506660
+          },
+          {
+            "c": null,
+            "t": 1783506720
+          },
+          {
+            "c": null,
+            "t": 1783506780
+          },
+          {
+            "c": null,
+            "t": 1783506840
+          },
+          {
+            "c": null,
+            "t": 1783506900
+          },
+          {
+            "c": null,
+            "t": 1783506960
+          },
+          {
+            "c": null,
+            "t": 1783507020
+          },
+          {
+            "c": null,
+            "t": 1783507080
+          },
+          {
+            "c": null,
+            "t": 1783507140
+          },
+          {
+            "c": null,
+            "t": 1783507200
+          },
+          {
+            "c": null,
+            "t": 1783507260
+          },
+          {
+            "c": null,
+            "t": 1783507320
+          },
+          {
+            "c": null,
+            "t": 1783507380
+          },
+          {
+            "c": null,
+            "t": 1783507440
+          },
+          {
+            "c": null,
+            "t": 1783507500
+          },
+          {
+            "c": null,
+            "t": 1783507560
+          },
+          {
+            "c": null,
+            "t": 1783507620
+          },
+          {
+            "c": null,
+            "t": 1783507680
+          },
+          {
+            "c": null,
+            "t": 1783507740
+          },
+          {
+            "c": null,
+            "t": 1783507800
+          },
+          {
+            "c": null,
+            "t": 1783507860
+          },
+          {
+            "c": null,
+            "t": 1783507920
+          },
+          {
+            "c": null,
+            "t": 1783507980
+          },
+          {
+            "c": null,
+            "t": 1783508040
+          },
+          {
+            "c": null,
+            "t": 1783508100
+          },
+          {
+            "c": null,
+            "t": 1783508160
+          },
+          {
+            "c": null,
+            "t": 1783508220
+          },
+          {
+            "c": null,
+            "t": 1783508280
+          },
+          {
+            "c": null,
+            "t": 1783508340
+          },
+          {
+            "c": null,
+            "t": 1783508400
+          },
+          {
+            "c": null,
+            "t": 1783508460
+          },
+          {
+            "c": null,
+            "t": 1783508520
+          },
+          {
+            "c": null,
+            "t": 1783508580
+          },
+          {
+            "c": null,
+            "t": 1783508640
+          },
+          {
+            "c": null,
+            "t": 1783508700
+          },
+          {
+            "c": null,
+            "t": 1783508760
+          },
+          {
+            "c": null,
+            "t": 1783508820
+          },
+          {
+            "c": null,
+            "t": 1783508880
+          },
+          {
+            "c": null,
+            "t": 1783508940
+          },
+          {
+            "c": null,
+            "t": 1783509000
+          },
+          {
+            "c": null,
+            "t": 1783509060
+          },
+          {
+            "c": null,
+            "t": 1783509120
+          },
+          {
+            "c": null,
+            "t": 1783509180
+          },
+          {
+            "c": null,
+            "t": 1783509240
+          },
+          {
+            "c": null,
+            "t": 1783509300
+          },
+          {
+            "c": null,
+            "t": 1783509360
+          },
+          {
+            "c": null,
+            "t": 1783509420
+          },
+          {
+            "c": null,
+            "t": 1783509480
+          },
+          {
+            "c": null,
+            "t": 1783509540
+          },
+          {
+            "c": null,
+            "t": 1783509600
+          },
+          {
+            "c": null,
+            "t": 1783509660
+          },
+          {
+            "c": null,
+            "t": 1783509720
+          },
+          {
+            "c": null,
+            "t": 1783509780
+          },
+          {
+            "c": null,
+            "t": 1783509840
+          },
+          {
+            "c": null,
+            "t": 1783509900
+          },
+          {
+            "c": null,
+            "t": 1783509960
+          },
+          {
+            "c": null,
+            "t": 1783510020
+          },
+          {
+            "c": null,
+            "t": 1783510080
+          },
+          {
+            "c": null,
+            "t": 1783510140
+          },
+          {
+            "c": null,
+            "t": 1783510200
+          },
+          {
+            "c": null,
+            "t": 1783510260
+          },
+          {
+            "c": null,
+            "t": 1783510320
+          },
+          {
+            "c": null,
+            "t": 1783510380
+          },
+          {
+            "c": null,
+            "t": 1783510440
+          },
+          {
+            "c": null,
+            "t": 1783510500
+          },
+          {
+            "c": null,
+            "t": 1783510560
+          },
+          {
+            "c": null,
+            "t": 1783510620
+          },
+          {
+            "c": null,
+            "t": 1783510680
+          },
+          {
+            "c": null,
+            "t": 1783510740
+          },
+          {
+            "c": null,
+            "t": 1783510800
+          },
+          {
+            "c": null,
+            "t": 1783510860
+          },
+          {
+            "c": null,
+            "t": 1783510920
+          },
+          {
+            "c": null,
+            "t": 1783510980
+          },
+          {
+            "c": null,
+            "t": 1783511040
+          },
+          {
+            "c": null,
+            "t": 1783511100
+          },
+          {
+            "c": null,
+            "t": 1783511160
+          },
+          {
+            "c": null,
+            "t": 1783511220
+          },
+          {
+            "c": null,
+            "t": 1783511280
+          },
+          {
+            "c": null,
+            "t": 1783511340
+          },
+          {
+            "c": null,
+            "t": 1783511400
+          },
+          {
+            "c": null,
+            "t": 1783511460
+          },
+          {
+            "c": null,
+            "t": 1783511520
+          },
+          {
+            "c": null,
+            "t": 1783511580
+          },
+          {
+            "c": null,
+            "t": 1783511640
+          },
+          {
+            "c": null,
+            "t": 1783511700
+          },
+          {
+            "c": null,
+            "t": 1783511760
+          },
+          {
+            "c": null,
+            "t": 1783511820
+          },
+          {
+            "c": null,
+            "t": 1783511880
+          },
+          {
+            "c": null,
+            "t": 1783511940
+          },
+          {
+            "c": null,
+            "t": 1783512000
+          },
+          {
+            "c": null,
+            "t": 1783512060
+          },
+          {
+            "c": null,
+            "t": 1783512120
+          },
+          {
+            "c": null,
+            "t": 1783512180
+          },
+          {
+            "c": null,
+            "t": 1783512240
+          },
+          {
+            "c": null,
+            "t": 1783512300
+          },
+          {
+            "c": null,
+            "t": 1783512360
+          },
+          {
+            "c": null,
+            "t": 1783512420
+          },
+          {
+            "c": null,
+            "t": 1783512480
+          },
+          {
+            "c": null,
+            "t": 1783512540
+          },
+          {
+            "c": null,
+            "t": 1783512600
+          },
+          {
+            "c": null,
+            "t": 1783512660
+          },
+          {
+            "c": null,
+            "t": 1783512720
+          },
+          {
+            "c": null,
+            "t": 1783512780
+          },
+          {
+            "c": null,
+            "t": 1783512840
+          },
+          {
+            "c": null,
+            "t": 1783512900
+          },
+          {
+            "c": null,
+            "t": 1783512960
+          },
+          {
+            "c": null,
+            "t": 1783513020
+          },
+          {
+            "c": null,
+            "t": 1783513080
+          },
+          {
+            "c": null,
+            "t": 1783513140
+          },
+          {
+            "c": null,
+            "t": 1783513200
+          },
+          {
+            "c": null,
+            "t": 1783513260
+          },
+          {
+            "c": null,
+            "t": 1783513320
+          },
+          {
+            "c": null,
+            "t": 1783513380
+          },
+          {
+            "c": null,
+            "t": 1783513440
+          },
+          {
+            "c": null,
+            "t": 1783513500
+          },
+          {
+            "c": null,
+            "t": 1783513560
+          },
+          {
+            "c": null,
+            "t": 1783513620
+          },
+          {
+            "c": null,
+            "t": 1783513680
+          },
+          {
+            "c": null,
+            "t": 1783513740
+          },
+          {
+            "c": null,
+            "t": 1783513800
+          },
+          {
+            "c": null,
+            "t": 1783513860
+          },
+          {
+            "c": null,
+            "t": 1783513920
+          },
+          {
+            "c": null,
+            "t": 1783513980
+          },
+          {
+            "c": null,
+            "t": 1783514040
+          },
+          {
+            "c": 25.7,
+            "t": 1783514100
+          },
+          {
+            "t": 1783514159
+          },
+          {
+            "t": 1783514219
+          },
+          {
+            "t": 1783514279
+          },
+          {
+            "t": 1783514339
+          },
+          {
+            "t": 1783514399
+          },
+          {
+            "t": 1783514459
+          },
+          {
+            "t": 1783514519
+          },
+          {
+            "t": 1783514579
+          },
+          {
+            "t": 1783514639
+          },
+          {
+            "t": 1783514699
+          },
+          {
+            "t": 1783514759
+          },
+          {
+            "t": 1783514819
+          },
+          {
+            "t": 1783514879
+          },
+          {
+            "t": 1783514939
+          },
+          {
+            "t": 1783514999
+          },
+          {
+            "t": 1783515059
+          },
+          {
+            "t": 1783515119
+          },
+          {
+            "t": 1783515179
+          },
+          {
+            "t": 1783515239
+          },
+          {
+            "t": 1783515299
+          },
+          {
+            "t": 1783515359
+          },
+          {
+            "t": 1783515419
+          },
+          {
+            "t": 1783515479
+          },
+          {
+            "t": 1783515539
+          },
+          {
+            "t": 1783515599
+          },
+          {
+            "t": 1783515659
+          },
+          {
+            "t": 1783515719
+          },
+          {
+            "t": 1783515779
+          },
+          {
+            "t": 1783515839
+          },
+          {
+            "t": 1783515899
+          },
+          {
+            "t": 1783515959
+          },
+          {
+            "t": 1783516019
+          },
+          {
+            "t": 1783516079
+          },
+          {
+            "t": 1783516139
+          },
+          {
+            "t": 1783516199
+          },
+          {
+            "t": 1783516259
+          },
+          {
+            "t": 1783516319
+          },
+          {
+            "t": 1783516379
+          },
+          {
+            "t": 1783516439
+          },
+          {
+            "t": 1783516499
+          },
+          {
+            "t": 1783516559
+          },
+          {
+            "t": 1783516619
+          },
+          {
+            "t": 1783516679
+          },
+          {
+            "t": 1783516739
+          },
+          {
+            "t": 1783516799
+          },
+          {
+            "t": 1783516859
+          },
+          {
+            "t": 1783516919
+          },
+          {
+            "t": 1783516979
+          },
+          {
+            "t": 1783517039
+          },
+          {
+            "t": 1783517099
+          },
+          {
+            "t": 1783517159
+          },
+          {
+            "t": 1783517219
+          },
+          {
+            "t": 1783517279
+          },
+          {
+            "t": 1783517339
+          },
+          {
+            "t": 1783517399
+          },
+          {
+            "t": 1783517459
+          },
+          {
+            "t": 1783517519
+          },
+          {
+            "t": 1783517579
+          },
+          {
+            "t": 1783517639
+          },
+          {
+            "t": 1783517699
+          },
+          {
+            "t": 1783517759
+          },
+          {
+            "t": 1783517819
+          },
+          {
+            "t": 1783517879
+          },
+          {
+            "t": 1783517939
+          },
+          {
+            "t": 1783517999
+          },
+          {
+            "t": 1783518059
+          },
+          {
+            "t": 1783518119
+          },
+          {
+            "t": 1783518179
+          },
+          {
+            "t": 1783518239
+          },
+          {
+            "t": 1783518299
+          },
+          {
+            "t": 1783518359
+          },
+          {
+            "t": 1783518419
+          },
+          {
+            "t": 1783518479
+          },
+          {
+            "t": 1783518539
+          },
+          {
+            "t": 1783518599
+          },
+          {
+            "t": 1783518659
+          },
+          {
+            "t": 1783518719
+          },
+          {
+            "t": 1783518779
+          },
+          {
+            "t": 1783518839
+          },
+          {
+            "t": 1783518899
+          },
+          {
+            "t": 1783518959
+          },
+          {
+            "t": 1783519019
+          },
+          {
+            "t": 1783519079
+          },
+          {
+            "t": 1783519139
+          },
+          {
+            "t": 1783519199
+          },
+          {
+            "t": 1783519259
+          },
+          {
+            "t": 1783519319
+          },
+          {
+            "t": 1783519379
+          },
+          {
+            "t": 1783519439
+          },
+          {
+            "t": 1783519499
+          },
+          {
+            "t": 1783519559
+          },
+          {
+            "t": 1783519619
+          },
+          {
+            "t": 1783519679
+          },
+          {
+            "t": 1783519739
+          },
+          {
+            "t": 1783519799
+          },
+          {
+            "t": 1783519859
+          },
+          {
+            "t": 1783519919
+          },
+          {
+            "t": 1783519979
+          },
+          {
+            "t": 1783520039
+          },
+          {
+            "t": 1783520099
+          },
+          {
+            "t": 1783520159
+          },
+          {
+            "t": 1783520219
+          },
+          {
+            "t": 1783520279
+          },
+          {
+            "t": 1783520339
+          },
+          {
+            "t": 1783520399
+          },
+          {
+            "t": 1783520459
+          },
+          {
+            "t": 1783520519
+          },
+          {
+            "t": 1783520579
+          },
+          {
+            "t": 1783520639
+          },
+          {
+            "t": 1783520699
+          },
+          {
+            "t": 1783520759
+          },
+          {
+            "t": 1783520819
+          },
+          {
+            "t": 1783520879
+          },
+          {
+            "t": 1783520939
+          },
+          {
+            "t": 1783520999
+          },
+          {
+            "t": 1783521059
+          },
+          {
+            "t": 1783521119
+          },
+          {
+            "t": 1783521179
+          },
+          {
+            "t": 1783521239
+          },
+          {
+            "t": 1783521299
+          },
+          {
+            "t": 1783521359
+          },
+          {
+            "t": 1783521419
+          },
+          {
+            "t": 1783521479
+          },
+          {
+            "t": 1783521539
+          },
+          {
+            "t": 1783521599
+          },
+          {
+            "t": 1783521659
+          },
+          {
+            "t": 1783521719
+          },
+          {
+            "t": 1783521779
+          },
+          {
+            "t": 1783521839
+          },
+          {
+            "t": 1783521899
+          },
+          {
+            "t": 1783521959
+          },
+          {
+            "t": 1783522019
+          },
+          {
+            "t": 1783522079
+          },
+          {
+            "t": 1783522139
+          },
+          {
+            "t": 1783522199
+          },
+          {
+            "t": 1783522259
+          },
+          {
+            "t": 1783522319
+          },
+          {
+            "t": 1783522379
+          },
+          {
+            "t": 1783522439
+          },
+          {
+            "t": 1783522499
+          },
+          {
+            "t": 1783522559
+          },
+          {
+            "t": 1783522619
+          },
+          {
+            "t": 1783522679
+          },
+          {
+            "t": 1783522739
+          },
+          {
+            "t": 1783522799
+          },
+          {
+            "t": 1783522859
+          },
+          {
+            "t": 1783522919
+          },
+          {
+            "t": 1783522979
+          },
+          {
+            "t": 1783523039
+          },
+          {
+            "t": 1783523099
+          },
+          {
+            "t": 1783523159
+          },
+          {
+            "t": 1783523219
+          },
+          {
+            "t": 1783523279
+          },
+          {
+            "t": 1783523339
+          },
+          {
+            "t": 1783523399
+          },
+          {
+            "t": 1783523459
+          },
+          {
+            "t": 1783523519
+          },
+          {
+            "t": 1783523579
+          },
+          {
+            "t": 1783523639
+          },
+          {
+            "t": 1783523699
+          },
+          {
+            "t": 1783523759
+          },
+          {
+            "t": 1783523819
+          },
+          {
+            "t": 1783523879
+          },
+          {
+            "t": 1783523939
+          },
+          {
+            "t": 1783523999
+          },
+          {
+            "t": 1783524059
+          },
+          {
+            "t": 1783524119
+          },
+          {
+            "t": 1783524179
+          },
+          {
+            "t": 1783524239
+          },
+          {
+            "t": 1783524299
+          },
+          {
+            "t": 1783524359
+          },
+          {
+            "t": 1783524419
+          },
+          {
+            "t": 1783524479
+          },
+          {
+            "t": 1783524539
+          },
+          {
+            "t": 1783524599
+          },
+          {
+            "t": 1783524659
+          },
+          {
+            "t": 1783524719
+          },
+          {
+            "t": 1783524779
+          },
+          {
+            "t": 1783524839
+          },
+          {
+            "t": 1783524899
+          },
+          {
+            "t": 1783524959
+          },
+          {
+            "t": 1783525019
+          },
+          {
+            "t": 1783525079
+          },
+          {
+            "t": 1783525139
+          },
+          {
+            "t": 1783525199
+          },
+          {
+            "t": 1783525259
+          },
+          {
+            "t": 1783525319
+          },
+          {
+            "t": 1783525379
+          },
+          {
+            "t": 1783525439
+          },
+          {
+            "t": 1783525499
+          },
+          {
+            "t": 1783525559
+          },
+          {
+            "t": 1783525619
+          },
+          {
+            "t": 1783525679
+          },
+          {
+            "t": 1783525739
+          },
+          {
+            "t": 1783525799
+          },
+          {
+            "t": 1783525859
+          },
+          {
+            "t": 1783525919
+          },
+          {
+            "t": 1783525979
+          },
+          {
+            "t": 1783526039
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
           }
         ]
       },
-      "history_1y": [
+      "description": "The VanEck Consumer Staples TruSector ETF (TRUO) is an exchange-traded fund that mostly invests in consumer staples equity. The fund is an actively managed sector fund that is a part of a suite aiming to provide the full economic composition of the consumer staples sector. TRUO was launched on Jun 2, 2026 and is issued by VanEck.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "TRUO"
+        ],
+        [
+          "Provider",
+          "VanEck"
+        ]
+      ],
+      "etf_website": "https://www.vaneck.com/us/en/etf-mutual-fund-finder/etfs/?InvType=etf&AssetClass=c,nr,mi,t,ue,cb,ei,ib,mb,fr,c-ra,c-da,c-g&Funds=emf,grf,iigf,mwmf,embf,ccif&ShareClass=a,c,i,y,z&tab=ov&Sort=name&SortDesc=true",
+      "provider_page": "vaneck",
+      "holdingsTable": {
+        "count": 38,
+        "updated": "Jul 3, 2026",
+        "top10": 94.45,
+        "holdings": [
+          {
+            "n": "State Street®CnsmrStpSelSectSPDR®ETF",
+            "as": "40.02%",
+            "sh": "1,206"
+          },
+          {
+            "n": "Walmart Inc.",
+            "s": "$WMT",
+            "as": "12.10%",
+            "sh": "277"
+          },
+          {
+            "n": "Costco Wholesale Corporation",
+            "s": "$COST",
+            "as": "10.40%",
+            "sh": "28"
+          },
+          {
+            "n": "The Procter & Gamble Company",
+            "s": "$PG",
+            "as": "8.69%",
+            "sh": "147"
+          },
+          {
+            "n": "The Coca-Cola Company",
+            "s": "$KO",
+            "as": "8.02%",
+            "sh": "244"
+          },
+          {
+            "n": "Philip Morris International Inc.",
+            "s": "$PM",
+            "as": "6.97%",
+            "sh": "98"
+          },
+          {
+            "n": "PepsiCo, Inc.",
+            "s": "$PEP",
+            "as": "4.84%",
+            "sh": "86"
+          },
+          {
+            "n": "Altria Group, Inc.",
+            "s": "$MO",
+            "as": "2.10%",
+            "sh": "74"
+          },
+          {
+            "n": "Colgate-Palmolive Company",
+            "s": "$CL",
+            "as": "0.67%",
+            "sh": "18"
+          },
+          {
+            "n": "Mondelez International, Inc.",
+            "s": "$MDLZ",
+            "as": "0.64%",
+            "sh": "27"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783556271092",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260603424680/en/VanEck%C2%A0Adds-Consumer-Staples-TRUO-and-Industrials-TRUI-to-TruSector-ETF-Suite/",
+            "img": "https://cdn.snapi.dev/images/v1/o/c/c/press2-3734078.jpg",
+            "title": "VanEck Adds Consumer Staples (TRUO) and Industrials (TRUI) to TruSector ETF Suite",
+            "text": "NEW YORK--(BUSINESS WIRE)--VanEck's adds two funds to its TruSector Suite, providing full market-cap sector exposure, closer alignment with actual market composition of sectors.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "#TRUI"
+            ],
+            "time": "Jun 3, 2026, 8:00 AM EDT",
+            "ago": "5 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 25.026,
+        "price1m": 25.295,
+        "priceMAX": 24.882
+      },
+      "performance": {
+        "tr1m": 1.056
+      }
+    },
+    "quote": {
+      "p": 25.5623,
+      "pd": 25.56,
+      "c": -0.11,
+      "cp": -0.42,
+      "cl": 25.67,
+      "cdr": -1,
+      "o": 25.73,
+      "h": 25.73,
+      "l": 25.56,
+      "v": 391,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 25.93,
+      "l52": 24.857,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1783541700013.1938,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783589108340,
+      "symbol": "TRUO",
+      "uid": "TRUO"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 24.95,
+        "h": 25.73,
+        "l": 24.95,
+        "c": 25.562,
+        "a": 25.5623,
+        "v": 619,
+        "ch": 1.77
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-03",
-          "Open": 25.059999465942383,
-          "High": 25.059999465942383,
-          "Low": 24.8799991607666,
-          "Close": 24.8799991607666,
-          "Volume": 800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-08",
+          "o": 25.73,
+          "h": 25.73,
+          "l": 25.562,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 391,
+          "ch": -0.4
         },
         {
-          "date": "2026-06-04",
-          "Open": 24.860000610351562,
-          "High": 24.860000610351562,
-          "Low": 24.860000610351562,
-          "Close": 24.860000610351562,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 25.666,
+          "h": 25.666,
+          "l": 25.666,
+          "c": 25.666,
+          "a": 25.6655,
+          "v": 6,
+          "ch": 0.99
         },
         {
-          "date": "2026-06-05",
-          "Open": 25.299999237060547,
-          "High": 25.299999237060547,
-          "Low": 25.299999237060547,
-          "Close": 25.299999237060547,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 25.415,
+          "h": 25.415,
+          "l": 25.415,
+          "c": 25.415,
+          "a": 25.4149,
+          "v": 7,
+          "ch": -0.86
         },
         {
-          "date": "2026-06-08",
-          "Open": 25.25,
-          "High": 25.25,
-          "Low": 25.170000076293945,
-          "Close": 25.200000762939453,
-          "Volume": 7400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 25.635,
+          "h": 25.635,
+          "l": 25.635,
+          "c": 25.635,
+          "a": 25.6352,
+          "v": 8,
+          "ch": 2.43
         },
         {
-          "date": "2026-06-09",
-          "Open": 25.239999771118164,
-          "High": 25.450000762939453,
-          "Low": 25.149999618530273,
-          "Close": 25.450000762939453,
-          "Volume": 3800.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.026,
+          "l": 24.95,
+          "c": 25.026,
+          "a": 25.0262,
+          "v": 207,
+          "ch": -0.36
         },
         {
-          "date": "2026-06-10",
-          "Open": 25.850000381469727,
-          "High": 25.899999618530273,
-          "Low": 25.850000381469727,
-          "Close": 25.899999618530273,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 25.18,
+          "h": 25.18,
+          "l": 25.118,
+          "c": 25.118,
+          "a": 25.1177,
+          "v": 257,
+          "ch": -1.51
         },
         {
-          "date": "2026-06-11",
-          "Open": 25.93000030517578,
-          "High": 25.93000030517578,
-          "Low": 25.770000457763672,
-          "Close": 25.770000457763672,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 25.502,
+          "h": 25.502,
+          "l": 25.502,
+          "c": 25.502,
+          "a": 25.5017,
+          "v": 9,
+          "ch": -0.46
         },
         {
-          "date": "2026-06-12",
-          "Open": 25.90999984741211,
-          "High": 25.920000076293945,
-          "Low": 25.90999984741211,
-          "Close": 25.920000076293945,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 25.65,
+          "h": 25.65,
+          "l": 25.62,
+          "c": 25.62,
+          "a": 25.6201,
+          "v": 252,
+          "ch": 1.02
         },
         {
-          "date": "2026-06-15",
-          "Open": 25.700000762939453,
-          "High": 25.81999969482422,
-          "Low": 25.700000762939453,
-          "Close": 25.81999969482422,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.36,
+          "c": 25.36,
+          "a": 25.3602,
+          "v": 40,
+          "ch": -1.02
         },
         {
-          "date": "2026-06-16",
-          "Open": 25.90999984741211,
-          "High": 25.90999984741211,
-          "Low": 25.90999984741211,
-          "Close": 25.90999984741211,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 25.622,
+          "h": 25.622,
+          "l": 25.622,
+          "c": 25.622,
+          "a": 25.6217,
+          "v": 3,
+          "ch": 0.4
         },
         {
-          "date": "2026-06-17",
-          "Open": 25.3700008392334,
-          "High": 25.3700008392334,
-          "Low": 25.3700008392334,
-          "Close": 25.3700008392334,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 25.45,
+          "h": 25.519,
+          "l": 25.45,
+          "c": 25.519,
+          "a": 25.5188,
+          "v": 317,
+          "ch": 1.92
         },
         {
-          "date": "2026-06-18",
-          "Open": 25.260000228881836,
-          "High": 25.260000228881836,
-          "Low": 25.260000228881836,
-          "Close": 25.260000228881836,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-22",
+          "o": 25.19,
+          "h": 25.19,
+          "l": 25.039,
+          "c": 25.039,
+          "a": 25.0385,
+          "v": 1366,
+          "ch": -0.88
         },
         {
-          "date": "2026-06-22",
-          "Open": 25.190000534057617,
-          "High": 25.190000534057617,
-          "Low": 25.040000915527344,
-          "Close": 25.040000915527344,
-          "Volume": 1400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-18",
+          "o": 25.261,
+          "h": 25.261,
+          "l": 25.261,
+          "c": 25.261,
+          "a": 25.2613,
+          "v": 0,
+          "ch": -0.42
         },
         {
-          "date": "2026-06-23",
-          "Open": 25.450000762939453,
-          "High": 25.520000457763672,
-          "Low": 25.450000762939453,
-          "Close": 25.520000457763672,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-17",
+          "o": 25.368,
+          "h": 25.368,
+          "l": 25.368,
+          "c": 25.368,
+          "a": 25.3683,
+          "v": 2,
+          "ch": -2.1
         },
         {
-          "date": "2026-06-24",
-          "Open": 25.6200008392334,
-          "High": 25.6200008392334,
-          "Low": 25.6200008392334,
-          "Close": 25.6200008392334,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-16",
+          "o": 25.912,
+          "h": 25.912,
+          "l": 25.912,
+          "c": 25.912,
+          "a": 25.9123,
+          "v": 12,
+          "ch": 0.34
         },
         {
-          "date": "2026-06-25",
-          "Open": 25.360000610351562,
-          "High": 25.360000610351562,
-          "Low": 25.360000610351562,
-          "Close": 25.360000610351562,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-15",
+          "o": 25.7,
+          "h": 25.824,
+          "l": 25.7,
+          "c": 25.824,
+          "a": 25.8243,
+          "v": 207,
+          "ch": -0.37
         },
         {
-          "date": "2026-06-26",
-          "Open": 25.649999618530273,
-          "High": 25.649999618530273,
-          "Low": 25.6200008392334,
-          "Close": 25.6200008392334,
-          "Volume": 300.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-12",
+          "o": 25.91,
+          "h": 25.92,
+          "l": 25.91,
+          "c": 25.92,
+          "a": 25.9197,
+          "v": 125,
+          "ch": 0.59
         },
         {
-          "date": "2026-06-29",
-          "Open": 25.5,
-          "High": 25.5,
-          "Low": 25.5,
-          "Close": 25.5,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-11",
+          "o": 25.93,
+          "h": 25.93,
+          "l": 25.767,
+          "c": 25.767,
+          "a": 25.7665,
+          "v": 306,
+          "ch": -0.51
+        },
+        {
+          "t": "2026-06-10",
+          "o": 25.85,
+          "h": 25.898,
+          "l": 25.85,
+          "c": 25.898,
+          "a": 25.8975,
+          "v": 335,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-06-09",
+          "o": 25.24,
+          "h": 25.45,
+          "l": 25.145,
+          "c": 25.45,
+          "a": 25.4502,
+          "v": 3844,
+          "ch": 0.98
+        },
+        {
+          "t": "2026-06-08",
+          "o": 25.25,
+          "h": 25.25,
+          "l": 25.17,
+          "c": 25.202,
+          "a": 25.2021,
+          "v": 7400,
+          "ch": -0.37
+        },
+        {
+          "t": "2026-06-05",
+          "o": 25.295,
+          "h": 25.295,
+          "l": 25.295,
+          "c": 25.295,
+          "a": 25.2953,
+          "v": 4,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-06-04",
+          "o": 24.857,
+          "h": 24.857,
+          "l": 24.857,
+          "c": 24.857,
+          "a": 24.857,
+          "v": 2,
+          "ch": -0.1
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 25.415,
+          "h": 25.73,
+          "l": 25.415,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 404,
+          "ch": -0.28
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.502,
+          "h": 25.635,
+          "l": 24.95,
+          "c": 25.635,
+          "a": 25.6352,
+          "v": 481,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-06-22",
+          "o": 25.19,
+          "h": 25.65,
+          "l": 25.039,
+          "c": 25.62,
+          "a": 25.6201,
+          "v": 1978,
+          "ch": 1.42
+        },
+        {
+          "t": "2026-06-15",
+          "o": 25.7,
+          "h": 25.912,
+          "l": 25.261,
+          "c": 25.261,
+          "a": 25.2613,
+          "v": 221,
+          "ch": -2.54
+        },
+        {
+          "t": "2026-06-08",
+          "o": 25.25,
+          "h": 25.93,
+          "l": 25.145,
+          "c": 25.92,
+          "a": 25.9197,
+          "v": 12010,
+          "ch": 2.47
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.73,
+          "l": 24.95,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 619,
+          "ch": 1.77
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 25.415,
+          "h": 25.73,
+          "l": 25.415,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 404,
+          "ch": -0.28
+        },
+        {
+          "t": "2026-06-29",
+          "o": 25.502,
+          "h": 25.635,
+          "l": 24.95,
+          "c": 25.635,
+          "a": 25.6352,
+          "v": 481,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-06-22",
+          "o": 25.19,
+          "h": 25.65,
+          "l": 25.039,
+          "c": 25.62,
+          "a": 25.6201,
+          "v": 1978,
+          "ch": 1.42
+        },
+        {
+          "t": "2026-06-15",
+          "o": 25.7,
+          "h": 25.912,
+          "l": 25.261,
+          "c": 25.261,
+          "a": 25.2613,
+          "v": 221,
+          "ch": -2.54
+        },
+        {
+          "t": "2026-06-08",
+          "o": 25.25,
+          "h": 25.93,
+          "l": 25.145,
+          "c": 25.92,
+          "a": 25.9197,
+          "v": 12010,
+          "ch": 2.47
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.73,
+          "l": 24.95,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 619,
+          "ch": 1.77
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.95,
+          "h": 25.73,
+          "l": 24.95,
+          "c": 25.562,
+          "a": 25.5623,
+          "v": 619,
+          "ch": 1.77
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

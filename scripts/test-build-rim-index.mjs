@@ -280,39 +280,46 @@ try {
   fs.rmSync(bridgeFixtureRoot, { recursive: true, force: true });
 }
 
-assert.equal(payload.indices.SOX.role, "backlog_blocked");
-assert.equal(payload.indices.SOX.public_status, "blocked_or_input_only");
-assert.ok(
-  payload.indices.SOX.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified"),
-);
-assert.ok(payload.indices.SOX.blockers.some((blocker) => blocker.code === "missing_sox_constituent_weight_path"));
-assert.equal(payload.indices.SOX.derived.payout_ratio.source_tier, "blocked_missing_source");
-assert.equal(payload.indices.SOX.derived.explicit_eps_growth_3y.source_tier, "blocked_missing_source");
-assert.equal(payload.indices.SOX.derived.forecast_grid_v1, undefined);
+const sox = payload.indices.SOX;
+assert.equal(sox.role, "secondary_input_only");
+assert.equal(sox.public_status, "ready_inputs_and_forecast_grid");
+assert.equal(sox.blockers.length, 0);
+assert.equal(sox.observed.risk_free_rate.source_tier, "observed_source");
+assert.equal(sox.observed.risk_free_rate.source, "macro/fred-banking-daily.json");
+assert.equal(sox.observed.equity_risk_premium.source_tier, "observed_source");
+assert.equal(sox.derived.payout_ratio.source_tier, "derived_formula");
+assert.equal(sox.derived.payout_ratio.formula, "sox_methodology_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)");
+assert.equal(sox.derived.explicit_eps_growth_3y.source_tier, "derived_formula");
+assert.equal(sox.derived.cost_of_equity.source_tier, "derived_formula");
+assert.ok(sox.derived.payout_ratio.coverage.covered_weight_ratio >= 0.75);
+assert.ok(sox.derived.explicit_eps_growth_3y.coverage.covered_weight_ratio >= 0.75);
+assert.equal(sox.derived.forecast_grid_v1.schema_version, "forecast_grid_v1");
+assert.equal(sox.derived.forecast_grid_v1.public_status, "input_only_sox_methodology_weights_no_fair_value");
+assert.equal(sox.derived.forecast_grid_v1.periods.length, 3);
+assert.equal(sox.derived.forecast_grid_v1.coverage.index_key, "sox_nasdaq_giw_methodology_mktcap");
+assert.equal(sox.derived.proxy_inputs_v1, undefined);
+const soxDiagnostic = payload.coverage_diagnostics.stock_action.SOX;
+assert.equal(soxDiagnostic.source_tier, "methodology_derived_index_weight_source");
+assert.equal(soxDiagnostic.source, "indices/nasdaq-giw-sox-constituents.json");
+assert.equal(soxDiagnostic.official_weight_columns_available, false);
+assert.equal(soxDiagnostic.constituent_rows, 30);
+assert.equal(soxDiagnostic.methodology_weight_rows, 30);
+assert.equal(soxDiagnostic.cap_violation_count, 0);
+assert.ok(Math.abs(soxDiagnostic.methodology_weight_total - 100) < 0.0001);
+assert.ok(Array.isArray(soxDiagnostic.top_weight_sample));
+assert.ok(soxDiagnostic.top_weight_sample.length > 0);
+assert.ok(soxDiagnostic.matched_weight_ratio >= 0.99);
+assert.ok(soxDiagnostic.forward_eps_fy1_fy3_weight_ratio >= 0.75);
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.proxy_ticker, "SOXX");
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.exact_index_substitute, false);
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.resolved_weight_ratio >= 0.75);
-const soxProxyInputs = payload.indices.SOX.derived.proxy_inputs_v1;
-assert.equal(soxProxyInputs.schema_version, "proxy_inputs_v1");
-assert.equal(soxProxyInputs.public_status, "proxy_input_only_exact_index_blocked");
-assert.equal(soxProxyInputs.source_tier, "proxy_diagnostic");
-assert.equal(soxProxyInputs.proxy_ticker, "SOXX");
-assert.equal(soxProxyInputs.exact_index_substitute, false);
-assert.equal(soxProxyInputs.key_inputs.payout_ratio.source_tier, "derived_formula");
-assert.equal(soxProxyInputs.key_inputs.explicit_eps_growth_3y.source_tier, "derived_formula");
-assert.equal(soxProxyInputs.key_inputs.cost_of_equity.source_tier, "derived_formula");
-assert.ok(soxProxyInputs.coverage.forward_eps_fy1_fy3_weight_ratio >= 0.75);
-assert.ok(soxProxyInputs.key_inputs.payout_ratio.coverage.covered_weight_ratio >= 0.75);
-assert.ok(soxProxyInputs.key_inputs.explicit_eps_growth_3y.coverage.covered_weight_ratio >= 0.75);
-assert.equal(soxProxyInputs.forecast_grid_v1.schema_version, "forecast_grid_v1");
-assert.equal(soxProxyInputs.forecast_grid_v1.public_status, "proxy_input_only_no_fair_value_exact_index_blocked");
-assert.equal(soxProxyInputs.forecast_grid_v1.periods.length, 3);
-assert.equal(soxProxyInputs.forecast_grid_v1.coverage.index_key, "soxx_etf_proxy");
-assert.ok(soxProxyInputs.blockers.some((blocker) => blocker.code === "proxy_not_exact_index_constituents"));
-assert.ok(soxProxyInputs.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified"));
 
 const badProxyPayload = JSON.parse(JSON.stringify(payload));
-badProxyPayload.indices.SOX.derived.proxy_inputs_v1.exact_index_substitute = true;
+badProxyPayload.indices.SOX.derived.proxy_inputs_v1 = {
+  schema_version: "proxy_inputs_v1",
+  source_tier: "proxy_diagnostic",
+  exact_index_substitute: false,
+};
 assert.equal(validateRimIndexInputs(badProxyPayload).ok, false);
 
 const publicText = JSON.stringify(payload);

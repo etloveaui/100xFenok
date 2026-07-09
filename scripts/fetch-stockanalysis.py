@@ -2897,9 +2897,13 @@ def main() -> None:
 
     pending_ledger_summary = None
     if incremental_summary is not None:
+        ledger_selected_rows = [
+            *(incremental_summary.get("selected") or []),
+            *({"ticker": ticker} for ticker in etfs),
+        ]
         pending_ledger_summary = update_pending_ledger(
             results=results,
-            selected_rows=incremental_summary.get("selected") or [],
+            selected_rows=ledger_selected_rows,
             cooldown_days=args.incremental_etf_cooldown_days,
             failure_threshold=args.incremental_etf_cooldown_failures,
             mirror_public=mirror_public,

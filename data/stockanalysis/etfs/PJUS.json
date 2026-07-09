@@ -1,19 +1,425 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "PJUS",
-  "fetched_at": "2026-07-01T23:59:35Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-09T09:23:30Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/PJUS/holdings",
+    "overview": "/api/symbol/e/PJUS/overview",
+    "quote": "/api/quotes/e/PJUS",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/PJUS/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/PJUS/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/PJUS/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/PJUS/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/PJUS/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/PJUS/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 7.93,
+        "shares": 1709,
+        "raw": {
+          "no": 1,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "7.93%",
+          "sh": "1,709"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 6.72,
+        "shares": 2295,
+        "raw": {
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "6.72%",
+          "sh": "2,295"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 6.59,
+        "shares": 1219,
+        "raw": {
+          "no": 3,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "6.59%",
+          "sh": "1,219"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 4.2,
+        "shares": 716,
+        "raw": {
+          "no": 4,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "4.20%",
+          "sh": "716"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 3.96,
+        "shares": 1085,
+        "raw": {
+          "no": 5,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "3.96%",
+          "sh": "1,085"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 3.6,
+        "shares": 664,
+        "raw": {
+          "no": 6,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "3.60%",
+          "sh": "664"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 2.63,
+        "shares": 300,
+        "raw": {
+          "no": 7,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "2.63%",
+          "sh": "300"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 2.37,
+        "shares": 448,
+        "raw": {
+          "no": 8,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.37%",
+          "sh": "448"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 2.17,
+        "shares": 148,
+        "raw": {
+          "no": 9,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "2.17%",
+          "sh": "148"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "BAC",
+        "name": "Bank of America Corporation",
+        "weight_pct": 2.07,
+        "shares": 2349,
+        "raw": {
+          "no": 10,
+          "n": "Bank of America Corporation",
+          "s": "$BAC",
+          "as": "2.07%",
+          "sh": "2,349"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "weight_pct": 2.03,
+        "shares": 261,
+        "raw": {
+          "no": 11,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "2.03%",
+          "sh": "261"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "V",
+        "name": "Visa Inc.",
+        "weight_pct": 1.95,
+        "shares": 359,
+        "raw": {
+          "no": 12,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "1.95%",
+          "sh": "359"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight_pct": 1.95,
+        "shares": 107,
+        "raw": {
+          "no": 13,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "1.95%",
+          "sh": "107"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 1.88,
+        "shares": 1112,
+        "raw": {
+          "no": 14,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "1.88%",
+          "sh": "1,112"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "PNC",
+        "name": "The PNC Financial Services Group, Inc.",
+        "weight_pct": 1.72,
+        "shares": 460,
+        "raw": {
+          "no": 15,
+          "n": "The PNC Financial Services Group, Inc.",
+          "s": "$PNC",
+          "as": "1.72%",
+          "sh": "460"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "PH",
+        "name": "Parker-Hannifin Corporation",
+        "weight_pct": 1.69,
+        "shares": 117,
+        "raw": {
+          "no": 16,
+          "n": "Parker-Hannifin Corporation",
+          "s": "$PH",
+          "as": "1.69%",
+          "sh": "117"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "TFC",
+        "name": "Truist Financial Corporation",
+        "weight_pct": 1.64,
+        "shares": 2142,
+        "raw": {
+          "no": 17,
+          "n": "Truist Financial Corporation",
+          "s": "$TFC",
+          "as": "1.64%",
+          "sh": "2,142"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "MTB",
+        "name": "M&T Bank Corporation",
+        "weight_pct": 1.42,
+        "shares": 396,
+        "raw": {
+          "no": 18,
+          "n": "M&T Bank Corporation",
+          "s": "$MTB",
+          "as": "1.42%",
+          "sh": "396"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "LNG",
+        "name": "Cheniere Energy, Inc.",
+        "weight_pct": 1.35,
+        "shares": 366,
+        "raw": {
+          "no": 19,
+          "n": "Cheniere Energy, Inc.",
+          "s": "$LNG",
+          "as": "1.35%",
+          "sh": "366"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "UNP",
+        "name": "Union Pacific Corporation",
+        "weight_pct": 1.31,
+        "shares": 310,
+        "raw": {
+          "no": 20,
+          "n": "Union Pacific Corporation",
+          "s": "$UNP",
+          "as": "1.31%",
+          "sh": "310"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight_pct": 1.3,
+        "shares": 259,
+        "raw": {
+          "no": 21,
+          "n": "JPMorgan Chase & Co.",
+          "s": "$JPM",
+          "as": "1.30%",
+          "sh": "259"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "CB",
+        "name": "Chubb Limited",
+        "weight_pct": 1.28,
+        "shares": 235,
+        "raw": {
+          "no": 22,
+          "n": "Chubb Limited",
+          "s": "$CB",
+          "as": "1.28%",
+          "sh": "235"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "SHEL",
+        "name": "Shell plc",
+        "weight_pct": 1.25,
+        "shares": 1067,
+        "raw": {
+          "no": 23,
+          "n": "Shell plc",
+          "s": "$SHEL",
+          "as": "1.25%",
+          "sh": "1,067"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "NOC",
+        "name": "Northrop Grumman Corporation",
+        "weight_pct": 1.18,
+        "shares": 143,
+        "raw": {
+          "no": 24,
+          "n": "Northrop Grumman Corporation",
+          "s": "$NOC",
+          "as": "1.18%",
+          "sh": "143"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight_pct": 1.11,
+        "shares": 951,
+        "raw": {
+          "no": 25,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "1.11%",
+          "sh": "951"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 35.35
+      },
+      {
+        "n": "Financials",
+        "w": 15.33
+      },
+      {
+        "n": "Communication Services",
+        "w": 13.35
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 10.43
+      },
+      {
+        "n": "Industrials",
+        "w": 9.09
+      },
+      {
+        "n": "Healthcare",
+        "w": 6.12
+      },
+      {
+        "n": "Energy",
+        "w": 4.45
+      },
+      {
+        "n": "Utilities",
+        "w": 1.96
+      },
+      {
+        "n": "Real Estate",
+        "w": 1.81
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 1.72
+      },
+      {
+        "n": "Materials",
+        "w": 0.4
+      }
+    ],
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-07-01T23:59:35Z",
+    "holding_count": 96,
+    "holdings_updated": "Jul 2, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -24,987 +430,2741 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": 7186178.0,
-      "nav": 51.34387,
-      "expenseRatio": 0.19,
-      "beta": 0.0,
-      "provider_page": "PGIM",
-      "category": "Large Blend",
-      "legalType": "Exchange Traded Fund",
-      "description": "Under normal circumstances, the fund invests at least 80% of its investable assets in equity and equity-related securities of U.S. companies. It primarily invests in equity and equity-related securities which include common and preferred stock, common stock, non-convertible preferred stock, convertible securities, American Depositary Receipts (“ADRs”), warrants, rights, real estate investment trusts (“REITs”), and other similar instruments. The fund is non-diversified."
+      "aum": "$6.65M",
+      "expenseRatio": "0.19%",
+      "peRatio": "24.43",
+      "sharesOut": "130,000",
+      "inception": "May 20, 2026",
+      "provider_page": "pgim",
+      "etf_website": "https://www.pgim.com/us/en/individual/investment-capabilities/products/etf/pgim-jennison-us-core-equity-etf"
+    },
+    "performance": {
+      "tr1m": 2.139
     },
     "quote": {
-      "p": 51.3056,
-      "pd": 51.3809,
-      "c": -0.07529999999999859,
-      "cp": -0.1465525127041344,
-      "u": "2026-07-01T23:59:35Z",
-      "ex": "yahoo_finance"
+      "p": 51.296,
+      "pd": 51.3,
+      "c": -0.08,
+      "cp": -0.16,
+      "cl": 51.38,
+      "cdr": -1,
+      "o": 51.3,
+      "h": 51.3,
+      "l": 51.3,
+      "v": 20,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 51.563,
+      "l52": 49.61,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1783555207116.9036,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783589016803,
+      "symbol": "PJUS",
+      "uid": "PJUS"
     },
     "history": [
       {
-        "date": "2026-05-21",
-        "Open": 49.970001220703125,
-        "High": 50.150001525878906,
-        "Low": 49.970001220703125,
-        "Close": 50.11000061035156,
-        "Volume": 17200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 51.306,
+        "h": 51.545,
+        "l": 51.14,
+        "c": 51.296,
+        "a": 51.296,
+        "v": 92,
+        "ch": -0.17
       },
       {
-        "date": "2026-05-22",
-        "Open": 50.439998626708984,
-        "High": 50.47999954223633,
-        "Low": 50.43000030517578,
-        "Close": 50.43000030517578,
-        "Volume": 200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-05-26",
-        "Open": 50.77000045776367,
-        "High": 50.91999816894531,
-        "Low": 50.7599983215332,
-        "Close": 50.86000061035156,
-        "Volume": 1200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-05-27",
-        "Open": 50.900001525878906,
-        "High": 51.119998931884766,
-        "Low": 50.88999938964844,
-        "Close": 50.91999816894531,
-        "Volume": 12600.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-05-28",
-        "Open": 50.849998474121094,
-        "High": 51.060001373291016,
-        "Low": 50.849998474121094,
-        "Close": 51.060001373291016,
-        "Volume": 1100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-05-29",
-        "Open": 51.27000045776367,
-        "High": 51.369998931884766,
-        "Low": 51.27000045776367,
-        "Close": 51.369998931884766,
-        "Volume": 400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-01",
-        "Open": 51.400001525878906,
-        "High": 51.45000076293945,
-        "Low": 51.349998474121094,
-        "Close": 51.349998474121094,
-        "Volume": 2000.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-02",
-        "Open": 51.560001373291016,
-        "High": 51.560001373291016,
-        "Low": 51.560001373291016,
-        "Close": 51.560001373291016,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-03",
-        "Open": 51.25,
-        "High": 51.25,
-        "Low": 51.25,
-        "Close": 51.25,
-        "Volume": 500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-04",
-        "Open": 51.2400016784668,
-        "High": 51.369998931884766,
-        "Low": 51.2400016784668,
-        "Close": 51.369998931884766,
-        "Volume": 900.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-05",
-        "Open": 50.599998474121094,
-        "High": 50.599998474121094,
-        "Low": 50.220001220703125,
-        "Close": 50.220001220703125,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-08",
-        "Open": 50.36000061035156,
-        "High": 50.36000061035156,
-        "Low": 50.36000061035156,
-        "Close": 50.36000061035156,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-09",
-        "Open": 50.93000030517578,
-        "High": 50.93000030517578,
-        "Low": 49.91999816894531,
-        "Close": 50.27000045776367,
-        "Volume": 400.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-10",
-        "Open": 49.61000061035156,
-        "High": 49.61000061035156,
-        "Low": 49.61000061035156,
-        "Close": 49.61000061035156,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-11",
-        "Open": 50.61000061035156,
-        "High": 50.61000061035156,
-        "Low": 50.5,
-        "Close": 50.5,
-        "Volume": 200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-12",
-        "Open": 50.689998626708984,
-        "High": 50.689998626708984,
-        "Low": 50.689998626708984,
-        "Close": 50.689998626708984,
-        "Volume": 0.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-15",
-        "Open": 51.34000015258789,
-        "High": 51.34000015258789,
-        "Low": 51.34000015258789,
-        "Close": 51.34000015258789,
-        "Volume": 0.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-16",
-        "Open": 51.09000015258789,
-        "High": 51.09000015258789,
-        "Low": 51.09000015258789,
-        "Close": 51.09000015258789,
-        "Volume": 0.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-17",
-        "Open": 50.529998779296875,
-        "High": 50.529998779296875,
-        "Low": 50.529998779296875,
-        "Close": 50.529998779296875,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-18",
-        "Open": 51.09000015258789,
-        "High": 51.09000015258789,
-        "Low": 51.09000015258789,
-        "Close": 51.09000015258789,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-22",
-        "Open": 50.93000030517578,
-        "High": 50.93000030517578,
-        "Low": 50.93000030517578,
-        "Close": 50.93000030517578,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-23",
-        "Open": 50.369998931884766,
-        "High": 50.369998931884766,
-        "Low": 50.369998931884766,
-        "Close": 50.369998931884766,
-        "Volume": 0.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-24",
-        "Open": 50.2599983215332,
-        "High": 50.2599983215332,
-        "Low": 50.2599983215332,
-        "Close": 50.2599983215332,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-25",
-        "Open": 50.189998626708984,
-        "High": 50.189998626708984,
-        "Low": 50.189998626708984,
-        "Close": 50.189998626708984,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 50.33000183105469,
-        "High": 50.33000183105469,
-        "Low": 50.33000183105469,
-        "Close": 50.33000183105469,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 50.90999984741211,
-        "High": 50.90999984741211,
-        "Low": 50.90999984741211,
-        "Close": 50.90999984741211,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 51.380001068115234,
-        "High": 51.380001068115234,
-        "Low": 51.380001068115234,
-        "Close": 51.380001068115234,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-06-01",
+        "o": 51.4,
+        "h": 51.563,
+        "l": 49.61,
+        "c": 51.381,
+        "a": 51.3809,
+        "v": 4457,
+        "ch": 0.02
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-05-21",
-          "Open": 49.970001220703125,
-          "High": 50.150001525878906,
-          "Low": 49.970001220703125,
-          "Close": 50.11000061035156,
-          "Volume": 17200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-08",
+          "o": 51.296,
+          "h": 51.296,
+          "l": 51.296,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 20,
+          "ch": -0.17
         },
         {
-          "date": "2026-05-22",
-          "Open": 50.439998626708984,
-          "High": 50.47999954223633,
-          "Low": 50.43000030517578,
-          "Close": 50.43000030517578,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 51.383,
+          "h": 51.383,
+          "l": 51.383,
+          "c": 51.383,
+          "a": 51.3831,
+          "v": 7,
+          "ch": -0.31
         },
         {
-          "date": "2026-05-26",
-          "Open": 50.77000045776367,
-          "High": 50.91999816894531,
-          "Low": 50.7599983215332,
-          "Close": 50.86000061035156,
-          "Volume": 1200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 51.545,
+          "h": 51.545,
+          "l": 51.545,
+          "c": 51.545,
+          "a": 51.5452,
+          "v": 50,
+          "ch": 0.79
         },
         {
-          "date": "2026-05-27",
-          "Open": 50.900001525878906,
-          "High": 51.119998931884766,
-          "Low": 50.88999938964844,
-          "Close": 50.91999816894531,
-          "Volume": 12600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 51.14,
+          "h": 51.14,
+          "l": 51.14,
+          "c": 51.14,
+          "a": 51.1402,
+          "v": 7,
+          "ch": -0.32
         },
         {
-          "date": "2026-05-28",
-          "Open": 50.849998474121094,
-          "High": 51.060001373291016,
-          "Low": 50.849998474121094,
-          "Close": 51.060001373291016,
-          "Volume": 1100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.306,
+          "l": 51.306,
+          "c": 51.306,
+          "a": 51.3056,
+          "v": 8,
+          "ch": -0.15
         },
         {
-          "date": "2026-05-29",
-          "Open": 51.27000045776367,
-          "High": 51.369998931884766,
-          "Low": 51.27000045776367,
-          "Close": 51.369998931884766,
-          "Volume": 400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 51.381,
+          "h": 51.381,
+          "l": 51.381,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 7,
+          "ch": 0.93
         },
         {
-          "date": "2026-06-01",
-          "Open": 51.400001525878906,
-          "High": 51.45000076293945,
-          "Low": 51.349998474121094,
-          "Close": 51.349998474121094,
-          "Volume": 2000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 50.908,
+          "h": 50.908,
+          "l": 50.908,
+          "c": 50.908,
+          "a": 50.9084,
+          "v": 19,
+          "ch": 1.15
         },
         {
-          "date": "2026-06-02",
-          "Open": 51.560001373291016,
-          "High": 51.560001373291016,
-          "Low": 51.560001373291016,
-          "Close": 51.560001373291016,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 50.332,
+          "h": 50.332,
+          "l": 50.332,
+          "c": 50.332,
+          "a": 50.332,
+          "v": 4,
+          "ch": 0.29
         },
         {
-          "date": "2026-06-03",
-          "Open": 51.25,
-          "High": 51.25,
-          "Low": 51.25,
-          "Close": 51.25,
-          "Volume": 500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 50.186,
+          "h": 50.186,
+          "l": 50.186,
+          "c": 50.186,
+          "a": 50.1864,
+          "v": 101,
+          "ch": -0.15
         },
         {
-          "date": "2026-06-04",
-          "Open": 51.2400016784668,
-          "High": 51.369998931884766,
-          "Low": 51.2400016784668,
-          "Close": 51.369998931884766,
-          "Volume": 900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 50.261,
+          "h": 50.261,
+          "l": 50.261,
+          "c": 50.261,
+          "a": 50.2606,
+          "v": 1,
+          "ch": -0.21
         },
         {
-          "date": "2026-06-05",
-          "Open": 50.599998474121094,
-          "High": 50.599998474121094,
-          "Low": 50.220001220703125,
-          "Close": 50.220001220703125,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 50.367,
+          "h": 50.367,
+          "l": 50.367,
+          "c": 50.367,
+          "a": 50.3668,
+          "v": 0,
+          "ch": -1.11
         },
         {
-          "date": "2026-06-08",
-          "Open": 50.36000061035156,
-          "High": 50.36000061035156,
-          "Low": 50.36000061035156,
-          "Close": 50.36000061035156,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-22",
+          "o": 50.933,
+          "h": 50.933,
+          "l": 50.933,
+          "c": 50.933,
+          "a": 50.9331,
+          "v": 12,
+          "ch": -0.3
         },
         {
-          "date": "2026-06-09",
-          "Open": 50.93000030517578,
-          "High": 50.93000030517578,
-          "Low": 49.91999816894531,
-          "Close": 50.27000045776367,
-          "Volume": 400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-18",
+          "o": 51.086,
+          "h": 51.086,
+          "l": 51.086,
+          "c": 51.086,
+          "a": 51.0862,
+          "v": 10,
+          "ch": 1.1
         },
         {
-          "date": "2026-06-10",
-          "Open": 49.61000061035156,
-          "High": 49.61000061035156,
-          "Low": 49.61000061035156,
-          "Close": 49.61000061035156,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-17",
+          "o": 50.531,
+          "h": 50.531,
+          "l": 50.531,
+          "c": 50.531,
+          "a": 50.5314,
+          "v": 52,
+          "ch": -1.08
         },
         {
-          "date": "2026-06-11",
-          "Open": 50.61000061035156,
-          "High": 50.61000061035156,
-          "Low": 50.5,
-          "Close": 50.5,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-16",
+          "o": 51.085,
+          "h": 51.085,
+          "l": 51.085,
+          "c": 51.085,
+          "a": 51.0854,
+          "v": 0,
+          "ch": -0.49
         },
         {
-          "date": "2026-06-12",
-          "Open": 50.689998626708984,
-          "High": 50.689998626708984,
-          "Low": 50.689998626708984,
-          "Close": 50.689998626708984,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-15",
+          "o": 51.335,
+          "h": 51.335,
+          "l": 51.335,
+          "c": 51.335,
+          "a": 51.3352,
+          "v": 0,
+          "ch": 1.28
         },
         {
-          "date": "2026-06-15",
-          "Open": 51.34000015258789,
-          "High": 51.34000015258789,
-          "Low": 51.34000015258789,
-          "Close": 51.34000015258789,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-12",
+          "o": 50.685,
+          "h": 50.685,
+          "l": 50.685,
+          "c": 50.685,
+          "a": 50.6852,
+          "v": 0,
+          "ch": 0.36
         },
         {
-          "date": "2026-06-16",
-          "Open": 51.09000015258789,
-          "High": 51.09000015258789,
-          "Low": 51.09000015258789,
-          "Close": 51.09000015258789,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-11",
+          "o": 50.61,
+          "h": 50.61,
+          "l": 50.503,
+          "c": 50.503,
+          "a": 50.5027,
+          "v": 247,
+          "ch": 1.8
         },
         {
-          "date": "2026-06-17",
-          "Open": 50.529998779296875,
-          "High": 50.529998779296875,
-          "Low": 50.529998779296875,
-          "Close": 50.529998779296875,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-10",
+          "o": 49.61,
+          "h": 49.61,
+          "l": 49.61,
+          "c": 49.61,
+          "a": 49.6102,
+          "v": 55,
+          "ch": -1.31
         },
         {
-          "date": "2026-06-18",
-          "Open": 51.09000015258789,
-          "High": 51.09000015258789,
-          "Low": 51.09000015258789,
-          "Close": 51.09000015258789,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-09",
+          "o": 50.93,
+          "h": 50.93,
+          "l": 49.915,
+          "c": 50.268,
+          "a": 50.2679,
+          "v": 408,
+          "ch": -0.18
         },
         {
-          "date": "2026-06-22",
-          "Open": 50.93000030517578,
-          "High": 50.93000030517578,
-          "Low": 50.93000030517578,
-          "Close": 50.93000030517578,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-08",
+          "o": 50.358,
+          "h": 50.358,
+          "l": 50.358,
+          "c": 50.358,
+          "a": 50.3577,
+          "v": 27,
+          "ch": 0.27
         },
         {
-          "date": "2026-06-23",
-          "Open": 50.369998931884766,
-          "High": 50.369998931884766,
-          "Low": 50.369998931884766,
-          "Close": 50.369998931884766,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-05",
+          "o": 50.6,
+          "h": 50.6,
+          "l": 50.222,
+          "c": 50.222,
+          "a": 50.222,
+          "v": 103,
+          "ch": -2.24
         },
         {
-          "date": "2026-06-24",
-          "Open": 50.2599983215332,
-          "High": 50.2599983215332,
-          "Low": 50.2599983215332,
-          "Close": 50.2599983215332,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-04",
+          "o": 51.24,
+          "h": 51.371,
+          "l": 51.24,
+          "c": 51.371,
+          "a": 51.3706,
+          "v": 934,
+          "ch": 0.23
         },
         {
-          "date": "2026-06-25",
-          "Open": 50.189998626708984,
-          "High": 50.189998626708984,
-          "Low": 50.189998626708984,
-          "Close": 50.189998626708984,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-03",
+          "o": 51.253,
+          "h": 51.253,
+          "l": 51.253,
+          "c": 51.253,
+          "a": 51.2526,
+          "v": 475,
+          "ch": -0.6
         },
         {
-          "date": "2026-06-26",
-          "Open": 50.33000183105469,
-          "High": 50.33000183105469,
-          "Low": 50.33000183105469,
-          "Close": 50.33000183105469,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-02",
+          "o": 51.563,
+          "h": 51.563,
+          "l": 51.563,
+          "c": 51.563,
+          "a": 51.563,
+          "v": 2,
+          "ch": 0.42
         },
         {
-          "date": "2026-06-29",
-          "Open": 50.90999984741211,
-          "High": 50.90999984741211,
-          "Low": 50.90999984741211,
-          "Close": 50.90999984741211,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.45,
+          "l": 51.35,
+          "c": 51.35,
+          "a": 51.3498,
+          "v": 2000,
+          "ch": -0.04
         },
         {
-          "date": "2026-06-30",
-          "Open": 51.380001068115234,
-          "High": 51.380001068115234,
-          "Low": 51.380001068115234,
-          "Close": 51.380001068115234,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-05-29",
+          "o": 51.27,
+          "h": 51.37,
+          "l": 51.27,
+          "c": 51.37,
+          "a": 51.37,
+          "v": 363,
+          "ch": 0.61
+        },
+        {
+          "t": "2026-05-28",
+          "o": 50.85,
+          "h": 51.058,
+          "l": 50.85,
+          "c": 51.058,
+          "a": 51.058,
+          "v": 1132,
+          "ch": 0.28
+        },
+        {
+          "t": "2026-05-27",
+          "o": 50.9,
+          "h": 51.12,
+          "l": 50.89,
+          "c": 50.915,
+          "a": 50.9152,
+          "v": 12562,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-05-26",
+          "o": 50.77,
+          "h": 50.92,
+          "l": 50.76,
+          "c": 50.862,
+          "a": 50.8623,
+          "v": 1220,
+          "ch": 0.86
+        },
+        {
+          "t": "2026-05-22",
+          "o": 50.44,
+          "h": 50.48,
+          "l": 50.43,
+          "c": 50.43,
+          "a": 50.4299,
+          "v": 225,
+          "ch": 0.64
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.545,
+          "h": 51.545,
+          "l": 51.296,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 77,
+          "ch": 0.3
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.908,
+          "h": 51.381,
+          "l": 50.908,
+          "c": 51.14,
+          "a": 51.1402,
+          "v": 41,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.933,
+          "h": 50.933,
+          "l": 50.186,
+          "c": 50.332,
+          "a": 50.332,
+          "v": 118,
+          "ch": -1.48
+        },
+        {
+          "t": "2026-06-15",
+          "o": 51.335,
+          "h": 51.335,
+          "l": 50.531,
+          "c": 51.086,
+          "a": 51.0862,
+          "v": 62,
+          "ch": 0.79
+        },
+        {
+          "t": "2026-06-08",
+          "o": 50.358,
+          "h": 50.93,
+          "l": 49.61,
+          "c": 50.685,
+          "a": 50.6852,
+          "v": 737,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 50.222,
+          "c": 50.222,
+          "a": 50.222,
+          "v": 3514,
+          "ch": -2.23
+        },
+        {
+          "t": "2026-05-26",
+          "o": 50.77,
+          "h": 51.37,
+          "l": 50.76,
+          "c": 51.37,
+          "a": 51.37,
+          "v": 15277,
+          "ch": 1.86
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.545,
+          "l": 51.14,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 92,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 49.61,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 4457,
+          "ch": 0.02
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.545,
+          "h": 51.545,
+          "l": 51.296,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 77,
+          "ch": 0.3
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.908,
+          "h": 51.381,
+          "l": 50.908,
+          "c": 51.14,
+          "a": 51.1402,
+          "v": 41,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.933,
+          "h": 50.933,
+          "l": 50.186,
+          "c": 50.332,
+          "a": 50.332,
+          "v": 118,
+          "ch": -1.48
+        },
+        {
+          "t": "2026-06-15",
+          "o": 51.335,
+          "h": 51.335,
+          "l": 50.531,
+          "c": 51.086,
+          "a": 51.0862,
+          "v": 62,
+          "ch": 0.79
+        },
+        {
+          "t": "2026-06-08",
+          "o": 50.358,
+          "h": 50.93,
+          "l": 49.61,
+          "c": 50.685,
+          "a": 50.6852,
+          "v": 737,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 50.222,
+          "c": 50.222,
+          "a": 50.222,
+          "v": 3514,
+          "ch": -2.23
+        },
+        {
+          "t": "2026-05-26",
+          "o": 50.77,
+          "h": 51.37,
+          "l": 50.76,
+          "c": 51.37,
+          "a": 51.37,
+          "v": 15277,
+          "ch": 1.86
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.545,
+          "l": 51.14,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 92,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 49.61,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 4457,
+          "ch": 0.02
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.545,
+          "l": 51.14,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 92,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 49.61,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 4457,
+          "ch": 0.02
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "PGIM Jennison U.S. Core Equity ",
-        "longName": "PGIM Jennison U.S. Core Equity ETF",
-        "currency": "USD",
-        "exchange": "BTS",
-        "fundFamily": "PGIM",
-        "category": "Large Blend",
-        "legalType": "Exchange Traded Fund",
-        "totalAssets": 7186178,
-        "netAssets": 7186178.0,
-        "navPrice": 51.34387,
-        "beta3Year": 0.0,
-        "netExpenseRatio": 0.19,
-        "previousClose": 51.3809,
-        "fiftyTwoWeekHigh": 51.56,
-        "fiftyTwoWeekLow": 49.61,
-        "fiftyTwoWeekChangePercent": 2.5344253,
-        "averageVolume": 1403,
-        "averageVolume10days": 80
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "exchange": "BTS",
-        "fiftyDayAverage": 50.75370364718967,
-        "lastPrice": 51.3056,
-        "lastVolume": 0.0,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 51.380001068115234,
-        "tenDayAverageVolume": 80.0,
-        "threeMonthAverageVolume": 1403.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 50.75370364718967,
-        "yearChange": 0.025344251492611623,
-        "yearHigh": 51.560001373291016,
-        "yearLow": 49.61000061035156
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "Under normal circumstances, the fund invests at least 80% of its investable assets in equity and equity-related securities of U.S. companies. It primarily invests in equity and equity-related securities which include common and preferred stock, common stock, non-convertible preferred stock, convertible securities, American Depositary Receipts (“ADRs”), warrants, rights, real estate investment trusts (“REITs”), and other similar instruments. The fund is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Large Blend",
-          "family": "PGIM",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "7.93%",
+          "sh": "1,709"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "6.72%",
+          "sh": "2,295"
+        },
+        {
+          "no": 3,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "6.59%",
+          "sh": "1,219"
+        },
+        {
+          "no": 4,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "4.20%",
+          "sh": "716"
+        },
+        {
+          "no": 5,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "3.96%",
+          "sh": "1,085"
+        },
+        {
+          "no": 6,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "3.60%",
+          "sh": "664"
+        },
+        {
+          "no": 7,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "2.63%",
+          "sh": "300"
+        },
+        {
+          "no": 8,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.37%",
+          "sh": "448"
+        },
+        {
+          "no": 9,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "2.17%",
+          "sh": "148"
+        },
+        {
+          "no": 10,
+          "n": "Bank of America Corporation",
+          "s": "$BAC",
+          "as": "2.07%",
+          "sh": "2,349"
+        },
+        {
+          "no": 11,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "2.03%",
+          "sh": "261"
+        },
+        {
+          "no": 12,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "1.95%",
+          "sh": "359"
+        },
+        {
+          "no": 13,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "1.95%",
+          "sh": "107"
+        },
+        {
+          "no": 14,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "1.88%",
+          "sh": "1,112"
+        },
+        {
+          "no": 15,
+          "n": "The PNC Financial Services Group, Inc.",
+          "s": "$PNC",
+          "as": "1.72%",
+          "sh": "460"
+        },
+        {
+          "no": 16,
+          "n": "Parker-Hannifin Corporation",
+          "s": "$PH",
+          "as": "1.69%",
+          "sh": "117"
+        },
+        {
+          "no": 17,
+          "n": "Truist Financial Corporation",
+          "s": "$TFC",
+          "as": "1.64%",
+          "sh": "2,142"
+        },
+        {
+          "no": 18,
+          "n": "M&T Bank Corporation",
+          "s": "$MTB",
+          "as": "1.42%",
+          "sh": "396"
+        },
+        {
+          "no": 19,
+          "n": "Cheniere Energy, Inc.",
+          "s": "$LNG",
+          "as": "1.35%",
+          "sh": "366"
+        },
+        {
+          "no": 20,
+          "n": "Union Pacific Corporation",
+          "s": "$UNP",
+          "as": "1.31%",
+          "sh": "310"
+        },
+        {
+          "no": 21,
+          "n": "JPMorgan Chase & Co.",
+          "s": "$JPM",
+          "as": "1.30%",
+          "sh": "259"
+        },
+        {
+          "no": 22,
+          "n": "Chubb Limited",
+          "s": "$CB",
+          "as": "1.28%",
+          "sh": "235"
+        },
+        {
+          "no": 23,
+          "n": "Shell plc",
+          "s": "$SHEL",
+          "as": "1.25%",
+          "sh": "1,067"
+        },
+        {
+          "no": 24,
+          "n": "Northrop Grumman Corporation",
+          "s": "$NOC",
+          "as": "1.18%",
+          "sh": "143"
+        },
+        {
+          "no": 25,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "1.11%",
+          "sh": "951"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 35.35
+        },
+        {
+          "n": "Financials",
+          "w": 15.33
+        },
+        {
+          "n": "Communication Services",
+          "w": 13.35
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 10.43
+        },
+        {
+          "n": "Industrials",
+          "w": 9.09
+        },
+        {
+          "n": "Healthcare",
+          "w": 6.12
+        },
+        {
+          "n": "Energy",
+          "w": 4.45
+        },
+        {
+          "n": "Utilities",
+          "w": 1.96
+        },
+        {
+          "n": "Real Estate",
+          "w": 1.81
+        },
+        {
+          "n": "Consumer Staples",
+          "w": 1.72
+        },
+        {
+          "n": "Materials",
+          "w": 0.4
+        }
+      ],
+      "countries": null,
+      "news": [
+        {
+          "t": "PGIM Announces Strategic Enhancements to Equity ETF Platform",
+          "u": "https://www.businesswire.com/news/home/20260615232651/en/PGIM-Announces-Strategic-Enhancements-to-Equity-ETF-Platform/",
+          "n": "Business Wire",
+          "d": "23 days ago"
+        }
+      ],
+      "infoBox": "PJUS is an equity ETF with a total of 96 individual holdings. The top holdings are Apple stock at 7.93%, NVIDIA at 6.72%, Alphabet at 6.59%, Microsoft at 4.20%, and Amazon.com at 3.96%.",
+      "infoTable": {
+        "count": 96,
+        "top10": 42.23,
+        "assetClass": "Equity",
+        "aum": 6653400,
+        "peRatio": 24.42634
+      },
+      "date": "Jul 2, 2026",
+      "count": 96
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$6.65M",
+      "expenseRatio": "0.19%",
+      "peRatio": "24.43",
+      "sharesOut": "130,000",
+      "ch1y": null,
+      "holdings": 96,
+      "inception": "May 20, 2026",
+      "chart": {
+        "expiration": null,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "PJUS": 0.0019,
-            "Category Average": 0.0072176997
+            "t": 1783416600
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "PJUS": 0.0,
-            "Category Average": 0.9461
+            "t": 1783416660
           },
           {
-            "_index": "Total Net Assets",
-            "PJUS": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "PJUS": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783416720
           },
           {
-            "_index": "Price/Book",
-            "PJUS": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783416780
           },
           {
-            "_index": "Price/Sales",
-            "PJUS": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783416840
           },
           {
-            "_index": "Price/Cashflow",
-            "PJUS": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783416900
           },
           {
-            "_index": "Median Market Cap",
-            "PJUS": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783416960
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "PJUS": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "PJUS": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783417020
           },
           {
-            "_index": "Maturity",
-            "PJUS": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783417080
           },
           {
-            "_index": "Credit Quality",
-            "PJUS": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783417140
+          },
+          {
+            "t": 1783417200
+          },
+          {
+            "t": 1783417260
+          },
+          {
+            "t": 1783417320
+          },
+          {
+            "t": 1783417380
+          },
+          {
+            "t": 1783417440
+          },
+          {
+            "t": 1783417500
+          },
+          {
+            "c": 51.383,
+            "o": 51.545,
+            "t": 1783417560
+          },
+          {
+            "t": 1783417619
+          },
+          {
+            "t": 1783417679
+          },
+          {
+            "t": 1783417739
+          },
+          {
+            "t": 1783417799
+          },
+          {
+            "t": 1783417859
+          },
+          {
+            "t": 1783417919
+          },
+          {
+            "t": 1783417979
+          },
+          {
+            "t": 1783418039
+          },
+          {
+            "t": 1783418099
+          },
+          {
+            "t": 1783418159
+          },
+          {
+            "t": 1783418219
+          },
+          {
+            "t": 1783418279
+          },
+          {
+            "t": 1783418339
+          },
+          {
+            "t": 1783418399
+          },
+          {
+            "t": 1783418459
+          },
+          {
+            "t": 1783418519
+          },
+          {
+            "t": 1783418579
+          },
+          {
+            "t": 1783418639
+          },
+          {
+            "t": 1783418699
+          },
+          {
+            "t": 1783418759
+          },
+          {
+            "t": 1783418819
+          },
+          {
+            "t": 1783418879
+          },
+          {
+            "t": 1783418939
+          },
+          {
+            "t": 1783418999
+          },
+          {
+            "t": 1783419059
+          },
+          {
+            "t": 1783419119
+          },
+          {
+            "t": 1783419179
+          },
+          {
+            "t": 1783419239
+          },
+          {
+            "t": 1783419299
+          },
+          {
+            "t": 1783419359
+          },
+          {
+            "t": 1783419419
+          },
+          {
+            "t": 1783419479
+          },
+          {
+            "t": 1783419539
+          },
+          {
+            "t": 1783419599
+          },
+          {
+            "t": 1783419659
+          },
+          {
+            "t": 1783419719
+          },
+          {
+            "t": 1783419779
+          },
+          {
+            "t": 1783419839
+          },
+          {
+            "t": 1783419899
+          },
+          {
+            "t": 1783419959
+          },
+          {
+            "t": 1783420019
+          },
+          {
+            "t": 1783420079
+          },
+          {
+            "t": 1783420139
+          },
+          {
+            "t": 1783420199
+          },
+          {
+            "t": 1783420259
+          },
+          {
+            "t": 1783420319
+          },
+          {
+            "t": 1783420379
+          },
+          {
+            "t": 1783420439
+          },
+          {
+            "t": 1783420499
+          },
+          {
+            "t": 1783420559
+          },
+          {
+            "t": 1783420619
+          },
+          {
+            "t": 1783420679
+          },
+          {
+            "t": 1783420739
+          },
+          {
+            "t": 1783420799
+          },
+          {
+            "t": 1783420859
+          },
+          {
+            "t": 1783420919
+          },
+          {
+            "t": 1783420979
+          },
+          {
+            "t": 1783421039
+          },
+          {
+            "t": 1783421099
+          },
+          {
+            "t": 1783421159
+          },
+          {
+            "t": 1783421219
+          },
+          {
+            "t": 1783421279
+          },
+          {
+            "t": 1783421339
+          },
+          {
+            "t": 1783421399
+          },
+          {
+            "t": 1783421459
+          },
+          {
+            "t": 1783421519
+          },
+          {
+            "t": 1783421579
+          },
+          {
+            "t": 1783421639
+          },
+          {
+            "t": 1783421699
+          },
+          {
+            "t": 1783421759
+          },
+          {
+            "t": 1783421819
+          },
+          {
+            "t": 1783421879
+          },
+          {
+            "t": 1783421939
+          },
+          {
+            "t": 1783421999
+          },
+          {
+            "t": 1783422059
+          },
+          {
+            "t": 1783422119
+          },
+          {
+            "t": 1783422179
+          },
+          {
+            "t": 1783422239
+          },
+          {
+            "t": 1783422299
+          },
+          {
+            "t": 1783422359
+          },
+          {
+            "t": 1783422419
+          },
+          {
+            "t": 1783422479
+          },
+          {
+            "t": 1783422539
+          },
+          {
+            "t": 1783422599
+          },
+          {
+            "t": 1783422659
+          },
+          {
+            "t": 1783422719
+          },
+          {
+            "t": 1783422779
+          },
+          {
+            "t": 1783422839
+          },
+          {
+            "t": 1783422899
+          },
+          {
+            "t": 1783422959
+          },
+          {
+            "t": 1783423019
+          },
+          {
+            "t": 1783423079
+          },
+          {
+            "t": 1783423139
+          },
+          {
+            "t": 1783423199
+          },
+          {
+            "t": 1783423259
+          },
+          {
+            "t": 1783423319
+          },
+          {
+            "t": 1783423379
+          },
+          {
+            "t": 1783423439
+          },
+          {
+            "t": 1783423499
+          },
+          {
+            "t": 1783423559
+          },
+          {
+            "t": 1783423619
+          },
+          {
+            "t": 1783423679
+          },
+          {
+            "t": 1783423739
+          },
+          {
+            "t": 1783423799
+          },
+          {
+            "t": 1783423859
+          },
+          {
+            "t": 1783423919
+          },
+          {
+            "t": 1783423979
+          },
+          {
+            "t": 1783424039
+          },
+          {
+            "t": 1783424099
+          },
+          {
+            "t": 1783424159
+          },
+          {
+            "t": 1783424219
+          },
+          {
+            "t": 1783424279
+          },
+          {
+            "t": 1783424339
+          },
+          {
+            "t": 1783424399
+          },
+          {
+            "t": 1783424459
+          },
+          {
+            "t": 1783424519
+          },
+          {
+            "t": 1783424579
+          },
+          {
+            "t": 1783424639
+          },
+          {
+            "t": 1783424699
+          },
+          {
+            "t": 1783424759
+          },
+          {
+            "t": 1783424819
+          },
+          {
+            "t": 1783424879
+          },
+          {
+            "t": 1783424939
+          },
+          {
+            "t": 1783424999
+          },
+          {
+            "t": 1783425059
+          },
+          {
+            "t": 1783425119
+          },
+          {
+            "t": 1783425179
+          },
+          {
+            "t": 1783425239
+          },
+          {
+            "t": 1783425299
+          },
+          {
+            "t": 1783425359
+          },
+          {
+            "t": 1783425419
+          },
+          {
+            "t": 1783425479
+          },
+          {
+            "t": 1783425539
+          },
+          {
+            "t": 1783425599
+          },
+          {
+            "t": 1783425659
+          },
+          {
+            "t": 1783425719
+          },
+          {
+            "t": 1783425779
+          },
+          {
+            "t": 1783425839
+          },
+          {
+            "t": 1783425899
+          },
+          {
+            "t": 1783425959
+          },
+          {
+            "t": 1783426019
+          },
+          {
+            "t": 1783426079
+          },
+          {
+            "t": 1783426139
+          },
+          {
+            "t": 1783426199
+          },
+          {
+            "t": 1783426259
+          },
+          {
+            "t": 1783426319
+          },
+          {
+            "t": 1783426379
+          },
+          {
+            "t": 1783426439
+          },
+          {
+            "t": 1783426499
+          },
+          {
+            "t": 1783426559
+          },
+          {
+            "t": 1783426619
+          },
+          {
+            "t": 1783426679
+          },
+          {
+            "t": 1783426739
+          },
+          {
+            "t": 1783426799
+          },
+          {
+            "t": 1783426859
+          },
+          {
+            "t": 1783426919
+          },
+          {
+            "t": 1783426979
+          },
+          {
+            "t": 1783427039
+          },
+          {
+            "t": 1783427099
+          },
+          {
+            "t": 1783427159
+          },
+          {
+            "t": 1783427219
+          },
+          {
+            "t": 1783427279
+          },
+          {
+            "t": 1783427339
+          },
+          {
+            "t": 1783427399
+          },
+          {
+            "t": 1783427459
+          },
+          {
+            "t": 1783427519
+          },
+          {
+            "t": 1783427579
+          },
+          {
+            "t": 1783427639
+          },
+          {
+            "t": 1783427699
+          },
+          {
+            "t": 1783427759
+          },
+          {
+            "t": 1783427819
+          },
+          {
+            "t": 1783427879
+          },
+          {
+            "t": 1783427939
+          },
+          {
+            "t": 1783427999
+          },
+          {
+            "t": 1783428059
+          },
+          {
+            "t": 1783428119
+          },
+          {
+            "t": 1783428179
+          },
+          {
+            "t": 1783428239
+          },
+          {
+            "t": 1783428299
+          },
+          {
+            "t": 1783428359
+          },
+          {
+            "t": 1783428419
+          },
+          {
+            "t": 1783428479
+          },
+          {
+            "t": 1783428539
+          },
+          {
+            "t": 1783428599
+          },
+          {
+            "t": 1783428659
+          },
+          {
+            "t": 1783428719
+          },
+          {
+            "t": 1783428779
+          },
+          {
+            "t": 1783428839
+          },
+          {
+            "t": 1783428899
+          },
+          {
+            "t": 1783428959
+          },
+          {
+            "t": 1783429019
+          },
+          {
+            "t": 1783429079
+          },
+          {
+            "t": 1783429139
+          },
+          {
+            "t": 1783429199
+          },
+          {
+            "t": 1783429259
+          },
+          {
+            "t": 1783429319
+          },
+          {
+            "t": 1783429379
+          },
+          {
+            "t": 1783429439
+          },
+          {
+            "t": 1783429499
+          },
+          {
+            "t": 1783429559
+          },
+          {
+            "t": 1783429619
+          },
+          {
+            "t": 1783429679
+          },
+          {
+            "t": 1783429739
+          },
+          {
+            "t": 1783429799
+          },
+          {
+            "t": 1783429859
+          },
+          {
+            "t": 1783429919
+          },
+          {
+            "t": 1783429979
+          },
+          {
+            "t": 1783430039
+          },
+          {
+            "t": 1783430099
+          },
+          {
+            "t": 1783430159
+          },
+          {
+            "t": 1783430219
+          },
+          {
+            "t": 1783430279
+          },
+          {
+            "t": 1783430339
+          },
+          {
+            "t": 1783430399
+          },
+          {
+            "t": 1783430459
+          },
+          {
+            "t": 1783430519
+          },
+          {
+            "t": 1783430579
+          },
+          {
+            "t": 1783430639
+          },
+          {
+            "t": 1783430699
+          },
+          {
+            "t": 1783430759
+          },
+          {
+            "t": 1783430819
+          },
+          {
+            "t": 1783430879
+          },
+          {
+            "t": 1783430939
+          },
+          {
+            "t": 1783430999
+          },
+          {
+            "t": 1783431059
+          },
+          {
+            "t": 1783431119
+          },
+          {
+            "t": 1783431179
+          },
+          {
+            "t": 1783431239
+          },
+          {
+            "t": 1783431299
+          },
+          {
+            "t": 1783431359
+          },
+          {
+            "t": 1783431419
+          },
+          {
+            "t": 1783431479
+          },
+          {
+            "t": 1783431539
+          },
+          {
+            "t": 1783431599
+          },
+          {
+            "t": 1783431659
+          },
+          {
+            "t": 1783431719
+          },
+          {
+            "t": 1783431779
+          },
+          {
+            "t": 1783431839
+          },
+          {
+            "t": 1783431899
+          },
+          {
+            "t": 1783431959
+          },
+          {
+            "t": 1783432019
+          },
+          {
+            "t": 1783432079
+          },
+          {
+            "t": 1783432139
+          },
+          {
+            "t": 1783432199
+          },
+          {
+            "t": 1783432259
+          },
+          {
+            "t": 1783432319
+          },
+          {
+            "t": 1783432379
+          },
+          {
+            "t": 1783432439
+          },
+          {
+            "t": 1783432499
+          },
+          {
+            "t": 1783432559
+          },
+          {
+            "t": 1783432619
+          },
+          {
+            "t": 1783432679
+          },
+          {
+            "t": 1783432739
+          },
+          {
+            "t": 1783432799
+          },
+          {
+            "t": 1783432859
+          },
+          {
+            "t": 1783432919
+          },
+          {
+            "t": 1783432979
+          },
+          {
+            "t": 1783433039
+          },
+          {
+            "t": 1783433099
+          },
+          {
+            "t": 1783433159
+          },
+          {
+            "t": 1783433219
+          },
+          {
+            "t": 1783433279
+          },
+          {
+            "t": 1783433339
+          },
+          {
+            "t": 1783433399
+          },
+          {
+            "t": 1783433459
+          },
+          {
+            "t": 1783433519
+          },
+          {
+            "t": 1783433579
+          },
+          {
+            "t": 1783433639
+          },
+          {
+            "t": 1783433699
+          },
+          {
+            "t": 1783433759
+          },
+          {
+            "t": 1783433819
+          },
+          {
+            "t": 1783433879
+          },
+          {
+            "t": 1783433939
+          },
+          {
+            "t": 1783433999
+          },
+          {
+            "t": 1783434059
+          },
+          {
+            "t": 1783434119
+          },
+          {
+            "t": 1783434179
+          },
+          {
+            "t": 1783434239
+          },
+          {
+            "t": 1783434299
+          },
+          {
+            "t": 1783434359
+          },
+          {
+            "t": 1783434419
+          },
+          {
+            "t": 1783434479
+          },
+          {
+            "t": 1783434539
+          },
+          {
+            "t": 1783434599
+          },
+          {
+            "t": 1783434659
+          },
+          {
+            "t": 1783434719
+          },
+          {
+            "t": 1783434779
+          },
+          {
+            "t": 1783434839
+          },
+          {
+            "t": 1783434899
+          },
+          {
+            "t": 1783434959
+          },
+          {
+            "t": 1783435019
+          },
+          {
+            "t": 1783435079
+          },
+          {
+            "t": 1783435139
+          },
+          {
+            "t": 1783435199
+          },
+          {
+            "t": 1783435259
+          },
+          {
+            "t": 1783435319
+          },
+          {
+            "t": 1783435379
+          },
+          {
+            "t": 1783435439
+          },
+          {
+            "t": 1783435499
+          },
+          {
+            "t": 1783435559
+          },
+          {
+            "t": 1783435619
+          },
+          {
+            "t": 1783435679
+          },
+          {
+            "t": 1783435739
+          },
+          {
+            "t": 1783435799
+          },
+          {
+            "t": 1783435859
+          },
+          {
+            "t": 1783435919
+          },
+          {
+            "t": 1783435979
+          },
+          {
+            "t": 1783436039
+          },
+          {
+            "t": 1783436099
+          },
+          {
+            "t": 1783436159
+          },
+          {
+            "t": 1783436219
+          },
+          {
+            "t": 1783436279
+          },
+          {
+            "t": 1783436339
+          },
+          {
+            "t": 1783436399
+          },
+          {
+            "t": 1783436459
+          },
+          {
+            "t": 1783436519
+          },
+          {
+            "t": 1783436579
+          },
+          {
+            "t": 1783436639
+          },
+          {
+            "t": 1783436699
+          },
+          {
+            "t": 1783436759
+          },
+          {
+            "t": 1783436819
+          },
+          {
+            "t": 1783436879
+          },
+          {
+            "t": 1783436939
+          },
+          {
+            "t": 1783436999
+          },
+          {
+            "t": 1783437059
+          },
+          {
+            "t": 1783437119
+          },
+          {
+            "t": 1783437179
+          },
+          {
+            "t": 1783437239
+          },
+          {
+            "t": 1783437299
+          },
+          {
+            "t": 1783437359
+          },
+          {
+            "t": 1783437419
+          },
+          {
+            "t": 1783437479
+          },
+          {
+            "t": 1783437539
+          },
+          {
+            "t": 1783437599
+          },
+          {
+            "t": 1783437659
+          },
+          {
+            "t": 1783437719
+          },
+          {
+            "t": 1783437779
+          },
+          {
+            "t": 1783437839
+          },
+          {
+            "t": 1783437899
+          },
+          {
+            "t": 1783437959
+          },
+          {
+            "t": 1783438019
+          },
+          {
+            "t": 1783438079
+          },
+          {
+            "t": 1783438139
+          },
+          {
+            "t": 1783438199
+          },
+          {
+            "t": 1783438259
+          },
+          {
+            "t": 1783438319
+          },
+          {
+            "t": 1783438379
+          },
+          {
+            "t": 1783438439
+          },
+          {
+            "t": 1783438499
+          },
+          {
+            "t": 1783438559
+          },
+          {
+            "t": 1783438619
+          },
+          {
+            "t": 1783438679
+          },
+          {
+            "t": 1783438739
+          },
+          {
+            "t": 1783438799
+          },
+          {
+            "t": 1783438859
+          },
+          {
+            "t": 1783438919
+          },
+          {
+            "t": 1783438979
+          },
+          {
+            "t": 1783439039
+          },
+          {
+            "t": 1783439099
+          },
+          {
+            "t": 1783439159
+          },
+          {
+            "t": 1783439219
+          },
+          {
+            "t": 1783439279
+          },
+          {
+            "t": 1783439339
+          },
+          {
+            "t": 1783439399
+          },
+          {
+            "t": 1783439459
+          },
+          {
+            "t": 1783439519
+          },
+          {
+            "t": 1783439579
+          },
+          {
+            "t": 1783439639
+          },
+          {
+            "t": 1783439699
+          },
+          {
+            "t": 1783439759
+          },
+          {
+            "t": 1783439819
+          },
+          {
+            "t": 1783439879
+          },
+          {
+            "t": 1783439939
+          },
+          {
+            "t": 1783439999
+          },
+          {
+            "t": 1783440000
           }
         ]
       },
-      "history_1y": [
+      "description": "The PGIM Jennison U.S. Core Equity ETF (PJUS) is an exchange-traded fund that mostly invests in total market equity. The fund is an actively managed US equity ETF that seeks long-term capital appreciation through a risk-managed portfolio of US companies selected using proprietary fundamental research and portfolio construction techniques. PJUS was launched on May 20, 2026 and is issued by PGIM.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "PJUS"
+        ],
+        [
+          "Provider",
+          "PGIM"
+        ]
+      ],
+      "etf_website": "https://www.pgim.com/us/en/individual/investment-capabilities/products/etf/pgim-jennison-us-core-equity-etf",
+      "provider_page": "pgim",
+      "holdingsTable": {
+        "count": 96,
+        "updated": "Jul 2, 2026",
+        "top10": 42.23,
+        "holdings": [
+          {
+            "n": "Apple Inc.",
+            "s": "$AAPL",
+            "as": "7.93%",
+            "sh": "1,709"
+          },
+          {
+            "n": "NVIDIA Corporation",
+            "s": "$NVDA",
+            "as": "6.72%",
+            "sh": "2,295"
+          },
+          {
+            "n": "Alphabet Inc.",
+            "s": "$GOOGL",
+            "as": "6.59%",
+            "sh": "1,219"
+          },
+          {
+            "n": "Microsoft Corporation",
+            "s": "$MSFT",
+            "as": "4.20%",
+            "sh": "716"
+          },
+          {
+            "n": "Amazon.com, Inc.",
+            "s": "$AMZN",
+            "as": "3.96%",
+            "sh": "1,085"
+          },
+          {
+            "n": "Broadcom Inc.",
+            "s": "$AVGO",
+            "as": "3.60%",
+            "sh": "664"
+          },
+          {
+            "n": "Meta Platforms, Inc.",
+            "s": "$META",
+            "as": "2.63%",
+            "sh": "300"
+          },
+          {
+            "n": "Lam Research Corporation",
+            "s": "$LRCX",
+            "as": "2.37%",
+            "sh": "448"
+          },
+          {
+            "n": "Micron Technology, Inc.",
+            "s": "$MU",
+            "as": "2.17%",
+            "sh": "148"
+          },
+          {
+            "n": "Bank of America Corporation",
+            "s": "$BAC",
+            "as": "2.07%",
+            "sh": "2,349"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783596814741",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260615232651/en/PGIM-Announces-Strategic-Enhancements-to-Equity-ETF-Platform/",
+            "img": "https://cdn.snapi.dev/images/v1/p/t/e/press12-3753483.jpg",
+            "title": "PGIM Announces Strategic Enhancements to Equity ETF Platform",
+            "text": "NEWARK, N.J.--(BUSINESS WIRE)--Enhancements organize equity ETF lineup around core and focused strategies.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "$PRU",
+              "#PJBF",
+              "#PJFV",
+              "#PJIO"
+            ],
+            "time": "Jun 15, 2026, 6:45 AM EDT",
+            "ago": "23 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 51.306,
+        "price1m": 50.222,
+        "priceMAX": 50.11
+      },
+      "performance": {
+        "tr1m": 2.139
+      }
+    },
+    "quote": {
+      "p": 51.296,
+      "pd": 51.3,
+      "c": -0.08,
+      "cp": -0.16,
+      "cl": 51.38,
+      "cdr": -1,
+      "o": 51.3,
+      "h": 51.3,
+      "l": 51.3,
+      "v": 20,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 51.563,
+      "l52": 49.61,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1783555207116.9036,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783589016803,
+      "symbol": "PJUS",
+      "uid": "PJUS"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 51.306,
+        "h": 51.545,
+        "l": 51.14,
+        "c": 51.296,
+        "a": 51.296,
+        "v": 92,
+        "ch": -0.17
+      },
+      {
+        "t": "2026-06-01",
+        "o": 51.4,
+        "h": 51.563,
+        "l": 49.61,
+        "c": 51.381,
+        "a": 51.3809,
+        "v": 4457,
+        "ch": 0.02
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-05-21",
-          "Open": 49.970001220703125,
-          "High": 50.150001525878906,
-          "Low": 49.970001220703125,
-          "Close": 50.11000061035156,
-          "Volume": 17200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-08",
+          "o": 51.296,
+          "h": 51.296,
+          "l": 51.296,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 20,
+          "ch": -0.17
         },
         {
-          "date": "2026-05-22",
-          "Open": 50.439998626708984,
-          "High": 50.47999954223633,
-          "Low": 50.43000030517578,
-          "Close": 50.43000030517578,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 51.383,
+          "h": 51.383,
+          "l": 51.383,
+          "c": 51.383,
+          "a": 51.3831,
+          "v": 7,
+          "ch": -0.31
         },
         {
-          "date": "2026-05-26",
-          "Open": 50.77000045776367,
-          "High": 50.91999816894531,
-          "Low": 50.7599983215332,
-          "Close": 50.86000061035156,
-          "Volume": 1200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 51.545,
+          "h": 51.545,
+          "l": 51.545,
+          "c": 51.545,
+          "a": 51.5452,
+          "v": 50,
+          "ch": 0.79
         },
         {
-          "date": "2026-05-27",
-          "Open": 50.900001525878906,
-          "High": 51.119998931884766,
-          "Low": 50.88999938964844,
-          "Close": 50.91999816894531,
-          "Volume": 12600.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 51.14,
+          "h": 51.14,
+          "l": 51.14,
+          "c": 51.14,
+          "a": 51.1402,
+          "v": 7,
+          "ch": -0.32
         },
         {
-          "date": "2026-05-28",
-          "Open": 50.849998474121094,
-          "High": 51.060001373291016,
-          "Low": 50.849998474121094,
-          "Close": 51.060001373291016,
-          "Volume": 1100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.306,
+          "l": 51.306,
+          "c": 51.306,
+          "a": 51.3056,
+          "v": 8,
+          "ch": -0.15
         },
         {
-          "date": "2026-05-29",
-          "Open": 51.27000045776367,
-          "High": 51.369998931884766,
-          "Low": 51.27000045776367,
-          "Close": 51.369998931884766,
-          "Volume": 400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-30",
+          "o": 51.381,
+          "h": 51.381,
+          "l": 51.381,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 7,
+          "ch": 0.93
         },
         {
-          "date": "2026-06-01",
-          "Open": 51.400001525878906,
-          "High": 51.45000076293945,
-          "Low": 51.349998474121094,
-          "Close": 51.349998474121094,
-          "Volume": 2000.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-29",
+          "o": 50.908,
+          "h": 50.908,
+          "l": 50.908,
+          "c": 50.908,
+          "a": 50.9084,
+          "v": 19,
+          "ch": 1.15
         },
         {
-          "date": "2026-06-02",
-          "Open": 51.560001373291016,
-          "High": 51.560001373291016,
-          "Low": 51.560001373291016,
-          "Close": 51.560001373291016,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-26",
+          "o": 50.332,
+          "h": 50.332,
+          "l": 50.332,
+          "c": 50.332,
+          "a": 50.332,
+          "v": 4,
+          "ch": 0.29
         },
         {
-          "date": "2026-06-03",
-          "Open": 51.25,
-          "High": 51.25,
-          "Low": 51.25,
-          "Close": 51.25,
-          "Volume": 500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-25",
+          "o": 50.186,
+          "h": 50.186,
+          "l": 50.186,
+          "c": 50.186,
+          "a": 50.1864,
+          "v": 101,
+          "ch": -0.15
         },
         {
-          "date": "2026-06-04",
-          "Open": 51.2400016784668,
-          "High": 51.369998931884766,
-          "Low": 51.2400016784668,
-          "Close": 51.369998931884766,
-          "Volume": 900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-24",
+          "o": 50.261,
+          "h": 50.261,
+          "l": 50.261,
+          "c": 50.261,
+          "a": 50.2606,
+          "v": 1,
+          "ch": -0.21
         },
         {
-          "date": "2026-06-05",
-          "Open": 50.599998474121094,
-          "High": 50.599998474121094,
-          "Low": 50.220001220703125,
-          "Close": 50.220001220703125,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-23",
+          "o": 50.367,
+          "h": 50.367,
+          "l": 50.367,
+          "c": 50.367,
+          "a": 50.3668,
+          "v": 0,
+          "ch": -1.11
         },
         {
-          "date": "2026-06-08",
-          "Open": 50.36000061035156,
-          "High": 50.36000061035156,
-          "Low": 50.36000061035156,
-          "Close": 50.36000061035156,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-22",
+          "o": 50.933,
+          "h": 50.933,
+          "l": 50.933,
+          "c": 50.933,
+          "a": 50.9331,
+          "v": 12,
+          "ch": -0.3
         },
         {
-          "date": "2026-06-09",
-          "Open": 50.93000030517578,
-          "High": 50.93000030517578,
-          "Low": 49.91999816894531,
-          "Close": 50.27000045776367,
-          "Volume": 400.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-18",
+          "o": 51.086,
+          "h": 51.086,
+          "l": 51.086,
+          "c": 51.086,
+          "a": 51.0862,
+          "v": 10,
+          "ch": 1.1
         },
         {
-          "date": "2026-06-10",
-          "Open": 49.61000061035156,
-          "High": 49.61000061035156,
-          "Low": 49.61000061035156,
-          "Close": 49.61000061035156,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-17",
+          "o": 50.531,
+          "h": 50.531,
+          "l": 50.531,
+          "c": 50.531,
+          "a": 50.5314,
+          "v": 52,
+          "ch": -1.08
         },
         {
-          "date": "2026-06-11",
-          "Open": 50.61000061035156,
-          "High": 50.61000061035156,
-          "Low": 50.5,
-          "Close": 50.5,
-          "Volume": 200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-16",
+          "o": 51.085,
+          "h": 51.085,
+          "l": 51.085,
+          "c": 51.085,
+          "a": 51.0854,
+          "v": 0,
+          "ch": -0.49
         },
         {
-          "date": "2026-06-12",
-          "Open": 50.689998626708984,
-          "High": 50.689998626708984,
-          "Low": 50.689998626708984,
-          "Close": 50.689998626708984,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-15",
+          "o": 51.335,
+          "h": 51.335,
+          "l": 51.335,
+          "c": 51.335,
+          "a": 51.3352,
+          "v": 0,
+          "ch": 1.28
         },
         {
-          "date": "2026-06-15",
-          "Open": 51.34000015258789,
-          "High": 51.34000015258789,
-          "Low": 51.34000015258789,
-          "Close": 51.34000015258789,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-12",
+          "o": 50.685,
+          "h": 50.685,
+          "l": 50.685,
+          "c": 50.685,
+          "a": 50.6852,
+          "v": 0,
+          "ch": 0.36
         },
         {
-          "date": "2026-06-16",
-          "Open": 51.09000015258789,
-          "High": 51.09000015258789,
-          "Low": 51.09000015258789,
-          "Close": 51.09000015258789,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-11",
+          "o": 50.61,
+          "h": 50.61,
+          "l": 50.503,
+          "c": 50.503,
+          "a": 50.5027,
+          "v": 247,
+          "ch": 1.8
         },
         {
-          "date": "2026-06-17",
-          "Open": 50.529998779296875,
-          "High": 50.529998779296875,
-          "Low": 50.529998779296875,
-          "Close": 50.529998779296875,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-10",
+          "o": 49.61,
+          "h": 49.61,
+          "l": 49.61,
+          "c": 49.61,
+          "a": 49.6102,
+          "v": 55,
+          "ch": -1.31
         },
         {
-          "date": "2026-06-18",
-          "Open": 51.09000015258789,
-          "High": 51.09000015258789,
-          "Low": 51.09000015258789,
-          "Close": 51.09000015258789,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-09",
+          "o": 50.93,
+          "h": 50.93,
+          "l": 49.915,
+          "c": 50.268,
+          "a": 50.2679,
+          "v": 408,
+          "ch": -0.18
         },
         {
-          "date": "2026-06-22",
-          "Open": 50.93000030517578,
-          "High": 50.93000030517578,
-          "Low": 50.93000030517578,
-          "Close": 50.93000030517578,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-08",
+          "o": 50.358,
+          "h": 50.358,
+          "l": 50.358,
+          "c": 50.358,
+          "a": 50.3577,
+          "v": 27,
+          "ch": 0.27
         },
         {
-          "date": "2026-06-23",
-          "Open": 50.369998931884766,
-          "High": 50.369998931884766,
-          "Low": 50.369998931884766,
-          "Close": 50.369998931884766,
-          "Volume": 0.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-05",
+          "o": 50.6,
+          "h": 50.6,
+          "l": 50.222,
+          "c": 50.222,
+          "a": 50.222,
+          "v": 103,
+          "ch": -2.24
         },
         {
-          "date": "2026-06-24",
-          "Open": 50.2599983215332,
-          "High": 50.2599983215332,
-          "Low": 50.2599983215332,
-          "Close": 50.2599983215332,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-04",
+          "o": 51.24,
+          "h": 51.371,
+          "l": 51.24,
+          "c": 51.371,
+          "a": 51.3706,
+          "v": 934,
+          "ch": 0.23
         },
         {
-          "date": "2026-06-25",
-          "Open": 50.189998626708984,
-          "High": 50.189998626708984,
-          "Low": 50.189998626708984,
-          "Close": 50.189998626708984,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-03",
+          "o": 51.253,
+          "h": 51.253,
+          "l": 51.253,
+          "c": 51.253,
+          "a": 51.2526,
+          "v": 475,
+          "ch": -0.6
         },
         {
-          "date": "2026-06-26",
-          "Open": 50.33000183105469,
-          "High": 50.33000183105469,
-          "Low": 50.33000183105469,
-          "Close": 50.33000183105469,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-02",
+          "o": 51.563,
+          "h": 51.563,
+          "l": 51.563,
+          "c": 51.563,
+          "a": 51.563,
+          "v": 2,
+          "ch": 0.42
         },
         {
-          "date": "2026-06-29",
-          "Open": 50.90999984741211,
-          "High": 50.90999984741211,
-          "Low": 50.90999984741211,
-          "Close": 50.90999984741211,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.45,
+          "l": 51.35,
+          "c": 51.35,
+          "a": 51.3498,
+          "v": 2000,
+          "ch": -0.04
         },
         {
-          "date": "2026-06-30",
-          "Open": 51.380001068115234,
-          "High": 51.380001068115234,
-          "Low": 51.380001068115234,
-          "Close": 51.380001068115234,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-05-29",
+          "o": 51.27,
+          "h": 51.37,
+          "l": 51.27,
+          "c": 51.37,
+          "a": 51.37,
+          "v": 363,
+          "ch": 0.61
+        },
+        {
+          "t": "2026-05-28",
+          "o": 50.85,
+          "h": 51.058,
+          "l": 50.85,
+          "c": 51.058,
+          "a": 51.058,
+          "v": 1132,
+          "ch": 0.28
+        },
+        {
+          "t": "2026-05-27",
+          "o": 50.9,
+          "h": 51.12,
+          "l": 50.89,
+          "c": 50.915,
+          "a": 50.9152,
+          "v": 12562,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-05-26",
+          "o": 50.77,
+          "h": 50.92,
+          "l": 50.76,
+          "c": 50.862,
+          "a": 50.8623,
+          "v": 1220,
+          "ch": 0.86
+        },
+        {
+          "t": "2026-05-22",
+          "o": 50.44,
+          "h": 50.48,
+          "l": 50.43,
+          "c": 50.43,
+          "a": 50.4299,
+          "v": 225,
+          "ch": 0.64
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.545,
+          "h": 51.545,
+          "l": 51.296,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 77,
+          "ch": 0.3
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.908,
+          "h": 51.381,
+          "l": 50.908,
+          "c": 51.14,
+          "a": 51.1402,
+          "v": 41,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.933,
+          "h": 50.933,
+          "l": 50.186,
+          "c": 50.332,
+          "a": 50.332,
+          "v": 118,
+          "ch": -1.48
+        },
+        {
+          "t": "2026-06-15",
+          "o": 51.335,
+          "h": 51.335,
+          "l": 50.531,
+          "c": 51.086,
+          "a": 51.0862,
+          "v": 62,
+          "ch": 0.79
+        },
+        {
+          "t": "2026-06-08",
+          "o": 50.358,
+          "h": 50.93,
+          "l": 49.61,
+          "c": 50.685,
+          "a": 50.6852,
+          "v": 737,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 50.222,
+          "c": 50.222,
+          "a": 50.222,
+          "v": 3514,
+          "ch": -2.23
+        },
+        {
+          "t": "2026-05-26",
+          "o": 50.77,
+          "h": 51.37,
+          "l": 50.76,
+          "c": 51.37,
+          "a": 51.37,
+          "v": 15277,
+          "ch": 1.86
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.545,
+          "l": 51.14,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 92,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 49.61,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 4457,
+          "ch": 0.02
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 51.545,
+          "h": 51.545,
+          "l": 51.296,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 77,
+          "ch": 0.3
+        },
+        {
+          "t": "2026-06-29",
+          "o": 50.908,
+          "h": 51.381,
+          "l": 50.908,
+          "c": 51.14,
+          "a": 51.1402,
+          "v": 41,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-06-22",
+          "o": 50.933,
+          "h": 50.933,
+          "l": 50.186,
+          "c": 50.332,
+          "a": 50.332,
+          "v": 118,
+          "ch": -1.48
+        },
+        {
+          "t": "2026-06-15",
+          "o": 51.335,
+          "h": 51.335,
+          "l": 50.531,
+          "c": 51.086,
+          "a": 51.0862,
+          "v": 62,
+          "ch": 0.79
+        },
+        {
+          "t": "2026-06-08",
+          "o": 50.358,
+          "h": 50.93,
+          "l": 49.61,
+          "c": 50.685,
+          "a": 50.6852,
+          "v": 737,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 50.222,
+          "c": 50.222,
+          "a": 50.222,
+          "v": 3514,
+          "ch": -2.23
+        },
+        {
+          "t": "2026-05-26",
+          "o": 50.77,
+          "h": 51.37,
+          "l": 50.76,
+          "c": 51.37,
+          "a": 51.37,
+          "v": 15277,
+          "ch": 1.86
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.545,
+          "l": 51.14,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 92,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 49.61,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 4457,
+          "ch": 0.02
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 51.306,
+          "h": 51.545,
+          "l": 51.14,
+          "c": 51.296,
+          "a": 51.296,
+          "v": 92,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-06-01",
+          "o": 51.4,
+          "h": 51.563,
+          "l": 49.61,
+          "c": 51.381,
+          "a": 51.3809,
+          "v": 4457,
+          "ch": 0.02
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

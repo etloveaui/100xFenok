@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SCJN",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Corgi ETF Trust I - Corgi U.S. Small-Cap 15% Structured Buffer ETF - June Series",
     "exchange": "BTS",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 25.6175,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 25.3336,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:00:05Z",
+      "fetched_at": "2026-07-09T09:24:09Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 25.6175,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.3336,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:00:05Z",
+          "fetched_at": "2026-07-09T09:24:09Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 25.6108,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.33,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:00:05Z",
+          "fetched_at": "2026-07-09T09:24:09Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.006699999999998596,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.14,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:00:05Z",
+      "fetched_at": "2026-07-09T09:24:09Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": 0.006699999999998596,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.14,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:00:05Z",
+          "fetched_at": "2026-07-09T09:24:09Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.026160838396296075,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.54,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:00:05Z",
+      "fetched_at": "2026-07-09T09:24:09Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,33 +103,81 @@
       ],
       "candidates": [
         {
-          "value": 0.026160838396296075,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.54,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:00:05Z",
+          "fetched_at": "2026-07-09T09:24:09Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "return_3m": {
-      "value": 0.5496713811203933,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-07-02T00:00:05Z",
-      "confidence": "derived",
-      "unit": "percent_points",
+    "total_assets": {
+      "value": 1030000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:24:09Z",
+      "confidence": "observed",
       "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
-          "value": 0.5496713811203933,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-07-02T00:00:05Z",
-          "confidence": "derived",
+          "value": 1030000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:24:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.3,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:24:09Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.3,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:24:09Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1m": {
+      "value": 2.388,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:24:09Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 2.388,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:24:09Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -197,9 +245,110 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-07-02T00:00:05Z",
-    "top_holdings": [],
+    "holdings_count": 8,
+    "holdings_updated": "Jul 2, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Iwm 05/28/2027 57.79 C",
+        "weight_pct": 156.39,
+        "shares": 34,
+        "raw": {
+          "no": 1,
+          "n": "Iwm 05/28/2027 57.79 C",
+          "as": "156.39%",
+          "sh": "34"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "T.0.5 05.31.27",
+        "name": "United States Treasury Notes 0.5%",
+        "weight_pct": 17.72,
+        "shares": 187000,
+        "raw": {
+          "no": 2,
+          "n": "United States Treasury Notes 0.5%",
+          "s": "T.0.5 05.31.27",
+          "as": "17.72%",
+          "sh": "187,000"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Iwm 05/28/2027 288.95 P",
+        "weight_pct": 13.15,
+        "shares": 34,
+        "raw": {
+          "no": 3,
+          "n": "Iwm 05/28/2027 288.95 P",
+          "as": "13.15%",
+          "sh": "34"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 2.34,
+        "shares": 23913,
+        "raw": {
+          "no": 4,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "2.34%",
+          "sh": "23,913"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.02,
+        "shares": 171,
+        "raw": {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.02%",
+          "sh": "171"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Iwm 05/28/2027 245.61 P",
+        "weight_pct": -5.46,
+        "shares": 34,
+        "raw": {
+          "no": 6,
+          "n": "Iwm 05/28/2027 245.61 P",
+          "as": "-5.46%",
+          "sh": "34"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Iwm 05/28/2027 345.56 C",
+        "weight_pct": -6.35,
+        "shares": 34,
+        "raw": {
+          "no": 7,
+          "n": "Iwm 05/28/2027 345.56 C",
+          "as": "-6.35%",
+          "sh": "34"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "Cash Offset",
+        "weight_pct": -77.77,
+        "shares": 795229,
+        "raw": {
+          "no": 8,
+          "n": "Cash Offset",
+          "as": "-77.77%",
+          "sh": "795,229"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
@@ -209,23 +358,23 @@
       "is_inverse": false,
       "is_single_stock": false,
       "underlying": null,
-      "source": "stockanalysis.etf_list.name",
-      "confidence": "low"
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
     },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/SCJN.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/SCJN.json",
+    "stockanalysis": "stockanalysis/etfs/SCJN.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

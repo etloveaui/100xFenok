@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "UUPP",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Principal CLO ETF",
     "exchange": "BTS",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 25.085,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 25.105,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:00Z",
+      "fetched_at": "2026-07-09T09:25:15Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 25.085,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.105,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
+          "fetched_at": "2026-07-09T09:25:15Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 25.082,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.11,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
+          "fetched_at": "2026-07-09T09:25:15Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.0030000000000001137,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:00Z",
+      "fetched_at": "2026-07-09T09:25:15Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": 0.0030000000000001137,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 0,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
+          "fetched_at": "2026-07-09T09:25:15Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.011960768678734206,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0.02,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:00Z",
+      "fetched_at": "2026-07-09T09:25:15Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,10 @@
       ],
       "candidates": [
         {
-          "value": 0.011960768678734206,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 0.02,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
+          "fetched_at": "2026-07-09T09:25:15Z",
           "confidence": "observed"
         }
       ],
@@ -132,33 +132,36 @@
           "confidence": "observed"
         },
         {
-          "value": 15052107.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 15050000.0,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
+          "fetched_at": "2026-07-09T09:25:15Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
+    "dividend_yield": {
+      "value": 0.49,
+      "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:00Z",
+      "fetched_at": "2026-07-09T09:25:15Z",
       "confidence": "observed",
+      "unit": "percent_points",
       "policy": [
         "yf",
         "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
       ],
       "candidates": [
         {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 0.49,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
-          "confidence": "observed"
+          "fetched_at": "2026-07-09T09:25:15Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -186,9 +189,9 @@
         },
         {
           "value": 0.19,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:00Z",
+          "fetched_at": "2026-07-09T09:25:15Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -216,32 +219,17 @@
           "fetched_at": "2026-07-02T00:01:00Z",
           "confidence": "derived",
           "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_3m": {
-      "value": 0.07939082965877844,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-07-02T00:01:00Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
+        },
         {
-          "value": 0.07939082965877844,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-07-02T00:01:00Z",
-          "confidence": "derived",
+          "value": 0.3904,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:25:15Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": 0.5985619382559421,
@@ -305,17 +293,361 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-07-02T00:01:00Z",
-    "top_holdings": [],
-    "asset_allocation": {
-      "cashPosition": 0.1649,
-      "stockPosition": 0.0,
-      "bondPosition": 0.8351,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
+    "holdings_count": 29,
+    "holdings_updated": "Jul 3, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "APID.2023-46A A2R",
+        "name": "APIDOS CLO XLVI LTD 5.06709%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 1,
+          "n": "APIDOS CLO XLVI LTD 5.06709%",
+          "s": "APID.2023-46A A2R",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "BRTPT.2024-3A A1R",
+        "name": "Brant Point CLO 2024-3 Ltd. / Brant Point CLO 2024-3 LLC 4.84989%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 2,
+          "n": "Brant Point CLO 2024-3 Ltd. / Brant Point CLO 2024-3 LLC 4.84989%",
+          "s": "BRTPT.2024-3A A1R",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "ARES.2020-57A A1R2",
+        "name": "ARES LVII CLO LTD 4.89659%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 3,
+          "n": "ARES LVII CLO LTD 4.89659%",
+          "s": "ARES.2020-57A A1R2",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "MDPK.2021-38A A2R",
+        "name": "MADISON PARK FUNDING LTD 21-38A 5.13038%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 4,
+          "n": "MADISON PARK FUNDING LTD 21-38A 5.13038%",
+          "s": "MDPK.2021-38A A2R",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "ELM16.2022-3A ARR",
+        "name": "Elmwood Clo 16 Ltd. 4.78523%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 5,
+          "n": "Elmwood Clo 16 Ltd. 4.78523%",
+          "s": "ELM16.2022-3A ARR",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "BRTPT.2024-5A A2",
+        "name": "Sound Point Clo 40 Ltd. 5.17523%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 6,
+          "n": "Sound Point Clo 40 Ltd. 5.17523%",
+          "s": "BRTPT.2024-5A A2",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "VENTR.2023-47A A1RR",
+        "name": "VENTURE CLO LTD 2023-47 4.94747%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 7,
+          "n": "VENTURE CLO LTD 2023-47 4.94747%",
+          "s": "VENTR.2023-47A A1RR",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "KKR.37A AR",
+        "name": "KKR CLO 37 LTD/LLC 4.84523%",
+        "weight_pct": 4.68,
+        "shares": 700000,
+        "raw": {
+          "no": 8,
+          "n": "KKR CLO 37 LTD/LLC 4.84523%",
+          "s": "KKR.37A AR",
+          "as": "4.68%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "RIN.2023-2A A1R",
+        "name": "Rin V LLC 5.00895%",
+        "weight_pct": 4.67,
+        "shares": 700000,
+        "raw": {
+          "no": 9,
+          "n": "Rin V LLC 5.00895%",
+          "s": "RIN.2023-2A A1R",
+          "as": "4.67%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "C4US.2022-2A A2R",
+        "name": "CAPITAL FOUR US CLO III LTD 5.09214%",
+        "weight_pct": 4.67,
+        "shares": 700000,
+        "raw": {
+          "no": 10,
+          "n": "CAPITAL FOUR US CLO III LTD 5.09214%",
+          "s": "C4US.2022-2A A2R",
+          "as": "4.67%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "ANCHC.2016-8A A1R3",
+        "name": "Anchorage Capital CLO 2012-1 Ltd. 4.95659%",
+        "weight_pct": 4.35,
+        "shares": 650000,
+        "raw": {
+          "no": 11,
+          "n": "Anchorage Capital CLO 2012-1 Ltd. 4.95659%",
+          "s": "ANCHC.2016-8A A1R3",
+          "as": "4.35%",
+          "sh": "650,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "B.0 07.14.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 4.34,
+        "shares": 650000,
+        "raw": {
+          "no": 12,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 07.14.26",
+          "as": "4.34%",
+          "sh": "650,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "TCW.2025-1A A",
+        "name": "TCW CLO 2025-1 LTD 4.86523%",
+        "weight_pct": 4.01,
+        "shares": 600000,
+        "raw": {
+          "no": 13,
+          "n": "TCW CLO 2025-1 LTD 4.86523%",
+          "s": "TCW.2025-1A A",
+          "as": "4.01%",
+          "sh": "600,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "ALC.2026-3A A1",
+        "name": "ABRY LIQUID CREDIT CLO 2026-3 LTD 4.90179%",
+        "weight_pct": 3.87,
+        "shares": 580000,
+        "raw": {
+          "no": 14,
+          "n": "ABRY LIQUID CREDIT CLO 2026-3 LTD 4.90179%",
+          "s": "ALC.2026-3A A1",
+          "as": "3.87%",
+          "sh": "580,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "BRTPT.2025-7A A1",
+        "name": "BRANT PT CLO 2025-7 LTD /LLC 5.04659%",
+        "weight_pct": 3.35,
+        "shares": 500000,
+        "raw": {
+          "no": 15,
+          "n": "BRANT PT CLO 2025-7 LTD /LLC 5.04659%",
+          "s": "BRTPT.2025-7A A1",
+          "as": "3.35%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "EMPWR.2024-1A A1R",
+        "name": "EMPOWER CLO 2024-1 LTD 4.93408%",
+        "weight_pct": 3.35,
+        "shares": 500000,
+        "raw": {
+          "no": 16,
+          "n": "EMPOWER CLO 2024-1 LTD 4.93408%",
+          "s": "EMPWR.2024-1A A1R",
+          "as": "3.35%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "GLM.2022-15A AJR",
+        "name": "GOLDENTREE LN MGMT US 2022-15 5.10523%",
+        "weight_pct": 3.35,
+        "shares": 500000,
+        "raw": {
+          "no": 17,
+          "n": "GOLDENTREE LN MGMT US 2022-15 5.10523%",
+          "s": "GLM.2022-15A AJR",
+          "as": "3.35%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "MDPK.2026-77A A1",
+        "name": "MADISON PARK FUNDING LXXVII LTD 4.91242%",
+        "weight_pct": 3.34,
+        "shares": 500000,
+        "raw": {
+          "no": 18,
+          "n": "MADISON PARK FUNDING LXXVII LTD 4.91242%",
+          "s": "MDPK.2026-77A A1",
+          "as": "3.34%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "WELF.2021-2A A1R",
+        "name": "WELLFLEET CLO LTD 2021-2 4.8231%",
+        "weight_pct": 3.34,
+        "shares": 500000,
+        "raw": {
+          "no": 19,
+          "n": "WELLFLEET CLO LTD 2021-2 4.8231%",
+          "s": "WELF.2021-2A A1R",
+          "as": "3.34%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "MAGNE.2023-34A A1R",
+        "name": "Magnetite XXXIV Ltd. 4.8131%",
+        "weight_pct": 3.34,
+        "shares": 500000,
+        "raw": {
+          "no": 20,
+          "n": "Magnetite XXXIV Ltd. 4.8131%",
+          "s": "MAGNE.2023-34A A1R",
+          "as": "3.34%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "GCBSL.2024-76A A1",
+        "name": "Golub Capital Partners Clo 76 B Ltd./Golub Capital Partners Clo 76 B LLC 5.",
+        "weight_pct": 2.64,
+        "shares": 394857,
+        "raw": {
+          "no": 21,
+          "n": "Golub Capital Partners Clo 76 B Ltd./Golub Capital Partners Clo 76 B LLC 5.",
+          "s": "GCBSL.2024-76A A1",
+          "as": "2.64%",
+          "sh": "394,857"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "MDPK.2022-55A A1R",
+        "name": "Madison Park Funding LV Ltd / Madison Park Funding LV LLC 5.03523%",
+        "weight_pct": 2.47,
+        "shares": 370000,
+        "raw": {
+          "no": 22,
+          "n": "Madison Park Funding LV Ltd / Madison Park Funding LV LLC 5.03523%",
+          "s": "MDPK.2022-55A A1R",
+          "as": "2.47%",
+          "sh": "370,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "WDMNT.2023-12A A1R",
+        "name": "Woodmont 2023-12 LP 5.06659%",
+        "weight_pct": 2.23,
+        "shares": 333725,
+        "raw": {
+          "no": 23,
+          "n": "Woodmont 2023-12 LP 5.06659%",
+          "s": "WDMNT.2023-12A A1R",
+          "as": "2.23%",
+          "sh": "333,725"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "STCP.2025-6A A1",
+        "name": "SYCAMORE TREE CLO 2025-6 LTD 4.87523%",
+        "weight_pct": 1.94,
+        "shares": 290000,
+        "raw": {
+          "no": 24,
+          "n": "SYCAMORE TREE CLO 2025-6 LTD 4.87523%",
+          "s": "STCP.2025-6A A1",
+          "as": "1.94%",
+          "sh": "290,000"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "PARPK.2021-1A AR",
+        "name": "Point Au Roche Park Clo Ltd. 4.84523%",
+        "weight_pct": 1.74,
+        "shares": 260000,
+        "raw": {
+          "no": 25,
+          "n": "Point Au Roche Park Clo Ltd. 4.84523%",
+          "s": "PARPK.2021-1A AR",
+          "as": "1.74%",
+          "sh": "260,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
     "classification": {
@@ -332,15 +664,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/UUPP.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/UUPP.json",
+    "stockanalysis": "stockanalysis/etfs/UUPP.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

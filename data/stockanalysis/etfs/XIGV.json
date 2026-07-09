@@ -1,19 +1,425 @@
 {
   "schema_version": "stockanalysis/v1",
-  "source": "yahoo_finance",
-  "source_provider": "yahoo_finance",
-  "detail_status": "yf_fallback",
+  "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "XIGV",
-  "fetched_at": "2026-07-02T00:01:27Z",
-  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "fetched_at": "2026-07-09T09:25:46Z",
+  "endpoints": {
+    "holdings": "/api/symbol/e/XIGV/holdings",
+    "overview": "/api/symbol/e/XIGV/overview",
+    "quote": "/api/quotes/e/XIGV",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/XIGV/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/XIGV/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/XIGV/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/XIGV/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/XIGV/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/XIGV/history?range=5Y&period=Monthly"
+    }
+  },
   "normalized": {
-    "holdings": [],
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "weight_pct": 5.47,
+        "shares": 102,
+        "raw": {
+          "no": 1,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "5.47%",
+          "sh": "102"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 5.25,
+        "shares": 52,
+        "raw": {
+          "no": 2,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "5.25%",
+          "sh": "52"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 5.11,
+        "shares": 160,
+        "raw": {
+          "no": 3,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "5.11%",
+          "sh": "160"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight_pct": 5.01,
+        "shares": 123,
+        "raw": {
+          "no": 4,
+          "n": "Tesla, Inc.",
+          "s": "$TSLA",
+          "as": "5.01%",
+          "sh": "123"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 4.95,
+        "shares": 82,
+        "raw": {
+          "no": 5,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "4.95%",
+          "sh": "82"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 4.9,
+        "shares": 195,
+        "raw": {
+          "no": 6,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "4.90%",
+          "sh": "195"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 4.84,
+        "shares": 130,
+        "raw": {
+          "no": 7,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "4.84%",
+          "sh": "130"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 4.68,
+        "shares": 232,
+        "raw": {
+          "no": 8,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "4.68%",
+          "sh": "232"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 4.63,
+        "shares": 124,
+        "raw": {
+          "no": 9,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "4.63%",
+          "sh": "124"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "weight_pct": 4.04,
+        "shares": 324,
+        "raw": {
+          "no": 10,
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "4.04%",
+          "sh": "324"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight_pct": 3.18,
+        "shares": 51,
+        "raw": {
+          "no": 11,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "3.18%",
+          "sh": "51"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 2.91,
+        "shares": 80,
+        "raw": {
+          "no": 12,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.91%",
+          "sh": "80"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "COST",
+        "name": "Costco Wholesale Corporation",
+        "weight_pct": 2.76,
+        "shares": 28,
+        "raw": {
+          "no": 13,
+          "n": "Costco Wholesale Corporation",
+          "s": "$COST",
+          "as": "2.76%",
+          "sh": "28"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "ARM",
+        "name": "Arm Holdings plc",
+        "weight_pct": 2.28,
+        "shares": 70,
+        "raw": {
+          "no": 14,
+          "n": "Arm Holdings plc",
+          "s": "$ARM",
+          "as": "2.28%",
+          "sh": "70"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight_pct": 2.2,
+        "shares": 274,
+        "raw": {
+          "no": 15,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "2.20%",
+          "sh": "274"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "KLAC",
+        "name": "KLA Corporation",
+        "weight_pct": 2.07,
+        "shares": 85,
+        "raw": {
+          "no": 16,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "2.07%",
+          "sh": "85"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 1.79,
+        "shares": 59,
+        "raw": {
+          "no": 17,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "1.79%",
+          "sh": "59"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "LIN",
+        "name": "Linde plc",
+        "weight_pct": 1.64,
+        "shares": 29,
+        "raw": {
+          "no": 18,
+          "n": "Linde plc",
+          "s": "$LIN",
+          "as": "1.64%",
+          "sh": "29"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "MRVL",
+        "name": "Marvell Technology, Inc.",
+        "weight_pct": 1.45,
+        "shares": 57,
+        "raw": {
+          "no": 19,
+          "n": "Marvell Technology, Inc.",
+          "s": "$MRVL",
+          "as": "1.45%",
+          "sh": "57"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "AMGN",
+        "name": "Amgen Inc.",
+        "weight_pct": 1.32,
+        "shares": 34,
+        "raw": {
+          "no": 20,
+          "n": "Amgen Inc.",
+          "s": "$AMGN",
+          "as": "1.32%",
+          "sh": "34"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight_pct": 1.31,
+        "shares": 88,
+        "raw": {
+          "no": 21,
+          "n": "PepsiCo, Inc.",
+          "s": "$PEP",
+          "as": "1.31%",
+          "sh": "88"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "TMUS",
+        "name": "T-Mobile US, Inc.",
+        "weight_pct": 1.3,
+        "shares": 71,
+        "raw": {
+          "no": 22,
+          "n": "T-Mobile US, Inc.",
+          "s": "$TMUS",
+          "as": "1.30%",
+          "sh": "71"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "WDC",
+        "name": "Western Digital Corporation",
+        "weight_pct": 1.28,
+        "shares": 23,
+        "raw": {
+          "no": 23,
+          "n": "Western Digital Corporation",
+          "s": "$WDC",
+          "as": "1.28%",
+          "sh": "23"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "QCOM",
+        "name": "QUALCOMM Incorporated",
+        "weight_pct": 1.28,
+        "shares": 70,
+        "raw": {
+          "no": 24,
+          "n": "QUALCOMM Incorporated",
+          "s": "$QCOM",
+          "as": "1.28%",
+          "sh": "70"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "STX",
+        "name": "Seagate Technology Holdings plc",
+        "weight_pct": 1.27,
+        "shares": 15,
+        "raw": {
+          "no": 25,
+          "n": "Seagate Technology Holdings plc",
+          "s": "$STX",
+          "as": "1.27%",
+          "sh": "15"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 49.74
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 15.74
+      },
+      {
+        "n": "Communication Services",
+        "w": 14.62
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 6.02
+      },
+      {
+        "n": "Healthcare",
+        "w": 5.85
+      },
+      {
+        "n": "Industrials",
+        "w": 3.65
+      },
+      {
+        "n": "Utilities",
+        "w": 1.73
+      },
+      {
+        "n": "Materials",
+        "w": 1.64
+      },
+      {
+        "n": "Energy",
+        "w": 0.68
+      },
+      {
+        "n": "Financials",
+        "w": 0.26
+      },
+      {
+        "n": "Real Estate",
+        "w": 0.07
+      }
+    ],
     "countries": null,
-    "holding_count": null,
-    "holdings_updated": "2026-07-02T00:01:27Z",
+    "holding_count": 78,
+    "holdings_updated": "Jul 2, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -24,326 +430,1991 @@
       "confidence": "high"
     },
     "overview": {
-      "nav": 25.2278,
-      "expenseRatio": 0.65,
-      "provider_page": "Defiance ETFs LLC",
-      "category": "Technology",
-      "legalType": "Exchange Traded Fund",
-      "description": "Under normal circumstances, the fund invests at least 80% of its net assets (plus borrowings for investment purposes) in U.S. Tech Ex Software Companies. It is non-diversified."
+      "aum": "$966.01K",
+      "expenseRatio": "0.65%",
+      "sharesOut": "40,000",
+      "inception": "Jun 24, 2026",
+      "provider_page": "defiance",
+      "etf_website": "https://www.defianceetfs.com/xigv/"
     },
+    "performance": {},
     "quote": {
-      "p": 24.72260093688965,
-      "pd": 25.279,
-      "c": -0.5563990631103515,
-      "cp": -2.2010327272057895,
-      "u": "2026-07-02T00:01:27Z",
-      "ex": "yahoo_finance"
+      "p": 24.0152,
+      "pd": 24.02,
+      "c": 0.09,
+      "cp": 0.36,
+      "cl": 23.93,
+      "cdr": 1,
+      "o": 23.95,
+      "h": 24.02,
+      "l": 23.95,
+      "v": 119.3994,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 25.279,
+      "l52": 23.93,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1783555209645.641,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783589152867,
+      "symbol": "XIGV",
+      "uid": "XIGV"
     },
     "history": [
       {
-        "date": "2026-06-25",
-        "Open": 24.780000686645508,
-        "High": 24.780000686645508,
-        "Low": 24.719999313354492,
-        "Close": 24.719999313354492,
-        "Volume": 900.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-26",
-        "Open": 24.350000381469727,
-        "High": 24.350000381469727,
-        "Low": 24.219999313354492,
-        "Close": 24.219999313354492,
-        "Volume": 1200.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-29",
-        "Open": 24.790000915527344,
-        "High": 24.790000915527344,
-        "Low": 24.790000915527344,
-        "Close": 24.790000915527344,
-        "Volume": 100.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-06-30",
-        "Open": 25.149999618530273,
-        "High": 25.280000686645508,
-        "Low": 25.149999618530273,
-        "Close": 25.280000686645508,
-        "Volume": 500.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
-      },
-      {
-        "date": "2026-07-01",
-        "Open": 24.850000381469727,
-        "High": 24.959999084472656,
-        "Low": 24.72260093688965,
-        "Close": 24.72260093688965,
-        "Volume": 2897.0,
-        "Dividends": 0.0,
-        "Stock Splits": 0.0
+        "t": "2026-07-01",
+        "o": 24.85,
+        "h": 25.01,
+        "l": 23.93,
+        "c": 24.015,
+        "a": 24.0152,
+        "v": 5907,
+        "ch": -5
       }
     ],
     "history_periods": {
       "daily_1y": [
         {
-          "date": "2026-06-25",
-          "Open": 24.780000686645508,
-          "High": 24.780000686645508,
-          "Low": 24.719999313354492,
-          "Close": 24.719999313354492,
-          "Volume": 900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-08",
+          "o": 23.95,
+          "h": 24.015,
+          "l": 23.95,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 119,
+          "ch": 0.36
         },
         {
-          "date": "2026-06-26",
-          "Open": 24.350000381469727,
-          "High": 24.350000381469727,
-          "Low": 24.219999313354492,
-          "Close": 24.219999313354492,
-          "Volume": 1200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 23.99,
+          "h": 23.99,
+          "l": 23.93,
+          "c": 23.93,
+          "a": 23.9302,
+          "v": 366,
+          "ch": -2.47
         },
         {
-          "date": "2026-06-29",
-          "Open": 24.790000915527344,
-          "High": 24.790000915527344,
-          "Low": 24.790000915527344,
-          "Close": 24.790000915527344,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 24.59,
+          "h": 24.63,
+          "l": 24.536,
+          "c": 24.536,
+          "a": 24.5363,
+          "v": 776,
+          "ch": 1.52
         },
         {
-          "date": "2026-06-30",
-          "Open": 25.149999618530273,
-          "High": 25.280000686645508,
-          "Low": 25.149999618530273,
-          "Close": 25.280000686645508,
-          "Volume": 500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 24.69,
+          "h": 24.69,
+          "l": 24,
+          "c": 24.17,
+          "a": 24.1699,
+          "v": 591,
+          "ch": -2.24
         },
         {
-          "date": "2026-07-01",
-          "Open": 24.850000381469727,
-          "High": 24.959999084472656,
-          "Low": 24.72260093688965,
-          "Close": 24.72260093688965,
-          "Volume": 2897.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 24.723,
+          "c": 24.723,
+          "a": 24.7226,
+          "v": 4054.9999999999995,
+          "ch": -2.2
+        },
+        {
+          "t": "2026-06-30",
+          "o": 25.15,
+          "h": 25.279,
+          "l": 25.15,
+          "c": 25.279,
+          "a": 25.279,
+          "v": 520,
+          "ch": 1.97
+        },
+        {
+          "t": "2026-06-29",
+          "o": 24.791,
+          "h": 24.791,
+          "l": 24.791,
+          "c": 24.791,
+          "a": 24.7907,
+          "v": 73,
+          "ch": 2.37
+        },
+        {
+          "t": "2026-06-26",
+          "o": 24.345,
+          "h": 24.345,
+          "l": 24.218,
+          "c": 24.218,
+          "a": 24.2179,
+          "v": 1180,
+          "ch": -2.03
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 24.59,
+          "h": 24.63,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 1261,
+          "ch": -0.64
+        },
+        {
+          "t": "2026-06-29",
+          "o": 24.791,
+          "h": 25.279,
+          "l": 24,
+          "c": 24.17,
+          "a": 24.1699,
+          "v": 5239,
+          "ch": -0.2
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 5907,
+          "ch": -5
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 24.59,
+          "h": 24.63,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 1261,
+          "ch": -0.64
+        },
+        {
+          "t": "2026-06-29",
+          "o": 24.791,
+          "h": 25.279,
+          "l": 24,
+          "c": 24.17,
+          "a": 24.1699,
+          "v": 5239,
+          "ch": -0.2
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 5907,
+          "ch": -5
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 5907,
+          "ch": -5
         }
       ]
     }
   },
   "raw": {
-    "yf": {
-      "info": {
-        "quoteType": "ETF",
-        "shortName": "Defiance US 100 Tech Ex Softwar",
-        "longName": "Defiance US 100 Tech Ex Software ETF",
-        "currency": "USD",
-        "exchange": "BTS",
-        "fundFamily": "Defiance ETFs LLC",
-        "category": "Technology",
-        "legalType": "Exchange Traded Fund",
-        "navPrice": 25.2278,
-        "netExpenseRatio": 0.65,
-        "previousClose": 25.279,
-        "fiftyTwoWeekHigh": 25.28,
-        "fiftyTwoWeekLow": 24.22,
-        "fiftyTwoWeekChangePercent": 2.26537,
-        "averageVolume": 675,
-        "averageVolume10days": 675
-      },
-      "major_holders": null,
-      "institutional_holders": null,
-      "analyst_price_targets": null,
-      "recommendations": null,
-      "earnings_estimate": null,
-      "revenue_estimate": null,
-      "income_statement": null,
-      "quarterly_income_statement": null,
-      "balance_sheet": null,
-      "quarterly_balance_sheet": null,
-      "cash_flow": null,
-      "quarterly_cash_flow": null,
-      "recommendations_summary": null,
-      "upgrades_downgrades": null,
-      "earnings_dates": null,
-      "earnings_history": null,
-      "eps_trend": null,
-      "eps_revisions": null,
-      "growth_estimates": null,
-      "sustainability": null,
-      "mutualfund_holders": null,
-      "insider_transactions": null,
-      "insider_purchases": null,
-      "insider_roster_holders": null,
-      "sec_filings": null,
-      "news": null,
-      "dividends": null,
-      "fast_info": {
-        "currency": "USD",
-        "dayHigh": 24.959999084472656,
-        "dayLow": 24.72260093688965,
-        "exchange": "BTS",
-        "fiftyDayAverage": 24.75250005722046,
-        "lastPrice": 24.72260093688965,
-        "lastVolume": 2897.0,
-        "open": 24.850000381469727,
-        "previousClose": 25.279,
-        "quoteType": "ETF",
-        "regularMarketPreviousClose": 25.280000686645508,
-        "tenDayAverageVolume": 675.0,
-        "threeMonthAverageVolume": 675.0,
-        "timezone": "America/New_York",
-        "twoHundredDayAverage": 24.75250005722046,
-        "yearChange": 0.02265377786594379,
-        "yearHigh": 25.280000686645508,
-        "yearLow": 24.219999313354492
-      },
-      "actions": null,
-      "splits": null,
-      "capital_gains": null,
-      "funds_data": {
-        "quote_type": "ETF",
-        "description": "Under normal circumstances, the fund invests at least 80% of its net assets (plus borrowings for investment purposes) in U.S. Tech Ex Software Companies. It is non-diversified.",
-        "fund_overview": {
-          "categoryName": "Technology",
-          "family": "Defiance ETFs LLC",
-          "legalType": "Exchange Traded Fund"
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "5.47%",
+          "sh": "102"
         },
-        "fund_operations": [
+        {
+          "no": 2,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "5.25%",
+          "sh": "52"
+        },
+        {
+          "no": 3,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "5.11%",
+          "sh": "160"
+        },
+        {
+          "no": 4,
+          "n": "Tesla, Inc.",
+          "s": "$TSLA",
+          "as": "5.01%",
+          "sh": "123"
+        },
+        {
+          "no": 5,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "4.95%",
+          "sh": "82"
+        },
+        {
+          "no": 6,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "4.90%",
+          "sh": "195"
+        },
+        {
+          "no": 7,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "4.84%",
+          "sh": "130"
+        },
+        {
+          "no": 8,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "4.68%",
+          "sh": "232"
+        },
+        {
+          "no": 9,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "4.63%",
+          "sh": "124"
+        },
+        {
+          "no": 10,
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "4.04%",
+          "sh": "324"
+        },
+        {
+          "no": 11,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "3.18%",
+          "sh": "51"
+        },
+        {
+          "no": 12,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.91%",
+          "sh": "80"
+        },
+        {
+          "no": 13,
+          "n": "Costco Wholesale Corporation",
+          "s": "$COST",
+          "as": "2.76%",
+          "sh": "28"
+        },
+        {
+          "no": 14,
+          "n": "Arm Holdings plc",
+          "s": "$ARM",
+          "as": "2.28%",
+          "sh": "70"
+        },
+        {
+          "no": 15,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "2.20%",
+          "sh": "274"
+        },
+        {
+          "no": 16,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "2.07%",
+          "sh": "85"
+        },
+        {
+          "no": 17,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "1.79%",
+          "sh": "59"
+        },
+        {
+          "no": 18,
+          "n": "Linde plc",
+          "s": "$LIN",
+          "as": "1.64%",
+          "sh": "29"
+        },
+        {
+          "no": 19,
+          "n": "Marvell Technology, Inc.",
+          "s": "$MRVL",
+          "as": "1.45%",
+          "sh": "57"
+        },
+        {
+          "no": 20,
+          "n": "Amgen Inc.",
+          "s": "$AMGN",
+          "as": "1.32%",
+          "sh": "34"
+        },
+        {
+          "no": 21,
+          "n": "PepsiCo, Inc.",
+          "s": "$PEP",
+          "as": "1.31%",
+          "sh": "88"
+        },
+        {
+          "no": 22,
+          "n": "T-Mobile US, Inc.",
+          "s": "$TMUS",
+          "as": "1.30%",
+          "sh": "71"
+        },
+        {
+          "no": 23,
+          "n": "Western Digital Corporation",
+          "s": "$WDC",
+          "as": "1.28%",
+          "sh": "23"
+        },
+        {
+          "no": 24,
+          "n": "QUALCOMM Incorporated",
+          "s": "$QCOM",
+          "as": "1.28%",
+          "sh": "70"
+        },
+        {
+          "no": 25,
+          "n": "Seagate Technology Holdings plc",
+          "s": "$STX",
+          "as": "1.27%",
+          "sh": "15"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 49.74
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 15.74
+        },
+        {
+          "n": "Communication Services",
+          "w": 14.62
+        },
+        {
+          "n": "Consumer Staples",
+          "w": 6.02
+        },
+        {
+          "n": "Healthcare",
+          "w": 5.85
+        },
+        {
+          "n": "Industrials",
+          "w": 3.65
+        },
+        {
+          "n": "Utilities",
+          "w": 1.73
+        },
+        {
+          "n": "Materials",
+          "w": 1.64
+        },
+        {
+          "n": "Energy",
+          "w": 0.68
+        },
+        {
+          "n": "Financials",
+          "w": 0.26
+        },
+        {
+          "n": "Real Estate",
+          "w": 0.07
+        }
+      ],
+      "countries": null,
+      "news": [
+        {
+          "t": "Defiance Launches XIGV: The First ETF Targeting Nasdaq-100 Ex-Software Companies",
+          "u": "https://www.globenewswire.com/news-release/2026/06/25/3317628/0/en/Defiance-Launches-XIGV-The-First-ETF-Targeting-Nasdaq-100-Ex-Software-Companies.html",
+          "n": "GlobeNewsWire",
+          "d": "13 days ago"
+        }
+      ],
+      "infoBox": "XIGV is an equity ETF with a total of 78 individual holdings. The top holdings are Advanced Micro Devices stock at 5.47%, Micron Technology at 5.25%, Apple at 5.11%, Tesla at 5.01%, and Meta Platforms at 4.95%.",
+      "infoTable": {
+        "count": 78,
+        "top10": 48.87,
+        "assetClass": "Equity",
+        "aum": 966012
+      },
+      "date": "Jul 2, 2026",
+      "count": 78
+    },
+    "overview": {
+      "type": "etf",
+      "aum": "$966.01K",
+      "expenseRatio": "0.65%",
+      "sharesOut": "40,000",
+      "ch1y": null,
+      "holdings": 78,
+      "inception": "Jun 24, 2026",
+      "chart": {
+        "expiration": 1783603800000,
+        "data": [
           {
-            "_index": "Annual Report Expense Ratio",
-            "XIGV": 0.0064999997,
-            "Category Average": 0.009006999
+            "t": 1783503000
           },
           {
-            "_index": "Annual Holdings Turnover",
-            "XIGV": 0.0,
-            "Category Average": 0.582
+            "t": 1783503060
           },
           {
-            "_index": "Total Net Assets",
-            "XIGV": 0.0,
-            "Category Average": 0.0
-          }
-        ],
-        "equity_holdings": [
-          {
-            "_index": "Price/Earnings",
-            "XIGV": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503120
           },
           {
-            "_index": "Price/Book",
-            "XIGV": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503180
           },
           {
-            "_index": "Price/Sales",
-            "XIGV": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503240
           },
           {
-            "_index": "Price/Cashflow",
-            "XIGV": 0.0,
-            "Category Average": "<NA>"
+            "t": 1783503300
           },
           {
-            "_index": "Median Market Cap",
-            "XIGV": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503360
           },
           {
-            "_index": "3 Year Earnings Growth",
-            "XIGV": "<NA>",
-            "Category Average": "<NA>"
-          }
-        ],
-        "bond_holdings": [
-          {
-            "_index": "Duration",
-            "XIGV": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503420
           },
           {
-            "_index": "Maturity",
-            "XIGV": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503480
           },
           {
-            "_index": "Credit Quality",
-            "XIGV": "<NA>",
-            "Category Average": "<NA>"
+            "t": 1783503540
+          },
+          {
+            "t": 1783503600
+          },
+          {
+            "t": 1783503660
+          },
+          {
+            "t": 1783503720
+          },
+          {
+            "t": 1783503780
+          },
+          {
+            "t": 1783503840
+          },
+          {
+            "t": 1783503900
+          },
+          {
+            "t": 1783503960
+          },
+          {
+            "t": 1783504020
+          },
+          {
+            "t": 1783504080
+          },
+          {
+            "t": 1783504140
+          },
+          {
+            "t": 1783504200
+          },
+          {
+            "t": 1783504260
+          },
+          {
+            "t": 1783504320
+          },
+          {
+            "t": 1783504380
+          },
+          {
+            "t": 1783504440
+          },
+          {
+            "t": 1783504500
+          },
+          {
+            "t": 1783504560
+          },
+          {
+            "t": 1783504620
+          },
+          {
+            "t": 1783504680
+          },
+          {
+            "t": 1783504740
+          },
+          {
+            "t": 1783504800
+          },
+          {
+            "t": 1783504860
+          },
+          {
+            "t": 1783504920
+          },
+          {
+            "t": 1783504980
+          },
+          {
+            "t": 1783505040
+          },
+          {
+            "t": 1783505100
+          },
+          {
+            "t": 1783505160
+          },
+          {
+            "t": 1783505220
+          },
+          {
+            "t": 1783505280
+          },
+          {
+            "t": 1783505340
+          },
+          {
+            "t": 1783505400
+          },
+          {
+            "t": 1783505460
+          },
+          {
+            "t": 1783505520
+          },
+          {
+            "t": 1783505580
+          },
+          {
+            "t": 1783505640
+          },
+          {
+            "t": 1783505700
+          },
+          {
+            "t": 1783505760
+          },
+          {
+            "t": 1783505820
+          },
+          {
+            "t": 1783505880
+          },
+          {
+            "t": 1783505940
+          },
+          {
+            "t": 1783506000
+          },
+          {
+            "t": 1783506060
+          },
+          {
+            "t": 1783506120
+          },
+          {
+            "t": 1783506180
+          },
+          {
+            "t": 1783506240
+          },
+          {
+            "t": 1783506300
+          },
+          {
+            "t": 1783506360
+          },
+          {
+            "t": 1783506420
+          },
+          {
+            "t": 1783506480
+          },
+          {
+            "t": 1783506540
+          },
+          {
+            "t": 1783506600
+          },
+          {
+            "t": 1783506660
+          },
+          {
+            "t": 1783506720
+          },
+          {
+            "t": 1783506780
+          },
+          {
+            "t": 1783506840
+          },
+          {
+            "t": 1783506900
+          },
+          {
+            "t": 1783506960
+          },
+          {
+            "t": 1783507020
+          },
+          {
+            "t": 1783507080
+          },
+          {
+            "t": 1783507140
+          },
+          {
+            "t": 1783507200
+          },
+          {
+            "t": 1783507260
+          },
+          {
+            "t": 1783507320
+          },
+          {
+            "t": 1783507380
+          },
+          {
+            "t": 1783507440
+          },
+          {
+            "t": 1783507500
+          },
+          {
+            "t": 1783507560
+          },
+          {
+            "t": 1783507620
+          },
+          {
+            "t": 1783507680
+          },
+          {
+            "t": 1783507740
+          },
+          {
+            "t": 1783507800
+          },
+          {
+            "t": 1783507860
+          },
+          {
+            "t": 1783507920
+          },
+          {
+            "t": 1783507980
+          },
+          {
+            "t": 1783508040
+          },
+          {
+            "t": 1783508100
+          },
+          {
+            "t": 1783508160
+          },
+          {
+            "t": 1783508220
+          },
+          {
+            "t": 1783508280
+          },
+          {
+            "t": 1783508340
+          },
+          {
+            "t": 1783508400
+          },
+          {
+            "t": 1783508460
+          },
+          {
+            "t": 1783508520
+          },
+          {
+            "t": 1783508580
+          },
+          {
+            "t": 1783508640
+          },
+          {
+            "t": 1783508700
+          },
+          {
+            "t": 1783508760
+          },
+          {
+            "t": 1783508820
+          },
+          {
+            "t": 1783508880
+          },
+          {
+            "t": 1783508940
+          },
+          {
+            "t": 1783509000
+          },
+          {
+            "t": 1783509060
+          },
+          {
+            "t": 1783509120
+          },
+          {
+            "t": 1783509180
+          },
+          {
+            "t": 1783509240
+          },
+          {
+            "t": 1783509300
+          },
+          {
+            "t": 1783509360
+          },
+          {
+            "t": 1783509420
+          },
+          {
+            "t": 1783509480
+          },
+          {
+            "t": 1783509540
+          },
+          {
+            "t": 1783509600
+          },
+          {
+            "t": 1783509660
+          },
+          {
+            "t": 1783509720
+          },
+          {
+            "t": 1783509780
+          },
+          {
+            "t": 1783509840
+          },
+          {
+            "t": 1783509900
+          },
+          {
+            "t": 1783509960
+          },
+          {
+            "t": 1783510020
+          },
+          {
+            "t": 1783510080
+          },
+          {
+            "t": 1783510140
+          },
+          {
+            "t": 1783510200
+          },
+          {
+            "t": 1783510260
+          },
+          {
+            "t": 1783510320
+          },
+          {
+            "t": 1783510380
+          },
+          {
+            "t": 1783510440
+          },
+          {
+            "t": 1783510500
+          },
+          {
+            "t": 1783510560
+          },
+          {
+            "t": 1783510620
+          },
+          {
+            "t": 1783510680
+          },
+          {
+            "t": 1783510740
+          },
+          {
+            "t": 1783510800
+          },
+          {
+            "t": 1783510860
+          },
+          {
+            "t": 1783510920
+          },
+          {
+            "t": 1783510980
+          },
+          {
+            "t": 1783511040
+          },
+          {
+            "t": 1783511100
+          },
+          {
+            "t": 1783511160
+          },
+          {
+            "t": 1783511220
+          },
+          {
+            "t": 1783511280
+          },
+          {
+            "t": 1783511340
+          },
+          {
+            "t": 1783511400
+          },
+          {
+            "t": 1783511460
+          },
+          {
+            "t": 1783511520
+          },
+          {
+            "t": 1783511580
+          },
+          {
+            "t": 1783511640
+          },
+          {
+            "t": 1783511700
+          },
+          {
+            "t": 1783511760
+          },
+          {
+            "t": 1783511820
+          },
+          {
+            "t": 1783511880
+          },
+          {
+            "t": 1783511940
+          },
+          {
+            "t": 1783512000
+          },
+          {
+            "t": 1783512060
+          },
+          {
+            "t": 1783512120
+          },
+          {
+            "t": 1783512180
+          },
+          {
+            "t": 1783512240
+          },
+          {
+            "t": 1783512300
+          },
+          {
+            "t": 1783512360
+          },
+          {
+            "t": 1783512420
+          },
+          {
+            "t": 1783512480
+          },
+          {
+            "t": 1783512540
+          },
+          {
+            "t": 1783512600
+          },
+          {
+            "t": 1783512660
+          },
+          {
+            "t": 1783512720
+          },
+          {
+            "t": 1783512780
+          },
+          {
+            "t": 1783512840
+          },
+          {
+            "t": 1783512900
+          },
+          {
+            "t": 1783512960
+          },
+          {
+            "t": 1783513020
+          },
+          {
+            "t": 1783513080
+          },
+          {
+            "t": 1783513140
+          },
+          {
+            "t": 1783513200
+          },
+          {
+            "t": 1783513260
+          },
+          {
+            "t": 1783513320
+          },
+          {
+            "t": 1783513380
+          },
+          {
+            "t": 1783513440
+          },
+          {
+            "t": 1783513500
+          },
+          {
+            "t": 1783513560
+          },
+          {
+            "t": 1783513620
+          },
+          {
+            "t": 1783513680
+          },
+          {
+            "t": 1783513740
+          },
+          {
+            "t": 1783513800
+          },
+          {
+            "t": 1783513860
+          },
+          {
+            "t": 1783513920
+          },
+          {
+            "t": 1783513980
+          },
+          {
+            "t": 1783514040
+          },
+          {
+            "t": 1783514100
+          },
+          {
+            "t": 1783514160
+          },
+          {
+            "t": 1783514220
+          },
+          {
+            "t": 1783514280
+          },
+          {
+            "t": 1783514340
+          },
+          {
+            "t": 1783514400
+          },
+          {
+            "t": 1783514460
+          },
+          {
+            "t": 1783514520
+          },
+          {
+            "t": 1783514580
+          },
+          {
+            "t": 1783514640
+          },
+          {
+            "t": 1783514700
+          },
+          {
+            "t": 1783514760
+          },
+          {
+            "t": 1783514820
+          },
+          {
+            "t": 1783514880
+          },
+          {
+            "t": 1783514940
+          },
+          {
+            "t": 1783515000
+          },
+          {
+            "t": 1783515060
+          },
+          {
+            "t": 1783515120
+          },
+          {
+            "t": 1783515180
+          },
+          {
+            "t": 1783515240
+          },
+          {
+            "t": 1783515300
+          },
+          {
+            "t": 1783515360
+          },
+          {
+            "t": 1783515420
+          },
+          {
+            "t": 1783515480
+          },
+          {
+            "t": 1783515540
+          },
+          {
+            "t": 1783515600
+          },
+          {
+            "t": 1783515660
+          },
+          {
+            "t": 1783515720
+          },
+          {
+            "t": 1783515780
+          },
+          {
+            "t": 1783515840
+          },
+          {
+            "t": 1783515900
+          },
+          {
+            "t": 1783515960
+          },
+          {
+            "t": 1783516020
+          },
+          {
+            "t": 1783516080
+          },
+          {
+            "t": 1783516140
+          },
+          {
+            "t": 1783516200
+          },
+          {
+            "t": 1783516260
+          },
+          {
+            "t": 1783516320
+          },
+          {
+            "t": 1783516380
+          },
+          {
+            "t": 1783516440
+          },
+          {
+            "t": 1783516500
+          },
+          {
+            "t": 1783516560
+          },
+          {
+            "c": 24.015,
+            "o": 23.95,
+            "t": 1783516620
+          },
+          {
+            "t": 1783516679
+          },
+          {
+            "t": 1783516739
+          },
+          {
+            "t": 1783516799
+          },
+          {
+            "t": 1783516859
+          },
+          {
+            "t": 1783516919
+          },
+          {
+            "t": 1783516979
+          },
+          {
+            "t": 1783517039
+          },
+          {
+            "t": 1783517099
+          },
+          {
+            "t": 1783517159
+          },
+          {
+            "t": 1783517219
+          },
+          {
+            "t": 1783517279
+          },
+          {
+            "t": 1783517339
+          },
+          {
+            "t": 1783517399
+          },
+          {
+            "t": 1783517459
+          },
+          {
+            "t": 1783517519
+          },
+          {
+            "t": 1783517579
+          },
+          {
+            "t": 1783517639
+          },
+          {
+            "t": 1783517699
+          },
+          {
+            "t": 1783517759
+          },
+          {
+            "t": 1783517819
+          },
+          {
+            "t": 1783517879
+          },
+          {
+            "t": 1783517939
+          },
+          {
+            "t": 1783517999
+          },
+          {
+            "t": 1783518059
+          },
+          {
+            "t": 1783518119
+          },
+          {
+            "t": 1783518179
+          },
+          {
+            "t": 1783518239
+          },
+          {
+            "t": 1783518299
+          },
+          {
+            "t": 1783518359
+          },
+          {
+            "t": 1783518419
+          },
+          {
+            "t": 1783518479
+          },
+          {
+            "t": 1783518539
+          },
+          {
+            "t": 1783518599
+          },
+          {
+            "t": 1783518659
+          },
+          {
+            "t": 1783518719
+          },
+          {
+            "t": 1783518779
+          },
+          {
+            "t": 1783518839
+          },
+          {
+            "t": 1783518899
+          },
+          {
+            "t": 1783518959
+          },
+          {
+            "t": 1783519019
+          },
+          {
+            "t": 1783519079
+          },
+          {
+            "t": 1783519139
+          },
+          {
+            "t": 1783519199
+          },
+          {
+            "t": 1783519259
+          },
+          {
+            "t": 1783519319
+          },
+          {
+            "t": 1783519379
+          },
+          {
+            "t": 1783519439
+          },
+          {
+            "t": 1783519499
+          },
+          {
+            "t": 1783519559
+          },
+          {
+            "t": 1783519619
+          },
+          {
+            "t": 1783519679
+          },
+          {
+            "t": 1783519739
+          },
+          {
+            "t": 1783519799
+          },
+          {
+            "t": 1783519859
+          },
+          {
+            "t": 1783519919
+          },
+          {
+            "t": 1783519979
+          },
+          {
+            "t": 1783520039
+          },
+          {
+            "t": 1783520099
+          },
+          {
+            "t": 1783520159
+          },
+          {
+            "t": 1783520219
+          },
+          {
+            "t": 1783520279
+          },
+          {
+            "t": 1783520339
+          },
+          {
+            "t": 1783520399
+          },
+          {
+            "t": 1783520459
+          },
+          {
+            "t": 1783520519
+          },
+          {
+            "t": 1783520579
+          },
+          {
+            "t": 1783520639
+          },
+          {
+            "t": 1783520699
+          },
+          {
+            "t": 1783520759
+          },
+          {
+            "t": 1783520819
+          },
+          {
+            "t": 1783520879
+          },
+          {
+            "t": 1783520939
+          },
+          {
+            "t": 1783520999
+          },
+          {
+            "t": 1783521059
+          },
+          {
+            "t": 1783521119
+          },
+          {
+            "t": 1783521179
+          },
+          {
+            "t": 1783521239
+          },
+          {
+            "t": 1783521299
+          },
+          {
+            "t": 1783521359
+          },
+          {
+            "t": 1783521419
+          },
+          {
+            "t": 1783521479
+          },
+          {
+            "t": 1783521539
+          },
+          {
+            "t": 1783521599
+          },
+          {
+            "t": 1783521659
+          },
+          {
+            "t": 1783521719
+          },
+          {
+            "t": 1783521779
+          },
+          {
+            "t": 1783521839
+          },
+          {
+            "t": 1783521899
+          },
+          {
+            "t": 1783521959
+          },
+          {
+            "t": 1783522019
+          },
+          {
+            "t": 1783522079
+          },
+          {
+            "t": 1783522139
+          },
+          {
+            "t": 1783522199
+          },
+          {
+            "t": 1783522259
+          },
+          {
+            "t": 1783522319
+          },
+          {
+            "t": 1783522379
+          },
+          {
+            "t": 1783522439
+          },
+          {
+            "t": 1783522499
+          },
+          {
+            "t": 1783522559
+          },
+          {
+            "t": 1783522619
+          },
+          {
+            "t": 1783522679
+          },
+          {
+            "t": 1783522739
+          },
+          {
+            "t": 1783522799
+          },
+          {
+            "t": 1783522859
+          },
+          {
+            "t": 1783522919
+          },
+          {
+            "t": 1783522979
+          },
+          {
+            "t": 1783523039
+          },
+          {
+            "t": 1783523099
+          },
+          {
+            "t": 1783523159
+          },
+          {
+            "t": 1783523219
+          },
+          {
+            "t": 1783523279
+          },
+          {
+            "t": 1783523339
+          },
+          {
+            "t": 1783523399
+          },
+          {
+            "t": 1783523459
+          },
+          {
+            "t": 1783523519
+          },
+          {
+            "t": 1783523579
+          },
+          {
+            "t": 1783523639
+          },
+          {
+            "t": 1783523699
+          },
+          {
+            "t": 1783523759
+          },
+          {
+            "t": 1783523819
+          },
+          {
+            "t": 1783523879
+          },
+          {
+            "t": 1783523939
+          },
+          {
+            "t": 1783523999
+          },
+          {
+            "t": 1783524059
+          },
+          {
+            "t": 1783524119
+          },
+          {
+            "t": 1783524179
+          },
+          {
+            "t": 1783524239
+          },
+          {
+            "t": 1783524299
+          },
+          {
+            "t": 1783524359
+          },
+          {
+            "t": 1783524419
+          },
+          {
+            "t": 1783524479
+          },
+          {
+            "t": 1783524539
+          },
+          {
+            "t": 1783524599
+          },
+          {
+            "t": 1783524659
+          },
+          {
+            "t": 1783524719
+          },
+          {
+            "t": 1783524779
+          },
+          {
+            "t": 1783524839
+          },
+          {
+            "t": 1783524899
+          },
+          {
+            "t": 1783524959
+          },
+          {
+            "t": 1783525019
+          },
+          {
+            "t": 1783525079
+          },
+          {
+            "t": 1783525139
+          },
+          {
+            "t": 1783525199
+          },
+          {
+            "t": 1783525259
+          },
+          {
+            "t": 1783525319
+          },
+          {
+            "t": 1783525379
+          },
+          {
+            "t": 1783525439
+          },
+          {
+            "t": 1783525499
+          },
+          {
+            "t": 1783525559
+          },
+          {
+            "t": 1783525619
+          },
+          {
+            "t": 1783525679
+          },
+          {
+            "t": 1783525739
+          },
+          {
+            "t": 1783525799
+          },
+          {
+            "t": 1783525859
+          },
+          {
+            "t": 1783525919
+          },
+          {
+            "t": 1783525979
+          },
+          {
+            "t": 1783526039
+          },
+          {
+            "t": 1783526099
+          },
+          {
+            "t": 1783526159
+          },
+          {
+            "t": 1783526219
+          },
+          {
+            "t": 1783526279
+          },
+          {
+            "t": 1783526339
+          },
+          {
+            "t": 1783526399
+          },
+          {
+            "t": 1783526400
           }
         ]
       },
-      "history_1y": [
+      "description": "The Defiance US 100 Tech Ex Software ETF (XIGV) is an exchange-traded fund that mostly invests in information technology equity. The Defiance US 100 Tech Ex Software ETF (the Fund or the Ex Software ETF) seeks to track the total return performance, before fees and expenses, of the Indxx US 100 Tech Focused Ex Software Technology Index (the Index). XIGV was launched on Jun 24, 2026 and is issued by Defiance.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "XIGV"
+        ],
+        [
+          "Provider",
+          "Defiance"
+        ],
+        [
+          "Index Tracked",
+          "Indxx US 100 Tech Focused Ex Software Technology Index"
+        ]
+      ],
+      "etf_website": "https://www.defianceetfs.com/xigv/",
+      "provider_page": "defiance",
+      "holdingsTable": {
+        "count": 78,
+        "updated": "Jul 2, 2026",
+        "top10": 48.87,
+        "holdings": [
+          {
+            "n": "Advanced Micro Devices, Inc.",
+            "s": "$AMD",
+            "as": "5.47%",
+            "sh": "102"
+          },
+          {
+            "n": "Micron Technology, Inc.",
+            "s": "$MU",
+            "as": "5.25%",
+            "sh": "52"
+          },
+          {
+            "n": "Apple Inc.",
+            "s": "$AAPL",
+            "as": "5.11%",
+            "sh": "160"
+          },
+          {
+            "n": "Tesla, Inc.",
+            "s": "$TSLA",
+            "as": "5.01%",
+            "sh": "123"
+          },
+          {
+            "n": "Meta Platforms, Inc.",
+            "s": "$META",
+            "as": "4.95%",
+            "sh": "82"
+          },
+          {
+            "n": "Amazon.com, Inc.",
+            "s": "$AMZN",
+            "as": "4.90%",
+            "sh": "195"
+          },
+          {
+            "n": "Alphabet Inc.",
+            "s": "$GOOGL",
+            "as": "4.84%",
+            "sh": "130"
+          },
+          {
+            "n": "NVIDIA Corporation",
+            "s": "$NVDA",
+            "as": "4.68%",
+            "sh": "232"
+          },
+          {
+            "n": "Broadcom Inc.",
+            "s": "$AVGO",
+            "as": "4.63%",
+            "sh": "124"
+          },
+          {
+            "n": "Intel Corporation",
+            "s": "$INTC",
+            "as": "4.04%",
+            "sh": "324"
+          }
+        ]
+      },
+      "dividendTable": [],
+      "news": {
+        "exp": "1783603028511",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/06/25/3317628/0/en/Defiance-Launches-XIGV-The-First-ETF-Targeting-Nasdaq-100-Ex-Software-Companies.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/s/0/press17-3771749.jpg",
+            "title": "Defiance Launches XIGV: The First ETF Targeting Nasdaq-100 Ex-Software Companies",
+            "text": "MIAMI, June 25, 2026 (GLOBE NEWSWIRE) -- Defiance ETFs, a leader in thematic and leveraged exchange-traded funds, today announced the launch of the Defiance US 100 Tech Ex Software ETF (Cboe: XIGV) , ...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "time": "Jun 25, 2026, 9:15 AM EDT",
+            "ago": "13 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 24.723,
+        "priceMAX": 24.72
+      },
+      "performance": {}
+    },
+    "quote": {
+      "p": 24.0152,
+      "pd": 24.02,
+      "c": 0.09,
+      "cp": 0.36,
+      "cl": 23.93,
+      "cdr": 1,
+      "o": 23.95,
+      "h": 24.02,
+      "l": 23.95,
+      "v": 119.3994,
+      "ts": 1783540800000,
+      "u": "Jul 8, 2026, 4:00 PM EDT",
+      "td": "2026-07-08",
+      "h52": 25.279,
+      "l52": 23.93,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1783555209645.641,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783589152867,
+      "symbol": "XIGV",
+      "uid": "XIGV"
+    },
+    "history": [
+      {
+        "t": "2026-07-01",
+        "o": 24.85,
+        "h": 25.01,
+        "l": 23.93,
+        "c": 24.015,
+        "a": 24.0152,
+        "v": 5907,
+        "ch": -5
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
         {
-          "date": "2026-06-25",
-          "Open": 24.780000686645508,
-          "High": 24.780000686645508,
-          "Low": 24.719999313354492,
-          "Close": 24.719999313354492,
-          "Volume": 900.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-08",
+          "o": 23.95,
+          "h": 24.015,
+          "l": 23.95,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 119,
+          "ch": 0.36
         },
         {
-          "date": "2026-06-26",
-          "Open": 24.350000381469727,
-          "High": 24.350000381469727,
-          "Low": 24.219999313354492,
-          "Close": 24.219999313354492,
-          "Volume": 1200.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-07",
+          "o": 23.99,
+          "h": 23.99,
+          "l": 23.93,
+          "c": 23.93,
+          "a": 23.9302,
+          "v": 366,
+          "ch": -2.47
         },
         {
-          "date": "2026-06-29",
-          "Open": 24.790000915527344,
-          "High": 24.790000915527344,
-          "Low": 24.790000915527344,
-          "Close": 24.790000915527344,
-          "Volume": 100.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-06",
+          "o": 24.59,
+          "h": 24.63,
+          "l": 24.536,
+          "c": 24.536,
+          "a": 24.5363,
+          "v": 776,
+          "ch": 1.52
         },
         {
-          "date": "2026-06-30",
-          "Open": 25.149999618530273,
-          "High": 25.280000686645508,
-          "Low": 25.149999618530273,
-          "Close": 25.280000686645508,
-          "Volume": 500.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-02",
+          "o": 24.69,
+          "h": 24.69,
+          "l": 24,
+          "c": 24.17,
+          "a": 24.1699,
+          "v": 591,
+          "ch": -2.24
         },
         {
-          "date": "2026-07-01",
-          "Open": 24.850000381469727,
-          "High": 24.959999084472656,
-          "Low": 24.72260093688965,
-          "Close": 24.72260093688965,
-          "Volume": 2897.0,
-          "Dividends": 0.0,
-          "Stock Splits": 0.0
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 24.723,
+          "c": 24.723,
+          "a": 24.7226,
+          "v": 4054.9999999999995,
+          "ch": -2.2
+        },
+        {
+          "t": "2026-06-30",
+          "o": 25.15,
+          "h": 25.279,
+          "l": 25.15,
+          "c": 25.279,
+          "a": 25.279,
+          "v": 520,
+          "ch": 1.97
+        },
+        {
+          "t": "2026-06-29",
+          "o": 24.791,
+          "h": 24.791,
+          "l": 24.791,
+          "c": 24.791,
+          "a": 24.7907,
+          "v": 73,
+          "ch": 2.37
+        },
+        {
+          "t": "2026-06-26",
+          "o": 24.345,
+          "h": 24.345,
+          "l": 24.218,
+          "c": 24.218,
+          "a": 24.2179,
+          "v": 1180,
+          "ch": -2.03
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-06",
+          "o": 24.59,
+          "h": 24.63,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 1261,
+          "ch": -0.64
+        },
+        {
+          "t": "2026-06-29",
+          "o": 24.791,
+          "h": 25.279,
+          "l": 24,
+          "c": 24.17,
+          "a": 24.1699,
+          "v": 5239,
+          "ch": -0.2
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 5907,
+          "ch": -5
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-07-06",
+          "o": 24.59,
+          "h": 24.63,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 1261,
+          "ch": -0.64
+        },
+        {
+          "t": "2026-06-29",
+          "o": 24.791,
+          "h": 25.279,
+          "l": 24,
+          "c": 24.17,
+          "a": 24.1699,
+          "v": 5239,
+          "ch": -0.2
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 5907,
+          "ch": -5
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-07-01",
+          "o": 24.85,
+          "h": 25.01,
+          "l": 23.93,
+          "c": 24.015,
+          "a": 24.0152,
+          "v": 5907,
+          "ch": -5
         }
       ]
     }
-  },
-  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found"
+  }
 }

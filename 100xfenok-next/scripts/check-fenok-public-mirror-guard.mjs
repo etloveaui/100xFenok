@@ -17,6 +17,7 @@ const forbiddenPatterns = [
   /^admin\/fenok-edge-etf-daily1y-fetchable-plan\.json$/,
   /^admin\/fenok-etf-daily1y-dispatch-plan\.json$/,
   /^admin\/fenok-etf-core-daily-basket\.json$/,
+  /^admin\/fenok-s0-finra-occ-mapping-ledger\.json$/,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
   /^computed\/etf_action_index\.json$/,

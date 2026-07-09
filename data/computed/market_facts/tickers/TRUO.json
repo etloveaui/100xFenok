@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "TRUO",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T12:37:30Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Vaneck Consumer Staples TruSector ETF",
     "exchange": "NGM",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 25.5,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 25.5623,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-30T12:36:33Z",
+      "fetched_at": "2026-07-09T09:25:02Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 25.5,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.5623,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T12:36:33Z",
+          "fetched_at": "2026-07-09T09:25:02Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 25.65,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.56,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T12:36:33Z",
+          "fetched_at": "2026-07-09T09:25:02Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.14999999999999858,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.11,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-30T12:36:33Z",
+      "fetched_at": "2026-07-09T09:25:02Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": -0.14999999999999858,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.11,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T12:36:33Z",
+          "fetched_at": "2026-07-09T09:25:02Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -0.5847953216374214,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.42,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-30T12:36:33Z",
+      "fetched_at": "2026-07-09T09:25:02Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,32 @@
       ],
       "candidates": [
         {
-          "value": -0.5847953216374214,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.42,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-30T12:36:33Z",
+          "fetched_at": "2026-07-09T09:25:02Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": "$254.20K",
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:25:02Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": "$254.20K",
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:25:02Z",
           "confidence": "observed"
         }
       ],
@@ -135,33 +157,35 @@
         },
         {
           "value": 0.14,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-30T12:36:33Z",
+          "fetched_at": "2026-07-09T09:25:02Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 2
     },
-    "return_3m": {
-      "value": -0.4683873352948302,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-30T12:36:33Z",
-      "confidence": "derived",
+    "return_1m": {
+      "value": 1.056,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:25:02Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
-        "stockanalysis.detail.history"
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
-          "value": -0.4683873352948302,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-30T12:36:33Z",
-          "confidence": "derived",
+          "value": 1.056,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:25:02Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -229,9 +253,356 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-06-30T12:36:33Z",
-    "top_holdings": [],
+    "holdings_count": 38,
+    "holdings_updated": "Jul 3, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "State Street®CnsmrStpSelSectSPDR®ETF",
+        "weight_pct": 40.02,
+        "shares": 1206,
+        "raw": {
+          "no": 1,
+          "n": "State Street®CnsmrStpSelSectSPDR®ETF",
+          "as": "40.02%",
+          "sh": "1,206"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "WMT",
+        "name": "Walmart Inc.",
+        "weight_pct": 12.1,
+        "shares": 277,
+        "raw": {
+          "no": 2,
+          "n": "Walmart Inc.",
+          "s": "$WMT",
+          "as": "12.10%",
+          "sh": "277"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "COST",
+        "name": "Costco Wholesale Corporation",
+        "weight_pct": 10.4,
+        "shares": 28,
+        "raw": {
+          "no": 3,
+          "n": "Costco Wholesale Corporation",
+          "s": "$COST",
+          "as": "10.40%",
+          "sh": "28"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "PG",
+        "name": "The Procter & Gamble Company",
+        "weight_pct": 8.69,
+        "shares": 147,
+        "raw": {
+          "no": 4,
+          "n": "The Procter & Gamble Company",
+          "s": "$PG",
+          "as": "8.69%",
+          "sh": "147"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "KO",
+        "name": "The Coca-Cola Company",
+        "weight_pct": 8.02,
+        "shares": 244,
+        "raw": {
+          "no": 5,
+          "n": "The Coca-Cola Company",
+          "s": "$KO",
+          "as": "8.02%",
+          "sh": "244"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "PM",
+        "name": "Philip Morris International Inc.",
+        "weight_pct": 6.97,
+        "shares": 98,
+        "raw": {
+          "no": 6,
+          "n": "Philip Morris International Inc.",
+          "s": "$PM",
+          "as": "6.97%",
+          "sh": "98"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight_pct": 4.84,
+        "shares": 86,
+        "raw": {
+          "no": 7,
+          "n": "PepsiCo, Inc.",
+          "s": "$PEP",
+          "as": "4.84%",
+          "sh": "86"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "MO",
+        "name": "Altria Group, Inc.",
+        "weight_pct": 2.1,
+        "shares": 74,
+        "raw": {
+          "no": 8,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "2.10%",
+          "sh": "74"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "CL",
+        "name": "Colgate-Palmolive Company",
+        "weight_pct": 0.67,
+        "shares": 18,
+        "raw": {
+          "no": 9,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "0.67%",
+          "sh": "18"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "MDLZ",
+        "name": "Mondelez International, Inc.",
+        "weight_pct": 0.64,
+        "shares": 27,
+        "raw": {
+          "no": 10,
+          "n": "Mondelez International, Inc.",
+          "s": "$MDLZ",
+          "as": "0.64%",
+          "sh": "27"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "CASY",
+        "name": "Casey's General Stores, Inc.",
+        "weight_pct": 0.62,
+        "shares": 2,
+        "raw": {
+          "no": 11,
+          "n": "Casey's General Stores, Inc.",
+          "s": "$CASY",
+          "as": "0.62%",
+          "sh": "2"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "MNST",
+        "name": "Monster Beverage Corporation",
+        "weight_pct": 0.5,
+        "shares": 13,
+        "raw": {
+          "no": 12,
+          "n": "Monster Beverage Corporation",
+          "s": "$MNST",
+          "as": "0.50%",
+          "sh": "13"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "TGT",
+        "name": "Target Corporation",
+        "weight_pct": 0.41,
+        "shares": 8,
+        "raw": {
+          "no": 13,
+          "n": "Target Corporation",
+          "s": "$TGT",
+          "as": "0.41%",
+          "sh": "8"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Us Dollar",
+        "weight_pct": 0.37,
+        "shares": 945,
+        "raw": {
+          "no": 14,
+          "n": "Us Dollar",
+          "as": "0.37%",
+          "sh": "945"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "KDP",
+        "name": "Keurig Dr Pepper Inc.",
+        "weight_pct": 0.33,
+        "shares": 25,
+        "raw": {
+          "no": 15,
+          "n": "Keurig Dr Pepper Inc.",
+          "s": "$KDP",
+          "as": "0.33%",
+          "sh": "25"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SYY",
+        "name": "Sysco Corporation",
+        "weight_pct": 0.3,
+        "shares": 9,
+        "raw": {
+          "no": 16,
+          "n": "Sysco Corporation",
+          "s": "$SYY",
+          "as": "0.30%",
+          "sh": "9"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "KVUE",
+        "name": "Kenvue Inc.",
+        "weight_pct": 0.27,
+        "shares": 35,
+        "raw": {
+          "no": 17,
+          "n": "Kenvue Inc.",
+          "s": "$KVUE",
+          "as": "0.27%",
+          "sh": "35"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ADM",
+        "name": "Archer-Daniels-Midland Company",
+        "weight_pct": 0.27,
+        "shares": 9,
+        "raw": {
+          "no": 18,
+          "n": "Archer-Daniels-Midland Company",
+          "s": "$ADM",
+          "as": "0.27%",
+          "sh": "9"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "KMB",
+        "name": "Kimberly-Clark Corporation",
+        "weight_pct": 0.27,
+        "shares": 6,
+        "raw": {
+          "no": 19,
+          "n": "Kimberly-Clark Corporation",
+          "s": "$KMB",
+          "as": "0.27%",
+          "sh": "6"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "KR",
+        "name": "The Kroger Co.",
+        "weight_pct": 0.25,
+        "shares": 11,
+        "raw": {
+          "no": 20,
+          "n": "The Kroger Co.",
+          "s": "$KR",
+          "as": "0.25%",
+          "sh": "11"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "HSY",
+        "name": "The Hershey Company",
+        "weight_pct": 0.21,
+        "shares": 3,
+        "raw": {
+          "no": 21,
+          "n": "The Hershey Company",
+          "s": "$HSY",
+          "as": "0.21%",
+          "sh": "3"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "DG",
+        "name": "Dollar General Corporation",
+        "weight_pct": 0.18,
+        "shares": 4,
+        "raw": {
+          "no": 22,
+          "n": "Dollar General Corporation",
+          "s": "$DG",
+          "as": "0.18%",
+          "sh": "4"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "STZ",
+        "name": "Constellation Brands, Inc.",
+        "weight_pct": 0.16,
+        "shares": 3,
+        "raw": {
+          "no": 23,
+          "n": "Constellation Brands, Inc.",
+          "s": "$STZ",
+          "as": "0.16%",
+          "sh": "3"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "KHC",
+        "name": "The Kraft Heinz Company",
+        "weight_pct": 0.16,
+        "shares": 16,
+        "raw": {
+          "no": 24,
+          "n": "The Kraft Heinz Company",
+          "s": "$KHC",
+          "as": "0.16%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CHD",
+        "name": "Church & Dwight Co., Inc.",
+        "weight_pct": 0.15,
+        "shares": 4,
+        "raw": {
+          "no": 25,
+          "n": "Church & Dwight Co., Inc.",
+          "s": "$CHD",
+          "as": "0.15%",
+          "sh": "4"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
@@ -249,15 +620,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/TRUO.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/TRUO.json",
+    "stockanalysis": "stockanalysis/etfs/TRUO.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

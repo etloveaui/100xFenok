@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "VUS",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Virtus U.S. Dividend ETF",
     "exchange": "PCX",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 29.565,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 29.5186,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:14Z",
+      "fetched_at": "2026-07-09T09:25:33Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 29.565,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 29.5186,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 29.8174,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 29.52,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.25239999999999796,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0.16,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:14Z",
+      "fetched_at": "2026-07-09T09:25:33Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": -0.25239999999999796,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 0.16,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -0.8464856090738897,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0.54,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:14Z",
+      "fetched_at": "2026-07-09T09:25:33Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,10 @@
       ],
       "candidates": [
         {
-          "value": -0.8464856090738897,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 0.54,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed"
         }
       ],
@@ -132,10 +132,10 @@
           "confidence": "observed"
         },
         {
-          "value": 17932476.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 17890000.0,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed"
         }
       ],
@@ -162,24 +162,27 @@
       ],
       "candidate_count": 1
     },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
+    "dividend_yield": {
+      "value": 1.3,
+      "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:14Z",
+      "fetched_at": "2026-07-09T09:25:33Z",
       "confidence": "observed",
+      "unit": "percent_points",
       "policy": [
         "yf",
         "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
       ],
       "candidates": [
         {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 1.3,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
-          "confidence": "observed"
+          "fetched_at": "2026-07-09T09:25:33Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -207,9 +210,9 @@
         },
         {
           "value": 0.25,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -237,9 +240,17 @@
           "fetched_at": "2026-07-02T00:01:14Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 1.42,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:25:33Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 19.84919391353854,
@@ -262,10 +273,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 19.84919391353854,
+          "value": 12.983866692617447,
           "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-07-02T00:01:14Z",
+          "as_of": "2026-07-08",
+          "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -296,6 +307,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 18.402,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:25:33Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 19.33704,
           "source": "yf",
           "as_of": null,
@@ -304,7 +323,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": 20.570576117705958,
@@ -342,141 +361,407 @@
     }
   },
   "etf": {
-    "holdings_count": 10,
-    "holdings_updated": "2026-07-02T00:01:14Z",
+    "holdings_count": 99,
+    "holdings_updated": "Jul 6, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "AAPL",
-        "name": "Apple Inc",
-        "weight_pct": 6.1748400000000006,
+        "name": "Apple Inc.",
+        "weight_pct": 6.25,
+        "shares": 3538,
         "raw": {
-          "_index": "AAPL",
-          "Name": "Apple Inc",
-          "Holding Percent": 0.0617484
+          "no": 1,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "6.25%",
+          "sh": "3,538"
         }
       },
       {
         "rank": 2,
         "symbol": "NVDA",
-        "name": "NVIDIA Corp",
-        "weight_pct": 5.622099700000001,
+        "name": "NVIDIA Corporation",
+        "weight_pct": 5.33,
+        "shares": 4761,
         "raw": {
-          "_index": "NVDA",
-          "Name": "NVIDIA Corp",
-          "Holding Percent": 0.056220997
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "5.33%",
+          "sh": "4,761"
         }
       },
       {
         "rank": 3,
         "symbol": "AVGO",
-        "name": "Broadcom Inc",
-        "weight_pct": 4.07787,
+        "name": "Broadcom Inc.",
+        "weight_pct": 3.44,
+        "shares": 1632,
         "raw": {
-          "_index": "AVGO",
-          "Name": "Broadcom Inc",
-          "Holding Percent": 0.0407787
+          "no": 3,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "3.44%",
+          "sh": "1,632"
         }
       },
       {
         "rank": 4,
         "symbol": "MSFT",
-        "name": "Microsoft Corp",
-        "weight_pct": 3.5656399999999997,
+        "name": "Microsoft Corporation",
+        "weight_pct": 3.13,
+        "shares": 1416,
         "raw": {
-          "_index": "MSFT",
-          "Name": "Microsoft Corp",
-          "Holding Percent": 0.0356564
+          "no": 4,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "3.13%",
+          "sh": "1,416"
         }
       },
       {
         "rank": 5,
         "symbol": "MU",
-        "name": "Micron Technology Inc",
-        "weight_pct": 3.08459,
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 2.62,
+        "shares": 492,
         "raw": {
-          "_index": "MU",
-          "Name": "Micron Technology Inc",
-          "Holding Percent": 0.0308459
+          "no": 5,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "2.62%",
+          "sh": "492"
         }
       },
       {
         "rank": 6,
         "symbol": "AMZN",
-        "name": "Amazon.com Inc",
-        "weight_pct": 2.4778198000000002,
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 2.29,
+        "shares": 1637,
         "raw": {
-          "_index": "AMZN",
-          "Name": "Amazon.com Inc",
-          "Holding Percent": 0.024778198
+          "no": 6,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "2.29%",
+          "sh": "1,637"
         }
       },
       {
         "rank": 7,
-        "symbol": "GOOGL",
-        "name": "Alphabet Inc Class A",
-        "weight_pct": 1.8485101,
+        "symbol": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight_pct": 2.08,
+        "shares": 1368,
         "raw": {
-          "_index": "GOOGL",
-          "Name": "Alphabet Inc Class A",
-          "Holding Percent": 0.018485101
+          "no": 7,
+          "n": "Johnson & Johnson",
+          "s": "$JNJ",
+          "as": "2.08%",
+          "sh": "1,368"
         }
       },
       {
         "rank": 8,
-        "symbol": "CSCO",
-        "name": "Cisco Systems Inc",
-        "weight_pct": 1.7618399999999999,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 1.81,
+        "shares": 869,
         "raw": {
-          "_index": "CSCO",
-          "Name": "Cisco Systems Inc",
-          "Holding Percent": 0.0176184
+          "no": 8,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "1.81%",
+          "sh": "869"
         }
       },
       {
         "rank": 9,
-        "symbol": "JNJ",
-        "name": "Johnson & Johnson",
-        "weight_pct": 1.72399,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 1.79,
+        "shares": 964,
         "raw": {
-          "_index": "JNJ",
-          "Name": "Johnson & Johnson",
-          "Holding Percent": 0.0172399
+          "no": 9,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "1.79%",
+          "sh": "964"
         }
       },
       {
         "rank": 10,
-        "symbol": "LRCX",
-        "name": "Lam Research Corp",
-        "weight_pct": 1.7154599,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 1.66,
+        "shares": 2616,
         "raw": {
-          "_index": "LRCX",
-          "Name": "Lam Research Corp",
-          "Holding Percent": 0.017154599
+          "no": 10,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "1.66%",
+          "sh": "2,616"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "ADI",
+        "name": "Analog Devices, Inc.",
+        "weight_pct": 1.54,
+        "shares": 716,
+        "raw": {
+          "no": 11,
+          "n": "Analog Devices, Inc.",
+          "s": "$ADI",
+          "as": "1.54%",
+          "sh": "716"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight_pct": 1.53,
+        "shares": 1056,
+        "raw": {
+          "no": 12,
+          "n": "AbbVie Inc.",
+          "s": "$ABBV",
+          "as": "1.53%",
+          "sh": "1,056"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "PH",
+        "name": "Parker-Hannifin Corporation",
+        "weight_pct": 1.36,
+        "shares": 250,
+        "raw": {
+          "no": 13,
+          "n": "Parker-Hannifin Corporation",
+          "s": "$PH",
+          "as": "1.36%",
+          "sh": "250"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "APH",
+        "name": "Amphenol Corporation",
+        "weight_pct": 1.32,
+        "shares": 1464,
+        "raw": {
+          "no": 14,
+          "n": "Amphenol Corporation",
+          "s": "$APH",
+          "as": "1.32%",
+          "sh": "1,464"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "NLY",
+        "name": "Annaly Capital Management, Inc.",
+        "weight_pct": 1.29,
+        "shares": 10021,
+        "raw": {
+          "no": 15,
+          "n": "Annaly Capital Management, Inc.",
+          "s": "$NLY",
+          "as": "1.29%",
+          "sh": "10,021"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "USB",
+        "name": "U.S. Bancorp",
+        "weight_pct": 1.29,
+        "shares": 3600,
+        "raw": {
+          "no": 16,
+          "n": "U.S. Bancorp",
+          "s": "$USB",
+          "as": "1.29%",
+          "sh": "3,600"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 1.27,
+        "shares": 760,
+        "raw": {
+          "no": 17,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "1.27%",
+          "sh": "760"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "AMGN",
+        "name": "Amgen Inc.",
+        "weight_pct": 1.26,
+        "shares": 600,
+        "raw": {
+          "no": 18,
+          "n": "Amgen Inc.",
+          "s": "$AMGN",
+          "as": "1.26%",
+          "sh": "600"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ROKU",
+        "name": "Roku, Inc.",
+        "weight_pct": 1.25,
+        "shares": 1560,
+        "raw": {
+          "no": 19,
+          "n": "Roku, Inc.",
+          "s": "$ROKU",
+          "as": "1.25%",
+          "sh": "1,560"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "ANET",
+        "name": "Arista Networks, Inc.",
+        "weight_pct": 1.2,
+        "shares": 1272,
+        "raw": {
+          "no": 20,
+          "n": "Arista Networks, Inc.",
+          "s": "$ANET",
+          "as": "1.20%",
+          "sh": "1,272"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "MO",
+        "name": "Altria Group, Inc.",
+        "weight_pct": 1.2,
+        "shares": 2899,
+        "raw": {
+          "no": 21,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "1.20%",
+          "sh": "2,899"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "GOOG",
+        "name": "Alphabet Inc.",
+        "weight_pct": 1.19,
+        "shares": 576,
+        "raw": {
+          "no": 22,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "1.19%",
+          "sh": "576"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "NVT",
+        "name": "nVent Electric plc",
+        "weight_pct": 1.18,
+        "shares": 1359,
+        "raw": {
+          "no": 23,
+          "n": "nVent Electric plc",
+          "s": "$NVT",
+          "as": "1.18%",
+          "sh": "1,359"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "BNY",
+        "name": "The Bank of New York Mellon Corporation",
+        "weight_pct": 1.15,
+        "shares": 1320,
+        "raw": {
+          "no": 24,
+          "n": "The Bank of New York Mellon Corporation",
+          "s": "$BNY",
+          "as": "1.15%",
+          "sh": "1,320"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "!CPH/TRMD.A",
+        "name": "TORM plc",
+        "weight_pct": 1.15,
+        "shares": 7114,
+        "raw": {
+          "no": 25,
+          "n": "TORM plc",
+          "s": "!cph/TRMD.A",
+          "as": "1.15%",
+          "sh": "7,114"
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.0027,
-      "stockPosition": 0.9972,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.11399999,
-      "consumer_cyclical": 0.0454,
-      "basic_materials": 0.032,
-      "consumer_defensive": 0.0252,
-      "technology": 0.3859,
-      "communication_services": 0.0617,
-      "financial_services": 0.0813,
-      "utilities": 0.0137,
-      "industrials": 0.09810001,
-      "energy": 0.0635,
-      "healthcare": 0.0793
-    },
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 35.46
+      },
+      {
+        "n": "Real Estate",
+        "w": 12.05
+      },
+      {
+        "n": "Financials",
+        "w": 11.1
+      },
+      {
+        "n": "Industrials",
+        "w": 10.55
+      },
+      {
+        "n": "Healthcare",
+        "w": 8.62
+      },
+      {
+        "n": "Energy",
+        "w": 6.75
+      },
+      {
+        "n": "Communication Services",
+        "w": 6.01
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 4.1
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 2.56
+      },
+      {
+        "n": "Materials",
+        "w": 1.4
+      },
+      {
+        "n": "Utilities",
+        "w": 1.39
+      }
+    ],
     "countries": null,
     "classification": {
       "is_leveraged": false,
@@ -492,15 +777,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/VUS.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/VUS.json",
+    "stockanalysis": "stockanalysis/etfs/VUS.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

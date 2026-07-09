@@ -16,12 +16,14 @@ const __dirname = path.dirname(__filename);
 const IS_DIRECT_RUN = process.argv[1] ? path.resolve(process.argv[1]) === __filename : false;
 const REPO_ROOT = path.resolve(__dirname, "..");
 const INDEX_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-edge-coverage-index.json");
+const S0_FINRA_OCC_LEDGER_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-s0-finra-occ-mapping-ledger.json");
 const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
 const PUBLIC_INDEX_PATH = path.join(PUBLIC_DATA_ROOT, "admin", "fenok-edge-coverage-index.json");
 const JSON_MODE = process.argv.includes("--json");
 const REQUIRE_ACTIVE_S0_DAILY_GATED = process.argv.includes("--require-active-s0-daily-gated");
 const PUBLIC_BUNDLE_MODE = process.argv.includes("--public-bundle") || process.argv.includes("--warn-stale-counted-sources");
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
+const S0_LEDGER_MAX_GENERATED_LAG_MS = 10 * 60 * 1000;
 const COUNTED_DAILY_SOURCE_FRESHNESS_IDS = new Set([
   "korea_counted_source_date",
   "us_flow_source_date",
@@ -91,6 +93,11 @@ function publicRel(absPath) {
 
 function check(id, ok, detail = {}) {
   return { id, ok: Boolean(ok), ...detail };
+}
+
+function toEpochMs(value) {
+  const ms = Date.parse(String(value ?? ""));
+  return Number.isFinite(ms) ? ms : null;
 }
 
 function freshnessReady(checks, id) {
@@ -243,6 +250,77 @@ function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, comp
   };
 }
 
+function s0FinraOccLedgerEvidence(index, activeTotal) {
+  let ledger = null;
+  let read_error = null;
+  const exists = fs.existsSync(S0_FINRA_OCC_LEDGER_PATH);
+  if (exists) {
+    try {
+      ledger = readJson(S0_FINRA_OCC_LEDGER_PATH);
+    } catch (error) {
+      read_error = error.message;
+    }
+  }
+
+  const indexGeneratedMs = toEpochMs(index.generated_at);
+  const ledgerGeneratedMs = toEpochMs(ledger?.generated_at);
+  const generated_lag_ms = indexGeneratedMs != null && ledgerGeneratedMs != null
+    ? Math.max(0, indexGeneratedMs - ledgerGeneratedMs)
+    : null;
+  const generated_fresh = generated_lag_ms != null && generated_lag_ms <= S0_LEDGER_MAX_GENERATED_LAG_MS;
+
+  const expectedRowCounts = {
+    finra_excluded_us_class_or_non_plain_daily_ready: ledger?.counts?.finra_excluded_us_class_or_non_plain_daily_ready,
+    finra_mapping_required_missing_row: ledger?.counts?.finra_mapping_required_missing_row,
+    finra_source_ready_no_reported_row: ledger?.counts?.finra_source_ready_no_reported_row,
+    finra_low_confidence_placeholder_policy_rows: ledger?.counts?.finra_low_confidence_placeholder_policy_rows,
+    occ_non_plain_mapping_required: ledger?.counts?.occ_non_plain_mapping_required,
+    occ_class_share_normalization_required: ledger?.counts?.occ_class_share_normalization_required,
+    occ_no_listed_options_source_ready: ledger?.counts?.plain_us_occ_no_listed_options_source_ready,
+  };
+  const row_count_checks = Object.entries(expectedRowCounts).map(([key, expected]) => {
+    const actual = asArray(ledger?.rows?.[key]).length;
+    return { key, expected: Number(expected), actual, ok: actual === Number(expected) };
+  });
+  const sourceRows = asArray(index.source_availability?.sources);
+  const finraSource = findById(sourceRows, "us_finra_flow_proxy");
+  const occSource = findById(sourceRows, "us_occ_options_proxy");
+
+  const evidence = {
+    path: path.relative(REPO_ROOT, S0_FINRA_OCC_LEDGER_PATH),
+    exists,
+    read_error,
+    schema_version: ledger?.schema_version ?? null,
+    generated_at: ledger?.generated_at ?? null,
+    index_generated_at: index.generated_at ?? null,
+    generated_lag_ms,
+    max_generated_lag_ms: S0_LEDGER_MAX_GENERATED_LAG_MS,
+    generated_fresh,
+    raw_policy: ledger?.raw_policy ?? null,
+    service_boundary: ledger?.service_boundary ?? null,
+    counts: ledger?.counts ?? null,
+    row_count_checks,
+    ready: exists
+      && !read_error
+      && ledger?.schema_version === "fenok-s0-finra-occ-mapping-ledger/v0.1"
+      && ledger?.raw_policy?.fetches_external_data === false
+      && ledger?.raw_policy?.public_bundle_safe === false
+      && ledger?.raw_policy?.admin_local_only === true
+      && ledger?.raw_policy?.raw_private_cache_included === false
+      && ledger?.service_boundary?.active_s0_daily_source_gate_blocker === false
+      && Number(ledger?.counts?.active_us_total) === Number(index.active_scoring_universe?.buckets?.us)
+      && Number(ledger?.counts?.plain_us_finra_denominator) === Number(finraSource?.denominator)
+      && Number(ledger?.counts?.plain_us_finra_source_ready) === Number(finraSource?.covered_count)
+      && Number(ledger?.counts?.plain_us_occ_denominator) === Number(occSource?.denominator)
+      && Number(ledger?.counts?.plain_us_occ_source_ready) === Number(occSource?.covered_count)
+      && Number(index.active_scoring_universe?.total) === Number(activeTotal)
+      && generated_fresh
+      && row_count_checks.every((item) => item.ok),
+  };
+
+  return evidence;
+}
+
 function main() {
 const index = readJson(INDEX_PATH);
 const errors = [];
@@ -275,6 +353,7 @@ const etfCoreReadinessTrack = readinessTracks.find((track) => track?.id === "etf
 const etfCoreEvidence = etfCoreReadinessTrack?.evidence_based_readiness ?? index.etf_universe?.core_daily_basket?.evidence_based_readiness ?? null;
 const freshnessChecks = asArray(index.freshness_gate?.checks);
 const activeS0Evidence = buildActiveS0Evidence(index, activeTotal, activeS0ReadinessTrack, sourceRows, composites, freshnessChecks);
+const s0LedgerEvidence = s0FinraOccLedgerEvidence(index, activeTotal);
 const publicBundleDegradedChecks = [];
 
 if (!activeTotal) add(errors, "active_scoring_universe.total must be derived and non-zero");
@@ -353,6 +432,9 @@ if (activeS0ReadinessTrack?.readiness_status === "ready" && activeS0Evidence.gat
 }
 if (activeS0ReadinessTrack?.public_done_claim_allowed === true && activeS0Evidence.gated_ready !== true) {
   add(errors, `${ACTIVE_S0_TRACK_ID}: public_done_claim_allowed=true requires active_s0_daily_gated_evidence.gated_ready=true`);
+}
+if (!s0LedgerEvidence.ready) {
+  add(errors, "s0_finra_occ_mapping_ledger: ledger must be fresh, admin-local, and internally count-consistent", s0LedgerEvidence);
 }
 
 if (etfReadinessTrack?.requirements?.public === true && etfEvidence?.public_ready !== true) {
@@ -465,6 +547,7 @@ const result = {
     degraded_checks: publicBundleDegradedChecks,
   },
   active_s0_daily_gated_evidence: activeS0Evidence,
+  s0_finra_occ_mapping_ledger_evidence: s0LedgerEvidence,
   etf_scoring_lane_evidence: etfEvidence,
   etf_core_daily_basket_evidence: etfCoreEvidence,
   checks: freshnessChecks.map((check) => ({
@@ -501,6 +584,7 @@ if (JSON_MODE) {
     console.log(`- ${check.result} ${check.id}${check.source_date ? ` source_date=${check.source_date}` : ""}${check.age_days != null ? ` age_days=${check.age_days}` : ""}`);
   }
   console.log(`active S0 evidence: daily_ready=${activeS0Evidence.daily_ready} gated_ready=${activeS0Evidence.gated_ready} blockers=${activeS0Evidence.blockers.join(",") || "none"}`);
+  console.log(`S0 FINRA/OCC mapping ledger: ready=${s0LedgerEvidence.ready} generated_at=${s0LedgerEvidence.generated_at ?? "n/a"} lag_ms=${s0LedgerEvidence.generated_lag_ms ?? "n/a"}`);
   if (etfEvidence) {
     console.log(`ETF evidence: public_ready=${etfEvidence.public_ready} daily_ready=${etfEvidence.daily_ready} gated_ready=${etfEvidence.gated_ready} blockers=${asArray(etfEvidence.blockers).join(",") || "none"}`);
   }
@@ -521,5 +605,6 @@ export {
   freshnessReady,
   fullSourceCoverage,
   requirementsReady,
+  s0FinraOccLedgerEvidence,
   warnOnlyStaleCountedSource,
 };

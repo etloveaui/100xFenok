@@ -129,6 +129,7 @@ removeGeneratedPublicMirror("public/data/admin/fenok-edge-etf-daily1y-readiness.
 removeGeneratedPublicMirror("public/data/admin/fenok-edge-etf-daily1y-fetchable-plan.json");
 removeGeneratedPublicMirror("public/data/admin/fenok-etf-daily1y-dispatch-plan.json");
 removeGeneratedPublicMirror("public/data/admin/fenok-etf-core-daily-basket.json");
+removeGeneratedPublicMirror("public/data/admin/fenok-s0-finra-occ-mapping-ledger.json");
 for (const relativePath of [
   "public/data/computed/fenok_flow_proxies.json",
   "public/data/computed/fenok_flow_proxies_history.json",

@@ -1,6 +1,6 @@
 {
   "schema_version": "product-surface-coverage/v1",
-  "generated_at": "2026-07-09T12:22:10.528Z",
+  "generated_at": "2026-07-09T13:01:10.835Z",
   "source": "local DataPack coverage files",
   "source_files": [
     "computed/market_facts/index.json",
@@ -110,7 +110,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:52:55Z",
+          "as_of": "2026-07-09T09:29:11Z",
           "age_days": 0,
           "max_age_days": 7
         },
@@ -142,7 +142,7 @@
       "owner": "Market valuation",
       "status": "partial",
       "status_label": "부분 준비",
-      "coverage_score": 87.5,
+      "coverage_score": 90,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -168,16 +168,49 @@
           "label": "소스 일치성",
           "status": "partial",
           "status_label": "부분 준비",
-          "detail": "29,960개 복수 후보",
-          "count": 29960,
+          "detail": "30,174개 복수 후보",
+          "count": 30174,
           "reason": "차이·오래됨·부호 차이를 Data Lab에서 계속 노출"
+        },
+        {
+          "label": "KOSPI RIM 입력",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "945개 구성 · 매칭 91.65%",
+          "index_id": "KOSPI",
+          "role": "secondary_input_only",
+          "public_status": "ready_inputs_and_forecast_grid",
+          "blockers": [],
+          "forecast_grid_status": "input_only_krx_exact_weights_no_fair_value",
+          "source_tier": "exact_index_weight_source",
+          "proxy_inputs_present": false,
+          "matched_weight_ratio": 0.91649,
+          "methodology_weight_rows": null,
+          "cap_violation_count": null
+        },
+        {
+          "label": "SOX RIM 입력",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "30개 구성 · 매칭 100% · cap 위반 0",
+          "index_id": "SOX",
+          "role": "secondary_input_only",
+          "public_status": "ready_inputs_and_forecast_grid",
+          "blockers": [],
+          "forecast_grid_status": "input_only_sox_methodology_weights_no_fair_value",
+          "source_tier": "methodology_derived_index_weight_source",
+          "official_weight_columns_available": false,
+          "proxy_inputs_present": false,
+          "matched_weight_ratio": 1,
+          "methodology_weight_rows": 30,
+          "cap_violation_count": 0
         },
         {
           "label": "RIM 입력 기준일",
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T12:22:09.892Z",
+          "as_of": "2026-07-09T13:00:57.595Z",
           "age_days": 0,
           "max_age_days": 2
         },
@@ -204,12 +237,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:52:55Z",
+          "as_of": "2026-07-09T09:29:11Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-09T02:52:55Z"
+      "as_of": "2026-07-09T09:29:11Z"
     },
     {
       "id": "market_events",
@@ -310,12 +343,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:52:55Z",
+          "as_of": "2026-07-09T09:29:11Z",
           "age_days": 0,
           "max_age_days": 14
         }
       ],
-      "as_of": "2026-07-09T02:52:55Z"
+      "as_of": "2026-07-09T09:29:11Z"
     },
     {
       "id": "etf_center",
@@ -364,12 +397,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:26:54Z",
+          "as_of": "2026-07-09T09:38:01Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-09T02:26:54Z"
+      "as_of": "2026-07-09T09:38:01Z"
     },
     {
       "id": "screener",
@@ -455,12 +488,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T12:22:10.528Z",
+          "as_of": "2026-07-09T13:01:10.835Z",
           "age_days": 0,
           "max_age_days": 1
         }
       ],
-      "as_of": "2026-07-09T12:22:10.528Z"
+      "as_of": "2026-07-09T13:01:10.835Z"
     }
   ]
 }

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "WDE",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Principal Securitized Debt ETF",
     "exchange": "BTS",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 25.295,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 25.2099,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:19Z",
+      "fetched_at": "2026-07-09T09:25:40Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 25.295,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.2099,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
+          "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 25.255,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.21,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
+          "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.0400000000000027,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.03,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:19Z",
+      "fetched_at": "2026-07-09T09:25:40Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": 0.0400000000000027,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.03,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
+          "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.15838447832113522,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.12,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:19Z",
+      "fetched_at": "2026-07-09T09:25:40Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,10 +103,10 @@
       ],
       "candidates": [
         {
-          "value": 0.15838447832113522,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.12,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
+          "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed"
         }
       ],
@@ -132,33 +132,36 @@
           "confidence": "observed"
         },
         {
-          "value": 20113932.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 20140000.0,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
+          "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
+    "dividend_yield": {
+      "value": 0.39,
+      "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-07-02T00:01:19Z",
+      "fetched_at": "2026-07-09T09:25:40Z",
       "confidence": "observed",
+      "unit": "percent_points",
       "policy": [
         "yf",
         "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
       ],
       "candidates": [
         {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 0.39,
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
-          "confidence": "observed"
+          "fetched_at": "2026-07-09T09:25:40Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -186,9 +189,9 @@
         },
         {
           "value": 0.19,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-07-02T00:01:19Z",
+          "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -216,32 +219,17 @@
           "fetched_at": "2026-07-02T00:01:19Z",
           "confidence": "derived",
           "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_3m": {
-      "value": -0.039370980441040586,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-07-02T00:01:19Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
+        },
         {
-          "value": -0.039370980441040586,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-07-02T00:01:19Z",
-          "confidence": "derived",
+          "value": 0.7515,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:25:40Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": 1.1553745170171592,
@@ -305,29 +293,355 @@
     }
   },
   "etf": {
-    "holdings_count": 1,
-    "holdings_updated": "2026-07-02T00:01:19Z",
+    "holdings_count": 45,
+    "holdings_updated": "Jul 3, 2026",
     "top_holdings": [
       {
         "rank": 1,
-        "symbol": "GVMXX",
-        "name": "State Street Instl US Govt MMkt Premier",
-        "weight_pct": 8.5788496,
+        "symbol": "B.0 07.14.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 6.15,
+        "shares": 1500000,
         "raw": {
-          "_index": "GVMXX",
-          "Name": "State Street Instl US Govt MMkt Premier",
-          "Holding Percent": 0.085788496
+          "no": 1,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 07.14.26",
+          "as": "6.15%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "2 Year Treasury Note Future Sept 26",
+        "weight_pct": 5.07,
+        "shares": 1200000,
+        "raw": {
+          "no": 2,
+          "n": "2 Year Treasury Note Future Sept 26",
+          "as": "5.07%",
+          "sh": "1,200,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "MSWF.2023-1 A5",
+        "name": "MSWF COML MTG TR 2023-1 5.752%",
+        "weight_pct": 4.26,
+        "shares": 1000000,
+        "raw": {
+          "no": 3,
+          "n": "MSWF COML MTG TR 2023-1 5.752%",
+          "s": "MSWF.2023-1 A5",
+          "as": "4.26%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "PCG.5.256 01.15.38 A-2",
+        "name": "PG&E Recovery Funding LLC 5.256%",
+        "weight_pct": 4.15,
+        "shares": 1000000,
+        "raw": {
+          "no": 4,
+          "n": "PG&E Recovery Funding LLC 5.256%",
+          "s": "PCG.5.256 01.15.38 A-2",
+          "as": "4.15%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "HAROT.2024-1 A4",
+        "name": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
+        "weight_pct": 4.14,
+        "shares": 1000000,
+        "raw": {
+          "no": 5,
+          "n": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
+          "s": "HAROT.2024-1 A4",
+          "as": "4.14%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "GGP.2026-SSP A",
+        "name": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
+        "weight_pct": 4.11,
+        "shares": 1000000,
+        "raw": {
+          "no": 6,
+          "n": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
+          "s": "GGP.2026-SSP A",
+          "as": "4.11%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "GALC.2025-1 A3",
+        "name": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
+        "weight_pct": 4.11,
+        "shares": 1000000,
+        "raw": {
+          "no": 7,
+          "n": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
+          "s": "GALC.2025-1 A3",
+          "as": "4.11%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "CONE.2026-DFW3 A",
+        "name": "CONE 2026-DFW3 5.75063%",
+        "weight_pct": 4.09,
+        "shares": 1000000,
+        "raw": {
+          "no": 8,
+          "n": "CONE 2026-DFW3 5.75063%",
+          "s": "CONE.2026-DFW3 A",
+          "as": "4.09%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "EFF.2025-4 A3",
+        "name": "ENTERPRISE FLEET FINANCING 2025-4 LLC 4.11%",
+        "weight_pct": 4.06,
+        "shares": 1000000,
+        "raw": {
+          "no": 9,
+          "n": "ENTERPRISE FLEET FINANCING 2025-4 LLC 4.11%",
+          "s": "EFF.2025-4 A3",
+          "as": "4.06%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "GSAR.2026-1A A2",
+        "name": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-1 4.05%",
+        "weight_pct": 3.87,
+        "shares": 947296,
+        "raw": {
+          "no": 10,
+          "n": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-1 4.05%",
+          "s": "GSAR.2026-1A A2",
+          "as": "3.87%",
+          "sh": "947,296"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "MSC.2016-UBS9 AS",
+        "name": "Ms Cap I Tr 2016-Ubs9 3.903%",
+        "weight_pct": 3.23,
+        "shares": 793887,
+        "raw": {
+          "no": 11,
+          "n": "Ms Cap I Tr 2016-Ubs9 3.903%",
+          "s": "MSC.2016-UBS9 AS",
+          "as": "3.23%",
+          "sh": "793,887"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "Us 10yr Note (Cbt)sep26 Xcbt 20260921",
+        "weight_pct": 3.15,
+        "shares": 700000,
+        "raw": {
+          "no": 12,
+          "n": "Us 10yr Note (Cbt)sep26 Xcbt 20260921",
+          "as": "3.15%",
+          "sh": "700,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "BFLD.2025-5MW A",
+        "name": "BFLD COMMERCIAL MORTGAGE TRUST 2025-5MW 4.82999%",
+        "weight_pct": 3.04,
+        "shares": 750000,
+        "raw": {
+          "no": 13,
+          "n": "BFLD COMMERCIAL MORTGAGE TRUST 2025-5MW 4.82999%",
+          "s": "BFLD.2025-5MW A",
+          "as": "3.04%",
+          "sh": "750,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "VWALT.2025-B A3",
+        "name": "VOLKSWAGEN AUTO LEASE TRUST 2025-B 4.01%",
+        "weight_pct": 2.99,
+        "shares": 732000,
+        "raw": {
+          "no": 14,
+          "n": "VOLKSWAGEN AUTO LEASE TRUST 2025-B 4.01%",
+          "s": "VWALT.2025-B A3",
+          "as": "2.99%",
+          "sh": "732,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "GSMS.2020-GC47 XA",
+        "name": "GS MORTGAGE SEC TR 2020-GC47 1.23552%",
+        "weight_pct": 2.82,
+        "shares": 19376352,
+        "raw": {
+          "no": 15,
+          "n": "GS MORTGAGE SEC TR 2020-GC47 1.23552%",
+          "s": "GSMS.2020-GC47 XA",
+          "as": "2.82%",
+          "sh": "19,376,352"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "T.3.875 03.31.31",
+        "name": "United States Treasury Notes 3.875%",
+        "weight_pct": 2.43,
+        "shares": 600000,
+        "raw": {
+          "no": 16,
+          "n": "United States Treasury Notes 3.875%",
+          "s": "T.3.875 03.31.31",
+          "as": "2.43%",
+          "sh": "600,000"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "BANK.2026-BNK52 XA",
+        "name": "BANK 2026-BNK52 0.921%",
+        "weight_pct": 2.07,
+        "shares": 9000000,
+        "raw": {
+          "no": 17,
+          "n": "BANK 2026-BNK52 0.921%",
+          "s": "BANK.2026-BNK52 XA",
+          "as": "2.07%",
+          "sh": "9,000,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "G2SF.5 7.11",
+        "name": "Government National Mortgage Association 5%",
+        "weight_pct": 2.06,
+        "shares": 510000,
+        "raw": {
+          "no": 18,
+          "n": "Government National Mortgage Association 5%",
+          "s": "G2SF.5 7.11",
+          "as": "2.06%",
+          "sh": "510,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "G2SF.5.5 7.11",
+        "name": "Government National Mortgage Association 5.5%",
+        "weight_pct": 2.06,
+        "shares": 500000,
+        "raw": {
+          "no": 19,
+          "n": "Government National Mortgage Association 5.5%",
+          "s": "G2SF.5.5 7.11",
+          "as": "2.06%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "NYC.2026-7W34 A",
+        "name": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.20572%",
+        "weight_pct": 2.03,
+        "shares": 500000,
+        "raw": {
+          "no": 20,
+          "n": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.20572%",
+          "s": "NYC.2026-7W34 A",
+          "as": "2.03%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "BBCMS.2024-C30 A1",
+        "name": "Bbcms Mortgage Trust 2024-C30 4.902%",
+        "weight_pct": 2.03,
+        "shares": 494555,
+        "raw": {
+          "no": 21,
+          "n": "Bbcms Mortgage Trust 2024-C30 4.902%",
+          "s": "BBCMS.2024-C30 A1",
+          "as": "2.03%",
+          "sh": "494,555"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "BANK.2021-BN35 XB",
+        "name": "BANK 2021-BNK35 0.70472%",
+        "weight_pct": 2.03,
+        "shares": 18100000,
+        "raw": {
+          "no": 22,
+          "n": "BANK 2021-BNK35 0.70472%",
+          "s": "BANK.2021-BN35 XB",
+          "as": "2.03%",
+          "sh": "18,100,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!MUTF/GVMXX",
+        "name": "State Street U.S. Government Money Market Portfolio",
+        "weight_pct": 1.99,
+        "shares": 485938,
+        "raw": {
+          "no": 23,
+          "n": "State Street U.S. Government Money Market Portfolio",
+          "s": "!mutf/GVMXX",
+          "as": "1.99%",
+          "sh": "485,938"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "BX.2026-VLT10 A",
+        "name": "BX COMMERCIAL MORTGAGE TRUST 2026-VLT10 5.35795%",
+        "weight_pct": 1.99,
+        "shares": 500000,
+        "raw": {
+          "no": 24,
+          "n": "BX COMMERCIAL MORTGAGE TRUST 2026-VLT10 5.35795%",
+          "s": "BX.2026-VLT10 A",
+          "as": "1.99%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "Us 5yr Note (Cbt) Sep26 Xcbt 20260930",
+        "weight_pct": 1.75,
+        "shares": 400000,
+        "raw": {
+          "no": 25,
+          "n": "Us 5yr Note (Cbt) Sep26 Xcbt 20260930",
+          "as": "1.75%",
+          "sh": "400,000"
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.1526,
-      "stockPosition": 0.0,
-      "bondPosition": 0.84739995,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
     "classification": {
@@ -344,15 +658,15 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/WDE.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/WDE.json",
+    "stockanalysis": "stockanalysis/etfs/WDE.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

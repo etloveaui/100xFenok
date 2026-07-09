@@ -14,6 +14,9 @@ const DEFAULT_MIN_COVERED_WEIGHT = 0.75;
 const KOSPI_KRX_BRIDGE_FILE = "admin/fenok-edge-korea-krx-daily-index.json";
 const KOSPI_KRX_WEIGHT_KEY = "kospi_krx_mktcap";
 const KOSPI_INPUT_FRESHNESS_MAX_DAYS = 2;
+const SOX_GIW_CONSTITUENTS_FILE = "indices/nasdaq-giw-sox-constituents.json";
+const SOX_DERIVED_WEIGHT_KEY = "sox_nasdaq_giw_methodology_mktcap";
+const SOX_INPUT_FRESHNESS_MAX_DAYS = 7;
 const ASSUMPTION_VERSION = "rim-assumptions-20260708";
 const REVIEWED_AT = "2026-07-08";
 
@@ -63,14 +66,12 @@ const SECONDARY_INDICES = [
   },
   {
     id: "SOX",
-    label: "PHLX Semiconductor / SOX candidate",
-    role: "backlog_blocked",
+    label: "PHLX Semiconductor / SOX",
+    role: "secondary_input_only",
     benchmarkFile: "benchmarks/micro_sectors.json",
     benchmarkSection: "philadelphia_semi",
     blockers: [
-      "identity_mapping_philadelphia_semi_to_sox_unverified",
       "missing_sox_constituent_weight_path",
-      "missing_sox_index_yield_path",
       "missing_sox_payout_coverage",
     ],
   },
@@ -102,7 +103,7 @@ const PROXY_CONSTITUENT_CANDIDATES = {
     exactIndexSubstitute: false,
     notes: [
       "iShares Semiconductor ETF holdings are a proxy candidate only, not literal PHLX Semiconductor Index weights.",
-      "High proxy coverage does not remove the SOX identity-mapping blocker.",
+      "SOXX is diagnostics-only; SOX RIM inputs use Nasdaq GIW official constituents when available.",
     ],
   },
 };
@@ -161,6 +162,19 @@ function krxInputFreshness(asOf, generatedAt) {
     calendar_age_days: ageDays,
     max_input_freshness_days: KOSPI_INPUT_FRESHNESS_MAX_DAYS,
     status: finite(ageDays) && ageDays <= KOSPI_INPUT_FRESHNESS_MAX_DAYS
+      ? "fresh_enough_for_input_slice"
+      : "refresh_recommended",
+  };
+}
+
+function soxInputFreshness(asOf, generatedAt) {
+  const generatedDate = String(generatedAt ?? "").slice(0, 10);
+  const ageDays = daysBetweenIsoDates(asOf, generatedDate);
+  return {
+    generated_at_date: generatedDate || null,
+    calendar_age_days: ageDays,
+    max_input_freshness_days: SOX_INPUT_FRESHNESS_MAX_DAYS,
+    status: finite(ageDays) && ageDays <= SOX_INPUT_FRESHNESS_MAX_DAYS
       ? "fresh_enough_for_input_slice"
       : "refresh_recommended",
   };
@@ -621,6 +635,173 @@ function stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights) {
   return { indexRows, denominatorRows, missingSample };
 }
 
+function capForSoxMarketCapRank(rankIndex) {
+  if (rankIndex === 0) return 12;
+  if (rankIndex === 1) return 10;
+  if (rankIndex === 2) return 8;
+  return 4;
+}
+
+function cappedSoxMarketCapWeights(rows) {
+  const totalMarketCap = rows.reduce((sum, row) => sum + row.market_cap, 0);
+  if (!finite(totalMarketCap) || totalMarketCap <= 0) return [];
+  const byMarketCap = rows
+    .map((row) => ({
+      ...row,
+      initial_weight_pct: (row.market_cap / totalMarketCap) * 100,
+    }))
+    .sort((a, b) => b.market_cap - a.market_cap);
+  let working = byMarketCap.map((row, index) => ({
+    ...row,
+    market_cap_rank: index + 1,
+    cap_pct: capForSoxMarketCapRank(index),
+    weight_pct: row.initial_weight_pct,
+    capped: false,
+  }));
+  for (let iteration = 0; iteration < 50; iteration += 1) {
+    const overCap = working.filter((row) => row.weight_pct > row.cap_pct + 1e-10);
+    if (!overCap.length) break;
+    const excess = overCap.reduce((sum, row) => sum + (row.weight_pct - row.cap_pct), 0);
+    const overSet = new Set(overCap.map((row) => row.symbol));
+    working = working.map((row) => overSet.has(row.symbol)
+      ? { ...row, weight_pct: row.cap_pct, capped: true }
+      : row);
+    const receivers = working.filter((row) => !overSet.has(row.symbol) && row.weight_pct < row.cap_pct - 1e-10);
+    const receiverMarketCap = receivers.reduce((sum, row) => sum + row.market_cap, 0);
+    if (!receivers.length || !finite(receiverMarketCap) || receiverMarketCap <= 0) break;
+    working = working.map((row) => {
+      if (!receivers.some((receiver) => receiver.symbol === row.symbol)) return row;
+      return {
+        ...row,
+        weight_pct: row.weight_pct + (excess * row.market_cap / receiverMarketCap),
+      };
+    });
+  }
+  return working
+    .map((row) => ({
+      ...row,
+      weight_pct: round(row.weight_pct, 8),
+      weight: round(row.weight_pct / 100, 10),
+      initial_weight_pct: round(row.initial_weight_pct, 8),
+    }))
+    .sort((a, b) => a.giw_rank - b.giw_rank);
+}
+
+function loadNasdaqGiwSoxConstituents(dataRootForReads) {
+  const payload = readOptionalJson(path.join(dataRootForReads, SOX_GIW_CONSTITUENTS_FILE));
+  const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+  const normalizedRows = rows
+    .map((row, index) => ({
+      giw_rank: numberOrNull(row?.rank) ?? index + 1,
+      name: String(row?.name ?? "").trim(),
+      symbol: String(row?.symbol ?? "").trim().toUpperCase(),
+    }))
+    .filter((row) => row.symbol);
+  if (payload?.schema_version !== "nasdaq_giw_sox_constituents.v1" || normalizedRows.length < 25) {
+    return null;
+  }
+  return {
+    ...payload,
+    rows: normalizedRows,
+    row_count: numberOrNull(payload?.row_count) ?? normalizedRows.length,
+  };
+}
+
+function loadSoxMethodologyWeights(dataRootForReads, stockActionPayload, generatedAt) {
+  const constituents = loadNasdaqGiwSoxConstituents(dataRootForReads);
+  if (!constituents) return null;
+  const lookup = stockActionLookup(stockActionPayload);
+  const missingSample = [];
+  const marketCapRows = [];
+  for (const constituent of constituents.rows) {
+    const stockActionRow = lookup.get(constituent.symbol);
+    const marketCap = numberOrNull(stockActionRow?.marketCap);
+    if (stockActionRow && finite(marketCap) && marketCap > 0) {
+      marketCapRows.push({
+        ...constituent,
+        market_cap: marketCap,
+        stock_action_symbol: String(stockActionRow.symbol ?? constituent.symbol).trim().toUpperCase(),
+      });
+    } else if (missingSample.length < 10) {
+      missingSample.push(constituent.symbol);
+    }
+  }
+  if (marketCapRows.length < 25) return null;
+  const totalMarketCap = marketCapRows.reduce((sum, row) => sum + row.market_cap, 0);
+  const rows = cappedSoxMarketCapWeights(marketCapRows);
+  return {
+    index_key: SOX_DERIVED_WEIGHT_KEY,
+    source_tier: "methodology_derived_index_weight_source",
+    source: SOX_GIW_CONSTITUENTS_FILE,
+    source_url: constituents.source_url ?? "https://indexes.nasdaqomx.com/Index/Weighting/SOX",
+    source_field: "rows[].symbol + computed/stock_action_index.marketCap -> SOX methodology capped weights",
+    access_scope: constituents.access_scope ?? "public_free_constituent_view_no_official_weight_columns",
+    as_of: constituents.as_of ?? null,
+    row_count: rows.length,
+    total_market_cap: totalMarketCap,
+    denominator: {
+      method: "stock_action_market_cap_sum_for_official_giw_constituents",
+      label: "SOX official Nasdaq GIW constituents weighted by stock_action market cap and SOX methodology caps",
+      unit: "USD",
+      value: totalMarketCap,
+    },
+    methodology: {
+      source: "Nasdaq SOX methodology",
+      source_url: "https://indexes.nasdaqomx.com/docs/methodology_SOX.pdf",
+      weighting_scheme: "modified_market_capitalization_weighted",
+      cap_schedule: {
+        largest_market_cap: 0.12,
+        second_largest_market_cap: 0.10,
+        third_largest_market_cap: 0.08,
+        other_constituents: 0.04,
+      },
+      redistribution: "excess_weight_proportionally_redistributed_to_lower_weighted_index_securities_iteratively",
+    },
+    freshness: soxInputFreshness(constituents.as_of, generatedAt),
+    official_weight_columns_available: false,
+    missing_sample: missingSample,
+    rows,
+    notes: [
+      "Constituent identities come from Nasdaq GIW public SOX weighting endpoint.",
+      "Official GIW weight columns are not available in the public free view, so weights are methodology-derived from stock_action market caps.",
+      "SOXX/SOXQ ETF holdings remain diagnostics-only and are not promoted as exact SOX weights.",
+    ],
+  };
+}
+
+function stockActionRowsForSoxWeights(stockActionPayload, soxWeights) {
+  if (!soxWeights?.rows?.length) {
+    return { indexRows: [], denominatorRows: [], missingSample: [] };
+  }
+  const lookup = stockActionLookup(stockActionPayload);
+  const denominatorRows = [];
+  const indexRows = [];
+  const missingSample = [];
+  for (const soxRow of soxWeights.rows) {
+    const indexWeight = {
+      index: SOX_DERIVED_WEIGHT_KEY,
+      weight: soxRow.weight_pct,
+      source_weight_unit: "percent",
+    };
+    denominatorRows.push({
+      row: {
+        symbol: soxRow.symbol,
+        ticker_normalized: soxRow.symbol,
+        company: soxRow.name,
+      },
+      indexWeight,
+      soxRow,
+    });
+    const stockActionRow = lookup.get(soxRow.symbol);
+    if (stockActionRow) {
+      indexRows.push({ row: stockActionRow, indexWeight, soxRow });
+    } else if (missingSample.length < 10) {
+      missingSample.push(soxRow.symbol);
+    }
+  }
+  return { indexRows, denominatorRows, missingSample };
+}
+
 function weightedMetric(indexRows, metricFn, { denominatorRows = indexRows, missingLimit = 10 } = {}) {
   const denominatorWeight = denominatorRows.reduce((sum, { indexWeight }) => sum + numberOrNull(indexWeight.weight), 0);
   let coveredWeight = 0;
@@ -803,6 +984,68 @@ function krxKospiWeightDiagnostics(stockActionPayload, krxWeights) {
   };
 }
 
+function soxWeightDiagnostics(stockActionPayload, soxWeights) {
+  if (!soxWeights) return null;
+  const joined = stockActionRowsForSoxWeights(stockActionPayload, soxWeights);
+  const denominatorOptions = { denominatorRows: joined.denominatorRows };
+  const matched = weightedMetric(joined.indexRows, () => 1, denominatorOptions);
+  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const forwardGrowth = weightedMetric(joined.indexRows, (row) => {
+    const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
+    const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
+    return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0
+      ? Math.exp(Math.log(fy3 / fy1) / 2) - 1
+      : null;
+  }, denominatorOptions);
+  const methodologyWeightTotal = soxWeights.rows.reduce((sum, row) => sum + numberOrNull(row.weight_pct), 0);
+  const capViolationCount = soxWeights.rows.filter((row) => numberOrNull(row.weight_pct) > numberOrNull(row.cap_pct) + 0.000001).length;
+  return {
+    index_key: SOX_DERIVED_WEIGHT_KEY,
+    source_tier: soxWeights.source_tier,
+    source: soxWeights.source,
+    source_url: soxWeights.source_url,
+    source_field: soxWeights.source_field,
+    access_scope: soxWeights.access_scope,
+    as_of: soxWeights.as_of,
+    official_weight_columns_available: soxWeights.official_weight_columns_available,
+    methodology: soxWeights.methodology,
+    constituent_rows: soxWeights.row_count,
+    methodology_weight_rows: soxWeights.rows.length,
+    methodology_weight_total: round(methodologyWeightTotal, 6),
+    cap_violation_count: capViolationCount,
+    top_weight_sample: soxWeights.rows
+      .slice()
+      .sort((a, b) => numberOrNull(b.weight_pct) - numberOrNull(a.weight_pct))
+      .slice(0, 10)
+      .map((row) => ({
+        symbol: row.symbol,
+        name: row.name,
+        market_cap_rank: row.market_cap_rank,
+        initial_weight_pct: row.initial_weight_pct,
+        cap_pct: row.cap_pct,
+        weight_pct: row.weight_pct,
+        capped: row.capped,
+      })),
+    total_market_cap: soxWeights.total_market_cap,
+    denominator: soxWeights.denominator,
+    freshness: soxWeights.freshness,
+    matched_stock_action_rows: joined.indexRows.length,
+    matched_weight_ratio: matched.covered_weight_ratio,
+    dividend_yield_rows: dividendYield.covered_rows,
+    dividend_yield_weight_ratio: dividendYield.covered_weight_ratio,
+    weighted_dividend_yield: round(dividendYield.value, 8),
+    forward_eps_fy1_fy3_rows: forwardGrowth.covered_rows,
+    forward_eps_fy1_fy3_weight_ratio: forwardGrowth.covered_weight_ratio,
+    weighted_forward_eps_3y_cagr: round(forwardGrowth.value, 6),
+    min_public_card_weight_ratio: DEFAULT_MIN_COVERED_WEIGHT,
+    public_status: forwardGrowth.covered_weight_ratio >= DEFAULT_MIN_COVERED_WEIGHT
+      ? "sox_methodology_weights_financials_coverage_ready"
+      : "sox_methodology_weights_financials_coverage_below_threshold",
+    missing_sample: Array.from(new Set([...soxWeights.missing_sample, ...joined.missingSample])).slice(0, 10),
+    notes: soxWeights.notes,
+  };
+}
+
 function koreaCoverageDiagnostics(stockActionPayload, krxWeights = null) {
   const rows = Array.isArray(stockActionPayload?.rows) ? stockActionPayload.rows : [];
   const koreaRows = rows.filter((row) => row?.marketScope === "korea");
@@ -918,6 +1161,76 @@ function buildKrxKospiForwardEpsGrowth(
     notes: [
       "Not a live index-level consensus field; KRX exact market-cap weights are combined with stock_action forward EPS snapshots.",
       "KRX daily latest pull may need refresh before public card promotion.",
+    ],
+  });
+}
+
+function buildSoxPayoutRatio(indexConfig, benchmarkRow, stockActionPayload, soxWeights) {
+  const joined = stockActionRowsForSoxWeights(stockActionPayload, soxWeights);
+  const denominatorOptions = { denominatorRows: joined.denominatorRows };
+  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
+  const payoutRatio = finite(dividendYield.value) && earningsYield > 0
+    ? dividendYield.value / earningsYield
+    : null;
+  return derivedValue({
+    value: round(payoutRatio, 6),
+    formula: "sox_methodology_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+    sources: ["computed/stock_action_index.json", soxWeights.source, indexConfig.benchmarkFile],
+    coverage: {
+      stock_action_source_date: stockActionPayload?.source_date ?? null,
+      index_key: SOX_DERIVED_WEIGHT_KEY,
+      sox_constituents_as_of: soxWeights.as_of,
+      sox_constituent_source: soxWeights.source,
+      official_weight_columns_available: soxWeights.official_weight_columns_available,
+      methodology_source: soxWeights.methodology.source_url,
+      weighted_dividend_yield: round(dividendYield.value, 8),
+      benchmark_as_of: benchmarkRow.date,
+      benchmark_earnings_yield: round(earningsYield, 8),
+      unmatched_sox_sample: joined.missingSample,
+      ...dividendYield,
+    },
+    notes: [
+      "SOX official constituent identities are sourced from Nasdaq GIW public data.",
+      "Weights are methodology-derived from stock_action market caps because GIW free view does not expose official weight columns.",
+      "SOXX ETF holdings are not used in this top-level SOX payout input.",
+    ],
+  });
+}
+
+function buildSoxForwardEpsGrowth(
+  indexConfig,
+  stockActionPayload,
+  soxWeights,
+  minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT,
+) {
+  const joined = stockActionRowsForSoxWeights(stockActionPayload, soxWeights);
+  const denominatorOptions = { denominatorRows: joined.denominatorRows };
+  const growth = weightedMetric(joined.indexRows, (row) => {
+    const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
+    const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
+    return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0
+      ? Math.exp(Math.log(fy3 / fy1) / 2) - 1
+      : null;
+  }, denominatorOptions);
+  return derivedValue({
+    value: round(growth.value, 6),
+    formula: "sox_methodology_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+    sources: ["computed/stock_action_index.json", soxWeights.source],
+    coverage: {
+      stock_action_source_date: stockActionPayload?.source_date ?? null,
+      index_key: SOX_DERIVED_WEIGHT_KEY,
+      sox_constituents_as_of: soxWeights.as_of,
+      sox_constituent_source: soxWeights.source,
+      official_weight_columns_available: soxWeights.official_weight_columns_available,
+      methodology_source: soxWeights.methodology.source_url,
+      min_covered_weight_ratio: minCoveredWeight,
+      unmatched_sox_sample: joined.missingSample,
+      ...growth,
+    },
+    notes: [
+      "Not a live index-level consensus field; Nasdaq GIW constituents and methodology-derived weights are combined with stock_action forward EPS snapshots.",
+      "A refreshed Nasdaq GIW file and stock_action rebuild are required before public card promotion.",
     ],
   });
 }
@@ -1041,7 +1354,7 @@ function buildProxyInputs(indexConfig, benchmarkRow, context) {
         indexDiagnostics: diagnostic,
         notes: [
           "This forecast grid is nested under proxy_inputs_v1 and must not be treated as public-ready exact index output.",
-          "Exact SOX output still requires licensed/verified official constituent weights and yield coverage.",
+          "SOX top-level output must use Nasdaq GIW constituents or another verified index source; ETF proxy holdings are never exact index weights.",
         ],
       },
     ),
@@ -1391,7 +1704,7 @@ function buildSecondaryIndex(indexConfig, context) {
   const benchmarkRow = latestBenchmarkRow(benchmarkPayload, indexConfig.benchmarkSection, indexConfig.benchmarkFile);
   const observed = buildBenchmarkObservedInputs(indexConfig, benchmarkRow);
   if (indexConfig.id === "KOSPI") {
-    const krRiskFree = context.kr10y ?? context.krxKr10y;
+    const krRiskFree = context.krxKr10y ?? context.kr10y;
     if (krRiskFree) {
       observed.risk_free_rate = observedValue({
         value: krRiskFree.value,
@@ -1496,6 +1809,95 @@ function buildSecondaryIndex(indexConfig, context) {
       };
     }
   }
+  if (indexConfig.id === "SOX") {
+    observed.risk_free_rate = observedValue({
+      value: context.dgs10.value,
+      source: "macro/fred-banking-daily.json",
+      sourceField: "series.DGS10[-1].value / 100",
+      asOf: context.dgs10.date,
+      label: "US 10Y Treasury",
+    });
+    observed.equity_risk_premium = observedValue({
+      value: context.usErp.value,
+      source: "damodaran/erp.json",
+      sourceField: "us_erp",
+      asOf: context.usErp.source_date,
+      label: "Damodaran US ERP",
+    });
+    if (context.soxWeights) {
+      const joined = stockActionRowsForSoxWeights(context.stockActionPayload, context.soxWeights);
+      const payoutRatio = buildSoxPayoutRatio(indexConfig, benchmarkRow, context.stockActionPayload, context.soxWeights);
+      const explicitEpsGrowth3y = buildSoxForwardEpsGrowth(
+        indexConfig,
+        context.stockActionPayload,
+        context.soxWeights,
+        context.minCoveredWeight,
+      );
+      const costOfEquityValue = context.dgs10.value + context.usErp.value;
+      const blockers = [];
+      if (context.soxWeights.freshness?.status === "refresh_recommended") {
+        blockers.push({
+          code: "sox_giw_daily_refresh_recommended",
+          severity: "freshness_blocker",
+        });
+      }
+      if ((payoutRatio.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
+        blockers.push({
+          code: "sox_payout_coverage_below_threshold",
+          severity: "public_blocker",
+        });
+      }
+      if ((explicitEpsGrowth3y.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
+        blockers.push({
+          code: "sox_forward_eps_coverage_below_threshold",
+          severity: "public_blocker",
+        });
+      }
+      return {
+        id: indexConfig.id,
+        label: indexConfig.label,
+        role: "secondary_input_only",
+        public_status: blockers.length
+          ? "input_only_sox_methodology_weights_with_caveats"
+          : "ready_inputs_and_forecast_grid",
+        observed,
+        derived: {
+          book_value: buildBookValue(benchmarkRow),
+          payout_ratio: payoutRatio,
+          explicit_eps_growth_3y: explicitEpsGrowth3y,
+          cost_of_equity: derivedValue({
+            value: round(costOfEquityValue, 8),
+            formula: "risk_free_rate + equity_risk_premium",
+            sources: ["observed.risk_free_rate", "observed.equity_risk_premium"],
+            notes: ["SOX uses US risk-free and Damodaran US ERP inputs; no house premium adjustment included."],
+          }),
+          forecast_grid_v1: buildForecastGrid(
+            indexConfig,
+            benchmarkRow,
+            context.stockActionPayload,
+            payoutRatio,
+            costOfEquityValue,
+            explicitEpsGrowth3y,
+            {
+              indexRows: joined.indexRows,
+              denominatorRows: joined.denominatorRows,
+              indexKey: SOX_DERIVED_WEIGHT_KEY,
+              sourceRefs: ["computed/stock_action_index.json", context.soxWeights.source],
+              publicStatus: "input_only_sox_methodology_weights_no_fair_value",
+              indexDiagnostics: soxWeightDiagnostics(context.stockActionPayload, context.soxWeights),
+              notes: [
+                "SOX forecast grid uses Nasdaq GIW official constituents plus methodology-derived stock_action market-cap weights.",
+                "Official GIW weight columns are not available in the public free view; generated weights are not licensed official weights.",
+                "SOXX/SOXQ ETF holdings remain diagnostics-only and are not used as top-level SOX RIM weights.",
+              ],
+            },
+          ),
+        },
+        assumptions: {},
+        blockers,
+      };
+    }
+  }
   const proxyInputs = buildProxyInputs(indexConfig, benchmarkRow, context);
   return {
     id: indexConfig.id,
@@ -1561,6 +1963,7 @@ export function buildRimIndexInputs({
   }
   const macroPayload = readFrom("macro/fred-banking-daily.json");
   const erpPayload = readFrom("damodaran/erp.json");
+  const stockActionPayload = readFrom("computed/stock_action_index.json");
   const context = {
     benchmarkPayloads,
     dgs10: loadDgs10(macroPayload),
@@ -1569,7 +1972,8 @@ export function buildRimIndexInputs({
     krxKospiWeights: loadKrxKospiMarketCapWeights(originalDataRoot, generatedAt),
     usErp: loadUsErp(erpPayload),
     erpPayload,
-    stockActionPayload: readFrom("computed/stock_action_index.json"),
+    stockActionPayload,
+    soxWeights: loadSoxMethodologyWeights(originalDataRoot, stockActionPayload, generatedAt),
     minCoveredWeight,
     dataRoot: originalDataRoot,
   };
@@ -1592,6 +1996,7 @@ export function buildRimIndexInputs({
       secondary_or_backlog_indices: SECONDARY_INDICES.map((item) => item.id),
       kospi_weight_method: "KRX KOSPI issuer MKTCAP / total KOSPI MKTCAP when available",
       kospi_etf_proxy_policy: "EWY/MSCI Korea is diagnostics-only and must not be used as KOSPI RIM weights",
+      sox_weight_method: "Nasdaq GIW official SOX constituents + stock_action market caps + published SOX methodology caps; not official GIW weight columns",
       proxy_input_policy: "ETF proxy inputs are not exact index substitutes and must not set publication_ready.",
     },
     indices,
@@ -1600,6 +2005,7 @@ export function buildRimIndexInputs({
         SPX: stockActionIndexDiagnostics(context.stockActionPayload, "sp500"),
         NDX: stockActionIndexDiagnostics(context.stockActionPayload, "nasdaq100"),
         KOSPI: koreaCoverageDiagnostics(context.stockActionPayload, context.krxKospiWeights),
+        SOX: soxWeightDiagnostics(context.stockActionPayload, context.soxWeights),
       },
       proxy_constituent_candidates: proxyConstituentCandidateDiagnostics(context.stockActionPayload, originalDataRoot),
     },
@@ -1717,6 +2123,48 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
       }
     }
   }
+  for (const id of ["KOSPI", "SOX"]) {
+    const item = payload?.indices?.[id];
+    if (!item || item.public_status !== "ready_inputs_and_forecast_grid") continue;
+    if (item.blockers?.length) errors.push(`${id}: ready secondary index must not have blockers`);
+    for (const key of ["risk_free_rate", "equity_risk_premium"]) {
+      const field = item.observed?.[key];
+      if (!finite(field?.value) || field.value <= 0) errors.push(`${id}.${key}: positive observed value required`);
+      if (field?.source_tier !== "observed_source") errors.push(`${id}.${key}: observed_source tier required`);
+    }
+    for (const key of ["payout_ratio", "explicit_eps_growth_3y", "cost_of_equity"]) {
+      if (item.derived?.[key]?.source_tier !== "derived_formula") errors.push(`${id}.${key}: derived_formula tier required`);
+    }
+    const growthCoverage = item.derived?.explicit_eps_growth_3y?.coverage?.covered_weight_ratio;
+    if (!finite(growthCoverage) || growthCoverage < minCoveredWeight) {
+      errors.push(`${id}.explicit_eps_growth_3y: covered_weight_ratio below ${minCoveredWeight}`);
+    }
+    const payoutCoverage = item.derived?.payout_ratio?.coverage?.covered_weight_ratio;
+    if (!finite(payoutCoverage) || payoutCoverage < minCoveredWeight) {
+      errors.push(`${id}.payout_ratio: covered_weight_ratio below ${minCoveredWeight}`);
+    }
+    const grid = item.derived?.forecast_grid_v1;
+    if (grid?.schema_version !== "forecast_grid_v1") errors.push(`${id}.forecast_grid_v1: schema_version required`);
+    const expectedGridStatus = id === "KOSPI"
+      ? "input_only_krx_exact_weights_no_fair_value"
+      : "input_only_sox_methodology_weights_no_fair_value";
+    if (grid?.public_status !== expectedGridStatus) {
+      errors.push(`${id}.forecast_grid_v1: public_status must be ${expectedGridStatus}`);
+    }
+    if (!Array.isArray(grid?.periods) || grid.periods.length !== 3) {
+      errors.push(`${id}.forecast_grid_v1: exactly 3 periods required`);
+    }
+    if (id === "SOX") {
+      if (item.derived?.proxy_inputs_v1) errors.push("SOX.proxy_inputs_v1: must not exist on ready SOX methodology output");
+      const diagnostic = payload?.coverage_diagnostics?.stock_action?.SOX;
+      if (diagnostic?.source_tier !== "methodology_derived_index_weight_source") {
+        errors.push("SOX coverage diagnostic must use methodology_derived_index_weight_source");
+      }
+      if (diagnostic?.official_weight_columns_available !== false) {
+        errors.push("SOX coverage diagnostic must disclose official_weight_columns_available=false");
+      }
+    }
+  }
   const kospiRiskFree = payload?.indices?.KOSPI?.observed?.risk_free_rate;
   const kospiRiskFreeSourceFields = [
     kospiRiskFree?.source,
@@ -1766,15 +2214,9 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     if (!Array.isArray(grid?.periods) || grid.periods.length !== 3) {
       errors.push(`${id}.proxy_inputs_v1.forecast_grid_v1: exactly 3 periods required`);
     }
-    if (id === "SOX" && !item.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified")) {
-      errors.push("SOX.proxy_inputs_v1: identity mapping blocker must remain");
-    }
   }
   const forbidden = scanForbiddenKeys(payload);
   if (forbidden.length > 0) errors.push(`forbidden output keys: ${forbidden.join(", ")}`);
-  if (!payload?.indices?.SOX?.blockers?.some((item) => item.code === "identity_mapping_philadelphia_semi_to_sox_unverified")) {
-    warnings.push("SOX identity mapping blocker is expected until verified");
-  }
   return { ok: errors.length === 0, errors, warnings };
 }
 

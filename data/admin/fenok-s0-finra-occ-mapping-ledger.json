@@ -1,0 +1,3045 @@
+{
+  "schema_version": "fenok-s0-finra-occ-mapping-ledger/v0.1",
+  "generated_at": "2026-07-09T13:01:08.146Z",
+  "generated_by": "scripts/audit-fenok-s0-source-gaps.mjs --write-ledger",
+  "purpose": "Durable no-fetch control-plane ledger for S0 FINRA/OCC rows that are source-ready by daily market data but need explicit universe mapping, symbol normalization, or null-evidence semantics before flow/options proxy metrics can be required.",
+  "raw_policy": {
+    "fetches_external_data": false,
+    "public_bundle_safe": false,
+    "admin_local_only": true,
+    "raw_private_cache_included": false,
+    "local_evidence_paths_only": true
+  },
+  "source_audit": {
+    "schema_version": "fenok-s0-source-gap-audit/v0.2",
+    "generated_at": "2026-07-09T13:01:08.146Z",
+    "input_files": {
+      "active_signals": "data/computed/fenok_signals.json",
+      "finra_flow_proxy": "data/computed/fenok_flow_proxies.json",
+      "occ_options_proxy": "data/computed/fenok_occ_options_volume.json",
+      "coverage_index": "data/admin/fenok-edge-coverage-index.json",
+      "flow_backfill_index": "data/admin/fenok-flow-backfill-index.json"
+    },
+    "source_dates": {
+      "signals_generated_at": "2026-07-09T13:00:56.537Z",
+      "finra_source_date": "20260708",
+      "occ_source_date": "20260707",
+      "coverage_index_generated_at": "2026-07-09T13:01:07.956Z",
+      "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
+    },
+    "acceptance_ok": true
+  },
+  "service_boundary": {
+    "active_s0_daily_source_gate_blocker": false,
+    "reason": "Plain US FINRA/OCC denominators are source-ready; US_CLASS/non-plain rows remain daily source-ready through YF/market facts and are tracked here as mapping policy work.",
+    "public_scoring_claim": "S0 daily source readiness can be true without fabricating FINRA/OCC metrics for non-plain rows."
+  },
+  "counts": {
+    "active_us_total": 744,
+    "plain_us_finra_denominator": 685,
+    "plain_us_finra_source_ready": 685,
+    "finra_excluded_us_class_or_non_plain_daily_ready": 59,
+    "finra_mapping_required_missing_row": 50,
+    "finra_source_ready_no_reported_row": 3,
+    "finra_low_confidence_placeholder_policy_rows": 9,
+    "plain_us_occ_denominator": 685,
+    "plain_us_occ_source_ready": 685,
+    "plain_us_occ_no_listed_options_source_ready": 5,
+    "occ_non_plain_mapping_required": 57,
+    "occ_class_share_normalization_required": 2,
+    "occ_excluded_us_class_or_non_plain_daily_ready": 59
+  },
+  "action_policy": [
+    {
+      "id": "do_not_broad_fetch_non_plain",
+      "status": "active",
+      "rule": "Existing daily market data must be connected first. FINRA/OCC proxy metrics are required only after reviewed ticker/listing/underlying mappings exist."
+    },
+    {
+      "id": "null_evidence_not_fabricated_metric",
+      "status": "active",
+      "rule": "No reported FINRA row or no listed OCC options can satisfy source readiness, but proxy scores remain null/zero-evidence instead of fabricated activity."
+    },
+    {
+      "id": "admin_local_ledger",
+      "status": "active",
+      "rule": "Keep this ledger local/admin until a reviewed public explanation surface is designed."
+    }
+  ],
+  "rows": {
+    "finra_excluded_us_class_or_non_plain_daily_ready": [
+      {
+        "ticker": "2454-TW",
+        "company": "Mediatek",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "2914-T",
+        "company": "Japan Tobacco",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "3382-T",
+        "company": "Seven & I Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4063-T",
+        "company": "Shin Etsu Chemical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4452-T",
+        "company": "Kao",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4502-T",
+        "company": "Takeda Pharmaceutical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4519-T",
+        "company": "Chugai Pharmaceutical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4568-T",
+        "company": "Daiichi Sankyo",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4612-T",
+        "company": "Nippon Paint Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4661-T",
+        "company": "Oriental Land",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4911-T",
+        "company": "Shiseido",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "5108-T",
+        "company": "Bridgestone",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "5401-T",
+        "company": "Nippon Steel",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6098-T",
+        "company": "Recruit Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6178-T",
+        "company": "Japan Post Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6273-T",
+        "company": "SMC (Japan)",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6367-T",
+        "company": "Daikin Industries",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6501-T",
+        "company": "Hitachi",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6594-T",
+        "company": "NIDEC",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6702-T",
+        "company": "Fujitsu",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6752-T",
+        "company": "Panasonic",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6758-T",
+        "company": "Sony Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6861-T",
+        "company": "Keyence",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6902-T",
+        "company": "Denso",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6954-T",
+        "company": "Fanuc",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6981-T",
+        "company": "Murata Manufacturing",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7182-T",
+        "company": "Japan Post Bank",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7203-T",
+        "company": "Toyota Motor",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7267-T",
+        "company": "Honda Motor",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7309-T",
+        "company": "Shimano",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7741-T",
+        "company": "Hoya",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7751-T",
+        "company": "CANON",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7832-T",
+        "company": "Bandai Namco Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7936-T",
+        "company": "Asics",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7951-T",
+        "company": "Yamaha",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7974-T",
+        "company": "Nintendo",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8001-T",
+        "company": "Itochu",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8031-T",
+        "company": "Mitsui",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8035-T",
+        "company": "Tokyo Electron",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8058-T",
+        "company": "Mitsubishi",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8306-T",
+        "company": "Mitsubishi UFJ Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8316-T",
+        "company": "Sumitomo Mitsui Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8411-T",
+        "company": "Mizuho Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8766-T",
+        "company": "Tokio Marine Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9022-T",
+        "company": "Central Japan Railway",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9432-T",
+        "company": "Nippon Telegraph And Telephone",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9433-T",
+        "company": "KDDI",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9434-T",
+        "company": "Softbank",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9983-T",
+        "company": "Fast Retailing",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9984-T",
+        "company": "Softbank Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BF-B",
+        "company": "Brown-Forman Corporation",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BMW-DE",
+        "company": "BMW",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BRK-A",
+        "company": "Berkshire Hathaway Class A",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BRK-B",
+        "company": "Berkshire Hathaway Class B",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "MBG-DE",
+        "company": "Mercedes-Benz Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "MC-PA",
+        "company": "LVMH",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "OR-PA",
+        "company": "L'Oreal",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "PAH3-DE",
+        "company": "Porsche",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "RMS-PA",
+        "company": "Hermes",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "daily_ready_via_yf_not_finra_denominator",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      }
+    ],
+    "finra_mapping_required_missing_row": [
+      {
+        "ticker": "2454-TW",
+        "company": "Mediatek",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "2914-T",
+        "company": "Japan Tobacco",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "3382-T",
+        "company": "Seven & I Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4063-T",
+        "company": "Shin Etsu Chemical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4452-T",
+        "company": "Kao",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4502-T",
+        "company": "Takeda Pharmaceutical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4519-T",
+        "company": "Chugai Pharmaceutical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4568-T",
+        "company": "Daiichi Sankyo",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4612-T",
+        "company": "Nippon Paint Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4661-T",
+        "company": "Oriental Land",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4911-T",
+        "company": "Shiseido",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "5108-T",
+        "company": "Bridgestone",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "5401-T",
+        "company": "Nippon Steel",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6098-T",
+        "company": "Recruit Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6178-T",
+        "company": "Japan Post Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6273-T",
+        "company": "SMC (Japan)",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6367-T",
+        "company": "Daikin Industries",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6501-T",
+        "company": "Hitachi",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6594-T",
+        "company": "NIDEC",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6702-T",
+        "company": "Fujitsu",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6752-T",
+        "company": "Panasonic",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6758-T",
+        "company": "Sony Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6861-T",
+        "company": "Keyence",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6902-T",
+        "company": "Denso",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6954-T",
+        "company": "Fanuc",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6981-T",
+        "company": "Murata Manufacturing",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7182-T",
+        "company": "Japan Post Bank",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7203-T",
+        "company": "Toyota Motor",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7267-T",
+        "company": "Honda Motor",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7309-T",
+        "company": "Shimano",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7741-T",
+        "company": "Hoya",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7751-T",
+        "company": "CANON",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7832-T",
+        "company": "Bandai Namco Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7936-T",
+        "company": "Asics",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7951-T",
+        "company": "Yamaha",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7974-T",
+        "company": "Nintendo",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8001-T",
+        "company": "Itochu",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8031-T",
+        "company": "Mitsui",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8035-T",
+        "company": "Tokyo Electron",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8058-T",
+        "company": "Mitsubishi",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8306-T",
+        "company": "Mitsubishi UFJ Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8316-T",
+        "company": "Sumitomo Mitsui Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8411-T",
+        "company": "Mizuho Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8766-T",
+        "company": "Tokio Marine Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9022-T",
+        "company": "Central Japan Railway",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9432-T",
+        "company": "Nippon Telegraph And Telephone",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9433-T",
+        "company": "KDDI",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9434-T",
+        "company": "Softbank",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9983-T",
+        "company": "Fast Retailing",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9984-T",
+        "company": "Softbank Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      }
+    ],
+    "finra_source_ready_no_reported_row": [
+      {
+        "ticker": "BK",
+        "company": "Bank of New York Mellon Corp",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_finra_metric_gap",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/BK.json",
+          "market_facts_file": "data/computed/market_facts/tickers/BK.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Financial Services"
+        }
+      },
+      {
+        "ticker": "CTRA",
+        "company": "Coterra Energy Inc.",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_finra_metric_gap",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/CTRA.json",
+          "market_facts_file": "data/computed/market_facts/tickers/CTRA.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Energy"
+        }
+      },
+      {
+        "ticker": "SATS",
+        "company": "EchoStar Corporation",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_finra_metric_gap",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/SATS.json",
+          "market_facts_file": "data/computed/market_facts/tickers/SATS.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NGM",
+          "currency": "USD",
+          "country": null,
+          "sector": "Communication Services"
+        }
+      }
+    ],
+    "finra_low_confidence_placeholder_policy_rows": [
+      {
+        "ticker": "BF-B",
+        "company": "Brown-Forman Corporation",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BMW-DE",
+        "company": "BMW",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BRK-A",
+        "company": "Berkshire Hathaway Class A",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "class_share_placeholder_requires_finra_symbol_policy",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BRK-B",
+        "company": "Berkshire Hathaway Class B",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "class_share_placeholder_requires_finra_symbol_policy",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "MBG-DE",
+        "company": "Mercedes-Benz Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "MC-PA",
+        "company": "LVMH",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "OR-PA",
+        "company": "L'Oreal",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "PAH3-DE",
+        "company": "Porsche",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "RMS-PA",
+        "company": "Hermes",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_placeholder_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      }
+    ],
+    "occ_non_plain_mapping_required": [
+      {
+        "ticker": "2454-TW",
+        "company": "Mediatek",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "2914-T",
+        "company": "Japan Tobacco",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "3382-T",
+        "company": "Seven & I Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4063-T",
+        "company": "Shin Etsu Chemical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4452-T",
+        "company": "Kao",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4502-T",
+        "company": "Takeda Pharmaceutical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4519-T",
+        "company": "Chugai Pharmaceutical",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4568-T",
+        "company": "Daiichi Sankyo",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4612-T",
+        "company": "Nippon Paint Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4661-T",
+        "company": "Oriental Land",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "4911-T",
+        "company": "Shiseido",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "5108-T",
+        "company": "Bridgestone",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "5401-T",
+        "company": "Nippon Steel",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6098-T",
+        "company": "Recruit Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6178-T",
+        "company": "Japan Post Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6273-T",
+        "company": "SMC (Japan)",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6367-T",
+        "company": "Daikin Industries",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6501-T",
+        "company": "Hitachi",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6594-T",
+        "company": "NIDEC",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6702-T",
+        "company": "Fujitsu",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6752-T",
+        "company": "Panasonic",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6758-T",
+        "company": "Sony Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6861-T",
+        "company": "Keyence",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6902-T",
+        "company": "Denso",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6954-T",
+        "company": "Fanuc",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "6981-T",
+        "company": "Murata Manufacturing",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7182-T",
+        "company": "Japan Post Bank",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7203-T",
+        "company": "Toyota Motor",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7267-T",
+        "company": "Honda Motor",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7309-T",
+        "company": "Shimano",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7741-T",
+        "company": "Hoya",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7751-T",
+        "company": "CANON",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7832-T",
+        "company": "Bandai Namco Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7936-T",
+        "company": "Asics",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7951-T",
+        "company": "Yamaha",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "7974-T",
+        "company": "Nintendo",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8001-T",
+        "company": "Itochu",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8031-T",
+        "company": "Mitsui",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8035-T",
+        "company": "Tokyo Electron",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8058-T",
+        "company": "Mitsubishi",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8306-T",
+        "company": "Mitsubishi UFJ Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8316-T",
+        "company": "Sumitomo Mitsui Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8411-T",
+        "company": "Mizuho Financial Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "8766-T",
+        "company": "Tokio Marine Holdings",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9022-T",
+        "company": "Central Japan Railway",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9432-T",
+        "company": "Nippon Telegraph And Telephone",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9433-T",
+        "company": "KDDI",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9434-T",
+        "company": "Softbank",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9983-T",
+        "company": "Fast Retailing",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "9984-T",
+        "company": "Softbank Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BF-B",
+        "company": "Brown-Forman Corporation",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BMW-DE",
+        "company": "BMW",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "MBG-DE",
+        "company": "Mercedes-Benz Group",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "MC-PA",
+        "company": "LVMH",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "OR-PA",
+        "company": "L'Oreal",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "PAH3-DE",
+        "company": "Porsche",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "RMS-PA",
+        "company": "Hermes",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      }
+    ],
+    "occ_class_share_normalization_required": [
+      {
+        "ticker": "BRK-A",
+        "company": "Berkshire Hathaway Class A",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "class_share_symbol_normalization_or_source_gap",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      },
+      {
+        "ticker": "BRK-B",
+        "company": "Berkshire Hathaway Class B",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "category": "class_share_symbol_normalization_or_source_gap",
+        "local_evidence": {
+          "yf_finance_file": null,
+          "market_facts_file": null,
+          "market_facts_asset_type": null,
+          "exchange": null,
+          "currency": null,
+          "country": null,
+          "sector": null
+        }
+      }
+    ],
+    "occ_no_listed_options_source_ready": [
+      {
+        "ticker": "BK",
+        "company": "Bank of New York Mellon Corp",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/BK.json",
+          "market_facts_file": "data/computed/market_facts/tickers/BK.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Financial Services"
+        }
+      },
+      {
+        "ticker": "CTRA",
+        "company": "Coterra Energy Inc.",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/CTRA.json",
+          "market_facts_file": "data/computed/market_facts/tickers/CTRA.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Energy"
+        }
+      },
+      {
+        "ticker": "NVR",
+        "company": "NVR",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/NVR.json",
+          "market_facts_file": "data/computed/market_facts/tickers/NVR.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Consumer Cyclical"
+        }
+      },
+      {
+        "ticker": "SATS",
+        "company": "EchoStar Corporation",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/SATS.json",
+          "market_facts_file": "data/computed/market_facts/tickers/SATS.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NGM",
+          "currency": "USD",
+          "country": null,
+          "sector": "Communication Services"
+        }
+      },
+      {
+        "ticker": "UI",
+        "company": "Ubiquiti",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/UI.json",
+          "market_facts_file": "data/computed/market_facts/tickers/UI.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Technology"
+        }
+      }
+    ]
+  }
+}

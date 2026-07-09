@@ -41,6 +41,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.fetcher.STOCKANALYSIS_ETF_SCREENER = self.root / "stockanalysis" / "surfaces" / "etf_screener.json"
         self.fetcher.STOCK_UNIVERSE_DIR = self.root / "global-scouter" / "stocks" / "detail"
         self.fetcher.ETF_INDEX = self.root / "global-scouter" / "etfs" / "index.json"
+        self.fetcher.MARKET_FACTS_INDEX = self.root / "computed" / "market_facts" / "index.json"
         self.fetcher.DASHBOARD_CONSTANTS = self.root / "dashboard" / "constants.ts"
         self.fetcher.PORTFOLIO_TS = self.root / "portfolio.ts"
         self.fetcher.OUT_DIR = self.root / "yf" / "finance"
@@ -96,6 +97,54 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(tickers[:2], ["BIG", "SMALL"])
         self.assertIn("AAA", tickers)
         self.assertIn("ZZZ", tickers)
+
+    def test_stocks_only_universe_includes_market_facts_class_and_asia_rows(self) -> None:
+        write_json(
+            self.fetcher.MARKET_FACTS_INDEX,
+            {
+                "rows": [
+                    {"ticker": "USCLASS-A", "asset_type": "stock", "market": "US_CLASS"},
+                    {"ticker": "0700.HK", "asset_type": "stock", "market": "HKEX"},
+                    {"ticker": "600519.SS", "asset_type": "stock", "market": "SSE"},
+                    {"ticker": "000001.SZ", "asset_type": "stock", "market": "SZSE"},
+                    {"ticker": "ETFROW", "asset_type": "etf", "market": "US"},
+                    {"ticker": "bad symbol", "asset_type": "stock", "market": "US"},
+                ],
+            },
+        )
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": []})
+        write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": []})
+
+        tickers = self.fetcher.load_universe(stocks_only=True)
+
+        self.assertIn("USCLASS-A", tickers)
+        self.assertIn("0700.HK", tickers)
+        self.assertIn("600519.SS", tickers)
+        self.assertIn("000001.SZ", tickers)
+        self.assertNotIn("ETFROW", tickers)
+        self.assertNotIn("bad symbol", tickers)
+
+    def test_unlimited_daily_shard_union_covers_future_stock_universe(self) -> None:
+        symbols = [f"STK{i:04d}" for i in range(1405)]
+        write_json(
+            self.fetcher.MARKET_FACTS_INDEX,
+            {"rows": [{"ticker": ticker, "asset_type": "stock"} for ticker in symbols]},
+        )
+
+        tickers = self.fetcher.load_universe(stocks_only=True)
+        shard_union = {
+            ticker
+            for shard_index in range(5)
+            for ticker in tickers[shard_index::5]
+        }
+        capped_shard_union = {
+            ticker
+            for shard_index in range(5)
+            for ticker in tickers[shard_index::5][:260]
+        }
+
+        self.assertEqual(set(tickers), shard_union)
+        self.assertLess(len(capped_shard_union), len(tickers))
 
     def test_filter_history_gaps_skips_only_payloads_with_enough_history_rows(self) -> None:
         write_json(

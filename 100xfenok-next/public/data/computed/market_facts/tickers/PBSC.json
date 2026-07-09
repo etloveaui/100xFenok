@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "PBSC",
   "asset_type": "etf",
-  "generated_at": "2026-07-02T00:01:59Z",
+  "generated_at": "2026-07-09T09:28:38Z",
   "identity": {
     "name": "Pacer Funds Trust - Pacer Barings Secured Credit Flex ETF",
     "exchange": "NGM",
@@ -14,10 +14,10 @@
   },
   "facts": {
     "price": {
-      "value": 25.14189910888672,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 25.1554,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:59:26Z",
+      "fetched_at": "2026-07-09T09:23:20Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -28,10 +28,10 @@
       ],
       "candidates": [
         {
-          "value": 25.14189910888672,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.1554,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:26Z",
+          "fetched_at": "2026-07-09T09:23:20Z",
           "confidence": "observed"
         }
       ],
@@ -57,20 +57,20 @@
           "confidence": "observed"
         },
         {
-          "value": 25.13,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 25.16,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:26Z",
+          "fetched_at": "2026-07-09T09:23:20Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.011899108886719745,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.05,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:59:26Z",
+      "fetched_at": "2026-07-09T09:23:20Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -80,20 +80,20 @@
       ],
       "candidates": [
         {
-          "value": 0.011899108886719745,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.05,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:26Z",
+          "fetched_at": "2026-07-09T09:23:20Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.047350214431833446,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.22,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-07-01T23:59:26Z",
+      "fetched_at": "2026-07-09T09:23:20Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -103,33 +103,56 @@
       ],
       "candidates": [
         {
-          "value": 0.047350214431833446,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.22,
+          "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-07-01T23:59:26Z",
+          "fetched_at": "2026-07-09T09:23:20Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "return_3m": {
-      "value": 0.047353555581074576,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-01",
-      "fetched_at": "2026-07-01T23:59:26Z",
-      "confidence": "derived",
-      "unit": "percent_points",
+    "total_assets": {
+      "value": 25720000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:23:20Z",
+      "confidence": "observed",
       "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
-          "value": 0.047353555581074576,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-01",
-          "fetched_at": "2026-07-01T23:59:26Z",
-          "confidence": "derived",
+          "value": 25720000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:23:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.49,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-09T09:23:20Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.49,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-09T09:23:20Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -197,9 +220,336 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-07-01T23:59:26Z",
-    "top_holdings": [],
+    "holdings_count": 202,
+    "holdings_updated": "Jul 2, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "U.S. Bank Money Market Deposit Account",
+        "weight_pct": 25.51,
+        "shares": 6560936,
+        "raw": {
+          "no": 1,
+          "n": "U.S. Bank Money Market Deposit Account",
+          "as": "25.51%",
+          "sh": "6,560,936"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "OCP.2025-48A D1",
+        "name": "OCP CLO 2025-48 LTD 6.16%",
+        "weight_pct": 3.89,
+        "shares": 1000000,
+        "raw": {
+          "no": 2,
+          "n": "OCP CLO 2025-48 LTD 6.16%",
+          "s": "OCP.2025-48A D1",
+          "as": "3.89%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "INVCO.2026-1A C",
+        "name": "INVESCO U.S CLO 2026-1 LTD 5.66%",
+        "weight_pct": 3.71,
+        "shares": 950000,
+        "raw": {
+          "no": 3,
+          "n": "INVESCO U.S CLO 2026-1 LTD 5.66%",
+          "s": "INVCO.2026-1A C",
+          "as": "3.71%",
+          "sh": "950,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "KLLM.2025-21A A",
+        "name": "GENERATE CLO 21 LTD 5.02%",
+        "weight_pct": 2.92,
+        "shares": 750000,
+        "raw": {
+          "no": 4,
+          "n": "GENERATE CLO 21 LTD 5.02%",
+          "s": "KLLM.2025-21A A",
+          "as": "2.92%",
+          "sh": "750,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "ANCHC.2025-32AR ER",
+        "name": "ANCHORAGE CAPITAL CLO 32 LTD",
+        "weight_pct": 2.92,
+        "shares": 750000,
+        "raw": {
+          "no": 5,
+          "n": "ANCHORAGE CAPITAL CLO 32 LTD",
+          "s": "ANCHC.2025-32AR ER",
+          "as": "2.92%",
+          "sh": "750,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "BALLY.2024-28A C1",
+        "name": "BALLYROCK CLO 28 LTD 6.48%",
+        "weight_pct": 2.26,
+        "shares": 580000,
+        "raw": {
+          "no": 6,
+          "n": "BALLYROCK CLO 28 LTD 6.48%",
+          "s": "BALLY.2024-28A C1",
+          "as": "2.26%",
+          "sh": "580,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "CGMS.2026-3A E",
+        "name": "CARLYLE US CLO 2026-3 LTD 9.67%",
+        "weight_pct": 1.97,
+        "shares": 500000,
+        "raw": {
+          "no": 7,
+          "n": "CARLYLE US CLO 2026-3 LTD 9.67%",
+          "s": "CGMS.2026-3A E",
+          "as": "1.97%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "VOYA.2021-3A ER",
+        "name": "VOY CLO 2021-3 9.57%",
+        "weight_pct": 1.95,
+        "shares": 500000,
+        "raw": {
+          "no": 8,
+          "n": "VOY CLO 2021-3 9.57%",
+          "s": "VOYA.2021-3A ER",
+          "as": "1.95%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "BGCLO.2024-8A A1R",
+        "name": "BIRCH GROVE CLO 8 LTD 4.97%",
+        "weight_pct": 1.95,
+        "shares": 500000,
+        "raw": {
+          "no": 9,
+          "n": "BIRCH GROVE CLO 8 LTD 4.97%",
+          "s": "BGCLO.2024-8A A1R",
+          "as": "1.95%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "Symphony CLO 44 Ltd",
+        "weight_pct": 1.94,
+        "shares": 500000,
+        "raw": {
+          "no": 10,
+          "n": "Symphony CLO 44 Ltd",
+          "as": "1.94%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "HONPK.2026-1A D1",
+        "name": "HONEY HILL PARK CLO LTD 2026-1 6.17%",
+        "weight_pct": 1.94,
+        "shares": 500000,
+        "raw": {
+          "no": 11,
+          "n": "HONEY HILL PARK CLO LTD 2026-1 6.17%",
+          "s": "HONPK.2026-1A D1",
+          "as": "1.94%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "BHCCN.10 04.15.32 144A",
+        "name": "1261229 Bc Ltd. 10%",
+        "weight_pct": 1.36,
+        "shares": 345000,
+        "raw": {
+          "no": 12,
+          "n": "1261229 Bc Ltd. 10%",
+          "s": "BHCCN.10 04.15.32 144A",
+          "as": "1.36%",
+          "sh": "345,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "CVNA.9 06.01.31 144A",
+        "name": "Carvana Co 9%",
+        "weight_pct": 1.14,
+        "shares": 264000,
+        "raw": {
+          "no": 13,
+          "n": "Carvana Co 9%",
+          "s": "CVNA.9 06.01.31 144A",
+          "as": "1.14%",
+          "sh": "264,000"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Aveanna Healthcare (Epic Health) 5/26 T/L B",
+        "weight_pct": 0.98,
+        "shares": 250000,
+        "raw": {
+          "no": 14,
+          "n": "Aveanna Healthcare (Epic Health) 5/26 T/L B",
+          "as": "0.98%",
+          "sh": "250,000"
+        }
+      },
+      {
+        "rank": 15,
+        "name": "Nvent Electric/Nvent Thermal (BCP VI Summit) T/L B (09/24)",
+        "weight_pct": 0.97,
+        "shares": 250000,
+        "raw": {
+          "no": 15,
+          "n": "Nvent Electric/Nvent Thermal (BCP VI Summit) T/L B (09/24)",
+          "as": "0.97%",
+          "sh": "250,000"
+        }
+      },
+      {
+        "rank": 16,
+        "name": "Madison Safety & Flow T/L B (09/25)",
+        "weight_pct": 0.97,
+        "shares": 250000,
+        "raw": {
+          "no": 16,
+          "n": "Madison Safety & Flow T/L B (09/25)",
+          "as": "0.97%",
+          "sh": "250,000"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "Kidde Global (LSF12 CROWN) 3rd Amd (1/26) T/L",
+        "weight_pct": 0.97,
+        "shares": 249331,
+        "raw": {
+          "no": 17,
+          "n": "Kidde Global (LSF12 CROWN) 3rd Amd (1/26) T/L",
+          "as": "0.97%",
+          "sh": "249,331"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "Bausch & Lomb 12/25 T/L",
+        "weight_pct": 0.97,
+        "shares": 249375,
+        "raw": {
+          "no": 18,
+          "n": "Bausch & Lomb 12/25 T/L",
+          "as": "0.97%",
+          "sh": "249,375"
+        }
+      },
+      {
+        "rank": 19,
+        "name": "ArchKey Holdings T/L B",
+        "weight_pct": 0.97,
+        "shares": 249369,
+        "raw": {
+          "no": 19,
+          "n": "ArchKey Holdings T/L B",
+          "as": "0.97%",
+          "sh": "249,369"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "SYNH.L 09.30.30 1",
+        "name": "Star Parent Inc",
+        "weight_pct": 0.97,
+        "shares": 249362,
+        "raw": {
+          "no": 20,
+          "n": "Star Parent Inc",
+          "s": "SYNH.L 09.30.30 1",
+          "as": "0.97%",
+          "sh": "249,362"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "Kenan Advantage Group Holdings T/L B (08/24)",
+        "weight_pct": 0.97,
+        "shares": 249364,
+        "raw": {
+          "no": 21,
+          "n": "Kenan Advantage Group Holdings T/L B (08/24)",
+          "as": "0.97%",
+          "sh": "249,364"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "WHTCAP.L 10.29.29 5",
+        "name": "White Cap Buyer Llc",
+        "weight_pct": 0.97,
+        "shares": 250000,
+        "raw": {
+          "no": 22,
+          "n": "White Cap Buyer Llc",
+          "s": "WHTCAP.L 10.29.29 5",
+          "as": "0.97%",
+          "sh": "250,000"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "Everi/IGT 12/25 TLB",
+        "weight_pct": 0.97,
+        "shares": 249370,
+        "raw": {
+          "no": 23,
+          "n": "Everi/IGT 12/25 TLB",
+          "as": "0.97%",
+          "sh": "249,370"
+        }
+      },
+      {
+        "rank": 24,
+        "name": "Madison IAQ/Madison Air 5/26 TLB",
+        "weight_pct": 0.97,
+        "shares": 250000,
+        "raw": {
+          "no": 24,
+          "n": "Madison IAQ/Madison Air 5/26 TLB",
+          "as": "0.97%",
+          "sh": "250,000"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "GFL Environmental T/L B (02/25)",
+        "weight_pct": 0.97,
+        "shares": 249372,
+        "raw": {
+          "no": 25,
+          "n": "GFL Environmental T/L B (02/25)",
+          "as": "0.97%",
+          "sh": "249,372"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
@@ -209,23 +559,23 @@
       "is_inverse": false,
       "is_single_stock": false,
       "underlying": null,
-      "source": "stockanalysis.etf_list.name",
-      "confidence": "low"
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
     },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/PBSC.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/PBSC.json",
+    "stockanalysis": "stockanalysis/etfs/PBSC.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },

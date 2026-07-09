@@ -274,6 +274,7 @@ jobs:
           node scripts/build-fenok-etf-action-index.mjs
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
           node scripts/build-fenok-edge-coverage-index.mjs
+          node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
           node scripts/write-fenok-etf-daily1y-readiness.mjs --check
           npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
           mkdir -p 100xfenok-next/public/data/computed 100xfenok-next/public/data/admin

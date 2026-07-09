@@ -7,13 +7,14 @@
 #   bash scripts/load-guard.sh <command...>
 #
 # Behavior:
-#   - CI (CI=true) or LOAD_GUARD_BYPASS=1  -> exec command directly (no-op).
+#   - CI (CI=true), LOAD_GUARD_BYPASS=1, or an existing guarded parent
+#     (LOAD_GUARD_ACTIVE=1) -> exec command directly (no-op).
 #   - Waits while 1-min loadavg >= LOAD_GUARD_MAX (default 8; 10-core host).
 #   - Serializes via mkdir lock (default /tmp/w5-build.lock, stale after 30min).
 #   - Runs the command under nice -n 15.
 set -u
 
-if [ "${CI:-}" = "true" ] || [ "${LOAD_GUARD_BYPASS:-}" = "1" ]; then
+if [ "${CI:-}" = "true" ] || [ "${LOAD_GUARD_BYPASS:-}" = "1" ] || [ "${LOAD_GUARD_ACTIVE:-}" = "1" ]; then
   exec "$@"
 fi
 
@@ -57,6 +58,6 @@ done
 cleanup() { rmdir "$LOCK_DIR" 2>/dev/null || true; }
 trap cleanup EXIT INT TERM
 
-nice -n 15 "$@"
+LOAD_GUARD_ACTIVE=1 nice -n 15 "$@"
 status=$?
 exit "$status"

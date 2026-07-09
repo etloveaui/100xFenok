@@ -40,6 +40,7 @@ ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
 STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
 STOCKANALYSIS_ETF_SCREENER = ROOT / "data" / "stockanalysis" / "surfaces" / "etf_screener.json"
 MARKET_FACTS_INDEX = ROOT / "data" / "computed" / "market_facts" / "index.json"
+SOX_GIW_CONSTITUENTS = ROOT / "data" / "indices" / "nasdaq-giw-sox-constituents.json"
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
@@ -705,9 +706,26 @@ def load_market_facts_stocks():
     return symbols
 
 
+def load_sox_giw_symbols():
+    try:
+        payload = json.loads(SOX_GIW_CONSTITUENTS.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+    rows = payload.get("rows") if isinstance(payload.get("rows"), list) else []
+    symbols = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        symbol = str(row.get("symbol") or "").strip().upper()
+        if SYMBOL_RE.match(symbol):
+            symbols.add(symbol)
+    return symbols
+
+
 def load_universe(stocks_only=False, stockanalysis_etfs=False):
     tickers = {p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}
     tickers |= load_market_facts_stocks()
+    tickers |= load_sox_giw_symbols()
     if not stocks_only:
         tickers |= load_scouter_etfs()
         tickers |= load_dashboard_etfs()

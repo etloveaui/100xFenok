@@ -107,6 +107,18 @@ def build_incremental_etf_audit(
     proof_file_exists = incremental_payload is not None
     plan_file_exists = plan_payload is not None
     plan_counts = (plan_payload or {}).get("counts") or {}
+    plan_selected = as_int(plan_counts.get("incremental_selected"))
+    plan_candidates = as_int(plan_counts.get("incremental_candidates"))
+    plan_history_gap = as_int(plan_counts.get("history_gap"))
+    plan_inception_limited_history_gap = as_int(plan_counts.get("inception_limited_history_gap"))
+    plan_total_history_gap = as_int(plan_counts.get("total_history_gap", plan_counts.get("history_gap")))
+    no_actionable_plan = (
+        plan_file_exists
+        and plan_selected == 0
+        and plan_history_gap == 0
+        and plan_total_history_gap == 0
+        and hard_failed == 0
+    )
     has_run_evidence = proof_file_exists or selected > 0 or fallback_ok > 0 or facts_fallback > 0
     notes = []
     if not index_file_exists:
@@ -118,11 +130,17 @@ def build_incremental_etf_audit(
     if proof_file_exists and selected > 0 and index_selected <= 0:
         notes.append("incremental_not_reflected_in_fetch_index")
     if still_pending > 0:
-        notes.append("pending_details_remain")
+        if no_actionable_plan:
+            notes.append("pending_details_tracked_no_actionable_plan")
+        else:
+            notes.append("pending_details_remain")
     if fallback_ok > 0 and facts_fallback <= 0:
         notes.append("fallback_not_reflected_in_market_facts")
     if hard_failed > 0:
         status = "fail"
+    elif ledger_cooldown > 0 and no_actionable_plan:
+        notes.append("cooldown_tracked_no_actionable_plan")
+        status = "pass"
     elif ledger_cooldown > 0:
         notes.append("cooldown_active")
         status = "warn"
@@ -131,7 +149,7 @@ def build_incremental_etf_audit(
     elif (
         not index_file_exists
         or (proof_file_exists and selected > 0 and index_selected <= 0)
-        or still_pending > 0
+        or (still_pending > 0 and not no_actionable_plan)
         or (fallback_ok > 0 and facts_fallback <= 0)
     ):
         status = "warn"
@@ -153,11 +171,12 @@ def build_incremental_etf_audit(
             "missing": as_int(incremental_counts.get("missing")),
             "fallback_retry": as_int(incremental_counts.get("fallback_retry")),
             "stale": as_int(incremental_counts.get("stale")),
-            "plan_selected": as_int(plan_counts.get("incremental_selected")),
-            "plan_candidates": as_int(plan_counts.get("incremental_candidates")),
-            "plan_history_gap": as_int(plan_counts.get("history_gap")),
-            "plan_inception_limited_history_gap": as_int(plan_counts.get("inception_limited_history_gap")),
-            "plan_total_history_gap": as_int(plan_counts.get("total_history_gap", plan_counts.get("history_gap"))),
+            "plan_selected": plan_selected,
+            "plan_candidates": plan_candidates,
+            "plan_history_gap": plan_history_gap,
+            "plan_inception_limited_history_gap": plan_inception_limited_history_gap,
+            "plan_total_history_gap": plan_total_history_gap,
+            "no_actionable_plan": int(no_actionable_plan),
             "cooldown_skipped": cooldown_skipped,
             "pending_ledger_tracked": ledger_tracked,
             "pending_ledger_cooldown": ledger_cooldown,

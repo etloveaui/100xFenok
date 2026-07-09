@@ -6,8 +6,12 @@ import {
   freshnessReady,
   fullSourceCoverage,
   requirementsReady,
+  s0FinraOccLedgerEvidence,
   warnOnlyStaleCountedSource,
 } from "./check-fenok-edge-freshness.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const freshOccChecks = [{ id: "us_occ_source_date", status: "ready" }];
 
@@ -56,5 +60,11 @@ assert.equal(warnOnlyStaleCountedSource({ id: "us_class_yf_source_date", status:
 assert.equal(warnOnlyStaleCountedSource({ id: "asia_ex_taiwan_yf_source_date", status: "stale" }, true), true);
 assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "missing" }, true), false);
 assert.equal(warnOnlyStaleCountedSource({ id: "etf_signal_summary_freshness", status: "stale" }, true), false);
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const coverageIndex = JSON.parse(fs.readFileSync(path.join(repoRoot, "data/admin/fenok-edge-coverage-index.json"), "utf8"));
+const s0Ledger = s0FinraOccLedgerEvidence(coverageIndex, coverageIndex.active_scoring_universe.total);
+assert.equal(s0Ledger.ready, true);
+assert.equal(s0Ledger.raw_policy.admin_local_only, true);
 
 console.log("test-check-fenok-edge-freshness: ok");

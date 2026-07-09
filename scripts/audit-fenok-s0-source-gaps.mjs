@@ -14,24 +14,39 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const SCHEMA_VERSION = "fenok-s0-source-gap-audit/v0.2";
+const LEDGER_SCHEMA_VERSION = "fenok-s0-finra-occ-mapping-ledger/v0.1";
+const DEFAULT_MAPPING_LEDGER_PATH = "data/admin/fenok-s0-finra-occ-mapping-ledger.json";
 const SAMPLE_LIMIT = 25;
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
 
 function parseArgs(argv) {
   const args = new Set(argv);
+  let ledgerOutput = DEFAULT_MAPPING_LEDGER_PATH;
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--ledger-output") {
+      ledgerOutput = argv[i + 1] ?? ledgerOutput;
+      i += 1;
+    } else if (arg.startsWith("--ledger-output=")) {
+      ledgerOutput = arg.slice("--ledger-output=".length) || ledgerOutput;
+    }
+  }
   return {
     check: args.has("--check"),
     full: args.has("--full"),
     json: args.has("--json"),
+    writeLedger: args.has("--write-ledger"),
+    ledgerOutput,
     help: args.has("--help") || args.has("-h"),
   };
 }
 
 function usage() {
   return [
-    "Usage: node scripts/audit-fenok-s0-source-gaps.mjs [--check] [--json] [--full]",
+    "Usage: node scripts/audit-fenok-s0-source-gaps.mjs [--check] [--json] [--full] [--write-ledger] [--ledger-output PATH]",
     "",
-    "Reads existing derived JSON only. Does not fetch, write, or publish raw rows.",
+    "Reads existing derived JSON only. Does not fetch or publish raw rows.",
+    "--write-ledger writes a local admin mapping ledger for FINRA/OCC non-plain rows.",
   ].join("\n");
 }
 
@@ -53,6 +68,17 @@ function readJsonOrNull(relPath) {
   } catch {
     return null;
   }
+}
+
+function outputAbs(outputPath) {
+  return path.isAbsolute(outputPath) ? outputPath : abs(outputPath);
+}
+
+function writeJson(outputPath, payload) {
+  const target = outputAbs(outputPath);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, `${JSON.stringify(payload, null, 2)}\n`);
+  return path.isAbsolute(outputPath) ? target : outputPath;
 }
 
 function asArray(value) {
@@ -280,6 +306,100 @@ function buildCategorySummary(rows, categoryFn) {
       },
     ]),
   );
+}
+
+function compactRows(rows, categoryFn) {
+  return rows.map((row) => compactRow(row, categoryFn(row)));
+}
+
+function buildMappingLedger({
+  audit,
+  activeUsRows,
+  finraEligibleNoReportedRows,
+  finraMissing,
+  finraPlaceholderRows,
+  finraRowsByTicker,
+  occClassShareMissing,
+  occExcludedFromPlainReadiness,
+  occPlainNoListedOptionsSourceReady,
+}) {
+  const finraExcludedRows = activeUsRows.filter((row) => row?.market !== "US");
+  const finraMappingRequiredRows = finraMissing.filter(
+    (row) => classifyFinraGap(row) !== "plain_us_finra_collection_gap",
+  );
+  const finraPlaceholderPolicyRows = finraPlaceholderRows.filter((row) => {
+    const category = classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)));
+    return category !== "plain_us_finra_metric_gap";
+  });
+  const occClassShareTickers = new Set(occClassShareMissing.map(rowTicker));
+  const occNonPlainMappingRows = occExcludedFromPlainReadiness.filter((row) => !occClassShareTickers.has(rowTicker(row)));
+
+  return {
+    schema_version: LEDGER_SCHEMA_VERSION,
+    generated_at: audit.generated_at,
+    generated_by: "scripts/audit-fenok-s0-source-gaps.mjs --write-ledger",
+    purpose: "Durable no-fetch control-plane ledger for S0 FINRA/OCC rows that are source-ready by daily market data but need explicit universe mapping, symbol normalization, or null-evidence semantics before flow/options proxy metrics can be required.",
+    raw_policy: {
+      fetches_external_data: false,
+      public_bundle_safe: false,
+      admin_local_only: true,
+      raw_private_cache_included: false,
+      local_evidence_paths_only: true,
+    },
+    source_audit: {
+      schema_version: audit.schema_version,
+      generated_at: audit.generated_at,
+      input_files: audit.input_files,
+      source_dates: audit.source_dates,
+      acceptance_ok: audit.acceptance_checks.ok,
+    },
+    service_boundary: {
+      active_s0_daily_source_gate_blocker: false,
+      reason: "Plain US FINRA/OCC denominators are source-ready; US_CLASS/non-plain rows remain daily source-ready through YF/market facts and are tracked here as mapping policy work.",
+      public_scoring_claim: "S0 daily source readiness can be true without fabricating FINRA/OCC metrics for non-plain rows.",
+    },
+    counts: {
+      active_us_total: audit.counts.active_us_total,
+      plain_us_finra_denominator: audit.counts.finra_eligible_denominator,
+      plain_us_finra_source_ready: audit.counts.finra_eligible_source_ready_present,
+      finra_excluded_us_class_or_non_plain_daily_ready: audit.counts.finra_excluded_us_class_count,
+      finra_mapping_required_missing_row: finraMappingRequiredRows.length,
+      finra_source_ready_no_reported_row: finraEligibleNoReportedRows.length,
+      finra_low_confidence_placeholder_policy_rows: finraPlaceholderPolicyRows.length,
+      plain_us_occ_denominator: audit.counts.occ_plain_eligible_denominator,
+      plain_us_occ_source_ready: audit.counts.occ_plain_source_ready_present,
+      plain_us_occ_no_listed_options_source_ready: occPlainNoListedOptionsSourceReady.length,
+      occ_non_plain_mapping_required: occNonPlainMappingRows.length,
+      occ_class_share_normalization_required: occClassShareMissing.length,
+      occ_excluded_us_class_or_non_plain_daily_ready: audit.counts.occ_excluded_us_class_or_non_plain_count,
+    },
+    action_policy: [
+      {
+        id: "do_not_broad_fetch_non_plain",
+        status: "active",
+        rule: "Existing daily market data must be connected first. FINRA/OCC proxy metrics are required only after reviewed ticker/listing/underlying mappings exist.",
+      },
+      {
+        id: "null_evidence_not_fabricated_metric",
+        status: "active",
+        rule: "No reported FINRA row or no listed OCC options can satisfy source readiness, but proxy scores remain null/zero-evidence instead of fabricated activity.",
+      },
+      {
+        id: "admin_local_ledger",
+        status: "active",
+        rule: "Keep this ledger local/admin until a reviewed public explanation surface is designed.",
+      },
+    ],
+    rows: {
+      finra_excluded_us_class_or_non_plain_daily_ready: compactRows(finraExcludedRows, () => "daily_ready_via_yf_not_finra_denominator"),
+      finra_mapping_required_missing_row: compactRows(finraMappingRequiredRows, classifyFinraGap),
+      finra_source_ready_no_reported_row: compactRows(finraEligibleNoReportedRows, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
+      finra_low_confidence_placeholder_policy_rows: compactRows(finraPlaceholderPolicyRows, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
+      occ_non_plain_mapping_required: compactRows(occNonPlainMappingRows, () => "non_plain_or_foreign_suffix_requires_universe_mapping"),
+      occ_class_share_normalization_required: compactRows(occClassShareMissing, classifyOccGap),
+      occ_no_listed_options_source_ready: compactRows(occPlainNoListedOptionsSourceReady, classifyOccGap),
+    },
+  };
 }
 
 function checkEqual(errors, id, actual, expected, detail = {}) {
@@ -589,6 +709,18 @@ function buildAudit({ full }) {
     },
   };
 
+  audit.mapping_ledger = buildMappingLedger({
+    audit,
+    activeUsRows,
+    finraEligibleNoReportedRows,
+    finraMissing,
+    finraPlaceholderRows,
+    finraRowsByTicker,
+    occClassShareMissing,
+    occExcludedFromPlainReadiness,
+    occPlainNoListedOptionsSourceReady,
+  });
+
   if (full) {
     audit.missing_rows = {
       finra: finraMissing.map((row) => compactRow(row, classifyFinraGap(row))),
@@ -634,10 +766,17 @@ if (options.help) {
 
 try {
   const audit = buildAudit(options);
+  let ledgerPath = null;
+  if (options.writeLedger) {
+    ledgerPath = writeJson(options.ledgerOutput, audit.mapping_ledger);
+  }
   if (options.json) {
     console.log(JSON.stringify(audit, null, 2));
   } else {
     console.log(renderText(audit));
+    if (ledgerPath) {
+      console.log(`Mapping ledger written: ${ledgerPath}`);
+    }
   }
   if (options.check && !audit.acceptance_checks.ok) {
     process.exit(1);

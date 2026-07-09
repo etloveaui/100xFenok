@@ -216,6 +216,7 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
   const missingByPeriod = report?.missing_by_period || {};
   const fetchableByPeriod = report?.fetchable_by_period || {};
   const inceptionLimitedByPeriod = report?.inception_limited_by_period || {};
+  const terminalLimitedByPeriod = report?.terminal_limited_by_period || {};
   const planCounts = incrementalPlan?.counts || {};
   const auditCounts = audit?.incremental_etf?.counts || {};
   const subsetOfFullScan = report?.incremental_plan?.subset_of_full_scan || {};
@@ -230,10 +231,13 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
   assert(Number(report?.missing_required_history ?? -1) >= 0, "ETF history gap report: missing history count is required", errors);
   assert(Number(report?.fetchable_required_history ?? -1) >= 0, "ETF history gap report: fetchable history count is required", errors);
   assert(Number(report?.inception_limited_required_history ?? -1) >= 0, "ETF history gap report: inception-limited history count is required", errors);
+  assert(Number(report?.terminal_limited_required_history ?? -1) >= 0, "ETF history gap report: terminal-limited history count is required", errors);
   assert(
     Number(report?.missing_required_history || 0) ===
-      Number(report?.fetchable_required_history || 0) + Number(report?.inception_limited_required_history || 0),
-    "ETF history gap report: missing history must split into fetchable + inception-limited",
+      Number(report?.fetchable_required_history || 0)
+        + Number(report?.inception_limited_required_history || 0)
+        + Number(report?.terminal_limited_required_history || 0),
+    "ETF history gap report: missing history must split into fetchable + inception-limited + terminal-limited",
     errors,
   );
   for (const period of requiredPeriods) {
@@ -241,6 +245,7 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
     assert(Number(missingByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} missing count is required`, errors);
     assert(Number(fetchableByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} fetchable count is required`, errors);
     assert(Number(inceptionLimitedByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} inception-limited count is required`, errors);
+    assert(Number(terminalLimitedByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} terminal-limited count is required`, errors);
   }
   assert(strictCountMatches.required_periods === true, "ETF history gap report: strict count diagnostics must confirm required periods", errors);
   if (enforceIncrementalPlan) {

@@ -236,6 +236,40 @@ const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sec
 const stockSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/stock/[ticker]");
 const etfSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/etfs");
 
+function rimIndexReadyCheck(indexId, label) {
+  const item = rimIndexInputs?.indices?.[indexId];
+  const blockers = Array.isArray(item?.blockers) ? item.blockers : [];
+  const ready = item?.public_status === "ready_inputs_and_forecast_grid" && blockers.length === 0;
+  const diagnostics = rimIndexInputs?.coverage_diagnostics?.stock_action?.[indexId] ?? null;
+  const detailParts = [];
+  if (indexId === "SOX" && diagnostics) {
+    detailParts.push(`${number(diagnostics.methodology_weight_rows).toLocaleString("ko-KR")}개 구성`);
+    detailParts.push(`매칭 ${pct(number(diagnostics.matched_weight_ratio), 1) ?? 0}%`);
+    detailParts.push(`cap 위반 ${number(diagnostics.cap_violation_count)}`);
+  } else if (indexId === "KOSPI" && diagnostics?.krx_kospi_weights) {
+    detailParts.push(`${number(diagnostics.krx_kospi_weights.krx_rows).toLocaleString("ko-KR")}개 구성`);
+    detailParts.push(`매칭 ${pct(number(diagnostics.krx_kospi_weights.matched_weight_ratio), 1) ?? 0}%`);
+  }
+  return check(
+    `${label} RIM 입력`,
+    ready ? "ready" : item ? "partial" : "unavailable",
+    detailParts.length ? detailParts.join(" · ") : (item?.public_status ?? "payload 없음"),
+    {
+      index_id: indexId,
+      role: item?.role ?? null,
+      public_status: item?.public_status ?? null,
+      blockers: blockers.map((blocker) => blocker?.code ?? blocker),
+      forecast_grid_status: item?.derived?.forecast_grid_v1?.public_status ?? null,
+      source_tier: diagnostics?.source_tier ?? diagnostics?.krx_kospi_weights?.source_tier ?? null,
+      official_weight_columns_available: diagnostics?.official_weight_columns_available,
+      proxy_inputs_present: Boolean(item?.derived?.proxy_inputs_v1),
+      matched_weight_ratio: diagnostics?.matched_weight_ratio ?? diagnostics?.krx_kospi_weights?.matched_weight_ratio ?? null,
+      methodology_weight_rows: diagnostics?.methodology_weight_rows ?? null,
+      cap_violation_count: diagnostics?.cap_violation_count ?? null,
+    },
+  );
+}
+
 const surfaces = [
   surface(
     "stock_detail",
@@ -267,6 +301,8 @@ const surfaces = [
       check("거시·심리", counts.dataUsageRootJson > 0 ? "ready" : "pending", `${counts.dataUsageRootJson.toLocaleString("ko-KR")}개 루트 JSON`, { count: counts.dataUsageRootJson }),
       check("시장 구조", exists("computed/market_structure_index.json") ? "ready" : "pending", "시장 구조 인덱스"),
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
+      rimIndexReadyCheck("KOSPI", "KOSPI"),
+      rimIndexReadyCheck("SOX", "SOX"),
       freshness("RIM 입력 기준일", rimIndexAsOf, 2),
       freshness("Yardeni 기준일", yardneyAsOf, 7),
       freshness("야후 파이낸스 수집일", yfAsOf, 8),

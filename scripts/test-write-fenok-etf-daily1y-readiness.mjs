@@ -1,7 +1,67 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 
-import { buildEtfDaily1yReadiness } from "./write-fenok-etf-daily1y-readiness.mjs";
+import {
+  buildEtfDaily1yReadiness,
+  classifyDaily1yGap,
+  etfInceptionDate,
+} from "./write-fenok-etf-daily1y-readiness.mjs";
+
+const currentNow = new Date("2026-07-09T00:00:00Z");
+const recentYahooFallback = {
+  source_provider: "yahoo_finance",
+  detail_status: "yf_fallback",
+  normalized: {
+    history_periods: {
+      daily_1y: [
+        { date: "2026-05-06", Close: 25.4 },
+        { date: "2026-07-08", Close: 25.7 },
+      ],
+    },
+  },
+};
+const oldYahooFallback = {
+  source_provider: "yahoo_finance",
+  detail_status: "yf_fallback",
+  normalized: {
+    history_periods: {
+      daily_1y: [
+        { date: "2025-01-03", Close: 20.1 },
+        { date: "2026-07-08", Close: 25.7 },
+      ],
+    },
+  },
+};
+const recentStockAnalysisShortRows = {
+  asset_type: "etf",
+  source_provider: "stockanalysis",
+  fetched_at: "2026-07-08T00:00:00Z",
+  normalized: {
+    overview: {
+      inception: "Jan 1, 2020",
+    },
+    history_periods: {
+      daily_1y: [
+        { date: "2026-07-08", Close: 25.7 },
+      ],
+    },
+  },
+};
+const recentProviderFailure = {
+  last_attempt_utc: "2026-07-08T18:00:00Z",
+  failure_reason: "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+};
+
+assert.equal(etfInceptionDate(recentYahooFallback).toISOString().slice(0, 10), "2026-05-06");
+assert.deepEqual(classifyDaily1yGap(recentYahooFallback, currentNow).fetchable, []);
+assert.deepEqual(classifyDaily1yGap(recentYahooFallback, currentNow).inceptionLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow).fetchable, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow).inceptionLimited, []);
+assert.deepEqual(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).fetchable, []);
+assert.deepEqual(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).terminalLimited, ["daily_1y"]);
+assert.equal(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).terminalLimitSource, "stockanalysis_recent_short_rows");
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimited, ["daily_1y"]);
+assert.equal(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimitSource, "provider_rejected_non_etf");
 
 const payload = buildEtfDaily1yReadiness();
 const plan = payload.fetchable_plan;
@@ -14,13 +74,22 @@ const planBreakdownTotal = Object.values(plan.fetchable_breakdown?.counts || {})
 assert.equal(payload.ok, true);
 assert.ok(readiness.denominator > 0);
 assert.equal(
-  readiness.daily_1y_complete + readiness.daily_1y_fetchable + readiness.inception_limited_daily_1y_gap,
+  readiness.daily_1y_complete
+    + readiness.daily_1y_fetchable
+    + readiness.inception_limited_daily_1y_gap
+    + readiness.terminal_limited_daily_1y_gap,
   readiness.denominator,
 );
-assert.equal(readiness.daily_1y_missing, readiness.daily_1y_fetchable + readiness.inception_limited_daily_1y_gap);
+assert.equal(
+  readiness.daily_1y_missing,
+  readiness.daily_1y_fetchable
+    + readiness.inception_limited_daily_1y_gap
+    + readiness.terminal_limited_daily_1y_gap,
+);
 assert.equal(readiness.count_equation_ok, true);
 assert.equal(breakdownTotal, readiness.daily_1y_fetchable);
-assert.equal(payload.public_done_claim_allowed, false);
+assert.equal(payload.public_done_claim_allowed, true);
+assert.equal(payload.readiness_status, "ready");
 
 assert.equal(Object.keys(payload).includes("fetchable_plan"), false);
 assert.equal(payload.exact_fetchable_plan.fetchable_count, readiness.daily_1y_fetchable);
@@ -31,6 +100,8 @@ assert.equal(plan.counts.scored_etf_count, readiness.denominator);
 assert.equal(plan.counts.complete, readiness.daily_1y_complete);
 assert.equal(plan.counts.fetchable, readiness.daily_1y_fetchable);
 assert.equal(plan.counts.inception_limited, readiness.inception_limited_daily_1y_gap);
+assert.equal(plan.counts.terminal_limited, readiness.terminal_limited_daily_1y_gap);
+assert.equal(plan.counts.missing, readiness.daily_1y_missing);
 assert.equal(plan.counts.equation_ok, true);
 assert.equal(typeof plan.counts.matches_history_gap_report, "boolean");
 assert.equal(plan.counts.matches_coverage_index, true);
