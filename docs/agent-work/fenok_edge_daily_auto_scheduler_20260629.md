@@ -69,6 +69,7 @@ Non-negotiable handoff contents for the next main pane:
   - Adds a KST Tue-Sat bounded Core Basket/surface refresh lane after the YF window.
   - Scheduled runs disable stock financial statements, full ETF universe discovery, and universe backfill.
   - Scheduled runs keep incremental ETF backfill on, capped at 40 ETF details, with Core Basket priority tickers, core surfaces, and 0.5 second sleep.
+  - After StockAnalysis detail/history refreshes, the workflow now rebuilds ETF signals and the ETF action index before rebuilding the ETF Core Daily Basket. This keeps the committed Core Basket artifacts aligned with the same clean-base generation order used by the Cloudflare Worker build.
   - The workflow participates in the shared `fenok-data-writer-${{ github.ref }}` queue because it regenerates the same coverage/readiness/static-route artifacts as the Edge daily lanes.
 - `.github/workflows/fenok-edge-daily.yml`
   - Adds a KST Tue-Sat 09:30 FINRA/OCC derived-proxy refresh.
@@ -213,6 +214,7 @@ Acceptance criteria for the governor:
 - `qa:fenok-edge-readiness` includes `qa:fenok-occ-options`, a no-fetch unit/plan test for OCC selector, request budget, and no-record availability evidence handling.
 - `qa:fenok-edge-readiness` includes `qa:fenok-s1-promotion-gate`, a no-fetch check that the durable non-public S1 promotion gate artifact can be regenerated without mutating S0/public outputs.
 - ETF daily 1Y readiness uses the current `fenok_etf_signals_summary.json` plus ETF detail files as the exact selector. The StockAnalysis history-gap report remains a freshness/diagnostic input and may lag inside the same build after the ETF summary is regenerated.
+- StockAnalysis run `28983683639` produced data commit `20ca24adf7`, but the following manual Worker deploy `28983982075` failed in `qa:fenok-etf-core-daily-basket` because the committed Core Basket payload was built before the refreshed ETF signals/action-index layer. Fix commit `e53ffc2747` regenerates `fenok_etf_signals`, `etf_action_index`, and the Core Basket artifacts in the workflow order; local `qa:fenok-etf-core-daily-basket` passed before push.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
 
 ## Daily Truth Table
