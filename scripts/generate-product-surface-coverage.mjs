@@ -194,6 +194,8 @@ const stocksAnalyzer = readJson("global-scouter/core/stocks_analyzer.json");
 const actionSummary = readJson("computed/stock_action_summary.json");
 const yfSummary = readJson("yf/finance/_summary.json");
 const edgarIndex = readJson("edgar-korean-summaries/index.json");
+const rimIndexInputs = readJson("computed/rim-index/inputs.json");
+const yardneyModel = readJson("yardney/yardney_model.json");
 
 const counts = {
   marketFactsTickers: number(marketFactsIndex?.count) || countJsonFiles("computed/market_facts/tickers"),
@@ -221,6 +223,14 @@ const screenerAsOf = latestDate(stocksAnalyzer?.generated_at, stocksAnalyzer?.so
 const yfAsOf = yfSummary?.generated_at ?? null;
 const marketFactsAsOf = latestDate(marketFactsIndex?.generated_at, sourceParity?.generated_at, marketAudit?.generated_at);
 const edgarAsOf = latestDate(edgarIndex?.generated_at, edgarIndex?.generatedAt, edgarIndex?.updated_at, edgarIndex?.updated);
+const rimIndexAsOf = latestDate(rimIndexInputs?.generated_at, rimIndexInputs?.meta?.generated_at);
+const yardneyRows = Array.isArray(yardneyModel?.data) ? yardneyModel.data : [];
+const yardneyLatest = yardneyRows.at(-1) ?? null;
+const yardneyAsOf = latestDate(
+  yardneyLatest?.date,
+  yardneyModel?.meta?.last_update?.last_public_date,
+  yardneyModel?.meta?.generated_at,
+);
 const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/market/events");
 const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sectors");
 const stockSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/stock/[ticker]");
@@ -257,6 +267,8 @@ const surfaces = [
       check("거시·심리", counts.dataUsageRootJson > 0 ? "ready" : "pending", `${counts.dataUsageRootJson.toLocaleString("ko-KR")}개 루트 JSON`, { count: counts.dataUsageRootJson }),
       check("시장 구조", exists("computed/market_structure_index.json") ? "ready" : "pending", "시장 구조 인덱스"),
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
+      freshness("RIM 입력 기준일", rimIndexAsOf, 2),
+      freshness("Yardeni 기준일", yardneyAsOf, 7),
       freshness("야후 파이낸스 수집일", yfAsOf, 8),
       freshness("시장 데이터 기준일", marketFactsAsOf, 7),
     ],
@@ -355,6 +367,8 @@ const payload = {
     "computed/market_source_parity.json",
     "global-scouter/core/stocks_analyzer.json",
     "computed/stock_action_summary.json",
+    "computed/rim-index/inputs.json",
+    "yardney/yardney_model.json",
     "yf/finance/_summary.json",
     "edgar-korean-summaries/index.json",
     "stockanalysis/index.json",

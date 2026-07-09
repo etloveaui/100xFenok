@@ -1,6 +1,6 @@
 {
   "schema_version": "product-surface-coverage/v1",
-  "generated_at": "2026-07-09T02:29:28.934Z",
+  "generated_at": "2026-07-09T04:04:34.689Z",
   "source": "local DataPack coverage files",
   "source_files": [
     "computed/market_facts/index.json",
@@ -8,6 +8,8 @@
     "computed/market_source_parity.json",
     "global-scouter/core/stocks_analyzer.json",
     "computed/stock_action_summary.json",
+    "computed/rim-index/inputs.json",
+    "yardney/yardney_model.json",
     "yf/finance/_summary.json",
     "edgar-korean-summaries/index.json",
     "stockanalysis/index.json",
@@ -30,7 +32,7 @@
     "marketFactsTickers": 6620,
     "marketFactsEtfs": 5442,
     "marketFactsStocks": 1178,
-    "yfFinance": 2076,
+    "yfFinance": 2077,
     "globalScouterDetails": 1064,
     "stockanalysisEtfs": 5440,
     "stockanalysisStocks": 49,
@@ -38,8 +40,8 @@
     "sec13fJson": 78,
     "edgarByTicker": 202,
     "slickchartsJson": 568,
-    "dataUsageRootJson": 17919,
-    "dataUsagePublicJson": 17955
+    "dataUsageRootJson": 17942,
+    "dataUsagePublicJson": 17978
   },
   "surfaces": [
     {
@@ -70,8 +72,8 @@
           "label": "가격·재무 캐시",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "2,076개 캐시",
-          "count": 2076
+          "detail": "2,077개 캐시",
+          "count": 2077
         },
         {
           "label": "보조 재무 검산",
@@ -108,7 +110,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:28:11Z",
+          "as_of": "2026-07-09T02:52:55Z",
           "age_days": 0,
           "max_age_days": 7
         },
@@ -116,9 +118,9 @@
           "label": "야후 파이낸스 수집일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-07 · 1일 전",
-          "as_of": "2026-07-07T04:34:59Z",
-          "age_days": 1,
+          "detail": "기준 2026-07-09 · 0일 전",
+          "as_of": "2026-07-09T02:50:40Z",
+          "age_days": 0,
           "max_age_days": 8
         },
         {
@@ -131,7 +133,7 @@
           "max_age_days": 14
         }
       ],
-      "as_of": "2026-07-09T02:28:11Z"
+      "as_of": "2026-07-09T03:01:19.912Z"
     },
     {
       "id": "market_valuation",
@@ -140,7 +142,7 @@
       "owner": "Market valuation",
       "status": "partial",
       "status_label": "부분 준비",
-      "coverage_score": 83.33,
+      "coverage_score": 87.5,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -153,8 +155,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "17,919개 루트 JSON",
-          "count": 17919
+          "detail": "17,942개 루트 JSON",
+          "count": 17942
         },
         {
           "label": "시장 구조",
@@ -166,17 +168,35 @@
           "label": "소스 일치성",
           "status": "partial",
           "status_label": "부분 준비",
-          "detail": "27,760개 복수 후보",
-          "count": 27760,
+          "detail": "29,960개 복수 후보",
+          "count": 29960,
           "reason": "차이·오래됨·부호 차이를 Data Lab에서 계속 노출"
+        },
+        {
+          "label": "RIM 입력 기준일",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "기준 2026-07-09 · 0일 전",
+          "as_of": "2026-07-09T03:52:30.994Z",
+          "age_days": 0,
+          "max_age_days": 2
+        },
+        {
+          "label": "Yardeni 기준일",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "기준 2026-07-08 · 0일 전",
+          "as_of": "2026-07-08T22:37:45.351Z",
+          "age_days": 0,
+          "max_age_days": 7
         },
         {
           "label": "야후 파이낸스 수집일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-07 · 1일 전",
-          "as_of": "2026-07-07T04:34:59Z",
-          "age_days": 1,
+          "detail": "기준 2026-07-09 · 0일 전",
+          "as_of": "2026-07-09T02:50:40Z",
+          "age_days": 0,
           "max_age_days": 8
         },
         {
@@ -184,12 +204,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:28:11Z",
+          "as_of": "2026-07-09T02:52:55Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-09T02:28:11Z"
+      "as_of": "2026-07-09T02:52:55Z"
     },
     {
       "id": "market_events",
@@ -280,9 +300,9 @@
           "label": "야후 파이낸스 수집일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-07 · 1일 전",
-          "as_of": "2026-07-07T04:34:59Z",
-          "age_days": 1,
+          "detail": "기준 2026-07-09 · 0일 전",
+          "as_of": "2026-07-09T02:50:40Z",
+          "age_days": 0,
           "max_age_days": 8
         },
         {
@@ -290,12 +310,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:28:11Z",
+          "as_of": "2026-07-09T02:52:55Z",
           "age_days": 0,
           "max_age_days": 14
         }
       ],
-      "as_of": "2026-07-09T02:28:11Z"
+      "as_of": "2026-07-09T02:52:55Z"
     },
     {
       "id": "etf_center",
@@ -385,13 +405,13 @@
           "label": "스크리너 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-08 · 0일 전",
-          "as_of": "2026-07-08T08:42:19.633Z",
+          "detail": "기준 2026-07-09 · 0일 전",
+          "as_of": "2026-07-09T03:01:19.912Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-08T08:42:19.633Z"
+      "as_of": "2026-07-09T03:01:19.912Z"
     },
     {
       "id": "admin_data_lab",
@@ -407,9 +427,9 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "17,919 / 17,955 JSON",
-          "root": 17919,
-          "public": 17955
+          "detail": "17,942 / 17,978 JSON",
+          "root": 17942,
+          "public": 17978
         },
         {
           "label": "시장 데이터 감사",
@@ -435,12 +455,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-09 · 0일 전",
-          "as_of": "2026-07-09T02:29:28.934Z",
+          "as_of": "2026-07-09T04:04:34.689Z",
           "age_days": 0,
           "max_age_days": 1
         }
       ],
-      "as_of": "2026-07-09T02:29:28.934Z"
+      "as_of": "2026-07-09T04:04:34.689Z"
     }
   ]
 }
