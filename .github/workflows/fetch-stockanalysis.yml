@@ -253,6 +253,8 @@ jobs:
 
       - name: Build Fenok Edge ETF derived readiness
         run: |
+          node scripts/build-fenok-etf-signals.mjs
+          node scripts/build-fenok-etf-action-index.mjs
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
           node scripts/build-fenok-edge-coverage-index.mjs
           node scripts/write-fenok-etf-daily1y-readiness.mjs --check
