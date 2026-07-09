@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-09T03:01:19.912Z",
+  "generated_at": "2026-07-09T04:41:46.490Z",
   "totals": {
     "rootJsonCount": 17942,
     "publicJsonCount": 17978,
     "mirroredRootJsonCount": 17925,
     "missingPublicMirrorCount": 17,
     "publicOnlyJsonCount": 53,
-    "directDataFetchCount": 121,
+    "directDataFetchCount": 122,
     "dynamicPatternCount": 9
   },
   "mirror_sync_status": "partial",
@@ -110,10 +110,10 @@
       "category": "admin",
       "rootJsonCount": 14,
       "publicJsonCount": 8,
-      "directFetchCount": 0,
+      "directFetchCount": 1,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
-      "status": "catalog_only",
+      "status": "active",
       "usage": "Admin proof layer and notification caches"
     },
     {
@@ -288,6 +288,13 @@
     }
   ],
   "directFetches": [
+    {
+      "dataPath": "admin/product-surface-coverage.json",
+      "category": "admin",
+      "consumers": [
+        "100xfenok-next/src/app/admin/data-lab/page.tsx"
+      ]
+    },
     {
       "dataPath": "benchmarks/developed.json",
       "category": "benchmarks",
