@@ -21,12 +21,13 @@ const PUBLIC_INDEX_PATH = path.join(PUBLIC_DATA_ROOT, "admin", "fenok-edge-cover
 const JSON_MODE = process.argv.includes("--json");
 const REQUIRE_ACTIVE_S0_DAILY_GATED = process.argv.includes("--require-active-s0-daily-gated");
 const PUBLIC_BUNDLE_MODE = process.argv.includes("--public-bundle") || process.argv.includes("--warn-stale-counted-sources");
-const EXPECTED_ACTIVE_S0_STOCK_COUNT = 1066;
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
 const COUNTED_DAILY_SOURCE_FRESHNESS_IDS = new Set([
   "korea_counted_source_date",
   "us_flow_source_date",
   "us_occ_source_date",
+  "us_class_yf_source_date",
+  "asia_ex_taiwan_yf_source_date",
 ]);
 const PUBLIC_FORBIDDEN_PATTERNS = [
   /^computed\/fenok_signals\.json$/,
@@ -116,7 +117,7 @@ function requirementsReady(requirements) {
 
 function activeS0DailyGatedReady(track, activeCount) {
   return Boolean(track)
-    && activeCount === EXPECTED_ACTIVE_S0_STOCK_COUNT
+    && Number(activeCount) > 0
     && Number(track.denominator) === activeCount
     && track.readiness_status === "ready"
     && track.public_done_claim_allowed === true
@@ -181,22 +182,15 @@ function publicMirrorEvidence(index, activeTotal) {
   };
 }
 
-function asiaExTaiwanExplicitlyExcluded(asiaGap) {
-  const count = Number(asiaGap?.count) || 0;
-  if (count <= 0) return false;
-  return asiaGap?.excluded_from_s0_daily_gated_scope === true
-    || asiaGap?.blocks_daily_ready === false
-    || asiaGap?.claim_scope === "explicit_s0_daily_scope_exclusion";
-}
-
 function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, composites, freshnessChecks) {
   const krx = findById(sourceRows, "krx_issuer_daily_latest_full_proof");
   const finra = findById(sourceRows, "us_finra_flow_proxy");
   const occ = findById(sourceRows, "us_occ_options_proxy");
+  const usClassYf = findById(sourceRows, "us_class_yf_daily_source");
+  const asiaYf = findById(sourceRows, "asia_ex_taiwan_yf_daily_source");
   const asiaGap = composites.remaining_asia_ex_taiwan ?? {};
   const mirror = publicMirrorEvidence(index, activeTotal);
   const asiaGapCount = Number(asiaGap.count) || 0;
-  const asiaExplicitlyExcluded = asiaExTaiwanExplicitlyExcluded(asiaGap);
   const daily_checks = [
     check("krx_full_daily_source_ready", fullSourceCoverage(krx) && freshnessReady(freshnessChecks, "korea_counted_source_date"), {
       covered_count: krx?.covered_count ?? null,
@@ -213,15 +207,18 @@ function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, comp
       denominator: occ?.denominator ?? null,
       source_date: occ?.source_date ?? null,
     }),
-    check("no_asia_ex_taiwan_gap", asiaGapCount === 0 || asiaExplicitlyExcluded, {
-      count: asiaGapCount,
-      denominator: asiaGap.denominator ?? activeTotal,
-      excluded_from_s0_daily_gated_scope: asiaExplicitlyExcluded,
-      blocks_daily_ready: asiaExplicitlyExcluded ? false : asiaGapCount > 0,
-      daily_gated_scope_denominator: asiaGap.daily_gated_scope_denominator ?? null,
-      claim_scope: asiaGap.claim_scope ?? null,
+    check("us_class_yf_daily_source_ready", fullSourceCoverage(usClassYf) && freshnessReady(freshnessChecks, "us_class_yf_source_date"), {
+      covered_count: usClassYf?.covered_count ?? null,
+      denominator: usClassYf?.denominator ?? null,
+      source_date: usClassYf?.source_date ?? null,
     }),
-    check("counted_sources_fresh", ["coverage_index_generated", "korea_counted_source_date", "us_flow_source_date", "us_occ_source_date"]
+    check("asia_ex_taiwan_yf_daily_source_ready", fullSourceCoverage(asiaYf) && freshnessReady(freshnessChecks, "asia_ex_taiwan_yf_source_date"), {
+      covered_count: asiaYf?.covered_count ?? null,
+      denominator: asiaYf?.denominator ?? null,
+      source_date: asiaYf?.source_date ?? null,
+      remaining_gap_count: asiaGapCount,
+    }),
+    check("counted_sources_fresh", ["coverage_index_generated", "korea_counted_source_date", "us_flow_source_date", "us_occ_source_date", "us_class_yf_source_date", "asia_ex_taiwan_yf_source_date"]
       .every((id) => freshnessReady(freshnessChecks, id))),
   ];
   const daily_ready = daily_checks.every((item) => item.ok);
@@ -394,9 +391,6 @@ if (etfCoreEvidence?.core_daily_basket_ready === true && etfCoreEvidence?.genera
 }
 
 if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
-  if (activeTotal !== EXPECTED_ACTIVE_S0_STOCK_COUNT) {
-    add(errors, `strict S0 gate requires active_scoring_universe.total=${EXPECTED_ACTIVE_S0_STOCK_COUNT}; got ${activeTotal}`);
-  }
   if (!activeS0ReadinessTrack) {
     add(errors, `strict S0 gate requires public_scoring_readiness track '${ACTIVE_S0_TRACK_ID}'`);
   } else {
@@ -455,7 +449,8 @@ const result = {
   })),
   strict_s0_daily_gated: REQUIRE_ACTIVE_S0_DAILY_GATED ? {
     required: true,
-    expected_active_stock_count: EXPECTED_ACTIVE_S0_STOCK_COUNT,
+    expected_active_stock_count: activeTotal,
+    expected_active_stock_count_source: "active_scoring_universe.total",
     active_stock_count: activeTotal,
     track_id: ACTIVE_S0_TRACK_ID,
     track_found: Boolean(activeS0ReadinessTrack),

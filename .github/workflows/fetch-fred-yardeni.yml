@@ -12,12 +12,13 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
 concurrency:
-  group: fetch-fred-yardeni-${{ github.ref }}
+  group: fenok-data-writer-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -45,16 +46,28 @@ jobs:
 
       - name: Commit and push Feno Yardeni data
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add \
             data/yardney/yardney_model.json \
             100xfenok-next/public/data/yardney/yardney_model.json
-          git diff --staged --quiet || git commit -m "chore: update Feno Yardeni data"
+          if git diff --staged --quiet; then
+            echo "No Feno Yardeni changes to publish"
+            exit 0
+          fi
+          git commit -m "chore: update Feno Yardeni data"
           for attempt in $(seq 1 5); do
-            git pull --rebase --autostash origin main
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
             if git push; then
+              gh workflow run update-manifest.yml --ref main
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"

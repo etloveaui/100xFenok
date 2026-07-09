@@ -1898,8 +1898,12 @@ def daily_1y_plan_candidate_summary(
     offset: int,
     exclude: set[str],
     pending_entries: dict,
+    cooldown_days: float,
+    cooldown_failure_threshold: int,
+    now_dt: datetime,
 ) -> dict:
     candidates = []
+    cooldown_rows = []
     for order, plan_row in enumerate(plan_rows):
         ticker = plan_row["ticker"]
         if ticker in exclude:
@@ -1908,6 +1912,21 @@ def daily_1y_plan_candidate_summary(
         prior_failures = parse_int((pending_entry or {}).get("consecutive_failures")) or 0
         fetchable_missing = plan_row.get("fetchable_missing")
         missing_periods = fetchable_missing if isinstance(fetchable_missing, list) and fetchable_missing else ["daily_1y"]
+        if pending_entry_in_cooldown(pending_entry, now_dt, cooldown_days, cooldown_failure_threshold):
+            cooldown_rows.append(
+                {
+                    "ticker": ticker,
+                    "source": "fenok_edge_etf_daily1y_fetchable_plan",
+                    "consecutive_failures": (pending_entry or {}).get("consecutive_failures"),
+                    "next_attempt_after_utc": (pending_entry or {}).get("next_attempt_after_utc"),
+                    "failure_reason": (pending_entry or {}).get("failure_reason"),
+                    "plan_order": order,
+                    "missing_history_periods": missing_periods,
+                    "fetchable_missing_history_periods": missing_periods,
+                    "inception_date": plan_row.get("inception_date"),
+                }
+            )
+            continue
         candidates.append(
             {
                 "ticker": ticker,
@@ -1942,8 +1961,8 @@ def daily_1y_plan_candidate_summary(
             "limit": limit,
             "offset": safe_offset,
             "max_age_hours": None,
-            "cooldown_days": None,
-            "cooldown_failure_threshold": None,
+            "cooldown_days": cooldown_days,
+            "cooldown_failure_threshold": cooldown_failure_threshold,
             "required_history_periods": ["daily_1y"],
             "history_gaps_only": True,
             "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
@@ -1959,14 +1978,14 @@ def daily_1y_plan_candidate_summary(
             "inception_limited_history_gap": 0,
             "total_history_gap": len(candidates),
             "stale": 0,
-            "cooldown_skipped": 0,
+            "cooldown_skipped": len(cooldown_rows),
             "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
             "daily_1y_missing_file": sum(1 for row in candidates if row.get("missing_file")),
             "daily_1y_short_rows": sum(1 for row in candidates if not row.get("missing_file")),
             "offset_skipped": min(safe_offset, len(candidates)),
         },
         "selected": selected,
-        "cooldown": [],
+        "cooldown": cooldown_rows,
         "inception_limited": [],
     }
 
@@ -2245,7 +2264,16 @@ def incremental_etf_backfill_candidates(
     if is_daily_1y_history_gap_mode(required_history_periods, history_gaps_only):
         daily_1y_plan_rows = load_daily_1y_fetchable_plan_rows()
         if daily_1y_plan_rows is not None:
-            return daily_1y_plan_candidate_summary(daily_1y_plan_rows, limit, offset, exclude, pending_entries)
+            return daily_1y_plan_candidate_summary(
+                daily_1y_plan_rows,
+                limit,
+                offset,
+                exclude,
+                pending_entries,
+                cooldown_days,
+                cooldown_failure_threshold,
+                now_dt,
+            )
 
     sources = [
         ("new_etfs", load_surface_symbols("new_etfs")),
@@ -2397,6 +2425,24 @@ def first_number(*values):
     return None
 
 
+def normalize_yahoo_date(value):
+    if isinstance(value, (int, float)) and value > 0:
+        try:
+            return datetime.fromtimestamp(value, timezone.utc).date().isoformat()
+        except (OverflowError, OSError, ValueError):
+            return None
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def first_present(*values):
+    for value in values:
+        if value not in (None, ""):
+            return value
+    return None
+
+
 def ratio_to_percent(value):
     parsed = parse_suffix_number(value)
     if parsed is None:
@@ -2438,6 +2484,12 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
     change = None if price is None or previous_close is None else price - previous_close
     change_pct = None if change is None or previous_close in (None, 0) else (change / previous_close) * 100
     holdings = normalize_yahoo_holdings(funds_data.get("top_holdings") if isinstance(funds_data, dict) else None)
+    inception = first_present(
+        normalize_yahoo_date(info.get("fundInceptionDate")),
+        normalize_yahoo_date(info.get("inceptionDate")),
+        normalize_yahoo_date((fund_overview or {}).get("inceptionDate")),
+        normalize_yahoo_date((fund_overview or {}).get("inception")),
+    )
     overview = {
         "aum": first_number(info.get("totalAssets"), info.get("netAssets")),
         "nav": first_number(info.get("navPrice")),
@@ -2447,6 +2499,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
         "provider_page": info.get("fundFamily") or (fund_overview or {}).get("family"),
         "category": info.get("category") or (fund_overview or {}).get("categoryName"),
         "legalType": info.get("legalType") or (fund_overview or {}).get("legalType"),
+        "inception": inception,
         "description": description,
     }
     overview = {key: value for key, value in overview.items() if value is not None}
@@ -2467,6 +2520,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
         "detail_status": "yf_fallback",
         "asset_type": "etf",
         "ticker": ticker,
+        "inceptionDate": inception,
         "fetched_at": yf_payload.get("fetched_at") or now_iso(),
         "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
         "normalized": {

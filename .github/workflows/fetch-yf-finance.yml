@@ -223,6 +223,15 @@ jobs:
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: node scripts/build-fenok-signals.mjs
 
+      - name: Rebuild Fenok Edge daily gates
+        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        run: |
+          node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
+          node scripts/build-fenok-edge-coverage-index.mjs
+          node scripts/write-fenok-etf-daily1y-readiness.mjs --check
+          npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
+          npm --prefix 100xfenok-next run build:static-route-manifest
+
       - name: Mirror to public
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: |
@@ -241,6 +250,7 @@ jobs:
           python3 -m unittest scripts/test_audit_market_data.py
           npm --prefix 100xfenok-next run qa:market-audit
           npm --prefix 100xfenok-next run qa:fenok-edge-readiness
+          npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated
           npm --prefix 100xfenok-next run qa:copy
 
       - name: Commit and push
@@ -248,7 +258,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/yf data/computed/market_facts data/computed/rim-index/inputs.json data/computed/market_source_parity.json data/computed/market_data_audit.json data/computed/fenok_signals.json data/computed/fenok_signals_summary.json data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/rim-index/inputs.json 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/computed/fenok_signals_summary.json 100xfenok-next/public/data/manifest.json
+          git add data/yf data/computed/market_facts data/computed/rim-index/inputs.json data/computed/market_source_parity.json data/computed/market_data_audit.json data/computed/fenok_signals.json data/computed/fenok_signals_summary.json data/admin/fenok-edge-coverage-index.json data/admin/fenok-edge-etf-daily1y-fetchable-plan.json data/admin/fenok-edge-etf-daily1y-readiness.json data/admin/fenok-s1-stock-public-promotion-dry-run.json data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/rim-index/inputs.json 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/computed/fenok_signals_summary.json 100xfenok-next/public/data/admin/fenok-edge-coverage-index.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
           git restore --staged --worktree -- \
             data/computed/rim-index/inputs.json \
             100xfenok-next/public/data/computed/rim-index/inputs.json \
@@ -256,7 +266,12 @@ jobs:
             100xfenok-next/public/data/manifest.json
           git diff --staged --quiet || git commit -m "chore: update yf finance data"
           for attempt in $(seq 1 5); do
-            git pull --rebase --autostash origin main
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
             if git push; then
               exit 0
             fi

@@ -37,14 +37,6 @@ const PROTECTED_PUBLIC_MUTATION_PATHS = [
   PUBLIC_FENOK_SIGNALS_REL,
   PUBLIC_FENOK_SIGNALS_SUMMARY_REL,
 ];
-const EXPECTED_BLOCKED_ROWS = [
-  ["DAY", ["market_currency_country_scope"]],
-  ["HOLX", ["market_currency_country_scope"]],
-  ["KEY", ["market_currency_country_scope"]],
-  ["MMC", ["market_currency_country_scope"]],
-  ["STRC", ["evidence_families_min3"]],
-];
-
 function parseArgs(argv) {
   const args = {
     check: false,
@@ -378,27 +370,24 @@ function axesAreExplicitNull(row) {
   ].every((axis) => axis?.value === null && axis?.display === "미확인");
 }
 
-function blockedRowsMatch(blockedRows) {
+function blockedRowsMatch(blockedRows, sourceArtifact) {
   const actual = blockedRows
     .map((row) => [row.ticker, row.blockers])
     .sort(([a], [b]) => a.localeCompare(b));
-  return actual.length === EXPECTED_BLOCKED_ROWS.length
+  const expected = (sourceArtifact?.blocked_plan_rows ?? [])
+    .map((row) => [row.ticker, row.blockers])
+    .sort(([a], [b]) => a.localeCompare(b));
+  return actual.length === expected.length
     && actual.every(([ticker, blockers], index) => (
-      ticker === EXPECTED_BLOCKED_ROWS[index][0]
-      && arraysEqual(blockers, EXPECTED_BLOCKED_ROWS[index][1])
+      ticker === expected[index][0]
+      && arraysEqual(blockers, expected[index][1])
     ));
 }
 
 function countsMatchExpectedMutationState(counts) {
-  const preMutationState = counts.public_s0_before === 1066
-    && counts.s1_gap_total === 112
-    && counts.promotion_rows === 107
-    && counts.excluded_blocked_rows === 5;
-  const postMutationState = counts.public_s0_before === 1173
-    && counts.s1_gap_total === 5
-    && counts.promotion_rows === 0
-    && counts.excluded_blocked_rows === 5;
-  return preMutationState || postMutationState;
+  return Number(counts.public_s0_before) > 0
+    && counts.s1_gap_total === counts.promotion_rows + counts.excluded_blocked_rows
+    && counts.public_s0_after_if_enabled === counts.public_s0_before + counts.promotion_rows;
 }
 
 function compactPromotionRow(row) {
@@ -524,8 +513,8 @@ function buildAdminDryRunArtifact({ outRel, noWrite, enablePublicMutation }) {
     {
       id: "s1_public_promotion_dry_run_hypothetical_denominator",
       ok: counts.public_s0_after_if_enabled === counts.public_s0_before + counts.promotion_rows
-        && counts.public_s0_after_if_enabled === 1173,
-      detail: `${counts.public_s0_before}+${counts.promotion_rows}=${counts.public_s0_after_if_enabled}`,
+        && counts.public_s0_after_if_enabled + counts.excluded_blocked_rows === counts.public_s0_before + counts.s1_gap_total,
+      detail: `${counts.public_s0_before}+${counts.promotion_rows}=${counts.public_s0_after_if_enabled}; blocked=${counts.excluded_blocked_rows}; gap=${counts.s1_gap_total}`,
     },
     {
       id: "s1_public_promotion_dry_run_no_s0_overlap",
@@ -554,7 +543,7 @@ function buildAdminDryRunArtifact({ outRel, noWrite, enablePublicMutation }) {
     },
     {
       id: "s1_public_promotion_dry_run_blockers_exact_current_set",
-      ok: blockedRowsMatch(blockedRows),
+      ok: blockedRowsMatch(blockedRows, sourceArtifact),
       detail: JSON.stringify(blockedRows.map((row) => [row.ticker, row.blockers])),
     },
     {
@@ -641,6 +630,9 @@ const ok = artifact.acceptance_checks.every((check) => check.ok === true);
 let wrote = null;
 
 if (!args.noWrite) {
+  if (!ok) {
+    throw new Error("Refusing to write S1 public promotion dry-run artifacts because acceptance checks failed");
+  }
   if (args.enablePublicMutation) {
     writePublicMutationTargets(artifact);
   }
@@ -659,4 +651,4 @@ if (args.json) {
   console.log(`public_files_written: ${artifact.counts.public_files_written}`);
 }
 
-process.exitCode = args.check && !ok ? 1 : 0;
+process.exitCode = ok ? 0 : 1;

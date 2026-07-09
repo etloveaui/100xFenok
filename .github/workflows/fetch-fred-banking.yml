@@ -331,7 +331,12 @@ jobs:
             100xfenok-next/public/data/computed/rim-index/inputs.json
           git diff --staged --quiet || git commit -m "chore: update FRED banking data"
           for attempt in $(seq 1 5); do
-            git pull --rebase --autostash origin main
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
             if git push; then
               exit 0
             fi

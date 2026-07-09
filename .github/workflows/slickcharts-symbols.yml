@@ -36,6 +36,14 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # Matrix build for parallel batch execution
   scrape-batch:
@@ -54,6 +62,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Install dependencies
         run: |
@@ -129,13 +142,48 @@ jobs:
           mkdir -p 100xfenok-next/public/data/slickcharts
           rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
 
+      - name: Rebuild Fenok derived gates
+        run: |
+          node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
+          npm --prefix 100xfenok-next run sync-static
+          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
+          npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated
+
       - name: Commit and push changes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+          git add -A \
+            data/slickcharts/ \
+            data/computed/fenok_signals*.json \
+            data/computed/stock_action_index.json \
+            data/computed/fenok_signal_lens_proxies*.json \
+            data/admin/fenok-edge-coverage-index.json \
+            data/admin/fenok-s1-stock-public-promotion-dry-run.json \
+            100xfenok-next/public/data/slickcharts/ \
+            100xfenok-next/public/data/computed/fenok_signals_summary.json \
+            100xfenok-next/public/data/computed/stock_action_index.json \
+            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
+            100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)"
-          git push
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1
 
   # Single symbol scraping for testing
   scrape-single:

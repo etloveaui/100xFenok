@@ -11,6 +11,11 @@ on:
 
 permissions:
   contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   fetch-yahoo-ticker:
@@ -26,7 +31,7 @@ jobs:
           node-version: '20'
 
       - name: Create data directory
-        run: mkdir -p data data/macro
+        run: mkdir -p data data/macro 100xfenok-next/public/data/macro
 
       - name: Fetch Yahoo Finance chart snapshot
         run: |
@@ -150,8 +155,11 @@ jobs:
             };
 
             fs.mkdirSync('data/macro', { recursive: true });
-            fs.writeFileSync('data/macro/yahoo-ticker.json', JSON.stringify(output, null, 2));
-            console.log(`Saved ${Object.keys(tickers).length} ticker(s) to data/macro/yahoo-ticker.json`);
+            fs.mkdirSync('100xfenok-next/public/data/macro', { recursive: true });
+            const payload = JSON.stringify(output, null, 2);
+            fs.writeFileSync('data/macro/yahoo-ticker.json', payload);
+            fs.writeFileSync('100xfenok-next/public/data/macro/yahoo-ticker.json', payload);
+            console.log(`Saved ${Object.keys(tickers).length} ticker(s) to data/macro/yahoo-ticker.json and public mirror`);
           }
 
           main().catch((err) => {
@@ -168,10 +176,30 @@ jobs:
           echo "Total lines: $(wc -l < data/macro/yahoo-ticker.json)"
 
       - name: Commit and push
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/macro/yahoo-ticker.json
-          git diff --staged --quiet || git commit -m "data: refresh yahoo-ticker snapshot (TQQQ/SOXL)"
-          git pull --rebase origin main
-          git push
+          git add data/macro/yahoo-ticker.json 100xfenok-next/public/data/macro/yahoo-ticker.json
+          if git diff --staged --quiet; then
+            echo "No Yahoo ticker changes to publish"
+            exit 0
+          fi
+          git commit -m "data: refresh yahoo-ticker snapshot (TQQQ/SOXL)"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

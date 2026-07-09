@@ -113,6 +113,7 @@ function buildReport() {
   const s0 = coverageIndex.active_scoring_universe ?? {};
   const s1 = coverageIndex.expanded_stock_candidate_universe ?? {};
   const s3 = coverageIndex.etf_universe ?? {};
+  const s1Evidence = s1Track?.promotion_gate_readiness ?? s1.promotion_gate_readiness ?? null;
   const historyPlan = historyGap?.incremental_plan ?? null;
   const coverageIndexEtfScored = asNumber(s3.scored_public_etf);
   const computedEtfScored = asNumber(etfSignals?.coverage?.scored_public_etf, coverageIndexEtfScored);
@@ -131,8 +132,8 @@ function buildReport() {
       scored_public_stock: asNumber(signals?.coverage?.row_count, asArray(signals?.rows).length),
       cadence: {
         workflow: "fenok-edge-krx-daily.yml + fenok-edge-daily.yml",
-        schedule: "KRX KST Mon-Fri 19:30 bounded daily fetch; FINRA KST Tue-Sat 09:30 7-day-to-yesterday window; OCC rolling batch",
-        truth: "S0 is public-scored, but active_stock_scoring_current.requirements.daily/gated are still false.",
+        schedule: "KRX KST Mon-Fri 19:30 bounded daily fetch; FINRA/OCC KST Tue-Sat 09:30; US_CLASS/non-plain and Asia HKEX/SSE/SZSE via YF daily stock shards",
+        truth: "S0 is public-scored and done only when every active stock bucket has current counted daily sources plus strict gated evidence.",
       },
       remaining_blockers: missingRequirements(s0Track?.requirements),
       blocking_evidence_ids: s0BlockingEvidenceIds,
@@ -142,6 +143,8 @@ function buildReport() {
           korea: summarizeFreshness(freshness.korea_counted_source_date),
           us_flow: summarizeFreshness(freshness.us_flow_source_date),
           us_occ: summarizeFreshness(freshness.us_occ_source_date),
+          us_class_yf: summarizeFreshness(freshness.us_class_yf_source_date),
+          asia_yf: summarizeFreshness(freshness.asia_ex_taiwan_yf_source_date),
           signals_generated_at: signals?.generated_at ?? null,
         },
         blocking_gates: missingRequirements(s0Track?.requirements),
@@ -159,11 +162,15 @@ function buildReport() {
       scored_public_stock: asNumber(s1.scored_public_stock, asNumber(signals?.coverage?.row_count, asArray(signals?.rows).length)),
       backlog: {
         stock_promotion_audit_gap: asNumber(s1.stock_promotion_audit_gap),
+        blocked_excluded_rows: asNumber(s1Evidence?.counts?.blocked_excluded_rows),
+        promotion_rows_remaining: asNumber(s1Evidence?.counts?.promotion_rows),
       },
       cadence: {
         yf_finance: "scheduled branch uses one rolling shard per run, cap 140, max_age_hours=18, history_gaps_only=true",
         stockanalysis: "scheduled branch is ETF/surface incremental only; stock financial statement fetches are disabled on schedule",
-        truth: "S1 stocks can accumulate source data, but are not joined/scored/public/daily/gated as expanded stock coverage.",
+        truth: s1Evidence?.gated_ready
+          ? "S1 is closed by current public S0 daily/gated rows plus an explicit blocked/excluded ledger."
+          : "S1 stocks can accumulate source data, but are not joined/scored/public/daily/gated as expanded stock coverage.",
       },
       remaining_blockers: missingRequirements(s1Track?.requirements),
       caveat: s1.caveat ?? s1Track?.caveat ?? null,
@@ -305,7 +312,10 @@ function printHuman(report) {
   const s3 = report.tracks.s3_etf_lane;
   console.log(`- S0 active stock scoring: stage=${s0.stage} denominator=${s0.denominator} scored_public_stock=${s0.scored_public_stock} public_daily_gated=${s0.public_daily_gated} cadence="${s0.cadence.schedule}" blockers=${s0.remaining_blockers.join(",") || "none"}`);
   console.log(`  status: sources=[${compactSources(s0.operator_status.last_sources)}] blocking_gates=${s0.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s0.operator_status.done_claim_allowed}`);
-  console.log(`- S1 stock candidates: stage=${s1.stage} denominator=${s1.denominator} promotion_gap=${s1.backlog.stock_promotion_audit_gap} public_daily_gated=${s1.public_daily_gated} cadence="YF one shard/140 per scheduled run; no scheduled stock-financial promotion" blockers=${s1.remaining_blockers.join(",") || "none"}`);
+  const s1LedgerText = s1.backlog.blocked_excluded_rows != null
+    ? ` blocked_excluded=${s1.backlog.blocked_excluded_rows} promotion_rows_remaining=${s1.backlog.promotion_rows_remaining}`
+    : "";
+  console.log(`- S1 stock candidates: stage=${s1.stage} denominator=${s1.denominator} promotion_gap=${s1.backlog.stock_promotion_audit_gap}${s1LedgerText} public_daily_gated=${s1.public_daily_gated} cadence="YF one shard/140 per scheduled run; promotion gate closes via public S0 + blocked ledger" blockers=${s1.remaining_blockers.join(",") || "none"}`);
   console.log(`  status: sources=[${compactSources(s1.operator_status.last_sources)}] blocking_gates=${s1.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s1.operator_status.done_claim_allowed}`);
   const gap = s3.history_gap;
   const daily1y = gap?.exact_daily_1y_gap ?? gap?.daily_1y_gap;

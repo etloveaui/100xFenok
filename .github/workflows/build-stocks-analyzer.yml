@@ -11,6 +11,11 @@ on:
 
 permissions:
   contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build-stocks-analyzer:
@@ -65,6 +70,8 @@ jobs:
           cp data/global-scouter/schema.json 100xfenok-next/public/data/global-scouter/schema.json
 
       - name: Commit and push
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -104,6 +111,24 @@ jobs:
             100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json
           find 100xfenok-next/public/data/sec-13f/investors \
             -maxdepth 1 -name '*.json' ! -name 'griffin.json' -print0 | xargs -0 git add
-          git diff --staged --quiet || git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
-          git pull --rebase origin main
-          git push
+          if git diff --staged --quiet; then
+            echo "No stocks analyzer or 13F analytics changes to publish"
+            exit 0
+          fi
+          git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

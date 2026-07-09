@@ -101,6 +101,10 @@ function rowTicker(row) {
   return normTicker(row?.ticker_normalized ?? row?.ticker);
 }
 
+function sourceTicker(row) {
+  return String(row?.ticker ?? row?.symbol ?? "").trim().toUpperCase();
+}
+
 function rowTickerMap(payload) {
   return new Map((Array.isArray(payload?.rows) ? payload.rows : [])
     .map((row) => [rowTicker(row), row])
@@ -139,6 +143,10 @@ function finraMetricReady(row) {
     && Number(row.coverage_ratio) > 0
     && row.short_pressure_proxy?.score_0_100 != null
     && row.off_exchange_activity_proxy?.score_0_100 != null;
+}
+
+function finraSourceReady(row) {
+  return Boolean(row) && toIsoDate(row.source_date ?? row.as_of);
 }
 
 function classifyFinraRowGap(row) {
@@ -247,6 +255,37 @@ function ageHours(timestamp, now = Date.now()) {
   const time = new Date(text).getTime();
   if (!Number.isFinite(time)) return null;
   return Math.max(0, Number(((now - time) / 3600000).toFixed(2)));
+}
+
+function yfFinancePayload(row) {
+  const ticker = sourceTicker(row);
+  return ticker ? readJson(`data/yf/finance/${ticker}.json`, null) : null;
+}
+
+function yfHistoryRows(payload) {
+  const rows = payload?.data?.history_1y;
+  return Array.isArray(rows) ? rows : [];
+}
+
+function yfDailySourceEvidence(row) {
+  const payload = yfFinancePayload(row);
+  const historyRows = yfHistoryRows(payload);
+  const fetchedAt = payload?.fetched_at ?? null;
+  const sourceDate = toIsoDate(fetchedAt);
+  const info = payload?.data?.info ?? {};
+  const fastInfo = payload?.data?.fast_info ?? {};
+  const hasSpotQuote = Number.isFinite(Number(info.currentPrice ?? fastInfo.lastPrice));
+  const hasDailyHistory = historyRows.length >= 2;
+  const sourceFresh = countedDailySourceFresh(sourceDate);
+  return {
+    ticker: sourceTicker(row),
+    source_date: sourceDate,
+    fetched_at: fetchedAt,
+    history_1y_rows: historyRows.length,
+    source_fresh: sourceFresh,
+    ready: sourceFresh && (hasDailyHistory || hasSpotQuote),
+    ready_basis: hasDailyHistory ? "yf_history_1y" : hasSpotQuote ? "yf_spot_quote" : "missing_yf_daily_payload",
+  };
 }
 
 function marketCounts(rows) {
@@ -362,6 +401,8 @@ function recomputeSourceComposites(index) {
   const krxCount = Number(findById(sources, "krx_issuer_daily_latest_full_proof")?.covered_count) || 0;
   const finraCount = Number(findById(sources, "us_finra_flow_proxy")?.covered_count) || 0;
   const occCount = Number(findById(sources, "us_occ_options_proxy")?.covered_count) || 0;
+  const usClassYfCount = Number(findById(sources, "us_class_yf_daily_source")?.covered_count) || 0;
+  const asiaYfCount = Number(findById(sources, "asia_ex_taiwan_yf_daily_source")?.covered_count) || 0;
   const latestUsCount = Number(findById(sources, "us_latest_bounded_backfill_run")?.covered_count) || 0;
   const composites = index.source_availability_composites ?? {};
 
@@ -376,6 +417,10 @@ function recomputeSourceComposites(index) {
   if (composites.strict_new_bounded_run_plus_kr) {
     composites.strict_new_bounded_run_plus_kr.covered_count = krxCount + latestUsCount;
     composites.strict_new_bounded_run_plus_kr.coverage_pct = pct(krxCount + latestUsCount, activeTotal);
+  }
+  if (composites.latest_available_all_active_daily_sources) {
+    composites.latest_available_all_active_daily_sources.covered_count = krxCount + finraCount + usClassYfCount + asiaYfCount;
+    composites.latest_available_all_active_daily_sources.coverage_pct = pct(krxCount + finraCount + usClassYfCount + asiaYfCount, activeTotal);
   }
 }
 
@@ -401,6 +446,7 @@ function preservePriorPrivateBackedEvidence(index, priorIndex, conditions) {
 
 const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
+const s1PromotionDryRun = readJson("data/admin/fenok-s1-stock-public-promotion-dry-run.json", {});
 const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
 const etfHistoryGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", {});
 const etfCoreDailyBasket = readJson("data/admin/fenok-etf-core-daily-basket.json", {});
@@ -417,9 +463,10 @@ const etfEligible = Number(etfSignals?.coverage?.eligible_etf_count) || Number(m
 const usRows = universeRows.filter((row) => row.market === "US" || row.market === "US_CLASS");
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
-const s0DailyEligibleRows = [...usRows, ...koreaRows];
+const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows];
 const explicitTaiwanRows = universeRows.filter((row) => /^(TW|TAIWAN|TPE|TPEX)$/i.test(String(row.market ?? "")) || /taiwan/i.test(String(row.market_scope ?? "")));
 const finraEligibleRows = usRows.filter((row) => row.market === "US");
+const usClassYfRows = usRows.filter((row) => row.market !== "US");
 const taiwanTickerAnomalies = universeRows
   .filter((row) => /\.(TW|TWO)$/i.test(String(row.ticker ?? "")) || /-(TW|TWO)$/i.test(String(row.ticker_normalized ?? "")))
   .filter((row) => !explicitTaiwanRows.includes(row))
@@ -489,6 +536,20 @@ const koreaIssueCodes = new Set([
 ].map((row) => krCode(row.ISU_CD)).filter(Boolean));
 const koreaIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.has(code));
 
+const usClassYfEvidenceRows = usClassYfRows.map(yfDailySourceEvidence);
+const usClassYfReadyEvidenceRows = usClassYfEvidenceRows.filter((row) => row.ready);
+const usClassYfBlockingEvidenceRows = usClassYfEvidenceRows.filter((row) => !row.ready);
+const usClassYfSourceDates = unique(usClassYfReadyEvidenceRows.map((row) => row.source_date));
+const usClassYfOldestSourceDate = usClassYfSourceDates.at(0) ?? null;
+const usClassYfLatestSourceDate = usClassYfSourceDates.at(-1) ?? null;
+
+const asiaYfEvidenceRows = asiaExTwRows.map(yfDailySourceEvidence);
+const asiaYfReadyEvidenceRows = asiaYfEvidenceRows.filter((row) => row.ready);
+const asiaYfBlockingEvidenceRows = asiaYfEvidenceRows.filter((row) => !row.ready);
+const asiaYfSourceDates = unique(asiaYfReadyEvidenceRows.map((row) => row.source_date));
+const asiaYfOldestSourceDate = asiaYfSourceDates.at(0) ?? null;
+const asiaYfLatestSourceDate = asiaYfSourceDates.at(-1) ?? null;
+
 const taiwanBridge = readJson("data/admin/taiwan-data-bridge-index.json", readJson("data/computed/taiwan-data-bridge-index.json", {}));
 const taiwanHistorical = readJson("_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json", {});
 const koreaProofMissing = koreaIntersection.length === 0 && koreaProofDates.length === 0 && !hasManifestPayload(koreaProofManifest);
@@ -503,6 +564,12 @@ const etfSignalGate = runEtfSignalGateChecks({ repoRoot: REPO_ROOT });
 
 const finraEligibleMetricReadyRows = finraEligibleRows.filter((row) => finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
 const finraEligibleMetricMissingRows = finraEligibleRows.filter((row) => !finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
+const finraEligibleSourceReadyRows = finraEligibleRows.filter((row) => finraSourceReady(flowRowsByTicker.get(rowTicker(row))));
+const finraEligibleSourceMissingRows = finraEligibleRows.filter((row) => !finraSourceReady(flowRowsByTicker.get(rowTicker(row))));
+const finraEligibleNoReportedRows = finraEligibleRows.filter((row) => {
+  const flowRow = flowRowsByTicker.get(rowTicker(row));
+  return finraSourceReady(flowRow) && !finraMetricReady(flowRow);
+});
 const finraMissingRows = usRows.filter((row) => !flowSet.has(rowTicker(row)));
 const finraStrictMetricReadyRows = usRows.filter((row) => finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
 const finraStrictGapRows = usRows.filter((row) => !finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
@@ -579,7 +646,9 @@ function computeEtfReadinessEvidence() {
       caveat: "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; fetchable gaps keep only the full-universe diagnostic lane daily=false.",
     },
   ];
-  const dailyReady = dailyChecks.every((check) => check.ok);
+  const serviceDailyChecks = dailyChecks.filter((check) => check.service_gate !== false);
+  const diagnosticDailyChecks = dailyChecks.filter((check) => check.service_gate === false);
+  const dailyReady = serviceDailyChecks.every((check) => check.ok);
   const gatedReady = publicReady && dailyReady && etfSignalGate.ok;
   return {
     public_ready: publicReady,
@@ -590,12 +659,17 @@ function computeEtfReadinessEvidence() {
     public_surface_errors: etfSignalGate.errors ?? [],
     service_gate_scope: "ETF Core Daily Basket owns ETF service DAILY/GATED readiness; full scored-ETF daily 1Y continuity stays diagnostic until explicitly promoted.",
     daily_checks: dailyChecks,
+    service_daily_checks: serviceDailyChecks,
+    diagnostic_backlog_checks: diagnosticDailyChecks,
     blockers: [
       ...(!publicReady ? ["public_surface_proof"] : []),
-      ...dailyChecks.filter((check) => !check.ok).map((check) => check.id),
+      ...serviceDailyChecks.filter((check) => !check.ok).map((check) => check.id),
       ...(!etfSignalGate.ok ? ["qa_fenok_etf_signal_gate"] : []),
       ...(!gatedReady ? ["gated_ready"] : []),
     ],
+    diagnostic_backlog: diagnosticDailyChecks
+      .filter((check) => !check.ok)
+      .map((check) => check.id),
     counts: {
       scored_public_etf: etfScoredPublic,
       eligible_etf_count: etfEligible,
@@ -695,8 +769,10 @@ function activeS0BlockingEvidence() {
   const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
   const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
   const krxCoverageReady = koreaIntersection.length === koreaRows.length;
-  const finraCoverageReady = finraEligibleMetricReadyRows.length === finraEligibleRows.length;
+  const finraCoverageReady = finraEligibleSourceReadyRows.length === finraEligibleRows.length;
   const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
+  const usClassYfDailyReady = usClassYfReadyEvidenceRows.length === usClassYfRows.length;
+  const asiaYfDailyReady = asiaYfReadyEvidenceRows.length === asiaExTwRows.length;
   const checks = [
     {
       id: "krx_full_daily_source_ready",
@@ -713,13 +789,13 @@ function activeS0BlockingEvidence() {
     {
       id: "finra_full_us_source_ready",
       status: countedDailySourceStatus({ coverageReady: finraCoverageReady, sourceDate: flowSourceDate }),
-      covered_count: finraEligibleMetricReadyRows.length,
+      covered_count: finraEligibleSourceReadyRows.length,
       denominator: finraEligibleRows.length,
-      missing_count: Math.max(0, finraEligibleRows.length - finraEligibleMetricReadyRows.length),
+      missing_count: Math.max(0, finraEligibleRows.length - finraEligibleSourceReadyRows.length),
       source_date: flowSourceDate,
       age_days: ageDays(flowSourceDate),
       max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
-      eligibility_policy: "active_scoring_universe rows where market=US; US_CLASS foreign/class rows stay in active US bucket but are excluded from FINRA plain-US readiness until mapped or rebucketed.",
+      eligibility_policy: "active_scoring_universe rows where market=US. Source readiness means the FINRA daily file was checked for the ticker; absent FINRA rows stay null/low-evidence, not fabricated metrics.",
       excluded_us_class_count: usRows.length - finraEligibleRows.length,
       row_existence_count: flowIntersection.length,
       strict_metric_ready_count: finraStrictMetricReadyRows.length,
@@ -741,9 +817,15 @@ function activeS0BlockingEvidence() {
           denominator: finraEligibleRows.length,
           missing_count: finraEligibleMetricMissingRows.length,
         },
+        active_plain_us_source_ready_criterion: {
+          covered_count: finraEligibleSourceReadyRows.length,
+          denominator: finraEligibleRows.length,
+          missing_count: finraEligibleSourceMissingRows.length,
+          no_reported_finra_row_count: finraEligibleNoReportedRows.length,
+        },
       },
-      semantic_warning: "Row-existence FINRA coverage is not the same as metric-ready FINRA coverage when low-confidence placeholders exist.",
-      next_action: "Keep US_CLASS foreign/class rows out of FINRA readiness until mapped or rebucketed; do not refetch FINRA for those rows.",
+      semantic_warning: "FINRA source readiness is not the same as metric-ready coverage. Tickers absent from the daily file remain null/low-evidence rows.",
+      next_action: "Keep US_CLASS foreign/class rows out of FINRA readiness until mapped or rebucketed; do not refetch FINRA for rows already checked in the counted daily file.",
     },
     {
       id: "occ_full_us_source_ready",
@@ -803,18 +885,40 @@ function activeS0BlockingEvidence() {
       next_action: "Do not broad-fetch. Keep non-plain/foreign/class rows as mapping/denominator policy work outside the current plain-OCC readiness denominator; continue BRK accepted-form research separately.",
     },
     {
-      id: "no_asia_ex_taiwan_gap",
-      status: "ready",
-      covered_count: 0,
-      denominator: asiaExTwRows.length,
-      missing_count: 0,
-      excluded_count: asiaExTwRows.length,
-      markets: marketCounts(asiaExTwRows),
-      claim_scope: "explicit_s0_daily_scope_exclusion",
-      blocks_daily_ready: false,
+      id: "us_class_yf_daily_source_ready",
+      status: countedDailySourceStatus({ coverageReady: usClassYfDailyReady, sourceDate: usClassYfOldestSourceDate }),
+      covered_count: usClassYfReadyEvidenceRows.length,
+      denominator: usClassYfRows.length,
+      missing_count: usClassYfBlockingEvidenceRows.length,
+      source_date: usClassYfOldestSourceDate,
+      latest_source_date: usClassYfLatestSourceDate,
+      age_days: ageDays(usClassYfOldestSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+      markets: marketCounts(usClassYfRows),
+      claim_scope: "yf_daily_source_available",
+      source_file_pattern: "data/yf/finance/{TICKER}.json",
       daily_gated_scope_denominator: s0DailyEligibleRows.length,
-      daily_gated_scope_policy: "Current S0 daily/gated source scope is Korea + US only; HKEX/SSE/SZSE need a separate Asia daily-source workstream before an all-1066 daily/gated claim.",
-      next_action: "Build HKEX/SSE/SZSE daily-source workstream before claiming all active 1066 stocks as daily/gated.",
+      daily_gated_scope_policy: "US_CLASS/non-plain active rows are included in S0 daily/gated via YF daily source freshness; FINRA/OCC proxy mapping remains a separate signal-expansion problem.",
+      sample_blockers: usClassYfBlockingEvidenceRows.slice(0, 10),
+      next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed US_CLASS/non-plain tickers before claiming all active S0 stocks as daily/gated.",
+    },
+    {
+      id: "asia_ex_taiwan_yf_daily_source_ready",
+      status: countedDailySourceStatus({ coverageReady: asiaYfDailyReady, sourceDate: asiaYfOldestSourceDate }),
+      covered_count: asiaYfReadyEvidenceRows.length,
+      denominator: asiaExTwRows.length,
+      missing_count: asiaYfBlockingEvidenceRows.length,
+      source_date: asiaYfOldestSourceDate,
+      latest_source_date: asiaYfLatestSourceDate,
+      age_days: ageDays(asiaYfOldestSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+      markets: marketCounts(asiaExTwRows),
+      claim_scope: "yf_daily_source_available",
+      source_file_pattern: "data/yf/finance/{TICKER}.json",
+      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_policy: "Current S0 daily/gated source scope is all active stock rows: KRX/KOSDAQ via KRX, plain US via FINRA/OCC source proof, HKEX/SSE/SZSE via scheduled YF daily stock shards.",
+      sample_blockers: asiaYfBlockingEvidenceRows.slice(0, 10),
+      next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated.",
     },
   ];
   return {
@@ -828,6 +932,83 @@ function activeS0BlockingEvidence() {
 }
 
 const activeS0Evidence = activeS0BlockingEvidence();
+
+function checksOk(rows) {
+  return Array.isArray(rows) && rows.length > 0 && rows.every((row) => row?.ok === true);
+}
+
+function buildS1PromotionGateEvidence() {
+  const counts = asObject(s1PromotionDryRun.counts);
+  const denominator = Number(marketFactsCoverage.stock) || 0;
+  const currentPublicStock = activeScoringTotal;
+  const publicS0Before = Number(counts.public_s0_before) || 0;
+  const publicS0AfterIfEnabled = Number(counts.public_s0_after_if_enabled) || 0;
+  const s1GapTotal = Number(counts.s1_gap_total) || 0;
+  const promotionRows = Number(counts.promotion_rows) || 0;
+  const blockedExcludedRows = Number(counts.excluded_blocked_rows) || 0;
+  const artifactPresent = s1PromotionDryRun.schema_version === "fenok-s1-stock-public-promotion-dry-run/v0.1";
+  const artifactChecksOk = checksOk(s1PromotionDryRun.acceptance_checks) && checksOk(s1PromotionDryRun.source_acceptance_checks);
+  const gapPartitionOk = s1GapTotal === promotionRows + blockedExcludedRows;
+  const preMutationUniverseOk = publicS0Before + s1GapTotal === denominator;
+  const mutationAppliedToCurrentPublic = publicS0AfterIfEnabled === currentPublicStock;
+  const blockedLedgerClosesCurrentDenominator = currentPublicStock + blockedExcludedRows === denominator;
+  const allCandidatesAccounted = artifactPresent
+    && artifactChecksOk
+    && gapPartitionOk
+    && preMutationUniverseOk
+    && mutationAppliedToCurrentPublic
+    && blockedLedgerClosesCurrentDenominator;
+  const dailyReady = allCandidatesAccounted && activeS0Evidence.daily_ready === true;
+  const gatedReady = allCandidatesAccounted && activeS0Evidence.gated_ready === true;
+  const blockers = [
+    ...(artifactPresent ? [] : ["s1_promotion_artifact_missing"]),
+    ...(artifactChecksOk ? [] : ["s1_promotion_acceptance_checks"]),
+    ...(gapPartitionOk ? [] : ["s1_gap_partition"]),
+    ...(preMutationUniverseOk ? [] : ["s1_pre_mutation_universe"]),
+    ...(mutationAppliedToCurrentPublic ? [] : ["s1_public_mutation_not_applied"]),
+    ...(blockedLedgerClosesCurrentDenominator ? [] : ["s1_blocked_ledger_not_closed"]),
+    ...(activeS0Evidence.daily_ready ? [] : ["active_s0_daily_ready"]),
+    ...(activeS0Evidence.gated_ready ? [] : ["active_s0_gated_ready"]),
+  ];
+
+  return {
+    evidence_origin: "admin_promotion_artifact_and_current_public_counts",
+    artifact_present: artifactPresent,
+    artifact_generated_at: s1PromotionDryRun.generated_at ?? null,
+    source_gate: s1PromotionDryRun.source_gate ?? null,
+    public_mutation_enabled_in_artifact: s1PromotionDryRun.public_mutation_enabled === true,
+    joined_ready: allCandidatesAccounted,
+    scored_ready: allCandidatesAccounted,
+    public_ready: allCandidatesAccounted,
+    daily_ready: dailyReady,
+    gated_ready: gatedReady,
+    public_done_claim_allowed: gatedReady,
+    blockers,
+    counts: {
+      denominator,
+      current_public_stock: currentPublicStock,
+      public_s0_before: publicS0Before,
+      public_s0_after_if_enabled: publicS0AfterIfEnabled,
+      s1_gap_total: s1GapTotal,
+      promotion_rows: promotionRows,
+      blocked_excluded_rows: blockedExcludedRows,
+      current_public_plus_blocked: currentPublicStock + blockedExcludedRows,
+    },
+    checks: [
+      { id: "artifact_present", ok: artifactPresent },
+      { id: "artifact_acceptance_checks_ok", ok: artifactChecksOk },
+      { id: "gap_partition_ok", ok: gapPartitionOk },
+      { id: "pre_mutation_universe_ok", ok: preMutationUniverseOk },
+      { id: "public_mutation_applied_to_current_public", ok: mutationAppliedToCurrentPublic },
+      { id: "blocked_ledger_closes_current_denominator", ok: blockedLedgerClosesCurrentDenominator },
+      { id: "inherits_active_s0_daily_ready", ok: activeS0Evidence.daily_ready === true },
+      { id: "inherits_active_s0_gated_ready", ok: activeS0Evidence.gated_ready === true },
+    ],
+    caveat: "S1 completion means every normalized stock candidate is either promoted into the current public S0 daily/gated chain or explicitly excluded by the blocked promotion ledger; blocked rows are not fabricated public scores.",
+  };
+}
+
+const s1PromotionGateEvidence = buildS1PromotionGateEvidence();
 const generatedAt = new Date().toISOString();
 const index = {
   schema_version: "fenok-edge-coverage-index/v0.2",
@@ -856,15 +1037,18 @@ const index = {
       explicit_taiwan: explicitTaiwanRows.length,
     },
     s0_daily_gated_scope: {
-      policy: "korea_plus_us_current_daily_sources",
+      policy: "all_active_stock_current_daily_sources",
       eligible_count: s0DailyEligibleRows.length,
       eligible_buckets: {
         us: usRows.length,
+        us_plain_finra_occ: finraEligibleRows.length,
+        us_class_or_non_plain_yf: usClassYfRows.length,
         korea: koreaRows.length,
+        asia_ex_taiwan: asiaExTwRows.length,
       },
-      excluded_count: asiaExTwRows.length,
-      excluded_markets: marketCounts(asiaExTwRows),
-      excluded_reason: "HKEX/SSE/SZSE rows are active/public scored rows, but they are outside the current Korea+US daily-source workstream.",
+      excluded_count: 0,
+      excluded_markets: [],
+      asia_source_policy: "HKEX/SSE/SZSE rows use scheduled YF daily stock shards as the counted daily source.",
       public_scoring_total_remains: activeScoringTotal,
     },
     taiwan_ticker_anomalies: taiwanTickerAnomalies,
@@ -876,9 +1060,12 @@ const index = {
     collected_stock_candidates: Number(marketFactsCoverage.stock) || null,
     scored_public_stock: activeScoringTotal,
     stock_promotion_audit_gap: Number(marketFactsCoverage.stock) ? Math.max(0, Number(marketFactsCoverage.stock) - activeScoringTotal) : null,
-    stage: "NORMALIZED",
-    public_done_claim_allowed: false,
-    caveat: "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated.",
+    stage: s1PromotionGateEvidence.gated_ready ? "PUBLIC_GATED_WITH_BLOCKED_LEDGER" : "NORMALIZED",
+    public_done_claim_allowed: s1PromotionGateEvidence.public_done_claim_allowed,
+    promotion_gate_readiness: s1PromotionGateEvidence,
+    caveat: s1PromotionGateEvidence.gated_ready
+      ? "S1 stock candidates are closed by current public S0 rows plus an explicit blocked/excluded promotion ledger; blocked rows are not scored or fabricated."
+      : "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated.",
   },
   etf_universe: {
     source_file: "data/computed/market_facts/index.json",
@@ -932,23 +1119,24 @@ const index = {
     }),
     coverageRow({
       id: "us_finra_flow_proxy",
-      label: "US FINRA flow proxy coverage, active plain-US metric-ready",
-      count: finraEligibleMetricReadyRows.length,
+      label: "US FINRA flow proxy coverage, active plain-US source-ready",
+      count: finraEligibleSourceReadyRows.length,
       denominator: finraEligibleRows.length,
       denominatorLabel: "active_scoring_universe.us where market=US",
       sourceDate: flowSourceDate,
-      status: finraEligibleMetricReadyRows.length === finraEligibleRows.length ? "ready" : "partial",
+      status: finraEligibleSourceReadyRows.length === finraEligibleRows.length ? "ready" : "partial",
       claimScope: "proxy_source_available",
       activeTotal: activeScoringTotal,
-      caveat: "FINRA short-sale/off-exchange metric-ready coverage for active plain-US rows only; not full all-axis scoring and not directional flow. US_CLASS foreign/class rows are tracked as mapping policy work, not FINRA fetch gaps.",
+      caveat: "FINRA source-ready coverage for active plain-US rows only. Missing FINRA rows remain null/low-evidence metrics, not fabricated scores. US_CLASS foreign/class rows are tracked as mapping policy work, not FINRA fetch gaps.",
       extra: {
         source_file: "data/computed/fenok_flow_proxies.json",
         rows: Array.isArray(flow.rows) ? flow.rows.length : 0,
         row_existence_count: flowIntersection.length,
         strict_metric_ready_count: finraStrictMetricReadyRows.length,
+        source_ready_count: finraEligibleSourceReadyRows.length,
         low_confidence_placeholder_count: finraPlaceholderRows.length,
         excluded_us_class_count: usRows.length - finraEligibleRows.length,
-        eligibility_policy: "active rows where market=US and FINRA proxy metrics are high-confidence/non-placeholder",
+        eligibility_policy: "active rows where market=US and the counted FINRA source file has been checked for the ticker",
       },
     }),
     coverageRow({
@@ -975,6 +1163,44 @@ const index = {
           partial_zero_side_rule: "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
           no_listed_options_rule: "Both-side no_record for the counted source date counts as source-ready no-listed-options evidence for daily/gated readiness; it does not fabricate options activity.",
         },
+      },
+    }),
+    coverageRow({
+      id: "us_class_yf_daily_source",
+      label: "US_CLASS/non-plain YF daily source coverage",
+      count: usClassYfReadyEvidenceRows.length,
+      denominator: usClassYfRows.length,
+      denominatorLabel: "active_scoring_universe.us_class_or_non_plain",
+      sourceDate: usClassYfOldestSourceDate,
+      status: usClassYfReadyEvidenceRows.length === usClassYfRows.length ? "ready" : "partial",
+      claimScope: "yf_daily_source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "YF daily stock shards provide counted source freshness for US_CLASS/non-plain active rows. FINRA/OCC flow/options proxy mapping remains separate and is not required for daily source readiness.",
+      extra: {
+        source_file_pattern: "data/yf/finance/{TICKER}.json",
+        latest_source_date: usClassYfLatestSourceDate,
+        ready_basis_counts: countByCategory(usClassYfReadyEvidenceRows, (row) => row.ready_basis),
+        markets: marketCounts(usClassYfRows),
+        sample_blockers: usClassYfBlockingEvidenceRows.slice(0, 10),
+      },
+    }),
+    coverageRow({
+      id: "asia_ex_taiwan_yf_daily_source",
+      label: "HKEX/SSE/SZSE YF daily source coverage",
+      count: asiaYfReadyEvidenceRows.length,
+      denominator: asiaExTwRows.length,
+      denominatorLabel: "active_scoring_universe.asia_ex_taiwan",
+      sourceDate: asiaYfOldestSourceDate,
+      status: asiaYfReadyEvidenceRows.length === asiaExTwRows.length ? "ready" : "partial",
+      claimScope: "yf_daily_source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "YF daily stock shards provide counted source freshness for HKEX/SSE/SZSE active rows. This proves daily source availability, not exchange-official flow/options proxies.",
+      extra: {
+        source_file_pattern: "data/yf/finance/{TICKER}.json",
+        latest_source_date: asiaYfLatestSourceDate,
+        ready_basis_counts: countByCategory(asiaYfReadyEvidenceRows, (row) => row.ready_basis),
+        markets: marketCounts(asiaExTwRows),
+        sample_blockers: asiaYfBlockingEvidenceRows.slice(0, 10),
       },
     }),
     coverageRow({
@@ -1050,18 +1276,27 @@ const index = {
       formula: "KRX latest fully populated issuer daily proof + latest US bounded reference-ticker run",
     },
     remaining_asia_ex_taiwan: {
-      count: asiaExTwRows.length,
+      count: asiaYfBlockingEvidenceRows.length,
       denominator: activeScoringTotal,
       denominator_label: "active_scoring_universe.total",
-      pct: pct(asiaExTwRows.length, activeScoringTotal),
-      claim_scope: "explicit_s0_daily_scope_exclusion",
+      pct: pct(asiaYfBlockingEvidenceRows.length, activeScoringTotal),
+      claim_scope: "yf_daily_source_gap",
       not_public_scoring: true,
-      excluded_from_s0_daily_gated_scope: true,
-      blocks_daily_ready: false,
+      excluded_from_s0_daily_gated_scope: false,
+      blocks_daily_ready: asiaYfBlockingEvidenceRows.length > 0,
       daily_gated_scope_denominator: s0DailyEligibleRows.length,
-      daily_gated_scope_label: "active_scoring_universe.us + active_scoring_universe.korea",
+      daily_gated_scope_label: "active_scoring_universe.us + active_scoring_universe.korea + active_scoring_universe.asia_ex_taiwan",
       excluded_markets: marketCounts(asiaExTwRows),
-      caveat: "HKEX/SSE/SZSE rows remain active/public scored rows, but are explicitly excluded from the current Korea+US S0 daily/gated source scope until a separate Asia daily-source workstream exists.",
+      caveat: "HKEX/SSE/SZSE active rows are included in the current S0 daily/gated source scope through YF daily stock shards; any nonzero count here blocks the all-active-stock daily claim.",
+    },
+    latest_available_all_active_daily_sources: {
+      covered_count: koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length,
+      denominator: activeScoringTotal,
+      denominator_label: "active_scoring_universe.total",
+      coverage_pct: pct(koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length, activeScoringTotal),
+      claim_scope: "source_availability_composite",
+      not_public_scoring: true,
+      formula: "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows",
     },
   },
   public_scoring_readiness: {
@@ -1083,7 +1318,7 @@ const index = {
           gated: activeS0Evidence.gated_ready,
         },
         caveat: activeS0Evidence.gated_ready
-          ? "The current active stock chain is public-scored and has Korea+US daily/gated source proof under the current S0 scope; HKEX/SSE/SZSE and US_CLASS mapping remain separate expansion work."
+          ? "The current active stock chain is public-scored and has all-active-stock daily/gated source proof under the current S0 scope; FINRA/OCC mapping remains separate proxy expansion work for non-plain rows."
           : "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
         extra: {
           blocking_evidence: activeS0Evidence,
@@ -1093,12 +1328,22 @@ const index = {
         id: "expanded_stock_candidates",
         label: "Expanded stock candidate promotion",
         denominator: Number(marketFactsCoverage.stock) || null,
-        stage: "NORMALIZED",
+        stage: s1PromotionGateEvidence.gated_ready ? "PUBLIC_GATED_WITH_BLOCKED_LEDGER" : "NORMALIZED",
         booleans: {
           source_available: Boolean(marketFactsCoverage.stock),
           normalized: Boolean(marketFactsCoverage.stock),
+          joined_to_target_universe: s1PromotionGateEvidence.joined_ready,
+          scored: s1PromotionGateEvidence.scored_ready,
+          public: s1PromotionGateEvidence.public_ready,
+          daily: s1PromotionGateEvidence.daily_ready,
+          gated: s1PromotionGateEvidence.gated_ready,
         },
-        caveat: "112 stock candidates need promotion audit before they can increase scored/public stock coverage.",
+        caveat: s1PromotionGateEvidence.gated_ready
+          ? "Every S1 stock candidate is either current public S0 daily/gated or explicitly blocked by the promotion ledger; blocked rows stay non-public and non-scored."
+          : `${Math.max(0, Number(marketFactsCoverage.stock || 0) - activeScoringTotal)} stock candidates need promotion audit before they can increase scored/public stock coverage.`,
+        extra: {
+          promotion_gate_readiness: s1PromotionGateEvidence,
+        },
       }),
       readinessTrack({
         id: "etf_scoring_lane",
@@ -1206,6 +1451,26 @@ const index = {
         source_date: occSourceDate,
         age_days: ageDays(occSourceDate),
         status: countedDailySourceFresh(occSourceDate) ? "ready" : "stale",
+      },
+      {
+        id: "us_class_yf_source_date",
+        source_date: usClassYfOldestSourceDate,
+        latest_source_date: usClassYfLatestSourceDate,
+        age_days: ageDays(usClassYfOldestSourceDate),
+        status: countedDailySourceFresh(usClassYfOldestSourceDate) && usClassYfReadyEvidenceRows.length === usClassYfRows.length ? "ready" : "stale",
+        covered_count: usClassYfReadyEvidenceRows.length,
+        denominator: usClassYfRows.length,
+        caveat: "Oldest fresh YF fetched_at date across US_CLASS/non-plain active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
+      },
+      {
+        id: "asia_ex_taiwan_yf_source_date",
+        source_date: asiaYfOldestSourceDate,
+        latest_source_date: asiaYfLatestSourceDate,
+        age_days: ageDays(asiaYfOldestSourceDate),
+        status: countedDailySourceFresh(asiaYfOldestSourceDate) && asiaYfReadyEvidenceRows.length === asiaExTwRows.length ? "ready" : "stale",
+        covered_count: asiaYfReadyEvidenceRows.length,
+        denominator: asiaExTwRows.length,
+        caveat: "Oldest fresh YF fetched_at date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
       },
       {
         id: "etf_public_surface",

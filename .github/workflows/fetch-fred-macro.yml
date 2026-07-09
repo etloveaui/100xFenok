@@ -11,6 +11,14 @@ on:
 env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   fetch-fred-macro:
     runs-on: ubuntu-latest
@@ -122,10 +130,30 @@ jobs:
           EOF
 
       - name: Commit and push macro FRED data
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/macro/fred-macro.json 100xfenok-next/public/data/macro/fred-macro.json
-          git diff --staged --quiet || git commit -m "chore: update FRED macro data"
-          git pull --rebase origin main
-          git push
+          if git diff --staged --quiet; then
+            echo "No FRED macro changes to publish"
+            exit 0
+          fi
+          git commit -m "chore: update FRED macro data"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

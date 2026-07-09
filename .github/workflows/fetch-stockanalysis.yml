@@ -173,6 +173,11 @@ jobs:
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
             fi
           fi
+          {
+            echo "EFFECTIVE_HISTORY_GAPS_ONLY=${INPUT_HISTORY_GAPS_ONLY:-false}"
+            echo "EFFECTIVE_REQUIRED_HISTORY_PERIODS=${INPUT_REQUIRED_HISTORY_PERIODS:-}"
+            echo "EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS=${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}"
+          } >> "$GITHUB_ENV"
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
@@ -212,14 +217,16 @@ jobs:
           python3 scripts/fetch-stockanalysis.py $ARGS
 
       - name: Refresh history-gap plan after live backfill
-        if: ${{ github.event.inputs.history_gaps_only == 'true' }}
+        if: ${{ github.event.inputs.history_gaps_only == 'true' || github.event.schedule == '50 22 * * 1-5' }}
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
         run: |
+          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
+          MAX_AGE_HOURS="${EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS:-${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}}"
           ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
-          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
-          if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
+          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
+          if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
           python3 scripts/fetch-stockanalysis.py $ARGS
 
       - name: Mirror docs to public
@@ -245,17 +252,20 @@ jobs:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
         run: |
+          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
+          MAX_AGE_HOURS="${EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS:-${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}}"
           ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
-          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
-          if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
+          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
+          if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
           python3 scripts/fetch-stockanalysis.py $ARGS
 
       - name: Build ETF history-gap report
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
         run: |
+          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
           ARGS="--write-report"
-          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
           npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
 
       - name: Build Fenok Edge ETF derived readiness
@@ -301,9 +311,12 @@ jobs:
           npm --prefix 100xfenok-next run qa:market-audit
           npm --prefix 100xfenok-next run qa:data-graph
           npm --prefix 100xfenok-next run qa:data-freshness
+          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
           ARGS=""
-          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
           npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
+          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
+          npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated
           npm --prefix 100xfenok-next run qa:copy
 
       - name: Commit and push
@@ -320,7 +333,12 @@ jobs:
             100xfenok-next/public/data/admin/product-surface-coverage.json
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
           for attempt in $(seq 1 5); do
-            git pull --rebase origin main
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
             if git push; then
               exit 0
             fi

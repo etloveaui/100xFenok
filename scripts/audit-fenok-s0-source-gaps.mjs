@@ -219,6 +219,10 @@ function finraMetricReady(row) {
     && row.off_exchange_activity_proxy?.score_0_100 != null;
 }
 
+function finraSourceReady(row) {
+  return Boolean(row) && dateKey(row.source_date ?? row.as_of);
+}
+
 function classifyFinraStrictGap(row, flowRow) {
   if (!flowRow) return classifyFinraGap(row);
   if (classShareTicker(row)) {
@@ -324,6 +328,12 @@ function buildAudit({ full }) {
   const finraEligibleRows = activeUsRows.filter((row) => row?.market === "US");
   const finraEligibleMetricReadyRows = finraEligibleRows.filter((row) => finraMetricReady(finraRowsByTicker.get(rowTicker(row))));
   const finraEligibleMetricMissingRows = finraEligibleRows.filter((row) => !finraMetricReady(finraRowsByTicker.get(rowTicker(row))));
+  const finraEligibleSourceReadyRows = finraEligibleRows.filter((row) => finraSourceReady(finraRowsByTicker.get(rowTicker(row))));
+  const finraEligibleSourceMissingRows = finraEligibleRows.filter((row) => !finraSourceReady(finraRowsByTicker.get(rowTicker(row))));
+  const finraEligibleNoReportedRows = finraEligibleRows.filter((row) => {
+    const flowRow = finraRowsByTicker.get(rowTicker(row));
+    return finraSourceReady(flowRow) && !finraMetricReady(flowRow);
+  });
   const finraPresent = activeUsRows.filter((row) => finraTickers.has(rowTicker(row)));
   const finraMissing = activeUsRows.filter((row) => !finraTickers.has(rowTicker(row)));
   const finraStrictPresent = activeUsRows.filter((row) => finraMetricReady(finraRowsByTicker.get(rowTicker(row))));
@@ -357,10 +367,9 @@ function buildAudit({ full }) {
   const occSource = getSourceRow(coverageIndex, "us_occ_options_proxy");
   const finraEvidence = getBlockingEvidence(activeTrack, "finra_full_us_source_ready");
   const occEvidence = getBlockingEvidence(activeTrack, "occ_full_us_source_ready");
-  const finraIndexUsesMetricReadyEligibility = Boolean(finraSource?.eligibility_policy || finraEvidence?.eligibility_policy);
-  const expectedFinraSourceCovered = finraIndexUsesMetricReadyEligibility ? finraEligibleMetricReadyRows.length : finraPresent.length;
-  const expectedFinraSourceDenominator = finraIndexUsesMetricReadyEligibility ? finraEligibleRows.length : activeUsRows.length;
-  const expectedFinraEvidenceMissing = finraIndexUsesMetricReadyEligibility ? finraEligibleMetricMissingRows.length : finraMissing.length;
+  const expectedFinraSourceCovered = finraEligibleSourceReadyRows.length;
+  const expectedFinraSourceDenominator = finraEligibleRows.length;
+  const expectedFinraEvidenceMissing = finraEligibleSourceMissingRows.length;
   const errors = [];
   const occPlainReadyEvidence = occEvidence?.derived_gap_breakdown?.active_plain_us_occ_ready_criterion;
 
@@ -379,6 +388,13 @@ function buildAudit({ full }) {
   checkEqual(errors, "finra_excluded_us_class_count_matches_source_row", activeUsRows.length - finraEligibleRows.length, finraSource?.excluded_us_class_count);
   checkEqual(errors, "finra_row_existence_count_matches_source_row", finraPresent.length, finraSource?.row_existence_count);
   checkEqual(errors, "finra_strict_metric_ready_count_matches_source_row", finraStrictPresent.length, finraSource?.strict_metric_ready_count);
+  checkEqual(errors, "finra_source_ready_count_matches_source_row", finraEligibleSourceReadyRows.length, finraSource?.source_ready_count);
+  checkEqual(
+    errors,
+    "finra_no_reported_row_count_matches_blocking_evidence",
+    finraEligibleNoReportedRows.length,
+    finraEvidence?.derived_gap_breakdown?.active_plain_us_source_ready_criterion?.no_reported_finra_row_count,
+  );
   checkEqual(errors, "finra_low_confidence_placeholder_count_matches_source_row", finraPlaceholderRows.length, finraSource?.low_confidence_placeholder_count);
   const occPlainPolicyEvidence = occEvidence?.derived_gap_breakdown?.plain_us_collection_or_no_options_policy_required;
   checkEqual(errors, "occ_plain_attempted_unresolved_matches_blocking_evidence", occPlainMissingAttempted.length, occPlainPolicyEvidence?.attempted_unresolved_count);
@@ -457,6 +473,10 @@ function buildAudit({ full }) {
       finra_eligible_metric_ready_present: finraEligibleMetricReadyRows.length,
       finra_eligible_metric_missing: finraEligibleMetricMissingRows.length,
       finra_eligible_metric_ready_coverage_pct: pct(finraEligibleMetricReadyRows.length, finraEligibleRows.length),
+      finra_eligible_source_ready_present: finraEligibleSourceReadyRows.length,
+      finra_eligible_source_ready_missing: finraEligibleSourceMissingRows.length,
+      finra_eligible_source_ready_coverage_pct: pct(finraEligibleSourceReadyRows.length, finraEligibleRows.length),
+      finra_eligible_no_reported_row_source_ready: finraEligibleNoReportedRows.length,
       finra_metric_ready_present: finraStrictPresent.length,
       finra_metric_ready_missing_or_placeholder: finraStrictMissing.length,
       finra_metric_ready_coverage_pct: pct(finraStrictPresent.length, activeUsRows.length),
@@ -478,16 +498,19 @@ function buildAudit({ full }) {
     classification: {
       finra_missing: buildCategorySummary(finraMissing, classifyFinraGap),
       finra_strict_missing_or_placeholder: buildCategorySummary(finraStrictMissing, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
+      finra_source_ready_no_reported: buildCategorySummary(finraEligibleNoReportedRows, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
       occ_missing: buildCategorySummary(occMissing, classifyOccGap),
     },
     action_slices: [
       {
         id: "finra_readiness_semantics",
         source: "FINRA",
-        current_gap_count: finraStrictMissing.length,
-        collectable_plain_us_count: finraStrictMissing.filter((row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row))) === "plain_us_finra_metric_gap").length,
+        current_gap_count: finraEligibleSourceMissingRows.length,
+        collectable_plain_us_count: 0,
         mapping_or_denominator_policy_count: finraStrictMissing.filter((row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row))) !== "plain_us_finra_metric_gap").length,
-        next_action: "S0 FINRA readiness uses current active plain-US metric-ready rows. Artifact-wide flow coverage may include non-active rows and must not be compared 1:1 to the current active denominator.",
+        no_reported_row_source_ready_count: finraEligibleNoReportedRows.length,
+        strict_metric_gap_count: finraEligibleMetricMissingRows.length,
+        next_action: "S0 FINRA readiness uses active plain-US source-ready rows. Tickers checked in the official daily file but absent from reported rows stay null/low-evidence metrics, not blocking source gaps.",
       },
       {
         id: "finra_us_class_mapping_policy",
@@ -539,6 +562,7 @@ function buildAudit({ full }) {
     samples: {
       finra_missing: sampleRows(finraMissing, classifyFinraGap),
       finra_strict_missing_or_placeholder: sampleRows(finraStrictMissing, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
+      finra_source_ready_no_reported: sampleRows(finraEligibleNoReportedRows, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
       finra_placeholder_low_confidence_rows: sampleRows(finraPlaceholderRows, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
       occ_missing: sampleRows(occMissing, classifyOccGap),
       occ_plain_us_collection_or_no_options_policy_required: sampleRows(occPlainMissing, classifyOccGap),
@@ -588,6 +612,7 @@ function renderText(audit) {
     `Fenok S0 source gap audit: ${audit.acceptance_checks.ok ? "PASS" : "FAIL"}`,
     `active US denominator: ${audit.counts.active_us_total} (${Object.entries(audit.denominator.active_us_by_market).map(([market, count]) => `${market}=${count}`).join(", ")})`,
     `FINRA: present=${audit.counts.finra_present} missing=${audit.counts.finra_missing} coverage=${audit.counts.finra_coverage_pct}%`,
+    `FINRA source-ready: present=${audit.counts.finra_eligible_source_ready_present}/${audit.counts.finra_eligible_denominator} no_reported=${audit.counts.finra_eligible_no_reported_row_source_ready} missing=${audit.counts.finra_eligible_source_ready_missing} excluded_us_class=${audit.counts.finra_excluded_us_class_count} coverage=${audit.counts.finra_eligible_source_ready_coverage_pct}%`,
     `FINRA eligible metric-ready: present=${audit.counts.finra_eligible_metric_ready_present}/${audit.counts.finra_eligible_denominator} excluded_us_class=${audit.counts.finra_excluded_us_class_count} coverage=${audit.counts.finra_eligible_metric_ready_coverage_pct}%`,
     `FINRA strict metric-ready: present=${audit.counts.finra_metric_ready_present} missing_or_placeholder=${audit.counts.finra_metric_ready_missing_or_placeholder} coverage=${audit.counts.finra_metric_ready_coverage_pct}%`,
     `FINRA missing classes: ${finraClasses || "none"}`,

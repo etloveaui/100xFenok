@@ -40,17 +40,20 @@ assert.equal(requirementsReady(completeRequirements), true);
 assert.equal(requirementsReady({ ...completeRequirements, gated: false }), false);
 
 const readyTrack = {
-  denominator: 1066,
+  denominator: 1064,
   readiness_status: "ready",
   public_done_claim_allowed: true,
   requirements: completeRequirements,
 };
-assert.equal(activeS0DailyGatedReady(readyTrack, 1066), true);
-assert.equal(activeS0DailyGatedReady({ ...readyTrack, requirements: { ...completeRequirements, daily: false } }, 1066), false);
-assert.equal(activeS0DailyGatedReady({ ...readyTrack, denominator: 1065 }, 1066), false);
+assert.equal(activeS0DailyGatedReady(readyTrack, 1064), true);
+assert.equal(activeS0DailyGatedReady({ ...readyTrack, requirements: { ...completeRequirements, daily: false } }, 1064), false);
+assert.equal(activeS0DailyGatedReady({ ...readyTrack, denominator: 1065 }, 1064), false);
+assert.equal(activeS0DailyGatedReady(readyTrack, 0), false);
 
 assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "stale" }), false);
 assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "stale" }, true), true);
+assert.equal(warnOnlyStaleCountedSource({ id: "us_class_yf_source_date", status: "stale" }, true), true);
+assert.equal(warnOnlyStaleCountedSource({ id: "asia_ex_taiwan_yf_source_date", status: "stale" }, true), true);
 assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "missing" }, true), false);
 assert.equal(warnOnlyStaleCountedSource({ id: "etf_signal_summary_freshness", status: "stale" }, true), false);
 

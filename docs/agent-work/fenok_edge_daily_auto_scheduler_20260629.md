@@ -12,9 +12,10 @@ legacy deletion, Cloudflare routing, or deployment changes are already approved.
 Current owner decisions:
 
 - Short-term Fenok Edge values require fresh daily source inputs for the signals
-  that claim short-term meaning. The current green claim is narrower: S0 is
-  PUBLIC + DAILY + GATED under the current Korea+US source scope, not "all 1,066
-  tickers fully refetched every day."
+  that claim short-term meaning. The current green claim is full active S0
+  source readiness: 1,172 public active stock rows are PUBLIC + DAILY + GATED
+  through KRX, FINRA/OCC, and counted YF daily stock shards. This is not a claim
+  that every optional metric axis is complete every day.
 - StockAnalysis ETF schedule/deploy was owner-approved on 2026-06-30 for the
   bounded lanes below. Broader cron/GitHub Actions/Cloudflare/Mac mini ownership
   decisions still require separate approval before any new operating claim.
@@ -37,9 +38,10 @@ Non-negotiable handoff contents for the next main pane:
 - Default nested checkout caveat: `source/100xFenok` in the normal workspace is
   dirty and behind/diverged from the clean temp worktree context; do not copy
   blindly or overwrite user/peer changes.
-- S0 completed scope: strict S0 Korea+US gate green; 1,066 active public stocks;
-  current S0 daily/gated source denominator 975; OCC source-ready 579/579; FINRA
-  active plain-US metric-ready 579/579; KRX 338/338.
+- S0 completed scope: strict all-active S0 gate green; 1,172 active public stocks;
+  current S0 daily/gated source denominator 1,172; KRX 337/337, plain-US
+  FINRA/OCC source-ready 685/685, US_CLASS/non-plain YF 59/59, Asia ex-Taiwan
+  YF 91/91.
 - Verification to rerun before any done claim:
   `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`,
   `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`,
@@ -74,6 +76,10 @@ Non-negotiable handoff contents for the next main pane:
   - Scheduled runs keep incremental ETF backfill on, capped at 40 ETF details, with Core Basket priority tickers, core surfaces, and 0.5 second sleep.
   - After StockAnalysis detail/history refreshes, the workflow now rebuilds ETF signals and the ETF action index before rebuilding the ETF Core Daily Basket. This keeps the committed Core Basket artifacts aligned with the same clean-base generation order used by the Cloudflare Worker build.
   - The workflow participates in the shared `fenok-data-writer-${{ github.ref }}` queue because it regenerates the same coverage/readiness/static-route artifacts as the Edge daily lanes.
+- `.github/workflows/slickcharts-*.yml`
+  - SlickCharts daily/weekly/monthly/symbols/history updates now participate in the same `fenok-data-writer-${{ github.ref }}` queue before pushing data commits.
+  - After updating `data/slickcharts/` and the Next public mirror, these lanes rebuild S1 dry-run evidence, run `sync-static`, and must pass `qa:fenok-edge-readiness` plus `qa:fenok-s0-daily-gated` before commit/push.
+  - Successful SlickCharts data commits dispatch `update-manifest.yml`, so bot-authored data updates still flow into manifest/RIM rebuild and the Worker deploy dispatch path.
 - `.github/workflows/fenok-edge-daily.yml`
   - Adds a KST Tue-Sat 09:30 FINRA/OCC derived-proxy refresh.
   - FINRA defaults to a 7-day-to-yesterday window to tolerate holidays and source lag.
@@ -90,10 +96,10 @@ Non-negotiable handoff contents for the next main pane:
 
 The current collectors are individually bounded, but the durable operating model
 needs a cross-collector lane governor before broader daily coverage expands.
-Until that governor exists, the daily system must not be described as "all 1,066
-tickers fully refetched every day." The correct claim is that S0 DAILY/GATED is
-maintained by bounded Korea+US source refreshes plus fail-closed readiness gates,
-with Asia ex-Taiwan still requiring a separate daily-source lane.
+Until that governor exists, the daily system must not be described as "every
+optional metric for every ticker fully refetched every day." The correct claim
+is that S0 DAILY/GATED is maintained by bounded KRX, FINRA/OCC, and YF daily
+source refreshes plus fail-closed readiness gates.
 
 Target lane shape:
 
@@ -101,8 +107,9 @@ Target lane shape:
 load-aware collection lane
 ├─ priority 0: keep S0 freshness green
 │  ├─ KRX daily issuer proof
-│  ├─ FINRA active plain-US metric-ready proof
-│  └─ OCC active plain-US source-ready proof
+│  ├─ FINRA active plain-US source-ready proof
+│  ├─ OCC active plain-US source-ready proof
+│  └─ YF daily source proof for US_CLASS/non-plain and HKEX/SSE/SZSE rows
 ├─ priority 1: repair S0 blockers only if strict gate turns red
 ├─ priority 2: S1/S3/ETF backfill and expansion work
 └─ global guard: pause or defer new heavy fetch batches when system load is high
@@ -209,9 +216,10 @@ Acceptance criteria for the governor:
 - Generated-data writers that touch overlapping Fenok Edge artifacts are serialized by the shared `fenok-data-writer-${{ github.ref }}` concurrency group. This was added after run `28981832204` proved that separate Edge/KRX queues can both pass data rebuilds but fail at commit time with real generated-JSON rebase conflicts. The fix commit `2556a02882` passed workflow YAML validation in run `28982488893`.
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`, which rebuilds `data/computed/rim-index/inputs.json` and its Next public mirror.
 - Bot-authored generated-data commits do not start push-triggered deploy runs on their own because of GitHub recursion guards. `Update Manifest` now requests `actions: write` and dispatches `Deploy Worker (Cloudflare)` after a generated-data commit, while the scheduled deploy remains the safety-net reconciliation path.
+- Every workflow that commits refreshed data now follows the same writer contract: `actions: write`, shared `fenok-data-writer-${{ github.ref }}` concurrency, guarded rebase retry before push (`pull` failure aborts the in-progress rebase before the next attempt), and an explicit post-push workflow dispatch. Edge/YF/StockAnalysis/SlickCharts/macro/FRED/Yardeni/DefiLlama/Sentiment/FDIC/TGA/Yahoo ticker/global-scouter/13F writers dispatch `update-manifest.yml`; EDGAR dispatches `deploy-worker.yml` directly because it updates `data/manifest.json` and the static route manifest inside its own run.
 - 2026-07-09 verification: manual YF daily all-shards run `28989900069` succeeded with `daily_all_shards=true`, `profile=daily`, `merge_existing=true`, and produced `data/yf/finance/_summary.json` with `count=1248`, `ok=1248`, `failed=0`. Follow-up data commits `3a0af30821`, `0eec550af4`, and bot manifest commit `cd5b7013c5` were pulled to main; final explicit Worker deploy `28991274708` on `cd5b7013c5` passed build/deploy/public smokes. Live Worker verification returned the same YF summary and fresh RIM inputs from `/data/computed/rim-index/inputs.json`.
 - RIM QA accepts both valid KOSPI operating states: `backlog_blocked` when no KRX bridge is available in the checkout, and `secondary_input_only` with KRX exact weights/KTS 10Y when the bridge is present.
-- YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
+- YF daily, Fenok Edge daily, Fenok Edge KRX daily, and StockAnalysis daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing. Scheduled Edge/KRX/YF/StockAnalysis workflows also run the strict `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated` gate directly before committing.
 - `qa:fenok-edge-readiness` includes `qa:rim-index`, a no-fetch RIM input contract check that forbids public `fair_value` / `target_price` output and blocks KOSPI from using DGS10 as a fallback.
 - `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
 - `qa:fenok-edge-readiness` also includes `qa:fenok-s0-source-gaps`, a no-fetch S0 source-gap audit that classifies FINRA/OCC missing rows into collection candidates vs universe-mapping policy work.
@@ -220,6 +228,7 @@ Acceptance criteria for the governor:
 - ETF daily 1Y readiness uses the current `fenok_etf_signals_summary.json` plus ETF detail files as the exact selector. The StockAnalysis history-gap report remains a freshness/diagnostic input and may lag inside the same build after the ETF summary is regenerated.
 - StockAnalysis run `28983683639` produced data commit `20ca24adf7`, but the following manual Worker deploy `28983982075` failed in `qa:fenok-etf-core-daily-basket` because the committed Core Basket payload was built before the refreshed ETF signals/action-index layer. Fix commit `e53ffc2747` regenerates `fenok_etf_signals`, `etf_action_index`, and the Core Basket artifacts in the workflow order; local `qa:fenok-etf-core-daily-basket` passed before push.
 - YF run `28980507925` completed its batch fetch but failed at `Rebuild Fenok signal summary mirrors` because a Yahoo payload contained `Infinity`, which is valid under Python's default `json.dumps` but invalid for Node `JSON.parse`. Fix commit `5acdce1b7c` adds stable JSON serialization and a unit test so non-finite values are removed before write; rerun `28984738182` is the current main verification run.
+- 2026-07-09 local verification after the all-active daily-source rebuild: `sync-static`, `qa:fenok-edge-readiness`, `qa:fenok-s0-daily-gated`, and `report-fenok-daily-accumulation --check` passed with S0 active stock `1172/1172` daily/gated, S1 `1178 = 1172 public + 6 blocked`, ETF service daily/gated true, and RIM primary index QA green.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
 
 ## Daily Truth Table
@@ -228,10 +237,10 @@ Current local snapshot:
 
 | Layer | Current stage | Scheduled cadence | Current backlog / next-run exposure | Remaining blocker |
 | --- | --- | --- | --- | --- |
-| S0 active stock scoring | PUBLIC + DAILY + GATED under current Korea+US S0 scope | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; current S0 daily/gated source scope is 975 Korea+US rows, with 91 HKEX/SSE/SZSE rows explicitly excluded until a separate Asia daily-source workstream exists; KRX 338/338, FINRA metric-ready 579/579 for active plain-US rows, OCC source-ready 579/579 (`573` options-activity rows + `6` both-side no-record no-listed-options evidence); strict `qa:fenok-s0-daily-gated` is green | none for current strict S0; US_CLASS/non-plain/class-share and Asia lanes remain expansion work |
-| S1 stock candidates | NORMALIZED / JOINED_READY staging, not scored | YF scheduled branch processes all 1,178 stock candidates per weekday run through 5 bounded daily shards, using merge-preserving `daily` profile; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates, 1,066 scored/public stocks, 112 promotion-audit gap; current gate is 107 promotion rows and 5 blocked, with hypothetical public count 1,173 | not scored/public/daily/gated as expanded stock coverage; remaining joined blockers are DAY, HOLX, KEY, MMC, STRC |
-| S3 ETF public/full universe | PUBLIC surface + diagnostic/backfill, not service gate | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis daily-1Y branch drains exact diagnostic gaps at 120/run when owner-approved | 5,310 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; generated admin diagnostic evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json` with `4484 = 3703 complete + 243 fetchable + 538 inception-limited`; exact fetchable ticker plan is `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` with 243 tickers / 3 bounded batches at 120 each | Full-universe `daily=false`, `gated=false`, `public_done_claim_allowed=false`; this is rolling universe health, not the ETF service blocker |
-| ETF Core Daily Basket | SERVICE DAILY + GATED target, currently green | StockAnalysis Core Basket/surface branch refreshes the Core Basket priority list and rebuilds the Core Basket evidence | 118 selected from 1,576 structural candidates; current local regeneration is 118 fresh / 0 stale, `core_daily_basket_ready=true`; excludes leveraged, inverse, single-stock, single-stock/concentrated derivative-income strategy, low-confidence, broken-history, stale, and New ETF Radar-only rows | No current blocker; keep the gate fail-closed if stale selected rows return |
+| S0 active stock scoring | PUBLIC + DAILY + GATED for the full active stock universe | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30 for FINRA/OCC; `fetch-yf-finance.yml` keeps US_CLASS/non-plain and HKEX/SSE/SZSE daily stock shards fresh | 1,172 scored/public stocks; all-active S0 daily/gated source scope is 1,172 rows: US 744 (`685` plain-US FINRA/OCC + `59` US_CLASS/non-plain YF), Korea 337, Asia ex-Taiwan 91. KRX source-ready 337/337, FINRA source-ready 685/685 (`682/685` metric-ready diagnostic), OCC source-ready 685/685 (`680` options-activity rows + `5` no-listed-options evidence), US_CLASS YF 59/59, Asia YF 91/91. Strict `qa:fenok-s0-daily-gated` is green | none for current strict S0; FINRA/OCC metric expansion for non-plain/class rows remains a separate signal-quality task, not a daily/gated blocker |
+| S1 stock candidates | PUBLIC_GATED_WITH_BLOCKED_LEDGER | YF scheduled branch processes all 1,178 stock candidates per weekday run through 5 bounded daily shards, using merge-preserving `daily` profile; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates are fully accounted for by 1,172 public S0 rows plus 6 blocked/excluded rows. Current dry-run has `promotion_rows=0`, `excluded_blocked_rows=6`, and `public_s0_after_if_enabled=1172` | none for the current public/gated S1 accounting; blocked rows stay explicit repair candidates until a separate identity/source policy promotes them |
+| S3 ETF public/full universe | PUBLIC service lane + DAILY/GATED service evidence; full daily-1Y remains diagnostic/backfill | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis daily-1Y branch drains exact diagnostic gaps at 120/run; Core Basket priority surface remains service-gated | 5,442 ETF candidates; 4,508 scored/public ETF rows in the separate ETF lane. Named ETF gates verify the compact public summary mirror, ETF signal API route, ETF action index, ETF detail UI card, and New ETF Radar. Generated admin diagnostic evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json` with `4508 = 3703 complete + 216 fetchable + 589 inception-limited`; exact fetchable ticker plan is `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` with 216 tickers / 2 bounded batches | No service blocker. The 216 fetchable daily-1Y rows are rolling diagnostic/backfill work with `service_gate=false`, not an ETF service readiness blocker |
+| ETF Core Daily Basket | SERVICE DAILY + GATED, currently green | StockAnalysis Core Basket/surface branch refreshes the Core Basket priority list and rebuilds the Core Basket evidence | 115 selected rows; current local regeneration is 115 fresh / 0 stale, `core_daily_basket_ready=true`; excludes leveraged, inverse, single-stock, single-stock/concentrated derivative-income strategy, low-confidence, broken-history, stale, and New ETF Radar-only rows | No current blocker; keep the gate fail-closed if stale selected rows return |
 
 Operational command:
 
@@ -249,15 +258,15 @@ Operator readout rule:
 - Each S0/S1/S3 row prints `status: sources=[...] blocking_gates=... done_claim_allowed=...`.
 - Treat `sources=[...]` as the latest available derived source dates/timestamps, not as paid-ready proof.
 - If `blocking_gates` is non-empty or `done_claim_allowed=false`, do not call that layer PUBLIC + DAILY + GATED.
-- `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip; for the current S0 Korea+US scope this evidence is now green.
-- The active S0 coverage index now carries derived blocker evidence directly under `public_scoring_readiness.tracks[].blocking_evidence`, so operators can see the FINRA/OCC/Asia gap counts without reading raw/private manifests.
-- The active/public scoring universe remains 1,066. The current S0 daily/gated source scope is explicitly Korea+US only: 975 eligible rows (`US`/`US_CLASS` 637 + `KRX`/`KOSDAQ` 338), with 91 HKEX/SSE/SZSE rows excluded from this daily gate rather than counted as a hidden fetch blocker.
-- The S0 source-gap audit is the action splitter for those blockers: FINRA readiness now uses active plain-US metric-ready rows (`market=US`) and is 579/579. The old row-existence diagnostic remains 587/637, with 50 `US_CLASS` foreign-suffix rows and eight low-confidence placeholders tracked as mapping/semantic evidence, not FINRA refetch work.
-- OCC source-ready readiness is 579/579 for active plain-US rows: 573 rows have options-activity proxy output, and 6 both-side `no_record` rows now count as no-listed-options source-ready evidence without fabricating options activity. The legacy 64-row activity diagnostic remains visible as expansion evidence: 56 non-US suffix `US_CLASS` mapping/denominator rows, 2 Berkshire class-share symbol-form rows, and the 6 source-ready no-listed-options rows.
-- Asia ex-Taiwan is no longer allowed to masquerade as an S0 daily blocker. It stays visible as explicit exclusion evidence; an all-1,066 daily/gated claim requires a separate HKEX/SSE/SZSE source lane.
-- `ETF evidence` separates public surface proof, Core Basket service readiness, and full-universe diagnostic readiness. Current full-universe 1Y continuity still has fetchable gaps, but current Core Basket local regeneration is `118 fresh / 0 stale`; ETF DAILY/GATED wording is Core Basket-scoped only.
-- `data/admin/fenok-edge-etf-daily1y-readiness.json` is the generated full-universe daily 1Y diagnostic evidence, and `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` is the exact no-fetch 243-ticker StockAnalysis diagnostic plan after the latest YF fallback-enabled run. Both must remain admin-only; `sync-static-overrides` removes the readiness public mirror and `qa:fenok-public-guard` forbids `public/data/admin/fenok-edge-etf-daily1y-readiness.json` and `public/data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`.
-- `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --required-history-periods daily_1y --incremental-etf-limit 120` now treats `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` as the exact dispatch source for full-universe diagnostic catch-up: it selects 120 from the 243 scored-ETF fetchable rows and does not broaden into generic missing/fallback/stale ETF retries.
+- `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip; current all-active S0 evidence is green for 1,172/1,172 rows.
+- The active S0 coverage index now carries derived blocker evidence directly under `public_scoring_readiness.tracks[].blocking_evidence`, so operators can see KRX, FINRA/OCC, US_CLASS YF, and HKEX/SSE/SZSE YF counts without reading raw/private manifests.
+- The active/public scoring universe is 1,172. The current all-active S0 daily/gated source scope includes all 1,172 rows: Korea 337, plain-US FINRA/OCC 685, US_CLASS/non-plain YF 59, and Asia ex-Taiwan YF 91. `excluded_count` must remain 0 for an all-active S0 DAILY/GATED claim.
+- The S0 source-gap audit remains the action splitter for signal-quality gaps: FINRA source-ready is 685/685 while metric-ready remains 682/685; US_CLASS/non-plain rows are daily-source-ready through YF, not FINRA/OCC metric-complete.
+- OCC source-ready readiness is 685/685 for active plain-US rows: 680 rows have options-activity proxy output, and 5 both-side `no_record` rows count as no-listed-options source-ready evidence without fabricating options activity.
+- Asia ex-Taiwan is now counted through the scheduled YF daily stock shard lane. If Asia YF freshness turns stale or incomplete, `qa:fenok-s0-daily-gated` must turn red rather than silently excluding those rows.
+- `ETF evidence` separates public service proof, Core Basket service readiness, and full-universe diagnostic readiness. Current full-universe daily 1Y continuity still has 216 fetchable diagnostic gaps, but current Core Basket local regeneration is `115 fresh / 0 stale`; ETF service DAILY/GATED wording is service-scoped, not a full-history-complete claim.
+- `data/admin/fenok-edge-etf-daily1y-readiness.json` is the generated full-universe daily 1Y diagnostic evidence, and `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` is the exact no-fetch 216-ticker StockAnalysis diagnostic plan after the latest YF fallback-enabled run. Both must remain admin-only; `sync-static-overrides` removes the readiness public mirror and `qa:fenok-public-guard` forbids `public/data/admin/fenok-edge-etf-daily1y-readiness.json` and `public/data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`.
+- `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --required-history-periods daily_1y --incremental-etf-limit 120` now treats `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` as the exact dispatch source for full-universe diagnostic catch-up: it selects 120 from the 216 scored-ETF fetchable rows and does not broaden into generic missing/fallback/stale ETF retries.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it must stay green before any current S0 PUBLIC + DAILY + GATED wording is used.
 
 ## Resource Controls
@@ -265,14 +274,13 @@ Operator readout rule:
 - Current resource controls are per-collector throttles, not a full lane
   governor. They keep individual jobs bounded, while the load-aware collection
   lane above defines the next coordination layer.
-- YF daily schedule is shard-limited without lowering the stock target: stock runs execute all 5 daily shards in the same scheduled run, capped at 260 candidates per shard with merge-preserving `daily` profile; ETF runs use one of 6 rolling shards capped at 140 candidates and are history-gap-limited.
+- YF daily schedule is shard-limited without lowering the stock target: stock runs execute all 5 daily shards in the same scheduled run, capped at 260 candidates per shard with merge-preserving `daily` profile; this stock lane is now counted for US_CLASS/non-plain and HKEX/SSE/SZSE daily-source readiness. ETF runs use one of 6 rolling shards capped at 140 candidates and are history-gap-limited.
 - YF daily ETF initial fill is expected to take multiple scheduled runs because each run processes one rolling shard capped at 140 candidates; large history-gap sets require repeated shard cycles before clearing. After gaps shrink, `history_gaps_only` and `max_age_hours` keep runs bounded; newly launched ETFs can remain inception-limited without blocking the ETF lane.
 - `scripts/write-fenok-etf-daily1y-readiness.mjs --check` persists the S3 admin-only readiness artifact plus the exact fetchable plan, validates the count equation against the ETF signal summary, the StockAnalysis history-gap report, and the coverage index, and records that local YF-only history would over-select 4,113 scored ETFs. It does not fetch or write public files.
 - S1 stock candidates are data-fill candidates only. `stock_action_index`, `fenok_signals`, and public stock scoring remain S0-only until a separate promotion/scoring-chain contract lands.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --scoring-contract-report --check` is the first S1 scoring-chain contract artifact. It is stdout-only, non-public, non-daily, non-gated, keeps all score outputs null, and does not mutate `stock_action_index`, `fenok_signals`, or public mirrors.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --score-preview-report --check` adds the next non-public S1 preview step. It uses the shared S0 scoring core, emits only stdout preview rows for joined-ready S1 stocks, keeps missing/unsupported axes explicit as `null` / `미확인`, and still does not mutate public S0, `stock_action_index`, `fenok_signals`, or public mirrors.
-- `scripts/audit-fenok-stock-promotion-candidates.mjs --promotion-gate-plan-report --check` adds the next non-public S1 promotion gate plan. It currently turns 107 promotion-ready preview rows into shadow-candidate-only promotion rows, keeps 5 blocked rows as explicit repair plans, and still writes no `stock_action_index`, `fenok_signals`, or public mirror output.
-- `scripts/write-fenok-s1-promotion-gate-plan.mjs --check` persists that S1 promotion gate plan to `data/admin/fenok-s1-stock-promotion-gate-plan.json` as admin-only derived evidence. It still writes no S0 scoring file, no `fenok_signals`, and no public mirror.
+- `scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check` persists the current S1 public-gated-with-blocked-ledger evidence to `data/admin/fenok-s1-stock-public-promotion-dry-run.json`: 1,178 denominator, 1,172 public S0 rows, 6 blocked/excluded rows, and 0 promotion rows. It writes no S0 scoring file, no `fenok_signals`, and no public mirror beyond the derived admin evidence.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --blocked-unblock-diagnostics-report --check` keeps DAY/HOLX/MMC/STRC as blocker-only diagnostics with local source evidence and next repair targets; it still writes no `stock_action_index`, `fenok_signals`, or public mirror output.
 - The S1 joined gate counts tickers present in the StockAnalysis corporate-action surface as the existing `stockanalysis` evidence family, deduped with StockAnalysis detail files. This removes DAY's evidence-family blocker but does not resolve DAY/HOLX/MMC identity scope.
 - Blocked diagnostics expose `accepted_family_flags` separately from raw `source_flags`, so surface-only StockAnalysis evidence is visible without pretending the market_facts detail already has a StockAnalysis source flag.
@@ -298,9 +306,9 @@ Operator readout rule:
 
 ## Residual Expansion Gap
 
-KRX now has a scheduled private daily fetch path, and the current S0 Korea+US source scope is green. The coverage index counts only the latest non-empty KRX stock/KOSDAQ issuer daily proof, and `qa:fenok-edge-readiness` plus the strict `qa:fenok-s0-daily-gated` gate remain the source of truth for any PUBLIC + DAILY + GATED claim.
+KRX, FINRA/OCC, YF stock shards, and ETF service gates now have scheduled daily source paths, and the current all-active S0 source scope is green. The coverage index counts only the latest non-empty KRX stock/KOSDAQ issuer daily proof plus the latest FINRA/OCC/YF source proofs, and `qa:fenok-edge-readiness` plus the strict `qa:fenok-s0-daily-gated` gate remain the source of truth for any PUBLIC + DAILY + GATED claim.
 
-- Strict S0 is green when active stock count and track denominator are both 1,066 and `active_stock_scoring_current` has `requirements.daily=true`, `requirements.gated=true`, `readiness_status=ready`, and `public_done_claim_allowed=true`.
-- Current daily proof: source/proxy rows are explicitly `not_public_scoring`; KRX covers 338/338 Korea rows, FINRA metric-ready covers 579/579 active plain-US rows, OCC source-ready covers 579/579 active plain-US rows, and the latest bounded US run remains a diagnostic reference only. The 91 Asia ex-Taiwan rows are explicit exclusion evidence for the current 975-row Korea+US daily scope; they must move into a new HKEX/SSE/SZSE source lane before any all-1,066 daily-source claim.
+- Strict S0 is green when active stock count and track denominator are both 1,172 and `active_stock_scoring_current` has `requirements.daily=true`, `requirements.gated=true`, `readiness_status=ready`, `public_done_claim_allowed=true`, and `s0_daily_gated_scope.excluded_count=0`.
+- Current daily proof: source/proxy rows are explicitly `not_public_scoring`; KRX covers 337/337 Korea rows, FINRA source-ready covers 685/685 active plain-US rows, OCC source-ready covers 685/685 active plain-US rows, US_CLASS/non-plain YF covers 59/59 rows, and HKEX/SSE/SZSE YF covers 91/91 rows.
 - Current gated proof: the fail-closed promotion rule now turns complete daily evidence into `requirements.daily=true` and `requirements.gated=true` only after stale, missing, empty-source, raw-private, and public-mirror checks pass.
 - If `qa:fenok-s0-daily-gated` turns red again, any S0 wording must immediately fall back to "PUBLIC, not DAILY/GATED" until the gate is repaired.

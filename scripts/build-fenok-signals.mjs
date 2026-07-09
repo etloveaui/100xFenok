@@ -122,6 +122,20 @@ function loadPriceHistory(ticker) {
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
+function loadSpotQuote(ticker) {
+  const payload = readOptionalJson(`yf/finance/${ticker}.json`);
+  const info = payload?.data?.info ?? {};
+  const fastInfo = payload?.data?.fast_info ?? {};
+  const currentPrice = num(info.currentPrice ?? fastInfo.lastPrice);
+  const previousClose = num(info.previousClose ?? fastInfo.previousClose);
+  if (currentPrice === null || previousClose === null || previousClose <= 0) return null;
+  return {
+    currentPrice,
+    previousClose,
+    fetched_at: payload?.fetched_at ?? null,
+  };
+}
+
 function movingAverage(values, window) {
   if (!Array.isArray(values) || values.length < window) return null;
   const slice = values.slice(-window);
@@ -651,6 +665,26 @@ function buildTechnicalSignal(stats, row) {
     { key: "slick_latest_return", weight: 0.2, component: metricComponent(stats, row, "slick_latest_return") },
     { key: "momentum_consistency", weight: 0.1, component: customComponent(null, consistency) },
   ]);
+  if (result.score === null) {
+    const quote = loadSpotQuote(row.symbol);
+    const oneDayReturn = quote ? quote.currentPrice / quote.previousClose - 1 : null;
+    const fallbackScore = finite(oneDayReturn) ? scoreRange(oneDayReturn, -0.08, 0.08) : null;
+    if (fallbackScore !== null) {
+      return {
+        score_0_100: fallbackScore,
+        direction: directionFromScore(fallbackScore),
+        coverage_ratio: 0.1,
+        confidence: confidenceFromCoverage(0.1, row.coverageRatio),
+        basis: "local_yf_spot_quote_fallback_when_ohlcv_history_is_short",
+        caveat: "Uses currentPrice versus previousClose only when 12m/local OHLCV technical inputs are unavailable; this is a minimal short-term axis, not a trend model.",
+        source_fetched_at: quote.fetched_at,
+        components: {
+          ...result.components,
+          spot_price_move_1d: customComponent(oneDayReturn, fallbackScore),
+        },
+      };
+    }
+  }
   return {
     score_0_100: result.score,
     direction: directionFromScore(result.score),
