@@ -612,61 +612,86 @@ function hasForwardEpsFy1Fy3(row) {
   return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0;
 }
 
-function proxyConstituentCandidateDiagnostics(stockActionPayload, dataRootForReads) {
+function stockActionRowsForProxyCandidate(stockActionPayload, config, dataRootForReads) {
   const lookup = stockActionLookup(stockActionPayload);
+  const payload = readDataJson(config.source, dataRootForReads);
+  const holdings = Array.isArray(payload?.normalized?.holdings) ? payload.normalized.holdings : [];
+  const indexKey = `${String(config.proxyTicker).toLowerCase()}_etf_proxy`;
+  const denominatorRows = [];
+  const indexRows = [];
+  const missingSample = [];
+  for (const holding of holdings) {
+    const symbol = String(holding?.symbol ?? "").trim().toUpperCase();
+    const weight = numberOrNull(holding?.weight_pct ?? holding?.weight);
+    if (!finite(weight) || weight <= 0) continue;
+    const indexWeight = {
+      index: indexKey,
+      weight,
+      source_weight_unit: "percent",
+    };
+    denominatorRows.push({
+      row: {
+        symbol,
+        ticker_normalized: symbol,
+        company: String(holding?.name ?? holding?.company ?? "").trim(),
+      },
+      indexWeight,
+      holding,
+    });
+    const row = lookup.get(symbol);
+    if (row) {
+      indexRows.push({ row, indexWeight, holding });
+    } else if (missingSample.length < 10) {
+      missingSample.push(symbol || "(blank)");
+    }
+  }
+  return { payload, holdings, indexKey, denominatorRows, indexRows, missingSample };
+}
+
+function proxyDiagnosticStatus(config, forwardWeightRatio) {
+  if (config.diagnosticStatus) return config.diagnosticStatus;
+  if (config.exactIndexSubstitute) return "exact_candidate";
+  return forwardWeightRatio >= DEFAULT_MIN_COVERED_WEIGHT
+    ? "proxy_financials_coverage_ready_exact_index_blocked"
+    : "proxy_coverage_below_threshold";
+}
+
+function proxyCandidateDiagnostic(config, joined) {
+  const reportedWeight = joined.denominatorRows.reduce((sum, { indexWeight }) => sum + numberOrNull(indexWeight.weight), 0);
+  const resolvedWeight = joined.indexRows.reduce((sum, { indexWeight }) => sum + numberOrNull(indexWeight.weight), 0);
+  const forwardRows = joined.indexRows.filter(({ row }) => hasForwardEpsFy1Fy3(row));
+  const forwardWeight = forwardRows.reduce((sum, { indexWeight }) => sum + numberOrNull(indexWeight.weight), 0);
+  const resolvedWeightRatio = resolvedWeight / 100;
+  const forwardWeightRatio = forwardWeight / 100;
+  return {
+    proxy_ticker: config.proxyTicker,
+    source: config.source,
+    source_tier: "proxy_diagnostic",
+    exact_index_substitute: config.exactIndexSubstitute,
+    fetched_at: joined.payload?.fetched_at ?? null,
+    holdings_updated: joined.payload?.normalized?.holdings_updated ?? null,
+    reported_holding_count: joined.payload?.normalized?.holding_count ?? joined.holdings.length,
+    sampled_holding_rows: joined.holdings.length,
+    reported_weight_total: round(reportedWeight, 4),
+    resolved_rows: joined.indexRows.length,
+    resolved_weight: round(resolvedWeight, 4),
+    resolved_weight_ratio: round(resolvedWeightRatio, 6),
+    resolved_weight_ratio_of_reported_holdings: reportedWeight > 0 ? round(resolvedWeight / reportedWeight, 6) : null,
+    forward_eps_fy1_fy3_rows: forwardRows.length,
+    forward_eps_fy1_fy3_weight: round(forwardWeight, 4),
+    forward_eps_fy1_fy3_weight_ratio: round(forwardWeightRatio, 6),
+    min_public_card_weight_ratio: DEFAULT_MIN_COVERED_WEIGHT,
+    diagnostic_status: proxyDiagnosticStatus(config, forwardWeightRatio),
+    missing_sample: joined.missingSample,
+    notes: config.notes,
+  };
+}
+
+function proxyConstituentCandidateDiagnostics(stockActionPayload, dataRootForReads) {
   const diagnostics = {};
   for (const [indexId, config] of Object.entries(PROXY_CONSTITUENT_CANDIDATES)) {
-    const payload = readDataJson(config.source, dataRootForReads);
-    const holdings = Array.isArray(payload?.normalized?.holdings) ? payload.normalized.holdings : [];
-    let reportedWeight = 0;
-    let resolvedWeight = 0;
-    let resolvedRows = 0;
-    let forwardWeight = 0;
-    let forwardRows = 0;
-    const missingSample = [];
-    for (const holding of holdings) {
-      const symbol = String(holding?.symbol ?? "").trim().toUpperCase();
-      const weight = numberOrNull(holding?.weight_pct ?? holding?.weight);
-      if (!finite(weight) || weight <= 0) continue;
-      reportedWeight += weight;
-      const row = lookup.get(symbol);
-      if (row) {
-        resolvedWeight += weight;
-        resolvedRows += 1;
-        if (hasForwardEpsFy1Fy3(row)) {
-          forwardWeight += weight;
-          forwardRows += 1;
-        }
-      } else if (missingSample.length < 10) {
-        missingSample.push(symbol || "(blank)");
-      }
-    }
-    const resolvedWeightRatio = resolvedWeight / 100;
-    const forwardWeightRatio = forwardWeight / 100;
-    diagnostics[indexId] = {
-      proxy_ticker: config.proxyTicker,
-      source: config.source,
-      source_tier: "proxy_diagnostic",
-      exact_index_substitute: config.exactIndexSubstitute,
-      fetched_at: payload?.fetched_at ?? null,
-      holdings_updated: payload?.normalized?.holdings_updated ?? null,
-      reported_holding_count: payload?.normalized?.holding_count ?? holdings.length,
-      sampled_holding_rows: holdings.length,
-      reported_weight_total: round(reportedWeight, 4),
-      resolved_rows: resolvedRows,
-      resolved_weight: round(resolvedWeight, 4),
-      resolved_weight_ratio: round(resolvedWeightRatio, 6),
-      resolved_weight_ratio_of_reported_holdings: reportedWeight > 0 ? round(resolvedWeight / reportedWeight, 6) : null,
-      forward_eps_fy1_fy3_rows: forwardRows,
-      forward_eps_fy1_fy3_weight: round(forwardWeight, 4),
-      forward_eps_fy1_fy3_weight_ratio: round(forwardWeightRatio, 6),
-      min_public_card_weight_ratio: DEFAULT_MIN_COVERED_WEIGHT,
-      diagnostic_status: config.diagnosticStatus ?? (config.exactIndexSubstitute
-        ? "exact_candidate"
-        : (forwardWeightRatio >= DEFAULT_MIN_COVERED_WEIGHT ? "proxy_financials_coverage_ready_exact_index_blocked" : "proxy_coverage_below_threshold")),
-      missing_sample: missingSample,
-      notes: config.notes,
-    };
+    const joined = stockActionRowsForProxyCandidate(stockActionPayload, config, dataRootForReads);
+    diagnostics[indexId] = proxyCandidateDiagnostic(config, joined);
   }
   return diagnostics;
 }
@@ -835,6 +860,146 @@ function buildKrxKospiForwardEpsGrowth(
       "KRX daily latest pull may need refresh before public card promotion.",
     ],
   });
+}
+
+function buildProxyPayoutRatio(indexConfig, benchmarkRow, stockActionPayload, proxyConfig, joined) {
+  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), {
+    denominatorRows: joined.denominatorRows,
+  });
+  const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
+  const payoutRatio = finite(dividendYield.value) && earningsYield > 0
+    ? dividendYield.value / earningsYield
+    : null;
+  return derivedValue({
+    value: round(payoutRatio, 6),
+    formula: "proxy_etf_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+    sources: ["computed/stock_action_index.json", proxyConfig.source, indexConfig.benchmarkFile],
+    coverage: {
+      stock_action_source_date: stockActionPayload?.source_date ?? null,
+      proxy_ticker: proxyConfig.proxyTicker,
+      proxy_source: proxyConfig.source,
+      proxy_holdings_updated: joined.payload?.normalized?.holdings_updated ?? null,
+      exact_index_substitute: proxyConfig.exactIndexSubstitute,
+      benchmark_as_of: benchmarkRow.date,
+      benchmark_earnings_yield: round(earningsYield, 8),
+      weighted_dividend_yield: round(dividendYield.value, 8),
+      unmatched_proxy_sample: joined.missingSample,
+      ...dividendYield,
+    },
+    notes: [
+      "ETF holdings are used only as proxy inputs; they are not official index constituent weights.",
+      "Proxy payout is not promoted to the exact index payout_ratio field.",
+    ],
+  });
+}
+
+function buildProxyForwardEpsGrowth(
+  indexConfig,
+  stockActionPayload,
+  proxyConfig,
+  joined,
+  minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT,
+) {
+  const growth = weightedMetric(joined.indexRows, (row) => {
+    const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
+    const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
+    return finite(fy1) && fy1 > 0 && finite(fy3) && fy3 > 0
+      ? Math.exp(Math.log(fy3 / fy1) / 2) - 1
+      : null;
+  }, { denominatorRows: joined.denominatorRows });
+  return derivedValue({
+    value: round(growth.value, 6),
+    formula: "proxy_etf_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+    sources: ["computed/stock_action_index.json", proxyConfig.source],
+    coverage: {
+      stock_action_source_date: stockActionPayload?.source_date ?? null,
+      proxy_ticker: proxyConfig.proxyTicker,
+      proxy_source: proxyConfig.source,
+      proxy_holdings_updated: joined.payload?.normalized?.holdings_updated ?? null,
+      exact_index_substitute: proxyConfig.exactIndexSubstitute,
+      min_covered_weight_ratio: minCoveredWeight,
+      unmatched_proxy_sample: joined.missingSample,
+      ...growth,
+    },
+    notes: [
+      "ETF holdings are used only as proxy inputs; they are not official index constituent weights.",
+      "Proxy growth is not promoted to the exact index explicit_eps_growth_3y field.",
+    ],
+  });
+}
+
+function buildProxyInputs(indexConfig, benchmarkRow, context) {
+  const proxyConfig = PROXY_CONSTITUENT_CANDIDATES[indexConfig.id];
+  if (!proxyConfig || proxyConfig.diagnosticStatus?.startsWith("rejected_")) return null;
+  const joined = stockActionRowsForProxyCandidate(context.stockActionPayload, proxyConfig, context.dataRoot);
+  const diagnostic = proxyCandidateDiagnostic(proxyConfig, joined);
+  if (diagnostic.forward_eps_fy1_fy3_weight_ratio < context.minCoveredWeight) return null;
+  const payoutRatio = buildProxyPayoutRatio(indexConfig, benchmarkRow, context.stockActionPayload, proxyConfig, joined);
+  const explicitEpsGrowth3y = buildProxyForwardEpsGrowth(
+    indexConfig,
+    context.stockActionPayload,
+    proxyConfig,
+    joined,
+    context.minCoveredWeight,
+  );
+  const costOfEquityValue = context.dgs10.value + context.usErp.value;
+  return {
+    schema_version: "proxy_inputs_v1",
+    public_status: "proxy_input_only_exact_index_blocked",
+    source_tier: "proxy_diagnostic",
+    input_basis: "etf_holdings_proxy_not_official_index_weights",
+    proxy_ticker: proxyConfig.proxyTicker,
+    source: proxyConfig.source,
+    exact_index_substitute: proxyConfig.exactIndexSubstitute,
+    diagnostic_status: diagnostic.diagnostic_status,
+    fetched_at: diagnostic.fetched_at,
+    holdings_updated: diagnostic.holdings_updated,
+    coverage: diagnostic,
+    key_inputs: {
+      payout_ratio: payoutRatio,
+      explicit_eps_growth_3y: explicitEpsGrowth3y,
+      cost_of_equity: derivedValue({
+        value: round(costOfEquityValue, 8),
+        formula: "risk_free_rate + equity_risk_premium",
+        sources: ["macro/fred-banking-daily.json:series.DGS10", "damodaran/erp.json:us_erp"],
+        notes: ["US proxy inputs use the same US risk-free and ERP policy as SPX/NDX."],
+      }),
+    },
+    forecast_grid_v1: buildForecastGrid(
+      indexConfig,
+      benchmarkRow,
+      context.stockActionPayload,
+      payoutRatio,
+      costOfEquityValue,
+      explicitEpsGrowth3y,
+      {
+        indexRows: joined.indexRows,
+        denominatorRows: joined.denominatorRows,
+        indexKey: joined.indexKey,
+        sourceRefs: ["computed/stock_action_index.json", proxyConfig.source],
+        publicStatus: "proxy_input_only_no_fair_value_exact_index_blocked",
+        indexDiagnostics: diagnostic,
+        notes: [
+          "This forecast grid is nested under proxy_inputs_v1 and must not be treated as public-ready exact index output.",
+          "Exact SOX output still requires licensed/verified official constituent weights and yield coverage.",
+        ],
+      },
+    ),
+    blockers: [
+      {
+        code: "proxy_not_exact_index_constituents",
+        severity: "public_blocker",
+      },
+      ...indexConfig.blockers.map((code) => ({
+        code,
+        severity: "public_blocker",
+      })),
+    ],
+    notes: [
+      "Proxy inputs are scenario diagnostics only; top-level exact payout_ratio and explicit_eps_growth_3y remain blocked.",
+      ...proxyConfig.notes,
+    ],
+  };
 }
 
 function buildForecastGrid(
@@ -1277,6 +1442,7 @@ function buildSecondaryIndex(indexConfig, context) {
       };
     }
   }
+  const proxyInputs = buildProxyInputs(indexConfig, benchmarkRow, context);
   return {
     id: indexConfig.id,
     label: indexConfig.label,
@@ -1291,6 +1457,7 @@ function buildSecondaryIndex(indexConfig, context) {
       explicit_eps_growth_3y: blockedValue({
         reason: "Exact index growth derivation requires named constituent weights with sufficient forward EPS coverage.",
       }),
+      ...(proxyInputs ? { proxy_inputs_v1: proxyInputs } : {}),
     },
     assumptions: {},
     blockers: indexConfig.blockers
@@ -1366,11 +1533,12 @@ export function buildRimIndexInputs({
       no_public_single_target: true,
       no_kospi_dgs10_fallback: true,
       source_tier_required: true,
-      forecast_grid_v1_scope: "SPX_NDX_plus_KOSPI_when_krx_exact_weights_available_inputs_only",
+      forecast_grid_v1_scope: "SPX_NDX_plus_KOSPI_when_krx_exact_weights_available_inputs_only; proxy grids stay nested under proxy_inputs_v1",
       primary_indices: PRIMARY_INDICES.map((item) => item.id),
       secondary_or_backlog_indices: SECONDARY_INDICES.map((item) => item.id),
       kospi_weight_method: "KRX KOSPI issuer MKTCAP / total KOSPI MKTCAP when available",
       kospi_etf_proxy_policy: "EWY/MSCI Korea is diagnostics-only and must not be used as KOSPI RIM weights",
+      proxy_input_policy: "ETF proxy inputs are not exact index substitutes and must not set publication_ready.",
     },
     indices,
     coverage_diagnostics: {
@@ -1503,6 +1671,50 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
   ].filter(Boolean).join(" ");
   if (/\bDGS10\b/i.test(kospiRiskFreeSourceFields)) {
     errors.push("KOSPI must not use DGS10 as risk_free_rate");
+  }
+  for (const [id, item] of Object.entries(payload?.indices ?? {})) {
+    const proxy = item?.derived?.proxy_inputs_v1;
+    if (!proxy) continue;
+    if (item.public_status === "ready_inputs_and_forecast_grid") {
+      errors.push(`${id}.proxy_inputs_v1: proxy inputs must not make the index public-ready`);
+    }
+    if (!Array.isArray(item.blockers) || item.blockers.length === 0) {
+      errors.push(`${id}.proxy_inputs_v1: top-level blockers are required`);
+    }
+    if (proxy.schema_version !== "proxy_inputs_v1") {
+      errors.push(`${id}.proxy_inputs_v1: schema_version required`);
+    }
+    if (proxy.source_tier !== "proxy_diagnostic") {
+      errors.push(`${id}.proxy_inputs_v1: source_tier must be proxy_diagnostic`);
+    }
+    if (proxy.exact_index_substitute !== false) {
+      errors.push(`${id}.proxy_inputs_v1: exact_index_substitute must be false`);
+    }
+    if (proxy.public_status !== "proxy_input_only_exact_index_blocked") {
+      errors.push(`${id}.proxy_inputs_v1: public_status must be proxy_input_only_exact_index_blocked`);
+    }
+    const proxyCoverage = proxy.coverage?.forward_eps_fy1_fy3_weight_ratio;
+    if (!finite(proxyCoverage) || proxyCoverage < minCoveredWeight) {
+      errors.push(`${id}.proxy_inputs_v1: forward_eps_fy1_fy3_weight_ratio below ${minCoveredWeight}`);
+    }
+    for (const key of ["payout_ratio", "explicit_eps_growth_3y", "cost_of_equity"]) {
+      if (proxy.key_inputs?.[key]?.source_tier !== "derived_formula") {
+        errors.push(`${id}.proxy_inputs_v1.key_inputs.${key}: derived_formula tier required`);
+      }
+    }
+    const grid = proxy.forecast_grid_v1;
+    if (grid?.schema_version !== "forecast_grid_v1") {
+      errors.push(`${id}.proxy_inputs_v1.forecast_grid_v1: schema_version required`);
+    }
+    if (grid?.public_status !== "proxy_input_only_no_fair_value_exact_index_blocked") {
+      errors.push(`${id}.proxy_inputs_v1.forecast_grid_v1: public_status must be proxy_input_only_no_fair_value_exact_index_blocked`);
+    }
+    if (!Array.isArray(grid?.periods) || grid.periods.length !== 3) {
+      errors.push(`${id}.proxy_inputs_v1.forecast_grid_v1: exactly 3 periods required`);
+    }
+    if (id === "SOX" && !item.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified")) {
+      errors.push("SOX.proxy_inputs_v1: identity mapping blocker must remain");
+    }
   }
   const forbidden = scanForbiddenKeys(payload);
   if (forbidden.length > 0) errors.push(`forbidden output keys: ${forbidden.join(", ")}`);

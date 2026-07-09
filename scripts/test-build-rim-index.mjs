@@ -178,13 +178,39 @@ try {
 }
 
 assert.equal(payload.indices.SOX.role, "backlog_blocked");
+assert.equal(payload.indices.SOX.public_status, "blocked_or_input_only");
 assert.ok(
   payload.indices.SOX.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified"),
 );
 assert.ok(payload.indices.SOX.blockers.some((blocker) => blocker.code === "missing_sox_constituent_weight_path"));
+assert.equal(payload.indices.SOX.derived.payout_ratio.source_tier, "blocked_missing_source");
+assert.equal(payload.indices.SOX.derived.explicit_eps_growth_3y.source_tier, "blocked_missing_source");
+assert.equal(payload.indices.SOX.derived.forecast_grid_v1, undefined);
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.proxy_ticker, "SOXX");
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.exact_index_substitute, false);
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.resolved_weight_ratio >= 0.75);
+const soxProxyInputs = payload.indices.SOX.derived.proxy_inputs_v1;
+assert.equal(soxProxyInputs.schema_version, "proxy_inputs_v1");
+assert.equal(soxProxyInputs.public_status, "proxy_input_only_exact_index_blocked");
+assert.equal(soxProxyInputs.source_tier, "proxy_diagnostic");
+assert.equal(soxProxyInputs.proxy_ticker, "SOXX");
+assert.equal(soxProxyInputs.exact_index_substitute, false);
+assert.equal(soxProxyInputs.key_inputs.payout_ratio.source_tier, "derived_formula");
+assert.equal(soxProxyInputs.key_inputs.explicit_eps_growth_3y.source_tier, "derived_formula");
+assert.equal(soxProxyInputs.key_inputs.cost_of_equity.source_tier, "derived_formula");
+assert.ok(soxProxyInputs.coverage.forward_eps_fy1_fy3_weight_ratio >= 0.75);
+assert.ok(soxProxyInputs.key_inputs.payout_ratio.coverage.covered_weight_ratio >= 0.75);
+assert.ok(soxProxyInputs.key_inputs.explicit_eps_growth_3y.coverage.covered_weight_ratio >= 0.75);
+assert.equal(soxProxyInputs.forecast_grid_v1.schema_version, "forecast_grid_v1");
+assert.equal(soxProxyInputs.forecast_grid_v1.public_status, "proxy_input_only_no_fair_value_exact_index_blocked");
+assert.equal(soxProxyInputs.forecast_grid_v1.periods.length, 3);
+assert.equal(soxProxyInputs.forecast_grid_v1.coverage.index_key, "soxx_etf_proxy");
+assert.ok(soxProxyInputs.blockers.some((blocker) => blocker.code === "proxy_not_exact_index_constituents"));
+assert.ok(soxProxyInputs.blockers.some((blocker) => blocker.code === "identity_mapping_philadelphia_semi_to_sox_unverified"));
+
+const badProxyPayload = JSON.parse(JSON.stringify(payload));
+badProxyPayload.indices.SOX.derived.proxy_inputs_v1.exact_index_substitute = true;
+assert.equal(validateRimIndexInputs(badProxyPayload).ok, false);
 
 const publicText = JSON.stringify(payload);
 assert.equal(publicText.includes('"fair_value"'), false);

@@ -50,6 +50,10 @@ Date: 2026-07-08
 - `coverage_diagnostics.proxy_constituent_candidates` records local ETF proxy
   candidates for CCMP, KOSPI, and SOX without promoting them to exact index
   weights.
+- `derived.proxy_inputs_v1` may expose proxy-only input grids for in-scope
+  backlog indices when coverage clears the threshold. These fields must remain
+  nested under `proxy_inputs_v1`, keep `exact_index_substitute=false`, preserve
+  top-level blockers, and must not make the index public-ready.
 - Current candidates:
   - CCMP: `ONEQ` via `stockanalysis/etfs/ONEQ.json`; below the 0.75 public-card
     coverage threshold.
