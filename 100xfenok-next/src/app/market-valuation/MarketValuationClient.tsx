@@ -32,7 +32,7 @@ import {
 } from "@/lib/format";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
-import { formatAsOf as formatDataAsOf, freshnessDataState } from "@/lib/data-state";
+import { formatAsOf as formatDataAsOf, freshnessDataState, DATA_STATE_LABELS } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -186,6 +186,146 @@ function loadMarketStructureIndex(): Promise<MarketStructureIndexDoc | null> {
       return null;
     });
   return marketStructureIndexPending;
+}
+
+interface RimIndexEntry {
+  public_status?: string;
+  blockers?: Array<{ code?: string; severity?: string }>;
+}
+
+interface RimInputsDoc {
+  generated_at?: string;
+  indices?: Record<string, RimIndexEntry>;
+}
+
+let rimInputsCache: RimInputsDoc | null = null;
+let rimInputsPending: Promise<RimInputsDoc | null> | null = null;
+
+function loadRimInputs(): Promise<RimInputsDoc | null> {
+  if (rimInputsCache) return Promise.resolve(rimInputsCache);
+  if (rimInputsPending) return rimInputsPending;
+  rimInputsPending = fetch("/data/computed/rim-index/inputs.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((doc) => {
+      rimInputsCache = doc;
+      return doc;
+    })
+    .catch(() => {
+      rimInputsPending = null;
+      return null;
+    });
+  return rimInputsPending;
+}
+
+// §H rule 2: no raw index ids leak to users; missing lookup renders an honest generic label.
+const RIM_INDEX_LABELS_KO: Record<string, string> = {
+  SPX: "S&P 500",
+  NDX: "나스닥 100",
+  KOSPI: "코스피",
+  SOX: "필라델피아 반도체",
+  CCMP: "나스닥 종합",
+};
+
+// No public fair-value card exists anywhere: the payload is globally
+// output_scope=inputs_only_no_fair_value with policy.no_public_single_target=true
+// (public/data/computed/rim-index/inputs.json). Tiers describe input readiness only.
+type RimReadinessTier = "input_ready" | "input_only" | "pending";
+
+interface RimReadinessMeta {
+  rank: number;
+  badge: string;
+  tone: MarketTone;
+  detail: (blockerCount: number) => string;
+}
+
+const RIM_READINESS_META: Record<RimReadinessTier, RimReadinessMeta> = {
+  input_ready: {
+    rank: 0,
+    badge: "입력 준비",
+    tone: "amber",
+    detail: () => "입력 데이터와 예측 그리드가 준비되었습니다. 공개 적정가 카드는 제공하지 않습니다.",
+  },
+  input_only: {
+    rank: 1,
+    badge: "입력 전용",
+    tone: "slate",
+    detail: (blockerCount) =>
+      blockerCount > 0
+        ? `공개 적정가 카드 제공을 막는 항목이 ${blockerCount}건 남아 입력 데이터만 제공합니다.`
+        : "공개 적정가 카드는 제공하지 않고 입력 데이터만 제공합니다.",
+  },
+  pending: {
+    rank: 2,
+    // Per-index state label sourced from data-state.ts (§H-5): "확인 중".
+    badge: DATA_STATE_LABELS.pending,
+    tone: "slate",
+    detail: () => "준비 상태를 확인하고 있습니다.",
+  },
+};
+
+function classifyRimReadiness(publicStatus: string | undefined, blockerCount: number): RimReadinessTier {
+  if (publicStatus === "blocked_or_input_only" || blockerCount > 0) return "input_only";
+  if (publicStatus === "ready_inputs_and_forecast_grid") return "input_ready";
+  return "pending";
+}
+
+function RimReadinessPanel() {
+  const [doc, setDoc] = useState<RimInputsDoc | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRimInputs().then((next) => {
+      if (cancelled) return;
+      setDoc(next);
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const rows = Object.entries(doc?.indices ?? {})
+    .map(([id, entry]) => {
+      const safe = entry ?? {};
+      const blockerCount = Array.isArray(safe.blockers) ? safe.blockers.length : 0;
+      const meta = RIM_READINESS_META[classifyRimReadiness(safe.public_status, blockerCount)];
+      return {
+        id,
+        name: RIM_INDEX_LABELS_KO[id] ?? "지수",
+        meta,
+        detail: meta.detail(blockerCount),
+      };
+    })
+    .sort((a, b) => a.meta.rank - b.meta.rank || a.id.localeCompare(b.id));
+
+  // Fallback copy comes only from DATA_STATE_LABELS (§H-5): loading vs. unavailable are distinct.
+  const fallbackLabel = !loaded ? DATA_STATE_LABELS.pending : rows.length === 0 ? DATA_STATE_LABELS.unavailable : null;
+
+  return (
+    <PanelShell title="잔여이익모델(RIM) 지수 준비 상태" subtitle="지수별 입력 준비 현황" asOf={doc?.generated_at ?? null}>
+      {fallbackLabel ? (
+        <EmptyPanel label={fallbackLabel} />
+      ) : (
+        <div className="grid min-w-0 sm:grid-cols-2">
+          {rows.map((row) => (
+            <div
+              key={row.id}
+              className="min-w-0 border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0"
+            >
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <p className="min-w-0 truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
+                <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(row.meta.tone))}>
+                  {row.meta.badge}
+                </span>
+              </div>
+              <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{row.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </PanelShell>
+  );
 }
 
 function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; fallbackAsOf?: string | null }) {
@@ -712,6 +852,8 @@ export default function MarketValuationClient() {
       <MarketHero sp500={sp500} sourceDate={sourceDate} erpValue={damodaranUsErp} />
 
       <SecondaryIndexTable indices={indices} />
+
+      <RimReadinessPanel />
 
       <MarketSection sectionKey="valuation" index="01 근거" title="이익과 멀티플이 만든 현재 위치" summary="S&P 500 판정의 배경을 시장 체온, ERP, Yardeni 모델로 확인합니다." muted={!dataReady}>
         <MarketThermometer />
