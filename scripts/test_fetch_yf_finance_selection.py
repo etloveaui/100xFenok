@@ -151,6 +151,30 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(latency_ms, 0)
         self.assertEqual(error, "SLOW exceeded ticker timeout (1s)")
 
+    def test_merge_existing_payload_data_preserves_heavy_fields(self) -> None:
+        existing = {
+            "data": {
+                "info": {"currentPrice": 10, "trailingPE": 20, "sector": "Technology"},
+                "income_statement": {"2025-12-31": {"Total Revenue": 100}},
+                "history_1y": [{"date": "2026-01-01", "Close": 10}],
+            }
+        }
+        fetched = {
+            "info": {"currentPrice": 11, "previousClose": 10.5},
+            "fast_info": {"last_price": 11},
+            "income_statement": None,
+            "history_1y": [{"date": "2026-01-02", "Close": 11}],
+        }
+
+        merged = self.fetcher.merge_existing_payload_data(existing, fetched)
+
+        self.assertEqual(merged["info"]["currentPrice"], 11)
+        self.assertEqual(merged["info"]["trailingPE"], 20)
+        self.assertEqual(merged["info"]["previousClose"], 10.5)
+        self.assertEqual(merged["income_statement"], {"2025-12-31": {"Total Revenue": 100}})
+        self.assertEqual(merged["fast_info"], {"last_price": 11})
+        self.assertEqual(merged["history_1y"], [{"date": "2026-01-02", "Close": 11}])
+
     def test_plan_only_prints_resolved_plan_without_fetching_or_writing_summary(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
         write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "BIG", "aum": "10B"}]})

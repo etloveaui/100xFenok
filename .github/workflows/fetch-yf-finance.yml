@@ -32,8 +32,16 @@ on:
         description: 'Seconds per ticker attempt before retry/skip (0 = disabled)'
         required: false
         default: '90'
+      retries:
+        description: 'Retry attempts per ticker after the first attempt'
+        required: false
+        default: '2'
+      merge_existing:
+        description: 'Merge fetched non-null fields into existing payloads'
+        required: false
+        default: 'false'
       profile:
-        description: 'Fetch profile: core, full, or etf'
+        description: 'Fetch profile: daily, core, full, or etf'
         required: false
         default: 'full'
       max_age_hours:
@@ -98,6 +106,8 @@ jobs:
           INPUT_TICKERS: ${{ github.event.inputs.tickers || '' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep || '0.8' }}
           INPUT_TICKER_TIMEOUT: ${{ github.event.inputs.ticker_timeout || '90' }}
+          INPUT_RETRIES: ${{ github.event.inputs.retries || '2' }}
+          INPUT_MERGE_EXISTING: ${{ github.event.inputs.merge_existing || 'false' }}
           INPUT_PROFILE: ${{ github.event.inputs.profile || 'full' }}
           INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '0' }}
           INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options || 'false' }}
@@ -112,11 +122,15 @@ jobs:
         run: |
           if [ "$EVENT_NAME" = "schedule" ]; then
             if [ "$EVENT_SCHEDULE" = "20 23 * * 1-5" ]; then
-              INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"
+              DAILY_STOCK_SHARDS="${YF_DAILY_STOCK_SHARDS:-5}"
+              INPUT_DAILY_ALL_SHARDS="${YF_DAILY_STOCK_ALL_SHARDS:-true}"
+              INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-260}"
               INPUT_SHARD="${YF_DAILY_STOCK_SHARD:-}"
               INPUT_SLEEP="${YF_DAILY_STOCK_SLEEP:-0.35}"
-              INPUT_TICKER_TIMEOUT="${YF_DAILY_STOCK_TICKER_TIMEOUT:-90}"
-              INPUT_PROFILE="${YF_DAILY_STOCK_PROFILE:-core}"
+              INPUT_TICKER_TIMEOUT="${YF_DAILY_STOCK_TICKER_TIMEOUT:-45}"
+              INPUT_RETRIES="${YF_DAILY_STOCK_RETRIES:-1}"
+              INPUT_MERGE_EXISTING="${YF_DAILY_STOCK_MERGE_EXISTING:-true}"
+              INPUT_PROFILE="${YF_DAILY_STOCK_PROFILE:-daily}"
               INPUT_MAX_AGE_HOURS="${YF_DAILY_STOCK_MAX_AGE_HOURS:-18}"
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_HISTORY_MIN_ROWS="${YF_DAILY_STOCK_HISTORY_MIN_ROWS:-200}"
@@ -129,6 +143,8 @@ jobs:
               INPUT_SHARD="${YF_WEEKLY_ETF_SHARD:-${DAILY_INDEX}/${DAILY_SHARDS}}"
               INPUT_SLEEP="${YF_WEEKLY_ETF_SLEEP:-1.0}"
               INPUT_TICKER_TIMEOUT="${YF_WEEKLY_ETF_TICKER_TIMEOUT:-90}"
+              INPUT_RETRIES="${YF_WEEKLY_ETF_RETRIES:-1}"
+              INPUT_MERGE_EXISTING="${YF_WEEKLY_ETF_MERGE_EXISTING:-false}"
               INPUT_PROFILE="${YF_WEEKLY_ETF_PROFILE:-etf}"
               INPUT_MAX_AGE_HOURS="${YF_WEEKLY_ETF_MAX_AGE_HOURS:-18}"
               INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-true}"
@@ -150,8 +166,19 @@ jobs:
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
           if [ "$INPUT_STOCKANALYSIS_ETFS" = "true" ]; then ARGS="$ARGS --stockanalysis-etfs"; fi
           if [ "$INPUT_HISTORY_GAPS_ONLY" = "true" ]; then ARGS="$ARGS --history-gaps-only --history-min-rows ${INPUT_HISTORY_MIN_ROWS:-200}"; fi
+          if [ "$INPUT_MERGE_EXISTING" = "true" ]; then ARGS="$ARGS --merge-existing"; fi
           if [ "$INPUT_PLAN_ONLY" = "true" ]; then ARGS="$ARGS --plan-only"; fi
-          python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}"
+          if [ "${INPUT_DAILY_ALL_SHARDS:-false}" = "true" ] && [ -z "$INPUT_SHARD" ]; then
+            echo "Running all daily stock shards: ${DAILY_STOCK_SHARDS}"
+            for shard_index in $(seq 0 $((DAILY_STOCK_SHARDS - 1))); do
+              echo "::group::YF daily stock shard ${shard_index}/${DAILY_STOCK_SHARDS}"
+              python3 scripts/fetch-yf-finance.py $ARGS --shard "${shard_index}/${DAILY_STOCK_SHARDS}" --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
+              echo "::endgroup::"
+            done
+          else
+            if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
+            python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
+          fi
 
       - name: Rebuild local coverage summary
         if: ${{ env.YF_PLAN_ONLY != 'true' }}

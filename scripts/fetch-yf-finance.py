@@ -9,6 +9,7 @@ an explicit flag because they are expiry-heavy and rate-limit sensitive.
 
 Usage:
   python3 scripts/fetch-yf-finance.py                  # default stock/ETF universe, full profile
+  python3 scripts/fetch-yf-finance.py --profile daily  # daily price/history merge profile
   python3 scripts/fetch-yf-finance.py --profile core   # legacy compact profile
   python3 scripts/fetch-yf-finance.py --limit 30       # first 30
   python3 scripts/fetch-yf-finance.py --shard 0/4      # shard i of n
@@ -117,7 +118,9 @@ INFO_KEYS = [
     "annualReportExpenseRatio", "threeYearAverageReturn",
     "fiveYearAverageReturn",
     # price / range
-    "currentPrice", "previousClose", "fiftyTwoWeekHigh", "fiftyTwoWeekLow",
+    "currentPrice", "previousClose", "regularMarketPrice",
+    "regularMarketChange", "regularMarketChangePercent", "regularMarketTime",
+    "fiftyTwoWeekHigh", "fiftyTwoWeekLow",
     "fiftyTwoWeekChangePercent", "averageVolume", "averageVolume10days",
     # size / shares
     "marketCap", "enterpriseValue", "sharesOutstanding", "floatShares",
@@ -456,6 +459,11 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     fund_like = is_fund_like(info)
     data["info"] = {k: info.get(k) for k in INFO_KEYS if info.get(k) is not None} or None
 
+    if profile == "daily":
+        data["fast_info"] = safe(lambda: clean_dict(dict(t.fast_info)))
+        data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
+        return data, round((time.perf_counter() - start) * 1000)
+
     if fund_like or profile == "etf":
         for key in STOCK_ONLY_KEYS:
             data[key] = None
@@ -545,6 +553,23 @@ def fetch_with_retry(
         if attempt < retries:
             time.sleep(backoffs[min(attempt, len(backoffs) - 1)])
     return None, 0, last_err
+
+
+def merge_existing_payload_data(existing_payload, fetched_data):
+    existing_data = (existing_payload or {}).get("data")
+    if not isinstance(existing_data, dict):
+        return fetched_data
+    merged = dict(existing_data)
+    for key, value in (fetched_data or {}).items():
+        if value is None:
+            continue
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            nested = dict(merged[key])
+            nested.update(value)
+            merged[key] = nested
+        else:
+            merged[key] = value
+    return merged
 
 
 def load_scouter_etfs():
@@ -757,6 +782,7 @@ def write_empty_summary(profile, args, candidate_count, reason):
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "merge_existing": args.merge_existing,
         "empty_reason": reason,
         "errors": [],
     }
@@ -775,6 +801,7 @@ def plan_summary(args, tickers, candidate_count):
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "merge_existing": args.merge_existing,
         "limit": args.limit,
         "shard": args.shard,
         "tickers_override": bool(args.tickers),
@@ -792,12 +819,14 @@ def main():
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
-    parser.add_argument("--profile", choices=("core", "full", "etf"), default="full", help="core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
+    parser.add_argument("--profile", choices=("daily", "core", "full", "etf"), default="full", help="daily=price/history only, core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
     parser.add_argument("--include-options", action="store_true", help="fetch first option expiries; use targeted tickers only")
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
     parser.add_argument("--max-age-hours", type=float, default=0, help="skip usable local payloads fetched within N hours")
     parser.add_argument("--sleep", type=float, default=0.8)
     parser.add_argument("--ticker-timeout", type=float, default=90, help="max seconds per ticker attempt before retrying/skipping; 0 disables")
+    parser.add_argument("--retries", type=int, default=2, help="retry attempts per ticker after the first attempt")
+    parser.add_argument("--merge-existing", action="store_true", help="merge fetched non-null fields into existing payload data instead of replacing heavy fields")
     parser.add_argument("--plan-only", action="store_true", help="print the resolved ticker plan and exit before any Yahoo calls or file writes")
     parser.add_argument("--plan-sample-size", type=int, default=25, help="number of resolved tickers to include in --plan-only output")
     args = parser.parse_args()
@@ -845,9 +874,12 @@ def main():
             profile=args.profile,
             include_options=args.include_options,
             include_shares_full=args.include_shares_full,
+            retries=max(0, args.retries),
             timeout_seconds=args.ticker_timeout,
         )
         if error is None:
+            if args.merge_existing and existing:
+                data = merge_existing_payload_data(existing, data)
             payload = {
                 "schema_version": SCHEMA_VERSION,
                 "ticker": ticker,
@@ -885,6 +917,7 @@ def main():
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "merge_existing": args.merge_existing,
         "candidate_count_before_filters": candidate_count,
         "errors": errors,
     }
