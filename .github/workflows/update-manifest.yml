@@ -5,7 +5,7 @@
 #
 # Infinite loop prevention:
 #   This workflow ignores data/manifest.json, data/computed/**, and the generated
-#   admin usage/product coverage manifests, so its own generated-data commit can
+#   admin usage/product coverage/KPI manifests, so its own generated-data commit can
 #   still trigger deploy without retriggering itself.
 #
 # What is updated:  file_count, updated, last_updated, generatedAt, categories, manifest_version
@@ -22,6 +22,7 @@ on:
       - '!data/computed/**'
       - '!data/admin/data-usage-manifest.json'
       - '!data/admin/product-surface-coverage.json'
+      - '!data/admin/fenok-data-health-kpi.json'
       - 'scripts/update-manifest.py'
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/build-phase2-closeout-indexes.mjs'
@@ -29,6 +30,7 @@ on:
       - 'scripts/test-build-rim-index.mjs'
       - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
       - 'scripts/generate-product-surface-coverage.mjs'
+      - 'scripts/build-fenok-data-health-kpi.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
   schedule:
     # UTC 02:30 = KST 11:30. Morning reconciliation.
@@ -93,6 +95,11 @@ jobs:
       - name: Build product surface coverage
         run: node scripts/generate-product-surface-coverage.mjs
 
+      - name: Build data health KPI
+        run: |
+          npm --prefix 100xfenok-next run build:fenok-data-health-kpi
+          npm --prefix 100xfenok-next run qa:fenok-data-health-kpi
+
       - name: Check if manifest changed
         id: check
         run: |
@@ -106,6 +113,7 @@ jobs:
               data/computed/rim-index/inputs.json \
               data/admin/data-usage-manifest.json \
               data/admin/product-surface-coverage.json \
+              data/admin/fenok-data-health-kpi.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
               100xfenok-next/public/data/computed/stock_action_index.json \
@@ -115,6 +123,7 @@ jobs:
               100xfenok-next/public/data/computed/rim-index/inputs.json \
               100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/admin/product-surface-coverage.json \
+              100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
               100xfenok-next/public/data/manifest.json \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
@@ -144,6 +153,8 @@ jobs:
             fi
             node scripts/build-rim-index.mjs
             node scripts/generate-product-surface-coverage.mjs
+            npm --prefix 100xfenok-next run build:fenok-data-health-kpi
+            npm --prefix 100xfenok-next run qa:fenok-data-health-kpi
 
             if git diff --quiet \
                 data/computed/signals.json \
@@ -155,6 +166,7 @@ jobs:
                 data/computed/rim-index/inputs.json \
                 data/admin/data-usage-manifest.json \
                 data/admin/product-surface-coverage.json \
+                data/admin/fenok-data-health-kpi.json \
                 data/manifest.json \
                 100xfenok-next/public/data/computed/signals.json \
                 100xfenok-next/public/data/computed/stock_action_index.json \
@@ -164,6 +176,7 @@ jobs:
                 100xfenok-next/public/data/computed/rim-index/inputs.json \
                 100xfenok-next/public/data/admin/data-usage-manifest.json \
                 100xfenok-next/public/data/admin/product-surface-coverage.json \
+                100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
                 100xfenok-next/public/data/manifest.json; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
               exit 0
@@ -179,6 +192,7 @@ jobs:
               data/computed/rim-index/inputs.json \
               data/admin/data-usage-manifest.json \
               data/admin/product-surface-coverage.json \
+              data/admin/fenok-data-health-kpi.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
               100xfenok-next/public/data/computed/stock_action_index.json \
@@ -188,6 +202,7 @@ jobs:
               100xfenok-next/public/data/computed/rim-index/inputs.json \
               100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/admin/product-surface-coverage.json \
+              100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
               100xfenok-next/public/data/manifest.json
             git commit -m "chore: update computed signals and manifest"
 

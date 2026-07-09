@@ -397,6 +397,12 @@ const payload = {
   schema_version: "product-surface-coverage/v1",
   generated_at: generatedAt,
   source: "local DataPack coverage files",
+  raw_policy: {
+    public_mirror_allowed: true,
+    raw_rows_included: false,
+    private_artifact_paths_included: false,
+    derived_counts_and_status_only: true,
+  },
   source_files: [
     "computed/market_facts/index.json",
     "computed/market_data_audit.json",

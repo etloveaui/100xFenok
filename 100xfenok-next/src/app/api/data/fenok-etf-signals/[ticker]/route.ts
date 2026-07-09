@@ -121,7 +121,7 @@ export async function GET(
         generated_at: payload.generated_at ?? null,
         formula_version: payload.formula_version ?? null,
         coverage: payload.coverage ?? null,
-        caveat: "Separate ETF lane. SCORED but not PUBLIC/DAILY/GATED; not a stock score.",
+        caveat: "Separate ETF lane. PUBLIC/DAILY/GATED for the scored ETF universe; not a stock score.",
         row,
       },
       { headers: ETF_SIGNAL_CACHE_HEADERS },

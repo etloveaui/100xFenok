@@ -41,6 +41,49 @@ function writeJson(relativePath, payload) {
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
+function walkFiles(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walkFiles(full));
+    else if (entry.isFile()) out.push(full);
+  }
+  return out;
+}
+
+function sanitizePrivateTokens(node) {
+  if (Array.isArray(node)) return node.map(sanitizePrivateTokens);
+  if (node && typeof node === "object") {
+    return Object.fromEntries(
+      Object.entries(node)
+        .filter(([key]) => key !== "private_manifest_file" && key !== "manifest_file")
+        .map(([key, value]) => [key, sanitizePrivateTokens(value)]),
+    );
+  }
+  if (typeof node === "string" && node.includes("_private/")) {
+    return "admin_private_path_redacted";
+  }
+  return node;
+}
+
+function sanitizePublicPrivateTokenLeaks() {
+  const publicDataDir = path.join(rootDir, "public", "data");
+  const tokens = ["_private/", "\"private_manifest_file\"", "\"manifest_file\""];
+  for (const filePath of walkFiles(publicDataDir)) {
+    if (!filePath.endsWith(".json")) continue;
+    const text = fs.readFileSync(filePath, "utf8");
+    if (!tokens.some((token) => text.includes(token))) continue;
+    try {
+      const sanitized = sanitizePrivateTokens(JSON.parse(text));
+      fs.writeFileSync(filePath, `${JSON.stringify(sanitized, null, 2)}\n`, "utf8");
+      console.log(`[sync-static-overrides] redacted private path tokens ${path.relative(rootDir, filePath)}`);
+    } catch (error) {
+      console.warn(`[sync-static-overrides] failed to sanitize ${path.relative(rootDir, filePath)}: ${error.message}`);
+    }
+  }
+}
+
 function compactFenokEdgeSourceRow(row) {
   return {
     id: row.id,
@@ -148,6 +191,7 @@ for (const relativePath of [
   removeGeneratedPublicMirror(relativePath);
 }
 compactFenokEdgePublicMirror();
+sanitizePublicPrivateTokenLeaks();
 
 applyReplacements("public/tools/stock_analyzer/stock_analyzer.html", [
   [

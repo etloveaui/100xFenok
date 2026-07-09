@@ -39,9 +39,44 @@ type ProductSurfaceCoverage = {
   surfaces?: CoverageSurface[];
 };
 
+type DataHealthCheck = {
+  id?: string;
+  label?: string;
+  status?: string;
+  status_label?: string;
+  detail?: string;
+};
+
+type DataHealthLane = {
+  id?: string;
+  label?: string;
+  status?: string;
+  status_label?: string;
+  as_of?: string | null;
+  counts?: Record<string, unknown>;
+  checks?: DataHealthCheck[];
+};
+
+type DataHealthKpi = {
+  generated_at?: string;
+  status?: string;
+  status_label?: string;
+  totals?: Record<string, number>;
+  lanes?: DataHealthLane[];
+  non_ready_checks?: Array<DataHealthCheck & { lane_id?: string; required?: boolean }>;
+};
+
 async function readProductSurfaceCoverage(): Promise<ProductSurfaceCoverage | null> {
   try {
     return JSON.parse(await readPublicAssetText("/data/admin/product-surface-coverage.json")) as ProductSurfaceCoverage;
+  } catch {
+    return null;
+  }
+}
+
+async function readDataHealthKpi(): Promise<DataHealthKpi | null> {
+  try {
+    return JSON.parse(await readPublicAssetText("/data/admin/fenok-data-health-kpi.json")) as DataHealthKpi;
   } catch {
     return null;
   }
@@ -54,8 +89,8 @@ function dateLabel(value?: string) {
 
 function statusClass(status?: string) {
   if (status === "ready") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (status === "partial" || status === "pending") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (status === "stale" || status === "unavailable" || status === "error") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (status === "partial" || status === "pending" || status === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (status === "stale" || status === "unavailable" || status === "error" || status === "blocked") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
@@ -64,6 +99,8 @@ function statusText(status?: string, fallback?: string) {
     ready: "정상",
     partial: "부분",
     pending: "대기",
+    warning: "주의",
+    blocked: "차단",
     stale: "오래됨",
     unavailable: "없음",
     error: "오류",
@@ -74,8 +111,29 @@ function freshnessChecks(surface: CoverageSurface) {
   return (surface.checks || []).filter((check) => typeof check.max_age_days === "number");
 }
 
+function laneById(kpi: DataHealthKpi | null, id: string) {
+  return (kpi?.lanes || []).find((lane) => lane.id === id) || null;
+}
+
+function countValue(lane: DataHealthLane | null, key: string) {
+  const value = lane?.counts?.[key];
+  return typeof value === "number" ? value : null;
+}
+
+function compactLaneCounts(lane: DataHealthLane) {
+  const counts = lane.counts || {};
+  return Object.entries(counts)
+    .filter(([, value]) => typeof value === "number")
+    .slice(0, 4);
+}
+
 export default async function AdminDataLabPage() {
+  const dataHealthKpi = await readDataHealthKpi();
   const coverage = await readProductSurfaceCoverage();
+  const kpiLanes = dataHealthKpi?.lanes || [];
+  const s0Lane = laneById(dataHealthKpi, "stock_s0_active_daily_gate");
+  const etfLane = laneById(dataHealthKpi, "etf_public_and_daily_gate");
+  const rimLane = laneById(dataHealthKpi, "rim_inputs");
   const surfaces = coverage?.surfaces || [];
   const totals = coverage?.totals || {};
 
@@ -138,6 +196,85 @@ export default async function AdminDataLabPage() {
               홈 탐색
             </Link>
           </nav>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-health-kpi="true">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Fenok Data Health</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">데이터 헬스 KPI</h2>
+            <p className="mt-1 text-xs font-semibold text-slate-500">기준 {dateLabel(dataHealthKpi?.generated_at)}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center text-[11px] font-black sm:grid-cols-5">
+            {[
+              ["전체 상태", statusText(dataHealthKpi?.status, dataHealthKpi?.status_label)],
+              ["게이트", `${Number(dataHealthKpi?.totals?.ready || 0).toLocaleString("ko-KR")}/${Number(dataHealthKpi?.totals?.lanes || 0).toLocaleString("ko-KR")}`],
+              ["S0 종목", countValue(s0Lane, "active_total")?.toLocaleString("ko-KR") || "-"],
+              ["ETF gap", countValue(etfLane, "fetchable_daily_1y_gap")?.toLocaleString("ko-KR") || "0"],
+              ["RIM", `${Number(rimLane?.counts?.required_ready || 0).toLocaleString("ko-KR")}/${Number(rimLane?.counts?.required_total || 0).toLocaleString("ko-KR")}`],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                <p className="text-slate-500">{label}</p>
+                <p className="orbitron mt-1 text-sm text-slate-950">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-xs">
+            <thead>
+              <tr className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                <th className="border-b border-slate-200 px-3 py-2">KPI</th>
+                <th className="border-b border-slate-200 px-3 py-2">상태</th>
+                <th className="border-b border-slate-200 px-3 py-2">핵심 수치</th>
+                <th className="border-b border-slate-200 px-3 py-2">점검</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kpiLanes.length > 0 ? kpiLanes.map((lane) => (
+                <tr key={lane.id} className="align-top">
+                  <td className="border-b border-slate-100 px-3 py-3">
+                    <p className="font-black text-slate-950">{lane.label || lane.id}</p>
+                    <p className="mt-1 font-semibold text-slate-500">{dateLabel(lane.as_of || undefined)}</p>
+                  </td>
+                  <td className="border-b border-slate-100 px-3 py-3">
+                    <span className={`inline-flex rounded-full border px-2 py-1 font-black ${statusClass(lane.status)}`}>
+                      {statusText(lane.status, lane.status_label)}
+                    </span>
+                  </td>
+                  <td className="border-b border-slate-100 px-3 py-3">
+                    <div className="grid grid-cols-2 gap-1">
+                      {compactLaneCounts(lane).map(([key, value]) => (
+                        <div key={`${lane.id}-${key}`} className="rounded-lg bg-slate-50 px-2 py-1">
+                          <p className="font-bold text-slate-500">{key}</p>
+                          <p className="orbitron font-black text-slate-900">{Number(value).toLocaleString("ko-KR")}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="border-b border-slate-100 px-3 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      {(lane.checks || []).slice(0, 5).map((check) => (
+                        <span
+                          key={`${lane.id}-${check.id}`}
+                          className={`inline-flex rounded-full border px-2 py-1 font-bold ${statusClass(check.status)}`}
+                          title={check.detail || undefined}
+                        >
+                          {check.label || check.id}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={4}>fenok-data-health-kpi를 읽지 못했습니다.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 

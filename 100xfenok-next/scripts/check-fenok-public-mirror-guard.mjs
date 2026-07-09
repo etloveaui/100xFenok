@@ -73,6 +73,11 @@ const violations = files.filter((rel) => (
   forbiddenRawPatterns.some((pattern) => pattern.test(rel))
 )).map((rel) => `public/data/${rel}`);
 const yardneyRawKeyHits = new Map();
+const forbiddenPublicTokens = [
+  "_private/",
+  "\"private_manifest_file\"",
+  "\"manifest_file\"",
+];
 
 function recordYardneyRawKeyHit(rel, key) {
   const fileHits = yardneyRawKeyHits.get(rel) ?? new Map();
@@ -97,6 +102,14 @@ function scanYardneyRawKeys(root, displayPrefix) {
 
 scanYardneyRawKeys(publicDataRoot, "public/data");
 scanYardneyRawKeys(canonicalDataRoot, "data");
+
+for (const rel of files) {
+  if (!rel.endsWith(".json")) continue;
+  const text = fs.readFileSync(path.join(publicDataRoot, rel), "utf8");
+  for (const token of forbiddenPublicTokens) {
+    if (text.includes(token)) violations.push(`public/data/${rel}: unsafe token ${token}`);
+  }
+}
 
 for (const [rel, keyHits] of [...yardneyRawKeyHits.entries()].sort()) {
   for (const [key, count] of [...keyHits.entries()].sort()) {

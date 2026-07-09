@@ -189,6 +189,33 @@ function writeJson(relPath, payload, roots) {
   }
 }
 
+function sanitizePublicRimMirror(node) {
+  if (Array.isArray(node)) {
+    return node.map((item) => sanitizePublicRimMirror(item));
+  }
+  if (node && typeof node === "object") {
+    return Object.fromEntries(
+      Object.entries(node).map(([key, value]) => [key, sanitizePublicRimMirror(value)]),
+    );
+  }
+  if (typeof node === "string" && node.includes("_private/")) {
+    return "admin_private_path_redacted";
+  }
+  return node;
+}
+
+function buildPublicRimMirror(payload) {
+  return {
+    ...sanitizePublicRimMirror(payload),
+    public_mirror_policy: {
+      raw_public: false,
+      raw_rows_included: false,
+      private_artifact_paths_included: false,
+      private_path_redaction: "strings_containing__private_are_replaced_with_admin_private_path_redacted",
+    },
+  };
+}
+
 function latestDatedRow(rows, label) {
   const usable = (Array.isArray(rows) ? rows : [])
     .filter((row) => typeof row?.date === "string")
@@ -2275,14 +2302,18 @@ function main() {
     if (args.publicMirror) {
       const mirrorPath = path.join(publicDataRoot, args.output);
       const currentMirror = fs.existsSync(mirrorPath) ? readJson(mirrorPath) : null;
+      const publicPayload = buildPublicRimMirror(payload);
       if (!currentMirror) throw new Error(`${path.join("100xfenok-next/public/data", args.output)} is missing`);
-      if (JSON.stringify(currentMirror) !== JSON.stringify(payload)) {
+      if (JSON.stringify(currentMirror) !== JSON.stringify(publicPayload)) {
         throw new Error(`${path.join("100xfenok-next/public/data", args.output)} is not up to date`);
       }
     }
   }
   if (args.write) {
-    writeJson(args.output, payload, args.publicMirror ? [dataRoot, publicDataRoot] : [dataRoot]);
+    writeJson(args.output, payload, [dataRoot]);
+    if (args.publicMirror) {
+      writeJson(args.output, buildPublicRimMirror(payload), [publicDataRoot]);
+    }
   }
   const report = {
     ok: validation.ok,

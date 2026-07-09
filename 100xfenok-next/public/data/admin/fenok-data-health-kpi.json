@@ -1,0 +1,708 @@
+{
+  "schema_version": "fenok-data-health-kpi/v1",
+  "generated_at": "2026-07-09T15:08:47.303Z",
+  "status": "ready",
+  "status_label": "정상",
+  "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
+  "raw_policy": {
+    "public_mirror_allowed": true,
+    "raw_rows_included": false,
+    "private_artifact_paths_included": false,
+    "private_ledgers_included": false,
+    "source_artifacts_are_referenced_by_id_only": true
+  },
+  "source_artifacts": [
+    {
+      "id": "fenok_edge_coverage_index",
+      "generated_at": "2026-07-09T15:08:44.449Z",
+      "public_mirror": true,
+      "public_safe": true
+    },
+    {
+      "id": "rim_index_inputs",
+      "generated_at": "2026-07-09T15:08:32.721Z",
+      "public_mirror": true,
+      "public_safe": true
+    },
+    {
+      "id": "product_surface_coverage",
+      "generated_at": "2026-07-09T15:08:47.193Z",
+      "public_mirror": true,
+      "public_safe": true
+    },
+    {
+      "id": "s0_finra_occ_mapping_ledger",
+      "generated_at": "2026-07-09T15:08:44.596Z",
+      "public_mirror": false,
+      "public_safe": false
+    },
+    {
+      "id": "etf_daily1y_readiness_admin",
+      "generated_at": "2026-07-09T15:08:46.741Z",
+      "public_mirror": false,
+      "public_safe": false
+    },
+    {
+      "id": "etf_core_daily_basket_admin",
+      "generated_at": "2026-07-09T15:08:39.747Z",
+      "public_mirror": false,
+      "public_safe": false
+    }
+  ],
+  "totals": {
+    "lanes": 8,
+    "ready": 8,
+    "warning": 0,
+    "blocked": 0,
+    "unavailable": 0,
+    "required_not_ready": 0
+  },
+  "lanes": [
+    {
+      "id": "stock_s0_active_daily_gate",
+      "label": "S0 active stocks daily gate",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T15:08:44.449Z",
+      "counts": {
+        "active_total": 1172,
+        "by_market": [
+          {
+            "market": "HKEX",
+            "count": 34
+          },
+          {
+            "market": "KOSDAQ",
+            "count": 101
+          },
+          {
+            "market": "KRX",
+            "count": 236
+          },
+          {
+            "market": "SSE",
+            "count": 38
+          },
+          {
+            "market": "SZSE",
+            "count": 19
+          },
+          {
+            "market": "US",
+            "count": 685
+          },
+          {
+            "market": "US_CLASS",
+            "count": 59
+          }
+        ],
+        "buckets": {
+          "us": 744,
+          "korea": 337,
+          "asia_ex_taiwan": 91,
+          "explicit_taiwan": 0
+        },
+        "denominator": 1172
+      },
+      "details": {},
+      "checks": [
+        {
+          "id": "requirements_complete",
+          "label": "PUBLIC+DAILY+GATED",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "PUBLIC"
+        },
+        {
+          "id": "daily_ready",
+          "label": "daily ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "all active stock source lanes fresh"
+        },
+        {
+          "id": "gated_ready",
+          "label": "gated ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "gate blockers empty"
+        },
+        {
+          "id": "blockers_empty",
+          "label": "blockers",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 blockers"
+        },
+        {
+          "id": "krx_full_daily_source_ready",
+          "label": "krx_full_daily_source_ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "337 / 337 · 2026-07-08",
+          "source_date": "2026-07-08",
+          "age_days": 1,
+          "max_age_days": 4,
+          "covered_count": 337,
+          "denominator": 337,
+          "missing_count": 0
+        },
+        {
+          "id": "finra_full_us_source_ready",
+          "label": "finra_full_us_source_ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "685 / 685 · 2026-07-08",
+          "source_date": "2026-07-08",
+          "age_days": 1,
+          "max_age_days": 4,
+          "covered_count": 685,
+          "denominator": 685,
+          "missing_count": 0
+        },
+        {
+          "id": "occ_full_us_source_ready",
+          "label": "occ_full_us_source_ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "685 / 685 · 2026-07-07",
+          "source_date": "2026-07-07",
+          "age_days": 2,
+          "max_age_days": 4,
+          "covered_count": 685,
+          "denominator": 685,
+          "missing_count": 0
+        },
+        {
+          "id": "us_class_yf_daily_source_ready",
+          "label": "us_class_yf_daily_source_ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "59 / 59 · 2026-07-09",
+          "source_date": "2026-07-09",
+          "age_days": 0,
+          "max_age_days": 4,
+          "covered_count": 59,
+          "denominator": 59,
+          "missing_count": 0
+        },
+        {
+          "id": "asia_ex_taiwan_yf_daily_source_ready",
+          "label": "asia_ex_taiwan_yf_daily_source_ready",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "91 / 91 · 2026-07-09",
+          "source_date": "2026-07-09",
+          "age_days": 0,
+          "max_age_days": 4,
+          "covered_count": 91,
+          "denominator": 91,
+          "missing_count": 0
+        }
+      ]
+    },
+    {
+      "id": "stock_s1_candidate_gate",
+      "label": "S1 candidate promotion gate",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T06:57:23.321Z",
+      "counts": {
+        "denominator": 1178,
+        "current_public_stock": 1172,
+        "s1_gap_total": 6,
+        "promotion_count": 0,
+        "blocked_excluded_count": 6,
+        "current_public_plus_blocked": 1178
+      },
+      "details": {},
+      "checks": [
+        {
+          "id": "requirements_complete",
+          "label": "PUBLIC+DAILY+GATED with blocked ledger",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "PUBLIC_GATED_WITH_BLOCKED_LEDGER"
+        },
+        {
+          "id": "artifact_present",
+          "label": "promotion artifact",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "2026-07-09T06:57:23.321Z"
+        },
+        {
+          "id": "gap_partition_closed",
+          "label": "public plus blocked equals denominator",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "1,178 / 1,178"
+        },
+        {
+          "id": "promotion_queue_empty",
+          "label": "promotion queue",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 rows"
+        },
+        {
+          "id": "blockers_empty",
+          "label": "gate blockers",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 blockers"
+        }
+      ]
+    },
+    {
+      "id": "etf_public_and_daily_gate",
+      "label": "ETF public scoring and daily gate",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T15:08:46.741Z",
+      "counts": {
+        "eligible_etf_count": 4508,
+        "scored_public_etf": 4508,
+        "fetchable_daily_1y_gap": 0,
+        "inception_limited_daily_1y_gap": 715,
+        "terminal_limited_daily_1y_gap": 88,
+        "core_selected_count": 115,
+        "core_fresh_selected_count": 115,
+        "core_stale_selected_count": 0
+      },
+      "details": {
+        "full_daily_1y_diagnostic_service_gate": false,
+        "exact_plan_batch_count": 0
+      },
+      "checks": [
+        {
+          "id": "requirements_complete",
+          "label": "PUBLIC+DAILY+GATED",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "PUBLIC"
+        },
+        {
+          "id": "coverage_gate_ok",
+          "label": "coverage-index ETF gate",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ready"
+        },
+        {
+          "id": "fetchable_daily_1y_gap_zero",
+          "label": "daily 1Y fetchable gap",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 fetchable"
+        },
+        {
+          "id": "fetchable_plan_empty",
+          "label": "exact fetchable plan",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 fetchable"
+        },
+        {
+          "id": "core_basket_ready",
+          "label": "ETF core daily basket",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "115 fresh / 115 selected"
+        },
+        {
+          "id": "route_caveat_consistent",
+          "label": "ETF API public label",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "route caveat matches ready public lane"
+        }
+      ]
+    },
+    {
+      "id": "rim_inputs",
+      "label": "RIM inputs",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T15:08:32.721Z",
+      "counts": {
+        "required_ready": 4,
+        "required_total": 4,
+        "indices": [
+          {
+            "id": "SPX",
+            "role": "primary_public_v1",
+            "public_status": "ready_inputs_and_forecast_grid",
+            "forecast_status": "ready_inputs_only_no_fair_value",
+            "blocker_count": 0,
+            "required": true
+          },
+          {
+            "id": "NDX",
+            "role": "primary_public_v1",
+            "public_status": "ready_inputs_and_forecast_grid",
+            "forecast_status": "ready_inputs_only_no_fair_value",
+            "blocker_count": 0,
+            "required": true
+          },
+          {
+            "id": "CCMP",
+            "role": "secondary_input_only",
+            "public_status": "blocked_or_input_only",
+            "forecast_status": null,
+            "blocker_count": 3,
+            "required": false
+          },
+          {
+            "id": "KOSPI",
+            "role": "secondary_input_only",
+            "public_status": "ready_inputs_and_forecast_grid",
+            "forecast_status": "input_only_krx_exact_weights_no_fair_value",
+            "blocker_count": 0,
+            "required": true
+          },
+          {
+            "id": "SOX",
+            "role": "secondary_input_only",
+            "public_status": "ready_inputs_and_forecast_grid",
+            "forecast_status": "input_only_sox_methodology_weights_no_fair_value",
+            "blocker_count": 0,
+            "required": true
+          }
+        ]
+      },
+      "details": {
+        "output_scope": "inputs_only_no_fair_value",
+        "no_public_single_target": true,
+        "public_mirror_policy": {
+          "raw_public": false,
+          "raw_rows_included": false,
+          "private_artifact_paths_included": false,
+          "private_path_redaction": "strings_containing__private_are_replaced_with_admin_private_path_redacted"
+        }
+      },
+      "checks": [
+        {
+          "id": "rim_spx_ready",
+          "label": "SPX RIM input",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ready_inputs_only_no_fair_value",
+          "index_id": "SPX",
+          "role": "primary_public_v1",
+          "blocker_count": 0
+        },
+        {
+          "id": "rim_ndx_ready",
+          "label": "NDX RIM input",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ready_inputs_only_no_fair_value",
+          "index_id": "NDX",
+          "role": "primary_public_v1",
+          "blocker_count": 0
+        },
+        {
+          "id": "rim_kospi_ready",
+          "label": "KOSPI RIM input",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "input_only_krx_exact_weights_no_fair_value",
+          "index_id": "KOSPI",
+          "role": "secondary_input_only",
+          "blocker_count": 0
+        },
+        {
+          "id": "rim_sox_ready",
+          "label": "SOX RIM input",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "input_only_sox_methodology_weights_no_fair_value",
+          "index_id": "SOX",
+          "role": "secondary_input_only",
+          "blocker_count": 0
+        },
+        {
+          "id": "rim_ccmp_input_only",
+          "label": "CCMP public card",
+          "status": "warning",
+          "status_label": "주의",
+          "detail": "CCMP remains input-only/blocked for public result cards",
+          "required": false,
+          "blocker_count": 3,
+          "public_status": "blocked_or_input_only"
+        }
+      ]
+    },
+    {
+      "id": "product_surface_freshness",
+      "label": "Product surface freshness",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T15:08:47.193Z",
+      "counts": {
+        "surfaces": 7,
+        "ready": 4,
+        "partial": 3,
+        "pending": 0,
+        "stale": 0,
+        "unavailable": 0,
+        "error": 0
+      },
+      "details": {},
+      "checks": [
+        {
+          "id": "surface_payload_present",
+          "label": "product-surface-coverage",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "2026-07-09T15:08:47.193Z"
+        },
+        {
+          "id": "no_stale_surfaces",
+          "label": "stale surfaces",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 stale"
+        },
+        {
+          "id": "no_unavailable_surfaces",
+          "label": "unavailable surfaces",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 unavailable"
+        },
+        {
+          "id": "no_error_surfaces",
+          "label": "error surfaces",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 error"
+        }
+      ]
+    },
+    {
+      "id": "finra_occ_plain_us_and_mapping_policy",
+      "label": "FINRA/OCC source gate",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T15:08:44.596Z",
+      "counts": {
+        "active_us_total": 744,
+        "plain_us_finra_denominator": 685,
+        "plain_us_finra_source_ready": 685,
+        "plain_us_occ_denominator": 685,
+        "plain_us_occ_source_ready": 685,
+        "non_plain_daily_ready": 59,
+        "mapping_required_count": 109
+      },
+      "details": {
+        "source_dates": {
+          "signals_generated_at": "2026-07-09T15:08:31.372Z",
+          "finra_source_date": "20260708",
+          "occ_source_date": "20260707",
+          "coverage_index_generated_at": "2026-07-09T15:08:44.449Z",
+          "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
+        },
+        "action_policy": [
+          {
+            "id": "do_not_broad_fetch_non_plain",
+            "status": "active",
+            "rule": "Existing daily market data must be connected first. FINRA/OCC proxy metrics are required only after reviewed ticker/listing/underlying mappings exist."
+          },
+          {
+            "id": "null_evidence_not_fabricated_metric",
+            "status": "active",
+            "rule": "No reported FINRA row or no listed OCC options can satisfy source readiness, but proxy scores remain null/zero-evidence instead of fabricated activity."
+          },
+          {
+            "id": "admin_local_ledger",
+            "status": "active",
+            "rule": "Keep this ledger local/admin until a reviewed public explanation surface is designed."
+          }
+        ]
+      },
+      "checks": [
+        {
+          "id": "ledger_acceptance",
+          "label": "ledger acceptance",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "2026-07-09T15:08:44.596Z"
+        },
+        {
+          "id": "finra_plain_us_ready",
+          "label": "plain US FINRA",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "685 / 685"
+        },
+        {
+          "id": "occ_plain_us_ready",
+          "label": "plain US OCC",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "685 / 685"
+        },
+        {
+          "id": "non_plain_not_service_blocker",
+          "label": "non-plain policy",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "Plain US FINRA/OCC denominators are source-ready; US_CLASS/non-plain rows remain daily source-ready through YF/market facts and are tracked here as mapping policy work."
+        },
+        {
+          "id": "ledger_private_only",
+          "label": "ledger public mirror",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "admin-local only"
+        }
+      ]
+    },
+    {
+      "id": "automation_contract",
+      "label": "Daily automation and deploy gates",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": "2026-07-09T15:08:47.303Z",
+      "counts": {},
+      "details": {
+        "credential_dependent_for_build": false,
+        "github_api_polling_required": false,
+        "deploy_secret_required_only_for_wrangler": true
+      },
+      "checks": [
+        {
+          "id": "sync_static_builds_kpi",
+          "label": "sync-static KPI build",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "package script wiring"
+        },
+        {
+          "id": "sync_static_checks_kpi",
+          "label": "sync-static KPI check",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "package gate wiring"
+        },
+        {
+          "id": "update_manifest_rebuilds_kpi",
+          "label": "manifest reconciliation",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "update-manifest rebuild path"
+        },
+        {
+          "id": "deploy_worker_checks_kpi",
+          "label": "Worker deploy gate",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "deploy prebuild gate"
+        },
+        {
+          "id": "deploy_worker_smokes_kpi",
+          "label": "Worker live KPI smoke",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "deploy post-smoke contract"
+        },
+        {
+          "id": "yf_daily_no_default_cap",
+          "label": "YF daily stock shards no silent cap",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "future active universe expansion does not silently fall outside freshness"
+        },
+        {
+          "id": "stockanalysis_daily1y_scheduled",
+          "label": "StockAnalysis daily-1Y schedule",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "weekday catch-up lane"
+        },
+        {
+          "id": "edge_daily_dispatches_manifest",
+          "label": "Edge daily manifest dispatch",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "manifest/RIM/deploy chain"
+        },
+        {
+          "id": "krx_daily_dispatches_manifest",
+          "label": "KRX daily manifest dispatch",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "manifest/RIM/deploy chain"
+        }
+      ]
+    },
+    {
+      "id": "public_mirror_safety",
+      "label": "Public mirror safety",
+      "status": "ready",
+      "status_label": "정상",
+      "required": true,
+      "as_of": null,
+      "counts": {},
+      "details": {
+        "rim_public_mirror_policy": {
+          "raw_public": false,
+          "raw_rows_included": false,
+          "private_artifact_paths_included": false,
+          "private_path_redaction": "strings_containing__private_are_replaced_with_admin_private_path_redacted"
+        },
+        "full_finra_occ_ledger_public": false,
+        "full_etf_daily1y_readiness_public": false
+      },
+      "checks": [
+        {
+          "id": "kpi_public_mirror",
+          "label": "KPI public mirror",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "root and public KPI are written together"
+        },
+        {
+          "id": "rim_public_private_paths_redacted",
+          "label": "RIM private paths",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "public RIM mirror token scan"
+        },
+        {
+          "id": "coverage_public_private_paths_absent",
+          "label": "coverage private paths",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "public coverage mirror token scan"
+        },
+        {
+          "id": "forbidden_tokens_absent",
+          "label": "forbidden public tokens",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "aggregate public token scan"
+        }
+      ]
+    }
+  ],
+  "non_ready_checks": [
+    {
+      "lane_id": "rim_inputs",
+      "check_id": "rim_ccmp_input_only",
+      "status": "warning",
+      "label": "CCMP public card",
+      "detail": "CCMP remains input-only/blocked for public result cards",
+      "required": false
+    }
+  ]
+}

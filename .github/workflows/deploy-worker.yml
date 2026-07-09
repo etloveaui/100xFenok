@@ -67,9 +67,17 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run build:product-surface-coverage
 
+      - name: Build data health KPI
+        working-directory: 100xfenok-next
+        run: npm run build:fenok-data-health-kpi
+
       - name: Verify product data freshness
         working-directory: 100xfenok-next
         run: npm run qa:data-freshness
+
+      - name: Verify data health KPI
+        working-directory: 100xfenok-next
+        run: npm run qa:fenok-data-health-kpi
 
       - name: Verify product data-state rendering contract
         working-directory: 100xfenok-next
@@ -112,6 +120,11 @@ jobs:
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Smoke data health KPI
+        run: |
+          curl -fsS "https://100xfenok.etloveaui.workers.dev/data/admin/fenok-data-health-kpi.json?cb=${GITHUB_SHA}" \
+            | node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); if (p.schema_version !== "fenok-data-health-kpi/v1" || p.status !== "ready") { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status})); process.exit(1); } console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2));'
 
       - name: Smoke StockAnalysis routes
         working-directory: 100xfenok-next
