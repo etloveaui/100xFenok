@@ -41,6 +41,9 @@ const STOCK_ACTION_SOURCES = [
   "slickcharts/dowjones-analysis.json",
   "slickcharts/stocks-returns.json",
   "slickcharts/stocks-dividends.json",
+  "data/computed/market_facts/index.json",
+  "data/computed/market_facts/tickers/*.json",
+  "data/admin/fenok-s1-stock-public-promotion-dry-run.json",
 ];
 
 const MARKET_STRUCTURE_SOURCES = [
@@ -273,6 +276,65 @@ function stockDetail(symbol) {
     detailCache.set(key, detail && typeof detail === "object" ? detail : null);
   }
   return detailCache.get(key);
+}
+
+function factValue(doc, key) {
+  return num(doc?.facts?.[key]?.value);
+}
+
+function factPercent(doc, key) {
+  const value = factValue(doc, key);
+  return value === null ? null : value / 100;
+}
+
+function countryFromNormalizedMarket(market) {
+  if (market === "KRX" || market === "KOSDAQ") return "KR";
+  if (market === "HKEX") return "HK";
+  if (market === "SSE" || market === "SZSE") return "CN";
+  if (market === "US" || market === "US_CLASS") return "US";
+  return null;
+}
+
+function promotionBlockedTickers() {
+  const doc = readJson("admin/fenok-s1-stock-public-promotion-dry-run.json", {});
+  return new Set(
+    (Array.isArray(doc?.blocked_rows) ? doc.blocked_rows : [])
+      .map((row) => String(row?.ticker ?? "").trim().toUpperCase())
+      .filter(Boolean),
+  );
+}
+
+function marketFactStockRows(baseRows) {
+  const marketFacts = readJson("computed/market_facts/index.json", {});
+  const blocked = promotionBlockedTickers();
+  const seen = new Set(baseRows.map((row) => String(row?.symbol ?? "").trim().toUpperCase()).filter(Boolean));
+  const out = [];
+  for (const row of Array.isArray(marketFacts?.rows) ? marketFacts.rows : []) {
+    if (row?.asset_type !== "stock") continue;
+    const symbol = String(row?.ticker ?? "").trim().toUpperCase();
+    if (!symbol || seen.has(symbol) || blocked.has(symbol)) continue;
+    const detail = readJson(`computed/market_facts/tickers/${symbol}.json`, {});
+    const normalized = normalizeTicker(symbol);
+    const identity = detail?.identity && typeof detail.identity === "object" ? detail.identity : {};
+    out.push({
+      __marketFactExtension: true,
+      symbol,
+      companyName: identity.name ?? symbol,
+      sector: identity.sector ?? null,
+      country: countryFromNormalizedMarket(normalized.market),
+      price: factValue(detail, "price"),
+      marketCap: factValue(detail, "market_cap"),
+      per: factValue(detail, "trailing_pe"),
+      peForward: factValue(detail, "forward_pe"),
+      dividendYield: factValue(detail, "dividend_yield"),
+      return12m: factPercent(detail, "return_1y"),
+      ret1y: factPercent(detail, "return_1y"),
+      ret3y: factPercent(detail, "return_3y"),
+      ret5y: factPercent(detail, "return_5y"),
+    });
+    seen.add(symbol);
+  }
+  return out;
 }
 
 function ratioEstimateNum(existingBlock, metric, numeratorBlock, numeratorMetric, denominatorBlock, denominatorMetric, key) {
@@ -547,7 +609,8 @@ function convictionMap(knownSymbols) {
 
 function buildStockActionIndex() {
   const stocksDoc = readJson("global-scouter/core/stocks_analyzer.json", {});
-  const rows = Array.isArray(stocksDoc?.data) ? stocksDoc.data : [];
+  const scouterRows = Array.isArray(stocksDoc?.data) ? stocksDoc.data : [];
+  const rows = [...scouterRows, ...marketFactStockRows(scouterRows)];
   const universe = readJson("slickcharts/universe.json", {});
   const universeMap = new Map(
     (Array.isArray(universe?.stocks) ? universe.stocks : [])
@@ -594,8 +657,11 @@ function buildStockActionIndex() {
         revision: revisions.get(symbol) ?? null,
         sectorSmartMoney: sectorSmartMoney.get(canonicalSector) ?? null,
       };
+      const extensionQualityFlags = stock.__marketFactExtension
+        ? ["missing_global_scouter_core_row"]
+        : [];
       const action = actionFrom(stock, context);
-      const quality_flags = Array.from(new Set([...qualityFlags(stock, context), ...action.scoreQualityFlags])).sort();
+      const quality_flags = Array.from(new Set([...qualityFlags(stock, context), ...action.scoreQualityFlags, ...extensionQualityFlags])).sort();
       delete action.scoreQualityFlags;
       return {
         asset_type: "stock",
@@ -637,6 +703,20 @@ function buildStockActionIndex() {
         quality_flags,
         detailHref: `/stock/${encodeURIComponent(symbol)}`,
         ...action,
+        ...(stock.__marketFactExtension
+          ? {
+              s1_public_promotion: {
+                schema_version: "fenok-s1-stock-public-promotion-row/v0.1",
+                source_stage: "MARKET_FACTS_PUBLIC_S0",
+                target_stage: "PUBLIC_S0_DAILY_GATED",
+                score_source: "scripts/stock-action-score-core.mjs",
+                score_contract_version: ACTION_SCORE_CONFIG.schema_version,
+                source_artifact: "data/computed/market_facts/index.json",
+                market_facts_detail: `data/computed/market_facts/tickers/${symbol}.json`,
+                claim_scope: "Explicit public S0 stock row from market_facts; unsupported axes remain null/unavailable.",
+              },
+            }
+          : {}),
       };
     })
     .filter((row) => row.symbol)
