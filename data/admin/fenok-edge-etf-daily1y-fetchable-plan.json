@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-07-08T23:55:12.150Z",
+  "generated_at": "2026-07-09T02:29:11.284Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -25,23 +25,23 @@
   },
   "counts": {
     "scored_etf_count": 4508,
-    "complete": 3702,
-    "fetchable": 222,
-    "inception_limited": 584,
-    "missing": 806,
+    "complete": 3703,
+    "fetchable": 216,
+    "inception_limited": 589,
+    "missing": 805,
     "equation_ok": true,
     "matches_history_gap_report": true,
     "matches_coverage_index": true,
     "matches_coverage_index_daily_check": true,
     "fetchable_breakdown": {
-      "missing_external_quote_type_mismatch": 55,
-      "stockanalysis_short_rows": 24,
+      "missing_external_quote_type_mismatch": 48,
+      "stockanalysis_short_rows": 25,
       "yahoo_fallback_short_rows": 143
     }
   },
   "yf_local_crosscheck": {
-    "complete": 373,
-    "missing_or_lt_min_rows": 4135,
+    "complete": 374,
+    "missing_or_lt_min_rows": 4134,
     "min_daily_1y_rows": 200,
     "matches_exact_fetchable_selector": false,
     "sample": [
@@ -204,7 +204,6 @@
       "MAYC",
       "MDCR",
       "MFEB",
-      "MIVL",
       "MJUN",
       "MMAR",
       "MMAY",
@@ -214,16 +213,17 @@
       "MSBT",
       "MSEP",
       "MWHS",
-      "NGIF",
       "NISM",
-      "NUDG",
       "NUIF",
       "NVPS",
       "OCDB",
       "ORO",
       "OWN",
       "PBSC",
-      "PCEB"
+      "PCEB",
+      "PCLC",
+      "PCPP",
+      "PCSG"
     ]
   },
   "tickers": [
@@ -327,7 +327,6 @@
     "MAYC",
     "MDCR",
     "MFEB",
-    "MIVL",
     "MJUN",
     "MMAR",
     "MMAY",
@@ -337,9 +336,7 @@
     "MSBT",
     "MSEP",
     "MWHS",
-    "NGIF",
     "NISM",
-    "NUDG",
     "NUIF",
     "NVPS",
     "OCDB",
@@ -356,7 +353,6 @@
     "PQX",
     "PQXV",
     "PQXX",
-    "PRIZ",
     "PRXI",
     "PSLV",
     "QJL",
@@ -414,7 +410,6 @@
     "TSUI",
     "TSYW",
     "UBEW",
-    "UFOX",
     "UNHW",
     "UUPP",
     "VAVX",
@@ -447,7 +442,6 @@
     "XRPZ",
     "XSHP",
     "XSPC",
-    "YCLO",
     "ZTAX"
   ],
   "rows": [
@@ -1181,8 +1175,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 2,
-      "pending_next_attempt_after_utc": null
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "FESC",
@@ -1190,8 +1184,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 2,
-      "pending_next_attempt_after_utc": null
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "FPAA",
@@ -1752,15 +1746,6 @@
       "detail_status": "yf_fallback"
     },
     {
-      "ticker": "MIVL",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
-    },
-    {
       "ticker": "MJUN",
       "actual_rows": 13,
       "missing_file": false,
@@ -1887,31 +1872,13 @@
       "detail_status": "yf_fallback"
     },
     {
-      "ticker": "NGIF",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
-    },
-    {
       "ticker": "NISM",
       "actual_rows": 0,
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
-    },
-    {
-      "ticker": "NUDG",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "NUIF",
@@ -2059,8 +2026,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "PJUS",
@@ -2082,8 +2049,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 2,
-      "pending_next_attempt_after_utc": null
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "PQX",
@@ -2119,17 +2086,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 2,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "PRIZ",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "PRXI",
@@ -2151,8 +2109,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "QJL",
@@ -2258,8 +2216,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "RAAY",
@@ -2267,8 +2225,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "RACK",
@@ -2299,8 +2257,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "RCLY",
@@ -2308,8 +2266,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "REGS",
@@ -2345,8 +2303,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 4,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 5,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "RNMN",
@@ -2354,7 +2312,7 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 1,
+      "pending_consecutive_failures": 2,
       "pending_next_attempt_after_utc": null
     },
     {
@@ -2377,8 +2335,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "RWLC",
@@ -2386,8 +2344,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "SCA",
@@ -2437,8 +2395,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "SFYI",
@@ -2446,17 +2404,22 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 1,
+      "pending_consecutive_failures": 2,
       "pending_next_attempt_after_utc": null
     },
     {
       "ticker": "SHRD",
-      "actual_rows": 0,
-      "missing_file": true,
+      "actual_rows": 15,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
       "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null
     },
     {
       "ticker": "SLWS",
@@ -2464,8 +2427,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "SMHC",
@@ -2529,8 +2492,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "STXF",
@@ -2720,8 +2683,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "TOXR",
@@ -2757,8 +2720,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 7,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 8,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "TRUI",
@@ -2843,15 +2806,6 @@
       "daily_1y_gap_source": "yahoo_fallback_short_rows",
       "source_provider": "yahoo_finance",
       "detail_status": "yf_fallback"
-    },
-    {
-      "ticker": "UFOX",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
     },
     {
       "ticker": "UNHW",
@@ -3069,8 +3023,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XIGV",
@@ -3106,8 +3060,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XLEI",
@@ -3129,8 +3083,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XLII",
@@ -3138,8 +3092,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XLRI",
@@ -3147,8 +3101,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XLSI",
@@ -3170,8 +3124,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XLYI",
@@ -3179,8 +3133,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XRP",
@@ -3230,8 +3184,8 @@
       "missing_file": true,
       "yf_history_rows": null,
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 6,
-      "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+      "pending_consecutive_failures": 7,
+      "pending_next_attempt_after_utc": "2026-07-16T02:26:45Z"
     },
     {
       "ticker": "XSHP",
@@ -3262,15 +3216,6 @@
       "detail_status": "yf_fallback"
     },
     {
-      "ticker": "YCLO",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
-      "pending_consecutive_failures": 4,
-      "pending_next_attempt_after_utc": "2026-07-09T01:57:36Z"
-    },
-    {
       "ticker": "ZTAX",
       "actual_rows": 190,
       "missing_file": false,
@@ -3287,8 +3232,8 @@
   ],
   "fetchable_breakdown": {
     "counts": {
-      "missing_external_quote_type_mismatch": 55,
-      "stockanalysis_short_rows": 24,
+      "missing_external_quote_type_mismatch": 48,
+      "stockanalysis_short_rows": 25,
       "yahoo_fallback_short_rows": 143
     },
     "samples": {

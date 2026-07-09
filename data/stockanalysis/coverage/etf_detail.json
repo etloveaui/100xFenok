@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-08T23:53:30Z",
+  "generated_at": "2026-07-09T02:26:54Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -23,37 +23,37 @@
       "etf_screener": 5472,
       "new_etfs": 100
     },
-    "detail_files": 5430,
-    "covered_detail_files": 5409,
-    "missing_detail_files": 63,
+    "detail_files": 5440,
+    "covered_detail_files": 5419,
+    "missing_detail_files": 53,
     "extra_detail_files": 21,
-    "stockanalysis_detail_files": 4680,
-    "yahoo_fallback_files": 750,
+    "stockanalysis_detail_files": 4688,
+    "yahoo_fallback_files": 752,
     "invalid_detail_files": 0,
-    "coverage_pct": 98.85,
-    "primary_stockanalysis_pct": 85.14,
+    "coverage_pct": 99.03,
+    "primary_stockanalysis_pct": 85.29,
     "missing_by_source": {
-      "etf_universe": 63,
-      "etf_screener": 63,
+      "etf_universe": 53,
+      "etf_screener": 53,
       "new_etfs": 11
     },
     "missing_status_breakdown": {
-      "retry_cooldown": 56,
-      "retry_pending": 7
+      "retry_cooldown": 51,
+      "retry_pending": 2
     },
     "missing_failure_breakdown": {
-      "external_quote_type_mismatch": 63
+      "external_quote_type_mismatch": 53
     },
-    "pending_tracked": 92,
-    "pending_cooldown": 66,
-    "pending_tracked_missing": 63
+    "pending_tracked": 82,
+    "pending_cooldown": 55,
+    "pending_tracked_missing": 53
   },
   "missing_reason_summary": {
-    "external_quote_type_mismatch": 63
+    "external_quote_type_mismatch": 53
   },
   "missing_status_summary": {
-    "retry_cooldown": 56,
-    "retry_pending": 7
+    "retry_cooldown": 51,
+    "retry_pending": 2
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
@@ -65,10 +65,10 @@
       "AMHI",
       "ASMZ",
       "BAVA",
-      "BBUL",
       "CLNK",
       "CLOO",
-      "CRIB"
+      "CRIB",
+      "DISK"
     ]
   },
   "missing_status_samples": {
@@ -87,11 +87,6 @@
       "DISK"
     ],
     "retry_pending": [
-      "BBUL",
-      "FECM",
-      "FESC",
-      "PQV",
-      "PQXX",
       "RNMN",
       "SFYI"
     ]
@@ -105,7 +100,6 @@
     "AMHI",
     "ASMZ",
     "BAVA",
-    "BBUL",
     "CLNK",
     "CLOO",
     "CRIB",
@@ -122,14 +116,10 @@
     "JPO",
     "KRYP",
     "LAZR",
-    "MIVL",
-    "NGIF",
     "NISM",
-    "NUDG",
     "PHYS",
     "PQV",
     "PQXX",
-    "PRIZ",
     "PSLV",
     "RAAR",
     "RAAY",
@@ -142,14 +132,10 @@
     "RWLC",
     "SFGV",
     "SFYI",
-    "SHRD",
     "SLWS",
     "SPPP",
     "TOT",
     "TPUT",
-    "UFOX",
-    "UGLD",
-    "USLV",
     "UXRP",
     "WTIB",
     "XLCI",
@@ -158,8 +144,7 @@
     "XLRI",
     "XLVI",
     "XLYI",
-    "XRPZ",
-    "YCLO"
+    "XRPZ"
   ],
   "yahoo_fallback_tickers": [
     "AAAU",
@@ -221,6 +206,7 @@
     "BAR",
     "BAUG",
     "BBB",
+    "BBUL",
     "BCCC",
     "BCEM",
     "BDCX",
@@ -787,6 +773,7 @@
     "UDN",
     "UFEB",
     "UFIV",
+    "UFOX",
     "UJAN",
     "UJUL",
     "UJUN",
@@ -947,7 +934,6 @@
       "AMHI",
       "ASMZ",
       "BAVA",
-      "BBUL",
       "CLNK",
       "CLOO",
       "CRIB",
@@ -964,14 +950,10 @@
       "JPO",
       "KRYP",
       "LAZR",
-      "MIVL",
-      "NGIF",
       "NISM",
-      "NUDG",
       "PHYS",
       "PQV",
       "PQXX",
-      "PRIZ",
       "PSLV",
       "RAAR",
       "RAAY",
@@ -984,11 +966,16 @@
       "RWLC",
       "SFGV",
       "SFYI",
-      "SHRD",
       "SLWS",
       "SPPP",
       "TOT",
-      "TPUT"
+      "TPUT",
+      "UXRP",
+      "WTIB",
+      "XLCI",
+      "XLFI",
+      "XLII",
+      "XLRI"
     ],
     "missing_retry_cooldown": [
       "ACII",
@@ -1005,11 +992,6 @@
       "DISK"
     ],
     "missing_retry_pending": [
-      "BBUL",
-      "FECM",
-      "FESC",
-      "PQV",
-      "PQXX",
       "RNMN",
       "SFYI"
     ],
@@ -1022,10 +1004,10 @@
       "AMHI",
       "ASMZ",
       "BAVA",
-      "BBUL",
       "CLNK",
       "CLOO",
-      "CRIB"
+      "CRIB",
+      "DISK"
     ],
     "yahoo_fallback": [
       "AAAU",

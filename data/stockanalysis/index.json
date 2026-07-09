@@ -1,599 +1,1347 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-08T23:53:30Z",
+  "generated_at": "2026-07-09T02:26:54Z",
   "counts": {
     "etf_universe": 5415,
     "etf_candidate_total": 5472,
-    "etf_detail_files": 5430,
-    "etf_detail_covered": 5409,
-    "etf_detail_missing": 63,
-    "etf_detail_coverage_pct": 98.85,
-    "etf_detail_primary_pct": 85.14,
-    "etfs_requested": 120,
+    "etf_detail_files": 5440,
+    "etf_detail_covered": 5419,
+    "etf_detail_missing": 53,
+    "etf_detail_coverage_pct": 99.03,
+    "etf_detail_primary_pct": 85.29,
+    "etfs_requested": 155,
     "stocks_requested": 0,
-    "surfaces_requested": 0,
-    "surfaces_ok": 0,
+    "surfaces_requested": 25,
+    "surfaces_ok": 25,
     "surfaces_failed": 0,
     "financials_requested": 0,
     "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 100,
-    "failed": 20,
+    "ok": 125,
+    "failed": 30,
     "hard_failed": 0,
-    "etfs_stockanalysis_ok": 56,
-    "etfs_yahoo_fallback_ok": 44,
-    "etfs_still_pending": 20,
-    "incremental_etf_backfill_candidates": 234,
-    "incremental_etf_backfill_selected": 120,
-    "incremental_etf_cooldown_skipped": 0,
-    "incremental_etf_ledger_tracked": 92,
-    "incremental_etf_ledger_cooldown": 66
+    "etfs_stockanalysis_ok": 123,
+    "etfs_yahoo_fallback_ok": 2,
+    "etfs_still_pending": 30,
+    "incremental_etf_backfill_candidates": 5182,
+    "incremental_etf_backfill_selected": 40,
+    "incremental_etf_cooldown_skipped": 27,
+    "incremental_etf_ledger_tracked": 82,
+    "incremental_etf_ledger_cooldown": 55
   },
   "results": [
     {
-      "ticker": "AAAP",
+      "ticker": "VYMI",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/AAAP.json",
-      "financials_path": null,
-      "latency_ms": 988,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "ACGO",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/ACGO.json",
-      "financials_path": null,
-      "latency_ms": 972,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "ACII",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1718,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "ACYQ",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 950,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "AFGR",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1049,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "AMEI",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/AMEI.json",
-      "financials_path": null,
-      "latency_ms": 795,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "AMEM",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/AMEM.json",
-      "financials_path": null,
-      "latency_ms": 794,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "AMGR",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/AMGR.json",
-      "financials_path": null,
-      "latency_ms": 712,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "AMHI",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 834,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "AMUN",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/AMUN.json",
-      "financials_path": null,
-      "latency_ms": 826,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "APDB",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/APDB.json",
-      "financials_path": null,
-      "latency_ms": 926,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "AQLG",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/AQLG.json",
-      "financials_path": null,
-      "latency_ms": 859,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "ARLI",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/ARLI.json",
-      "financials_path": null,
-      "latency_ms": 932,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "ARMW",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/ARMW.json",
-      "financials_path": null,
-      "latency_ms": 915,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "ARMY",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/ARMY.json",
+      "path": "etfs/VYMI.json",
       "financials_path": null,
       "latency_ms": 919,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "ASCI",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/ASCI.json",
-      "financials_path": null,
-      "latency_ms": 793,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "ASD",
+      "ticker": "SCHF",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ASD.json",
+      "path": "etfs/SCHF.json",
       "financials_path": null,
-      "latency_ms": 794,
+      "latency_ms": 959,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "ASEC",
+      "ticker": "VPL",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ASEC.json",
+      "path": "etfs/VPL.json",
       "financials_path": null,
-      "latency_ms": 759,
+      "latency_ms": 1190,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BABW",
+      "ticker": "EMXC",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BABW.json",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/EMXC.json",
       "financials_path": null,
-      "latency_ms": 1008,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "latency_ms": 801,
+      "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BAVA",
+      "ticker": "SPDW",
       "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 900,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPDW.json",
+      "financials_path": null,
+      "latency_ms": 970,
+      "stockanalysis_error": null,
+      "error": null
     },
     {
-      "ticker": "BCEM",
+      "ticker": "VONV",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BCEM.json",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VONV.json",
+      "financials_path": null,
+      "latency_ms": 849,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "FNDF",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/FNDF.json",
+      "financials_path": null,
+      "latency_ms": 1117,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VEA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VEA.json",
       "financials_path": null,
       "latency_ms": 905,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BGCG",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/BGCG.json",
-      "financials_path": null,
-      "latency_ms": 731,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BGEG",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BGEG.json",
-      "financials_path": null,
-      "latency_ms": 977,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BGGG",
+      "ticker": "VTV",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BGGG.json",
+      "path": "etfs/VTV.json",
       "financials_path": null,
-      "latency_ms": 676,
+      "latency_ms": 864,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BGIA",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BGIA.json",
-      "financials_path": null,
-      "latency_ms": 927,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BHYP",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 843,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "BKLG",
+      "ticker": "DFIV",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BKLG.json",
+      "path": "etfs/DFIV.json",
       "financials_path": null,
-      "latency_ms": 723,
+      "latency_ms": 841,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BRCE",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BRCE.json",
-      "financials_path": null,
-      "latency_ms": 993,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BREE",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BREE.json",
-      "financials_path": null,
-      "latency_ms": 1031,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BRIE",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BRIE.json",
-      "financials_path": null,
-      "latency_ms": 1035,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BROL",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BROL.json",
-      "financials_path": null,
-      "latency_ms": 993,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "BSCA",
+      "ticker": "VEU",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSCA.json",
+      "path": "etfs/VEU.json",
       "financials_path": null,
-      "latency_ms": 786,
+      "latency_ms": 1039,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BSGR",
+      "ticker": "IWD",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSGR.json",
+      "path": "etfs/IWD.json",
       "financials_path": null,
-      "latency_ms": 719,
+      "latency_ms": 962,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BSGT",
+      "ticker": "XCEM",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSGT.json",
+      "path": "etfs/XCEM.json",
       "financials_path": null,
-      "latency_ms": 756,
+      "latency_ms": 896,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BSJY",
+      "ticker": "BBEM",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSJY.json",
+      "path": "etfs/BBEM.json",
       "financials_path": null,
-      "latency_ms": 763,
+      "latency_ms": 830,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BSOL",
+      "ticker": "IXUS",
       "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IXUS.json",
+      "financials_path": null,
       "latency_ms": 892,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "BSTS",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/BSTS.json",
-      "financials_path": null,
-      "latency_ms": 756,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BSTU",
+      "ticker": "SCHV",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSTU.json",
+      "path": "etfs/SCHV.json",
       "financials_path": null,
       "latency_ms": 727,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BSTV",
+      "ticker": "VXUS",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSTV.json",
+      "path": "etfs/VXUS.json",
       "financials_path": null,
-      "latency_ms": 906,
+      "latency_ms": 972,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BTCK",
+      "ticker": "IWN",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BTCK.json",
+      "path": "etfs/IWN.json",
+      "financials_path": null,
+      "latency_ms": 852,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IEMG",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IEMG.json",
+      "financials_path": null,
+      "latency_ms": 1100,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VLUE",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VLUE.json",
+      "financials_path": null,
+      "latency_ms": 809,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VTWV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VTWV.json",
+      "financials_path": null,
+      "latency_ms": 965,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VSGX",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VSGX.json",
+      "financials_path": null,
+      "latency_ms": 1203,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "FLTW",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/FLTW.json",
+      "financials_path": null,
+      "latency_ms": 810,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VYM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VYM.json",
       "financials_path": null,
       "latency_ms": 829,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "BWOW",
+      "ticker": "MGV",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/BWOW.json",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/MGV.json",
       "financials_path": null,
-      "latency_ms": 920,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "latency_ms": 865,
+      "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "CBOO",
+      "ticker": "FNDX",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/CBOO.json",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/FNDX.json",
+      "financials_path": null,
+      "latency_ms": 772,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IDEV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IDEV.json",
+      "financials_path": null,
+      "latency_ms": 922,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VTWO",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VTWO.json",
+      "financials_path": null,
+      "latency_ms": 831,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IEFA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IEFA.json",
+      "financials_path": null,
+      "latency_ms": 843,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DFUV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DFUV.json",
+      "financials_path": null,
+      "latency_ms": 751,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IVLU",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IVLU.json",
+      "financials_path": null,
+      "latency_ms": 734,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IWM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IWM.json",
+      "financials_path": null,
+      "latency_ms": 903,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SCHA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SCHA.json",
+      "financials_path": null,
+      "latency_ms": 811,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SPSM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPSM.json",
+      "financials_path": null,
+      "latency_ms": 816,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "HFXI",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/HFXI.json",
+      "financials_path": null,
+      "latency_ms": 923,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VT",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VT.json",
+      "financials_path": null,
+      "latency_ms": 916,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SLYV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SLYV.json",
+      "financials_path": null,
+      "latency_ms": 779,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DBEF",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DBEF.json",
+      "financials_path": null,
+      "latency_ms": 971,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IJR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IJR.json",
+      "financials_path": null,
+      "latency_ms": 793,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AVDV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AVDV.json",
+      "financials_path": null,
+      "latency_ms": 772,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AVLV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AVLV.json",
+      "financials_path": null,
+      "latency_ms": 679,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SPGM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPGM.json",
+      "financials_path": null,
+      "latency_ms": 1020,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AVUV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AVUV.json",
+      "financials_path": null,
+      "latency_ms": 759,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "GPIQ",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/GPIQ.json",
+      "financials_path": null,
+      "latency_ms": 640,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AVSC",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AVSC.json",
+      "financials_path": null,
+      "latency_ms": 730,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VBR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VBR.json",
+      "financials_path": null,
+      "latency_ms": 842,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AVUS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AVUS.json",
+      "financials_path": null,
+      "latency_ms": 870,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VIOV",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VIOV.json",
+      "financials_path": null,
+      "latency_ms": 765,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IJS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IJS.json",
+      "financials_path": null,
+      "latency_ms": 956,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "RDVI",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/RDVI.json",
+      "financials_path": null,
+      "latency_ms": 682,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SCHM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SCHM.json",
+      "financials_path": null,
+      "latency_ms": 650,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SMBS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SMBS.json",
+      "financials_path": null,
+      "latency_ms": 897,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SCYB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SCYB.json",
+      "financials_path": null,
+      "latency_ms": 909,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "INCM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/INCM.json",
+      "financials_path": null,
+      "latency_ms": 853,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "HYLB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/HYLB.json",
+      "financials_path": null,
+      "latency_ms": 903,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VCRM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VCRM.json",
+      "financials_path": null,
+      "latency_ms": 776,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "PULS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/PULS.json",
+      "financials_path": null,
+      "latency_ms": 765,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "JAAA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/JAAA.json",
+      "financials_path": null,
+      "latency_ms": 783,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VUSB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VUSB.json",
+      "financials_path": null,
+      "latency_ms": 756,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BBHY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BBHY.json",
+      "financials_path": null,
+      "latency_ms": 1052,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "FLTR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/FLTR.json",
+      "financials_path": null,
+      "latency_ms": 858,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VWOB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VWOB.json",
+      "financials_path": null,
+      "latency_ms": 734,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "FLOT",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/FLOT.json",
+      "financials_path": null,
+      "latency_ms": 774,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IBDS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IBDS.json",
+      "financials_path": null,
+      "latency_ms": 895,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SPSB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPSB.json",
       "financials_path": null,
       "latency_ms": 1057,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "CBTO",
+      "ticker": "VTEB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VTEB.json",
+      "financials_path": null,
+      "latency_ms": 975,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ICSH",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ICSH.json",
+      "financials_path": null,
+      "latency_ms": 842,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VGUS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VGUS.json",
+      "financials_path": null,
+      "latency_ms": 898,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "PAAA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/PAAA.json",
+      "financials_path": null,
+      "latency_ms": 888,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "KNG",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/KNG.json",
+      "financials_path": null,
+      "latency_ms": 721,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BSCR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BSCR.json",
+      "financials_path": null,
+      "latency_ms": 828,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "FLRN",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/FLRN.json",
+      "financials_path": null,
+      "latency_ms": 1070,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CLOA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CLOA.json",
+      "financials_path": null,
+      "latency_ms": 750,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VCLT",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VCLT.json",
+      "financials_path": null,
+      "latency_ms": 827,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VSDM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VSDM.json",
+      "financials_path": null,
+      "latency_ms": 931,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IGSB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IGSB.json",
+      "financials_path": null,
+      "latency_ms": 954,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VCSH",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VCSH.json",
+      "financials_path": null,
+      "latency_ms": 889,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SPHY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPHY.json",
+      "financials_path": null,
+      "latency_ms": 884,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "RLY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/RLY.json",
+      "financials_path": null,
+      "latency_ms": 870,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SCMB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SCMB.json",
+      "financials_path": null,
+      "latency_ms": 1021,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "VCIT",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/VCIT.json",
+      "financials_path": null,
+      "latency_ms": 1009,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "USHY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/USHY.json",
+      "financials_path": null,
+      "latency_ms": 771,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SCHI",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SCHI.json",
+      "financials_path": null,
+      "latency_ms": 1044,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "MUNY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/MUNY.json",
+      "financials_path": null,
+      "latency_ms": 760,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IGLB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IGLB.json",
+      "financials_path": null,
+      "latency_ms": 1092,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SPLB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPLB.json",
+      "financials_path": null,
+      "latency_ms": 1072,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "MUB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/MUB.json",
+      "financials_path": null,
+      "latency_ms": 1134,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "USIG",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/USIG.json",
+      "financials_path": null,
+      "latency_ms": 1148,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SPBO",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SPBO.json",
+      "financials_path": null,
+      "latency_ms": 1070,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AOR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AOR.json",
+      "financials_path": null,
+      "latency_ms": 738,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AOA",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AOA.json",
+      "financials_path": null,
+      "latency_ms": 814,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CAIE",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CAIE.json",
+      "financials_path": null,
+      "latency_ms": 735,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "NTSX",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/NTSX.json",
+      "financials_path": null,
+      "latency_ms": 832,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "RSSB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/RSSB.json",
+      "financials_path": null,
+      "latency_ms": 928,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "YLD",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/YLD.json",
+      "financials_path": null,
+      "latency_ms": 755,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BOXX",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BOXX.json",
+      "financials_path": null,
+      "latency_ms": 779,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CEFS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CEFS.json",
+      "financials_path": null,
+      "latency_ms": 763,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "COMT",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/COMT.json",
+      "financials_path": null,
+      "latency_ms": 995,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ALLW",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ALLW.json",
+      "financials_path": null,
+      "latency_ms": 906,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CGBL",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CGBL.json",
+      "financials_path": null,
+      "latency_ms": 925,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CMDY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CMDY.json",
+      "financials_path": null,
+      "latency_ms": 840,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BCI",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BCI.json",
+      "financials_path": null,
+      "latency_ms": 701,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AOK",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AOK.json",
+      "financials_path": null,
+      "latency_ms": 760,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BCD",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BCD.json",
+      "financials_path": null,
+      "latency_ms": 831,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SFLR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SFLR.json",
+      "financials_path": null,
+      "latency_ms": 806,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DBMF",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DBMF.json",
+      "financials_path": null,
+      "latency_ms": 656,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "PSFF",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/PSFF.json",
+      "financials_path": null,
+      "latency_ms": 839,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "QAI",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/QAI.json",
+      "financials_path": null,
+      "latency_ms": 737,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BUFM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BUFM.json",
+      "financials_path": null,
+      "latency_ms": 780,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "HGER",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/HGER.json",
+      "financials_path": null,
+      "latency_ms": 771,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "RSST",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/RSST.json",
+      "financials_path": null,
+      "latency_ms": 769,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BUFR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/BUFR.json",
+      "financials_path": null,
+      "latency_ms": 880,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CMDT",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CMDT.json",
+      "financials_path": null,
+      "latency_ms": 812,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "RFIX",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/RFIX.json",
+      "financials_path": null,
+      "latency_ms": 750,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DBB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DBB.json",
+      "financials_path": null,
+      "latency_ms": 881,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BBUL",
       "asset_type": "etf",
       "status": "fallback_ok",
       "provider": "yahoo_finance",
-      "path": "etfs/CBTO.json",
+      "path": "etfs/BBUL.json",
       "financials_path": null,
-      "latency_ms": 941,
+      "latency_ms": 2049,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "error": null
     },
     {
-      "ticker": "CBXO",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/CBXO.json",
-      "financials_path": null,
-      "latency_ms": 911,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "CGOV",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/CGOV.json",
-      "financials_path": null,
-      "latency_ms": 731,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "CHNL",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/CHNL.json",
-      "financials_path": null,
-      "latency_ms": 929,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "CHYG",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/CHYG.json",
-      "financials_path": null,
-      "latency_ms": 761,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "CIEI",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/CIEI.json",
-      "financials_path": null,
-      "latency_ms": 725,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "CIVG",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/CIVG.json",
-      "financials_path": null,
-      "latency_ms": 717,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "CJUN",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/CJUN.json",
-      "financials_path": null,
-      "latency_ms": 714,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "CLNK",
+      "ticker": "RNMN",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 1003,
+      "latency_ms": 1013,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: NONE",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SFYI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 844,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "CLOO",
+      "ticker": "FECM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1002,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FESC",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
@@ -604,757 +1352,394 @@
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "CMAY",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/CMAY.json",
-      "financials_path": null,
-      "latency_ms": 761,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "COMD",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/COMD.json",
-      "financials_path": null,
-      "latency_ms": 971,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "COSW",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/COSW.json",
-      "financials_path": null,
-      "latency_ms": 900,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "CRDD",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/CRDD.json",
-      "financials_path": null,
-      "latency_ms": 936,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "CRIB",
+      "ticker": "PQV",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 890,
+      "latency_ms": 886,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "CRUX",
+      "ticker": "PQXX",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 922,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RMHY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 828,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "UGLD",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CRUX.json",
+      "path": "etfs/UGLD.json",
       "financials_path": null,
-      "latency_ms": 720,
+      "latency_ms": 701,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "CSEN",
+      "ticker": "USLV",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CSEN.json",
+      "path": "etfs/USLV.json",
       "financials_path": null,
-      "latency_ms": 678,
+      "latency_ms": 739,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "CTJN",
+      "ticker": "UXRP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 877,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "YCLO",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CTJN.json",
+      "path": "etfs/YCLO.json",
       "financials_path": null,
-      "latency_ms": 729,
+      "latency_ms": 696,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "DDFY",
+      "ticker": "TOT",
       "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DDFY.json",
-      "financials_path": null,
-      "latency_ms": 768,
-      "stockanalysis_error": null,
-      "error": null
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 958,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "DDFZ",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DDFZ.json",
-      "financials_path": null,
-      "latency_ms": 802,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DDSQ",
+      "ticker": "UFOX",
       "asset_type": "etf",
       "status": "fallback_ok",
       "provider": "yahoo_finance",
-      "path": "etfs/DDSQ.json",
+      "path": "etfs/UFOX.json",
       "financials_path": null,
-      "latency_ms": 899,
+      "latency_ms": 1074,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "error": null
     },
     {
-      "ticker": "DDTY",
+      "ticker": "WTIB",
       "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DDTY.json",
-      "financials_path": null,
-      "latency_ms": 715,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DDTZ",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DDTZ.json",
-      "financials_path": null,
-      "latency_ms": 775,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DFAL",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DFAL.json",
-      "financials_path": null,
-      "latency_ms": 743,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DHLX",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DHLX.json",
-      "financials_path": null,
-      "latency_ms": 734,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DLMY",
-      "asset_type": "etf",
-      "status": "fallback_ok",
+      "status": "error",
       "provider": "yahoo_finance",
-      "path": "etfs/DLMY.json",
-      "financials_path": null,
-      "latency_ms": 928,
+      "path": null,
+      "latency_ms": 867,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "DOJE",
+      "ticker": "XLCI",
       "asset_type": "etf",
-      "status": "fallback_ok",
+      "status": "error",
       "provider": "yahoo_finance",
-      "path": "etfs/DOJE.json",
-      "financials_path": null,
-      "latency_ms": 1217,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "DQJN",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/DQJN.json",
-      "financials_path": null,
+      "path": null,
       "latency_ms": 897,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "DRMP",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DRMP.json",
-      "financials_path": null,
-      "latency_ms": 652,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DUSG",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DUSG.json",
-      "financials_path": null,
-      "latency_ms": 730,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "DWWN",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/DWWN.json",
-      "financials_path": null,
-      "latency_ms": 923,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "EDGQ",
+      "ticker": "XLFI",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 880,
+      "latency_ms": 867,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "EDGX",
+      "ticker": "XLII",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 1001,
+      "latency_ms": 925,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "EHCC",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/EHCC.json",
-      "financials_path": null,
-      "latency_ms": 928,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "EMEM",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/EMEM.json",
-      "financials_path": null,
-      "latency_ms": 736,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "EMJN",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/EMJN.json",
-      "financials_path": null,
-      "latency_ms": 754,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "EMSC",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/EMSC.json",
-      "financials_path": null,
-      "latency_ms": 728,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "ESUM",
+      "ticker": "XLRI",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 1009,
+      "latency_ms": 951,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "ETHB",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/ETHB.json",
-      "financials_path": null,
-      "latency_ms": 965,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "EZMO",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/EZMO.json",
-      "financials_path": null,
-      "latency_ms": 1065,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "FHIL",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/FHIL.json",
-      "financials_path": null,
-      "latency_ms": 714,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "FITZ",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/FITZ.json",
-      "financials_path": null,
-      "latency_ms": 710,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "FOTO",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/FOTO.json",
-      "financials_path": null,
-      "latency_ms": 577,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "FPAA",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/FPAA.json",
-      "financials_path": null,
-      "latency_ms": 1049,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "FREI",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/FREI.json",
-      "financials_path": null,
-      "latency_ms": 821,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "FSOL",
+      "ticker": "XLVI",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 808,
+      "latency_ms": 870,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "FSTB",
+      "ticker": "XLYI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1140,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XRPZ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 936,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "MIVL",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/FSTB.json",
+      "path": "etfs/MIVL.json",
       "financials_path": null,
-      "latency_ms": 566,
+      "latency_ms": 704,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "GAVA",
+      "ticker": "NGIF",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/GAVA.json",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/NGIF.json",
       "financials_path": null,
+      "latency_ms": 859,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "NISM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 924,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "NUDG",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/NUDG.json",
+      "financials_path": null,
+      "latency_ms": 790,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "PHYS",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 929,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "PRIZ",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/PRIZ.json",
+      "financials_path": null,
+      "latency_ms": 718,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "PSLV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1133,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RAAR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 926,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RAAY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 889,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RCLR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 906,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RCLY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1321,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RWEM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 971,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RWLC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1055,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SFGV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1139,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SHRD",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/SHRD.json",
+      "financials_path": null,
+      "latency_ms": 749,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "SLWS",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 888,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SPPP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 976,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TPUT",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
       "latency_ms": 942,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "GDOG",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/GDOG.json",
-      "financials_path": null,
-      "latency_ms": 968,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "GDT",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/GDT.json",
-      "financials_path": null,
-      "latency_ms": 967,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "GDXW",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/GDXW.json",
-      "financials_path": null,
-      "latency_ms": 1034,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "GEQ",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/GEQ.json",
-      "financials_path": null,
-      "latency_ms": 902,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "GISC",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 872,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "GLDW",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/GLDW.json",
-      "financials_path": null,
-      "latency_ms": 873,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "GSUI",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/GSUI.json",
-      "financials_path": null,
-      "latency_ms": 1134,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "HBMX",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/HBMX.json",
-      "financials_path": null,
-      "latency_ms": 801,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "HBR",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/HBR.json",
-      "financials_path": null,
-      "latency_ms": 1000,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "HJUN",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/HJUN.json",
-      "financials_path": null,
-      "latency_ms": 735,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "HYPG",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/HYPG.json",
-      "financials_path": null,
-      "latency_ms": 1026,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "IBCB",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/IBCB.json",
-      "financials_path": null,
-      "latency_ms": 722,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "IBGM",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/IBGM.json",
-      "financials_path": null,
-      "latency_ms": 931,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "IBHM",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/IBHM.json",
-      "financials_path": null,
-      "latency_ms": 793,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "IBIM",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 838,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "IBTR",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/IBTR.json",
-      "financials_path": null,
-      "latency_ms": 770,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "IDEQ",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1333,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "IDJN",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/IDJN.json",
-      "financials_path": null,
-      "latency_ms": 741,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "IDMY",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/IDMY.json",
-      "financials_path": null,
-      "latency_ms": 977,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "INYY",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 827,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "JADB",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/JADB.json",
-      "financials_path": null,
-      "latency_ms": 941,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "JANI",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/JANI.json",
-      "financials_path": null,
-      "latency_ms": 930,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "JELM",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/JELM.json",
-      "financials_path": null,
-      "latency_ms": 937,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "JPO",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1128,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "JUDB",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/JUDB.json",
-      "financials_path": null,
-      "latency_ms": 1005,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "JUNC",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/JUNC.json",
-      "financials_path": null,
-      "latency_ms": 736,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "KRYP",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1004,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "LSTB",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "path": "etfs/LSTB.json",
-      "financials_path": null,
-      "latency_ms": 753,
-      "stockanalysis_error": null,
-      "error": null
-    },
-    {
-      "ticker": "LTCC",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/LTCC.json",
-      "financials_path": null,
-      "latency_ms": 927,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "LVIG",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/LVIG.json",
-      "financials_path": null,
-      "latency_ms": 1022,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-08T23:53:30Z",
+    "generated_at": "2026-07-09T02:26:54Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5472,
@@ -1363,2851 +1748,934 @@
         "etf_screener": 5472,
         "new_etfs": 100
       },
-      "detail_files": 5430,
-      "covered_detail_files": 5409,
-      "missing_detail_files": 63,
+      "detail_files": 5440,
+      "covered_detail_files": 5419,
+      "missing_detail_files": 53,
       "extra_detail_files": 21,
-      "stockanalysis_detail_files": 4680,
-      "yahoo_fallback_files": 750,
+      "stockanalysis_detail_files": 4688,
+      "yahoo_fallback_files": 752,
       "invalid_detail_files": 0,
-      "coverage_pct": 98.85,
-      "primary_stockanalysis_pct": 85.14,
+      "coverage_pct": 99.03,
+      "primary_stockanalysis_pct": 85.29,
       "missing_by_source": {
-        "etf_universe": 63,
-        "etf_screener": 63,
+        "etf_universe": 53,
+        "etf_screener": 53,
         "new_etfs": 11
       },
       "missing_status_breakdown": {
-        "retry_cooldown": 56,
-        "retry_pending": 7
+        "retry_cooldown": 51,
+        "retry_pending": 2
       },
       "missing_failure_breakdown": {
-        "external_quote_type_mismatch": 63
+        "external_quote_type_mismatch": 53
       },
-      "pending_tracked": 92,
-      "pending_cooldown": 66,
-      "pending_tracked_missing": 63
+      "pending_tracked": 82,
+      "pending_cooldown": 55,
+      "pending_tracked_missing": 53
     }
   },
-  "surface_results": null,
+  "surface_results": [
+    {
+      "surface": "new_etfs",
+      "group": "etf",
+      "format": "svelte_devalue",
+      "status": "ok",
+      "path": "surfaces/new_etfs.json",
+      "endpoint": "/etf/list/new/__data.json?x-sveltekit-invalidated=01",
+      "tables": 0,
+      "rows": 100,
+      "latency_ms": 337,
+      "error": null
+    },
+    {
+      "surface": "etf_screener",
+      "group": "etf",
+      "format": "svelte_devalue",
+      "status": "ok",
+      "path": "surfaces/etf_screener.json",
+      "endpoint": "/etf/screener/__data.json?x-sveltekit-invalidated=01",
+      "tables": 0,
+      "rows": 5472,
+      "latency_ms": 13320,
+      "error": null
+    },
+    {
+      "surface": "etf_provider_blackrock",
+      "group": "etf_provider",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/etf_provider_blackrock.json",
+      "endpoint": "/etf/provider/blackrock/",
+      "tables": 1,
+      "rows": 487,
+      "latency_ms": 721,
+      "error": null
+    },
+    {
+      "surface": "etf_provider_proshares",
+      "group": "etf_provider",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/etf_provider_proshares.json",
+      "endpoint": "/etf/provider/proshares/",
+      "tables": 1,
+      "rows": 168,
+      "latency_ms": 321,
+      "error": null
+    },
+    {
+      "surface": "list_bitcoin_etfs",
+      "group": "theme_list",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/list_bitcoin_etfs.json",
+      "endpoint": "/list/bitcoin-etfs/",
+      "tables": 1,
+      "rows": 77,
+      "latency_ms": 248,
+      "error": null
+    },
+    {
+      "surface": "ipos_recent",
+      "group": "ipo",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/ipos_recent.json",
+      "endpoint": "/ipos/",
+      "tables": 2,
+      "rows": 205,
+      "latency_ms": 441,
+      "error": null
+    },
+    {
+      "surface": "ipos_statistics",
+      "group": "ipo",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/ipos_statistics.json",
+      "endpoint": "/ipos/statistics/",
+      "tables": 1,
+      "rows": 5,
+      "latency_ms": 252,
+      "error": null
+    },
+    {
+      "surface": "ipos_calendar",
+      "group": "ipo",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/ipos_calendar.json",
+      "endpoint": "/ipos/calendar/",
+      "tables": 2,
+      "rows": 5,
+      "latency_ms": 192,
+      "error": null
+    },
+    {
+      "surface": "ipos_filings",
+      "group": "ipo",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/ipos_filings.json",
+      "endpoint": "/ipos/filings/",
+      "tables": 2,
+      "rows": 453,
+      "latency_ms": 271,
+      "error": null
+    },
+    {
+      "surface": "ipos_withdrawn",
+      "group": "ipo",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/ipos_withdrawn.json",
+      "endpoint": "/ipos/withdrawn/",
+      "tables": 2,
+      "rows": 134,
+      "latency_ms": 205,
+      "error": null
+    },
+    {
+      "surface": "actions_recent",
+      "group": "corporate_actions",
+      "format": "svelte_devalue",
+      "status": "ok",
+      "path": "surfaces/actions_recent.json",
+      "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
+      "tables": 0,
+      "rows": 1935,
+      "latency_ms": 318,
+      "error": null
+    },
+    {
+      "surface": "actions_splits",
+      "group": "corporate_actions",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/actions_splits.json",
+      "endpoint": "/actions/splits/",
+      "tables": 1,
+      "rows": 500,
+      "latency_ms": 321,
+      "error": null
+    },
+    {
+      "surface": "market_gainers",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_gainers.json",
+      "endpoint": "/markets/gainers/",
+      "tables": 1,
+      "rows": 20,
+      "latency_ms": 220,
+      "error": null
+    },
+    {
+      "surface": "market_losers",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_losers.json",
+      "endpoint": "/markets/losers/",
+      "tables": 1,
+      "rows": 20,
+      "latency_ms": 213,
+      "error": null
+    },
+    {
+      "surface": "market_active",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_active.json",
+      "endpoint": "/markets/active/",
+      "tables": 1,
+      "rows": 20,
+      "latency_ms": 334,
+      "error": null
+    },
+    {
+      "surface": "market_premarket",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_premarket.json",
+      "endpoint": "/markets/premarket/",
+      "tables": 2,
+      "rows": 20,
+      "latency_ms": 288,
+      "error": null
+    },
+    {
+      "surface": "market_afterhours",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_afterhours.json",
+      "endpoint": "/markets/afterhours/",
+      "tables": 2,
+      "rows": 20,
+      "latency_ms": 427,
+      "error": null
+    },
+    {
+      "surface": "market_gainers_week",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_gainers_week.json",
+      "endpoint": "/markets/gainers/week/",
+      "tables": 1,
+      "rows": 20,
+      "latency_ms": 313,
+      "error": null
+    },
+    {
+      "surface": "market_gainers_month",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_gainers_month.json",
+      "endpoint": "/markets/gainers/month/",
+      "tables": 1,
+      "rows": 20,
+      "latency_ms": 245,
+      "error": null
+    },
+    {
+      "surface": "market_losers_ytd",
+      "group": "market_movers",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/market_losers_ytd.json",
+      "endpoint": "/markets/losers/ytd/",
+      "tables": 1,
+      "rows": 20,
+      "latency_ms": 211,
+      "error": null
+    },
+    {
+      "surface": "earnings_calendar",
+      "group": "earnings",
+      "format": "svelte_devalue",
+      "status": "ok",
+      "path": "surfaces/earnings_calendar.json",
+      "endpoint": "/stocks/earnings-calendar/__data.json?x-sveltekit-invalidated=01",
+      "tables": 0,
+      "rows": 4767,
+      "latency_ms": 724,
+      "error": null
+    },
+    {
+      "surface": "industries",
+      "group": "industry",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/industries.json",
+      "endpoint": "/stocks/industry/",
+      "tables": 11,
+      "rows": 145,
+      "latency_ms": 209,
+      "error": null
+    },
+    {
+      "surface": "industries_all",
+      "group": "industry",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/industries_all.json",
+      "endpoint": "/stocks/industry/all/",
+      "tables": 1,
+      "rows": 145,
+      "latency_ms": 271,
+      "error": null
+    },
+    {
+      "surface": "sector_technology",
+      "group": "industry",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/sector_technology.json",
+      "endpoint": "/stocks/sector/technology/",
+      "tables": 1,
+      "rows": 500,
+      "latency_ms": 432,
+      "error": null
+    },
+    {
+      "surface": "industry_semiconductors",
+      "group": "industry",
+      "format": "html_table",
+      "status": "ok",
+      "path": "surfaces/industry_semiconductors.json",
+      "endpoint": "/stocks/industry/semiconductors/",
+      "tables": 1,
+      "rows": 69,
+      "latency_ms": 319,
+      "error": null
+    }
+  ],
   "incremental_etf_backfill": {
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-08T23:50:36Z",
+    "generated_at": "2026-07-09T02:23:10Z",
     "policy": {
-      "limit": 120,
-      "offset": 0,
-      "max_age_hours": null,
-      "cooldown_days": null,
-      "cooldown_failure_threshold": null,
-      "required_history_periods": [
-        "daily_1y"
-      ],
-      "history_gaps_only": true,
-      "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
-      "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-      "min_daily_1y_rows": 200
+      "limit": 40,
+      "max_age_hours": 168.0,
+      "cooldown_days": 7,
+      "cooldown_failure_threshold": 3,
+      "required_history_periods": [],
+      "history_gaps_only": false,
+      "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
     },
     "counts": {
-      "candidates": 234,
-      "selected": 120,
-      "missing": 0,
-      "fallback_retry": 0,
-      "history_gap": 234,
+      "candidates": 5182,
+      "selected": 40,
+      "missing": 40,
+      "fallback_retry": 746,
+      "history_gap": 0,
       "inception_limited_history_gap": 0,
-      "total_history_gap": 234,
-      "stale": 0,
-      "cooldown_skipped": 0,
-      "prior_failed_candidates": 76,
-      "daily_1y_missing_file": 46,
-      "daily_1y_short_rows": 188,
-      "offset_skipped": 0,
-      "ledger_tracked": 92,
-      "ledger_cooldown": 66
+      "total_history_gap": 0,
+      "stale": 4396,
+      "cooldown_skipped": 27,
+      "prior_failed_candidates": 56,
+      "ledger_tracked": 82,
+      "ledger_cooldown": 55
     },
     "selected": [
       {
-        "ticker": "AAAP",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "BBUL",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 0,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 6,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "prior_failures": 1,
+        "priority": 1,
+        "reason_priority": 0
       },
       {
-        "ticker": "ACGO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "RNMN",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 1,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 18,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "prior_failures": 1,
+        "priority": 1,
+        "reason_priority": 0
       },
       {
-        "ticker": "ACII",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "SFYI",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 2,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "prior_failures": 1,
+        "priority": 1,
+        "reason_priority": 0
       },
       {
-        "ticker": "ACYQ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "FECM",
+        "source": "new_etfs",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 0,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "FESC",
+        "source": "new_etfs",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 0,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "PQV",
+        "source": "new_etfs",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 0,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "PQXX",
+        "source": "new_etfs",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 0,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RMHY",
+        "source": "new_etfs",
+        "reason": "missing",
         "age_hours": null,
         "prior_failures": 4,
         "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 3,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 4,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "reason_priority": 0
       },
       {
-        "ticker": "AFGR",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "UGLD",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "USLV",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "UXRP",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "YCLO",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "TOT",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "UFOX",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "WTIB",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLCI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLFI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLII",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLRI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLVI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLYI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XRPZ",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 6,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "MIVL",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
         "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 4,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "priority": 1,
+        "reason_priority": 0
       },
       {
-        "ticker": "AMEI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "NGIF",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 5,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 5,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
       },
       {
-        "ticker": "AMEM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "NISM",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 6,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 5,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
       },
       {
-        "ticker": "AMGR",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
+        "ticker": "NUDG",
+        "source": "etf_universe",
+        "reason": "missing",
         "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 7,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 5,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "PHYS",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "PRIZ",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "PSLV",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RAAR",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RAAY",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RCLR",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RCLY",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RWEM",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RWLC",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SFGV",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SHRD",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SLWS",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SPPP",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "TPUT",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 7,
+        "priority": 1,
+        "reason_priority": 0
+      }
+    ],
+    "cooldown": [
+      {
+        "ticker": "DISK",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T22:46:50Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "LAZR",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T22:46:50Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "RANK",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T22:46:50Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "AMHI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 4,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 8,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 4,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "source": "new_etfs",
+        "consecutive_failures": 5,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "AMUN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 9,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": "1986-03-17",
-        "daily_1y_actual_rows": 172,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "APDB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 10,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 37,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "AQLG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 11,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 16,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "ARLI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 12,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 62,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "ARMW",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 13,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 171,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "ARMY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 14,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 191,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "ASCI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 15,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": "1996-09-30",
-        "daily_1y_actual_rows": 173,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "ASD",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 16,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 20,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "ASEC",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 17,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 23,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BABW",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 18,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 171,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BAVA",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 19,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
-      },
-      {
-        "ticker": "BCEM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 20,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 57,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BGCG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 21,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 21,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BGEG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 22,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 19,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BGGG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 23,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 21,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BGIA",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 24,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 19,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BHYP",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 25,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BKLG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 26,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 6,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BRCE",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 27,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 172,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BREE",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 28,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 81,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BRIE",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 29,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 172,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BROL",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 30,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 24,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BSCA",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 3,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 31,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 3,
-        "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-      },
-      {
-        "ticker": "BSGR",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 32,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BSGT",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 3,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 33,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 3,
-        "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-      },
-      {
-        "ticker": "BSJY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 3,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 34,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 3,
-        "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-      },
-      {
-        "ticker": "BSOL",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 35,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 167,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BSTS",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 36,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BSTU",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 3,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 37,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 3,
-        "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-      },
-      {
-        "ticker": "BSTV",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 3,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 38,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 3,
-        "pending_next_attempt_after_utc": "2026-07-07T23:57:27Z"
-      },
-      {
-        "ticker": "BTCK",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 39,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 18,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "BWOW",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 40,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 147,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CBOO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 41,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 182,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CBTO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 42,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 183,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CBXO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 43,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 182,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CGOV",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 44,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 18,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CHNL",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 45,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 61,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CHYG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 46,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 17,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CIEI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 47,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 17,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CIVG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 48,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 18,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CJUN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 49,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 20,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CLNK",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 50,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
-      },
-      {
-        "ticker": "CLOO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 51,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
-      },
-      {
-        "ticker": "CMAY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 52,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 39,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "COMD",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 53,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 95,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "COSW",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 54,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 171,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "CRDD",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 55,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 62,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "ACYQ",
+        "source": "new_etfs",
+        "consecutive_failures": 5,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "CRIB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 4,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 56,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 4,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "source": "new_etfs",
+        "consecutive_failures": 5,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "CRUX",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 57,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": "1986-01-09",
-        "daily_1y_actual_rows": 72,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "ACII",
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "CSEN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 58,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 10,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
+        "ticker": "AFGR",
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "CTJN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 59,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 19,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "AIQD",
+        "source": "etf_universe",
+        "consecutive_failures": 5,
+        "next_attempt_after_utc": "2026-07-15T22:46:50Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DDFY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 60,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 39,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "AIQU",
+        "source": "etf_universe",
+        "consecutive_failures": 5,
+        "next_attempt_after_utc": "2026-07-15T22:46:50Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DDFZ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 61,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 21,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "ASMZ",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-10T01:25:49Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DDSQ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 62,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 123,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "BAVA",
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DDTY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 63,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 39,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "BHYP",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DDTZ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 64,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 21,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "BSOL",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DFAL",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 65,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 6,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "CLNK",
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DHLX",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 66,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": "2021-02-26",
-        "daily_1y_actual_rows": 188,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "CLOO",
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "DLMY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 67,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 29,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "DOJE",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 68,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 196,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "DQJN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 69,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 7,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "DRMP",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 70,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 13,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "DUSG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 71,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": "2012-12-20",
-        "daily_1y_actual_rows": 36,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "DWWN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 72,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 26,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "ECHX",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T22:46:50Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "EDGQ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 73,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "EDGX",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 74,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
-      },
-      {
-        "ticker": "EHCC",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 75,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 61,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "EMEM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 76,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 28,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "EMJN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 77,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 20,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "EMSC",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 78,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 27,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "ESUM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 79,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
-      },
-      {
-        "ticker": "ETHB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 80,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 76,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "EZMO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 81,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 176,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "FHIL",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 82,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 9,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "FITZ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 83,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "FOTO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 84,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 22,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "FPAA",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 85,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 16,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "FREI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 86,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 5,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "FSOL",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 87,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "FSTB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 88,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 7,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "GAVA",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 89,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 76,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "GDOG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 90,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 149,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "GDT",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 91,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 110,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "GDXW",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 92,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 166,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "GEQ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 93,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "GISC",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 94,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
-        "ticker": "GLDW",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 95,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 166,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "GSUI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 96,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 96,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "HBMX",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 97,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 20,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "HBR",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 98,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 168,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "HJUN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 99,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 19,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "HYPG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 100,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 19,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "IBCB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 101,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 65,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "IBGM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 102,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 66,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "IBHM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 103,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 64,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "ticker": "GOLI",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-10T01:25:49Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "IBIM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 104,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 2,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "IBTR",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 105,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 65,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "IDEQ",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 106,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
-      },
-      {
-        "ticker": "IDJN",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 107,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 19,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "IDMY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 108,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 38,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "INYY",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 109,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 24,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "JADB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 110,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 37,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "JANI",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 111,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 103,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "JELM",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 112,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 48,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "JPO",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 113,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
-      },
-      {
-        "ticker": "JUDB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 114,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 39,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "JUNC",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 115,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 20,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
         "ticker": "KRYP",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 7,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 116,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 7,
-        "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
-      },
-      {
-        "ticker": "LSTB",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 4,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 117,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 0,
-        "daily_1y_min_rows": 200,
-        "missing_file": true,
-        "pending_consecutive_failures": 4,
-        "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
-      },
-      {
-        "ticker": "LTCC",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 118,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 169,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
-      },
-      {
-        "ticker": "LVIG",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 119,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": null,
-        "daily_1y_actual_rows": 79,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null
+        "source": "etf_universe",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-15T23:53:21Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       }
     ],
-    "cooldown": [],
     "inception_limited": [],
     "pending_ledger": {
       "path": "backfill/pending_ledger.json",
-      "generated_at": "2026-07-08T23:53:21Z",
+      "generated_at": "2026-07-09T02:26:45Z",
       "counts": {
-        "tracked": 92,
-        "cooldown": 66,
-        "updated": 20,
-        "cleared": 13
+        "tracked": 82,
+        "cooldown": 55,
+        "updated": 30,
+        "cleared": 10
       }
     }
   },
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
     "counts": {
-      "tracked": 92,
-      "cooldown": 66,
-      "updated": 20,
-      "cleared": 13
+      "tracked": 82,
+      "cooldown": 55,
+      "updated": 30,
+      "cleared": 10
     }
   },
   "stop_reason": null

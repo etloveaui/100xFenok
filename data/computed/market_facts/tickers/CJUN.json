@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "CJUN",
   "asset_type": "etf",
-  "generated_at": "2026-07-08T23:53:30Z",
+  "generated_at": "2026-07-09T02:27:20Z",
   "identity": {
     "name": "Corgi U.S. Equities 15% Structured Buffer ETF - June Series",
     "exchange": "BTS",
@@ -187,9 +187,17 @@
           "fetched_at": "2026-07-08T23:51:44Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 1.195,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": -0.5135479123309632,
@@ -376,14 +384,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/CJUN.json",
     "stockanalysis": "stockanalysis/etfs/CJUN.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
