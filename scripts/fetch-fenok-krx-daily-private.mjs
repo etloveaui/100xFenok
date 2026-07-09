@@ -3,7 +3,8 @@
  * Private/admin Korea KRX daily fetcher.
  *
  * Raw KRX Open API payloads stay under _private/admin. The tracked bridge index
- * contains only counts, private path references, and readiness caveats.
+ * contains counts, private path references, and public-safe derived RIM inputs
+ * only; it must never carry raw KRX rows.
  */
 
 import fs from "node:fs";
@@ -273,6 +274,29 @@ function getRowCount(data) {
   return Object.values(data).reduce((maxRows, value) => (Array.isArray(value) ? Math.max(maxRows, value.length) : maxRows), 0);
 }
 
+function finite(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function numberOrNull(value) {
+  const num = Number(value);
+  return finite(num) ? num : null;
+}
+
+function round(value, digits = 6) {
+  return finite(value) ? Number(value.toFixed(digits)) : null;
+}
+
+function compactDate(value) {
+  const compact = String(value ?? "").replaceAll("-", "");
+  return /^\d{8}$/.test(compact) ? compact : null;
+}
+
+function readOptionalJson(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
 function hasKrErrorPayload(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
   return Object.prototype.hasOwnProperty.call(data, "respCode") || Object.prototype.hasOwnProperty.call(data, "respMsg");
@@ -478,6 +502,104 @@ function endpointClassMap() {
   }));
 }
 
+function buildKrxKospiDerivedWeights(manifest, config) {
+  const asOf = manifest?.date_range?.end_date;
+  const dateKey = compactDate(asOf);
+  if (!dateKey) return null;
+  const sourcePath = path.join(config.outputRoot, "raw", "core_stock_index", "stk_bydd_trd", `${dateKey}.json`);
+  const payload = readOptionalJson(sourcePath);
+  const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+  const kospiRows = rows
+    .filter((row) => row?.MKT_NM === "KOSPI")
+    .map((row) => ({
+      code: String(row?.ISU_CD ?? "").trim().toUpperCase(),
+      name: String(row?.ISU_NM ?? "").trim(),
+      market_cap: numberOrNull(row?.MKTCAP),
+    }))
+    .filter((row) => row.code && finite(row.market_cap) && row.market_cap > 0);
+  const totalMarketCap = kospiRows.reduce((sum, row) => sum + row.market_cap, 0);
+  if (!finite(totalMarketCap) || totalMarketCap <= 0) return null;
+  return {
+    source: repoRel(sourcePath),
+    source_field: "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
+    as_of: asOf,
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+    row_count: kospiRows.length,
+    total_market_cap: totalMarketCap,
+    denominator: {
+      method: "issuer_level_market_cap_sum",
+      label: "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
+      unit: "KRW",
+      value: totalMarketCap,
+    },
+    rows: kospiRows.map((row) => {
+      const weight = row.market_cap / totalMarketCap;
+      return {
+        code: row.code,
+        name: row.name,
+        weight: round(weight, 12),
+        weight_pct: round(weight * 100, 10),
+      };
+    }),
+  };
+}
+
+function buildKrxKorea10yDerivedYield(manifest, config) {
+  const asOf = manifest?.date_range?.end_date;
+  const dateKey = compactDate(asOf);
+  if (!dateKey) return null;
+  const sourcePath = path.join(config.outputRoot, "raw", "bond_commodity_esg", "kts_bydd_trd", `${dateKey}.json`);
+  const payload = readOptionalJson(sourcePath);
+  const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+  const candidates = rows
+    .map((row) => ({
+      row,
+      yieldPercent: numberOrNull(row?.CLSPRC_YD),
+      term: String(row?.BND_EXP_TP_NM ?? "").trim(),
+      benchmarkType: String(row?.GOVBND_ISU_TP_NM ?? "").trim(),
+      name: String(row?.ISU_NM ?? "").trim(),
+    }))
+    .filter((item) => item.term === "10" && item.benchmarkType === "지표" && finite(item.yieldPercent) && item.yieldPercent > 0)
+    .sort((a, b) => Number(a.name.includes("물가")) - Number(b.name.includes("물가")));
+  const selected = candidates.find((item) => !item.name.includes("물가")) ?? candidates[0];
+  if (!selected) return null;
+  return {
+    value: round(selected.yieldPercent / 100, 8),
+    date: asOf,
+    raw_value_percent: selected.yieldPercent,
+    source: repoRel(sourcePath),
+    source_field: `OutBlock_1[ISU_NM=${selected.name},BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100`,
+    label: "KRX KTS 10Y benchmark government bond yield",
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+  };
+}
+
+function buildDerivedRimInputs(manifest, config) {
+  const kospiWeights = buildKrxKospiDerivedWeights(manifest, config);
+  const korea10y = buildKrxKorea10yDerivedYield(manifest, config);
+  const missing = [
+    ...(kospiWeights ? [] : ["kospi_weights"]),
+    ...(korea10y ? [] : ["korea_10y"]),
+  ];
+  return {
+    schema_version: "krx_derived_rim_inputs.v1",
+    generated_at: manifest?.completed_at ?? new Date().toISOString(),
+    as_of: manifest?.date_range?.end_date ?? null,
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+    status: missing.length === 0 ? "ready" : "partial_or_unavailable",
+    missing,
+    kospi_weights: kospiWeights,
+    korea_10y: korea10y,
+    notes: [
+      "Derived RIM inputs are computed from private KRX raw files so generic CI can rebuild RIM without publishing raw rows.",
+      "Rows contain issuer code/name plus derived KOSPI weights only; raw KRX records, prices, shares, and per-row market caps stay private/admin.",
+    ],
+  };
+}
+
 function buildBridgeIndex(manifest, groupManifests, config) {
   const groupSummaries = Object.fromEntries(
     Object.entries(groupManifests).map(([group, groupManifest]) => [
@@ -491,6 +613,7 @@ function buildBridgeIndex(manifest, groupManifests, config) {
       },
     ]),
   );
+  const derivedRimInputs = buildDerivedRimInputs(manifest, config);
 
   return {
     schema_version: "fenok-edge-korea-krx-bridge/v1",
@@ -499,7 +622,9 @@ function buildBridgeIndex(manifest, groupManifests, config) {
     source: SOURCE,
     raw_public: false,
     license_or_terms_note: LICENSE_OR_TERMS_NOTE,
-    bridge_scope: "stats_only_private_path_refs_no_raw_rows",
+    bridge_scope: derivedRimInputs.status === "ready"
+      ? "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows"
+      : "stats_only_private_path_refs_no_raw_rows",
     as_of: manifest.date_range.end_date,
     freshness: {
       as_of: manifest.date_range.end_date,
@@ -531,6 +656,7 @@ function buildBridgeIndex(manifest, groupManifests, config) {
     },
     normalized_score_candidates: manifest.normalized_score_candidates,
     request_budget: manifest.request_budget,
+    derived_rim_inputs: derivedRimInputs,
     daily_command: dailyCommandTemplate(),
     daily_accumulation: {
       automatic_cron_installed: config.scheduledRun,

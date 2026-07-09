@@ -153,6 +153,19 @@ function daysBetweenIsoDates(startDate, endDate) {
   return Math.round((end - start) / 86400000);
 }
 
+function krxInputFreshness(asOf, generatedAt) {
+  const generatedDate = String(generatedAt ?? "").slice(0, 10);
+  const ageDays = daysBetweenIsoDates(asOf, generatedDate);
+  return {
+    generated_at_date: generatedDate || null,
+    calendar_age_days: ageDays,
+    max_input_freshness_days: KOSPI_INPUT_FRESHNESS_MAX_DAYS,
+    status: finite(ageDays) && ageDays <= KOSPI_INPUT_FRESHNESS_MAX_DAYS
+      ? "fresh_enough_for_input_slice"
+      : "refresh_recommended",
+  };
+}
+
 function writeJson(relPath, payload, roots) {
   const body = `${JSON.stringify(payload, null, 2)}\n`;
   for (const root of roots) {
@@ -284,9 +297,47 @@ function krxPrivatePath(bridgeInfo, ...parts) {
   };
 }
 
+function loadKrxKospiBridgeWeights(bridgeInfo, generatedAt) {
+  const input = bridgeInfo?.bridge?.derived_rim_inputs?.kospi_weights;
+  const inputRows = Array.isArray(input?.rows) ? input.rows : [];
+  const rows = inputRows
+    .map((row) => {
+      const weight = numberOrNull(row?.weight);
+      const weightPct = numberOrNull(row?.weight_pct);
+      return {
+        code: String(row?.code ?? "").trim().toUpperCase(),
+        name: String(row?.name ?? "").trim(),
+        weight: finite(weight) ? weight : (finite(weightPct) ? weightPct / 100 : null),
+        weight_pct: finite(weightPct) ? weightPct : (finite(weight) ? weight * 100 : null),
+      };
+    })
+    .filter((row) => row.code && finite(row.weight) && row.weight > 0 && finite(row.weight_pct) && row.weight_pct > 0);
+  if (!rows.length) return null;
+  return {
+    source: input?.source ?? `${bridgeInfo.bridge_source}#derived_rim_inputs.kospi_weights`,
+    bridge_source: bridgeInfo.bridge_source,
+    source_field: input?.source_field ?? "derived_rim_inputs.kospi_weights.rows[].weight",
+    as_of: input?.as_of ?? bridgeInfo.as_of,
+    raw_public: input?.raw_public === true,
+    license_or_terms_note: input?.license_or_terms_note ?? bridgeInfo.license_or_terms_note,
+    row_count: numberOrNull(input?.row_count) ?? rows.length,
+    total_market_cap: numberOrNull(input?.total_market_cap),
+    denominator: input?.denominator ?? {
+      method: "issuer_level_market_cap_sum",
+      label: "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
+      unit: "KRW",
+      value: numberOrNull(input?.total_market_cap),
+    },
+    freshness: krxInputFreshness(input?.as_of ?? bridgeInfo.as_of, generatedAt),
+    derived_bridge_input: true,
+    rows,
+  };
+}
+
 function loadKrxKospiMarketCapWeights(dataRootForReads, generatedAt) {
   const bridgeInfo = loadKrxBridge(dataRootForReads);
   if (!bridgeInfo) return null;
+  const bridgeFallback = loadKrxKospiBridgeWeights(bridgeInfo, generatedAt);
   const sourcePath = krxPrivatePath(
     bridgeInfo,
     "core_stock_index",
@@ -306,9 +357,7 @@ function loadKrxKospiMarketCapWeights(dataRootForReads, generatedAt) {
     }))
     .filter((row) => row.code && finite(row.market_cap) && row.market_cap > 0);
   const totalMktCap = kospiRows.reduce((sum, row) => sum + row.market_cap, 0);
-  if (!finite(totalMktCap) || totalMktCap <= 0) return null;
-  const generatedDate = String(generatedAt ?? "").slice(0, 10);
-  const ageDays = daysBetweenIsoDates(bridgeInfo.as_of, generatedDate);
+  if (!finite(totalMktCap) || totalMktCap <= 0) return bridgeFallback;
   return {
     source: sourcePath.relPath,
     bridge_source: bridgeInfo.bridge_source,
@@ -324,14 +373,7 @@ function loadKrxKospiMarketCapWeights(dataRootForReads, generatedAt) {
       unit: "KRW",
       value: totalMktCap,
     },
-    freshness: {
-      generated_at_date: generatedDate || null,
-      calendar_age_days: ageDays,
-      max_input_freshness_days: KOSPI_INPUT_FRESHNESS_MAX_DAYS,
-      status: finite(ageDays) && ageDays <= KOSPI_INPUT_FRESHNESS_MAX_DAYS
-        ? "fresh_enough_for_input_slice"
-        : "refresh_recommended",
-    },
+    freshness: krxInputFreshness(bridgeInfo.as_of, generatedAt),
     rows: kospiRows.map((row) => ({
       ...row,
       weight: row.market_cap / totalMktCap,
@@ -340,9 +382,27 @@ function loadKrxKospiMarketCapWeights(dataRootForReads, generatedAt) {
   };
 }
 
+function loadKrxKorea10yBridge(bridgeInfo) {
+  const input = bridgeInfo?.bridge?.derived_rim_inputs?.korea_10y;
+  const value = numberOrNull(input?.value);
+  if (!finite(value) || value <= 0) return null;
+  return {
+    value,
+    date: input?.date ?? bridgeInfo.as_of,
+    raw_value_percent: numberOrNull(input?.raw_value_percent),
+    source: input?.source ?? `${bridgeInfo.bridge_source}#derived_rim_inputs.korea_10y`,
+    source_field: input?.source_field ?? "derived_rim_inputs.korea_10y.value",
+    label: input?.label ?? "KRX KTS 10Y benchmark government bond yield",
+    raw_public: input?.raw_public === true,
+    license_or_terms_note: input?.license_or_terms_note ?? bridgeInfo.license_or_terms_note,
+    derived_bridge_input: true,
+  };
+}
+
 function loadKrxKorea10y(dataRootForReads) {
   const bridgeInfo = loadKrxBridge(dataRootForReads);
   if (!bridgeInfo) return null;
+  const bridgeFallback = loadKrxKorea10yBridge(bridgeInfo);
   const sourcePath = krxPrivatePath(
     bridgeInfo,
     "bond_commodity_esg",
@@ -362,7 +422,7 @@ function loadKrxKorea10y(dataRootForReads) {
     .filter((item) => item.term === "10" && item.benchmarkType === "지표" && finite(item.yieldPercent) && item.yieldPercent > 0)
     .sort((a, b) => Number(a.name.includes("물가")) - Number(b.name.includes("물가")));
   const selected = candidates.find((item) => !item.name.includes("물가")) ?? candidates[0];
-  if (!selected) return null;
+  if (!selected) return bridgeFallback;
   return {
     value: round(selected.yieldPercent / 100, 8),
     date: bridgeInfo.as_of,

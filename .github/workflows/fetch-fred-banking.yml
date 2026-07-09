@@ -26,6 +26,7 @@ env:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: fenok-data-writer-${{ github.ref }}
@@ -325,6 +326,9 @@ jobs:
             data/computed/rim-index/inputs.json \
             100xfenok-next/public/data/macro/fred-banking-*.json \
             100xfenok-next/public/data/computed/rim-index/inputs.json
+          git restore --staged --worktree -- \
+            data/computed/rim-index/inputs.json \
+            100xfenok-next/public/data/computed/rim-index/inputs.json
           git diff --staged --quiet || git commit -m "chore: update FRED banking data"
           for attempt in $(seq 1 5); do
             git pull --rebase --autostash origin main
@@ -336,3 +340,8 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+
+      - name: Dispatch manifest and RIM rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-manifest.yml --ref main

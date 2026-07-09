@@ -38,6 +38,89 @@ function makeKr10yFixture() {
   return tempRoot;
 }
 
+function makeKrxBridgeFixture() {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-krx-bridge-"));
+  for (const dir of ["benchmarks", "computed", "damodaran", "macro", "slickcharts", "stockanalysis", "yf"]) {
+    fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
+  }
+  const stockActionPayload = readJson(path.join(dataRoot, "computed/stock_action_index.json"));
+  const rows = (stockActionPayload.rows ?? [])
+    .filter((row) =>
+      row?.marketScope === "korea"
+      && String(row?.symbol ?? "").endsWith(".KS")
+      && /^\d{6}$/.test(String(row?.ticker_normalized ?? ""))
+      && typeof row?.dividendYield === "number"
+      && typeof row?.estimateSnapshot?.forwardEps?.fy1 === "number"
+      && typeof row?.estimateSnapshot?.forwardEps?.fy2 === "number"
+      && typeof row?.estimateSnapshot?.forwardEps?.fy3 === "number"
+      && typeof row?.profitabilitySnapshot?.roe?.fy1 === "number"
+      && typeof row?.profitabilitySnapshot?.roe?.fy2 === "number"
+      && typeof row?.profitabilitySnapshot?.roe?.fy3 === "number"
+      && typeof row?.marketCap === "number"
+      && row.marketCap > 0)
+    .slice(0, 24);
+  assert.ok(rows.length >= 12, "Korea stock_action fixture rows");
+  const totalMarketCap = rows.reduce((sum, row) => sum + row.marketCap, 0);
+  const bridgeSource = "admin/fenok-edge-korea-krx-daily-index.json";
+  writeJson(path.join(tempRoot, bridgeSource), {
+    schema_version: "fenok-edge-korea-krx-bridge/v1",
+    generated_at: "2026-07-08T15:00:00.000Z",
+    market: "Korea",
+    source: "KRX_OPEN_API",
+    raw_public: false,
+    license_or_terms_note: "fixture raw stays private",
+    bridge_scope: "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows",
+    as_of: "2026-07-08",
+    private_artifacts: {
+      raw_root: "_private/admin/fenok-edge-korea/daily/fixture/raw",
+    },
+    derived_rim_inputs: {
+      schema_version: "krx_derived_rim_inputs.v1",
+      generated_at: "2026-07-08T15:00:00.000Z",
+      as_of: "2026-07-08",
+      raw_public: false,
+      license_or_terms_note: "fixture raw stays private",
+      status: "ready",
+      missing: [],
+      kospi_weights: {
+        source: `${bridgeSource}#derived_rim_inputs.kospi_weights`,
+        source_field: "derived_rim_inputs.kospi_weights.rows[].weight",
+        as_of: "2026-07-08",
+        raw_public: false,
+        license_or_terms_note: "fixture raw stays private",
+        row_count: rows.length,
+        total_market_cap: totalMarketCap,
+        denominator: {
+          method: "issuer_level_market_cap_sum",
+          label: "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
+          unit: "KRW",
+          value: totalMarketCap,
+        },
+        rows: rows.map((row) => {
+          const weight = row.marketCap / totalMarketCap;
+          return {
+            code: row.ticker_normalized,
+            name: row.company,
+            weight,
+            weight_pct: weight * 100,
+          };
+        }),
+      },
+      korea_10y: {
+        value: 0.04241,
+        date: "2026-07-08",
+        raw_value_percent: 4.241,
+        source: `${bridgeSource}#derived_rim_inputs.korea_10y`,
+        source_field: "derived_rim_inputs.korea_10y.value",
+        label: "KRX KTS 10Y benchmark government bond yield",
+        raw_public: false,
+        license_or_terms_note: "fixture raw stays private",
+      },
+    },
+  });
+  return tempRoot;
+}
+
 const payload = buildRimIndexInputs({
   generatedAt: "2026-07-08T00:00:00.000Z",
 });
@@ -121,7 +204,7 @@ assert.doesNotMatch(String(kospi.observed.risk_free_rate.source_field ?? ""), /D
 if (kospi.role === "secondary_input_only") {
   assert.equal(kospi.public_status, "ready_inputs_and_forecast_grid");
   assert.equal(kospi.observed.risk_free_rate.source_tier, "observed_source");
-  assert.match(kospi.observed.risk_free_rate.source, /kts_bydd_trd\/\d{8}\.json/);
+  assert.match(kospi.observed.risk_free_rate.source, /(kts_bydd_trd\/\d{8}\.json|derived_rim_inputs\.korea_10y)/);
   assert.ok(kospi.observed.risk_free_rate.value > 0.01);
   assert.ok(kospi.observed.risk_free_rate.value < 0.1);
   assert.equal(kospi.blockers.length, 0);
@@ -175,6 +258,26 @@ try {
   assert.ok(payloadWithKr10y.indices.KOSPI.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
+}
+
+const bridgeFixtureRoot = makeKrxBridgeFixture();
+try {
+  const payloadWithBridgeOnlyKrx = buildRimIndexInputs({
+    dataRootOverride: bridgeFixtureRoot,
+    generatedAt: "2026-07-09T00:00:00.000Z",
+  });
+  assert.equal(validateRimIndexInputs(payloadWithBridgeOnlyKrx).ok, true);
+  const kospiBridge = payloadWithBridgeOnlyKrx.indices.KOSPI;
+  assert.equal(kospiBridge.role, "secondary_input_only");
+  assert.equal(kospiBridge.public_status, "ready_inputs_and_forecast_grid");
+  assert.match(kospiBridge.observed.risk_free_rate.source, /derived_rim_inputs\.korea_10y/);
+  assert.equal(kospiBridge.blockers.length, 0);
+  assert.equal(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.public_status, "krx_exact_weights_available");
+  assert.match(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.source, /derived_rim_inputs\.kospi_weights/);
+  assert.ok(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.matched_weight_ratio >= 0.75);
+  assert.equal(kospiBridge.derived.forecast_grid_v1.public_status, "input_only_krx_exact_weights_no_fair_value");
+} finally {
+  fs.rmSync(bridgeFixtureRoot, { recursive: true, force: true });
 }
 
 assert.equal(payload.indices.SOX.role, "backlog_blocked");

@@ -5,8 +5,8 @@
 #
 # Infinite loop prevention:
 #   This workflow ignores data/manifest.json, data/computed/**, and the generated
-#   admin usage manifest, so its own generated-data commit can still trigger
-#   deploy without retriggering itself.
+#   admin usage/product coverage manifests, so its own generated-data commit can
+#   still trigger deploy without retriggering itself.
 #
 # What is updated:  file_count, updated, last_updated, generatedAt, categories, manifest_version
 # What is NOT touched: version, update_frequency, source, description, recent_changes
@@ -21,11 +21,13 @@ on:
       - '!data/manifest.json'
       - '!data/computed/**'
       - '!data/admin/data-usage-manifest.json'
+      - '!data/admin/product-surface-coverage.json'
       - 'scripts/update-manifest.py'
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/build-phase2-closeout-indexes.mjs'
       - 'scripts/build-rim-index.mjs'
       - 'scripts/test-build-rim-index.mjs'
+      - 'scripts/generate-product-surface-coverage.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
   schedule:
     # UTC 02:30 = KST 11:30. Morning reconciliation.
@@ -81,6 +83,9 @@ jobs:
           fi
           exit "$status"
 
+      - name: Build product surface coverage
+        run: node scripts/generate-product-surface-coverage.mjs
+
       - name: Check if manifest changed
         id: check
         run: |
@@ -91,6 +96,7 @@ jobs:
               data/computed/market_structure_index.json \
               data/computed/rim-index/inputs.json \
               data/admin/data-usage-manifest.json \
+              data/admin/product-surface-coverage.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
               100xfenok-next/public/data/computed/stock_action_index.json \
@@ -98,6 +104,7 @@ jobs:
               100xfenok-next/public/data/computed/market_structure_index.json \
               100xfenok-next/public/data/computed/rim-index/inputs.json \
               100xfenok-next/public/data/admin/data-usage-manifest.json \
+              100xfenok-next/public/data/admin/product-surface-coverage.json \
               100xfenok-next/public/data/manifest.json \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
@@ -124,6 +131,7 @@ jobs:
               echo "update-manifest.py exited with $status on attempt $attempt"
               exit "$status"
             fi
+            node scripts/generate-product-surface-coverage.mjs
 
             if git diff --quiet \
                 data/computed/signals.json \
@@ -132,6 +140,7 @@ jobs:
                 data/computed/market_structure_index.json \
                 data/computed/rim-index/inputs.json \
                 data/admin/data-usage-manifest.json \
+                data/admin/product-surface-coverage.json \
                 data/manifest.json \
                 100xfenok-next/public/data/computed/signals.json \
                 100xfenok-next/public/data/computed/stock_action_index.json \
@@ -139,6 +148,7 @@ jobs:
                 100xfenok-next/public/data/computed/market_structure_index.json \
                 100xfenok-next/public/data/computed/rim-index/inputs.json \
                 100xfenok-next/public/data/admin/data-usage-manifest.json \
+                100xfenok-next/public/data/admin/product-surface-coverage.json \
                 100xfenok-next/public/data/manifest.json; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
               exit 0
@@ -151,6 +161,7 @@ jobs:
               data/computed/market_structure_index.json \
               data/computed/rim-index/inputs.json \
               data/admin/data-usage-manifest.json \
+              data/admin/product-surface-coverage.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
               100xfenok-next/public/data/computed/stock_action_index.json \
@@ -158,6 +169,7 @@ jobs:
               100xfenok-next/public/data/computed/market_structure_index.json \
               100xfenok-next/public/data/computed/rim-index/inputs.json \
               100xfenok-next/public/data/admin/data-usage-manifest.json \
+              100xfenok-next/public/data/admin/product-surface-coverage.json \
               100xfenok-next/public/data/manifest.json
             git commit -m "chore: update computed signals and manifest"
 
