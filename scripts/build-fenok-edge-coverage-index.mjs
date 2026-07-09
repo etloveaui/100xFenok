@@ -444,6 +444,25 @@ function preservePriorPrivateBackedEvidence(index, priorIndex, conditions) {
   recomputeSourceComposites(index);
 }
 
+function recomputeBlockingEvidence(evidence) {
+  const checks = Array.isArray(evidence?.checks) ? evidence.checks : [];
+  evidence.daily_ready = checks.every((check) => check?.status === "ready");
+  evidence.gated_ready = evidence.daily_ready;
+  evidence.blockers = checks.filter((check) => check?.status !== "ready");
+}
+
+function preservePriorPrivateBackedActiveS0Evidence(evidence, priorIndex, conditions) {
+  const priorTrack = (priorIndex.public_scoring_readiness?.tracks ?? [])
+    .find((track) => track?.id === "active_stock_scoring_current");
+  const priorChecks = priorTrack?.blocking_evidence?.checks ?? [];
+
+  if (conditions.koreaProofMissing) {
+    replaceById(evidence.checks, "krx_full_daily_source_ready", findById(priorChecks, "krx_full_daily_source_ready"));
+  }
+
+  recomputeBlockingEvidence(evidence);
+}
+
 const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
 const s1PromotionDryRun = readJson("data/admin/fenok-s1-stock-public-promotion-dry-run.json", {});
@@ -936,6 +955,11 @@ function activeS0BlockingEvidence() {
 }
 
 const activeS0Evidence = activeS0BlockingEvidence();
+preservePriorPrivateBackedActiveS0Evidence(activeS0Evidence, priorIndex, {
+  koreaProofMissing,
+  latestUsRunMissing,
+  taiwanHistoricalMissing,
+});
 
 function checksOk(rows) {
   return Array.isArray(rows) && rows.length > 0 && rows.every((row) => row?.ok === true);
