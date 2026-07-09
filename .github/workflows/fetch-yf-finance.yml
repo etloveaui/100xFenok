@@ -28,6 +28,10 @@ on:
         description: 'Seconds between tickers'
         required: false
         default: '0.8'
+      ticker_timeout:
+        description: 'Seconds per ticker attempt before retry/skip (0 = disabled)'
+        required: false
+        default: '90'
       profile:
         description: 'Fetch profile: core, full, or etf'
         required: false
@@ -93,6 +97,7 @@ jobs:
           INPUT_SHARD: ${{ github.event.inputs.shard || '' }}
           INPUT_TICKERS: ${{ github.event.inputs.tickers || '' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep || '0.8' }}
+          INPUT_TICKER_TIMEOUT: ${{ github.event.inputs.ticker_timeout || '90' }}
           INPUT_PROFILE: ${{ github.event.inputs.profile || 'full' }}
           INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '0' }}
           INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options || 'false' }}
@@ -110,6 +115,7 @@ jobs:
               INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"
               INPUT_SHARD="${YF_DAILY_STOCK_SHARD:-}"
               INPUT_SLEEP="${YF_DAILY_STOCK_SLEEP:-0.35}"
+              INPUT_TICKER_TIMEOUT="${YF_DAILY_STOCK_TICKER_TIMEOUT:-90}"
               INPUT_PROFILE="${YF_DAILY_STOCK_PROFILE:-core}"
               INPUT_MAX_AGE_HOURS="${YF_DAILY_STOCK_MAX_AGE_HOURS:-18}"
               INPUT_HISTORY_GAPS_ONLY="false"
@@ -122,6 +128,7 @@ jobs:
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-140}"
               INPUT_SHARD="${YF_WEEKLY_ETF_SHARD:-${DAILY_INDEX}/${DAILY_SHARDS}}"
               INPUT_SLEEP="${YF_WEEKLY_ETF_SLEEP:-1.0}"
+              INPUT_TICKER_TIMEOUT="${YF_WEEKLY_ETF_TICKER_TIMEOUT:-90}"
               INPUT_PROFILE="${YF_WEEKLY_ETF_PROFILE:-etf}"
               INPUT_MAX_AGE_HOURS="${YF_WEEKLY_ETF_MAX_AGE_HOURS:-18}"
               INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-true}"
@@ -144,7 +151,7 @@ jobs:
           if [ "$INPUT_STOCKANALYSIS_ETFS" = "true" ]; then ARGS="$ARGS --stockanalysis-etfs"; fi
           if [ "$INPUT_HISTORY_GAPS_ONLY" = "true" ]; then ARGS="$ARGS --history-gaps-only --history-min-rows ${INPUT_HISTORY_MIN_ROWS:-200}"; fi
           if [ "$INPUT_PLAN_ONLY" = "true" ]; then ARGS="$ARGS --plan-only"; fi
-          python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
+          python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}"
 
       - name: Rebuild local coverage summary
         if: ${{ env.YF_PLAN_ONLY != 'true' }}

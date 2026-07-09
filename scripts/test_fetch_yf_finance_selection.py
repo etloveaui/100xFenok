@@ -135,6 +135,22 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(payload["nested"], {"keep": 2.0})
         self.assertEqual(payload["rows"], [{"keep": 3.0}])
 
+    def test_fetch_with_retry_records_ticker_timeout(self) -> None:
+        def timeout_fetch(*_args, **_kwargs):
+            raise self.fetcher.FetchTimeout("SLOW exceeded ticker timeout (1s)")
+
+        self.fetcher.fetch_ticker = timeout_fetch
+
+        data, latency_ms, error = self.fetcher.fetch_with_retry(
+            "SLOW",
+            retries=0,
+            timeout_seconds=1,
+        )
+
+        self.assertIsNone(data)
+        self.assertEqual(latency_ms, 0)
+        self.assertEqual(error, "SLOW exceeded ticker timeout (1s)")
+
     def test_plan_only_prints_resolved_plan_without_fetching_or_writing_summary(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
         write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "BIG", "aum": "10B"}]})

@@ -20,11 +20,13 @@ Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 """
 
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
 import math
 from numbers import Number
 import re
+import signal
 import sys
 import time
 from pathlib import Path
@@ -74,6 +76,36 @@ HISTORY_ENTRIES = 260  # ~1y daily bars
 OPTION_EXPIRIES = 2
 OPTION_ROWS = 40
 SHARES_FULL_ENTRIES = 48
+
+
+class FetchTimeout(Exception):
+    pass
+
+
+@contextmanager
+def ticker_timeout(seconds, ticker):
+    if (
+        not seconds
+        or seconds <= 0
+        or not hasattr(signal, "SIGALRM")
+        or not hasattr(signal, "ITIMER_REAL")
+        or not hasattr(signal, "setitimer")
+    ):
+        yield
+        return
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def _raise_timeout(_signum, _frame):
+        raise FetchTimeout(f"{ticker} exceeded ticker timeout ({seconds:g}s)")
+
+    signal.signal(signal.SIGALRM, _raise_timeout)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
 
 INFO_KEYS = [
     # identity
@@ -398,6 +430,8 @@ def fund_data_records(ticker_obj):
 def safe(fn, default=None):
     try:
         return fn()
+    except FetchTimeout:
+        raise
     except Exception:
         return default
 
@@ -481,20 +515,31 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     return data, latency_ms
 
 
-def fetch_with_retry(ticker, profile="full", include_options=False, include_shares_full=False, retries=2, backoffs=(5, 20)):
+def fetch_with_retry(
+    ticker,
+    profile="full",
+    include_options=False,
+    include_shares_full=False,
+    retries=2,
+    backoffs=(5, 20),
+    timeout_seconds=90,
+):
     last_err = None
     for attempt in range(retries + 1):
         try:
-            data, latency_ms = fetch_ticker(
-                ticker,
-                profile=profile,
-                include_options=include_options,
-                include_shares_full=include_shares_full,
-            )
+            with ticker_timeout(timeout_seconds, ticker):
+                data, latency_ms = fetch_ticker(
+                    ticker,
+                    profile=profile,
+                    include_options=include_options,
+                    include_shares_full=include_shares_full,
+                )
             # treat fully-empty payload as failure (likely rate-limited)
             if any(v is not None for v in data.values()):
                 return data, latency_ms, None
             last_err = "empty payload"
+        except FetchTimeout as e:
+            last_err = str(e)
         except Exception as e:
             last_err = str(e)
         if attempt < retries:
@@ -752,6 +797,7 @@ def main():
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
     parser.add_argument("--max-age-hours", type=float, default=0, help="skip usable local payloads fetched within N hours")
     parser.add_argument("--sleep", type=float, default=0.8)
+    parser.add_argument("--ticker-timeout", type=float, default=90, help="max seconds per ticker attempt before retrying/skipping; 0 disables")
     parser.add_argument("--plan-only", action="store_true", help="print the resolved ticker plan and exit before any Yahoo calls or file writes")
     parser.add_argument("--plan-sample-size", type=int, default=25, help="number of resolved tickers to include in --plan-only output")
     args = parser.parse_args()
@@ -799,6 +845,7 @@ def main():
             profile=args.profile,
             include_options=args.include_options,
             include_shares_full=args.include_shares_full,
+            timeout_seconds=args.ticker_timeout,
         )
         if error is None:
             payload = {
