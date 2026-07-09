@@ -21,8 +21,8 @@ Date: 2026-07-08
 - Every observed, derived, blocked, or assumed field must expose `source_tier`.
 - SPX and NDX are the first public-ready input/forecast-grid slices.
 - KOSPI may expose secondary input-only fields when KRX exact market-cap
-  weights are available. Public card promotion still requires freshness and
-  KRX raw-data terms review.
+  weights are available. Public payloads expose generated scalar inputs and
+  coverage only; raw KRX rows stay private/admin.
 - CCMP and SOX stay secondary/backlog until source coverage and public-product
   blockers are closed.
 - KOSPI must use Korea risk-free inputs (`IRLTLT01KRM156N` when available, or
@@ -72,9 +72,8 @@ Date: 2026-07-08
   stock-daily source referenced by `data/admin/fenok-edge-korea-krx-daily-index.json`.
 - Current denominator is the KOSPI stock-daily issuer `MKTCAP` sum, matching the
   KOSPI including foreign shares aggregate in `kospi_dd_trd`.
-- Raw KRX rows remain private/admin. Public payloads may expose derived scalar
-  values, coverage, and private path references, but must not redistribute raw
-  rows without terms review.
+- Raw KRX rows remain private/admin. Public payloads may expose generated
+  scalar values, coverage, and private path references.
 - KRX KTS nominal 10Y may provide Korea risk-free input when FRED/OECD KR10Y is
   absent. Inflation-linked 10Y rows must be filtered out.
 

@@ -767,7 +767,7 @@ function koreaCoverageDiagnostics(stockActionPayload, krxWeights = null) {
       krxWeights
         ? "KRX KOSPI market-cap weights are available; EWY is not used for KOSPI RIM inputs."
         : "Korea forward estimates exist, but KRX KOSPI index weights are required before public KOSPI RIM output.",
-      "KOSPI RIM publication still depends on freshness and KRX raw-data terms review.",
+      "KOSPI RIM output publishes generated inputs only; raw KRX rows stay private/admin.",
     ],
   };
 }
@@ -1384,12 +1384,6 @@ function buildSecondaryIndex(indexConfig, context) {
           severity: "freshness_blocker",
         });
       }
-      if (context.krxKospiWeights.raw_public !== true) {
-        blockers.push({
-          code: "krx_raw_terms_publication_review_needed",
-          severity: "policy_blocker",
-        });
-      }
       return {
         id: indexConfig.id,
         label: indexConfig.label,
@@ -1429,7 +1423,7 @@ function buildSecondaryIndex(indexConfig, context) {
                 indexDiagnostics: krxKospiWeightDiagnostics(context.stockActionPayload, context.krxKospiWeights),
                 notes: [
                   "KOSPI forecast grid uses KRX MKTCAP weights and stock_action financial snapshots.",
-                  "Promotion to public card should wait for fresh KRX daily pull and raw-data terms review.",
+                  "Raw KRX rows stay private/admin; generated RIM inputs are safe for this public payload.",
                 ],
               },
             )

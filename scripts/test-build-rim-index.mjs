@@ -119,14 +119,14 @@ assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.resolve
 const kospi = payload.indices.KOSPI;
 assert.doesNotMatch(String(kospi.observed.risk_free_rate.source_field ?? ""), /DGS10/);
 if (kospi.role === "secondary_input_only") {
-  assert.equal(kospi.public_status, "input_only_krx_exact_weights_with_caveats");
+  assert.equal(kospi.public_status, "ready_inputs_and_forecast_grid");
   assert.equal(kospi.observed.risk_free_rate.source_tier, "observed_source");
   assert.match(kospi.observed.risk_free_rate.source, /kts_bydd_trd\/\d{8}\.json/);
   assert.ok(kospi.observed.risk_free_rate.value > 0.01);
   assert.ok(kospi.observed.risk_free_rate.value < 0.1);
+  assert.equal(kospi.blockers.length, 0);
   assert.ok(!kospi.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
   assert.ok(!kospi.blockers.some((blocker) => blocker.code === "country_risk_free_source_solved_not_wired"));
-  assert.ok(kospi.blockers.some((blocker) => blocker.code === "krx_raw_terms_publication_review_needed"));
   assert.equal(kospi.derived.payout_ratio.source_tier, "derived_formula");
   assert.equal(kospi.derived.explicit_eps_growth_3y.source_tier, "derived_formula");
   assert.equal(kospi.derived.cost_of_equity.source_tier, "derived_formula");
