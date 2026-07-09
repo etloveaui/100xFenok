@@ -15,7 +15,7 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-07-06",
+      "updated": "2026-07-09",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
@@ -54,9 +54,9 @@
       "updated": "2026-07-09",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
-      "file_count": 9,
+      "file_count": 10,
       "schema": true,
-      "description": "Macro banking, liquidity, and monthly activity survey series: 924 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-05"
+      "description": "Macro banking, liquidity, and monthly activity survey series: 928 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-06"
     },
     "sec-13f": {
       "version": "3.4.0",
@@ -159,6 +159,20 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-07-09",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "PMI partial-input append from 2026-06 manufacturing/services workbooks: 4 records added, total 928 records; manufacturing/services PMI and ISM components through 2026-06, OECD CLI preserved through 2026-04; 3 historical source revisions detected and existing values preserved.",
+      "breaking": false
+    },
+    {
+      "date": "2026-07-09",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Re-ran 2026-07-03 source workbook from inbox; regenerated benchmark JSON metadata and verified DEC-275 floor preservation at 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; source_summaries remain 2,404 non-null + 66 null.",
+      "breaking": false
+    },
     {
       "date": "2026-07-08",
       "folder": "yardney",
@@ -705,7 +719,7 @@
       "path": "/data/benchmarks/",
       "schemaVersion": "3.8.0",
       "fileCount": 7,
-      "lastUpdated": "2026-07-06",
+      "lastUpdated": "2026-07-09",
       "notes": "Market indices P/E, P/B, ROE - 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     {
@@ -736,9 +750,9 @@
       "name": "macro",
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
-      "fileCount": 9,
+      "fileCount": 10,
       "lastUpdated": "2026-07-09",
-      "notes": "Macro banking, liquidity, and monthly activity survey series: 924 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-05"
+      "notes": "Macro banking, liquidity, and monthly activity survey series: 928 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-06"
     },
     {
       "name": "yardney",

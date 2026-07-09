@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-07-08
+> **Last Updated**: 2026-07-09
 > **Total Files**: 17,730 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -51,7 +51,7 @@
 ### Macro Data (macro/)
 - FRED banking series: daily, weekly, quarterly; the daily collector now also requests Korea 10Y government yield (`IRLTLT01KRM156N`) for RIM inputs
 - FDIC Tier1 capital ratio quarterly history
-- Activity surveys: 924 records; OECD CLI through 2026-04, major-country manufacturing/services PMI and ISM components through 2026-05
+- Activity surveys: 928 records; OECD CLI through 2026-04, major-country manufacturing/services PMI and ISM components through 2026-06
 - Root compatibility files are still published during migration
 
 ### Calendar Data (calendar/)

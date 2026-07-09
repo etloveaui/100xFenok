@@ -3,7 +3,7 @@
 > **Source**: Bloomberg Terminal (weekly update)
 > **Period**: 2010-01-01 ~ 2026-07-03 (15+ years, 862 S&P 500 data points)
 > **Version**: 3.8.0
-> **Last Update**: 2026-07-06
+> **Last Update**: 2026-07-09
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-07-09 | Re-ran the 2026-07-03 source workbook from inbox; regenerated benchmark JSON metadata and re-verified DEC-275 history preservation at 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; source_summaries remain 2,404 non-null + 66 null. |
 | 3.8.0 | 2026-07-06 | Weekly data update (2026-07-03 source): micro_sectors +1 section 과창판 (STAR50 Index, 311 rows from 2020-07-24); 31,943 records (+348), 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; DEC-275 floor preserved (source trimmed to 2010-08-20); source_summaries 2,404 non-null + 66 null; ISO-week dup drops=0. |
 | 3.8.0 | 2026-06-29 | Weekly data update (2026-06-26 source): 31,595 records (+37), 2010-01-01 ~ 2026-06-28, 37 sections, 861 S&P 500 data points; source_summaries 2,353 non-null + 52 null preserved; dup_section_weeks=0. |
 | 3.8.0 | 2026-06-22 | Weekly update (2026-06-19 source) + DEC-275 history-preservation merge: 31,558 records, 2010-01-01 ~ 2026-06-21, 37 sections, 860 S&P 500 data points. Restored the pre-window floor to 2010-01-01 (source had trimmed to 2010-08-06) via source-wins + floor-only + ISO-week grid guard; dup_section_weeks=0. |
