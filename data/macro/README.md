@@ -32,4 +32,4 @@
 - The daily FRED collector feeds RIM inputs with US DGS10 now and Korea 10Y once `IRLTLT01KRM156N` lands in the same payload; KOSPI must not fall back to DGS10
 - Latest FDIC Tier1 refresh: 2026-03-31, average Tier 1 capital ratio 13.3%, 4,352 banks
 - `activity-surveys.json` keeps empty source columns in `empty_source_series` but exposes only series with numeric observations
-- Latest activity survey refresh: 928 total records; manufacturing/services PMI and ISM components through 2026-06; OECD CLI preserved through 2026-04
+- Latest activity survey refresh: 930 total records; OECD CLI and manufacturing/services PMI/ISM components through 2026-06
