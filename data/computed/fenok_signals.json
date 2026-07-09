@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-08T04:23:00.020Z",
+  "generated_at": "2026-07-08T23:02:01.604Z",
   "source_file": "computed/stock_action_index.json",
   "source_generated_at": "2026-07-05T11:16:39.644Z",
   "source_score_contract": "action-score-v0.3.1",
@@ -2416,13 +2416,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 77.5,
+          "score_0_100": 81.16,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 77.5,
-          "coverage_adjusted_score_0_100": 77.5,
+          "observed_only_score_0_100": 81.16,
+          "coverage_adjusted_score_0_100": 81.16,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/AAPL.json",
@@ -2465,13 +2465,13 @@
               "operating_margin_score": 54.28
             },
             "roe_roic_efficiency": {
-              "score": 85.36,
+              "score": 100,
               "coverage_ratio": 1,
               "roe": 116.676,
               "roe_score": 100,
-              "roic": 35.845,
+              "roic": 103.915,
               "roic_field": "roic",
-              "roic_score": 51.21,
+              "roic_score": 100,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -2863,13 +2863,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 94.31,
+          "score_0_100": 95.16,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 94.31,
-          "coverage_adjusted_score_0_100": 94.31,
+          "observed_only_score_0_100": 95.16,
+          "coverage_adjusted_score_0_100": 95.16,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/ABBV.json",
@@ -2912,13 +2912,13 @@
               "operating_margin_score": 100
             },
             "roe_roic_efficiency": {
-              "score": 77.22,
+              "score": 80.66,
               "coverage_ratio": 1,
               "roe": 367.346,
               "roe_score": 100,
-              "roic": 8.41727,
+              "roic": 12.431000000000001,
               "roic_field": "roic",
-              "roic_score": 24.05,
+              "roic_score": 35.52,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -10015,16 +10015,14 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 71.98,
+          "score_0_100": 70,
           "direction": "strong",
-          "coverage_ratio": 0.8,
+          "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 71.98,
-          "coverage_adjusted_score_0_100": 57.58,
-          "missing_inputs": [
-            "cash_durability"
-          ],
+          "observed_only_score_0_100": 70,
+          "coverage_adjusted_score_0_100": 70,
+          "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/AMAT.json",
             "role": "financial statement cross-check candidate; not valuation SSOT"
@@ -10046,16 +10044,16 @@
               "note": "based on latest EPS from local stockanalysis financials"
             },
             "cash_durability": {
-              "score": null,
-              "coverage_ratio": 0,
-              "average_fcf_margin": null,
-              "fcf_margin_field": null,
-              "fcf_margin_score": null,
-              "fcf_field": null,
-              "fcf_positive_count": 0,
-              "fcf_years": 0,
-              "positive_fcf_count_score": null,
-              "status": "missing_financials_input"
+              "score": 62.15,
+              "coverage_ratio": 1,
+              "average_fcf_margin": 22.972080000000002,
+              "fcf_margin_field": "fcfMargin",
+              "fcf_margin_score": 41.77,
+              "fcf_field": "fcf",
+              "fcf_positive_count": 5,
+              "fcf_years": 5,
+              "positive_fcf_count_score": 100,
+              "status": "available_from_local_stockanalysis"
             },
             "margin_level": {
               "score": 53.38,
@@ -10066,26 +10064,26 @@
               "operating_margin_score": 56.17
             },
             "roe_roic_efficiency": {
-              "score": 56.95,
+              "score": 56.92,
               "coverage_ratio": 1,
               "roe": 41.231,
               "roe_score": 58.9,
-              "roic": 36.681999999999995,
+              "roic": 36.604,
               "roic_field": "roic",
-              "roic_score": 52.4,
+              "roic_score": 52.29,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
               "score": 100,
-              "coverage_ratio": 0.5,
+              "coverage_ratio": 1,
               "eps_field": "epsDiluted",
               "eps_positive_count": 5,
               "eps_years": 5,
               "eps_consecutive_positive_from_latest": 5,
-              "fcf_field": null,
-              "fcf_positive_count": 0,
-              "fcf_years": 0,
-              "fcf_consecutive_positive_from_latest": 0,
+              "fcf_field": "fcf",
+              "fcf_positive_count": 5,
+              "fcf_years": 5,
+              "fcf_consecutive_positive_from_latest": 5,
               "status": "available_from_local_stockanalysis"
             }
           }
@@ -10464,13 +10462,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 59.2,
+          "score_0_100": 59.23,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 59.2,
-          "coverage_adjusted_score_0_100": 59.2,
+          "observed_only_score_0_100": 59.23,
+          "coverage_adjusted_score_0_100": 59.23,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/AMD.json",
@@ -10513,13 +10511,13 @@
               "operating_margin_score": 49.96
             },
             "roe_roic_efficiency": {
-              "score": 24.05,
+              "score": 24.17,
               "coverage_ratio": 1,
               "roe": 21.248,
               "roe_score": 30.35,
-              "roic": 6.552099999999999,
+              "roic": 6.825,
               "roic_field": "roic",
-              "roic_score": 9.36,
+              "roic_score": 9.75,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -12699,13 +12697,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 52.99,
+          "score_0_100": 53.81,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 52.99,
-          "coverage_adjusted_score_0_100": 52.99,
+          "observed_only_score_0_100": 53.81,
+          "coverage_adjusted_score_0_100": 53.81,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/AMZN.json",
@@ -12748,13 +12746,13 @@
               "operating_margin_score": 34.55
             },
             "roe_roic_efficiency": {
-              "score": 38.45,
+              "score": 41.71,
               "coverage_ratio": 1,
               "roe": 19.531,
               "roe_score": 43.4,
-              "roic": 12.110899999999999,
+              "roic": 16.991999999999997,
               "roic_field": "roic",
-              "roic_score": 26.91,
+              "roic_score": 37.76,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -16275,13 +16273,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 68.25,
+          "score_0_100": 68.67,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 68.25,
-          "coverage_adjusted_score_0_100": 68.25,
+          "observed_only_score_0_100": 68.67,
+          "coverage_adjusted_score_0_100": 68.67,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/ARM.json",
@@ -16324,13 +16322,13 @@
               "operating_margin_score": 70.54
             },
             "roe_roic_efficiency": {
-              "score": 26.97,
+              "score": 28.66,
               "coverage_ratio": 1,
               "roe": 22.3,
               "roe_score": 31.86,
-              "roic": 10.889600000000002,
+              "roic": 14.84,
               "roic_field": "roic",
-              "roic_score": 15.56,
+              "roic_score": 21.2,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -16722,13 +16720,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 77.01,
+          "score_0_100": 81.62,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 77.01,
-          "coverage_adjusted_score_0_100": 77.01,
+          "observed_only_score_0_100": 81.62,
+          "coverage_adjusted_score_0_100": 81.62,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/ASML.json",
@@ -16771,13 +16769,13 @@
               "operating_margin_score": 64.33
             },
             "roe_roic_efficiency": {
-              "score": 66.2,
+              "score": 84.64,
               "coverage_ratio": 1,
               "roe": 55.574,
               "roe_score": 79.39,
-              "roic": 24.8011,
+              "roic": 67.827,
               "roic_field": "roic",
-              "roic_score": 35.43,
+              "roic_score": 96.9,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -17616,13 +17614,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 85.02,
+          "score_0_100": 85.42,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 85.02,
-          "coverage_adjusted_score_0_100": 85.02,
+          "observed_only_score_0_100": 85.42,
+          "coverage_adjusted_score_0_100": 85.42,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/AVGO.json",
@@ -17665,13 +17663,13 @@
               "operating_margin_score": 100
             },
             "roe_roic_efficiency": {
-              "score": 60.1,
+              "score": 61.69,
               "coverage_ratio": 1,
               "roe": 53.012,
               "roe_score": 75.73,
-              "roic": 16.5439,
+              "roic": 20.246,
               "roic_field": "roic",
-              "roic_score": 23.63,
+              "roic_score": 28.92,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -25662,13 +25660,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 74.69,
+          "score_0_100": 75.3,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 74.69,
-          "coverage_adjusted_score_0_100": 74.69,
+          "observed_only_score_0_100": 75.3,
+          "coverage_adjusted_score_0_100": 75.3,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/CAT.json",
@@ -25711,13 +25709,13 @@
               "operating_margin_score": 49.29
             },
             "roe_roic_efficiency": {
-              "score": 78.25,
+              "score": 80.69,
               "coverage_ratio": 1,
               "roe": 70.388,
               "roe_score": 100,
-              "roic": 12.3689,
+              "roic": 16.042,
               "roic_field": "roic",
-              "roic_score": 27.49,
+              "roic_score": 35.65,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -37284,13 +37282,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 67.84,
+          "score_0_100": 68.84,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 67.84,
-          "coverage_adjusted_score_0_100": 67.84,
+          "observed_only_score_0_100": 68.84,
+          "coverage_adjusted_score_0_100": 68.84,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/CSCO.json",
@@ -37333,13 +37331,13 @@
               "operating_margin_score": 57.54
             },
             "roe_roic_efficiency": {
-              "score": 37.66,
+              "score": 41.66,
               "coverage_ratio": 1,
               "roe": 33.783,
               "roe_score": 48.26,
-              "roic": 9.04606,
+              "roic": 18.375,
               "roic_field": "roic",
-              "roic_score": 12.92,
+              "roic_score": 26.25,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -40413,13 +40411,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 60.86,
+          "score_0_100": 61.06,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 60.86,
-          "coverage_adjusted_score_0_100": 60.86,
+          "observed_only_score_0_100": 61.06,
+          "coverage_adjusted_score_0_100": 61.06,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/CVX.json",
@@ -40462,13 +40460,13 @@
               "operating_margin_score": 41.94
             },
             "roe_roic_efficiency": {
-              "score": 24.02,
+              "score": 24.8,
               "coverage_ratio": 1,
               "roe": 13.71,
               "roe_score": 30.47,
-              "roic": 4.03503,
+              "roic": 5.205,
               "roic_field": "roic",
-              "roic_score": 8.97,
+              "roic_score": 11.57,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -67680,13 +67678,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 74.28,
+          "score_0_100": 77.92,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 74.28,
-          "coverage_adjusted_score_0_100": 74.28,
+          "observed_only_score_0_100": 77.92,
+          "coverage_adjusted_score_0_100": 77.92,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/GE.json",
@@ -67729,13 +67727,13 @@
               "operating_margin_score": 54.64
             },
             "roe_roic_efficiency": {
-              "score": 74.26,
+              "score": 88.8,
               "coverage_ratio": 1,
               "roe": 46.426,
               "roe_score": 100,
-              "roic": 6.39078,
+              "roic": 28.205000000000002,
               "roic_field": "roic",
-              "roic_score": 14.2,
+              "roic_score": 62.68,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -70809,13 +70807,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 67.64,
+          "score_0_100": 68.13,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 67.64,
-          "coverage_adjusted_score_0_100": 67.64,
+          "observed_only_score_0_100": 68.13,
+          "coverage_adjusted_score_0_100": 68.13,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/GOOG.json",
@@ -70858,13 +70856,13 @@
               "operating_margin_score": 58.99
             },
             "roe_roic_efficiency": {
-              "score": 42.01,
+              "score": 43.97,
               "coverage_ratio": 1,
               "roe": 28.625,
               "roe_score": 40.89,
-              "roic": 31.242900000000002,
+              "roic": 35.811,
               "roic_field": "roic",
-              "roic_score": 44.63,
+              "roic_score": 51.16,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -71256,13 +71254,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 68.1,
+          "score_0_100": 68.2,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 68.1,
-          "coverage_adjusted_score_0_100": 68.1,
+          "observed_only_score_0_100": 68.2,
+          "coverage_adjusted_score_0_100": 68.2,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/GOOGL.json",
@@ -71280,14 +71278,14 @@
               "score": 100,
               "operating_margin": 35.37,
               "roe": 29.06,
-              "latest_eps": 10.908715,
-              "source_field": "epsBasic",
+              "latest_eps": 10.82,
+              "source_field": "epsDiluted",
               "note": "based on latest EPS from local stockanalysis financials"
             },
             "cash_durability": {
               "score": 60.72,
               "coverage_ratio": 1,
-              "average_fcf_margin": 21.7624,
+              "average_fcf_margin": 21.76228,
               "fcf_margin_field": "fcfMargin",
               "fcf_margin_score": 39.57,
               "fcf_field": "fcf",
@@ -71305,19 +71303,19 @@
               "operating_margin_score": 58.95
             },
             "roe_roic_efficiency": {
-              "score": 44.01,
+              "score": 44.4,
               "coverage_ratio": 1,
               "roe": 29.06,
               "roe_score": 41.51,
-              "roic": 34.905,
+              "roic": 35.811,
               "roic_field": "roic",
-              "roic_score": 49.86,
+              "roic_score": 51.16,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
               "score": 100,
               "coverage_ratio": 1,
-              "eps_field": "epsBasic",
+              "eps_field": "epsDiluted",
               "eps_positive_count": 5,
               "eps_years": 5,
               "eps_consecutive_positive_from_latest": 5,
@@ -80696,7 +80694,7 @@
               "coverage_ratio": 1,
               "roe": 5.928,
               "roe_score": 8.47,
-              "roic": -0.0221138,
+              "roic": -0.027999999999999997,
               "roic_field": "roic",
               "roic_score": 0,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
@@ -85560,13 +85558,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 98.08,
+          "score_0_100": 95.85,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 98.08,
-          "coverage_adjusted_score_0_100": 98.08,
+          "observed_only_score_0_100": 95.85,
+          "coverage_adjusted_score_0_100": 95.85,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/JNJ.json",
@@ -85609,13 +85607,13 @@
               "operating_margin_score": 100
             },
             "roe_roic_efficiency": {
-              "score": 92.33,
+              "score": 83.41,
               "coverage_ratio": 1,
               "roe": 32.466,
               "roe_score": 92.76,
-              "roic": 31.957400000000003,
+              "roic": 21.560000000000002,
               "roic_field": "roic",
-              "roic_score": 91.31,
+              "roic_score": 61.6,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -90030,13 +90028,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 85.44,
+          "score_0_100": 86.16,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 85.44,
-          "coverage_adjusted_score_0_100": 85.44,
+          "observed_only_score_0_100": 86.16,
+          "coverage_adjusted_score_0_100": 86.16,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/KO.json",
@@ -90079,13 +90077,13 @@
               "operating_margin_score": 84.24
             },
             "roe_roic_efficiency": {
-              "score": 70.93,
+              "score": 73.83,
               "coverage_ratio": 1,
               "roe": 39.405,
               "roe_score": 87.57,
-              "roic": 14.449699999999998,
+              "roic": 18.790000000000003,
               "roic_field": "roic",
-              "roic_score": 32.11,
+              "roic_score": 41.76,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -93606,13 +93604,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 97.89,
+          "score_0_100": 100,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 97.89,
-          "coverage_adjusted_score_0_100": 97.89,
+          "observed_only_score_0_100": 100,
+          "coverage_adjusted_score_0_100": 100,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/LLY.json",
@@ -93655,13 +93653,13 @@
               "operating_margin_score": 100
             },
             "roe_roic_efficiency": {
-              "score": 91.58,
+              "score": 100,
               "coverage_ratio": 1,
               "roe": 68.226,
               "roe_score": 100,
-              "roic": 25.1799,
+              "roic": 39.650999999999996,
               "roic_field": "roic",
-              "roic_score": 71.94,
+              "roic_score": 100,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -95394,13 +95392,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 78.93,
+          "score_0_100": 81.08,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 78.93,
-          "coverage_adjusted_score_0_100": 78.93,
+          "observed_only_score_0_100": 81.08,
+          "coverage_adjusted_score_0_100": 81.08,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/LRCX.json",
@@ -95443,13 +95441,13 @@
               "operating_margin_score": 60.93
             },
             "roe_roic_efficiency": {
-              "score": 88.03,
+              "score": 96.63,
               "coverage_ratio": 1,
               "roe": 67.526,
               "roe_score": 96.47,
-              "roic": 47.837,
+              "roic": 67.904,
               "roic_field": "roic",
-              "roic_score": 68.34,
+              "roic_score": 97.01,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -98076,13 +98074,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 95.53,
+          "score_0_100": 98.6,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 95.53,
-          "coverage_adjusted_score_0_100": 95.53,
+          "observed_only_score_0_100": 98.6,
+          "coverage_adjusted_score_0_100": 98.6,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/MA.json",
@@ -98125,13 +98123,13 @@
               "operating_margin_score": 99.91
             },
             "roe_roic_efficiency": {
-              "score": 87.73,
+              "score": 100,
               "coverage_ratio": 1,
               "roe": 216.118,
               "roe_score": 100,
-              "roic": 41.3639,
+              "roic": 95.704,
               "roic_field": "roic",
-              "roic_score": 59.09,
+              "roic_score": 100,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -102546,13 +102544,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 70.12,
+          "score_0_100": 70.61,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 70.12,
-          "coverage_adjusted_score_0_100": 70.12,
+          "observed_only_score_0_100": 70.61,
+          "coverage_adjusted_score_0_100": 70.61,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/META.json",
@@ -102595,13 +102593,13 @@
               "operating_margin_score": 58.88
             },
             "roe_roic_efficiency": {
-              "score": 39.12,
+              "score": 41.08,
               "coverage_ratio": 1,
               "roe": 27.637,
               "roe_score": 39.48,
-              "roic": 26.785999999999998,
+              "roic": 31.379,
               "roic_field": "roic",
-              "roic_score": 38.27,
+              "roic_score": 44.83,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -107463,13 +107461,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 72.06,
+          "score_0_100": 73.71,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 72.06,
-          "coverage_adjusted_score_0_100": 72.06,
+          "observed_only_score_0_100": 73.71,
+          "coverage_adjusted_score_0_100": 73.71,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/MSFT.json",
@@ -107512,13 +107510,13 @@
               "operating_margin_score": 77.54
             },
             "roe_roic_efficiency": {
-              "score": 39.09,
+              "score": 45.68,
               "coverage_ratio": 1,
               "roe": 29.741,
               "roe_score": 42.49,
-              "roic": 21.810399999999998,
+              "roic": 37.175999999999995,
               "roic_field": "roic",
-              "roic_score": 31.16,
+              "roic_score": 53.11,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -108804,13 +108802,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 73.72,
+          "score_0_100": 73.81,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 73.72,
-          "coverage_adjusted_score_0_100": 73.72,
+          "observed_only_score_0_100": 73.81,
+          "coverage_adjusted_score_0_100": 73.81,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/MU.json",
@@ -108853,13 +108851,13 @@
               "operating_margin_score": 100
             },
             "roe_roic_efficiency": {
-              "score": 75.07,
+              "score": 75.46,
               "coverage_ratio": 1,
               "roe": 68.741,
               "roe_score": 98.2,
-              "roic": 14.774999999999999,
+              "roic": 15.672,
               "roic_field": "roic",
-              "roic_score": 21.11,
+              "roic_score": 22.39,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -110592,13 +110590,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 64.69,
+          "score_0_100": 66.1,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 64.69,
-          "coverage_adjusted_score_0_100": 64.69,
+          "observed_only_score_0_100": 66.1,
+          "coverage_adjusted_score_0_100": 66.1,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/NFLX.json",
@@ -110641,13 +110639,13 @@
               "operating_margin_score": 55.4
             },
             "roe_roic_efficiency": {
-              "score": 54.39,
+              "score": 60.01,
               "coverage_ratio": 1,
               "roe": 44.295,
               "roe_score": 63.28,
-              "roic": 23.5551,
+              "roic": 36.657000000000004,
               "roic_field": "roic",
-              "roic_score": 33.65,
+              "roic_score": 52.37,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -114221,7 +114219,7 @@
               "coverage_ratio": 1,
               "roe": 73.955,
               "roe_score": 100,
-              "roic": 135.44400000000002,
+              "roic": 145.746,
               "roic_field": "roic",
               "roic_score": 100,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
@@ -118157,13 +118155,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 56.13,
+          "score_0_100": 56.57,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 56.13,
-          "coverage_adjusted_score_0_100": 56.13,
+          "observed_only_score_0_100": 56.57,
+          "coverage_adjusted_score_0_100": 56.57,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/ORCL.json",
@@ -118206,13 +118204,13 @@
               "operating_margin_score": 64.15
             },
             "roe_roic_efficiency": {
-              "score": 37.91,
+              "score": 39.66,
               "coverage_ratio": 1,
               "roe": 34.177,
               "roe_score": 48.82,
-              "roic": 8.72348,
+              "roic": 12.806000000000001,
               "roic_field": "roic",
-              "roic_score": 12.46,
+              "roic_score": 18.29,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -122627,13 +122625,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 76.51,
+          "score_0_100": 77.58,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 76.51,
-          "coverage_adjusted_score_0_100": 76.51,
+          "observed_only_score_0_100": 77.58,
+          "coverage_adjusted_score_0_100": 77.58,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/PG.json",
@@ -122676,13 +122674,13 @@
               "operating_margin_score": 59.17
             },
             "roe_roic_efficiency": {
-              "score": 58.03,
+              "score": 62.3,
               "coverage_ratio": 1,
               "roe": 30.788,
               "roe_score": 68.42,
-              "roic": 15.211,
+              "roic": 21.61,
               "roic_field": "roic",
-              "roic_score": 33.8,
+              "roic_score": 48.02,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -124468,7 +124466,7 @@
               "coverage_ratio": 1,
               "roe": 34.597,
               "roe_score": 49.42,
-              "roic": 119.448,
+              "roic": 433.15099999999995,
               "roic_field": "roic",
               "roic_score": 100,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
@@ -151230,13 +151228,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 49.23,
+          "score_0_100": 49.64,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 49.23,
-          "coverage_adjusted_score_0_100": 49.23,
+          "observed_only_score_0_100": 49.64,
+          "coverage_adjusted_score_0_100": 49.64,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/TSLA.json",
@@ -151279,13 +151277,13 @@
               "operating_margin_score": 16.36
             },
             "roe_roic_efficiency": {
-              "score": 14.44,
+              "score": 16.07,
               "coverage_ratio": 1,
               "roe": 7.383,
               "roe_score": 16.41,
-              "roic": 4.43133,
+              "roic": 6.877,
               "roic_field": "roic",
-              "roic_score": 9.85,
+              "roic_score": 15.28,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -155253,13 +155251,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 59.61,
+          "score_0_100": 61.76,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 59.61,
-          "coverage_adjusted_score_0_100": 59.61,
+          "observed_only_score_0_100": 61.76,
+          "coverage_adjusted_score_0_100": 61.76,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/UNH.json",
@@ -155302,13 +155300,13 @@
               "operating_margin_score": 19.32
             },
             "roe_roic_efficiency": {
-              "score": 37.32,
+              "score": 45.9,
               "coverage_ratio": 1,
               "roe": 16.017,
               "roe_score": 45.76,
-              "roic": 6.17202,
+              "roic": 16.178,
               "roic_field": "roic",
-              "roic_score": 17.63,
+              "roic_score": 46.22,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -156594,13 +156592,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 93.91,
+          "score_0_100": 96.03,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 93.91,
-          "coverage_adjusted_score_0_100": 93.91,
+          "observed_only_score_0_100": 96.03,
+          "coverage_adjusted_score_0_100": 96.03,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/V.json",
@@ -156643,13 +156641,13 @@
               "operating_margin_score": 100
             },
             "roe_roic_efficiency": {
-              "score": 80.71,
+              "score": 89.18,
               "coverage_ratio": 1,
               "roe": 73.631,
               "roe_score": 100,
-              "roic": 24.9806,
+              "roic": 44.761,
               "roic_field": "roic",
-              "roic_score": 35.69,
+              "roic_score": 63.94,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -163746,13 +163744,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 53.52,
+          "score_0_100": 54.06,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 53.52,
-          "coverage_adjusted_score_0_100": 53.52,
+          "observed_only_score_0_100": 54.06,
+          "coverage_adjusted_score_0_100": 54.06,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/WMT.json",
@@ -163795,13 +163793,13 @@
               "operating_margin_score": 11.73
             },
             "roe_roic_efficiency": {
-              "score": 41.64,
+              "score": 43.81,
               "coverage_ratio": 1,
               "roe": 21.961,
               "roe_score": 48.8,
-              "roic": 11.2205,
+              "roic": 14.48,
               "roic_field": "roic",
-              "roic_score": 24.93,
+              "roic_score": 32.18,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -165534,13 +165532,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 61.95,
+          "score_0_100": 62.24,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 61.95,
-          "coverage_adjusted_score_0_100": 61.95,
+          "observed_only_score_0_100": 62.24,
+          "coverage_adjusted_score_0_100": 62.24,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/XOM.json",
@@ -165583,13 +165581,13 @@
               "operating_margin_score": 38.91
             },
             "roe_roic_efficiency": {
-              "score": 29.82,
+              "score": 30.99,
               "coverage_ratio": 1,
               "roe": 16.396,
               "roe_score": 36.44,
-              "roic": 6.46862,
+              "roic": 8.217,
               "roic_field": "roic",
-              "roic_score": 14.37,
+              "roic_score": 18.26,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -173933,13 +173931,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 53.78,
+          "score_0_100": 53.88,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 53.78,
-          "coverage_adjusted_score_0_100": 53.78,
+          "observed_only_score_0_100": 53.88,
+          "coverage_adjusted_score_0_100": 53.88,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/MS.json",
@@ -173982,13 +173980,13 @@
               "operating_margin_score": 78.56
             },
             "roe_roic_efficiency": {
-              "score": 28.97,
+              "score": 29.38,
               "coverage_ratio": 1,
               "roe": 17.978,
               "roe_score": 39.95,
-              "roic": 1.5054,
+              "roic": 2.125,
               "roic_field": "roic",
-              "roic_score": 3.35,
+              "roic_score": 4.72,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -357302,13 +357300,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 75.25,
+          "score_0_100": 76.95,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 75.25,
-          "coverage_adjusted_score_0_100": 75.25,
+          "observed_only_score_0_100": 76.95,
+          "coverage_adjusted_score_0_100": 76.95,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/TSM.json",
@@ -357351,13 +357349,13 @@
               "operating_margin_score": 91.78
             },
             "roe_roic_efficiency": {
-              "score": 51.18,
+              "score": 57.99,
               "coverage_ratio": 1,
               "roe": 35.672,
               "roe_score": 50.96,
-              "roic": 36.1905,
+              "roic": 52.075,
               "roic_field": "roic",
-              "roic_score": 51.7,
+              "roic_score": 74.39,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -364606,13 +364604,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 44.87,
-          "direction": "weak",
+          "score_0_100": 45.65,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 44.87,
-          "coverage_adjusted_score_0_100": 44.87,
+          "observed_only_score_0_100": 45.65,
+          "coverage_adjusted_score_0_100": 45.65,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/BRK.B.json",
@@ -364655,13 +364653,13 @@
               "operating_margin_score": 13.73
             },
             "roe_roic_efficiency": {
-              "score": 9.29,
+              "score": 12.39,
               "coverage_ratio": 1,
               "roe": 3.54,
               "roe_score": 7.87,
-              "roic": 5.67464,
+              "roic": 10.318,
               "roic_field": "roic",
-              "roic_score": 12.61,
+              "roic_score": 22.93,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -378742,13 +378740,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 49.19,
+          "score_0_100": 49.97,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 49.19,
-          "coverage_adjusted_score_0_100": 49.19,
+          "observed_only_score_0_100": 49.97,
+          "coverage_adjusted_score_0_100": 49.97,
           "missing_inputs": [],
           "financials_source": {
             "path": "stockanalysis/financials/BRK.A.json",
@@ -378791,13 +378789,13 @@
               "operating_margin_score": 28.14
             },
             "roe_roic_efficiency": {
-              "score": 12.17,
+              "score": 15.26,
               "coverage_ratio": 1,
               "roe": 5.39,
               "roe_score": 11.98,
-              "roic": 5.67464,
+              "roic": 10.318,
               "roic_field": "roic",
-              "roic_score": 12.61,
+              "roic_score": 22.93,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {
@@ -430486,13 +430484,13 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 62.86,
-          "direction": "constructive",
+          "score_0_100": 78.04,
+          "direction": "strong",
           "coverage_ratio": 0.75,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 62.86,
-          "coverage_adjusted_score_0_100": 47.14,
+          "observed_only_score_0_100": 78.04,
+          "coverage_adjusted_score_0_100": 58.53,
           "missing_inputs": [
             "margin_level"
           ],
@@ -430537,13 +430535,13 @@
               "operating_margin_score": null
             },
             "roe_roic_efficiency": {
-              "score": 35.37,
+              "score": 80.91,
               "coverage_ratio": 0.3,
               "roe": null,
               "roe_score": null,
-              "roic": 15.917100000000001,
+              "roic": 36.409000000000006,
               "roic_field": "roic",
-              "roic_score": 35.37,
+              "roic_score": 80.91,
               "note": "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
             },
             "multi_year_stability": {

@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-07-08T22:48:54.658Z",
+  "generated_at": "2026-07-08T23:36:54.779Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -24,24 +24,24 @@
     "caveat": "The exact readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
   },
   "counts": {
-    "scored_etf_count": 4484,
-    "complete": 3703,
-    "fetchable": 234,
-    "inception_limited": 547,
-    "missing": 781,
+    "scored_etf_count": 4508,
+    "complete": 3701,
+    "fetchable": 262,
+    "inception_limited": 545,
+    "missing": 807,
     "equation_ok": true,
-    "matches_history_gap_report": true,
+    "matches_history_gap_report": false,
     "matches_coverage_index": true,
     "matches_coverage_index_daily_check": true,
     "fetchable_breakdown": {
-      "missing_external_quote_type_mismatch": 46,
+      "missing_external_quote_type_mismatch": 56,
       "stockanalysis_short_rows": 18,
-      "yahoo_fallback_short_rows": 170
+      "yahoo_fallback_short_rows": 188
     }
   },
   "yf_local_crosscheck": {
-    "complete": 371,
-    "missing_or_lt_min_rows": 4113,
+    "complete": 372,
+    "missing_or_lt_min_rows": 4136,
     "min_daily_1y_rows": 200,
     "matches_exact_fetchable_selector": false,
     "sample": [
@@ -91,7 +91,7 @@
         "yf_missing_file_or_history": true
       },
       {
-        "ticker": "AAUM",
+        "ticker": "AAUS",
         "yf_history_rows": null,
         "yf_missing_file_or_history": true
       }
@@ -101,7 +101,7 @@
   "bounded_batches": {
     "can_drive_bounded_ticker_batches": true,
     "default_batch_size": 120,
-    "batch_count": 2,
+    "batch_count": 3,
     "command_template": "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
     "first_batch_tickers": [
       "AAAP",
@@ -109,6 +109,7 @@
       "ACII",
       "ACYQ",
       "AFGR",
+      "AIX",
       "AMEI",
       "AMEM",
       "AMGR",
@@ -116,6 +117,7 @@
       "AMUN",
       "APDB",
       "AQLG",
+      "ARKE",
       "ARLI",
       "ARMW",
       "ARMY",
@@ -153,6 +155,7 @@
       "CHYG",
       "CIEI",
       "CIVG",
+      "CJUL",
       "CJUN",
       "CLNK",
       "CLOO",
@@ -163,6 +166,7 @@
       "CRIB",
       "CRUX",
       "CSEN",
+      "CTJL",
       "CTJN",
       "DDFY",
       "DDFZ",
@@ -171,6 +175,7 @@
       "DDTZ",
       "DFAL",
       "DHLX",
+      "DISK",
       "DLMY",
       "DOJE",
       "DQJN",
@@ -181,11 +186,14 @@
       "EDGX",
       "EHCC",
       "EMEM",
+      "EMJL",
       "EMJN",
       "EMSC",
       "ESUM",
       "ETHB",
       "EZMO",
+      "FECM",
+      "FESC",
       "FHIL",
       "FITZ",
       "FOTO",
@@ -200,9 +208,11 @@
       "GEQ",
       "GISC",
       "GLDW",
+      "GOLI",
       "GSUI",
       "HBMX",
       "HBR",
+      "HJLY",
       "HJUN",
       "HYPG",
       "IBCB",
@@ -211,19 +221,9 @@
       "IBIM",
       "IBTR",
       "IDEQ",
+      "IDJL",
       "IDJN",
-      "IDMY",
-      "INYY",
-      "JADB",
-      "JANI",
-      "JELM",
-      "JPO",
-      "JUDB",
-      "JUNC",
-      "KRYP",
-      "LSTB",
-      "LTCC",
-      "LVIG"
+      "IDMY"
     ]
   },
   "tickers": [
@@ -232,6 +232,7 @@
     "ACII",
     "ACYQ",
     "AFGR",
+    "AIX",
     "AMEI",
     "AMEM",
     "AMGR",
@@ -239,6 +240,7 @@
     "AMUN",
     "APDB",
     "AQLG",
+    "ARKE",
     "ARLI",
     "ARMW",
     "ARMY",
@@ -276,6 +278,7 @@
     "CHYG",
     "CIEI",
     "CIVG",
+    "CJUL",
     "CJUN",
     "CLNK",
     "CLOO",
@@ -286,6 +289,7 @@
     "CRIB",
     "CRUX",
     "CSEN",
+    "CTJL",
     "CTJN",
     "DDFY",
     "DDFZ",
@@ -294,6 +298,7 @@
     "DDTZ",
     "DFAL",
     "DHLX",
+    "DISK",
     "DLMY",
     "DOJE",
     "DQJN",
@@ -304,11 +309,14 @@
     "EDGX",
     "EHCC",
     "EMEM",
+    "EMJL",
     "EMJN",
     "EMSC",
     "ESUM",
     "ETHB",
     "EZMO",
+    "FECM",
+    "FESC",
     "FHIL",
     "FITZ",
     "FOTO",
@@ -323,9 +331,11 @@
     "GEQ",
     "GISC",
     "GLDW",
+    "GOLI",
     "GSUI",
     "HBMX",
     "HBR",
+    "HJLY",
     "HJUN",
     "HYPG",
     "IBCB",
@@ -334,6 +344,7 @@
     "IBIM",
     "IBTR",
     "IDEQ",
+    "IDJL",
     "IDJN",
     "IDMY",
     "INYY",
@@ -342,8 +353,13 @@
     "JELM",
     "JPO",
     "JUDB",
+    "JULC",
+    "JULI",
     "JUNC",
+    "KMEM",
     "KRYP",
+    "LAZR",
+    "LCTO",
     "LSTB",
     "LTCC",
     "LVIG",
@@ -360,6 +376,7 @@
     "MRA",
     "MSBT",
     "MSEP",
+    "MWHS",
     "NGIF",
     "NISM",
     "NUDG",
@@ -375,9 +392,16 @@
     "PCSG",
     "PHYS",
     "PJUS",
+    "PQV",
+    "PQX",
+    "PQXV",
+    "PQXX",
     "PRIZ",
+    "PRXI",
     "PSLV",
+    "QJL",
     "QJN",
+    "QQJL",
     "QQJN",
     "QQMY",
     "QSOL",
@@ -385,17 +409,21 @@
     "RAAR",
     "RAAY",
     "RACK",
+    "RANK",
     "RCLR",
     "RCLY",
     "REGS",
     "RIZE",
     "RMHY",
+    "RNMN",
     "RONB",
     "RWEM",
     "RWLC",
     "SCA",
+    "SCJL",
     "SCJN",
     "SFGV",
+    "SFYI",
     "SHRD",
     "SLWS",
     "SMHC",
@@ -519,6 +547,20 @@
       "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
     },
     {
+      "ticker": "AIX",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "AMEI",
       "actual_rows": 5,
       "missing_file": false,
@@ -607,6 +649,20 @@
       "inception_limited_missing": [],
       "inception_date": null,
       "yf_history_rows": 16,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "ARKE",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5,
       "daily_1y_gap_source": "yahoo_fallback_short_rows",
       "source_provider": "yahoo_finance",
       "detail_status": "yf_fallback"
@@ -1125,6 +1181,20 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "CJUL",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "CJUN",
       "actual_rows": 20,
       "missing_file": false,
@@ -1250,6 +1320,20 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "CTJL",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "CTJN",
       "actual_rows": 19,
       "missing_file": false,
@@ -1360,6 +1444,15 @@
       "daily_1y_gap_source": "stockanalysis_short_rows",
       "source_provider": "stockanalysis",
       "detail_status": null
+    },
+    {
+      "ticker": "DISK",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
     },
     {
       "ticker": "DLMY",
@@ -1492,6 +1585,20 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "EMJL",
+      "actual_rows": 4,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 4,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "EMJN",
       "actual_rows": 20,
       "missing_file": false,
@@ -1555,6 +1662,24 @@
       "daily_1y_gap_source": "yahoo_fallback_short_rows",
       "source_provider": "yahoo_finance",
       "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "FECM",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 2,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FESC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 2,
+      "pending_next_attempt_after_utc": null
     },
     {
       "ticker": "FHIL",
@@ -1748,6 +1873,15 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "GOLI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-10T01:25:49Z"
+    },
+    {
       "ticker": "GSUI",
       "actual_rows": 96,
       "missing_file": false,
@@ -1785,6 +1919,20 @@
       "inception_limited_missing": [],
       "inception_date": null,
       "yf_history_rows": 168,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "HJLY",
+      "actual_rows": 4,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 4,
       "daily_1y_gap_source": "yahoo_fallback_short_rows",
       "source_provider": "yahoo_finance",
       "detail_status": "yf_fallback"
@@ -1897,6 +2045,20 @@
       "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
     },
     {
+      "ticker": "IDJL",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "IDJN",
       "actual_rows": 19,
       "missing_file": false,
@@ -2004,6 +2166,34 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "JULC",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "JULI",
+      "actual_rows": 6,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "JUNC",
       "actual_rows": 20,
       "missing_file": false,
@@ -2018,6 +2208,20 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "KMEM",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "KRYP",
       "actual_rows": 0,
       "missing_file": true,
@@ -2025,6 +2229,29 @@
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
       "pending_consecutive_failures": 7,
       "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+    },
+    {
+      "ticker": "LAZR",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+    },
+    {
+      "ticker": "LCTO",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
     },
     {
       "ticker": "LSTB",
@@ -2241,6 +2468,20 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "MWHS",
+      "actual_rows": 7,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 7,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "NGIF",
       "actual_rows": 0,
       "missing_file": true,
@@ -2431,6 +2672,52 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "PQV",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 2,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "PQX",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "PQXV",
+      "actual_rows": 4,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 4,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "PQXX",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 2,
+      "pending_next_attempt_after_utc": null
+    },
+    {
       "ticker": "PRIZ",
       "actual_rows": 0,
       "missing_file": true,
@@ -2438,6 +2725,20 @@
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
       "pending_consecutive_failures": 7,
       "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+    },
+    {
+      "ticker": "PRXI",
+      "actual_rows": 9,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 9,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
     },
     {
       "ticker": "PSLV",
@@ -2449,6 +2750,20 @@
       "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
     },
     {
+      "ticker": "QJL",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "QJN",
       "actual_rows": 20,
       "missing_file": false,
@@ -2458,6 +2773,20 @@
       "inception_limited_missing": [],
       "inception_date": null,
       "yf_history_rows": 20,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
+      "ticker": "QQJL",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
       "daily_1y_gap_source": "yahoo_fallback_short_rows",
       "source_provider": "yahoo_finance",
       "detail_status": "yf_fallback"
@@ -2551,6 +2880,15 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "RANK",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 3,
+      "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z"
+    },
+    {
       "ticker": "RCLR",
       "actual_rows": 0,
       "missing_file": true,
@@ -2606,6 +2944,15 @@
       "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
     },
     {
+      "ticker": "RNMN",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
       "ticker": "RONB",
       "actual_rows": 136,
       "missing_file": false,
@@ -2652,6 +2999,20 @@
       "detail_status": "yf_fallback"
     },
     {
+      "ticker": "SCJL",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3,
+      "daily_1y_gap_source": "yahoo_fallback_short_rows",
+      "source_provider": "yahoo_finance",
+      "detail_status": "yf_fallback"
+    },
+    {
       "ticker": "SCJN",
       "actual_rows": 20,
       "missing_file": false,
@@ -2673,6 +3034,15 @@
       "daily_1y_gap_source": "missing_external_quote_type_mismatch",
       "pending_consecutive_failures": 7,
       "pending_next_attempt_after_utc": "2026-07-09T00:01:50Z"
+    },
+    {
+      "ticker": "SFYI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "missing_external_quote_type_mismatch",
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
     },
     {
       "ticker": "SHRD",
@@ -3512,9 +3882,9 @@
   ],
   "fetchable_breakdown": {
     "counts": {
-      "missing_external_quote_type_mismatch": 46,
+      "missing_external_quote_type_mismatch": 56,
       "stockanalysis_short_rows": 18,
-      "yahoo_fallback_short_rows": 170
+      "yahoo_fallback_short_rows": 188
     },
     "samples": {
       "missing_external_quote_type_mismatch": [
@@ -3526,8 +3896,8 @@
         "CLNK",
         "CLOO",
         "CRIB",
-        "EDGQ",
-        "EDGX"
+        "DISK",
+        "EDGQ"
       ],
       "stockanalysis_short_rows": [
         "AMUN",
@@ -3544,14 +3914,14 @@
       "yahoo_fallback_short_rows": [
         "AAAP",
         "ACGO",
+        "AIX",
         "AMEI",
         "AMEM",
         "AMGR",
         "APDB",
         "AQLG",
-        "ARLI",
-        "ARMW",
-        "ARMY"
+        "ARKE",
+        "ARLI"
       ]
     }
   },
@@ -3588,6 +3958,12 @@
         "inception_date": null
       },
       {
+        "ticker": "AIX",
+        "actual_rows": 3,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
         "ticker": "AMEI",
         "actual_rows": 5,
         "missing_file": false,
@@ -3610,12 +3986,6 @@
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null
-      },
-      {
-        "ticker": "AMUN",
-        "actual_rows": 172,
-        "missing_file": false,
-        "inception_date": "1986-03-17"
       }
     ],
     "inception_limited": [
@@ -3644,12 +4014,6 @@
         "inception_date": "2026-03-18"
       },
       {
-        "ticker": "AAUM",
-        "actual_rows": 179,
-        "missing_file": false,
-        "inception_date": "2025-10-01"
-      },
-      {
         "ticker": "ABUF",
         "actual_rows": 54,
         "missing_file": false,
@@ -3675,6 +4039,12 @@
       },
       {
         "ticker": "ACSG",
+        "actual_rows": 168,
+        "missing_file": false,
+        "inception_date": "2025-10-16"
+      },
+      {
+        "ticker": "ACSV",
         "actual_rows": 168,
         "missing_file": false,
         "inception_date": "2025-10-16"
