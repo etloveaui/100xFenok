@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { ROUTES } from "@/lib/routes";
+import { readPublicAssetText } from "@/lib/server/public-assets";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +41,7 @@ type ProductSurfaceCoverage = {
 
 async function readProductSurfaceCoverage(): Promise<ProductSurfaceCoverage | null> {
   try {
-    const filePath = path.join(process.cwd(), "public", "data", "admin", "product-surface-coverage.json");
-    return JSON.parse(await readFile(filePath, "utf8")) as ProductSurfaceCoverage;
+    return JSON.parse(await readPublicAssetText("/data/admin/product-surface-coverage.json")) as ProductSurfaceCoverage;
   } catch {
     return null;
   }
