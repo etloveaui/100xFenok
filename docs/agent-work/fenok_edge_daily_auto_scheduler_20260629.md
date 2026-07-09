@@ -61,6 +61,7 @@ Non-negotiable handoff contents for the next main pane:
   - `stockanalysis_etfs=true` adds the full StockAnalysis ETF universe/screener candidate set so ETF daily history gaps can be filled by rotating shards.
   - After YF-derived market facts/audit rebuild, the workflow now rebuilds the local full `fenok_signals.json` plus the public `fenok_signals_summary.json` mirror before the dual-hexagon gate runs.
   - The workflow participates in the shared `fenok-data-writer-${{ github.ref }}` queue and uses the same 5-attempt rebase/push retry loop as the generated-data writers, so it does not race overlapping data commits.
+  - YF JSON writes sanitize non-finite Yahoo values before writing and use `allow_nan=false` so `Infinity` / `NaN` cannot break the Node rebuild steps that parse the generated payloads.
   - Manual dispatch still keeps the existing full/profile/limit/shard controls.
 - `.github/workflows/fetch-fred-yardeni.yml`
   - Weekly FRED Yardeni rebuild remains the canonical Feno Yardeni lane: public payload keeps only `date/spx/eps/bond_per/fair_value/premium_pct`, while raw FRED bond-yield components stay under `_private/admin/yardney`.
@@ -215,6 +216,7 @@ Acceptance criteria for the governor:
 - `qa:fenok-edge-readiness` includes `qa:fenok-s1-promotion-gate`, a no-fetch check that the durable non-public S1 promotion gate artifact can be regenerated without mutating S0/public outputs.
 - ETF daily 1Y readiness uses the current `fenok_etf_signals_summary.json` plus ETF detail files as the exact selector. The StockAnalysis history-gap report remains a freshness/diagnostic input and may lag inside the same build after the ETF summary is regenerated.
 - StockAnalysis run `28983683639` produced data commit `20ca24adf7`, but the following manual Worker deploy `28983982075` failed in `qa:fenok-etf-core-daily-basket` because the committed Core Basket payload was built before the refreshed ETF signals/action-index layer. Fix commit `e53ffc2747` regenerates `fenok_etf_signals`, `etf_action_index`, and the Core Basket artifacts in the workflow order; local `qa:fenok-etf-core-daily-basket` passed before push.
+- YF run `28980507925` completed its batch fetch but failed at `Rebuild Fenok signal summary mirrors` because a Yahoo payload contained `Infinity`, which is valid under Python's default `json.dumps` but invalid for Node `JSON.parse`. Fix commit `5acdce1b7c` adds stable JSON serialization and a unit test so non-finite values are removed before write; rerun `28984738182` is the current main verification run.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
 
 ## Daily Truth Table
