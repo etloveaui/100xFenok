@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import path from "node:path";
 
 import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
+import { createEffectiveEtfDetailReader } from "../../scripts/effective-etf-detail-reader.mjs";
 
 const ROOT = process.cwd();
 const SOURCE_DIR = path.resolve(ROOT, "..", "data", "stockanalysis");
@@ -381,6 +382,7 @@ function main() {
   const now = new Date();
   const pendingLedger = existsSync(PENDING_LEDGER_PATH) ? readJson(PENDING_LEDGER_PATH) : null;
   const pendingEntries = asObject(pendingLedger?.entries);
+  const effectiveDetailReader = createEffectiveEtfDetailReader({ rootDir: path.resolve(ROOT, "..") });
 
   for (const fileName of detailFiles) {
     const payload = readJson(path.join(DETAIL_DIR, fileName));
@@ -507,9 +509,29 @@ function main() {
   const scoredDaily1yInceptionLimitedRows = [];
   const scoredDaily1yTerminalLimitedRows = [];
   for (const ticker of scoredEtfTickers) {
-    const filePath = path.join(DETAIL_DIR, `${ticker}.json`);
     const pendingEntry = asObject(pendingEntries[ticker]);
-    if (!existsSync(filePath)) {
+    const resolved = effectiveDetailReader.resolve(ticker);
+    const resolutionEvidence = {
+      detail_source_kind: resolved.sourceKind,
+      primary_present: resolved.primaryPresent,
+      data_supply_status: resolved.status,
+      data_supply_resolution_state: resolved.selection?.resolution_state ?? null,
+    };
+    if (resolved.status === "unavailable") {
+      scoredDaily1yTerminalLimitedRows.push({
+        ticker,
+        actual_rows: 0,
+        missing_file: true,
+        terminal_limited_missing: ["daily_1y"],
+        terminal_limit_source: "data_supply_unavailable",
+        daily_1y_gap_source: "data_supply_unavailable",
+        pending_consecutive_failures: Number(pendingEntry.consecutive_failures || 0),
+        pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc || null,
+        ...resolutionEvidence,
+      });
+      continue;
+    }
+    if (resolved.status === "missing") {
       const terminalLimitSource = terminalDaily1yGapSource(null, pendingEntry, now);
       const row = {
         ticker,
@@ -519,6 +541,7 @@ function main() {
         terminal_limit_source: terminalLimitSource,
         pending_consecutive_failures: Number(pendingEntry.consecutive_failures || 0),
         pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc || null,
+        ...resolutionEvidence,
       };
       if (terminalLimitSource) {
         row.terminal_limited_missing = ["daily_1y"];
@@ -528,10 +551,10 @@ function main() {
       }
       continue;
     }
-    const payload = readJson(filePath);
+    const payload = resolved.payload;
     const gap = classifyDaily1yGap(payload, now, pendingEntry);
     if (gap.complete) {
-      scoredDaily1yCompleteRows.push({ ticker, actual_rows: gap.actualRows });
+      scoredDaily1yCompleteRows.push({ ticker, actual_rows: gap.actualRows, ...resolutionEvidence });
     } else if (gap.fetchable.length > 0) {
       scoredDaily1yFetchableRows.push({
         ticker,
@@ -542,6 +565,7 @@ function main() {
         daily_1y_gap_source: daily1yFetchableSource(payload),
         source_provider: payload.source_provider || payload.source || null,
         detail_status: payload.detail_status || null,
+        ...resolutionEvidence,
       });
     } else if (gap.terminalLimited.length > 0) {
       scoredDaily1yTerminalLimitedRows.push({
@@ -557,6 +581,7 @@ function main() {
         detail_status: payload.detail_status || null,
         pending_consecutive_failures: Number(pendingEntry.consecutive_failures || 0),
         pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc || null,
+        ...resolutionEvidence,
       });
     } else if (gap.inceptionLimited.length > 0) {
       scoredDaily1yInceptionLimitedRows.push({
@@ -567,6 +592,7 @@ function main() {
         inception_date: gap.inceptionDate,
         source_provider: payload.source_provider || payload.source || null,
         detail_status: payload.detail_status || null,
+        ...resolutionEvidence,
       });
     }
   }
@@ -629,7 +655,7 @@ function main() {
           complete: scoredDaily1yCompleteRows.slice(0, 5),
         },
       },
-      caveat: "StockAnalysis ETF detail daily 1Y continuity is required; fetchable gaps are the immediate backfill queue. Inception-limited and recent terminal provider-limited gaps are tracked but do not block by themselves.",
+      caveat: "Effective ETF detail daily 1Y continuity uses true StockAnalysis primary first, then the verified R2 active selection. Fetchable gaps are the immediate backfill queue; inception-limited and terminal provider/data-supply states are tracked but do not block by themselves.",
     },
     incremental_plan: plan
       ? {

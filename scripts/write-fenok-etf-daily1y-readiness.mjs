@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
+import { createEffectiveEtfDetailReader } from "./effective-etf-detail-reader.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -80,10 +81,6 @@ function readJsonOrNull(relPath, rootDir = REPO_ROOT) {
   } catch {
     return null;
   }
-}
-
-function fileExists(relPath, rootDir = REPO_ROOT) {
-  return fs.existsSync(abs(relPath, rootDir));
 }
 
 function asArray(value) {
@@ -347,6 +344,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
   const generatedDailyCheck = findDailyCheck(readiness, "etf_no_fetchable_daily_1y_gap");
   const pendingEntries = asObject(readJsonOrNull(PENDING_LEDGER_REL, rootDir)?.entries);
+  const effectiveDetailReader = createEffectiveEtfDetailReader({ rootDir });
 
   const completeRows = [];
   const fetchableRows = [];
@@ -355,6 +353,12 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
   const yfRows = {
     complete: [],
     fetchable_or_missing: [],
+  };
+  const effectiveResolutionCounts = {
+    stockanalysis_primary: 0,
+    r2_active_selection: 0,
+    r2_unavailable: 0,
+    missing: 0,
   };
 
   for (const ticker of summaryTickers) {
@@ -369,8 +373,30 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
     if (yfMissing) yfRows.fetchable_or_missing.push(yfRow);
     else yfRows.complete.push(yfRow);
 
-    const detailRelPath = `${STOCKANALYSIS_DETAIL_DIR_REL}/${ticker}.json`;
-    if (!fileExists(detailRelPath, rootDir)) {
+    const resolved = effectiveDetailReader.resolve(ticker);
+    effectiveResolutionCounts[resolved.sourceKind] = asNumber(effectiveResolutionCounts[resolved.sourceKind]) + 1;
+    const resolutionEvidence = {
+      detail_source_kind: resolved.sourceKind,
+      primary_present: resolved.primaryPresent,
+      data_supply_status: resolved.status,
+      data_supply_resolution_state: resolved.selection?.resolution_state ?? null,
+    };
+    if (resolved.status === "unavailable") {
+      terminalLimitedRows.push({
+        ticker,
+        actual_rows: 0,
+        missing_file: true,
+        yf_history_rows: yfRowsCount,
+        terminal_limited_missing: ["daily_1y"],
+        terminal_limit_source: "data_supply_unavailable",
+        daily_1y_gap_source: "data_supply_unavailable",
+        pending_consecutive_failures: asNumber(pendingEntry.consecutive_failures),
+        pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc ?? null,
+        ...resolutionEvidence,
+      });
+      continue;
+    }
+    if (resolved.status === "missing") {
       const terminalLimitSource = terminalDaily1yGapSource(null, pendingEntry, now);
       const row = {
         ticker,
@@ -381,6 +407,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         terminal_limit_source: terminalLimitSource,
         pending_consecutive_failures: asNumber(pendingEntry.consecutive_failures),
         pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc ?? null,
+        ...resolutionEvidence,
       };
       if (terminalLimitSource) {
         row.terminal_limited_missing = ["daily_1y"];
@@ -391,13 +418,14 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       continue;
     }
 
-    const payload = readJson(detailRelPath, rootDir);
+    const payload = resolved.payload;
     const gap = classifyDaily1yGap(payload, now, pendingEntry);
     if (gap.complete) {
       completeRows.push({
         ticker,
         actual_rows: gap.actualRows,
         yf_history_rows: yfRowsCount,
+        ...resolutionEvidence,
       });
     } else if (gap.fetchable.length > 0) {
       fetchableRows.push({
@@ -411,6 +439,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         daily_1y_gap_source: daily1yFetchableSource(payload),
         source_provider: payload.source_provider || payload.source || null,
         detail_status: payload.detail_status || null,
+        ...resolutionEvidence,
       });
     } else if (gap.terminalLimited.length > 0) {
       terminalLimitedRows.push({
@@ -428,6 +457,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         detail_status: payload.detail_status || null,
         pending_consecutive_failures: asNumber(pendingEntry.consecutive_failures),
         pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc ?? null,
+        ...resolutionEvidence,
       });
     } else if (gap.inceptionLimited.length > 0) {
       inceptionLimitedRows.push({
@@ -440,6 +470,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         yf_history_rows: yfRowsCount,
         source_provider: payload.source_provider || payload.source || null,
         detail_status: payload.detail_status || null,
+        ...resolutionEvidence,
       });
     }
   }
@@ -475,6 +506,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
     source_files: {
       etf_signal_summary: "data/computed/fenok_etf_signals_summary.json",
       stockanalysis_detail_dir: STOCKANALYSIS_DETAIL_DIR_REL,
+      data_supply_active: "data/admin/data-supply-state/v1/domains/etf_detail/active.json",
       yf_finance_dir: YF_FINANCE_DIR_REL,
       history_gap_report: "data/stockanalysis/backfill/history_gap_report_latest.json",
       coverage_index: "data/admin/fenok-edge-coverage-index.json",
@@ -491,7 +523,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         required_history_periods: "daily_1y",
         incremental_etf_limit: String(batchSize),
       },
-      caveat: "The exact readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set.",
+      caveat: "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority.",
     },
     counts: {
       scored_etf_count: denominator,
@@ -506,6 +538,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       matches_coverage_index_daily_check: dailyCheckCountOk,
       fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows).counts,
       terminal_limited_breakdown: summarizeFetchableBreakdown(terminalLimitedRows).counts,
+      effective_detail_resolution: effectiveResolutionCounts,
     },
     yf_local_crosscheck: {
       complete: yfRows.complete.length,
@@ -513,7 +546,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       min_daily_1y_rows: DAILY_1Y_MIN_ROWS,
       matches_exact_fetchable_selector: yfGapCount === fetchableRows.length,
       sample: yfRows.fetchable_or_missing.slice(0, 10),
-      caveat: "Do not use the local YF-only count as the ETF readiness blocker unless the product contract changes; it currently over-selects versus the exact StockAnalysis continuity blocker.",
+      caveat: "Do not use the raw local YF-only count as the ETF readiness blocker; it is not R2-selected authority and over-selects versus the exact effective-detail continuity check.",
     },
     bounded_batches: {
       can_drive_bounded_ticker_batches: coverageCountOk && dailyCheckCountOk && equationOk,

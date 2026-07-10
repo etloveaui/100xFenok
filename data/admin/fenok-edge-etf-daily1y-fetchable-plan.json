@@ -1,10 +1,11 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-07-10T13:50:25.829Z",
+  "generated_at": "2026-07-10T18:07:05.001Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
     "stockanalysis_detail_dir": "data/stockanalysis/etfs",
+    "data_supply_active": "data/admin/data-supply-state/v1/domains/etf_detail/active.json",
     "yf_finance_dir": "data/yf/finance",
     "history_gap_report": "data/stockanalysis/backfill/history_gap_report_latest.json",
     "coverage_index": "data/admin/fenok-edge-coverage-index.json",
@@ -21,7 +22,7 @@
       "required_history_periods": "daily_1y",
       "incremental_etf_limit": "120"
     },
-    "caveat": "The exact readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
+    "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
   "counts": {
     "scored_etf_count": 4515,
@@ -36,8 +37,15 @@
     "matches_coverage_index_daily_check": true,
     "fetchable_breakdown": {},
     "terminal_limited_breakdown": {
-      "provider_rejected_non_etf": 56,
+      "data_supply_unavailable": 9,
+      "provider_rejected_non_etf": 47,
       "stockanalysis_recent_short_rows": 38
+    },
+    "effective_detail_resolution": {
+      "stockanalysis_primary": 4022,
+      "r2_active_selection": 437,
+      "r2_unavailable": 9,
+      "missing": 47
     }
   },
   "yf_local_crosscheck": {
@@ -97,7 +105,7 @@
         "yf_missing_file_or_history": true
       }
     ],
-    "caveat": "Do not use the local YF-only count as the ETF readiness blocker unless the product contract changes; it currently over-selects versus the exact StockAnalysis continuity blocker."
+    "caveat": "Do not use the raw local YF-only count as the ETF readiness blocker; it is not R2-selected authority and over-selects versus the exact effective-detail continuity check."
   },
   "bounded_batches": {
     "can_drive_bounded_ticker_batches": true,
@@ -234,7 +242,7 @@
       {
         "ticker": "BHYP",
         "actual_rows": 0,
-        "missing_file": false,
+        "missing_file": true,
         "inception_date": null
       }
     ],

@@ -1,7 +1,7 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-10T13:50:25.829Z",
+  "generated_at": "2026-07-10T18:07:05.001Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -34,7 +34,8 @@
       "samples": {}
     },
     "terminal_limited_breakdown": {
-      "provider_rejected_non_etf": 56,
+      "data_supply_unavailable": 9,
+      "provider_rejected_non_etf": 47,
       "stockanalysis_recent_short_rows": 38
     },
     "etf_no_fetchable_daily_1y_gap": 0,
@@ -184,7 +185,7 @@
       {
         "ticker": "BHYP",
         "actual_rows": 0,
-        "missing_file": false,
+        "missing_file": true,
         "inception_date": null
       }
     ],
@@ -230,7 +231,7 @@
     "default_batch_size": 120,
     "yf_local_crosscheck_gap_count": 4140,
     "yf_local_crosscheck_matches": false,
-    "caveat": "The exact readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
+    "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
   "recommended_dispatch": {
     "status": "not_recommended",
