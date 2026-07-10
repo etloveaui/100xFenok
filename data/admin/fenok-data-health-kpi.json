@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-10T03:14:10.518Z",
+  "generated_at": "2026-07-10T04:56:18.224Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -14,11 +14,11 @@
   "runtime": {
     "producer_context": null,
     "last_rebuild_context": {
-      "built_at": "2026-07-10T03:14:10.518Z",
-      "run_id": "29066315285",
+      "built_at": "2026-07-10T04:56:18.224Z",
+      "run_id": "29070096972",
       "workflow": "Update Manifest",
-      "event_name": "push",
-      "sha": "45d875cd938fe260a706ee4a58e2f24fd8b42ab2"
+      "event_name": "workflow_dispatch",
+      "sha": "6603cbb9731038e1f9af5a7751b04bbaca5df598"
     },
     "cadence": {
       "crons_utc": [
@@ -139,7 +139,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 12.09,
+      "age": 13.79,
       "status": "ready"
     }
   ],
@@ -152,13 +152,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T03:14:09.745Z",
+      "generated_at": "2026-07-10T04:56:17.434Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T03:14:10.360Z",
+      "generated_at": "2026-07-10T04:56:18.062Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -460,7 +460,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T03:14:09.745Z",
+      "as_of": "2026-07-10T04:56:17.434Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -510,12 +510,7 @@
       "details": {
         "output_scope": "inputs_only_no_fair_value",
         "no_public_single_target": true,
-        "public_mirror_policy": {
-          "raw_public": false,
-          "raw_rows_included": false,
-          "private_artifact_paths_included": false,
-          "private_path_redaction": "strings_containing__private_are_replaced_with_admin_private_path_redacted"
-        }
+        "public_mirror_policy": null
       },
       "checks": [
         {
@@ -576,7 +571,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T03:14:10.360Z",
+      "as_of": "2026-07-10T04:56:18.062Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -593,7 +588,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T03:14:10.360Z"
+          "detail": "2026-07-10T04:56:18.062Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -704,7 +699,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T03:14:10.539Z",
+      "as_of": "2026-07-10T04:56:18.248Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -786,12 +781,7 @@
       "as_of": null,
       "counts": {},
       "details": {
-        "rim_public_mirror_policy": {
-          "raw_public": false,
-          "raw_rows_included": false,
-          "private_artifact_paths_included": false,
-          "private_path_redaction": "strings_containing__private_are_replaced_with_admin_private_path_redacted"
-        },
+        "rim_public_mirror_policy": null,
         "full_finra_occ_ledger_public": false,
         "full_etf_daily1y_readiness_public": false
       },
