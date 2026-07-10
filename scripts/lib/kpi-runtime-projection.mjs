@@ -1,0 +1,72 @@
+/**
+ * Side-effect-free public projector for the data health KPI runtime block.
+ *
+ * projectPublicKpi(rootDoc, nowIso) returns a deep copy of rootDoc with the
+ * runtime block reduced to a public allowlist and freshness flags evaluated at
+ * nowIso. Non-runtime shape (schema_version, lanes, source_sla, ...) passes
+ * through untouched. v1 documents (no runtime block) pass through unchanged.
+ *
+ * Consumers (contract §4): the builder's public-mirror write, sync-static-overrides
+ * post-copy, and the checker's equality recompute. All three must agree, so the
+ * projection must be a pure function of (rootDoc, nowIso).
+ */
+
+import { PUBLIC_RUNTIME_DENY_KEYS } from "./kpi-contract-constants.mjs";
+
+export const PUBLIC_PROJECTION_VERSION = "kpi_runtime_projection.v1";
+
+// Canonical deny-key list lives in kpi-contract-constants.mjs; re-exported here
+// for existing importers of the projection module.
+export { PUBLIC_RUNTIME_DENY_KEYS };
+
+function deepClone(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function ageHours(fromIso, nowIso) {
+  const from = new Date(fromIso).getTime();
+  const now = new Date(nowIso).getTime();
+  if (!Number.isFinite(from) || !Number.isFinite(now)) return null;
+  return (now - from) / 3600000;
+}
+
+/**
+ * Project a root runtime block into the public allowlist evaluated at nowIso.
+ * Returns the public runtime object only (allowlist).
+ */
+export function projectRuntime(runtime, nowIso) {
+  const producerContext = runtime && typeof runtime === "object" ? runtime.producer_context : null;
+  const cadence = (runtime && typeof runtime === "object" && runtime.cadence) || {};
+  const slots = (runtime && typeof runtime === "object" && runtime.slots) || {};
+  const builtAt = producerContext && producerContext.built_at ? producerContext.built_at : null;
+  const hardMaxAgeHours = Number(cadence.hard_max_age_hours);
+  const missedSlotCount = Array.isArray(slots.missed_slot_keys) ? slots.missed_slot_keys.length : 0;
+
+  let hardAgeOk = false;
+  if (builtAt && Number.isFinite(hardMaxAgeHours)) {
+    const age = ageHours(builtAt, nowIso);
+    hardAgeOk = age != null && age <= hardMaxAgeHours;
+  }
+  const fresh = hardAgeOk && missedSlotCount === 0;
+
+  return {
+    projection: PUBLIC_PROJECTION_VERSION,
+    built_at: builtAt,
+    evaluated_at: nowIso,
+    fresh,
+    missed_slot_count: missedSlotCount,
+    hard_age_ok: hardAgeOk,
+  };
+}
+
+/**
+ * Deep-copy rootDoc and replace runtime with its public projection.
+ * v1 / runtime-less documents pass through unchanged.
+ */
+export function projectPublicKpi(rootDoc, nowIso) {
+  if (!rootDoc || typeof rootDoc !== "object") return rootDoc;
+  const doc = deepClone(rootDoc);
+  if (!("runtime" in doc) || doc.runtime == null) return doc;
+  doc.runtime = projectRuntime(doc.runtime, nowIso);
+  return doc;
+}

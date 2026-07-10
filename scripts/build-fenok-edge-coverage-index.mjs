@@ -1038,9 +1038,27 @@ function buildS1PromotionGateEvidence() {
 
 const s1PromotionGateEvidence = buildS1PromotionGateEvidence();
 const generatedAt = new Date().toISOString();
+
+// Root source-freshness stamp (KPI v2 SLA basis, contract §5). OLDEST of this
+// index's declared daily SOURCE dates — the true source dates, never rebuild
+// times. Deterministic named input list; do not add generated_at/rebuild fields.
+const SOURCE_AS_OF_INPUTS = [
+  { id: "krx_issuer_daily_latest_full_proof", date: koreaCountedSourceDate },
+  { id: "us_finra_flow_proxy", date: flowSourceDate },
+  { id: "us_occ_options_proxy", date: occSourceDate },
+  { id: "us_class_yf_daily_source", date: usClassYfOldestSourceDate },
+  { id: "asia_ex_taiwan_yf_daily_source", date: asiaYfOldestSourceDate },
+];
+// Fail-closed: if ANY declared counted-source date is missing/unparseable, the
+// stamp is null (KPI reads unavailable), never the oldest of the survivors.
+const sourceAsOfDates = SOURCE_AS_OF_INPUTS.map((entry) => toIsoDate(entry.date));
+const sourceAsOf = sourceAsOfDates.some((date) => !date) ? null : [...sourceAsOfDates].sort()[0] ?? null;
+
 const index = {
   schema_version: "fenok-edge-coverage-index/v0.2",
   generated_at: generatedAt,
+  source_as_of: sourceAsOf,
+  source_as_of_inputs: SOURCE_AS_OF_INPUTS.map((entry) => ({ id: entry.id, source_date: toIsoDate(entry.date) })),
   purpose: "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   raw_policy: {
     raw_public: false,

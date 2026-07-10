@@ -1,7 +1,37 @@
 import fs from "node:fs";
 import path from "node:path";
+import { projectPublicKpi } from "../scripts/lib/kpi-runtime-projection.mjs";
 
 const rootDir = process.cwd();
+const isMain = process.argv[1]
+  && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
+
+// temp-file -> validate -> rename, shared by the KPI public-mirror re-projection.
+function writeJsonAtomic(absPath, payload) {
+  const body = `${JSON.stringify(payload, null, 2)}\n`;
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  const tmp = `${absPath}.tmp`;
+  fs.writeFileSync(tmp, body, "utf8");
+  JSON.parse(fs.readFileSync(tmp, "utf8"));
+  fs.renameSync(tmp, absPath);
+}
+
+// The ../data -> public copy clobbers the projected mirror with the full-runtime
+// root doc. Re-project so the public KPI never carries producer identity/history
+// (contract §4). v1 / runtime-less docs pass through untouched. Injectable clock +
+// atomic write so the fixture can exercise this exact path against a temp root.
+export function projectFenokDataHealthKpiPublicMirror({
+  rootDir: baseDir = rootDir,
+  nowIso = process.env.KPI_FAKE_NOW || new Date().toISOString(),
+} = {}) {
+  const relativePath = "public/data/admin/fenok-data-health-kpi.json";
+  const filePath = path.join(baseDir, relativePath);
+  if (!fs.existsSync(filePath)) return;
+  const doc = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  if (!doc || !doc.runtime) return;
+  writeJsonAtomic(filePath, projectPublicKpi(doc, nowIso));
+  console.log(`[sync-static-overrides] projected public KPI runtime ${relativePath}`);
+}
 
 function replaceExact(content, from, to, filePath) {
   if (content.includes(to)) {
@@ -162,6 +192,9 @@ function compactFenokEdgePublicMirror() {
   console.log(`[sync-static-overrides] compacted ${relativePath}`);
 }
 
+// Guard so importing this module (fixture tests) does not run the whole override
+// pipeline against the importer's cwd. Executed only when run as the sync-static step.
+if (isMain) {
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
@@ -191,6 +224,7 @@ for (const relativePath of [
   removeGeneratedPublicMirror(relativePath);
 }
 compactFenokEdgePublicMirror();
+projectFenokDataHealthKpiPublicMirror();
 sanitizePublicPrivateTokenLeaks();
 
 applyReplacements("public/tools/stock_analyzer/stock_analyzer.html", [
@@ -490,3 +524,4 @@ applyReplacements("public/tools/macro-monitor/details/liquidity-flow.html", [
       return result;`,
   ],
 ]);
+} // end if (isMain)

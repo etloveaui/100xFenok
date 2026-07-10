@@ -9,6 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ETF_CORE_MAX_QUOTE_AGE_DAYS } from "./lib/kpi-contract-constants.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -28,7 +29,7 @@ export const ETF_CORE_DAILY_BASKET_CONFIG = Object.freeze({
   summary_schema_version: "fenok-etf-core-daily-basket-summary/v0.1",
   basket_id: "etf_core_daily_basket",
   minSelectedCount: 75,
-  maxQuoteAgeDays: 7,
+  maxQuoteAgeDays: ETF_CORE_MAX_QUOTE_AGE_DAYS, // canonical single source (kpi-contract-constants)
   minDaily1yRows: 200,
   minAum: 50_000_000,
   minAverageDollarVolume5d: 1_000_000,

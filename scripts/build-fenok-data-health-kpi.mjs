@@ -1,13 +1,388 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
+import {
+  calendar_version,
+  businessDayAge,
+  calendarDayAge,
+  hoursAge,
+  isoDateOf,
+  isFutureSource,
+} from "./lib/market-calendar.mjs";
+import {
+  CADENCE,
+  TRACKED_CRONS,
+  SOURCE_SLA_DEF,
+  SOURCE_WORKFLOW_CRONS,
+  REQUIRED_RIM_INDICES,
+} from "./lib/kpi-contract-constants.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
-const DATA_ROOT = path.join(ROOT, "data");
-const PUBLIC_DATA_ROOT = path.join(ROOT, "100xfenok-next", "public", "data");
-const SCHEMA_VERSION = "fenok-data-health-kpi/v1";
+const SCHEMA_VERSION = "fenok-data-health-kpi/v2";
+const KPI_REL_PATH = "admin/fenok-data-health-kpi.json";
+const SCRIPT_START_MS = Date.now();
 
-const REQUIRED_RIM_INDICES = ["SPX", "NDX", "KOSPI", "SOX"];
+function getArg(flag) {
+  const eq = process.argv.find((a) => a.startsWith(`${flag}=`));
+  if (eq) return eq.slice(flag.length + 1);
+  const idx = process.argv.indexOf(flag);
+  return idx >= 0 && idx + 1 < process.argv.length ? process.argv[idx + 1] : null;
+}
+
+// Injectable data root (fixture temp roots) + injectable clock.
+const DATA_ROOT_ARG = getArg("--data-root");
+let DATA_ROOT = DATA_ROOT_ARG
+  ? path.join(DATA_ROOT_ARG, "data")
+  : path.join(ROOT, "data");
+let PUBLIC_DATA_ROOT = DATA_ROOT_ARG
+  ? path.join(DATA_ROOT_ARG, "public", "data")
+  : path.join(ROOT, "100xfenok-next", "public", "data");
+
+function resolveNow() {
+  const fake = process.env.KPI_FAKE_NOW;
+  if (fake) {
+    const t = new Date(fake);
+    if (Number.isFinite(t.getTime())) return t.toISOString();
+  }
+  return new Date().toISOString();
+}
+
+// ── Runtime self-proof (contract §1-3) ──────────────────────────────────────
+// CADENCE / TRACKED_CRONS / SOURCE_SLA_DEF / SOURCE_WORKFLOW_CRONS are canonical
+// (scripts/lib/kpi-contract-constants.mjs). The builder only EMITS from them; the
+// checker VALIDATES the artifact against them. Never redefine them here.
+const ENVELOPE_SOURCE_ALLOWLIST = new Set(Object.keys(SOURCE_WORKFLOW_CRONS));
+
+function parseCron(cron) {
+  const [min, hour, , , dow] = String(cron).trim().split(/\s+/);
+  return { minute: Number(min), hour: Number(hour), dow: parseDow(dow) };
+}
+
+function parseDow(dow) {
+  if (dow == null || dow === "*") return null;
+  const range = String(dow).match(/^(\d)-(\d)$/);
+  if (range) {
+    const set = new Set();
+    for (let d = Number(range[1]); d <= Number(range[2]); d += 1) set.add(d % 7);
+    return set;
+  }
+  return new Set(String(dow).split(",").map((x) => Number(x) % 7));
+}
+
+function cronAllowsDay(parsed, jsDay) {
+  return !parsed.dow || parsed.dow.has(jsDay % 7);
+}
+
+function occurrenceKey(workflowFile, cron, occMs) {
+  return `${workflowFile}:${cron}@${new Date(occMs).toISOString().slice(0, 16)}Z`;
+}
+
+function parseSlotKey(slotKey) {
+  const text = String(slotKey ?? "");
+  const at = text.lastIndexOf("@");
+  if (at < 0) return null;
+  const left = text.slice(0, at);
+  const tsRaw = text.slice(at + 1);
+  const colon = left.indexOf(":");
+  if (colon < 0) return null;
+  if (!/Z$/.test(tsRaw)) return null;
+  const timestamp = tsRaw.slice(0, -1);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(timestamp)) return null;
+  return { workflow_file: left.slice(0, colon), cron: left.slice(colon + 1), timestamp };
+}
+
+function isValidOccurrence(cron, timestamp) {
+  const parsed = parseCron(cron);
+  const occ = new Date(`${timestamp}:00Z`);
+  if (!Number.isFinite(occ.getTime())) return false;
+  return occ.getUTCHours() === parsed.hour
+    && occ.getUTCMinutes() === parsed.minute
+    && cronAllowsDay(parsed, occ.getUTCDay());
+}
+
+function validateOriginSlotKey(slotKey, sourceWorkflow, { nowIso, graceMinutes }) {
+  const parsed = parseSlotKey(slotKey);
+  if (!parsed || parsed.workflow_file !== sourceWorkflow) return false;
+  const crons = SOURCE_WORKFLOW_CRONS[sourceWorkflow];
+  if (!crons || !crons.includes(parsed.cron)) return false;
+  if (!isValidOccurrence(parsed.cron, parsed.timestamp)) return false;
+  // §3: the slot must be a RECENT occurrence within grace of the source cron — not
+  // a stale canonical key replayed from days ago. Occurrence must sit at/before now
+  // and within slot_grace_minutes of now.
+  const occMs = new Date(`${parsed.timestamp}:00Z`).getTime();
+  const nowMs = new Date(nowIso).getTime();
+  if (!Number.isFinite(occMs) || !Number.isFinite(nowMs)) return false;
+  return occMs <= nowMs && nowMs - occMs <= Number(graceMinutes) * 60000;
+}
+
+function latestOccurrenceOnOrBefore(parsed, jobStartMs) {
+  for (let back = 0; back < 21; back += 1) {
+    const day = new Date(jobStartMs - back * 86400000);
+    const occ = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), parsed.hour, parsed.minute, 0, 0);
+    if (occ <= jobStartMs && cronAllowsDay(parsed, new Date(occ).getUTCDay())) return occ;
+  }
+  return null;
+}
+
+export function inferSlotKey({ crons, workflowFile, jobStartedAtIso, graceMinutes, runAttempt }) {
+  if (Number(runAttempt) > 1) return null; // §2: re-runs are always slotless
+  const jobStart = new Date(jobStartedAtIso).getTime();
+  if (!Number.isFinite(jobStart)) return null;
+  let best = null;
+  for (const cron of crons) {
+    const occ = latestOccurrenceOnOrBefore(parseCron(cron), jobStart);
+    if (occ == null) continue;
+    if (best == null || occ > best.occMs) best = { occMs: occ, cron };
+  }
+  if (best == null) return null;
+  if (jobStart - best.occMs > Number(graceMinutes) * 60000) return null; // outside grace -> slotless
+  return occurrenceKey(workflowFile, best.cron, best.occMs);
+}
+
+export function enumerateDueSlots({ trackedCrons, watermarkIso, nowIso, retentionDays }) {
+  const now = new Date(nowIso).getTime();
+  const watermark = new Date(watermarkIso).getTime();
+  if (!Number.isFinite(now) || !Number.isFinite(watermark)) return [];
+  const startMs = Math.max(watermark, now - Number(retentionDays) * 86400000);
+  const startDay = new Date(startMs);
+  startDay.setUTCHours(0, 0, 0, 0);
+  const out = [];
+  for (let t = startDay.getTime(); t <= now; t += 86400000) {
+    const day = new Date(t);
+    for (const { workflow_file, cron } of trackedCrons) {
+      const parsed = parseCron(cron);
+      if (!cronAllowsDay(parsed, day.getUTCDay())) continue;
+      const occ = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), parsed.hour, parsed.minute, 0, 0);
+      if (occ < startMs || occ > now) continue;
+      out.push(occurrenceKey(workflow_file, cron, occ));
+    }
+  }
+  return [...new Set(out)].sort();
+}
+
+export function deriveMissedSlots({ dueSlots, satisfiedSlotKeys, cronDeferrals }) {
+  const satisfied = new Set(satisfiedSlotKeys || []);
+  const deferred = new Set((cronDeferrals || []).map((d) => (typeof d === "string" ? d : d?.slot_key)));
+  return dueSlots.filter((s) => !satisfied.has(s) && !deferred.has(s)).sort();
+}
+
+function slotTimestampMs(slotKey) {
+  const parsed = parseSlotKey(slotKey);
+  return parsed ? new Date(`${parsed.timestamp}:00Z`).getTime() : NaN;
+}
+
+function trimByRetention(slotKeys, nowIso, retentionDays) {
+  const floor = new Date(nowIso).getTime() - Number(retentionDays) * 86400000;
+  return [...new Set(slotKeys)]
+    .filter((s) => {
+      const ms = slotTimestampMs(s);
+      return !Number.isFinite(ms) || ms >= floor;
+    })
+    .sort();
+}
+
+function readGithubContext(env) {
+  const ref = env.GITHUB_WORKFLOW_REF || "";
+  const fileMatch = ref.match(/\.github\/workflows\/([^@]+)/);
+  return {
+    run_id: env.GITHUB_RUN_ID || null,
+    run_attempt: env.GITHUB_RUN_ATTEMPT ? Number(env.GITHUB_RUN_ATTEMPT) : null,
+    event_name: env.GITHUB_EVENT_NAME || null,
+    workflow: env.GITHUB_WORKFLOW || null,
+    workflow_file: fileMatch ? fileMatch[1] : null,
+    sha: env.GITHUB_SHA || null,
+    actor: env.GITHUB_ACTOR || null,
+    ref: env.GITHUB_REF || null,
+  };
+}
+
+function readOriginEnvelope(env) {
+  const sourceWorkflow = env.KPI_ORIGIN_SOURCE_WORKFLOW || "";
+  if (!sourceWorkflow) return null;
+  return {
+    source_workflow: sourceWorkflow,
+    source_run_id: env.KPI_ORIGIN_SOURCE_RUN_ID || null,
+    source_run_attempt: env.KPI_ORIGIN_SOURCE_RUN_ATTEMPT ? Number(env.KPI_ORIGIN_SOURCE_RUN_ATTEMPT) : null,
+    original_event: env.KPI_ORIGIN_ORIGINAL_EVENT || null,
+    slot_key: env.KPI_ORIGIN_SLOT_KEY || null,
+  };
+}
+
+function classifyAuthoritative({ github, origin, jobStartedAtIso, nowIso, eventSchedule }) {
+  if (github.event_name === "schedule" && github.workflow_file === "update-manifest.yml") {
+    // §2: infer ONLY on the run's OWN cron. GitHub passes the triggering cron in
+    // github.event.schedule (KPI_EVENT_SCHEDULE). A delayed 02:30 run must never
+    // claim the 09:30 slot by "latest occurrence across crons".
+    const ownCron = eventSchedule && CADENCE.crons_utc.includes(eventSchedule) ? eventSchedule : null;
+    return {
+      authoritative: true,
+      reason: ownCron ? "schedule" : "schedule_unknown_cron",
+      slot_key: ownCron
+        ? inferSlotKey({
+            crons: [ownCron],
+            workflowFile: "update-manifest.yml",
+            jobStartedAtIso,
+            graceMinutes: CADENCE.slot_grace_minutes,
+            runAttempt: github.run_attempt,
+          })
+        : null, // own cron unidentifiable -> slotless, never cross-cron guess
+    };
+  }
+  if (github.event_name === "workflow_dispatch" && origin) {
+    const failures = [];
+    if (github.actor !== "github-actions[bot]") failures.push("actor");
+    if (github.ref !== "refs/heads/main") failures.push("ref");
+    if (!ENVELOPE_SOURCE_ALLOWLIST.has(origin.source_workflow)) failures.push("source_workflow");
+    if (origin.original_event !== "schedule") failures.push("original_event");
+    if (!validateOriginSlotKey(origin.slot_key, origin.source_workflow, { nowIso, graceMinutes: CADENCE.slot_grace_minutes })) {
+      failures.push("origin_slot_key");
+    }
+    if (failures.length === 0) {
+      // §2: a re-run of EITHER the dispatch run or the source run is always slotless.
+      const slotless = Number(github.run_attempt) > 1 || Number(origin.source_run_attempt) > 1;
+      return {
+        authoritative: true,
+        reason: slotless ? "valid_dispatch_slotless_rerun" : "valid_dispatch",
+        slot_key: slotless ? null : origin.slot_key,
+      };
+    }
+    return { authoritative: false, reason: `invalid_envelope:${failures.join(",")}`, slot_key: null };
+  }
+  return { authoritative: false, reason: "non_authoritative_context", slot_key: null };
+}
+
+function appendHistory(priorHistory, entry, cap) {
+  const key = (h) => `${h?.workflow || ""}|${h?.run_id || ""}|${h?.run_attempt ?? ""}`;
+  const combined = [...(Array.isArray(priorHistory) ? priorHistory : [])];
+  const idx = combined.findIndex((h) => key(h) === key(entry));
+  if (idx >= 0) combined.splice(idx, 1);
+  combined.push(entry);
+  return combined.slice(-cap);
+}
+
+export function buildRuntime({ nowIso, env, priorRuntime, overallStatus }) {
+  const github = readGithubContext(env);
+  const origin = readOriginEnvelope(env);
+  const jobStartedAtIso = env.KPI_JOB_STARTED_AT || nowIso;
+  const auth = classifyAuthoritative({
+    github,
+    origin,
+    jobStartedAtIso,
+    nowIso,
+    eventSchedule: env.KPI_EVENT_SCHEDULE || null,
+  });
+  const lastRebuildContext = {
+    built_at: nowIso,
+    run_id: github.run_id,
+    workflow: github.workflow,
+    event_name: github.event_name,
+    sha: github.sha,
+  };
+  const priorV2ActivatedAt = priorRuntime?.cadence?.v2_activated_at ?? null;
+
+  // cadence is DEFINITIONAL — re-emitted canonical every build (never preserved),
+  // so a prior malformed/tampered cadence cannot survive a rebuild. Only
+  // v2_activated_at (watermark) is preserved state.
+  const canonicalCadence = { ...CADENCE, v2_activated_at: priorV2ActivatedAt ?? nowIso, calendar_version };
+
+  if (!auth.authoritative) {
+    // Non-authoritative: preserve producer/slots/history verbatim; only rebuild ctx
+    // + the definitional cadence update.
+    if (priorRuntime && typeof priorRuntime === "object") {
+      return {
+        producer_context: priorRuntime.producer_context ?? null,
+        last_rebuild_context: lastRebuildContext,
+        cadence: canonicalCadence,
+        slots: priorRuntime.slots ?? { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] },
+        successful_snapshot_history: priorRuntime.successful_snapshot_history ?? [],
+        authoritative_context: { authoritative: false, reason: auth.reason },
+      };
+    }
+    return {
+      producer_context: null, // honest bootstrap; warn-only in Phase A
+      last_rebuild_context: lastRebuildContext,
+      cadence: canonicalCadence,
+      slots: { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] },
+      successful_snapshot_history: [],
+      authoritative_context: { authoritative: false, reason: auth.reason },
+    };
+  }
+
+  const v2ActivatedAt = priorV2ActivatedAt ?? nowIso;
+  const slotKey = auth.slot_key;
+  const durationMs = Date.now() - SCRIPT_START_MS;
+  const producerContext = {
+    built_at: nowIso,
+    duration_ms: durationMs,
+    run_id: github.run_id,
+    run_attempt: github.run_attempt,
+    event_name: github.event_name,
+    workflow: github.workflow,
+    sha: github.sha,
+    slot_key: slotKey,
+    origin: origin ?? null,
+  };
+  const priorSatisfied = priorRuntime?.slots?.satisfied_slot_keys ?? [];
+  const cronDeferrals = priorRuntime?.slots?.cron_deferrals ?? [];
+  const satisfied = trimByRetention(
+    [...priorSatisfied, ...(slotKey ? [slotKey] : [])],
+    nowIso,
+    CADENCE.slot_retention_days,
+  );
+  const dueSlots = enumerateDueSlots({
+    trackedCrons: TRACKED_CRONS,
+    watermarkIso: v2ActivatedAt,
+    nowIso,
+    retentionDays: CADENCE.slot_retention_days,
+  });
+  const missed = deriveMissedSlots({ dueSlots, satisfiedSlotKeys: satisfied, cronDeferrals });
+  const historyEntry = {
+    built_at: nowIso,
+    slot_key: slotKey,
+    run_id: github.run_id,
+    run_attempt: github.run_attempt,
+    workflow: github.workflow,
+    status: overallStatus,
+    duration_ms: durationMs,
+  };
+  return {
+    producer_context: producerContext,
+    last_rebuild_context: lastRebuildContext,
+    cadence: canonicalCadence,
+    slots: {
+      satisfied_slot_keys: satisfied,
+      last_satisfied_slot_key: slotKey ?? (priorRuntime?.slots?.last_satisfied_slot_key ?? null),
+      missed_slot_keys: missed,
+      cron_deferrals: cronDeferrals,
+    },
+    successful_snapshot_history: appendHistory(priorRuntime?.successful_snapshot_history, historyEntry, 14),
+    authoritative_context: { authoritative: true, reason: auth.reason },
+  };
+}
+
+// ── Per-source SLA evaluation (contract §5) ─────────────────────────────────
+
+export function evaluateSlaAge({ sourceDate, unit, calendar, nowIso }) {
+  if (sourceDate == null) return null;
+  if (unit === "hours") return hoursAge(sourceDate, nowIso);
+  if (unit === "calendar_days") return calendarDayAge(sourceDate, nowIso);
+  return businessDayAge(sourceDate, nowIso, calendar); // business_days
+}
+
+export function slaStatusForAge(age, maxStaleness) {
+  if (age == null) return "unavailable";
+  return age <= Number(maxStaleness) ? "ready" : "stale";
+}
+
+// Fail-closed OLDEST: if ANY listed input is null/unparseable, the aggregate is
+// null (unavailable) — a missing required input must never be silently dropped
+// so the surviving inputs mask it (contract §5).
+function oldestRequiredIsoDate(values) {
+  const dates = values.map(isoDateOf);
+  if (dates.some((d) => !d)) return null;
+  return [...dates].sort()[0] ?? null;
+}
 
 function readJson(relPath, root = DATA_ROOT) {
   try {
@@ -337,7 +712,94 @@ function summarize(lanes) {
   return { overallStatus, totals };
 }
 
-function buildPayload() {
+// product_surface_coverage: its surface as_of values derive from upstream
+// generated_at/fetched_at (REBUILD timestamps), which §5 forbids as freshness
+// evidence. Until generate-product-surface-coverage.mjs stamps true per-surface
+// source dates, the KPI marks it unavailable_pending_source_stamp — honest, never
+// consuming rebuild timestamps (same bootstrap posture as the coverage-index stamp).
+const PRODUCT_SURFACE_PENDING_SOURCE_STAMP = true;
+
+function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, etfDaily1y }) {
+  const sourceDates = {
+    s0_finra_occ_mapping_ledger: oldestRequiredIsoDate([
+      finraOccLedger?.source_audit?.source_dates?.finra_source_date,
+      finraOccLedger?.source_audit?.source_dates?.occ_source_date,
+    ]),
+    rim_index_inputs: oldestRequiredIsoDate(
+      REQUIRED_RIM_INDICES.map((id) => rimInputs?.indices?.[id]?.observed?.price?.as_of),
+    ),
+    etf_core_daily_basket_admin: oldestRequiredIsoDate(
+      (Array.isArray(etfCoreBasket?.rows) ? etfCoreBasket.rows : []).map((row) => row?.proof?.quote_date),
+    ),
+    fenok_edge_coverage_index: isoDateOf(coverageIndex?.source_as_of),
+    product_surface_coverage: null, // see note above; rebuild timestamps are not freshness
+    // hours unit keeps the raw timestamp (not date-truncated).
+    etf_daily1y_readiness_admin: etfDaily1y?.generated_at ?? null,
+  };
+
+  return SOURCE_SLA_DEF.map((def) => {
+    const sourceDate = sourceDates[def.source_id] ?? null;
+    const flags = {};
+
+    // Honest pending stamp for the rebuild-timestamp-only source.
+    if (def.source_id === "product_surface_coverage" && PRODUCT_SURFACE_PENDING_SOURCE_STAMP) {
+      return {
+        source_id: def.source_id,
+        freshness_basis: def.freshness_basis,
+        source_date: null,
+        unit: def.unit,
+        calendar: def.calendar,
+        max_staleness: def.max_staleness,
+        required: def.required,
+        age: null,
+        status: "unavailable_pending_source_stamp",
+        pending_source_stamp: true,
+      };
+    }
+
+    // Future-dated source: age helpers clamp future to 0 (would read fresh); flag it.
+    if (isFutureSource(sourceDate, nowIso, def.unit)) {
+      return {
+        source_id: def.source_id,
+        freshness_basis: def.freshness_basis,
+        source_date: sourceDate,
+        unit: def.unit,
+        calendar: def.calendar,
+        max_staleness: def.max_staleness,
+        required: def.required,
+        age: evaluateSlaAge({ sourceDate, unit: def.unit, calendar: def.calendar, nowIso }),
+        status: "future_date_anomaly",
+        future_date_anomaly: true,
+      };
+    }
+
+    const age = evaluateSlaAge({ sourceDate, unit: def.unit, calendar: def.calendar, nowIso });
+    let status = slaStatusForAge(age, def.max_staleness);
+    if (def.source_id === "etf_core_daily_basket_admin") {
+      // Reuse the existing basket gate: not-ready or any stale selection forces stale.
+      const coreReady = etfCoreBasket?.readiness?.core_daily_basket_ready === true;
+      const staleSelected = Number(etfCoreBasket?.coverage?.stale_selected_count) || 0;
+      if (status === "ready" && (!coreReady || staleSelected > 0)) {
+        status = "stale";
+        flags.gate_override_stale = true;
+      }
+    }
+    return {
+      source_id: def.source_id,
+      freshness_basis: def.freshness_basis,
+      source_date: sourceDate,
+      unit: def.unit,
+      calendar: def.calendar,
+      max_staleness: def.max_staleness,
+      required: def.required,
+      age,
+      status,
+      ...flags,
+    };
+  });
+}
+
+function buildPayload(nowIso, priorRuntime) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const rimInputs = readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT) || readJson("computed/rim-index/inputs.json");
   const productCoverage = readJson("admin/product-surface-coverage.json");
@@ -368,9 +830,19 @@ function buildPayload() {
       required: entry.required !== false && item.required !== false,
     })));
 
+  const sourceSla = buildSourceSla({
+    nowIso,
+    finraOccLedger,
+    rimInputs,
+    etfCoreBasket,
+    coverageIndex,
+    etfDaily1y,
+  });
+  const runtime = buildRuntime({ nowIso, env: process.env, priorRuntime, overallStatus });
+
   return {
     schema_version: SCHEMA_VERSION,
-    generated_at: new Date().toISOString(),
+    generated_at: nowIso,
     status: overallStatus,
     status_label: statusLabel(overallStatus),
     purpose: "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -381,6 +853,8 @@ function buildPayload() {
       private_ledgers_included: false,
       source_artifacts_are_referenced_by_id_only: true,
     },
+    runtime,
+    source_sla: sourceSla,
     source_artifacts: [
       { id: "fenok_edge_coverage_index", generated_at: coverageIndex?.generated_at ?? null, public_mirror: true, public_safe: true },
       { id: "rim_index_inputs", generated_at: rimInputs?.generated_at ?? null, public_mirror: true, public_safe: true },
@@ -395,22 +869,55 @@ function buildPayload() {
   };
 }
 
-function writeJson(relPath, payload, roots) {
-  const body = `${JSON.stringify(payload, null, 2)}\n`;
-  for (const root of roots) {
-    const outPath = path.join(root, relPath);
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, body, "utf8");
+function readPriorRuntime() {
+  try {
+    const prior = JSON.parse(fs.readFileSync(path.join(DATA_ROOT, KPI_REL_PATH), "utf8"));
+    if (prior?.schema_version === SCHEMA_VERSION && prior.runtime && typeof prior.runtime === "object") {
+      return prior.runtime;
+    }
+  } catch {
+    // missing prior or v1 -> no runtime carry-forward (bootstrap).
   }
+  return null;
 }
 
-const payload = buildPayload();
-writeJson("admin/fenok-data-health-kpi.json", payload, [DATA_ROOT, PUBLIC_DATA_ROOT]);
+// temp-file -> validate -> rename (contract §4, both mirrors).
+function writeJsonAtomic(absPath, payload) {
+  const body = `${JSON.stringify(payload, null, 2)}\n`;
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  const tmp = `${absPath}.tmp`;
+  fs.writeFileSync(tmp, body, "utf8");
+  JSON.parse(fs.readFileSync(tmp, "utf8")); // validate serialized JSON before publish
+  fs.renameSync(tmp, absPath);
+}
 
-console.log(JSON.stringify({
-  ok: payload.status === "ready",
-  status: payload.status,
-  generated_at: payload.generated_at,
-  lanes: payload.totals.lanes,
-  non_ready_checks: payload.non_ready_checks.length,
-}, null, 2));
+export function buildKpiDocuments(nowIso = resolveNow()) {
+  const priorRuntime = readPriorRuntime();
+  const rootDoc = buildPayload(nowIso, priorRuntime);
+  const publicDoc = projectPublicKpi(rootDoc, nowIso);
+  return { rootDoc, publicDoc };
+}
+
+function main() {
+  const nowIso = resolveNow();
+  const { rootDoc, publicDoc } = buildKpiDocuments(nowIso);
+  writeJsonAtomic(path.join(DATA_ROOT, KPI_REL_PATH), rootDoc);
+  writeJsonAtomic(path.join(PUBLIC_DATA_ROOT, KPI_REL_PATH), publicDoc);
+
+  console.log(JSON.stringify({
+    ok: rootDoc.status === "ready",
+    schema_version: rootDoc.schema_version,
+    status: rootDoc.status,
+    generated_at: rootDoc.generated_at,
+    lanes: rootDoc.totals.lanes,
+    non_ready_checks: rootDoc.non_ready_checks.length,
+    runtime_authoritative: rootDoc.runtime?.authoritative_context?.authoritative ?? null,
+    producer_slot_key: rootDoc.runtime?.producer_context?.slot_key ?? null,
+    missed_slot_count: rootDoc.runtime?.slots?.missed_slot_keys?.length ?? 0,
+    source_sla_stale: rootDoc.source_sla.filter((s) => s.status === "stale").map((s) => s.source_id),
+  }, null, 2));
+}
+
+const isMain = process.argv[1]
+  && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
+if (isMain) main();

@@ -197,4 +197,17 @@ jobs:
         if: ${{ env.FENOK_KRX_PLAN_ONLY != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run update-manifest.yml --ref main
+          # Origin envelope for KPI v2 authoritative-dispatch validation (contract §3).
+          # slot_key = this workflow's own cron fire time (§2 canonical).
+          SOURCE_EVENT: ${{ github.event_name }}
+          SOURCE_RUN_ID: ${{ github.run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          CRON="30 10 * * 1-5"
+          SLOT_KEY="fenok-edge-krx-daily.yml:${CRON}@$(date -u +%Y-%m-%d)T10:30Z"
+          gh workflow run update-manifest.yml --ref main \
+            -f source_workflow=fenok-edge-krx-daily.yml \
+            -f source_run_id="${SOURCE_RUN_ID}" \
+            -f source_run_attempt="${SOURCE_RUN_ATTEMPT}" \
+            -f original_event="${SOURCE_EVENT}" \
+            -f slot_key="${SLOT_KEY}"

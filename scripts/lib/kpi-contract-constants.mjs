@@ -1,0 +1,93 @@
+/**
+ * Canonical KPI v2 contract constants (single source of truth).
+ *
+ * The builder EMITS definitional values from this module; the checker VALIDATES
+ * the artifact against this module. The artifact may only carry OBSERVATIONS
+ * (statuses, dates, ages, run identity). Any DEFINITIONAL field embedded in the
+ * artifact (cadence thresholds, SLA table, deny keys, tolerance) must deep-equal
+ * this module or the checker hard-errors in BOTH Phase A and strict — a definition
+ * tamper is never warn-only. This kills the "checker trusts values carried in the
+ * artifact" bug class at the root.
+ *
+ * LEAF MODULE: constants only, ZERO imports (no import cycles). It must NOT import
+ * from the builder / checker / projector / market-calendar / basket. Downstream
+ * modules import FROM here (arrows point toward this leaf).
+ */
+
+// Canonical single source of the ETF Core Daily Basket max quote age. The basket
+// builder imports THIS (build-fenok-etf-core-daily-basket.mjs) — the number lives
+// in exactly one place (contract §5 "no second number").
+export const ETF_CORE_MAX_QUOTE_AGE_DAYS = 7;
+
+// Required RIM indices (OLDEST-of aggregation basis for rim_index_inputs SLA).
+export const REQUIRED_RIM_INDICES = Object.freeze(["SPX", "NDX", "KOSPI", "SOX"]);
+
+// Required product surfaces (definitional; used once product_surface_coverage gets
+// its true per-surface source stamp — kept here where definitions live).
+export const REQUIRED_SURFACE_IDS = Object.freeze([
+  "stock_detail",
+  "market_valuation",
+  "market_events",
+  "sectors",
+  "etf_center",
+  "screener",
+]);
+
+// Cadence thresholds (definitional). v2_activated_at + calendar_version are
+// per-build state stamped onto the artifact cadence, NOT part of this canonical set.
+export const CADENCE = Object.freeze({
+  crons_utc: Object.freeze(["30 2 * * *", "30 9 * * *"]),
+  slot_grace_minutes: 360,
+  hard_max_age_hours: 26,
+  slot_retention_days: 14,
+});
+
+// Crons accountable as due/satisfied/missed (workflow-namespaced, §2/§3).
+export const TRACKED_CRONS = Object.freeze([
+  Object.freeze({ workflow_file: "update-manifest.yml", cron: "30 2 * * *" }),
+  Object.freeze({ workflow_file: "update-manifest.yml", cron: "30 9 * * *" }),
+  Object.freeze({ workflow_file: "fenok-edge-daily.yml", cron: "30 0 * * 2-6" }),
+  Object.freeze({ workflow_file: "fenok-edge-krx-daily.yml", cron: "30 10 * * 1-5" }),
+]);
+
+// Source workflows allowed to dispatch authoritative rebuilds + their own crons.
+export const SOURCE_WORKFLOW_CRONS = Object.freeze({
+  "fenok-edge-daily.yml": Object.freeze(["30 0 * * 2-6"]),
+  "fenok-edge-krx-daily.yml": Object.freeze(["30 10 * * 1-5"]),
+});
+
+// Normative per-source SLA table (contract §5). Every field here is DEFINITIONAL;
+// the artifact copies these verbatim and the checker enforces deep-equality.
+// etf_core reuses ETF_CORE_DAILY_BASKET_CONFIG.maxQuoteAgeDays (no second number).
+export const SOURCE_SLA_DEF = Object.freeze([
+  Object.freeze({ source_id: "s0_finra_occ_mapping_ledger", freshness_basis: ".source_audit.source_dates.finra_source_date/.occ_source_date (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
+  Object.freeze({ source_id: "rim_index_inputs", freshness_basis: ".indices[SPX,NDX,KOSPI,SOX].observed.price.as_of (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: 10, required: true }),
+  Object.freeze({ source_id: "etf_core_daily_basket_admin", freshness_basis: ".rows[].proof.quote_date (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: ETF_CORE_MAX_QUOTE_AGE_DAYS, required: true }),
+  Object.freeze({ source_id: "fenok_edge_coverage_index", freshness_basis: ".source_as_of", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
+  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[required].as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
+  Object.freeze({ source_id: "etf_daily1y_readiness_admin", freshness_basis: ".generated_at", unit: "hours", calendar: "wall_clock", max_staleness: 50, required: false }),
+]);
+
+// The definitional keys of an SLA row (checker deep-equals these against SOURCE_SLA_DEF).
+export const SLA_DEFINITIONAL_KEYS = Object.freeze(["source_id", "freshness_basis", "unit", "calendar", "max_staleness", "required"]);
+
+// Keys that must NEVER appear anywhere in the public projection (redaction).
+export const PUBLIC_RUNTIME_DENY_KEYS = Object.freeze([
+  "producer_context",
+  "last_rebuild_context",
+  "cadence",
+  "slots",
+  "successful_snapshot_history",
+  "run_id",
+  "run_attempt",
+  "workflow",
+  "sha",
+  "actor",
+  "origin",
+  "slot_key",
+  "satisfied_slot_keys",
+  "missed_slot_keys",
+]);
+
+// Clock-skew tolerance band (minutes) between projector and checker clocks (§4).
+export const TOLERANCE_MINUTES = 10;

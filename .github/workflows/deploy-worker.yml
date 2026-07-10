@@ -124,7 +124,7 @@ jobs:
       - name: Smoke data health KPI
         run: |
           curl -fsS "https://100xfenok.etloveaui.workers.dev/data/admin/fenok-data-health-kpi.json?cb=${GITHUB_SHA}" \
-            | node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); if (p.schema_version !== "fenok-data-health-kpi/v1" || p.status !== "ready") { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status})); process.exit(1); } console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2));'
+            | node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; if (!okSchema || p.status !== "ready") { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status})); process.exit(1); } if (p.schema_version === "fenok-data-health-kpi/v2") { const r = p.runtime || {}; if (!r.built_at || r.fresh !== true || r.hard_age_ok !== true) { console.warn("::warning:: KPI v2 producer freshness (warn-only, Phase A): " + JSON.stringify({built_at:r.built_at, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count})); } console.log(JSON.stringify({ok:true, schema:p.schema_version, status:p.status, built_at:r.built_at, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count}, null, 2)); } else { console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2)); }'
 
       - name: Smoke StockAnalysis routes
         working-directory: 100xfenok-next
