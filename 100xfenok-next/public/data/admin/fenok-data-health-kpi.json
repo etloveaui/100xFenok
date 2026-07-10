@@ -1,6 +1,6 @@
 {
-  "schema_version": "fenok-data-health-kpi/v1",
-  "generated_at": "2026-07-10T00:21:07.865Z",
+  "schema_version": "fenok-data-health-kpi/v2",
+  "generated_at": "2026-07-10T00:37:00.289Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -11,6 +11,83 @@
     "private_ledgers_included": false,
     "source_artifacts_are_referenced_by_id_only": true
   },
+  "runtime": {
+    "projection": "kpi_runtime_projection.v1",
+    "built_at": null,
+    "evaluated_at": "2026-07-10T00:37:00.289Z",
+    "fresh": false,
+    "missed_slot_count": 0,
+    "hard_age_ok": false
+  },
+  "source_sla": [
+    {
+      "source_id": "s0_finra_occ_mapping_ledger",
+      "freshness_basis": ".source_audit.source_dates.finra_source_date/.occ_source_date (OLDEST)",
+      "source_date": "2026-07-07",
+      "unit": "business_days",
+      "calendar": "us_market",
+      "max_staleness": 3,
+      "required": true,
+      "age": 3,
+      "status": "ready"
+    },
+    {
+      "source_id": "rim_index_inputs",
+      "freshness_basis": ".indices[SPX,NDX,KOSPI,SOX].observed.price.as_of (OLDEST)",
+      "source_date": "2026-07-03",
+      "unit": "calendar_days",
+      "calendar": "us_market",
+      "max_staleness": 10,
+      "required": true,
+      "age": 7,
+      "status": "ready"
+    },
+    {
+      "source_id": "etf_core_daily_basket_admin",
+      "freshness_basis": ".rows[].proof.quote_date (OLDEST)",
+      "source_date": "2026-07-08",
+      "unit": "calendar_days",
+      "calendar": "us_market",
+      "max_staleness": 7,
+      "required": true,
+      "age": 2,
+      "status": "ready"
+    },
+    {
+      "source_id": "fenok_edge_coverage_index",
+      "freshness_basis": ".source_as_of",
+      "source_date": null,
+      "unit": "business_days",
+      "calendar": "us_market",
+      "max_staleness": 3,
+      "required": true,
+      "age": null,
+      "status": "unavailable"
+    },
+    {
+      "source_id": "product_surface_coverage",
+      "freshness_basis": ".surfaces[required].as_of (OLDEST)",
+      "source_date": null,
+      "unit": "business_days",
+      "calendar": "us_market",
+      "max_staleness": 3,
+      "required": true,
+      "age": null,
+      "status": "unavailable_pending_source_stamp",
+      "pending_source_stamp": true
+    },
+    {
+      "source_id": "etf_daily1y_readiness_admin",
+      "freshness_basis": ".generated_at",
+      "source_date": "2026-07-09T15:08:46.741Z",
+      "unit": "hours",
+      "calendar": "wall_clock",
+      "max_staleness": 50,
+      "required": false,
+      "age": 9.47,
+      "status": "ready"
+    }
+  ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
@@ -20,13 +97,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T00:21:07.135Z",
+      "generated_at": "2026-07-10T00:36:59.511Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T00:21:07.705Z",
+      "generated_at": "2026-07-10T00:37:00.132Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -328,7 +405,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T00:21:07.135Z",
+      "as_of": "2026-07-10T00:36:59.511Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -444,7 +521,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T00:21:07.705Z",
+      "as_of": "2026-07-10T00:37:00.132Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -461,7 +538,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T00:21:07.705Z"
+          "detail": "2026-07-10T00:37:00.132Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -572,7 +649,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T00:21:07.865Z",
+      "as_of": "2026-07-10T00:37:00.311Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
