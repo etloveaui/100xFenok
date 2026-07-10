@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-10T04:56:18.224Z",
+  "generated_at": "2026-07-10T05:03:38.333Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -14,11 +14,11 @@
   "runtime": {
     "producer_context": null,
     "last_rebuild_context": {
-      "built_at": "2026-07-10T04:56:18.224Z",
-      "run_id": "29070096972",
+      "built_at": "2026-07-10T05:03:38.333Z",
+      "run_id": "29070370642",
       "workflow": "Update Manifest",
       "event_name": "workflow_dispatch",
-      "sha": "6603cbb9731038e1f9af5a7751b04bbaca5df598"
+      "sha": "5903122f3d9b21a11a16dbdb1dac446ade419c38"
     },
     "cadence": {
       "crons_utc": [
@@ -99,7 +99,7 @@
       "required_surface_rows": [
         {
           "id": "stock_detail",
-          "source_as_of": null
+          "source_as_of": "2026-06-17"
         },
         {
           "id": "market_valuation",
@@ -111,7 +111,7 @@
         },
         {
           "id": "sectors",
-          "source_as_of": null
+          "source_as_of": "2026-06-17"
         },
         {
           "id": "etf_center",
@@ -122,61 +122,60 @@
           "source_as_of": "2026-07-02"
         }
       ],
-      "source_date": null,
-      "age": null,
-      "status": "unavailable_pending_source_stamp",
-      "pending_source_stamp": true,
+      "source_date": "2026-06-17",
+      "age": 15,
+      "status": "stale",
       "pending": {
-        "pending_since": "2026-07-10T02:51:31.794Z",
-        "ever_stamped": false
+        "pending_since": null,
+        "ever_stamped": true
       }
     },
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-09T15:08:46.741Z",
+      "source_date": "2026-07-10T04:59:47.222Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 13.79,
+      "age": 0.06,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-09T15:08:44.449Z",
+      "generated_at": "2026-07-10T04:59:41.262Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T04:56:17.434Z",
+      "generated_at": "2026-07-10T05:03:37.719Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T04:56:18.062Z",
+      "generated_at": "2026-07-10T05:03:38.196Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-09T15:08:44.596Z",
+      "generated_at": "2026-07-10T04:59:41.454Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-09T15:08:46.741Z",
+      "generated_at": "2026-07-10T04:59:47.222Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-09T15:08:39.747Z",
+      "generated_at": "2026-07-10T04:59:28.836Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -196,7 +195,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-09T15:08:44.449Z",
+      "as_of": "2026-07-10T04:59:41.262Z",
       "counts": {
         "active_total": 1172,
         "by_market": [
@@ -287,7 +286,7 @@
           "status_label": "정상",
           "detail": "685 / 685 · 2026-07-08",
           "source_date": "2026-07-08",
-          "age_days": 1,
+          "age_days": 2,
           "max_age_days": 4,
           "covered_count": 685,
           "denominator": 685,
@@ -300,7 +299,7 @@
           "status_label": "정상",
           "detail": "685 / 685 · 2026-07-07",
           "source_date": "2026-07-07",
-          "age_days": 2,
+          "age_days": 3,
           "max_age_days": 4,
           "covered_count": 685,
           "denominator": 685,
@@ -313,7 +312,7 @@
           "status_label": "정상",
           "detail": "59 / 59 · 2026-07-09",
           "source_date": "2026-07-09",
-          "age_days": 0,
+          "age_days": 1,
           "max_age_days": 4,
           "covered_count": 59,
           "denominator": 59,
@@ -326,7 +325,7 @@
           "status_label": "정상",
           "detail": "91 / 91 · 2026-07-09",
           "source_date": "2026-07-09",
-          "age_days": 0,
+          "age_days": 1,
           "max_age_days": 4,
           "covered_count": 91,
           "denominator": 91,
@@ -394,13 +393,13 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-09T15:08:46.741Z",
+      "as_of": "2026-07-10T04:59:47.222Z",
       "counts": {
         "eligible_etf_count": 4508,
         "scored_public_etf": 4508,
         "fetchable_daily_1y_gap": 0,
         "inception_limited_daily_1y_gap": 715,
-        "terminal_limited_daily_1y_gap": 88,
+        "terminal_limited_daily_1y_gap": 87,
         "core_selected_count": 115,
         "core_fresh_selected_count": 115,
         "core_stale_selected_count": 0
@@ -460,7 +459,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T04:56:17.434Z",
+      "as_of": "2026-07-10T05:03:37.719Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -571,7 +570,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T04:56:18.062Z",
+      "as_of": "2026-07-10T05:03:38.196Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -588,7 +587,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T04:56:18.062Z"
+          "detail": "2026-07-10T05:03:38.196Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -619,7 +618,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-09T15:08:44.596Z",
+      "as_of": "2026-07-10T04:59:41.454Z",
       "counts": {
         "active_us_total": 744,
         "plain_us_finra_denominator": 685,
@@ -631,10 +630,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-09T15:08:31.372Z",
+          "signals_generated_at": "2026-07-10T03:14:05.056Z",
           "finra_source_date": "20260708",
           "occ_source_date": "20260707",
-          "coverage_index_generated_at": "2026-07-09T15:08:44.449Z",
+          "coverage_index_generated_at": "2026-07-10T04:59:41.262Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -661,7 +660,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-09T15:08:44.596Z"
+          "detail": "2026-07-10T04:59:41.454Z"
         },
         {
           "id": "finra_plain_us_ready",
@@ -699,7 +698,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T04:56:18.248Z",
+      "as_of": "2026-07-10T05:03:38.355Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
