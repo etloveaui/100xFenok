@@ -45,6 +45,8 @@ DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
+ENDPOINT_CANARY_REL_PATH = "canary/endpoint_latest.json"
+ENDPOINT_CANARY_TICKERS = ("VYMI", "SPY", "GOLI")
 FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH = "admin/fenok-edge-etf-daily1y-fetchable-plan.json"
 FENOK_ETF_CORE_DAILY_BASKET_REL_PATH = "admin/fenok-etf-core-daily-basket.json"
 DAILY_1Y_MIN_ROWS = 200
@@ -847,6 +849,158 @@ def pick_data(payload: dict) -> dict | list | None:
         return payload.get("data")
     return payload.get("data") if isinstance(payload, dict) else None
 
+ETF_DETAIL_SURFACE_CONTRACTS = {
+    "overview": {
+        "path": "/etf/{ticker}/__data.json",
+        "required_types": {
+            "holdings": int,
+            "holdingsTable": dict,
+            "inception": str,
+        },
+    },
+    "holdings": {
+        "path": "/etf/{ticker}/holdings/__data.json",
+        "required_types": {
+            "holdings": list,
+            "count": int,
+            "date": str,
+            "sectors": (list, type(None)),
+            "countries": (list, type(None)),
+        },
+    },
+}
+ETF_DETAIL_DECODER = "svelte_devalue_node/v1"
+
+
+def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
+    """Decode one ETF detail node and fail closed on endpoint schema drift."""
+    contract = ETF_DETAIL_SURFACE_CONTRACTS.get(surface)
+    if contract is None:
+        raise ValueError(f"svelte_contract_unknown_surface: {surface}")
+    if not isinstance(payload, dict) or not isinstance(payload.get("nodes"), list):
+        raise ValueError(f"svelte_contract_drift:{surface}:missing_nodes")
+
+    required_types = contract["required_types"]
+    decoded_candidates = []
+    for node in reversed(payload.get("nodes") or []):
+        data = node.get("data") if isinstance(node, dict) else None
+        if not isinstance(data, list) or not data:
+            continue
+        try:
+            decoded = decode_svelte_data(data)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"svelte_contract_drift:{surface}:decode_error:{exc}") from exc
+        if isinstance(decoded, dict):
+            decoded_candidates.append(decoded)
+            if all(key in decoded for key in required_types):
+                for key, expected_type in required_types.items():
+                    value = decoded[key]
+                    expected_types = expected_type if isinstance(expected_type, tuple) else (expected_type,)
+                    if not isinstance(value, expected_type) or (
+                        int in expected_types and isinstance(value, bool)
+                    ):
+                        expected_label = "_or_".join(item.__name__ for item in expected_types)
+                        raise ValueError(
+                            f"svelte_contract_drift:{surface}:invalid_type:{key}:"
+                            f"expected_{expected_label}"
+                        )
+                return decoded
+
+    present = sorted({key for decoded in decoded_candidates for key in decoded})
+    missing = sorted(set(required_types) - set(present))
+    raise ValueError(
+        f"svelte_contract_drift:{surface}:missing_required:{','.join(missing)}"
+    )
+
+
+def fetch_svelte_detail(ticker: str, surface: str, timeout: int) -> tuple[str, dict]:
+    contract = ETF_DETAIL_SURFACE_CONTRACTS.get(surface)
+    if contract is None:
+        raise ValueError(f"svelte_contract_unknown_surface: {surface}")
+    path = contract["path"].format(ticker=ticker.lower())
+    payload = fetch_json(path, timeout)
+    return path, validate_svelte_detail_contract(payload, surface)
+
+
+def endpoint_canary_reason(exc: Exception) -> str:
+    if isinstance(exc, urllib.error.HTTPError):
+        exc.close()
+        return f"http_{exc.code}"
+    if isinstance(exc, TimeoutError):
+        return "timeout"
+    if isinstance(exc, urllib.error.URLError):
+        return "transport_error"
+    if isinstance(exc, json.JSONDecodeError):
+        return "decode_error"
+    if isinstance(exc, ValueError) and "contract_drift" in str(exc):
+        return "schema_drift"
+    return "unexpected_error"
+
+
+def validate_rest_endpoint_contract(surface: str, payload: dict) -> dict | list:
+    data = pick_data(payload)
+    expected_type = dict if surface == "quote" else list
+    if not isinstance(data, expected_type) or (surface == "history_daily_1y" and not data):
+        raise ValueError(
+            f"rest_contract_drift:{surface}:expected_nonempty_{expected_type.__name__}"
+        )
+    return data
+
+
+def run_endpoint_canary(
+    timeout: int,
+    tickers: tuple[str, ...] = ENDPOINT_CANARY_TICKERS,
+) -> dict:
+    """Probe current ETF endpoint contracts; this is a latest-state canary, not R2 history."""
+    results = []
+    for raw_ticker in tickers:
+        ticker = clean_symbol(raw_ticker)
+        probes = (
+            ("overview", f"/etf/{ticker.lower()}/__data.json"),
+            ("holdings", f"/etf/{ticker.lower()}/holdings/__data.json"),
+            ("quote", f"/api/quotes/e/{ticker}"),
+            ("history_daily_1y", history_endpoint("e", ticker, HISTORY_PERIOD_ENDPOINTS["daily_1y"])),
+        )
+        for surface, path in probes:
+            started = time.perf_counter()
+            row = {
+                "ticker": ticker,
+                "surface": surface,
+                "path": path,
+                "status": "ready",
+                "reason_code": "ok",
+            }
+            try:
+                if surface in ETF_DETAIL_SURFACE_CONTRACTS:
+                    actual_path, _decoded = fetch_svelte_detail(ticker, surface, timeout)
+                    if actual_path != path:
+                        raise ValueError(f"svelte_contract_drift:{surface}:path_mismatch")
+                    row["decoder"] = ETF_DETAIL_DECODER
+                else:
+                    validate_rest_endpoint_contract(surface, fetch_json(path, timeout))
+                    row["decoder"] = "rest_json/v1"
+            except Exception as exc:  # the canary must report every endpoint in one run
+                row["status"] = "blocked"
+                row["reason_code"] = endpoint_canary_reason(exc)
+                row["error"] = str(exc)[:300]
+            row["latency_ms"] = int((time.perf_counter() - started) * 1000)
+            results.append(row)
+
+    failed = sum(1 for row in results if row["status"] != "ready")
+    return {
+        "schema_version": "stockanalysis-endpoint-canary/v1",
+        "source": "stockanalysis",
+        "generated_at": now_iso(),
+        "status": "ready" if failed == 0 else "blocked",
+        "policy": {
+            "scope": "latest endpoint/schema canary only; observation history begins in R2",
+            "cadence": "existing StockAnalysis scheduled workflow lanes",
+            "required_tickers": list(tickers),
+        },
+        "counts": {"probes": len(results), "ready": len(results) - failed, "blocked": failed},
+        "results": results,
+    }
+
 
 def parse_percent(value):
     if value is None:
@@ -1509,21 +1663,21 @@ def load_etf_universe_symbols() -> list[str]:
 
 def fetch_etf(ticker: str, timeout: int) -> dict:
     history_paths, history_periods = fetch_history_periods("e", ticker, timeout)
+    overview_path, overview_data = fetch_svelte_detail(ticker, "overview", timeout)
+    holdings_path, holdings_data = fetch_svelte_detail(ticker, "holdings", timeout)
     paths = {
-        "holdings": f"/api/symbol/e/{ticker}/holdings",
-        "overview": f"/api/symbol/e/{ticker}/overview",
+        "holdings": holdings_path,
+        "overview": overview_path,
         "quote": f"/api/quotes/e/{ticker}",
         "history_periods": history_paths,
     }
     raw = {
-        name: pick_data(fetch_json(path, timeout))
-        for name, path in paths.items()
-        if isinstance(path, str)
+        "overview": overview_data,
+        "holdings": holdings_data,
+        "quote": pick_data(fetch_json(paths["quote"], timeout)),
     }
     raw["history"] = history_periods.get("monthly_1y")
     raw["history_periods"] = history_periods
-    holdings_data = raw["holdings"] if isinstance(raw.get("holdings"), dict) else {}
-    overview_data = raw["overview"] if isinstance(raw.get("overview"), dict) else {}
     holdings = holdings_data.get("holdings") or (overview_data.get("holdingsTable") or {}).get("holdings")
     normalized_holdings = normalize_holdings(holdings)
     classification = classify_etf(
@@ -1538,6 +1692,20 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         "ticker": ticker,
         "fetched_at": now_iso(),
         "endpoints": paths,
+        "endpoint_contracts": {
+            "overview": {
+                "format": "svelte_devalue",
+                "decoder": ETF_DETAIL_DECODER,
+                "contract": "etf_detail_overview/v1",
+            },
+            "holdings": {
+                "format": "svelte_devalue",
+                "decoder": ETF_DETAIL_DECODER,
+                "contract": "etf_detail_holdings/v1",
+            },
+            "quote": {"format": "rest_json", "contract": "stockanalysis_quote/v1"},
+            "history_periods": {"format": "rest_json", "contract": "stockanalysis_history/v1"},
+        },
         "normalized": {
             "holdings": normalized_holdings,
             "asset_allocation": holdings_data.get("asset_allocation"),
@@ -2711,6 +2879,11 @@ def classify_existing_etf_catalogs(mirror_public: bool) -> dict:
     return summary
 
 
+def has_existing_stockanalysis_etf_detail(ticker: str) -> bool:
+    payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+    return isinstance(payload, dict) and payload.get("source") == "stockanalysis"
+
+
 def run_one(
     kind: str,
     ticker: str,
@@ -2720,6 +2893,7 @@ def run_one(
     yf_fallback: bool = False,
 ) -> dict:
     start = time.perf_counter()
+    preserved_primary = False
     try:
         if kind == "etf":
             try:
@@ -2747,6 +2921,7 @@ def run_one(
                 payload["stockanalysis_error"] = stockanalysis_error
                 provider = "yahoo_finance"
             rel_path = f"etfs/{ticker}.json"
+            preserved_primary = provider == "yahoo_finance" and has_existing_stockanalysis_etf_detail(ticker)
             financials = None
             financials_rel_path = None
         else:
@@ -2756,14 +2931,23 @@ def run_one(
             rel_path = f"stocks/{ticker}.json"
             provider = "stockanalysis"
             stockanalysis_error = None
-        write_payload(rel_path, payload, mirror_public)
+        if not preserved_primary:
+            write_payload(rel_path, payload, mirror_public)
         if financials is not None and financials_rel_path is not None:
             write_payload(financials_rel_path, financials, mirror_public)
         return {
             "ticker": ticker,
             "asset_type": kind,
-            "status": "ok" if provider == "stockanalysis" else "fallback_ok",
+            "status": (
+                "ok"
+                if provider == "stockanalysis"
+                else "fallback_observed_primary_preserved"
+                if preserved_primary
+                else "fallback_ok"
+            ),
             "provider": provider,
+            "selected_provider": "stockanalysis" if preserved_primary else provider,
+            "canonical_write": not preserved_primary,
             "path": rel_path,
             "financials_path": financials_rel_path,
             "latency_ms": round((time.perf_counter() - start) * 1000),
@@ -2835,6 +3019,7 @@ def main() -> None:
     parser.add_argument("--max-universe-pages", type=int, default=100)
     parser.add_argument("--sleep", type=float, default=0.25)
     parser.add_argument("--timeout", type=int, default=20)
+    parser.add_argument("--endpoint-canary", action="store_true", help="probe current ETF detail/quote/history contracts before collection")
     parser.add_argument("--no-public-mirror", action="store_true")
     parser.add_argument("--fail-on-error", action="store_true", help="exit non-zero when any ticker fails")
     parser.add_argument("--stop-on-hard-error", action="store_true", help="stop chunk on non-404 fetch errors")
@@ -2854,6 +3039,17 @@ def main() -> None:
         raise SystemExit("--plan-only uses existing local files; do not combine it with fetch/write modes")
 
     mirror_public = not args.no_public_mirror
+    if args.endpoint_canary:
+        canary = run_endpoint_canary(args.timeout)
+        write_payload(ENDPOINT_CANARY_REL_PATH, canary, mirror_public)
+        print(
+            "[endpoint-canary] "
+            f"ready={canary['counts']['ready']}/{canary['counts']['probes']} "
+            f"blocked={canary['counts']['blocked']} status={canary['status']}",
+            flush=True,
+        )
+        if canary["status"] != "ready":
+            raise SystemExit(3)
     required_history_periods = (
         parse_history_periods(args.required_history_periods)
         if args.required_history_periods

@@ -40,6 +40,111 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(decoded["data"][1]["n"], "Beta Balance ETF")
         self.assertEqual(decoded["dataPoints"], ["s", "n", "as"])
 
+    def test_etf_detail_svelte_contract_fixtures_and_provenance(self) -> None:
+        overview = json.loads((FIXTURE_DIR / "etf_overview__data.fixture.json").read_text())
+        holdings = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        od = self.fetcher.validate_svelte_detail_contract(overview, "overview")
+        hd = self.fetcher.validate_svelte_detail_contract(holdings, "holdings")
+        self.assertEqual(od["holdingsTable"]["holdings"][0]["s"], "AAPL")
+        self.assertEqual(hd["holdings"][0]["s"], "AAPL")
+        self.assertEqual(hd["countries"][0]["country"], "United States")
+
+        sparse = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        sparse["nodes"][-1]["data"][0]["sectors"] = -1
+        sparse["nodes"][-1]["data"][0]["countries"] = -1
+        sparse_decoded = self.fetcher.validate_svelte_detail_contract(sparse, "holdings")
+        self.assertIsNone(sparse_decoded["sectors"])
+        self.assertIsNone(sparse_decoded["countries"])
+
+    def test_etf_detail_svelte_contract_fails_closed(self) -> None:
+        for payload in ({}, {"nodes": []}, {"nodes": [{"data": [[{"x": 1}]]}]}):
+            with self.assertRaises(ValueError):
+                self.fetcher.validate_svelte_detail_contract(payload, "overview")
+
+        wrong_type = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        wrong_type["nodes"][-1]["data"][1] = "two"
+        with self.assertRaisesRegex(ValueError, "invalid_type:count"):
+            self.fetcher.validate_svelte_detail_contract(wrong_type, "holdings")
+
+    def test_etf_detail_paths_use_lowercase_svelte_routes(self) -> None:
+        overview = json.loads((FIXTURE_DIR / "etf_overview__data.fixture.json").read_text())
+        holdings = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        calls = []
+        original_fetch_json = self.fetcher.fetch_json
+        try:
+            def fake_fetch_json(path: str, _timeout: int) -> dict:
+                calls.append(path)
+                if path == "/etf/vymi/__data.json":
+                    return overview
+                if path == "/etf/vymi/holdings/__data.json":
+                    return holdings
+                raise AssertionError(f"unexpected endpoint: {path}")
+
+            self.fetcher.fetch_json = fake_fetch_json
+            overview_path, _ = self.fetcher.fetch_svelte_detail("VYMI", "overview", 1)
+            holdings_path, _ = self.fetcher.fetch_svelte_detail("VYMI", "holdings", 1)
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        self.assertEqual(overview_path, "/etf/vymi/__data.json")
+        self.assertEqual(holdings_path, "/etf/vymi/holdings/__data.json")
+        self.assertFalse(any("/api/symbol/e/" in path for path in calls))
+
+    def test_endpoint_canary_covers_current_detail_quote_and_history_contracts(self) -> None:
+        overview = json.loads((FIXTURE_DIR / "etf_overview__data.fixture.json").read_text())
+        holdings = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        calls = []
+        original_fetch_json = self.fetcher.fetch_json
+        try:
+            def fake_fetch_json(path: str, _timeout: int) -> dict:
+                calls.append(path)
+                if path.endswith("/holdings/__data.json"):
+                    return holdings
+                if path.endswith("/__data.json"):
+                    return overview
+                if "/api/quotes/e/" in path:
+                    return {"status": 200, "data": {"p": 100.0, "pd": 99.0}}
+                if "/history?" in path:
+                    return {"status": 200, "data": [{"t": "2026-07-10", "c": 100.0}]}
+                raise AssertionError(path)
+
+            self.fetcher.fetch_json = fake_fetch_json
+            payload = self.fetcher.run_endpoint_canary(1, ("VYMI",))
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        self.assertEqual(payload["status"], "ready")
+        self.assertEqual(payload["counts"], {"probes": 4, "ready": 4, "blocked": 0})
+        self.assertEqual({row["surface"] for row in payload["results"]}, {
+            "overview", "holdings", "quote", "history_daily_1y",
+        })
+        self.assertFalse(any("/api/symbol/e/VYMI/overview" in path for path in calls))
+        self.assertFalse(any("/api/symbol/e/VYMI/holdings" in path for path in calls))
+
+    def test_endpoint_canary_reports_http_and_schema_drift_reason_codes(self) -> None:
+        holdings = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        original_fetch_json = self.fetcher.fetch_json
+        try:
+            def fake_fetch_json(path: str, _timeout: int) -> dict:
+                if path.endswith("/holdings/__data.json"):
+                    return holdings
+                if path.endswith("/__data.json"):
+                    return {"nodes": []}
+                if "/api/quotes/e/" in path:
+                    raise urllib.error.HTTPError(path, 404, "missing", {}, None)
+                return {"status": 200, "data": []}
+
+            self.fetcher.fetch_json = fake_fetch_json
+            payload = self.fetcher.run_endpoint_canary(1, ("VYMI",))
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        reasons = {row["surface"]: row["reason_code"] for row in payload["results"]}
+        self.assertEqual(payload["status"], "blocked")
+        self.assertEqual(reasons["overview"], "schema_drift")
+        self.assertEqual(reasons["quote"], "http_404")
+        self.assertEqual(reasons["history_daily_1y"], "schema_drift")
+
     def test_etf_universe_html_fixture(self) -> None:
         html = (FIXTURE_DIR / "etf_universe.fixture.html").read_text(encoding="utf-8")
         rows = self.fetcher.parse_etf_universe_page(html, page=3)
@@ -416,24 +521,28 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(stock_payload["normalized"]["financials"]["summary"], financials["summary"])
 
     def test_etf_payload_includes_classification_candidate(self) -> None:
-        def fake_fetch_json(path: str, _timeout: int) -> dict:
-            if path.endswith("/overview"):
-                return {
-                    "status": 200,
-                    "data": {
-                        "description": (
-                            "The fund provides 2x leveraged exposure, less fees and expenses, "
-                            "to the daily price movement for shares of NVIDIA Corporation stock."
-                        ),
-                        "aum": "$1.0B",
-                        "performance": {
-                            "tr1m": 12.3,
-                            "trYTD": 45.6,
-                        },
-                    },
+        def fake_fetch_svelte_detail(_ticker: str, surface: str, _timeout: int) -> tuple[str, dict]:
+            if surface == "overview":
+                return "/etf/nvdl/__data.json", {
+                    "description": (
+                        "The fund provides 2x leveraged exposure, less fees and expenses, "
+                        "to the daily price movement for shares of NVIDIA Corporation stock."
+                    ),
+                    "aum": "$1.0B",
+                    "holdings": 0,
+                    "holdingsTable": {"count": 0, "holdings": []},
+                    "inception": "Jan 1, 2023",
+                    "performance": {"tr1m": 12.3, "trYTD": 45.6},
                 }
-            if path.endswith("/holdings"):
-                return {"status": 200, "data": {"holdings": [], "count": 0}}
+            return "/etf/nvdl/holdings/__data.json", {
+                "holdings": [],
+                "count": 0,
+                "date": "Jun 30, 2026",
+                "sectors": [],
+                "countries": [],
+            }
+
+        def fake_fetch_json(path: str, _timeout: int) -> dict:
             if "history?range=1Y&period=Daily" in path:
                 return {"status": 200, "data": [{"t": "2026-06-18", "c": 101.0}]}
             if "history?range=1Y&period=Weekly" in path:
@@ -449,11 +558,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             return {"status": 200, "data": {}}
 
         original_fetch_json = self.fetcher.fetch_json
+        original_fetch_svelte_detail = self.fetcher.fetch_svelte_detail
         self.fetcher.fetch_json = fake_fetch_json
+        self.fetcher.fetch_svelte_detail = fake_fetch_svelte_detail
         try:
             payload = self.fetcher.fetch_etf("NVDL", timeout=1)
         finally:
             self.fetcher.fetch_json = original_fetch_json
+            self.fetcher.fetch_svelte_detail = original_fetch_svelte_detail
 
         classification = payload["normalized"]["classification"]
         self.assertTrue(classification["is_leveraged"])
@@ -470,6 +582,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(payload["normalized"]["history_periods"]["monthly_5y"][0]["c"], 96.0)
         self.assertIn("monthly_3y", payload["endpoints"]["history_periods"])
         self.assertIn("monthly_5y", payload["endpoints"]["history_periods"])
+        self.assertEqual(payload["endpoints"]["overview"], "/etf/nvdl/__data.json")
+        self.assertEqual(payload["endpoint_contracts"]["overview"]["decoder"], "svelte_devalue_node/v1")
 
     def test_etf_catalog_enrichment_promotes_detail_metrics(self) -> None:
         detail_index = {
@@ -1284,6 +1398,50 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIn("HTTP Error 404", result["stockanalysis_error"])
         self.assertEqual(writes[0][0], "etfs/ADIU.json")
         self.assertEqual(writes[0][1]["source_provider"], "yahoo_finance")
+
+    def test_yahoo_fallback_never_overwrites_existing_stockanalysis_detail(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_fallback = self.fetcher.fetch_yahoo_etf_fallback
+        original_write_payload = self.fetcher.write_payload
+        writes = []
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                self.fetcher.OUT_DIR = Path(tmp) / "stockanalysis"
+                detail_dir = self.fetcher.OUT_DIR / "etfs"
+                detail_dir.mkdir(parents=True)
+                canonical = {
+                    "source": "stockanalysis",
+                    "ticker": "VYMI",
+                    "fetched_at": "2026-07-09T00:00:00Z",
+                }
+                detail_path = detail_dir / "VYMI.json"
+                detail_path.write_text(json.dumps(canonical), encoding="utf-8")
+
+                self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
+                    urllib.error.URLError("HTTP Error 404: Not Found")
+                )
+                self.fetcher.fetch_yahoo_etf_fallback = lambda ticker, _mirror: {
+                    "source": "yahoo_finance",
+                    "source_provider": "yahoo_finance",
+                    "detail_status": "yf_fallback",
+                    "ticker": ticker,
+                }
+                self.fetcher.write_payload = lambda rel_path, payload, _mirror: writes.append((rel_path, payload))
+
+                result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
+                after = json.loads(detail_path.read_text(encoding="utf-8"))
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.fetch_yahoo_etf_fallback = original_fallback
+            self.fetcher.write_payload = original_write_payload
+
+        self.assertEqual(result["status"], "fallback_observed_primary_preserved")
+        self.assertEqual(result["selected_provider"], "stockanalysis")
+        self.assertFalse(result["canonical_write"])
+        self.assertEqual(after, canonical)
+        self.assertEqual(writes, [])
 
     def test_yahoo_etf_payload_normalizes_source_tags_quote_and_fund_profile(self) -> None:
         payload = self.fetcher.yahoo_etf_payload(
