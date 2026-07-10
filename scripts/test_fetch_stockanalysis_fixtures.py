@@ -91,6 +91,15 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', workflow)
         self.assertNotIn("STOCKANALYSIS_WEEKLY_MAX_UNIVERSE_PAGES", workflow)
 
+    def test_krx_workflow_refreshes_daily1y_report_before_coverage_builder(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "fenok-edge-krx-daily.yml").read_text(encoding="utf-8")
+        rebuild = workflow.split("- name: Rebuild Fenok Edge public-safe derivatives", 1)[1]
+        rebuild = rebuild.split("- name: Commit and push KRX derived artifacts", 1)[0]
+        report_command = "npm --prefix 100xfenok-next run build:history-gap-daily1y"
+        coverage_command = "node scripts/build-fenok-edge-coverage-index.mjs"
+        self.assertEqual(rebuild.count(report_command), 1, "KRX lane reuses the canonical report target exactly once")
+        self.assertLess(rebuild.index(report_command), rebuild.index(coverage_command))
+
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
         tables = self.fetcher.parse_html_tables(html)
