@@ -34,6 +34,12 @@ const forbiddenRawPatterns = [
   /(^|\/)(finra|occ|apewisdom|gdelt|reddit|social)(\/|_)/i,
 ];
 
+const forbiddenPrivateDataSupplyRoots = [
+  "admin/data-supply-state",
+  "yf/etf-details",
+  "yf/migration-evidence",
+];
+
 const forbiddenYardneyRawKeys = new Set([
   "moodys_aaa",
   "moodys_baa",
@@ -63,6 +69,15 @@ function walk(dir) {
   return out;
 }
 
+function lstatIfPresent(filePath) {
+  try {
+    return fs.lstatSync(filePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 function toRel(abs) {
   return path.relative(publicDataRoot, abs).split(path.sep).join("/");
 }
@@ -72,6 +87,13 @@ const violations = files.filter((rel) => (
   forbiddenPatterns.some((pattern) => pattern.test(rel)) ||
   forbiddenRawPatterns.some((pattern) => pattern.test(rel))
 )).map((rel) => `public/data/${rel}`);
+for (const relativeRoot of forbiddenPrivateDataSupplyRoots) {
+  const rootPath = path.join(publicDataRoot, ...relativeRoot.split("/"));
+  const stat = lstatIfPresent(rootPath);
+  if (!stat) continue;
+  const suffix = stat.isSymbolicLink() ? " (symlink)" : "";
+  violations.push(`public/data/${relativeRoot}: forbidden private data-supply root${suffix}`);
+}
 const yardneyRawKeyHits = new Map();
 const forbiddenPublicTokens = [
   "_private/",

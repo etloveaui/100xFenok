@@ -6,6 +6,12 @@ const rootDir = process.cwd();
 const isMain = process.argv[1]
   && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 
+const PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS = Object.freeze([
+  "public/data/admin/data-supply-state",
+  "public/data/yf/etf-details",
+  "public/data/yf/migration-evidence",
+]);
+
 // temp-file -> validate -> rename, shared by the KPI public-mirror re-projection.
 function writeJsonAtomic(absPath, payload) {
   const body = `${JSON.stringify(payload, null, 2)}\n`;
@@ -63,6 +69,129 @@ function removeGeneratedPublicMirror(relativePath) {
   if (!fs.existsSync(filePath)) return;
   fs.unlinkSync(filePath);
   console.log(`[sync-static-overrides] removed private-only public mirror ${relativePath}`);
+}
+
+function lstatIfPresent(filePath) {
+  try {
+    return fs.lstatSync(filePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+function normalizedPrivateDataSupplyRoot(relativePath) {
+  const portable = relativePath.split(path.sep).join("/");
+  const normalized = path.posix.normalize(portable);
+  if (!PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS.includes(normalized)) {
+    throw new Error(`refusing non-allowlisted public tree removal: ${relativePath}`);
+  }
+  return normalized;
+}
+
+function assertPathComponentsAreDirectories(baseDir, targetDir) {
+  const relative = path.relative(baseDir, targetDir);
+  if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`refusing public tree outside root: ${targetDir}`);
+  }
+
+  let cursor = baseDir;
+  for (const segment of relative.split(path.sep)) {
+    cursor = path.join(cursor, segment);
+    const stat = lstatIfPresent(cursor);
+    if (!stat) return false;
+    if (stat.isSymbolicLink()) {
+      throw new Error(`refusing symlink in private public-tree path: ${cursor}`);
+    }
+    if (!stat.isDirectory()) {
+      throw new Error(`refusing non-directory private public-tree path: ${cursor}`);
+    }
+  }
+  return true;
+}
+
+function collectRemovalTree(directory, files, directories) {
+  const rootStat = fs.lstatSync(directory);
+  if (rootStat.isSymbolicLink()) {
+    throw new Error(`refusing symlink in private public tree: ${directory}`);
+  }
+  if (!rootStat.isDirectory()) {
+    throw new Error(`refusing non-directory private public tree: ${directory}`);
+  }
+
+  directories.push(directory);
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+    const stat = fs.lstatSync(entryPath);
+    if (stat.isSymbolicLink()) {
+      throw new Error(`refusing symlink in private public tree: ${entryPath}`);
+    }
+    if (stat.isDirectory()) {
+      collectRemovalTree(entryPath, files, directories);
+    } else if (stat.isFile()) {
+      files.push(entryPath);
+    } else {
+      throw new Error(`refusing special file in private public tree: ${entryPath}`);
+    }
+  }
+}
+
+function removeCollectedTree(files, directories) {
+  for (const filePath of files) {
+    const stat = fs.lstatSync(filePath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error(`public tree changed before file removal: ${filePath}`);
+    }
+    fs.unlinkSync(filePath);
+  }
+  for (const directory of [...directories].reverse()) {
+    const stat = fs.lstatSync(directory);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) {
+      throw new Error(`public tree changed before directory removal: ${directory}`);
+    }
+    fs.rmdirSync(directory);
+  }
+}
+
+export function removePrivateDataSupplyPublicTrees({
+  rootDir: baseDir = rootDir,
+  logger = console.log,
+} = {}) {
+  const resolvedRoot = path.resolve(baseDir);
+  const rootStat = fs.lstatSync(resolvedRoot);
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`refusing unsafe sync-static root: ${resolvedRoot}`);
+  }
+
+  const pending = [];
+  for (const relativePath of PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS) {
+    const normalized = normalizedPrivateDataSupplyRoot(relativePath);
+    const target = path.resolve(resolvedRoot, ...normalized.split("/"));
+    if (!assertPathComponentsAreDirectories(resolvedRoot, target)) continue;
+    const files = [];
+    const directories = [];
+    collectRemovalTree(target, files, directories);
+    pending.push({ normalized, files, directories });
+  }
+
+  const result = { rootsRemoved: 0, filesRemoved: 0, directoriesRemoved: 0 };
+  for (const item of pending) {
+    removeCollectedTree(item.files, item.directories);
+    result.rootsRemoved += 1;
+    result.filesRemoved += item.files.length;
+    result.directoriesRemoved += item.directories.length;
+    logger(
+      `[sync-static-overrides] removed private-only public tree ${item.normalized} `
+      + `(${item.files.length} files, ${item.directories.length} directories)`,
+    );
+  }
+  if (result.rootsRemoved > 0) {
+    logger(
+      `[sync-static-overrides] removed ${result.filesRemoved} files and `
+      + `${result.directoriesRemoved} directories from ${result.rootsRemoved} private data-supply roots`,
+    );
+  }
+  return result;
 }
 
 function writeJson(relativePath, payload) {
@@ -195,6 +324,7 @@ function compactFenokEdgePublicMirror() {
 // Guard so importing this module (fixture tests) does not run the whole override
 // pipeline against the importer's cwd. Executed only when run as the sync-static step.
 if (isMain) {
+removePrivateDataSupplyPublicTrees();
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
