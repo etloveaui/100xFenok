@@ -854,7 +854,7 @@ ETF_DETAIL_SURFACE_CONTRACTS = {
         "path": "/etf/{ticker}/__data.json",
         "required_types": {
             "holdings": int,
-            "holdingsTable": dict,
+            "holdingsTable": (dict, type(None)),
             "inception": str,
         },
     },

@@ -56,6 +56,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIsNone(sparse_decoded["sectors"])
         self.assertIsNone(sparse_decoded["countries"])
 
+        sparse_overview = json.loads((FIXTURE_DIR / "etf_overview__data.fixture.json").read_text())
+        sparse_overview["nodes"][-1]["data"][0]["holdingsTable"] = -1
+        sparse_overview_decoded = self.fetcher.validate_svelte_detail_contract(sparse_overview, "overview")
+        self.assertEqual(sparse_overview_decoded["holdings"], 2)
+        self.assertIsNone(sparse_overview_decoded["holdingsTable"])
+
     def test_etf_detail_svelte_contract_fails_closed(self) -> None:
         for payload in ({}, {"nodes": []}, {"nodes": [{"data": [[{"x": 1}]]}]}):
             with self.assertRaises(ValueError):
