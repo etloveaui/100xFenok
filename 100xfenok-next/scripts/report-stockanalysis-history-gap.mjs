@@ -3,6 +3,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
+
 const ROOT = process.cwd();
 const SOURCE_DIR = path.resolve(ROOT, "..", "data", "stockanalysis");
 const DETAIL_DIR = path.join(SOURCE_DIR, "etfs");
@@ -655,7 +657,7 @@ function main() {
     },
     recommended_dispatch: fetchableGapRows.length > 0 && REQUIRED_PERIODS.join(",") !== "daily_1y"
       ? {
-          status: "manual_dispatch_recommended",
+          status: DISPATCH_STATUS.MANUAL_DISPATCH_RECOMMENDED,
           workflow: "fetch-stockanalysis.yml",
           inputs: {
             history_gaps_only: "true",
@@ -666,7 +668,7 @@ function main() {
         }
       : scoredDaily1yFetchableRows.length > 0
         ? {
-            status: "scheduled_backfill_active",
+            status: DISPATCH_STATUS.SCHEDULED_BACKFILL_ACTIVE,
             workflow: "fetch-stockanalysis.yml",
             schedule: "50 22 * * 1-5",
             schedule_kst: "Tue-Sat 07:50",
@@ -678,7 +680,7 @@ function main() {
             note: "The weekday scheduled lane drains scored ETF daily 1Y continuity gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate.",
           }
         : {
-            status: "not_recommended",
+            status: DISPATCH_STATUS.NOT_RECOMMENDED,
             workflow: "fetch-stockanalysis.yml",
             inputs: null,
             note: "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires.",

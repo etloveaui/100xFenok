@@ -101,7 +101,7 @@
     "qa:etf-universe": "node scripts/check-stockanalysis-etf-universe.mjs",
     "qa:etf-classification": "tsx scripts/check-etf-classification-confidence.ts",
     "qa:surface-consumers": "node scripts/check-stockanalysis-surface-consumers.mjs",
-    "qa:market-audit": "node scripts/check-stockanalysis-market-audit.mjs",
+    "qa:market-audit": "node scripts/test-check-stockanalysis-market-audit.mjs && node scripts/check-stockanalysis-market-audit.mjs",
     "qa:data-graph": "node scripts/check-data-graph.mjs",
     "qa:data-freshness": "node scripts/check-data-freshness.mjs",
     "qa:fenok-data-health-kpi": "node ../scripts/test-build-fenok-data-health-kpi.mjs && node scripts/check-fenok-data-health-kpi.mjs",

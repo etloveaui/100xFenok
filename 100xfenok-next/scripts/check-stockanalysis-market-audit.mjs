@@ -2,6 +2,9 @@
 
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { pathToFileURL } from "node:url";
+
+import { DISPATCH_STATUS, DISPATCH_STATUS_VALUES } from "./stockanalysis-dispatch-status.mjs";
 
 const ROOT = process.cwd();
 
@@ -210,7 +213,7 @@ function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
   assert(audit?.incremental_etf?.plan_generated_at === incrementalPlan?.generated_at, "Market audit: plan_generated_at must match incremental plan generated_at", errors);
 }
 
-function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) {
+export function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) {
   const requiredPeriods = Array.isArray(report?.required_history_periods) ? report.required_history_periods : [];
   const planRequiredPeriods = Array.isArray(incrementalPlan?.required_history_periods) ? incrementalPlan.required_history_periods : [];
   const missingByPeriod = report?.missing_by_period || {};
@@ -257,18 +260,27 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
     assert(Number(report?.inception_limited_required_history || 0) >= Number(planCounts.inception_limited_history_gap || 0), "ETF history gap report: inception-limited count must cover incremental plan", errors);
     assert(Number(report?.fetchable_required_history || 0) >= Number(auditCounts.plan_history_gap || 0), "ETF history gap report: fetchable count must cover market audit plan_history_gap", errors);
   }
+  // The recommended_dispatch status vocabulary is a shared contract with the generator
+  // (stockanalysis-dispatch-status.mjs). An unknown status = vocabulary drift = hard error,
+  // so a stale/wrong literal can never silently pass the dispatch gate again.
+  const dispatchStatus = report?.recommended_dispatch?.status;
+  assert(DISPATCH_STATUS_VALUES.has(dispatchStatus), `ETF history gap report: unknown recommended_dispatch.status ${dispatchStatus}`, errors);
+
   if (Number(report?.fetchable_required_history || 0) > 0) {
     assert(report?.recommended_dispatch?.inputs?.history_gaps_only === "true", "ETF history gap report: fetchable gaps need history_gaps_only dispatch inputs", errors);
   } else {
     const dailyDispatchInputs = report?.recommended_dispatch?.inputs || {};
     const dailyFetchable = Number(report?.daily_1y_gap?.scored_etfs?.fetchable || report?.daily_1y_gap?.fetchable || 0);
+    // The daily_1y continuity carve-out: the generator marks an active scored-gap drain lane
+    // as SCHEDULED_BACKFILL_ACTIVE (NOT owner_gated — that literal was the drift that dead-
+    // lettered this branch). Keep the other guards so only a genuine daily_1y lane qualifies.
     const dailyDispatchAllowed =
-      report?.recommended_dispatch?.status === "owner_gated" &&
+      dispatchStatus === DISPATCH_STATUS.SCHEDULED_BACKFILL_ACTIVE &&
       dailyDispatchInputs.history_gaps_only === "true" &&
       dailyDispatchInputs.required_history_periods === "daily_1y" &&
       dailyFetchable > 0;
     assert(
-      report?.recommended_dispatch?.status === "not_recommended" || dailyDispatchAllowed,
+      dispatchStatus === DISPATCH_STATUS.NOT_RECOMMENDED || dailyDispatchAllowed,
       "ETF history gap report: no fetchable required-history gaps must disable dispatch recommendation unless daily_1y continuity gaps remain",
       errors,
     );
@@ -444,49 +456,57 @@ function assertProductSurfaceCoverageContract(payload, errors) {
   }
 }
 
-const errors = [];
+// Main-guarded so the module can be imported (e.g. by test-check-stockanalysis-market-audit.mjs)
+// to unit-test the exported contract functions without triggering the real-file audit run.
+function main() {
+  const errors = [];
 
-assertMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
-assertMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
-assertMirror("Data Lab DEV", DATA_LAB_DEV_SOURCE_PATH, DATA_LAB_DEV_PUBLIC_PATH, errors);
-assertDataLabDevVersion(errors);
-for (const [label, sourceRelPath, publicRelPath] of JSON_PAIRS) {
-  assertMirror(label, sourceRelPath, publicRelPath, errors);
+  assertMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
+  assertMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
+  assertMirror("Data Lab DEV", DATA_LAB_DEV_SOURCE_PATH, DATA_LAB_DEV_PUBLIC_PATH, errors);
+  assertDataLabDevVersion(errors);
+  for (const [label, sourceRelPath, publicRelPath] of JSON_PAIRS) {
+    assertMirror(label, sourceRelPath, publicRelPath, errors);
+  }
+
+  const payloads = {
+    audit: readJson("public/data/computed/market_data_audit.json"),
+    sourceParity: readJson("public/data/computed/market_source_parity.json"),
+    stockanalysisIndex: readJson("public/data/stockanalysis/index.json"),
+    coverage: readJson("public/data/stockanalysis/coverage/etf_detail.json"),
+    classification: readJson("public/data/stockanalysis/classification/latest.json"),
+    surfaceIndex: readJson("public/data/stockanalysis/surfaces/index.json"),
+    surfaceConsumers: readJson("public/data/stockanalysis/surface_consumers.json"),
+    etfUniverse: readJson("public/data/stockanalysis/etf_universe.json"),
+    etfScreener: readJson("public/data/stockanalysis/surfaces/etf_screener.json"),
+    newEtfs: readJson("public/data/stockanalysis/surfaces/new_etfs.json"),
+    incremental: readJson("public/data/stockanalysis/backfill/incremental_latest.json"),
+    incrementalPlan: readJson("public/data/stockanalysis/backfill/incremental_plan_latest.json"),
+    historyGapReport: readJson("public/data/stockanalysis/backfill/history_gap_report_latest.json"),
+    pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
+    marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
+    productSurfaceCoverage: readJson("public/data/admin/product-surface-coverage.json"),
+  };
+  payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener);
+
+  assertCoverageContract(payloads.coverage, errors);
+  assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors);
+  assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
+  assertHistoryGapReportContract(payloads.historyGapReport, payloads.incrementalPlan, payloads.audit, errors);
+  assertReturnCoverageContract(payloads.audit, errors);
+  assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
+  assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors);
+  assertRenderedMarketAudit(payloads, errors);
+
+  if (errors.length > 0) {
+    console.error("stockanalysis market audit check failed");
+    for (const error of errors) console.error(`- ${error}`);
+    process.exit(1);
+  }
+
+  console.log("stockanalysis market audit check passed");
 }
 
-const payloads = {
-  audit: readJson("public/data/computed/market_data_audit.json"),
-  sourceParity: readJson("public/data/computed/market_source_parity.json"),
-  stockanalysisIndex: readJson("public/data/stockanalysis/index.json"),
-  coverage: readJson("public/data/stockanalysis/coverage/etf_detail.json"),
-  classification: readJson("public/data/stockanalysis/classification/latest.json"),
-  surfaceIndex: readJson("public/data/stockanalysis/surfaces/index.json"),
-  surfaceConsumers: readJson("public/data/stockanalysis/surface_consumers.json"),
-  etfUniverse: readJson("public/data/stockanalysis/etf_universe.json"),
-  etfScreener: readJson("public/data/stockanalysis/surfaces/etf_screener.json"),
-  newEtfs: readJson("public/data/stockanalysis/surfaces/new_etfs.json"),
-  incremental: readJson("public/data/stockanalysis/backfill/incremental_latest.json"),
-  incrementalPlan: readJson("public/data/stockanalysis/backfill/incremental_plan_latest.json"),
-  historyGapReport: readJson("public/data/stockanalysis/backfill/history_gap_report_latest.json"),
-  pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
-  marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
-  productSurfaceCoverage: readJson("public/data/admin/product-surface-coverage.json"),
-};
-payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener);
-
-assertCoverageContract(payloads.coverage, errors);
-assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors);
-assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
-assertHistoryGapReportContract(payloads.historyGapReport, payloads.incrementalPlan, payloads.audit, errors);
-assertReturnCoverageContract(payloads.audit, errors);
-assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
-assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors);
-assertRenderedMarketAudit(payloads, errors);
-
-if (errors.length > 0) {
-  console.error("stockanalysis market audit check failed");
-  for (const error of errors) console.error(`- ${error}`);
-  process.exit(1);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
 }
-
-console.log("stockanalysis market audit check passed");
