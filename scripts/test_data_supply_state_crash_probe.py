@@ -35,13 +35,37 @@ def make_observation(suffix="b"):
     return row
 
 
+def make_failure(provider, suffix, observed_at):
+    row = make_observation(suffix)
+    row.update(
+        {
+            "provider": provider,
+            "endpoint_family": (
+                "stockanalysis_etf_detail" if provider == "stockanalysis" else "yahoo_finance_etf_detail"
+            ),
+            "provider_path": (
+                f"data/stockanalysis/etfs/VYMI-{suffix}.json"
+                if provider == "stockanalysis"
+                else f"data/yf/etf-details/VYMI-{suffix}.json"
+            ),
+            "provider_schema": "stockanalysis/v1" if provider == "stockanalysis" else "yf-etf-detail/v1",
+            "source_as_of": observed_at,
+            "observed_at": observed_at,
+            "validation_status": "invalid",
+            "reason_code": "fetch_failed",
+        }
+    )
+    row["event_id"] = deterministic_event_id("observation", row)
+    return row
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("root")
     parser.add_argument("--failpoint", default="")
     parser.add_argument(
         "--mode",
-        choices=("transition", "record", "recover", "provider-lkg", "rollback"),
+        choices=("transition", "record", "recover", "provider-object", "provider-lkg", "prune", "rollback", "unavailable"),
         default="transition",
     )
     parser.add_argument("--transaction-id", default="")
@@ -57,6 +81,9 @@ def main():
     store = DataSupplyStateStore(root, failpoint_hook=crash, provider_truth_root=root)
     if args.mode == "recover":
         store.recover_domain("etf_detail")
+        return
+    if args.mode == "prune":
+        store.prune_domain("etf_detail")
         return
     if args.transaction_id:
         try:
@@ -84,7 +111,31 @@ def main():
             decided_at="2026-07-10T04:00:00Z",
         )
         return
+    if args.mode == "unavailable":
+        active = store.read_active_domain("etf_detail")
+        evidence = [
+            make_failure("stockanalysis", "primary-failure", "2026-07-25T02:00:00Z"),
+            make_failure("yahoo_finance", "fallback-failure", "2026-07-25T02:00:01Z"),
+        ]
+        for failure in evidence:
+            store.record_observation(failure)
+        transaction_id = store.prepare_unavailable_transition(
+            domain="etf_detail",
+            entity="VYMI",
+            evidence_observations=evidence,
+            expected_active_transaction_id=active["transaction_id"],
+            reason_code="all_authorities_exhausted",
+            decided_at="2026-07-25T02:00:02Z",
+        )
+        store.commit_prepared("etf_detail", transaction_id)
+        return
     row = make_observation()
+    if args.mode == "provider-object":
+        store.store_provider_object(
+            observation=row,
+            payload=canonical_json_bytes({"ticker": "VYMI", "suffix": "b"}),
+        )
+        return
     truth_path = root / row["provider_path"]
     truth_path.parent.mkdir(parents=True, exist_ok=True)
     truth_path.write_bytes(canonical_json_bytes({"ticker": "VYMI", "suffix": "b"}))
@@ -92,6 +143,8 @@ def main():
         store.record_observation(row)
         return
 
+    payload_bytes = canonical_json_bytes({"ticker": "VYMI", "suffix": "b"})
+    provider_object = store.store_provider_object(observation=row, payload=payload_bytes)
     store.record_observation(row)
     active = store.read_active_domain("etf_detail")
     selected = build_selection(
@@ -100,7 +153,8 @@ def main():
         resolution_state="fresh_fallback",
         reason_code="primary_unavailable_fallback_valid",
         fallback_depth=1,
-        payload_ref_kind="provider_truth",
+        payload_ref_kind="provider_object",
+        payload_ref_path=provider_object["path"],
     )
     current = dict(active["current"])
     lkg = dict(active["lkg"])
@@ -117,7 +171,7 @@ def main():
             / "latest.json"
         )
         expected = json.loads(latest_path.read_text(encoding="utf-8"))["sha256"] if latest_path.exists() else None
-        previous_payload = (root / previous["provider_path"]).read_bytes()
+        previous_payload = (root / previous["payload_ref"]["path"]).read_bytes()
         ref = store.store_provider_lkg(
             provider=previous["provider"],
             domain=previous["domain"],

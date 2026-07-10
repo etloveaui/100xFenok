@@ -1585,6 +1585,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 normalized_yf_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "VYMI.json").exists()
                 history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
                 observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+                pending = json.loads(
+                    (
+                        self.fetcher.DATA_SUPPLY_STATE_ROOT
+                        / "providers/stockanalysis/etf_detail/pending/VYMI.json"
+                    ).read_text(encoding="utf-8")
+                )
+                provider_object_bytes = (self.fetcher.DATA_SUPPLY_STATE_ROOT / pending["path"]).read_bytes()
+                primary_bytes = (self.fetcher.OUT_DIR / "etfs" / "VYMI.json").read_bytes()
         finally:
             self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.PUBLIC_DIR = original_public_dir
@@ -1600,6 +1608,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertFalse(normalized_yf_exists)
         self.assertEqual(observations[0]["provider"], "stockanalysis")
         self.assertEqual(observations[0]["validation_status"], "valid")
+        self.assertEqual(observations[0]["observation_origin"], "natural")
+        self.assertEqual(provider_object_bytes, primary_bytes)
+        self.assertEqual(pending["observation_event_id"], observations[0]["event_id"])
 
     def test_stockanalysis_path_rejects_cross_provider_payload(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
@@ -1718,6 +1729,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     / f"{datetime.now(timezone.utc).date().isoformat()}.jsonl"
                 )
                 observations = [json.loads(line) for line in history_path.read_text(encoding="utf-8").splitlines()]
+                yahoo_pending = json.loads(
+                    (
+                        self.fetcher.DATA_SUPPLY_STATE_ROOT
+                        / "providers/yahoo_finance/etf_detail/pending/VYMI.json"
+                    ).read_text(encoding="utf-8")
+                )
+                yahoo_object_bytes = (self.fetcher.DATA_SUPPLY_STATE_ROOT / yahoo_pending["path"]).read_bytes()
+                candidate_bytes = candidate_path.read_bytes()
                 raw_exists = raw_path.exists()
                 candidate_exists = candidate_path.exists()
         finally:
@@ -1739,6 +1758,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             [("stockanalysis", "invalid"), ("yahoo_finance", "valid")],
         )
         self.assertEqual(observations[1]["provider_path"], "data/yf/etf-details/VYMI.json")
+        self.assertEqual(observations[1]["observation_origin"], "natural")
+        self.assertEqual(yahoo_object_bytes, candidate_bytes)
+        self.assertEqual(yahoo_pending["observation_event_id"], observations[1]["event_id"])
 
     def test_yahoo_etf_payload_normalizes_source_tags_quote_and_fund_profile(self) -> None:
         payload = self.fetcher.yahoo_etf_payload(

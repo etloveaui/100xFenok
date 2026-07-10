@@ -1978,9 +1978,13 @@ def record_etf_detail_observation(
         "observed_at": observed_at,
         "validation_status": validation_status,
         "reason_code": reason_code,
+        "observation_origin": "natural",
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
+    store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT)
+    if validation_status == "valid":
+        store.store_provider_object(observation=row, payload=payload_path.read_bytes())
+    store.record_observation(row)
     return row
 
 
@@ -2017,6 +2021,7 @@ def record_etf_detail_failure_observation(
         "observed_at": observed_at,
         "validation_status": "invalid",
         "reason_code": reason_code,
+        "observation_origin": "natural",
         "payload_available": False,
         "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
     }

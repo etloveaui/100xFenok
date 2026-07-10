@@ -23,13 +23,15 @@ from typing import Any, Callable, Iterator, Mapping
 
 
 GENERATIONS_RETAINED = 3
+MAX_LIVE_PREPARED_GENERATIONS = 4
+PREPARATION_LEASE_HOURS = 24
 ETF_DETAIL_FRESH_TTL_HOURS = 168
 ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS = 14
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _COMPONENT = re.compile(r"^[A-Za-z0-9._-]+$")
 _SELECTION_STATES = {"fresh_primary", "fresh_fallback", "lkg_primary", "lkg_fallback"}
-_PAYLOAD_REF_KINDS = {"provider_truth", "provider_lkg"}
+_PAYLOAD_REF_KINDS = {"provider_truth", "provider_object", "provider_lkg"}
 
 
 class DataSupplyStateError(RuntimeError):
@@ -46,6 +48,10 @@ class IntegrityError(DataSupplyStateError):
 
 class ConcurrencyError(DataSupplyStateError):
     """A compare-and-swap precondition was not satisfied."""
+
+
+class UnavailableError(DataSupplyStateError):
+    """No current immutable payload is selected for an entity."""
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -92,6 +98,12 @@ def _parse_timestamp(value: Any, field: str) -> dt.datetime:
 
 def _day_from_timestamp(value: Any, field: str) -> str:
     return _parse_timestamp(value, field).date().isoformat()
+
+
+def _format_timestamp(value: dt.datetime) -> str:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise SchemaError("clock must return a timezone-aware datetime")
+    return value.astimezone(dt.timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _safe_component(value: Any, field: str) -> str:
@@ -167,6 +179,12 @@ def validate_observation(record: Mapping[str, Any], *, require_valid: bool = Fal
         raise SchemaError("observed_at cannot precede source_as_of")
     if row["validation_status"] not in {"valid", "invalid"}:
         raise SchemaError("validation_status must be valid or invalid")
+    if "observation_origin" in row and row["observation_origin"] not in {
+        "natural",
+        "cache",
+        "rebuild",
+    }:
+        raise SchemaError("observation_origin must be natural, cache, or rebuild")
     has_failure_extension = "payload_available" in row or "failure_detail_sha256" in row
     if has_failure_extension:
         if row["validation_status"] != "invalid" or row.get("payload_available") is not False:
@@ -331,6 +349,35 @@ def bind_selection_to_provider_lkg(
     return _validate_selection(rebound)
 
 
+def restate_selection(
+    selection: Mapping[str, Any],
+    *,
+    selected_at: str,
+    resolution_state: str,
+    reason_code: str,
+    fallback_depth: int,
+) -> dict[str, Any]:
+    """Reuse an immutable selection payload with a new resolver-state envelope."""
+
+    selected = _validate_selection(selection)
+    source = _parse_timestamp(selected["source_as_of"], "source_as_of")
+    decided = _parse_timestamp(selected_at, "selected_at")
+    age_seconds = int((decided - source).total_seconds())
+    if age_seconds < 0:
+        raise SchemaError("selected_at cannot precede source_as_of")
+    rebound = dict(selected)
+    rebound.update(
+        {
+            "selected_at": selected_at,
+            "resolution_state": resolution_state,
+            "reason_code": _safe_component(reason_code, "reason_code"),
+            "fallback_depth": fallback_depth,
+            "age_seconds": age_seconds,
+        }
+    )
+    return _validate_selection(rebound)
+
+
 def selection_age_status(resolution_state: str, age_seconds: int) -> str:
     if not isinstance(age_seconds, int) or isinstance(age_seconds, bool) or age_seconds < 0:
         raise SchemaError("age_seconds must be a non-negative integer")
@@ -354,6 +401,8 @@ def _validate_recovery_map(value: Any) -> dict[str, Any]:
         if not isinstance(count, int) or isinstance(count, bool) or count < 0:
             raise SchemaError("consecutive_green must be a non-negative integer")
         _safe_component(record["last_transition"], "last_transition")
+        if "last_primary_event_id" in record and record["last_primary_event_id"] is not None:
+            _validate_sha(record["last_primary_event_id"], "last_primary_event_id")
     return result
 
 
@@ -382,6 +431,7 @@ def _validate_decision(record: Mapping[str, Any]) -> dict[str, Any]:
             "entity",
             "decided_at",
             "candidate_event_ids",
+            "evidence_event_ids",
             "previous_selection_digest",
             "new_selection_digest",
             "transition",
@@ -397,8 +447,16 @@ def _validate_decision(record: Mapping[str, Any]) -> dict[str, Any]:
     _parse_timestamp(row["decided_at"], "decided_at")
     if not isinstance(row["candidate_event_ids"], list):
         raise SchemaError("candidate_event_ids must be a list")
-    for event_id in row["candidate_event_ids"]:
-        _validate_sha(event_id, "candidate_event_id")
+    if not isinstance(row["evidence_event_ids"], list):
+        raise SchemaError("evidence_event_ids must be a list")
+    for field, event_ids in (
+        ("candidate_event_id", row["candidate_event_ids"]),
+        ("evidence_event_id", row["evidence_event_ids"]),
+    ):
+        for event_id in event_ids:
+            _validate_sha(event_id, field)
+        if event_ids != sorted(set(event_ids)):
+            raise SchemaError(f"{field}s must be sorted and unique")
     _validate_sha(row["previous_selection_digest"], "previous_selection_digest")
     _validate_sha(row["new_selection_digest"], "new_selection_digest")
     count = row["recovery_green_count"]
@@ -419,6 +477,7 @@ class DataSupplyStateStore:
         failpoint_hook: Callable[[str], None] | None = None,
         allowed_provider_truth_roots: tuple[str, ...] = ("data/stockanalysis", "data/yf"),
         provider_truth_root: Path | str | None = None,
+        now_fn: Callable[[], dt.datetime] | None = None,
     ):
         self.root = Path(root).expanduser().resolve(strict=False)
         missing: list[Path] = []
@@ -441,6 +500,13 @@ class DataSupplyStateStore:
             for value in allowed_provider_truth_roots
         )
         self.provider_truth_root = Path(provider_truth_root).expanduser().resolve() if provider_truth_root else None
+        self._now_fn = now_fn or (lambda: dt.datetime.now(dt.timezone.utc))
+
+    def _now(self) -> dt.datetime:
+        value = self._now_fn()
+        if not isinstance(value, dt.datetime) or value.tzinfo is None or value.utcoffset() is None:
+            raise SchemaError("now_fn must return a timezone-aware datetime")
+        return value.astimezone(dt.timezone.utc)
 
     def _failpoint(self, point: str) -> None:
         self._failpoint_hook(point)
@@ -665,7 +731,13 @@ class DataSupplyStateStore:
         return self.root / "domains" / _safe_component(domain, "domain")
 
     def _empty_domain(self) -> dict[str, Any]:
-        return {"transaction_id": None, "current": {}, "lkg": {}, "recovery": {}}
+        return {
+            "transaction_id": None,
+            "retained_generation_ids": [],
+            "current": {},
+            "lkg": {},
+            "recovery": {},
+        }
 
     def _generation_digest_payload(
         self,
@@ -691,45 +763,41 @@ class DataSupplyStateStore:
             row = _validate_selection(selected)
             ref = row["payload_ref"]
             if ref["kind"] == "provider_truth":
-                ref_path = _safe_relative_path(ref["path"], "payload_ref.path")
-                if not any(ref_path == root or ref_path.startswith(f"{root}/") for root in self._allowed_provider_truth_roots):
-                    raise SchemaError("provider-truth ref is outside the configured allowlist")
-                if self.provider_truth_root is None:
-                    raise SchemaError("provider_truth_root is required to verify provider-truth selections")
-                candidate_path = (self.provider_truth_root / ref_path).resolve(strict=False)
-                try:
-                    candidate_path.relative_to(self.provider_truth_root)
-                except ValueError as exc:
-                    raise SchemaError("provider-truth ref escapes the configured corpus root") from exc
-                try:
-                    payload_bytes = candidate_path.read_bytes()
-                except FileNotFoundError as exc:
-                    raise SchemaError("provider-truth payload is missing") from exc
-                if hashlib.sha256(payload_bytes).hexdigest() != ref["sha256"]:
-                    raise SchemaError("provider-truth payload digest mismatch")
-                continue
+                raise SchemaError("mutable provider-truth refs cannot participate in active state")
             ref_path = self._inside_root(self.root / _safe_relative_path(ref["path"], "payload_ref.path"))
-            expected_path = (
-                Path("providers")
-                / row["provider"]
-                / row["domain"]
-                / "lkg"
-                / row["entity"]
-                / "objects"
-                / f"{ref['sha256']}.json"
-            ).as_posix()
+            if ref["kind"] == "provider_object":
+                expected_path = (
+                    Path("providers")
+                    / row["provider"]
+                    / row["domain"]
+                    / "objects"
+                    / row["entity"]
+                    / f"{ref['sha256']}.json"
+                ).as_posix()
+                label = "provider object"
+            else:
+                expected_path = (
+                    Path("providers")
+                    / row["provider"]
+                    / row["domain"]
+                    / "lkg"
+                    / row["entity"]
+                    / "objects"
+                    / f"{ref['sha256']}.json"
+                ).as_posix()
+                label = "provider LKG"
             if ref["path"] != expected_path:
-                raise SchemaError("provider LKG ref identity mismatch")
+                raise SchemaError(f"{label} ref identity mismatch")
             try:
                 payload_bytes = ref_path.read_bytes()
             except FileNotFoundError as exc:
-                raise IntegrityError("provider LKG payload is missing") from exc
+                raise IntegrityError(f"{label} payload is missing") from exc
             try:
                 _strict_json_loads(payload_bytes)
             except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
-                raise IntegrityError("provider LKG payload is not strict JSON") from exc
+                raise IntegrityError(f"{label} payload is not strict JSON") from exc
             if hashlib.sha256(payload_bytes).hexdigest() != ref["sha256"]:
-                raise IntegrityError("provider LKG payload digest mismatch")
+                raise IntegrityError(f"{label} payload digest mismatch")
 
     def _validate_generation(self, domain: str, transaction_id: str) -> dict[str, Any]:
         _safe_component(transaction_id, "transaction_id")
@@ -749,6 +817,8 @@ class DataSupplyStateStore:
             "generations_retained",
             "protected_generation_ids",
             "preparation_nonce",
+            "prepared_at",
+            "prepared_expires_at",
         }
         if required.difference(manifest):
             raise IntegrityError("generation manifest is incomplete")
@@ -758,6 +828,15 @@ class DataSupplyStateStore:
             raise IntegrityError("generation manifest identity mismatch")
         if manifest["generations_retained"] != GENERATIONS_RETAINED:
             raise IntegrityError("generation retention bound mismatch")
+        try:
+            prepared_at = _parse_timestamp(manifest["prepared_at"], "prepared_at")
+            prepared_expires_at = _parse_timestamp(
+                manifest["prepared_expires_at"], "prepared_expires_at"
+            )
+        except SchemaError as exc:
+            raise IntegrityError("generation preparation lease is malformed") from exc
+        if prepared_expires_at - prepared_at != dt.timedelta(hours=PREPARATION_LEASE_HOURS):
+            raise IntegrityError("generation preparation lease duration mismatch")
         previous_transaction_id = manifest["previous_transaction_id"]
         if previous_transaction_id is not None:
             try:
@@ -833,6 +912,8 @@ class DataSupplyStateStore:
             "decision": decision,
             "manifest": manifest,
             "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+            "prepared_at": prepared_at,
+            "prepared_expires_at": prepared_expires_at,
         }
 
     def _read_active_domain_unlocked(self, domain: str) -> dict[str, Any]:
@@ -843,7 +924,14 @@ class DataSupplyStateStore:
         active = self._read_json(active_path)
         if not isinstance(active, dict):
             raise IntegrityError("active pointer must be an object")
-        required = {"schema_version", "domain", "transaction_id", "generation_manifest_sha256", "decision"}
+        required = {
+            "schema_version",
+            "domain",
+            "transaction_id",
+            "generation_manifest_sha256",
+            "decision",
+            "retained_generation_ids",
+        }
         if required.difference(active):
             raise IntegrityError("active pointer is incomplete")
         if active["schema_version"] != "data-supply-active/v1" or active["domain"] != domain:
@@ -864,13 +952,273 @@ class DataSupplyStateStore:
             raise IntegrityError("active decision is not bound to its transaction")
         if pointer_decision["new_selection_digest"] != generation["manifest"]["new_selection_digest"]:
             raise IntegrityError("active decision target mismatch")
+        retained = active["retained_generation_ids"]
+        if (
+            not isinstance(retained, list)
+            or not retained
+            or len(retained) > GENERATIONS_RETAINED
+            or len(set(retained)) != len(retained)
+            or retained[0] != transaction_id
+        ):
+            raise IntegrityError("active retained generation list is malformed")
+        for retained_id in retained:
+            try:
+                _safe_component(retained_id, "retained_generation_id")
+            except SchemaError as exc:
+                raise IntegrityError("active retained generation ID is malformed") from exc
+            if retained_id != transaction_id:
+                self._validate_generation(domain, retained_id)
         generation["active_decision"] = pointer_decision
+        generation["retained_generation_ids"] = list(retained)
         return generation
 
     def read_active_domain(self, domain: str) -> dict[str, Any]:
         domain_dir = self._domain_dir(domain)
         with self._lock(domain_dir / ".lock", shared=True):
             return self._read_active_domain_unlocked(domain)
+
+    def read_resolved_payload(self, domain: str, entity: str) -> Any:
+        """Read, verify, and parse the selected immutable payload under one shared lock."""
+
+        domain = _safe_component(domain, "domain")
+        entity = _safe_component(entity, "entity")
+        domain_dir = self._domain_dir(domain)
+        with self._lock(domain_dir / ".lock", shared=True):
+            active = self._read_active_domain_unlocked(domain)
+            selected = active["current"].get(entity)
+            if selected is None:
+                raise UnavailableError(f"no current selection for {domain}/{entity}")
+            self._failpoint("resolved_payload_after_active")
+            row = _validate_selection(selected)
+            ref = row["payload_ref"]
+            if ref["kind"] == "provider_truth":
+                raise IntegrityError("active selection references mutable provider truth")
+            payload_path = self._inside_root(
+                self.root / _safe_relative_path(ref["path"], "payload_ref.path")
+            )
+            self._failpoint("resolved_payload_before_object_read")
+            try:
+                payload_bytes = payload_path.read_bytes()
+            except FileNotFoundError as exc:
+                raise IntegrityError("selected immutable payload is missing") from exc
+            self._failpoint("resolved_payload_after_object_read")
+            if hashlib.sha256(payload_bytes).hexdigest() != ref["sha256"]:
+                raise IntegrityError("selected immutable payload digest mismatch")
+            try:
+                return _strict_json_loads(payload_bytes)
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                raise IntegrityError("selected immutable payload is not strict JSON") from exc
+
+    def _generation_directories(self, domain: str) -> list[Path]:
+        parent = self._domain_dir(domain) / "generations"
+        if not parent.exists():
+            return []
+        if parent.is_symlink() or not parent.is_dir():
+            raise IntegrityError("generation root is not a regular directory")
+        result: list[Path] = []
+        for path in parent.iterdir():
+            if path.is_symlink() or not path.is_dir():
+                raise IntegrityError("generation root contains an unsafe entry")
+            try:
+                _safe_component(path.name, "transaction_id")
+            except SchemaError as exc:
+                raise IntegrityError("generation root contains a malformed transaction ID") from exc
+            result.append(path)
+        return sorted(result, key=lambda path: path.name)
+
+    def _generation_was_committed(
+        self,
+        generation: Mapping[str, Any],
+        retained_generation_ids: set[str],
+    ) -> bool:
+        transaction_id = generation["transaction_id"]
+        if transaction_id in retained_generation_ids:
+            return True
+        committed = self._bind_committed_transaction(generation["decision"], transaction_id)
+        return self._history_contains(
+            "resolutions", committed["decided_at"], committed
+        )
+
+    def _live_prepared_generation_ids_unlocked(
+        self,
+        domain: str,
+        *,
+        now: dt.datetime,
+        active: Mapping[str, Any] | None = None,
+    ) -> list[str]:
+        active = dict(active) if active is not None else self._read_active_domain_unlocked(domain)
+        retained = set(active.get("retained_generation_ids", []))
+        live: list[str] = []
+        for path in self._generation_directories(domain):
+            generation = self._validate_generation(domain, path.name)
+            if self._generation_was_committed(generation, retained):
+                continue
+            if now < generation["prepared_expires_at"]:
+                live.append(path.name)
+        return live
+
+    def _remove_generation_directory_unlocked(self, domain: str, transaction_id: str) -> None:
+        generation_root = self._domain_dir(domain) / "generations"
+        generation = generation_root / _safe_component(transaction_id, "transaction_id")
+        if generation.is_symlink() or not generation.is_dir():
+            raise IntegrityError("generation deletion target is unsafe")
+        members = list(generation.iterdir())
+        allowed = {"current.json", "lkg.json", "recovery.json", "decision.json", "manifest.json"}
+        if any(path.is_symlink() or not path.is_file() or path.name not in allowed for path in members):
+            raise IntegrityError("generation deletion target contains unsafe members")
+        if {path.name for path in members} != allowed:
+            raise IntegrityError("generation deletion target is incomplete")
+        for path in sorted(members, key=lambda item: item.name):
+            self._failpoint("before_generation_unlink")
+            path.unlink()
+            self._failpoint("after_generation_unlink")
+        self._fsync_directory(generation)
+        self._failpoint("after_generation_directory_fsync")
+        generation.rmdir()
+        self._fsync_directory(generation_root)
+
+    def _remove_incomplete_generation_directory_unlocked(
+        self,
+        domain: str,
+        transaction_id: str,
+    ) -> None:
+        generation_root = self._domain_dir(domain) / "generations"
+        generation = generation_root / _safe_component(transaction_id, "transaction_id")
+        if generation.is_symlink() or not generation.is_dir():
+            raise IntegrityError("incomplete generation target is unsafe")
+        allowed = {"current.json", "lkg.json", "recovery.json", "decision.json", "manifest.json"}
+        for path in generation.iterdir():
+            is_temp = path.name.startswith(".") and path.name.endswith(".tmp")
+            if path.is_symlink() or not path.is_file() or (path.name not in allowed and not is_temp):
+                raise IntegrityError("incomplete generation contains unsafe members")
+        for path in sorted(generation.iterdir(), key=lambda item: item.name):
+            path.unlink()
+        self._fsync_directory(generation)
+        generation.rmdir()
+        self._fsync_directory(generation_root)
+
+    def _reconcile_stale_prepared_unlocked(
+        self,
+        domain: str,
+        *,
+        now: dt.datetime,
+        active: Mapping[str, Any],
+    ) -> int:
+        retained = set(active.get("retained_generation_ids", []))
+        stale: list[str] = []
+        for path in self._generation_directories(domain):
+            if not (path / "manifest.json").exists():
+                if path.name in retained:
+                    raise IntegrityError("retained generation is incomplete")
+                self._remove_incomplete_generation_directory_unlocked(domain, path.name)
+                continue
+            generation = self._validate_generation(domain, path.name)
+            if self._generation_was_committed(generation, retained):
+                continue
+            if now >= generation["prepared_expires_at"]:
+                stale.append(path.name)
+        for transaction_id in stale:
+            self._remove_generation_directory_unlocked(domain, transaction_id)
+        return len(stale)
+
+    def _validate_recorded_evidence(
+        self,
+        *,
+        domain: str,
+        entity: str,
+        evidence_observations: list[Mapping[str, Any]],
+    ) -> list[dict[str, Any]]:
+        if not isinstance(evidence_observations, list):
+            raise SchemaError("evidence_observations must be a list")
+        evidence = [validate_observation(row) for row in evidence_observations]
+        event_ids = [row["event_id"] for row in evidence]
+        if len(event_ids) != len(set(event_ids)):
+            raise SchemaError("evidence_observations must not contain duplicates")
+        for row in evidence:
+            if row["domain"] != domain or row["entity"] != entity:
+                raise SchemaError("evidence observation identity mismatch")
+            if not self._history_contains("observations", row["observed_at"], row):
+                raise SchemaError("evidence observation must be recorded before decision")
+        return evidence
+
+    def _write_prepared_generation_unlocked(
+        self,
+        *,
+        domain: str,
+        current: Mapping[str, Any],
+        lkg: Mapping[str, Any],
+        recovery: Mapping[str, Any],
+        decision: Mapping[str, Any],
+        active: Mapping[str, Any],
+        now: dt.datetime,
+    ) -> str:
+        domain_dir = self._domain_dir(domain)
+        digest_payload = self._generation_digest_payload(
+            domain=domain,
+            current=current,
+            lkg=lkg,
+            recovery=recovery,
+            decision=decision,
+            previous_transaction_id=active["transaction_id"],
+        )
+        preparation_nonce = secrets.token_hex(16)
+        transaction_id = canonical_sha256(
+            {"generation": digest_payload, "preparation_nonce": preparation_nonce}
+        )
+        generation = domain_dir / "generations" / transaction_id
+        if generation.exists():
+            self._validate_generation(domain, transaction_id)
+            return transaction_id
+        self._ensure_directory(generation.parent)
+        generation.mkdir(exist_ok=False)
+        self._fsync_directory(generation.parent)
+
+        members = (
+            ("current.json", current, "after_write_current"),
+            ("lkg.json", lkg, "after_write_lkg"),
+            ("recovery.json", recovery, "after_write_recovery"),
+            ("decision.json", decision, "after_write_decision"),
+        )
+        member_digests: dict[str, str] = {}
+        for name, value, failpoint in members:
+            path = generation / name
+            self._write_immutable_json(
+                path,
+                value,
+                failpoint_prefix=f"generation_{name.removesuffix('.json')}",
+            )
+            member_digests[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+            self._failpoint(failpoint)
+
+        protected = [transaction_id]
+        if active["transaction_id"] is not None:
+            protected.append(active["transaction_id"])
+        manifest = {
+            "schema_version": "data-supply-generation/v1",
+            "transaction_id": transaction_id,
+            "domain": domain,
+            "previous_transaction_id": active["transaction_id"],
+            "previous_selection_digest": decision["previous_selection_digest"],
+            "new_selection_digest": decision["new_selection_digest"],
+            "members": member_digests,
+            "generations_retained": GENERATIONS_RETAINED,
+            "protected_generation_ids": protected,
+            "preparation_nonce": preparation_nonce,
+            "prepared_at": _format_timestamp(now),
+            "prepared_expires_at": _format_timestamp(
+                now + dt.timedelta(hours=PREPARATION_LEASE_HOURS)
+            ),
+        }
+        self._write_immutable_json(
+            generation / "manifest.json",
+            manifest,
+            failpoint_prefix="generation_manifest",
+        )
+        self._failpoint("after_write_manifest")
+        self._fsync_directory(generation)
+        self._failpoint("after_generation_fsync")
+        self._validate_generation(domain, transaction_id)
+        return transaction_id
 
     def prepare_transition(
         self,
@@ -886,6 +1234,7 @@ class DataSupplyStateStore:
         reason_code: str,
         recovery_green_count: int,
         decided_at: str,
+        evidence_observations: list[Mapping[str, Any]] | None = None,
     ) -> str:
         domain = _safe_component(domain, "domain")
         entity = _safe_component(entity, "entity")
@@ -896,14 +1245,19 @@ class DataSupplyStateStore:
             _safe_component(expected_active_transaction_id, "expected_active_transaction_id")
         if not isinstance(recovery_green_count, int) or isinstance(recovery_green_count, bool) or recovery_green_count < 0:
             raise SchemaError("recovery_green_count must be a non-negative integer")
-        if not isinstance(candidate_observations, list) or not candidate_observations:
-            raise SchemaError("candidate_observations must be a non-empty list")
+        if not isinstance(candidate_observations, list):
+            raise SchemaError("candidate_observations must be a list")
         candidates = [validate_observation(row, require_valid=True) for row in candidate_observations]
         if any(row["domain"] != domain for row in candidates):
             raise SchemaError("candidate domain mismatch")
         for candidate in candidates:
             if not self._history_contains("observations", candidate["observed_at"], candidate):
                 raise SchemaError("candidate observation must be recorded before promotion")
+        evidence = self._validate_recorded_evidence(
+            domain=domain,
+            entity=entity,
+            evidence_observations=evidence_observations or [],
+        )
         next_current = _validate_selection_map(current, domain, "current")
         next_lkg = _validate_selection_map(lkg, domain, "lkg")
         next_recovery = _validate_recovery_map(recovery)
@@ -917,6 +1271,19 @@ class DataSupplyStateStore:
             active = self._read_active_domain_unlocked(domain)
             if active["transaction_id"] != expected_active_transaction_id:
                 raise ConcurrencyError("stale expected_active_transaction_id")
+            now = self._now()
+            self._reconcile_stale_prepared_unlocked(
+                domain,
+                now=now,
+                active=active,
+            )
+            live_prepared = self._live_prepared_generation_ids_unlocked(
+                domain,
+                now=now,
+                active=active,
+            )
+            if len(live_prepared) >= MAX_LIVE_PREPARED_GENERATIONS:
+                raise ConcurrencyError("live prepared generation cap reached")
             prior_current = active["current"]
             prior_lkg = active["lkg"]
             prior_recovery = active["recovery"]
@@ -936,20 +1303,31 @@ class DataSupplyStateStore:
                     if proposed_lkg is not None:
                         raise SchemaError("an initial selection cannot inject an LKG")
                 else:
-                    if proposed_lkg is None:
-                        raise SchemaError("a changed current selection must preserve prior current as LKG")
-                    prior_without_ref = dict(prior_selected)
-                    proposed_without_ref = dict(proposed_lkg)
-                    prior_without_ref.pop("payload_ref", None)
-                    proposed_without_ref.pop("payload_ref", None)
-                    if proposed_without_ref != prior_without_ref:
-                        raise SchemaError("LKG metadata must exactly preserve the prior current selection")
-                    proposed_ref = proposed_lkg["payload_ref"]
-                    if (
-                        proposed_ref["kind"] != "provider_lkg"
-                        or proposed_ref["sha256"] != prior_selected["payload_sha256"]
-                    ):
-                        raise SchemaError("prior current must be rebound to an immutable provider LKG object")
+                    next_selected = next_current[entity]
+                    same_provider_refresh = (
+                        prior_selected["provider"] == next_selected["provider"]
+                        and prior_selected["resolution_state"] in {"fresh_primary", "fresh_fallback"}
+                        and next_selected["resolution_state"] in {"fresh_primary", "fresh_fallback"}
+                        and transition in {"primary_refresh", "fallback_refresh"}
+                    )
+                    if same_provider_refresh:
+                        if proposed_lkg != prior_lkg.get(entity):
+                            raise SchemaError("same-provider refresh cannot mutate LKG")
+                    else:
+                        if proposed_lkg is None:
+                            raise SchemaError("a changed current selection must preserve prior current as LKG")
+                        prior_without_ref = dict(prior_selected)
+                        proposed_without_ref = dict(proposed_lkg)
+                        prior_without_ref.pop("payload_ref", None)
+                        proposed_without_ref.pop("payload_ref", None)
+                        if proposed_without_ref != prior_without_ref:
+                            raise SchemaError("LKG metadata must exactly preserve the prior current selection")
+                        proposed_ref = proposed_lkg["payload_ref"]
+                        if (
+                            proposed_ref["kind"] != "provider_lkg"
+                            or proposed_ref["sha256"] != prior_selected["payload_sha256"]
+                        ):
+                            raise SchemaError("prior current must be rebound to an immutable provider LKG object")
             elif proposed_lkg != prior_lkg.get(entity):
                 raise SchemaError("an unchanged current selection cannot mutate its LKG")
             proposed_recovery = next_recovery.get(entity)
@@ -959,6 +1337,12 @@ class DataSupplyStateStore:
                 raise SchemaError("recovery_green_count differs from recovery state")
             if proposed_recovery["last_transition"] != transition:
                 raise SchemaError("last_transition differs from decision transition")
+            prior_green_count = prior_recovery.get(entity, {}).get("consecutive_green", 0)
+            if (
+                any(row["validation_status"] == "invalid" for row in evidence)
+                and recovery_green_count > prior_green_count
+            ):
+                raise SchemaError("invalid evidence cannot advance recovery")
             candidate_by_id = {row["event_id"]: row for row in candidates}
             if any(candidate["entity"] != entity for candidate in candidates):
                 raise SchemaError("candidate entity differs from transition entity")
@@ -968,6 +1352,27 @@ class DataSupplyStateStore:
                 candidate_id = selected.get("candidate_event_id")
                 candidate = candidate_by_id.get(candidate_id)
                 if candidate is None:
+                    proposed_lkg = next_lkg.get(name)
+                    stable_fields = (
+                        "domain",
+                        "entity",
+                        "provider",
+                        "provider_path",
+                        "payload_sha256",
+                        "provider_schema",
+                        "source_as_of",
+                        "observed_at",
+                        "candidate_event_id",
+                    )
+                    is_lkg_reselection = (
+                        selected["resolution_state"] in {"lkg_primary", "lkg_fallback"}
+                        and selected["payload_ref"]["kind"] == "provider_lkg"
+                        and isinstance(proposed_lkg, Mapping)
+                        and all(selected.get(field) == proposed_lkg.get(field) for field in stable_fields)
+                        and selected["payload_ref"] == proposed_lkg["payload_ref"]
+                    )
+                    if is_lkg_reselection:
+                        continue
                     raise SchemaError("changed current selection has no matching candidate")
                 for field in ("domain", "entity", "provider", "provider_path", "payload_sha256", "provider_schema", "source_as_of", "observed_at"):
                     if selected[field] != candidate[field]:
@@ -981,6 +1386,7 @@ class DataSupplyStateStore:
                 "entity": entity,
                 "decided_at": decided_at,
                 "candidate_event_ids": sorted(candidate_by_id),
+                "evidence_event_ids": sorted(row["event_id"] for row in evidence),
                 "previous_selection_digest": previous_selection_digest,
                 "new_selection_digest": new_selection_digest,
                 "transition": transition,
@@ -989,74 +1395,148 @@ class DataSupplyStateStore:
             }
             decision["event_id"] = deterministic_event_id("resolution", decision)
             _validate_decision(decision)
-            digest_payload = self._generation_digest_payload(
+            return self._write_prepared_generation_unlocked(
                 domain=domain,
                 current=next_current,
                 lkg=next_lkg,
                 recovery=next_recovery,
                 decision=decision,
-                previous_transaction_id=active["transaction_id"],
+                active=active,
+                now=now,
             )
-            preparation_nonce = secrets.token_hex(16)
-            transaction_id = canonical_sha256({"generation": digest_payload, "preparation_nonce": preparation_nonce})
-            generation = domain_dir / "generations" / transaction_id
-            if generation.exists():
-                self._validate_generation(domain, transaction_id)
-                return transaction_id
-            self._ensure_directory(generation.parent)
-            generation.mkdir(exist_ok=False)
-            self._fsync_directory(generation.parent)
 
-            members = (
-                ("current.json", next_current, "after_write_current"),
-                ("lkg.json", next_lkg, "after_write_lkg"),
-                ("recovery.json", next_recovery, "after_write_recovery"),
-                ("decision.json", decision, "after_write_decision"),
+    def prepare_unavailable_transition(
+        self,
+        *,
+        domain: str,
+        entity: str,
+        evidence_observations: list[Mapping[str, Any]],
+        expected_active_transaction_id: str | None,
+        reason_code: str,
+        decided_at: str,
+    ) -> str:
+        """Prepare an atomic current-removal after complete negative authority proof."""
+
+        domain = _safe_component(domain, "domain")
+        entity = _safe_component(entity, "entity")
+        reason_code = _safe_component(reason_code, "reason_code")
+        if expected_active_transaction_id is not None:
+            expected_active_transaction_id = _safe_component(
+                expected_active_transaction_id,
+                "expected_active_transaction_id",
             )
-            member_digests: dict[str, str] = {}
-            for name, value, failpoint in members:
-                path = generation / name
-                self._write_immutable_json(
-                    path,
-                    value,
-                    failpoint_prefix=f"generation_{name.removesuffix('.json')}",
+        decided = _parse_timestamp(decided_at, "decided_at")
+        evidence = self._validate_recorded_evidence(
+            domain=domain,
+            entity=entity,
+            evidence_observations=evidence_observations,
+        )
+        if domain != "etf_detail":
+            raise SchemaError("unavailable authority proof is not configured for this domain")
+        required_providers = {"stockanalysis", "yahoo_finance"}
+        latest_by_provider: dict[str, dict[str, Any]] = {}
+        for row in evidence:
+            if row["provider"] not in required_providers:
+                raise SchemaError("evidence provider is outside the domain authority set")
+            observed = _parse_timestamp(row["observed_at"], "observed_at")
+            if observed > decided:
+                raise SchemaError("evidence observation cannot follow the decision time")
+            previous = latest_by_provider.get(row["provider"])
+            if previous is None or observed > _parse_timestamp(previous["observed_at"], "observed_at"):
+                latest_by_provider[row["provider"]] = row
+        if set(latest_by_provider) != required_providers:
+            raise SchemaError("unavailable transition requires complete provider evidence")
+        for provider, row in latest_by_provider.items():
+            if row["validation_status"] == "invalid":
+                continue
+            source = _parse_timestamp(row["source_as_of"], "source_as_of")
+            age_seconds = int((decided - source).total_seconds())
+            if age_seconds < 0:
+                raise SchemaError("provider evidence source time follows the decision")
+            if age_seconds <= ETF_DETAIL_FRESH_TTL_HOURS * 3600:
+                raise SchemaError(f"fresh {provider} evidence prevents unavailable")
+
+        domain_dir = self._domain_dir(domain)
+        with self._lock(domain_dir / ".lock"):
+            active = self._read_active_domain_unlocked(domain)
+            if active["transaction_id"] != expected_active_transaction_id:
+                raise ConcurrencyError("stale expected_active_transaction_id")
+            now = self._now()
+            self._reconcile_stale_prepared_unlocked(
+                domain,
+                now=now,
+                active=active,
+            )
+            if len(
+                self._live_prepared_generation_ids_unlocked(
+                    domain,
+                    now=now,
+                    active=active,
                 )
-                member_digests[name] = hashlib.sha256(path.read_bytes()).hexdigest()
-                self._failpoint(failpoint)
+            ) >= MAX_LIVE_PREPARED_GENERATIONS:
+                raise ConcurrencyError("live prepared generation cap reached")
+            prior_current = active["current"]
+            prior_selected = prior_current.get(entity)
+            audit_lkg = active["lkg"].get(entity, prior_selected)
+            if audit_lkg is not None:
+                lkg_source = _parse_timestamp(audit_lkg["source_as_of"], "LKG source_as_of")
+                lkg_age_seconds = int((decided - lkg_source).total_seconds())
+                if lkg_age_seconds < 0:
+                    raise SchemaError("LKG source time follows the decision")
+                if lkg_age_seconds <= ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS * 86400:
+                    raise SchemaError("unexpired selected LKG prevents unavailable")
 
-            protected = [transaction_id]
-            if active["transaction_id"] is not None:
-                protected.append(active["transaction_id"])
-            manifest = {
-                "schema_version": "data-supply-generation/v1",
-                "transaction_id": transaction_id,
-                "domain": domain,
-                "previous_transaction_id": active["transaction_id"],
-                "previous_selection_digest": previous_selection_digest,
-                "new_selection_digest": new_selection_digest,
-                "members": member_digests,
-                "generations_retained": GENERATIONS_RETAINED,
-                "protected_generation_ids": protected,
-                "preparation_nonce": preparation_nonce,
+            next_current = dict(prior_current)
+            next_current.pop(entity)
+            next_lkg = dict(active["lkg"])
+            if prior_selected is not None:
+                next_lkg.setdefault(entity, prior_selected)
+            next_recovery = dict(active["recovery"])
+            next_recovery[entity] = {
+                "consecutive_green": 0,
+                "last_transition": "unavailable",
             }
-            self._write_immutable_json(
-                generation / "manifest.json",
-                manifest,
-                failpoint_prefix="generation_manifest",
+            self._validate_payload_refs(next_current)
+            self._validate_payload_refs(next_lkg)
+            decision: dict[str, Any] = {
+                "schema_version": "data-supply-resolution-event/v1",
+                "domain": domain,
+                "entity": entity,
+                "decided_at": decided_at,
+                "candidate_event_ids": [],
+                "evidence_event_ids": sorted(row["event_id"] for row in evidence),
+                "previous_selection_digest": canonical_sha256(prior_current),
+                "new_selection_digest": canonical_sha256(next_current),
+                "transition": "unavailable",
+                "reason_code": reason_code,
+                "recovery_green_count": 0,
+            }
+            decision["event_id"] = deterministic_event_id("resolution", decision)
+            _validate_decision(decision)
+            return self._write_prepared_generation_unlocked(
+                domain=domain,
+                current=next_current,
+                lkg=next_lkg,
+                recovery=next_recovery,
+                decision=decision,
+                active=active,
+                now=now,
             )
-            self._failpoint("after_write_manifest")
-            self._fsync_directory(generation)
-            self._failpoint("after_generation_fsync")
-            self._validate_generation(domain, transaction_id)
-            return transaction_id
 
-    def _active_pointer(self, domain: str, generation: Mapping[str, Any], decision: Mapping[str, Any]) -> dict[str, Any]:
+    def _active_pointer(
+        self,
+        domain: str,
+        generation: Mapping[str, Any],
+        decision: Mapping[str, Any],
+        retained_generation_ids: list[str],
+    ) -> dict[str, Any]:
         return {
             "schema_version": "data-supply-active/v1",
             "domain": domain,
             "transaction_id": generation["transaction_id"],
             "generation_manifest_sha256": generation["manifest_sha256"],
             "decision": dict(decision),
+            "retained_generation_ids": list(retained_generation_ids),
         }
 
     def _bind_committed_transaction(
@@ -1077,14 +1557,36 @@ class DataSupplyStateStore:
             expected = generation["manifest"]["previous_transaction_id"]
             if active["transaction_id"] != expected:
                 raise ConcurrencyError("prepared generation lost its compare-and-swap race")
+            if self._now() >= generation["prepared_expires_at"]:
+                raise ConcurrencyError("prepared generation lease expired")
             committed_decision = self._bind_committed_transaction(
                 generation["decision"], generation["transaction_id"]
             )
-            pointer = self._active_pointer(domain, generation, committed_decision)
+            retained = [transaction_id]
+            retained.extend(
+                retained_id
+                for retained_id in active.get("retained_generation_ids", [])
+                if retained_id != transaction_id
+            )
+            retained = retained[:GENERATIONS_RETAINED]
+            pointer = self._active_pointer(
+                domain,
+                generation,
+                committed_decision,
+                retained,
+            )
             self._atomic_write_json(domain_dir / "active.json", pointer, failpoint_prefix="active")
             self._failpoint("after_active_replace")
             self._failpoint("before_resolution_append")
             self._record_resolution(committed_decision)
+            try:
+                self._clear_matching_pending_unlocked(generation)
+            except DataSupplyStateError:
+                pass
+            self._prune_domain_unlocked(
+                domain,
+                in_flight_generation_ids={transaction_id},
+            )
             return self._read_active_domain_unlocked(domain)
 
     def recover_domain(self, domain: str) -> dict[str, Any]:
@@ -1095,6 +1597,14 @@ class DataSupplyStateStore:
             if active["transaction_id"] is None:
                 return active
             self._record_resolution(active["active_decision"])
+            try:
+                self._clear_matching_pending_unlocked(active)
+            except DataSupplyStateError:
+                pass
+            self._prune_domain_unlocked(
+                domain,
+                in_flight_generation_ids={active["transaction_id"]},
+            )
             return active
 
     def rollback_domain(
@@ -1114,6 +1624,8 @@ class DataSupplyStateStore:
             active = self._read_active_domain_unlocked(domain)
             if active["transaction_id"] != expected_active_transaction_id:
                 raise ConcurrencyError("rollback compare-and-swap precondition failed")
+            if target_transaction_id not in active.get("retained_generation_ids", []):
+                raise ConcurrencyError("rollback target is outside the retained generation window")
             target = self._validate_generation(domain, target_transaction_id)
             target_commit = self._bind_committed_transaction(
                 target["decision"], target_transaction_id
@@ -1128,6 +1640,7 @@ class DataSupplyStateStore:
                 "entity": "domain",
                 "decided_at": decided_at,
                 "candidate_event_ids": [],
+                "evidence_event_ids": [],
                 "previous_selection_digest": canonical_sha256(active["current"]),
                 "new_selection_digest": canonical_sha256(target["current"]),
                 "transition": "rollback",
@@ -1137,14 +1650,539 @@ class DataSupplyStateStore:
             }
             decision["event_id"] = deterministic_event_id("resolution", decision)
             _validate_decision(decision)
-            pointer = self._active_pointer(domain, target, decision)
+            retained = [target_transaction_id]
+            retained.extend(
+                retained_id
+                for retained_id in active.get("retained_generation_ids", [])
+                if retained_id != target_transaction_id
+            )
+            retained = retained[:GENERATIONS_RETAINED]
+            pointer = self._active_pointer(domain, target, decision, retained)
             self._atomic_write_json(domain_dir / "active.json", pointer, failpoint_prefix="active")
             self._failpoint("after_active_replace")
             self._failpoint("before_resolution_append")
             self._record_resolution(decision)
+            self._prune_domain_unlocked(
+                domain,
+                in_flight_generation_ids={target_transaction_id},
+            )
             return self._read_active_domain_unlocked(domain)
 
+    def _validate_pending_pointer(
+        self,
+        path: Path,
+        *,
+        provider: str,
+        domain: str,
+        entity: str,
+    ) -> dict[str, Any]:
+        if path.is_symlink() or not path.is_file():
+            raise IntegrityError("pending pointer is not a regular file")
+        pointer = self._read_json(path)
+        required = {
+            "schema_version",
+            "provider",
+            "endpoint_family",
+            "domain",
+            "entity",
+            "provider_path",
+            "provider_schema",
+            "source_as_of",
+            "observed_at",
+            "observation_event_id",
+            "sha256",
+            "path",
+        }
+        if not isinstance(pointer, dict) or required.difference(pointer):
+            raise IntegrityError("pending pointer is incomplete")
+        try:
+            sha256 = _validate_sha(pointer["sha256"], "pending sha256")
+            _validate_sha(pointer["observation_event_id"], "pending observation_event_id")
+            _safe_relative_path(pointer["provider_path"], "pending provider_path")
+            _safe_label(pointer["provider_schema"], "pending provider_schema")
+            _safe_component(pointer["endpoint_family"], "pending endpoint_family")
+            _parse_timestamp(pointer["source_as_of"], "pending source_as_of")
+            _parse_timestamp(pointer["observed_at"], "pending observed_at")
+        except SchemaError as exc:
+            raise IntegrityError("pending pointer schema is malformed") from exc
+        expected_path = (
+            Path("providers")
+            / provider
+            / domain
+            / "objects"
+            / entity
+            / f"{sha256}.json"
+        ).as_posix()
+        if (
+            pointer["schema_version"] != "data-supply-provider-pending/v1"
+            or pointer["provider"] != provider
+            or pointer["domain"] != domain
+            or pointer["entity"] != entity
+            or pointer["path"] != expected_path
+        ):
+            raise IntegrityError("pending pointer identity mismatch")
+        object_path = self._inside_root(self.root / expected_path)
+        if object_path.is_symlink() or not object_path.is_file():
+            raise IntegrityError("pending provider object is missing or unsafe")
+        payload = object_path.read_bytes()
+        try:
+            _strict_json_loads(payload)
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+            raise IntegrityError("pending provider object is not strict JSON") from exc
+        if hashlib.sha256(payload).hexdigest() != sha256:
+            raise IntegrityError("pending provider object digest mismatch")
+        return pointer
+
+    def _validate_provider_lkg_latest(
+        self,
+        path: Path,
+        *,
+        provider: str,
+        domain: str,
+        entity: str,
+    ) -> dict[str, Any]:
+        if path.is_symlink() or not path.is_file():
+            raise IntegrityError("provider LKG latest pointer is not a regular file")
+        pointer = self._read_json(path)
+        if not isinstance(pointer, dict):
+            raise IntegrityError("provider LKG latest pointer is corrupt")
+        try:
+            sha256 = _validate_sha(pointer.get("sha256"), "provider LKG latest sha256")
+        except SchemaError as exc:
+            raise IntegrityError("provider LKG latest pointer is malformed") from exc
+        expected_path = (
+            Path("providers")
+            / provider
+            / domain
+            / "lkg"
+            / entity
+            / "objects"
+            / f"{sha256}.json"
+        ).as_posix()
+        if (
+            pointer.get("schema_version") != "data-supply-provider-lkg-pointer/v1"
+            or pointer.get("provider") != provider
+            or pointer.get("domain") != domain
+            or pointer.get("entity") != entity
+            or pointer.get("path") != expected_path
+        ):
+            raise IntegrityError("provider LKG latest pointer identity mismatch")
+        object_path = self._inside_root(self.root / expected_path)
+        if object_path.is_symlink() or not object_path.is_file():
+            raise IntegrityError("provider LKG latest object is missing or unsafe")
+        payload = object_path.read_bytes()
+        try:
+            _strict_json_loads(payload)
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+            raise IntegrityError("provider LKG latest object is not strict JSON") from exc
+        if hashlib.sha256(payload).hexdigest() != sha256:
+            raise IntegrityError("provider LKG latest object digest mismatch")
+        return pointer
+
+    def _collect_domain_pins_unlocked(
+        self,
+        domain: str,
+        *,
+        in_flight_generation_ids: set[str] | None = None,
+    ) -> tuple[set[str], set[str]]:
+        active = self._read_active_domain_unlocked(domain)
+        now = self._now()
+        retained = set(active.get("retained_generation_ids", []))
+        live_prepared = set(
+            self._live_prepared_generation_ids_unlocked(
+                domain,
+                now=now,
+                active=active,
+            )
+        )
+        generation_pins = retained | live_prepared | set(in_flight_generation_ids or set())
+        object_pins: set[str] = set()
+        for transaction_id in sorted(generation_pins):
+            generation = self._validate_generation(domain, transaction_id)
+            for records in (generation["current"], generation["lkg"]):
+                for selected in records.values():
+                    ref = selected["payload_ref"]
+                    if ref["kind"] == "provider_truth":
+                        raise IntegrityError("pinned generation contains mutable provider truth")
+                    object_pins.add(_safe_relative_path(ref["path"], "pinned payload path"))
+
+        providers_root = self.root / "providers"
+        if providers_root.exists():
+            if providers_root.is_symlink() or not providers_root.is_dir():
+                raise IntegrityError("providers root is unsafe")
+            for provider_dir in providers_root.iterdir():
+                if provider_dir.is_symlink() or not provider_dir.is_dir():
+                    raise IntegrityError("providers root contains an unsafe entry")
+                try:
+                    provider = _safe_component(provider_dir.name, "provider")
+                except SchemaError as exc:
+                    raise IntegrityError("providers root contains a malformed provider") from exc
+                provider_domain = provider_dir / domain
+                if not provider_domain.exists():
+                    continue
+                if provider_domain.is_symlink() or not provider_domain.is_dir():
+                    raise IntegrityError("provider domain root is unsafe")
+                pending_dir = provider_domain / "pending"
+                if pending_dir.exists():
+                    if pending_dir.is_symlink() or not pending_dir.is_dir():
+                        raise IntegrityError("pending root is unsafe")
+                    for pending_path in pending_dir.iterdir():
+                        if pending_path.suffix != ".json":
+                            raise IntegrityError("pending root contains an unexpected entry")
+                        try:
+                            entity = _safe_component(pending_path.stem, "pending entity")
+                        except SchemaError as exc:
+                            raise IntegrityError("pending pointer filename is malformed") from exc
+                        pointer = self._validate_pending_pointer(
+                            pending_path,
+                            provider=provider,
+                            domain=domain,
+                            entity=entity,
+                        )
+                        object_pins.add(pointer["path"])
+                lkg_root = provider_domain / "lkg"
+                if lkg_root.exists():
+                    if lkg_root.is_symlink() or not lkg_root.is_dir():
+                        raise IntegrityError("provider LKG root is unsafe")
+                    for entity_dir in lkg_root.iterdir():
+                        if entity_dir.is_symlink() or not entity_dir.is_dir():
+                            raise IntegrityError("provider LKG root contains an unsafe entry")
+                        try:
+                            entity = _safe_component(entity_dir.name, "provider LKG entity")
+                        except SchemaError as exc:
+                            raise IntegrityError("provider LKG entity is malformed") from exc
+                        latest = entity_dir / "latest.json"
+                        if latest.exists():
+                            pointer = self._validate_provider_lkg_latest(
+                                latest,
+                                provider=provider,
+                                domain=domain,
+                                entity=entity,
+                            )
+                            object_pins.add(pointer["path"])
+
+        migration_path = self._domain_dir(domain) / "migration.json"
+        if migration_path.exists():
+            if migration_path.is_symlink() or not migration_path.is_file():
+                raise IntegrityError("migration manifest is unsafe")
+            migration = self._read_json(migration_path)
+            if (
+                not isinstance(migration, dict)
+                or migration.get("schema_version") != "data-supply-migration/v1"
+                or migration.get("domain") != domain
+                or not isinstance(migration.get("payload_refs"), list)
+                or len(migration["payload_refs"]) > 718
+            ):
+                raise IntegrityError("migration manifest is malformed")
+            for ref in migration["payload_refs"]:
+                if not isinstance(ref, Mapping) or {"path", "sha256"}.difference(ref):
+                    raise IntegrityError("migration payload ref is malformed")
+                path = _safe_relative_path(ref["path"], "migration payload path")
+                sha256 = _validate_sha(ref["sha256"], "migration payload sha256")
+                if not path.endswith(f"/{sha256}.json"):
+                    raise IntegrityError("migration payload ref identity mismatch")
+                payload_path = self._inside_root(self.root / path)
+                if payload_path.is_symlink() or not payload_path.is_file():
+                    raise IntegrityError("migration payload ref is missing or unsafe")
+                payload = payload_path.read_bytes()
+                if hashlib.sha256(payload).hexdigest() != sha256:
+                    raise IntegrityError("migration payload digest mismatch")
+                object_pins.add(path)
+        return object_pins, generation_pins
+
+    def _provider_object_candidates(self, domain: str) -> list[Path]:
+        providers_root = self.root / "providers"
+        if not providers_root.exists():
+            return []
+        candidates: list[Path] = []
+        for provider_dir in providers_root.iterdir():
+            provider_domain = provider_dir / domain
+            if not provider_domain.exists():
+                continue
+            roots: list[Path] = []
+            object_root = provider_domain / "objects"
+            if object_root.exists():
+                if object_root.is_symlink() or not object_root.is_dir():
+                    raise IntegrityError("provider object root is unsafe")
+                roots.append(object_root)
+            lkg_root = provider_domain / "lkg"
+            if lkg_root.exists():
+                for entity_dir in lkg_root.iterdir():
+                    objects = entity_dir / "objects"
+                    if objects.exists():
+                        if objects.is_symlink() or not objects.is_dir():
+                            raise IntegrityError("provider LKG object root is unsafe")
+                        roots.append(objects)
+            for root in roots:
+                if root.name == "objects" and root.parent == provider_domain:
+                    entity_dirs = list(root.iterdir())
+                else:
+                    entity_dirs = [root]
+                for entity_dir in entity_dirs:
+                    if entity_dir.is_symlink() or not entity_dir.is_dir():
+                        raise IntegrityError("provider object root contains an unsafe entry")
+                    for path in entity_dir.iterdir():
+                        if path.is_symlink() or not path.is_file() or path.suffix != ".json":
+                            raise IntegrityError("provider object root contains an unsafe file")
+                        sha256 = path.stem
+                        try:
+                            _validate_sha(sha256, "provider object filename")
+                        except SchemaError as exc:
+                            raise IntegrityError("provider object filename is malformed") from exc
+                        payload = path.read_bytes()
+                        try:
+                            _strict_json_loads(payload)
+                        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                            raise IntegrityError("provider object candidate is not strict JSON") from exc
+                        if hashlib.sha256(payload).hexdigest() != sha256:
+                            raise IntegrityError("provider object candidate digest mismatch")
+                        candidates.append(path)
+        return candidates
+
+    def _prune_domain_unlocked(
+        self,
+        domain: str,
+        *,
+        in_flight_generation_ids: set[str] | None = None,
+        prune_generations: bool = True,
+    ) -> dict[str, Any]:
+        try:
+            object_pins, generation_pins = self._collect_domain_pins_unlocked(
+                domain,
+                in_flight_generation_ids=in_flight_generation_ids,
+            )
+            object_candidates = self._provider_object_candidates(domain)
+            generation_candidates: list[str] = []
+            if prune_generations:
+                for path in self._generation_directories(domain):
+                    self._validate_generation(domain, path.name)
+                    if path.name not in generation_pins:
+                        generation_candidates.append(path.name)
+        except (DataSupplyStateError, OSError, ValueError):
+            return {
+                "deleted_objects": 0,
+                "deleted_generations": 0,
+                "skipped": "pin_validation_failed",
+            }
+
+        deleted_generations = 0
+        for transaction_id in generation_candidates:
+            self._remove_generation_directory_unlocked(domain, transaction_id)
+            deleted_generations += 1
+        deleted_objects = 0
+        for path in object_candidates:
+            relative_path = path.relative_to(self.root).as_posix()
+            if relative_path in object_pins:
+                continue
+            self._failpoint("before_provider_object_unlink")
+            path.unlink()
+            self._failpoint("after_provider_object_unlink")
+            self._fsync_directory(path.parent)
+            self._failpoint("after_provider_object_directory_fsync")
+            deleted_objects += 1
+        return {
+            "deleted_objects": deleted_objects,
+            "deleted_generations": deleted_generations,
+            "skipped": None,
+        }
+
+    def prune_domain(self, domain: str) -> dict[str, Any]:
+        domain = _safe_component(domain, "domain")
+        domain_dir = self._domain_dir(domain)
+        with self._lock(domain_dir / ".lock"):
+            return self._prune_domain_unlocked(domain)
+
+    def _clear_matching_pending_unlocked(self, generation: Mapping[str, Any]) -> bool:
+        decision = generation.get("decision", {})
+        entity = decision.get("entity")
+        if not isinstance(entity, str) or entity == "domain":
+            return False
+        selected = generation.get("current", {}).get(entity)
+        if not isinstance(selected, Mapping):
+            return False
+        provider = selected["provider"]
+        domain = selected["domain"]
+        pending = self.root / "providers" / provider / domain / "pending" / f"{entity}.json"
+        if not pending.exists():
+            return False
+        provider_domain = self.root / "providers" / provider / domain
+        with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
+            if not pending.exists():
+                return False
+            pointer = self._validate_pending_pointer(
+                pending,
+                provider=provider,
+                domain=domain,
+                entity=entity,
+            )
+            ref = selected["payload_ref"]
+            if (
+                pointer["observation_event_id"] != selected.get("candidate_event_id")
+                or pointer["sha256"] != ref["sha256"]
+                or pointer["path"] != ref["path"]
+            ):
+                return False
+            pending.unlink()
+            self._fsync_directory(pending.parent)
+            return True
+
+    def preserve_current_as_provider_lkg(
+        self,
+        domain: str,
+        entity: str,
+        *,
+        expected_active_transaction_id: str,
+    ) -> dict[str, Any]:
+        """Copy the CAS-bound current immutable bytes into provider LKG under lock order."""
+
+        domain = _safe_component(domain, "domain")
+        entity = _safe_component(entity, "entity")
+        expected_active_transaction_id = _safe_component(
+            expected_active_transaction_id,
+            "expected_active_transaction_id",
+        )
+        with self._lock(self._domain_dir(domain) / ".lock"):
+            active = self._read_active_domain_unlocked(domain)
+            if active["transaction_id"] != expected_active_transaction_id:
+                raise ConcurrencyError("current-to-LKG compare-and-swap precondition failed")
+            selected = active["current"].get(entity)
+            if selected is None:
+                raise SchemaError("current-to-LKG requires a current selection")
+            ref = selected["payload_ref"]
+            if ref["kind"] == "provider_lkg":
+                return dict(selected)
+            payload_path = self._inside_root(self.root / ref["path"])
+            payload = payload_path.read_bytes()
+            if hashlib.sha256(payload).hexdigest() != ref["sha256"]:
+                raise IntegrityError("current immutable payload digest mismatch")
+            provider = selected["provider"]
+            base = self.root / "providers" / provider / domain / "lkg" / entity
+            latest_path = base / "latest.json"
+            expected_latest = None
+            if latest_path.exists():
+                latest = self._validate_provider_lkg_latest(
+                    latest_path,
+                    provider=provider,
+                    domain=domain,
+                    entity=entity,
+                )
+                expected_latest = latest["sha256"]
+            stored = self._store_provider_lkg_unlocked(
+                provider=provider,
+                domain=domain,
+                entity=entity,
+                payload=payload,
+                meaningful_transition=True,
+                expected_latest_sha256=expected_latest,
+            )
+            return bind_selection_to_provider_lkg(selected, stored)
+
+    def store_provider_object(
+        self,
+        *,
+        observation: Mapping[str, Any],
+        payload: Any,
+    ) -> dict[str, str]:
+        """Publish exact immutable candidate bytes and its one-per-entity pending pointer."""
+
+        row = validate_observation(observation, require_valid=True)
+        provider = row["provider"]
+        domain = row["domain"]
+        entity = row["entity"]
+        if isinstance(payload, bytes):
+            payload_bytes = payload
+            try:
+                _strict_json_loads(payload_bytes)
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                raise SchemaError("provider object bytes must contain strict JSON") from exc
+        else:
+            payload_bytes = canonical_json_bytes(payload)
+        payload_sha = hashlib.sha256(payload_bytes).hexdigest()
+        if payload_sha != row["payload_sha256"]:
+            raise SchemaError("provider object digest differs from observation")
+
+        relative_path = (
+            Path("providers")
+            / provider
+            / domain
+            / "objects"
+            / entity
+            / f"{payload_sha}.json"
+        ).as_posix()
+        pending_relative_path = (
+            Path("providers") / provider / domain / "pending" / f"{entity}.json"
+        ).as_posix()
+        provider_domain = self.root / "providers" / provider / domain
+        domain_dir = self._domain_dir(domain)
+        with self._lock(domain_dir / ".lock"):
+            active = self._read_active_domain_unlocked(domain)
+            self._reconcile_stale_prepared_unlocked(
+                domain,
+                now=self._now(),
+                active=active,
+            )
+            with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
+                object_path = self.root / relative_path
+                self._write_immutable_bytes(
+                    object_path,
+                    payload_bytes,
+                    failpoint_prefix="provider_object",
+                )
+                if hashlib.sha256(object_path.read_bytes()).hexdigest() != payload_sha:
+                    raise IntegrityError("provider object verification failed")
+                self._failpoint("after_provider_object")
+                pointer = {
+                    "schema_version": "data-supply-provider-pending/v1",
+                    "provider": provider,
+                    "endpoint_family": row["endpoint_family"],
+                    "domain": domain,
+                    "entity": entity,
+                    "provider_path": row["provider_path"],
+                    "provider_schema": row["provider_schema"],
+                    "source_as_of": row["source_as_of"],
+                    "observed_at": row["observed_at"],
+                    "observation_event_id": row["event_id"],
+                    "sha256": payload_sha,
+                    "path": relative_path,
+                }
+                self._atomic_write_json(
+                    self.root / pending_relative_path,
+                    pointer,
+                    failpoint_prefix="provider_pending",
+                )
+                self._failpoint("after_provider_pending")
+                self._prune_domain_unlocked(
+                    domain,
+                    prune_generations=False,
+                )
+        return {
+            "sha256": payload_sha,
+            "path": relative_path,
+            "pending_path": pending_relative_path,
+        }
+
     def store_provider_lkg(
+        self,
+        *,
+        provider: str,
+        domain: str,
+        entity: str,
+        payload: Any,
+        meaningful_transition: bool,
+        expected_latest_sha256: str | None,
+    ) -> dict[str, str]:
+        domain_component = _safe_component(domain, "domain")
+        with self._lock(self._domain_dir(domain_component) / ".lock"):
+            return self._store_provider_lkg_unlocked(
+                provider=provider,
+                domain=domain_component,
+                entity=entity,
+                payload=payload,
+                meaningful_transition=meaningful_transition,
+                expected_latest_sha256=expected_latest_sha256,
+            )
+
+    def _store_provider_lkg_unlocked(
         self,
         *,
         provider: str,
@@ -1246,6 +2284,7 @@ __all__ = [
     "GENERATIONS_RETAINED",
     "IntegrityError",
     "SchemaError",
+    "UnavailableError",
     "build_selection",
     "bind_selection_to_provider_lkg",
     "canonical_json_bytes",
