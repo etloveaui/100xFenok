@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-07-10T13:35:45.512Z",
+  "generated_at": "2026-07-10T13:50:25.579Z",
   "source_as_of": null,
   "source_as_of_inputs": [
     {
@@ -103,8 +103,8 @@
   },
   "expanded_stock_candidate_universe": {
     "source_file": "data/computed/market_facts/index.json",
-    "generated_at": "2026-07-10T13:34:07Z",
-    "collected_asset_total": 6621,
+    "generated_at": "2026-07-10T13:48:28Z",
+    "collected_asset_total": 6629,
     "collected_stock_candidates": 1178,
     "scored_public_stock": 1172,
     "stock_promotion_audit_gap": 6,
@@ -175,7 +175,7 @@
     "source_file": "data/computed/market_facts/index.json",
     "stockanalysis_index_file": "data/stockanalysis/index.json",
     "etf_signals_summary_file": "data/computed/fenok_etf_signals_summary.json",
-    "collected_etf_candidates": 5443,
+    "collected_etf_candidates": 5451,
     "eligible_etf_count": 4515,
     "stage": "PUBLIC",
     "scored_public_etf": 4515,
@@ -204,14 +204,14 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-07-10T13:35:11.612Z",
+          "generated_at": "2026-07-10T13:49:50.312Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-07-10T13:35:39.268Z",
+          "generated_at": "2026-07-10T13:50:19.313Z",
           "age_hours": 0,
           "max_age_hours": 48
         },
@@ -219,16 +219,16 @@
           "id": "etf_no_fetchable_required_history_gap",
           "ok": true,
           "fetchable_required_history": 0,
-          "missing_required_history": 8,
+          "missing_required_history": 10,
           "inception_limited_required_history": 6,
           "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
         },
         {
           "id": "etf_no_fetchable_daily_1y_gap",
-          "ok": false,
-          "fetchable_daily_1y_gap": 8,
+          "ok": true,
+          "fetchable_daily_1y_gap": 0,
           "inception_limited_daily_1y_gap": 715,
-          "terminal_limited_daily_1y_gap": 87,
+          "terminal_limited_daily_1y_gap": 94,
           "history_gap_report_match": true,
           "claim_scope": "full_scored_etf_universe_diagnostic",
           "service_gate": false,
@@ -239,14 +239,14 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-07-10T13:35:11.612Z",
+          "generated_at": "2026-07-10T13:49:50.312Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-07-10T13:35:39.268Z",
+          "generated_at": "2026-07-10T13:50:19.313Z",
           "age_hours": 0,
           "max_age_hours": 48
         },
@@ -254,7 +254,7 @@
           "id": "etf_no_fetchable_required_history_gap",
           "ok": true,
           "fetchable_required_history": 0,
-          "missing_required_history": 8,
+          "missing_required_history": 10,
           "inception_limited_required_history": 6,
           "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
         }
@@ -262,10 +262,10 @@
       "diagnostic_backlog_checks": [
         {
           "id": "etf_no_fetchable_daily_1y_gap",
-          "ok": false,
-          "fetchable_daily_1y_gap": 8,
+          "ok": true,
+          "fetchable_daily_1y_gap": 0,
           "inception_limited_daily_1y_gap": 715,
-          "terminal_limited_daily_1y_gap": 87,
+          "terminal_limited_daily_1y_gap": 94,
           "history_gap_report_match": true,
           "claim_scope": "full_scored_etf_universe_diagnostic",
           "service_gate": false,
@@ -273,9 +273,7 @@
         }
       ],
       "blockers": [],
-      "diagnostic_backlog": [
-        "etf_no_fetchable_daily_1y_gap"
-      ],
+      "diagnostic_backlog": [],
       "counts": {
         "scored_public_etf": 4515,
         "eligible_etf_count": 4515,
@@ -283,9 +281,9 @@
         "internal_summary_rows": 4515,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 6,
-        "fetchable_daily_1y_gap": 8,
+        "fetchable_daily_1y_gap": 0,
         "inception_limited_daily_1y_gap": 715,
-        "terminal_limited_daily_1y_gap": 87,
+        "terminal_limited_daily_1y_gap": 94,
         "history_gap_report_match": true
       }
     },
@@ -295,7 +293,7 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-07-10T13:35:21.533Z",
+        "generated_at": "2026-07-10T13:50:00.821Z",
         "generated_age_hours": 0.01,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
@@ -944,14 +942,14 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-07-10T13:35:11.612Z",
+              "generated_at": "2026-07-10T13:49:50.312Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-07-10T13:35:39.268Z",
+              "generated_at": "2026-07-10T13:50:19.313Z",
               "age_hours": 0,
               "max_age_hours": 48
             },
@@ -959,16 +957,16 @@
               "id": "etf_no_fetchable_required_history_gap",
               "ok": true,
               "fetchable_required_history": 0,
-              "missing_required_history": 8,
+              "missing_required_history": 10,
               "inception_limited_required_history": 6,
               "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
             },
             {
               "id": "etf_no_fetchable_daily_1y_gap",
-              "ok": false,
-              "fetchable_daily_1y_gap": 8,
+              "ok": true,
+              "fetchable_daily_1y_gap": 0,
               "inception_limited_daily_1y_gap": 715,
-              "terminal_limited_daily_1y_gap": 87,
+              "terminal_limited_daily_1y_gap": 94,
               "history_gap_report_match": true,
               "claim_scope": "full_scored_etf_universe_diagnostic",
               "service_gate": false,
@@ -979,14 +977,14 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-07-10T13:35:11.612Z",
+              "generated_at": "2026-07-10T13:49:50.312Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-07-10T13:35:39.268Z",
+              "generated_at": "2026-07-10T13:50:19.313Z",
               "age_hours": 0,
               "max_age_hours": 48
             },
@@ -994,7 +992,7 @@
               "id": "etf_no_fetchable_required_history_gap",
               "ok": true,
               "fetchable_required_history": 0,
-              "missing_required_history": 8,
+              "missing_required_history": 10,
               "inception_limited_required_history": 6,
               "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
             }
@@ -1002,10 +1000,10 @@
           "diagnostic_backlog_checks": [
             {
               "id": "etf_no_fetchable_daily_1y_gap",
-              "ok": false,
-              "fetchable_daily_1y_gap": 8,
+              "ok": true,
+              "fetchable_daily_1y_gap": 0,
               "inception_limited_daily_1y_gap": 715,
-              "terminal_limited_daily_1y_gap": 87,
+              "terminal_limited_daily_1y_gap": 94,
               "history_gap_report_match": true,
               "claim_scope": "full_scored_etf_universe_diagnostic",
               "service_gate": false,
@@ -1013,9 +1011,7 @@
             }
           ],
           "blockers": [],
-          "diagnostic_backlog": [
-            "etf_no_fetchable_daily_1y_gap"
-          ],
+          "diagnostic_backlog": [],
           "counts": {
             "scored_public_etf": 4515,
             "eligible_etf_count": 4515,
@@ -1023,9 +1019,9 @@
             "internal_summary_rows": 4515,
             "fetchable_required_history": 0,
             "inception_limited_required_history": 6,
-            "fetchable_daily_1y_gap": 8,
+            "fetchable_daily_1y_gap": 0,
             "inception_limited_daily_1y_gap": 715,
-            "terminal_limited_daily_1y_gap": 87,
+            "terminal_limited_daily_1y_gap": 94,
             "history_gap_report_match": true
           }
         }
@@ -1050,7 +1046,7 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-07-10T13:35:21.533Z",
+          "generated_at": "2026-07-10T13:50:00.821Z",
           "generated_age_hours": 0.01,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
@@ -1141,7 +1137,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-07-10T13:35:45.512Z"
+        "generated_at": "2026-07-10T13:50:25.579Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -1203,14 +1199,14 @@
       },
       {
         "id": "etf_signal_summary_freshness",
-        "generated_at": "2026-07-10T13:35:11.612Z",
+        "generated_at": "2026-07-10T13:49:50.312Z",
         "age_hours": 0.01,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-07-10T13:35:39.268Z",
+        "generated_at": "2026-07-10T13:50:19.313Z",
         "age_hours": 0,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
@@ -1220,19 +1216,19 @@
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-07-10T13:35:39.268Z",
-        "fetchable_daily_1y_gap": 8,
+        "generated_at": "2026-07-10T13:50:19.313Z",
+        "fetchable_daily_1y_gap": 0,
         "inception_limited_daily_1y_gap": 715,
-        "terminal_limited_daily_1y_gap": 87,
+        "terminal_limited_daily_1y_gap": 94,
         "history_gap_report_match": true,
-        "status": "blocked_fetchable_daily_gap",
+        "status": "ready",
         "claim_scope": "full_scored_etf_universe_diagnostic",
         "service_gate": false,
         "caveat": "Full scored-ETF daily 1Y continuity is a diagnostic/backfill track, not the ETF Core Daily Basket service gate."
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-07-10T13:35:21.533Z",
+        "generated_at": "2026-07-10T13:50:00.821Z",
         "age_hours": 0.01,
         "selected_count": 98,
         "fresh_selected_count": 98,

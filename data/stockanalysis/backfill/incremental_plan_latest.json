@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-07-10T13:35:00Z",
+  "generated_at": "2026-07-10T13:49:35Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "daily_1y"
@@ -13,20 +13,29 @@
     "execution_proof": "backfill/incremental_latest.json remains reserved for completed fetch runs"
   },
   "counts": {
-    "etfs_planned": 0,
-    "incremental_selected": 0,
-    "incremental_candidates": 0,
-    "history_gap": 0,
+    "etfs_planned": 8,
+    "incremental_selected": 8,
+    "incremental_candidates": 8,
+    "history_gap": 8,
     "inception_limited_history_gap": 0,
-    "total_history_gap": 0,
+    "total_history_gap": 8,
     "cooldown_skipped": 0
   },
-  "etfs": [],
+  "etfs": [
+    "DRVR",
+    "IQQ",
+    "PWRZ",
+    "SNTQ",
+    "TRUM",
+    "TRUN",
+    "TRUR",
+    "TRUU"
+  ],
   "incremental_etf_backfill": {
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-10T13:35:00Z",
+    "generated_at": "2026-07-10T13:49:35Z",
     "policy": {
       "limit": 0,
       "offset": 0,
@@ -42,21 +51,206 @@
       "min_daily_1y_rows": 200
     },
     "counts": {
-      "candidates": 0,
-      "selected": 0,
+      "candidates": 8,
+      "selected": 8,
       "missing": 0,
       "fallback_retry": 0,
-      "history_gap": 0,
+      "history_gap": 8,
       "inception_limited_history_gap": 0,
-      "total_history_gap": 0,
+      "total_history_gap": 8,
       "stale": 0,
       "cooldown_skipped": 0,
       "prior_failed_candidates": 0,
-      "daily_1y_missing_file": 0,
+      "daily_1y_missing_file": 8,
       "daily_1y_short_rows": 0,
       "offset_skipped": 0
     },
-    "selected": [],
+    "selected": [
+      {
+        "ticker": "DRVR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 0,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IQQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 1,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "PWRZ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 2,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "SNTQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 3,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "TRUM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 4,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "TRUN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 5,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "TRUR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 6,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "TRUU",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 7,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      }
+    ],
     "cooldown": [],
     "inception_limited": []
   }

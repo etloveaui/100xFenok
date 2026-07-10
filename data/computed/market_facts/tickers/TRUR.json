@@ -1,0 +1,252 @@
+{
+  "schema_version": "market-facts/v1",
+  "ticker": "TRUR",
+  "asset_type": "etf",
+  "generated_at": "2026-07-10T13:48:28Z",
+  "identity": {
+    "name": "TRUR",
+    "exchange": null,
+    "currency": null,
+    "sector": null,
+    "industry": null,
+    "fund_family": null,
+    "category": null
+  },
+  "facts": {
+    "price": {
+      "value": 24.9564,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:48:17Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 24.9564,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:48:17Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 24.96,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:48:17Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 24.96,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:48:17Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:48:17Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:48:17Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:48:17Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:48:17Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
+  "etf": {
+    "holdings_count": null,
+    "holdings_updated": null,
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
+  "financials": null,
+  "sources": {
+    "yf": false,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": false,
+    "slickcharts": false
+  },
+  "source_files": {
+    "yf": null,
+    "stockanalysis": "stockanalysis/etfs/TRUR.json",
+    "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": null,
+    "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_3m": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf",
+        "stockanalysis.detail.history"
+      ],
+      "return_5y_avg": [
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_10y_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_max_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
+  }
+}

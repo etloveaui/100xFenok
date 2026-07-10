@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-07-10T13:35:45.761Z",
+  "generated_at": "2026-07-10T13:50:25.829Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -25,21 +25,19 @@
   },
   "counts": {
     "scored_etf_count": 4515,
-    "complete": 3705,
-    "fetchable": 8,
+    "complete": 3706,
+    "fetchable": 0,
     "inception_limited": 715,
-    "terminal_limited": 87,
-    "missing": 810,
+    "terminal_limited": 94,
+    "missing": 809,
     "equation_ok": true,
     "matches_history_gap_report": true,
     "matches_coverage_index": true,
     "matches_coverage_index_daily_check": true,
-    "fetchable_breakdown": {
-      "missing_untracked": 8
-    },
+    "fetchable_breakdown": {},
     "terminal_limited_breakdown": {
       "provider_rejected_non_etf": 56,
-      "stockanalysis_recent_short_rows": 31
+      "stockanalysis_recent_short_rows": 38
     }
   },
   "yf_local_crosscheck": {
@@ -104,179 +102,18 @@
   "bounded_batches": {
     "can_drive_bounded_ticker_batches": true,
     "default_batch_size": 120,
-    "batch_count": 1,
+    "batch_count": 0,
     "command_template": "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
-    "first_batch_tickers": [
-      "DRVR",
-      "IQQ",
-      "PWRZ",
-      "SNTQ",
-      "TRUM",
-      "TRUN",
-      "TRUR",
-      "TRUU"
-    ]
+    "first_batch_tickers": []
   },
-  "tickers": [
-    "DRVR",
-    "IQQ",
-    "PWRZ",
-    "SNTQ",
-    "TRUM",
-    "TRUN",
-    "TRUR",
-    "TRUU"
-  ],
-  "rows": [
-    {
-      "ticker": "DRVR",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "IQQ",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "PWRZ",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "SNTQ",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "TRUM",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "TRUN",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "TRUR",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    },
-    {
-      "ticker": "TRUU",
-      "actual_rows": 0,
-      "missing_file": true,
-      "yf_history_rows": null,
-      "daily_1y_gap_source": "missing_untracked",
-      "terminal_limit_source": null,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": null
-    }
-  ],
+  "tickers": [],
+  "rows": [],
   "fetchable_breakdown": {
-    "counts": {
-      "missing_untracked": 8
-    },
-    "samples": {
-      "missing_untracked": [
-        "DRVR",
-        "IQQ",
-        "PWRZ",
-        "SNTQ",
-        "TRUM",
-        "TRUN",
-        "TRUR",
-        "TRUU"
-      ]
-    }
+    "counts": {},
+    "samples": {}
   },
   "samples": {
-    "fetchable": [
-      {
-        "ticker": "DRVR",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "IQQ",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "PWRZ",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "SNTQ",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "TRUM",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "TRUN",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "TRUR",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      },
-      {
-        "ticker": "TRUU",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null
-      }
-    ],
+    "fetchable": [],
     "inception_limited": [
       {
         "ticker": "AAAC",

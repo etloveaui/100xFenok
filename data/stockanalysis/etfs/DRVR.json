@@ -1,0 +1,334 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DRVR",
+  "fetched_at": "2026-07-10T13:48:10Z",
+  "endpoints": {
+    "holdings": "/etf/drvr/holdings/__data.json",
+    "overview": "/etf/drvr/__data.json",
+    "quote": "/api/quotes/e/DRVR",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/DRVR/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/DRVR/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/DRVR/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/DRVR/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/DRVR/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/DRVR/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "sharesOut": "10,000"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 25.0696,
+      "pd": 25.07,
+      "c": 0.24,
+      "cp": 0.97,
+      "cl": 24.83,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 10,
+      "ts": 1783690204693.5483,
+      "u": "Jul 10, 2026, 9:30 AM EDT",
+      "td": "2026-07-10",
+      "h52": null,
+      "l52": null,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1783690204693.5483,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783691294222,
+      "symbol": "DRVR",
+      "uid": "DRVR"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DRVR",
+        "lastChecked": 1783691231360,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": null,
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "Amplify ETF Trust - Amplify S&P 500 Dividend Drivers ETF is an exchange traded fund launched and managed by Amplify Investments LLC. The fund invests in public equity markets of the United States. The fund invests in stocks of companies operating across diversified sectors. It invests in growth and value stocks of large-cap companies. The fund invests in dividend paying stocks of companies within the market capitalization range of the S&P 500 Index. It seeks to track the performance of the S&P 500 Dividend Drivers Index, by using full replication technique. Amplify ETF Trust - Amplify S&P 500 Dividend Drivers ETF is domiciled in the United States.",
+      "infoTable": [
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "DRVR"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1783776867136",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/amplify-debuts-new-dividend-growth-strategy-with-drvr/",
+            "img": "https://cdn.snapi.dev/images/v1/g/d/j/etf18-3795223.jpg",
+            "title": "Amplify Debuts New Dividend-Growth Strategy with DRVR",
+            "text": "On July 9, Amplify ETFs launched the Amplify S&P 500 Dividend Driver ETF (DRVR), with an expense ratio of 39 basis points. The fund tracks the S&P 500 Dividend Drivers Index, providing exposure to S&P...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 10, 2026, 8:20 AM EDT",
+            "ago": "1 hour ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/09/3324676/0/en/Amplify-ETFs-Launches-Amplify-S-P-500-Dividend-Drivers-ETF-DRVR.html",
+            "img": "https://cdn.snapi.dev/images/v1/d/l/h/press19-3792834.jpg",
+            "title": "Amplify ETFs Launches Amplify S&P 500 Dividend Drivers ETF (DRVR)",
+            "text": "CHICAGO, July 09, 2026 (GLOBE NEWSWIRE) -- Amplify ETFs , a leading provider of breakthrough ETF solutions, today announced the launch of the Amplify S&P 500 Dividend Drivers ETF (DRVR), a forward-loo...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 9, 2026, 7:00 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/04/30/3285500/0/en/Amplify-ETFs-Files-for-Amplify-S-P-500-Dividend-Drivers-ETF-DRVR.html",
+            "img": "https://cdn.snapi.dev/images/v1/l/y/9/press16-3669356.jpg",
+            "title": "Amplify ETFs Files for Amplify S&P 500 Dividend Drivers ETF (DRVR)",
+            "text": "CHICAGO, April 30, 2026 (GLOBE NEWSWIRE) -- Amplify ETFs , a leading provider of breakthrough ETF solutions, announces the filing of the Amplify S&P 500 Dividend Drivers ETF (DRVR). The Amplify S&P 50...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Apr 30, 2026, 4:15 PM EDT",
+            "ago": "2 months ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": null,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": null
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 25.0696,
+      "pd": 25.07,
+      "c": 0.24,
+      "cp": 0.97,
+      "cl": 24.83,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 10,
+      "ts": 1783690204693.5483,
+      "u": "Jul 10, 2026, 9:30 AM EDT",
+      "td": "2026-07-10",
+      "h52": null,
+      "l52": null,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1783690204693.5483,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1783691294222,
+      "symbol": "DRVR",
+      "uid": "DRVR"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    },
+    "history_endpoint_errors": {
+      "daily_1y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/DRVR/history?range=1Y&period=Daily"
+      },
+      "weekly_1y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/DRVR/history?range=1Y&period=Weekly"
+      },
+      "monthly_1y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/DRVR/history?range=1Y&period=Monthly"
+      },
+      "weekly_3y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/DRVR/history?range=3Y&period=Weekly"
+      },
+      "monthly_3y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/DRVR/history?range=3Y&period=Monthly"
+      },
+      "monthly_5y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/DRVR/history?range=5Y&period=Monthly"
+      }
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "history_daily_1y_http_400",
+    "history_monthly_1y_http_400",
+    "history_monthly_3y_http_400",
+    "history_monthly_5y_http_400",
+    "history_weekly_1y_http_400",
+    "history_weekly_3y_http_400"
+  ]
+}
