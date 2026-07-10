@@ -853,9 +853,9 @@ ETF_DETAIL_SURFACE_CONTRACTS = {
     "overview": {
         "path": "/etf/{ticker}/__data.json",
         "required_types": {
-            "holdings": int,
+            "holdings": (int, type(None)),
             "holdingsTable": (dict, type(None)),
-            "inception": str,
+            "inception": (str, type(None)),
         },
     },
     "holdings": {
@@ -913,13 +913,74 @@ def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
     )
 
 
-def fetch_svelte_detail(ticker: str, surface: str, timeout: int) -> tuple[str, dict]:
+def fetch_svelte_detail(
+    ticker: str,
+    surface: str,
+    timeout: int,
+    *,
+    allow_unavailable: bool = False,
+) -> tuple[str, dict]:
     contract = ETF_DETAIL_SURFACE_CONTRACTS.get(surface)
     if contract is None:
         raise ValueError(f"svelte_contract_unknown_surface: {surface}")
     path = contract["path"].format(ticker=ticker.lower())
     payload = fetch_json(path, timeout)
+    if allow_unavailable and surface == "holdings":
+        identity_confirmed = False
+        for node in reversed(payload.get("nodes") or []):
+            data = node.get("data") if isinstance(node, dict) else None
+            if isinstance(data, list) and data:
+                decoded = decode_svelte_data(data)
+                if decoded == {}:
+                    return path, {}
+                info = decoded.get("info") if isinstance(decoded, dict) else None
+                if (
+                    isinstance(info, dict)
+                    and str(info.get("type") or "").lower() == "etf"
+                    and clean_symbol(str(info.get("ticker") or "")) == clean_symbol(ticker)
+                ):
+                    identity_confirmed = True
+        if identity_confirmed:
+            return path, {}
     return path, validate_svelte_detail_contract(payload, surface)
+
+
+def overview_declares_holdings_unavailable(overview: dict) -> bool:
+    if overview.get("holdings") is not None:
+        return False
+    table = overview.get("holdingsTable")
+    return table is None or (
+        isinstance(table, dict)
+        and table.get("count") is None
+        and table.get("holdings") is None
+    )
+
+
+def fetch_etf_history_periods(ticker: str, timeout: int) -> tuple[dict, dict, dict]:
+    paths = {
+        key: history_endpoint("e", ticker, config)
+        for key, config in HISTORY_PERIOD_ENDPOINTS.items()
+    }
+    periods = {}
+    errors = {}
+    for key, path in paths.items():
+        try:
+            data = pick_data(fetch_json(path, timeout))
+            if not isinstance(data, list):
+                raise ValueError(f"rest_contract_drift:history:{key}:expected_list")
+            periods[key] = data
+        except urllib.error.HTTPError as exc:
+            code = exc.code
+            exc.close()
+            if code not in (400, 404):
+                raise
+            periods[key] = []
+            errors[key] = {
+                "status": "unavailable",
+                "reason_code": f"http_{code}",
+                "path": path,
+            }
+    return paths, periods, errors
 
 
 def endpoint_canary_reason(exc: Exception) -> str:
@@ -1662,9 +1723,15 @@ def load_etf_universe_symbols() -> list[str]:
 
 
 def fetch_etf(ticker: str, timeout: int) -> dict:
-    history_paths, history_periods = fetch_history_periods("e", ticker, timeout)
     overview_path, overview_data = fetch_svelte_detail(ticker, "overview", timeout)
-    holdings_path, holdings_data = fetch_svelte_detail(ticker, "holdings", timeout)
+    holdings_unavailable = overview_declares_holdings_unavailable(overview_data)
+    holdings_path, holdings_data = fetch_svelte_detail(
+        ticker,
+        "holdings",
+        timeout,
+        allow_unavailable=holdings_unavailable,
+    )
+    history_paths, history_periods, history_errors = fetch_etf_history_periods(ticker, timeout)
     paths = {
         "holdings": holdings_path,
         "overview": overview_path,
@@ -1678,6 +1745,8 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
     }
     raw["history"] = history_periods.get("monthly_1y")
     raw["history_periods"] = history_periods
+    if history_errors:
+        raw["history_endpoint_errors"] = history_errors
     holdings = holdings_data.get("holdings") or (overview_data.get("holdingsTable") or {}).get("holdings")
     normalized_holdings = normalize_holdings(holdings)
     classification = classify_etf(
@@ -1685,7 +1754,7 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         overview=overview_data,
         holdings=normalized_holdings,
     )
-    return {
+    payload = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "asset_type": "etf",
@@ -1730,6 +1799,13 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         },
         "raw": raw,
     }
+    if holdings_unavailable or history_errors:
+        payload["detail_status"] = "stockanalysis_partial"
+        payload["partial_reason_codes"] = [
+            *(["holdings_unavailable"] if holdings_unavailable else []),
+            *(f"history_{key}_{row['reason_code']}" for key, row in sorted(history_errors.items())),
+        ]
+    return payload
 
 
 def fetch_stock(ticker: str, timeout: int, financials: dict | None = None) -> dict:

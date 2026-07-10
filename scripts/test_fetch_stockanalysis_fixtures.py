@@ -57,10 +57,49 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIsNone(sparse_decoded["countries"])
 
         sparse_overview = json.loads((FIXTURE_DIR / "etf_overview__data.fixture.json").read_text())
+        sparse_overview["nodes"][-1]["data"][0]["holdings"] = -1
         sparse_overview["nodes"][-1]["data"][0]["holdingsTable"] = -1
+        sparse_overview["nodes"][-1]["data"][0]["inception"] = -1
         sparse_overview_decoded = self.fetcher.validate_svelte_detail_contract(sparse_overview, "overview")
-        self.assertEqual(sparse_overview_decoded["holdings"], 2)
+        self.assertIsNone(sparse_overview_decoded["holdings"])
         self.assertIsNone(sparse_overview_decoded["holdingsTable"])
+        self.assertIsNone(sparse_overview_decoded["inception"])
+
+    def test_empty_holdings_node_requires_explicit_overview_unavailable_profile(self) -> None:
+        empty_holdings = {
+            "nodes": [
+                {"data": [{"info": 1}, {"type": 2, "ticker": 3}, "etf", "NEW"]},
+            ]
+        }
+        original_fetch_json = self.fetcher.fetch_json
+        try:
+            self.fetcher.fetch_json = lambda _path, _timeout: empty_holdings
+            with self.assertRaisesRegex(ValueError, "missing_required"):
+                self.fetcher.fetch_svelte_detail("NEW", "holdings", 1)
+            path, decoded = self.fetcher.fetch_svelte_detail(
+                "NEW", "holdings", 1, allow_unavailable=True
+            )
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+        self.assertEqual(path, "/etf/new/holdings/__data.json")
+        self.assertEqual(decoded, {})
+
+    def test_etf_history_expected_400_is_recorded_as_unavailable_not_schema_drift(self) -> None:
+        original_fetch_json = self.fetcher.fetch_json
+        try:
+            def fake_fetch_json(path: str, _timeout: int) -> dict:
+                if "period=Daily" in path:
+                    raise urllib.error.HTTPError(path, 400, "not indexed", {}, None)
+                return {"status": 200, "data": []}
+            self.fetcher.fetch_json = fake_fetch_json
+            paths, periods, errors = self.fetcher.fetch_etf_history_periods("NEW", 1)
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        self.assertEqual(periods["daily_1y"], [])
+        self.assertEqual(errors["daily_1y"]["reason_code"], "http_400")
+        self.assertEqual(errors["daily_1y"]["path"], paths["daily_1y"])
+        self.assertEqual(periods["monthly_1y"], [])
 
     def test_etf_detail_svelte_contract_fails_closed(self) -> None:
         for payload in ({}, {"nodes": []}, {"nodes": [{"data": [[{"x": 1}]]}]}):
@@ -543,7 +582,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(stock_payload["normalized"]["financials"]["summary"], financials["summary"])
 
     def test_etf_payload_includes_classification_candidate(self) -> None:
-        def fake_fetch_svelte_detail(_ticker: str, surface: str, _timeout: int) -> tuple[str, dict]:
+        def fake_fetch_svelte_detail(
+            _ticker: str,
+            surface: str,
+            _timeout: int,
+            *,
+            allow_unavailable: bool = False,
+        ) -> tuple[str, dict]:
+            self.assertFalse(allow_unavailable)
             if surface == "overview":
                 return "/etf/nvdl/__data.json", {
                     "description": (
