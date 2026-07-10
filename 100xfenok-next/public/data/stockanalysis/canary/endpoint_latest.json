@@ -1,0 +1,130 @@
+{
+  "schema_version": "stockanalysis-endpoint-canary/v1",
+  "source": "stockanalysis",
+  "generated_at": "2026-07-10T13:28:23Z",
+  "status": "ready",
+  "policy": {
+    "scope": "latest endpoint/schema canary only; observation history begins in R2",
+    "cadence": "existing StockAnalysis scheduled workflow lanes",
+    "required_tickers": [
+      "VYMI",
+      "SPY",
+      "GOLI"
+    ]
+  },
+  "counts": {
+    "probes": 12,
+    "ready": 12,
+    "blocked": 0
+  },
+  "results": [
+    {
+      "ticker": "VYMI",
+      "surface": "overview",
+      "path": "/etf/vymi/__data.json",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "svelte_devalue_node/v1",
+      "latency_ms": 107
+    },
+    {
+      "ticker": "VYMI",
+      "surface": "holdings",
+      "path": "/etf/vymi/holdings/__data.json",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "svelte_devalue_node/v1",
+      "latency_ms": 86
+    },
+    {
+      "ticker": "VYMI",
+      "surface": "quote",
+      "path": "/api/quotes/e/VYMI",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "rest_json/v1",
+      "latency_ms": 118
+    },
+    {
+      "ticker": "VYMI",
+      "surface": "history_daily_1y",
+      "path": "/api/symbol/e/VYMI/history?range=1Y&period=Daily",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "rest_json/v1",
+      "latency_ms": 37
+    },
+    {
+      "ticker": "SPY",
+      "surface": "overview",
+      "path": "/etf/spy/__data.json",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "svelte_devalue_node/v1",
+      "latency_ms": 99
+    },
+    {
+      "ticker": "SPY",
+      "surface": "holdings",
+      "path": "/etf/spy/holdings/__data.json",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "svelte_devalue_node/v1",
+      "latency_ms": 102
+    },
+    {
+      "ticker": "SPY",
+      "surface": "quote",
+      "path": "/api/quotes/e/SPY",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "rest_json/v1",
+      "latency_ms": 60
+    },
+    {
+      "ticker": "SPY",
+      "surface": "history_daily_1y",
+      "path": "/api/symbol/e/SPY/history?range=1Y&period=Daily",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "rest_json/v1",
+      "latency_ms": 80
+    },
+    {
+      "ticker": "GOLI",
+      "surface": "overview",
+      "path": "/etf/goli/__data.json",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "svelte_devalue_node/v1",
+      "latency_ms": 70
+    },
+    {
+      "ticker": "GOLI",
+      "surface": "holdings",
+      "path": "/etf/goli/holdings/__data.json",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "svelte_devalue_node/v1",
+      "latency_ms": 72
+    },
+    {
+      "ticker": "GOLI",
+      "surface": "quote",
+      "path": "/api/quotes/e/GOLI",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "rest_json/v1",
+      "latency_ms": 82
+    },
+    {
+      "ticker": "GOLI",
+      "surface": "history_daily_1y",
+      "path": "/api/symbol/e/GOLI/history?range=1Y&period=Daily",
+      "status": "ready",
+      "reason_code": "ok",
+      "decoder": "rest_json/v1",
+      "latency_ms": 39
+    }
+  ]
+}

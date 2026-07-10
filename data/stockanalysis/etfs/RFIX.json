@@ -3,10 +3,10 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "RFIX",
-  "fetched_at": "2026-07-09T02:25:46Z",
+  "fetched_at": "2026-07-10T13:31:19Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/RFIX/holdings",
-    "overview": "/api/symbol/e/RFIX/overview",
+    "holdings": "/etf/rfix/holdings/__data.json",
+    "overview": "/etf/rfix/__data.json",
     "quote": "/api/quotes/e/RFIX",
     "history_periods": {
       "daily_1y": "/api/symbol/e/RFIX/history?range=1Y&period=Daily",
@@ -17,173 +17,179 @@
       "monthly_5y": "/api/symbol/e/RFIX/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "B.0 10.15.26",
         "name": "B 10/15/26 Govt",
-        "weight_pct": 55.18,
+        "weight_pct": 55.65,
         "shares": 30280000,
         "raw": {
           "no": 1,
           "n": "B 10/15/26 Govt",
           "s": "B.0 10.15.26",
-          "as": "55.18%",
+          "as": "55.65%",
           "sh": "30,280,000"
         }
       },
       {
         "rank": 2,
-        "symbol": "B.0 07.21.26",
-        "name": "B 7/21/26 Govt",
-        "weight_pct": 32.19,
-        "shares": 17510000,
+        "symbol": "B.0 12.31.26",
+        "name": "B 12/31/26 Govt",
+        "weight_pct": 48.56,
+        "shares": 26650000,
         "raw": {
           "no": 2,
-          "n": "B 7/21/26 Govt",
-          "s": "B.0 07.21.26",
-          "as": "32.19%",
-          "sh": "17,510,000"
+          "n": "B 12/31/26 Govt",
+          "s": "B.0 12.31.26",
+          "as": "48.56%",
+          "sh": "26,650,000"
         }
       },
       {
         "rank": 3,
-        "symbol": "B.0 12.31.26",
-        "name": "B 12/31/26 Govt",
-        "weight_pct": 15.61,
-        "shares": 8640000,
-        "raw": {
-          "no": 3,
-          "n": "B 12/31/26 Govt",
-          "s": "B.0 12.31.26",
-          "as": "15.61%",
-          "sh": "8,640,000"
-        }
-      },
-      {
-        "rank": 4,
         "symbol": "B.0 12.03.26",
         "name": "B 12/3/26 Govt",
-        "weight_pct": 11.47,
+        "weight_pct": 11.57,
         "shares": 6330000,
         "raw": {
-          "no": 4,
+          "no": 3,
           "n": "B 12/3/26 Govt",
           "s": "B.0 12.03.26",
-          "as": "11.47%",
+          "as": "11.57%",
           "sh": "6,330,000"
         }
       },
       {
-        "rank": 5,
+        "rank": 4,
         "symbol": "B.0 08.20.26",
         "name": "B 8/20/26 Govt",
-        "weight_pct": 10.81,
+        "weight_pct": 10.91,
         "shares": 5900000,
         "raw": {
-          "no": 5,
+          "no": 4,
           "n": "B 8/20/26 Govt",
           "s": "B.0 08.20.26",
-          "as": "10.81%",
+          "as": "10.91%",
           "sh": "5,900,000"
         }
       },
       {
-        "rank": 6,
+        "rank": 5,
         "symbol": "B.0 09.01.26",
         "name": "B 09/01/26 Govt",
-        "weight_pct": 3.3,
+        "weight_pct": 3.32,
         "shares": 1800000,
         "raw": {
-          "no": 6,
+          "no": 5,
           "n": "B 09/01/26 Govt",
           "s": "B.0 09.01.26",
-          "as": "3.30%",
+          "as": "3.32%",
           "sh": "1,800,000"
         }
       },
       {
-        "rank": 7,
-        "symbol": "B.0 08.11.26",
+        "rank": 6,
+        "symbol": "WIB.0 08.11.26",
         "name": "B 8/11/26 Govt",
-        "weight_pct": 0.92,
+        "weight_pct": 0.93,
         "shares": 500000,
         "raw": {
-          "no": 7,
+          "no": 6,
           "n": "B 8/11/26 Govt",
-          "s": "B.0 08.11.26",
-          "as": "0.92%",
+          "s": "WIB.0 08.11.26",
+          "as": "0.93%",
           "sh": "500,000"
         }
       },
       {
-        "rank": 8,
+        "rank": 7,
         "symbol": "CASH",
         "name": "Cash",
-        "weight_pct": 0.43,
-        "shares": 236019,
+        "weight_pct": 0.09,
+        "shares": 47251,
         "raw": {
-          "no": 8,
+          "no": 7,
           "n": "Cash",
           "s": "Cash",
-          "as": "0.43%",
-          "sh": "236,019"
+          "as": "0.09%",
+          "sh": "47,251"
         }
       },
       {
-        "rank": 9,
+        "rank": 8,
         "symbol": "SWR300NOM",
         "name": "SWAPTION R 3.00%/SOFR 3/15/32-10Y NOM",
-        "weight_pct": -1.8,
+        "weight_pct": -1.86,
         "shares": 75000000,
         "raw": {
-          "no": 9,
+          "no": 8,
           "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y NOM",
           "s": "SWR300NOM",
-          "as": "-1.80%",
+          "as": "-1.86%",
           "sh": "75,000,000"
         }
       },
       {
-        "rank": 10,
+        "rank": 9,
         "symbol": "SWR300BOA",
         "name": "SWAPTION R 3.00%/SOFR 3/15/32-10Y BOA",
-        "weight_pct": -6.11,
+        "weight_pct": -6.37,
         "shares": 325000000,
         "raw": {
-          "no": 10,
+          "no": 9,
           "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y BOA",
           "s": "SWR300BOA",
-          "as": "-6.11%",
+          "as": "-6.37%",
           "sh": "325,000,000"
         }
       },
       {
-        "rank": 11,
+        "rank": 10,
         "symbol": "SWR300GSX",
         "name": "SWAPTION R 3.00%/SOFR 3/15/32-10Y GS",
-        "weight_pct": -8.75,
+        "weight_pct": -9.05,
         "shares": 375000000,
         "raw": {
-          "no": 11,
+          "no": 10,
           "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y GS",
           "s": "SWR300GSX",
-          "as": "-8.75%",
+          "as": "-9.05%",
           "sh": "375,000,000"
         }
       },
       {
-        "rank": 12,
+        "rank": 11,
         "symbol": "SWR300MSX",
         "name": "SWAPTION R 3.00%/SOFR 3/15/32-10Y MS",
-        "weight_pct": -13.25,
+        "weight_pct": -13.75,
         "shares": 625000000,
         "raw": {
-          "no": 12,
+          "no": 11,
           "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y MS",
           "s": "SWR300MSX",
-          "as": "-13.25%",
+          "as": "-13.75%",
           "sh": "625,000,000"
         }
       }
@@ -191,8 +197,8 @@
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": 12,
-    "holdings_updated": "Jul 6, 2026",
+    "holding_count": 11,
+    "holdings_updated": "Jul 8, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -206,48 +212,50 @@
       "aum": "$54.65M",
       "expenseRatio": "0.50%",
       "sharesOut": "1.40M",
-      "dividendYield": "4.53%",
+      "dividendYield": "4.57%",
       "inception": "Dec 9, 2024",
       "provider_page": "simplify",
       "etf_website": "https://www.simplify.us/etfs/rfix-simplify-downside-interest-rate-hedge-strategy-etf"
     },
     "performance": {
-      "tr1m": -1.866846626193723,
-      "trYTD": 7.008,
-      "tr1y": -12.446688617025751,
-      "cagrMAX": -22.29815807062454
+      "tr1m": -0.2762180449973095,
+      "trYTD": 6.085,
+      "tr1y": -12.66578702934931,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": -22.690067537197734
     },
     "quote": {
-      "p": 38.25,
-      "pd": 38.25,
-      "c": 0.32,
-      "cp": 0.84,
-      "cl": 37.93,
-      "cdr": 1,
-      "o": 38.36,
-      "h": 38.36,
-      "l": 37.73,
-      "v": 419350,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "p": 37.9,
+      "pd": 37.9,
+      "c": -0.02,
+      "cp": -0.05,
+      "cl": 37.92,
+      "cdr": -1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": null,
+      "ts": 1783690256129.8787,
+      "u": "Jul 10, 2026, 9:30 AM EDT",
+      "td": "2026-07-10",
       "h52": 46.42,
       "l52": 35.31,
       "ex": "NYSEARCA",
-      "ms": "closed",
-      "fms": "closed",
-      "e": true,
-      "ep": 38.11,
-      "epd": 38.11,
-      "ec": -0.14,
-      "ecp": -0.37,
-      "eu": "Jul 8, 2026, 8:00 PM EDT",
-      "es": "After-hours",
-      "ets": 1783555200057.9998,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1783690256129.8787,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783584900000,
+      "exp": 1783690283368,
       "symbol": "RFIX",
       "uid": "RFIX"
     },
@@ -257,10 +265,10 @@
         "o": 38.9,
         "h": 39.36,
         "l": 37.73,
-        "c": 38.11,
-        "a": 38.11,
-        "v": 2008060,
-        "ch": -2.56
+        "c": 37.92,
+        "a": 37.92,
+        "v": 2225904,
+        "ch": -3.04
       },
       {
         "t": "2026-06-01",
@@ -375,6 +383,16 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-09",
+          "o": 38.15,
+          "h": 38.485,
+          "l": 37.8,
+          "c": 37.92,
+          "a": 37.92,
+          "v": 217844,
+          "ch": -0.5
+        },
         {
           "t": "2026-07-08",
           "o": 38.36,
@@ -2884,16 +2902,6 @@
           "a": 44.406215,
           "v": 10032,
           "ch": 2.27
-        },
-        {
-          "t": "2025-07-08",
-          "o": 44.71,
-          "h": 45.32,
-          "l": 44.5,
-          "c": 45.32,
-          "a": 43.41941,
-          "v": 53772,
-          "ch": -0.61
         }
       ],
       "weekly_1y": [
@@ -2902,10 +2910,10 @@
           "o": 38.69,
           "h": 38.8,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 1408194,
-          "ch": -0.83
+          "c": 37.92,
+          "a": 37.92,
+          "v": 1626038,
+          "ch": -1.33
         },
         {
           "t": "2026-06-29",
@@ -3424,10 +3432,10 @@
           "o": 38.9,
           "h": 39.36,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 2008060,
-          "ch": -2.56
+          "c": 37.92,
+          "a": 37.92,
+          "v": 2225904,
+          "ch": -3.04
         },
         {
           "t": "2026-06-01",
@@ -3546,10 +3554,10 @@
           "o": 38.69,
           "h": 38.8,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 1408194,
-          "ch": -0.83
+          "c": 37.92,
+          "a": 37.92,
+          "v": 1626038,
+          "ch": -1.33
         },
         {
           "t": "2026-06-29",
@@ -4068,10 +4076,10 @@
           "o": 38.9,
           "h": 39.36,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 2008060,
-          "ch": -2.56
+          "c": 37.92,
+          "a": 37.92,
+          "v": 2225904,
+          "ch": -3.04
         },
         {
           "t": "2026-06-01",
@@ -4190,10 +4198,10 @@
           "o": 38.9,
           "h": 39.36,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 2008060,
-          "ch": -2.56
+          "c": 37.92,
+          "a": 37.92,
+          "v": 2225904,
+          "ch": -3.04
         },
         {
           "t": "2026-06-01",
@@ -4379,142 +4387,52 @@
     }
   },
   "raw": {
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "B 10/15/26 Govt",
-          "s": "B.0 10.15.26",
-          "as": "55.18%",
-          "sh": "30,280,000"
-        },
-        {
-          "no": 2,
-          "n": "B 7/21/26 Govt",
-          "s": "B.0 07.21.26",
-          "as": "32.19%",
-          "sh": "17,510,000"
-        },
-        {
-          "no": 3,
-          "n": "B 12/31/26 Govt",
-          "s": "B.0 12.31.26",
-          "as": "15.61%",
-          "sh": "8,640,000"
-        },
-        {
-          "no": 4,
-          "n": "B 12/3/26 Govt",
-          "s": "B.0 12.03.26",
-          "as": "11.47%",
-          "sh": "6,330,000"
-        },
-        {
-          "no": 5,
-          "n": "B 8/20/26 Govt",
-          "s": "B.0 08.20.26",
-          "as": "10.81%",
-          "sh": "5,900,000"
-        },
-        {
-          "no": 6,
-          "n": "B 09/01/26 Govt",
-          "s": "B.0 09.01.26",
-          "as": "3.30%",
-          "sh": "1,800,000"
-        },
-        {
-          "no": 7,
-          "n": "B 8/11/26 Govt",
-          "s": "B.0 08.11.26",
-          "as": "0.92%",
-          "sh": "500,000"
-        },
-        {
-          "no": 8,
-          "n": "Cash",
-          "s": "Cash",
-          "as": "0.43%",
-          "sh": "236,019"
-        },
-        {
-          "no": 9,
-          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y NOM",
-          "s": "SWR300NOM",
-          "as": "-1.80%",
-          "sh": "75,000,000"
-        },
-        {
-          "no": 10,
-          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y BOA",
-          "s": "SWR300BOA",
-          "as": "-6.11%",
-          "sh": "325,000,000"
-        },
-        {
-          "no": 11,
-          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y GS",
-          "s": "SWR300GSX",
-          "as": "-8.75%",
-          "sh": "375,000,000"
-        },
-        {
-          "no": 12,
-          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y MS",
-          "s": "SWR300MSX",
-          "as": "-13.25%",
-          "sh": "625,000,000"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": null,
-      "countries": null,
-      "news": [
-        {
-          "t": "Net Asset Value Restatement for Simplify Exchange Traded Funds (PCR, PFIX, RFIX)",
-          "u": "https://www.businesswire.com/news/home/20260306084355/en/Net-Asset-Value-Restatement-for-Simplify-Exchange-Traded-Funds-PCR-PFIX-RFIX/",
-          "n": "Business Wire",
-          "d": "4 months ago"
-        },
-        {
-          "t": "Simplify Provides Estimated Capital Gain Distribution Information for 2025",
-          "u": "https://www.businesswire.com/news/home/20251212505407/en/Simplify-Provides-Estimated-Capital-Gain-Distribution-Information-for-2025/",
-          "n": "Business Wire",
-          "d": "7 months ago"
-        },
-        {
-          "t": "Net Asset Value Restatement for Simplify Bond Bull ETF (RFIX)",
-          "u": "https://www.businesswire.com/news/home/20251210379948/en/Net-Asset-Value-Restatement-for-Simplify-Bond-Bull-ETF-RFIX/",
-          "n": "Business Wire",
-          "d": "7 months ago"
-        },
-        {
-          "t": "The Simplify Downside Interest Rate Hedge Strategy ETF is Now the Simplify Bond Bull ETF",
-          "u": "https://www.businesswire.com/news/home/20250218525338/en/The-Simplify-Downside-Interest-Rate-Hedge-Strategy-ETF-is-Now-the-Simplify-Bond-Bull-ETF/",
-          "n": "Business Wire",
-          "d": "1 year ago"
-        },
-        {
-          "t": "Simplify Launches the RFIX ETF, Designed to More Efficiently Profit From Falling Interest Rates and Fixed Income Market Volatility",
-          "u": "https://www.businesswire.com/news/home/20241210919030/en/Simplify-Launches-the-RFIX-ETF-Designed-to-More-Efficiently-Profit-From-Falling-Interest-Rates-and-Fixed-Income-Market-Volatility/",
-          "n": "Business Wire",
-          "d": "1 year ago"
-        }
-      ],
-      "date": "Jul 6, 2026",
-      "count": 12
-    },
     "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "RFIX",
+        "lastChecked": 1783690209799,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
       "type": "etf",
       "aum": "$54.65M",
+      "nav": null,
       "expenseRatio": "0.50%",
+      "peRatio": null,
       "sharesOut": "1.40M",
       "dps": "$1.73",
-      "dividendYield": "4.53%",
+      "dividendYield": "4.57%",
+      "payoutRatio": null,
       "exDivDate": "Jun 25, 2026",
-      "ch1y": "-16.12%",
+      "ch1y": "-16.33%",
       "payoutFrequency": "Monthly",
-      "holdings": 12,
+      "beta": null,
+      "holdings": 11,
       "inception": "Dec 9, 2024",
       "chart": {
         "expiration": 1783603800000,
@@ -6116,69 +6034,69 @@
       "etf_website": "https://www.simplify.us/etfs/rfix-simplify-downside-interest-rate-hedge-strategy-etf",
       "provider_page": "simplify",
       "holdingsTable": {
-        "count": 12,
-        "updated": "Jul 6, 2026",
-        "top10": 122,
+        "count": 11,
+        "updated": "Jul 8, 2026",
+        "top10": 113.75,
         "holdings": [
           {
             "n": "B 10/15/26 Govt",
             "s": "B.0 10.15.26",
-            "as": "55.18%",
+            "as": "55.65%",
             "sh": "30,280,000"
-          },
-          {
-            "n": "B 7/21/26 Govt",
-            "s": "B.0 07.21.26",
-            "as": "32.19%",
-            "sh": "17,510,000"
           },
           {
             "n": "B 12/31/26 Govt",
             "s": "B.0 12.31.26",
-            "as": "15.61%",
-            "sh": "8,640,000"
+            "as": "48.56%",
+            "sh": "26,650,000"
           },
           {
             "n": "B 12/3/26 Govt",
             "s": "B.0 12.03.26",
-            "as": "11.47%",
+            "as": "11.57%",
             "sh": "6,330,000"
           },
           {
             "n": "B 8/20/26 Govt",
             "s": "B.0 08.20.26",
-            "as": "10.81%",
+            "as": "10.91%",
             "sh": "5,900,000"
           },
           {
             "n": "B 09/01/26 Govt",
             "s": "B.0 09.01.26",
-            "as": "3.30%",
+            "as": "3.32%",
             "sh": "1,800,000"
           },
           {
             "n": "B 8/11/26 Govt",
-            "s": "B.0 08.11.26",
-            "as": "0.92%",
+            "s": "WIB.0 08.11.26",
+            "as": "0.93%",
             "sh": "500,000"
           },
           {
             "n": "Cash",
             "s": "Cash",
-            "as": "0.43%",
-            "sh": "236,019"
+            "as": "0.09%",
+            "sh": "47,251"
           },
           {
             "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y NOM",
             "s": "SWR300NOM",
-            "as": "-1.80%",
+            "as": "-1.86%",
             "sh": "75,000,000"
           },
           {
             "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y BOA",
             "s": "SWR300BOA",
-            "as": "-6.11%",
+            "as": "-6.37%",
             "sh": "325,000,000"
+          },
+          {
+            "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y GS",
+            "s": "SWR300GSX",
+            "as": "-9.05%",
+            "sh": "375,000,000"
           }
         ]
       },
@@ -6257,6 +6175,7 @@
             "text": "NEW YORK--(BUSINESS WIRE)--Simplify announces NAV restatement.",
             "source": "Business Wire",
             "type": "Article",
+            "tickers": null,
             "time": "Dec 10, 2025, 4:15 PM EST",
             "ago": "7 months ago"
           },
@@ -6267,6 +6186,7 @@
             "text": "NEW YORK--(BUSINESS WIRE)--The Simplify Downside Interest Rate Hedge Strategy ETF (RFIX) has been renamed the Simplify Bond Bull ETF (RFIX).",
             "source": "Business Wire",
             "type": "Article",
+            "tickers": null,
             "time": "Feb 20, 2025, 1:06 PM EST",
             "ago": "1 year ago"
           },
@@ -6277,6 +6197,7 @@
             "text": "NEW YORK--(BUSINESS WIRE)--Simplify launches Downside Interest Rate Hedge Strategy ETF (RFIX), providing simple and efficient way to obtain significant duration exposure.",
             "source": "Business Wire",
             "type": "Article",
+            "tickers": null,
             "time": "Dec 10, 2024, 9:00 AM EST",
             "ago": "1 year ago"
           }
@@ -6286,50 +6207,198 @@
         "no1d": false
       },
       "changes": {
-        "price1w": 38.94,
-        "price1m": 39.075,
+        "price1w": 38.43,
+        "price1m": 38.12,
+        "price3m": 40.09,
+        "price6m": 36.01,
         "priceYTD": 36.289,
-        "price1y": 45.6,
+        "price1y": 45.32,
+        "price5y": null,
         "priceMAX": 60.31
       },
       "performance": {
-        "tr1m": -1.866846626193723,
-        "trYTD": 7.008,
-        "tr1y": -12.446688617025751,
-        "cagrMAX": -22.29815807062454
+        "tr1m": -0.2762180449973095,
+        "trYTD": 6.085,
+        "tr1y": -12.66578702934931,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": -22.690067537197734
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "B 10/15/26 Govt",
+          "s": "B.0 10.15.26",
+          "as": "55.65%",
+          "sh": "30,280,000"
+        },
+        {
+          "no": 2,
+          "n": "B 12/31/26 Govt",
+          "s": "B.0 12.31.26",
+          "as": "48.56%",
+          "sh": "26,650,000"
+        },
+        {
+          "no": 3,
+          "n": "B 12/3/26 Govt",
+          "s": "B.0 12.03.26",
+          "as": "11.57%",
+          "sh": "6,330,000"
+        },
+        {
+          "no": 4,
+          "n": "B 8/20/26 Govt",
+          "s": "B.0 08.20.26",
+          "as": "10.91%",
+          "sh": "5,900,000"
+        },
+        {
+          "no": 5,
+          "n": "B 09/01/26 Govt",
+          "s": "B.0 09.01.26",
+          "as": "3.32%",
+          "sh": "1,800,000"
+        },
+        {
+          "no": 6,
+          "n": "B 8/11/26 Govt",
+          "s": "WIB.0 08.11.26",
+          "as": "0.93%",
+          "sh": "500,000"
+        },
+        {
+          "no": 7,
+          "n": "Cash",
+          "s": "Cash",
+          "as": "0.09%",
+          "sh": "47,251"
+        },
+        {
+          "no": 8,
+          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y NOM",
+          "s": "SWR300NOM",
+          "as": "-1.86%",
+          "sh": "75,000,000"
+        },
+        {
+          "no": 9,
+          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y BOA",
+          "s": "SWR300BOA",
+          "as": "-6.37%",
+          "sh": "325,000,000"
+        },
+        {
+          "no": 10,
+          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y GS",
+          "s": "SWR300GSX",
+          "as": "-9.05%",
+          "sh": "375,000,000"
+        },
+        {
+          "no": 11,
+          "n": "SWAPTION R 3.00%/SOFR 3/15/32-10Y MS",
+          "s": "SWR300MSX",
+          "as": "-13.75%",
+          "sh": "625,000,000"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "Net Asset Value Restatement for Simplify Exchange Traded Funds (PCR, PFIX, RFIX)",
+          "u": "https://www.businesswire.com/news/home/20260306084355/en/Net-Asset-Value-Restatement-for-Simplify-Exchange-Traded-Funds-PCR-PFIX-RFIX/",
+          "n": "Business Wire",
+          "d": "4 months ago"
+        },
+        {
+          "t": "Simplify Provides Estimated Capital Gain Distribution Information for 2025",
+          "u": "https://www.businesswire.com/news/home/20251212505407/en/Simplify-Provides-Estimated-Capital-Gain-Distribution-Information-for-2025/",
+          "n": "Business Wire",
+          "d": "7 months ago"
+        },
+        {
+          "t": "Net Asset Value Restatement for Simplify Bond Bull ETF (RFIX)",
+          "u": "https://www.businesswire.com/news/home/20251210379948/en/Net-Asset-Value-Restatement-for-Simplify-Bond-Bull-ETF-RFIX/",
+          "n": "Business Wire",
+          "d": "7 months ago"
+        },
+        {
+          "t": "The Simplify Downside Interest Rate Hedge Strategy ETF is Now the Simplify Bond Bull ETF",
+          "u": "https://www.businesswire.com/news/home/20250218525338/en/The-Simplify-Downside-Interest-Rate-Hedge-Strategy-ETF-is-Now-the-Simplify-Bond-Bull-ETF/",
+          "n": "Business Wire",
+          "d": "1 year ago"
+        },
+        {
+          "t": "Simplify Launches the RFIX ETF, Designed to More Efficiently Profit From Falling Interest Rates and Fixed Income Market Volatility",
+          "u": "https://www.businesswire.com/news/home/20241210919030/en/Simplify-Launches-the-RFIX-ETF-Designed-to-More-Efficiently-Profit-From-Falling-Interest-Rates-and-Fixed-Income-Market-Volatility/",
+          "n": "Business Wire",
+          "d": "1 year ago"
+        }
+      ],
+      "date": "Jul 8, 2026",
+      "count": 11,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 8, 2026",
+        "lastChecked": 1783676924720,
+        "topic": "holdings",
+        "ticker": "RFIX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 38.25,
-      "pd": 38.25,
-      "c": 0.32,
-      "cp": 0.84,
-      "cl": 37.93,
-      "cdr": 1,
-      "o": 38.36,
-      "h": 38.36,
-      "l": 37.73,
-      "v": 419350,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "p": 37.9,
+      "pd": 37.9,
+      "c": -0.02,
+      "cp": -0.05,
+      "cl": 37.92,
+      "cdr": -1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": null,
+      "ts": 1783690256129.8787,
+      "u": "Jul 10, 2026, 9:30 AM EDT",
+      "td": "2026-07-10",
       "h52": 46.42,
       "l52": 35.31,
       "ex": "NYSEARCA",
-      "ms": "closed",
-      "fms": "closed",
-      "e": true,
-      "ep": 38.11,
-      "epd": 38.11,
-      "ec": -0.14,
-      "ecp": -0.37,
-      "eu": "Jul 8, 2026, 8:00 PM EDT",
-      "es": "After-hours",
-      "ets": 1783555200057.9998,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1783690256129.8787,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783584900000,
+      "exp": 1783690283368,
       "symbol": "RFIX",
       "uid": "RFIX"
     },
@@ -6339,10 +6408,10 @@
         "o": 38.9,
         "h": 39.36,
         "l": 37.73,
-        "c": 38.11,
-        "a": 38.11,
-        "v": 2008060,
-        "ch": -2.56
+        "c": 37.92,
+        "a": 37.92,
+        "v": 2225904,
+        "ch": -3.04
       },
       {
         "t": "2026-06-01",
@@ -6457,6 +6526,16 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-09",
+          "o": 38.15,
+          "h": 38.485,
+          "l": 37.8,
+          "c": 37.92,
+          "a": 37.92,
+          "v": 217844,
+          "ch": -0.5
+        },
         {
           "t": "2026-07-08",
           "o": 38.36,
@@ -8966,16 +9045,6 @@
           "a": 44.406215,
           "v": 10032,
           "ch": 2.27
-        },
-        {
-          "t": "2025-07-08",
-          "o": 44.71,
-          "h": 45.32,
-          "l": 44.5,
-          "c": 45.32,
-          "a": 43.41941,
-          "v": 53772,
-          "ch": -0.61
         }
       ],
       "weekly_1y": [
@@ -8984,10 +9053,10 @@
           "o": 38.69,
           "h": 38.8,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 1408194,
-          "ch": -0.83
+          "c": 37.92,
+          "a": 37.92,
+          "v": 1626038,
+          "ch": -1.33
         },
         {
           "t": "2026-06-29",
@@ -9506,10 +9575,10 @@
           "o": 38.9,
           "h": 39.36,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 2008060,
-          "ch": -2.56
+          "c": 37.92,
+          "a": 37.92,
+          "v": 2225904,
+          "ch": -3.04
         },
         {
           "t": "2026-06-01",
@@ -9628,10 +9697,10 @@
           "o": 38.69,
           "h": 38.8,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 1408194,
-          "ch": -0.83
+          "c": 37.92,
+          "a": 37.92,
+          "v": 1626038,
+          "ch": -1.33
         },
         {
           "t": "2026-06-29",
@@ -10150,10 +10219,10 @@
           "o": 38.9,
           "h": 39.36,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 2008060,
-          "ch": -2.56
+          "c": 37.92,
+          "a": 37.92,
+          "v": 2225904,
+          "ch": -3.04
         },
         {
           "t": "2026-06-01",
@@ -10272,10 +10341,10 @@
           "o": 38.9,
           "h": 39.36,
           "l": 37.73,
-          "c": 38.11,
-          "a": 38.11,
-          "v": 2008060,
-          "ch": -2.56
+          "c": 37.92,
+          "a": 37.92,
+          "v": 2225904,
+          "ch": -3.04
         },
         {
           "t": "2026-06-01",

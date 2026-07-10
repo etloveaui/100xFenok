@@ -1,6 +1,13 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-07-10T04:59:17.750Z",
+  "generated_at": "2026-07-10T13:35:39.268Z",
+  "report_profile": {
+    "key": "daily_1y",
+    "required_history_periods": [
+      "daily_1y"
+    ],
+    "generated_at": "2026-07-10T13:35:39.268Z"
+  },
   "required_history_periods": [
     "daily_1y"
   ],
@@ -771,15 +778,28 @@
       ]
     },
     "scored_etfs": {
-      "scored_etf_count": 4508,
-      "complete": 3706,
-      "missing": 802,
-      "fetchable": 0,
+      "scored_etf_count": 4515,
+      "complete": 3705,
+      "missing": 810,
+      "fetchable": 8,
       "inception_limited": 715,
       "terminal_limited": 87,
       "fetchable_breakdown": {
-        "counts": {},
-        "samples": {}
+        "counts": {
+          "missing_untracked": 8
+        },
+        "samples": {
+          "missing_untracked": [
+            "DRVR",
+            "IQQ",
+            "PWRZ",
+            "SNTQ",
+            "TRUM",
+            "TRUN",
+            "TRUR",
+            "TRUU"
+          ]
+        }
       },
       "terminal_limited_breakdown": {
         "counts": {
@@ -814,7 +834,80 @@
         }
       },
       "samples": {
-        "fetchable": [],
+        "fetchable": [
+          {
+            "ticker": "DRVR",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "IQQ",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "PWRZ",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "SNTQ",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "TRUM",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "TRUN",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "TRUR",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          },
+          {
+            "ticker": "TRUU",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null
+          }
+        ],
         "inception_limited": [
           {
             "ticker": "AAAC",
@@ -1096,7 +1189,7 @@
     "caveat": "StockAnalysis ETF detail daily 1Y continuity is required; fetchable gaps are the immediate backfill queue. Inception-limited and recent terminal provider-limited gaps are tracked but do not block by themselves."
   },
   "incremental_plan": {
-    "generated_at": "2026-07-10T04:59:04Z",
+    "generated_at": "2026-07-10T13:35:00Z",
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
@@ -1141,14 +1234,20 @@
   "market_facts_return_3y": {
     "etf": 2868,
     "stockanalysis_history": 2607,
-    "etf_coverage_pct": 52.7,
-    "etf_denominator": 5442,
+    "etf_coverage_pct": 52.69,
+    "etf_denominator": 5443,
     "stockanalysis_universe_denominator": 5415
   },
   "recommended_dispatch": {
-    "status": "not_recommended",
+    "status": "scheduled_backfill_active",
     "workflow": "fetch-stockanalysis.yml",
-    "inputs": null,
-    "note": "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires."
+    "schedule": "50 22 * * 1-5",
+    "schedule_kst": "Tue-Sat 07:50",
+    "inputs": {
+      "history_gaps_only": "true",
+      "required_history_periods": "daily_1y",
+      "incremental_etf_limit": "120"
+    },
+    "note": "The weekday scheduled lane drains scored ETF daily 1Y continuity gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate."
   }
 }

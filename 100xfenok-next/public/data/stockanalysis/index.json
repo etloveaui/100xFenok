@@ -1,16 +1,24 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-10T04:57:45Z",
+  "generated_at": "2026-07-10T13:33:41Z",
+  "source_as_of": {
+    "surfaces": {
+      "market_events": "2026-07-10",
+      "sectors": "2026-07-10",
+      "etf_center": "2026-07-10"
+    },
+    "etf_universe": "2026-07-10"
+  },
   "counts": {
-    "etf_universe": 5415,
-    "etf_candidate_total": 5472,
+    "etf_universe": 5423,
+    "etf_candidate_total": 5480,
     "etf_detail_files": 5441,
-    "etf_detail_covered": 5420,
-    "etf_detail_missing": 52,
-    "etf_detail_coverage_pct": 99.05,
-    "etf_detail_primary_pct": 85.93,
-    "etfs_requested": 1,
+    "etf_detail_covered": 5419,
+    "etf_detail_missing": 61,
+    "etf_detail_coverage_pct": 98.89,
+    "etf_detail_primary_pct": 85.78,
+    "etfs_requested": 3,
     "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
@@ -18,10 +26,10 @@
     "financials_requested": 0,
     "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 1,
+    "ok": 3,
     "failed": 0,
     "hard_failed": 0,
-    "etfs_stockanalysis_ok": 1,
+    "etfs_stockanalysis_ok": 3,
     "etfs_yahoo_fallback_ok": 0,
     "etfs_still_pending": 0,
     "incremental_etf_backfill_candidates": 0,
@@ -32,48 +40,78 @@
   },
   "results": [
     {
-      "ticker": "GOLI",
+      "ticker": "SGOV",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/GOLI.json",
+      "selected_provider": "stockanalysis",
+      "canonical_write": true,
+      "path": "etfs/SGOV.json",
       "financials_path": null,
-      "latency_ms": 790,
+      "latency_ms": 688,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BILS",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "selected_provider": "stockanalysis",
+      "canonical_write": true,
+      "path": "etfs/BILS.json",
+      "financials_path": null,
+      "latency_ms": 948,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "BIL",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "selected_provider": "stockanalysis",
+      "canonical_write": true,
+      "path": "etfs/BIL.json",
+      "financials_path": null,
+      "latency_ms": 981,
       "stockanalysis_error": null,
       "error": null
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-10T04:57:45Z",
+    "generated_at": "2026-07-10T13:33:41Z",
     "status": "warn",
     "counts": {
-      "candidate_total": 5472,
+      "candidate_total": 5480,
       "source_breakdown": {
-        "etf_universe": 5415,
-        "etf_screener": 5472,
+        "etf_universe": 5423,
+        "etf_screener": 5480,
         "new_etfs": 100
       },
       "detail_files": 5441,
-      "covered_detail_files": 5420,
-      "missing_detail_files": 52,
-      "extra_detail_files": 21,
+      "covered_detail_files": 5419,
+      "missing_detail_files": 61,
+      "extra_detail_files": 22,
       "stockanalysis_detail_files": 4723,
       "yahoo_fallback_files": 718,
       "invalid_detail_files": 0,
-      "coverage_pct": 99.05,
-      "primary_stockanalysis_pct": 85.93,
+      "coverage_pct": 98.89,
+      "primary_stockanalysis_pct": 85.78,
       "missing_by_source": {
-        "etf_universe": 52,
-        "etf_screener": 52,
+        "etf_universe": 61,
+        "etf_screener": 61,
         "new_etfs": 11
       },
       "missing_status_breakdown": {
         "retry_cooldown": 51,
-        "retry_pending": 1
+        "retry_pending": 1,
+        "untracked": 9
       },
       "missing_failure_breakdown": {
-        "external_quote_type_mismatch": 52
+        "external_quote_type_mismatch": 52,
+        "untracked": 9
       },
       "pending_tracked": 75,
       "pending_cooldown": 63,

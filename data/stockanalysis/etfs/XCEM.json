@@ -3,10 +3,10 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "XCEM",
-  "fetched_at": "2026-07-09T02:23:29Z",
+  "fetched_at": "2026-07-10T13:29:14Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/XCEM/holdings",
-    "overview": "/api/symbol/e/XCEM/overview",
+    "holdings": "/etf/xcem/holdings/__data.json",
+    "overview": "/etf/xcem/__data.json",
     "quote": "/api/quotes/e/XCEM",
     "history_periods": {
       "daily_1y": "/api/symbol/e/XCEM/history?range=1Y&period=Daily",
@@ -17,19 +17,39 @@
       "monthly_5y": "/api/symbol/e/XCEM/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "!TPE/2330",
         "name": "Taiwan Semiconductor Manufacturing Company Limited",
-        "weight_pct": 15.58,
+        "weight_pct": 15.46,
         "shares": 4072765,
         "raw": {
           "no": 1,
           "n": "Taiwan Semiconductor Manufacturing Company Limited",
           "s": "!tpe/2330",
-          "as": "15.58%",
+          "as": "15.46%",
           "sh": "4,072,765"
         }
       },
@@ -37,13 +57,13 @@
         "rank": 2,
         "symbol": "!KRX/005930",
         "name": "Samsung Electronics Co., Ltd.",
-        "weight_pct": 8.45,
+        "weight_pct": 8.98,
         "shares": 926836,
         "raw": {
           "no": 2,
           "n": "Samsung Electronics Co., Ltd.",
           "s": "!krx/005930",
-          "as": "8.45%",
+          "as": "8.98%",
           "sh": "926,836"
         }
       },
@@ -51,13 +71,13 @@
         "rank": 3,
         "symbol": "!KRX/000660",
         "name": "SK hynix Inc.",
-        "weight_pct": 3.83,
+        "weight_pct": 3.96,
         "shares": 55010,
         "raw": {
           "no": 3,
           "n": "SK hynix Inc.",
           "s": "!krx/000660",
-          "as": "3.83%",
+          "as": "3.96%",
           "sh": "55,010"
         }
       },
@@ -65,13 +85,13 @@
         "rank": 4,
         "symbol": "!TPE/2454",
         "name": "MediaTek Inc.",
-        "weight_pct": 1.64,
+        "weight_pct": 1.52,
         "shares": 242487,
         "raw": {
           "no": 4,
           "n": "MediaTek Inc.",
           "s": "!tpe/2454",
-          "as": "1.64%",
+          "as": "1.52%",
           "sh": "242,487"
         }
       },
@@ -79,13 +99,13 @@
         "rank": 5,
         "symbol": "!TPE/2308",
         "name": "Delta Electronics, Inc.",
-        "weight_pct": 1.54,
+        "weight_pct": 1.48,
         "shares": 502327,
         "raw": {
           "no": 5,
           "n": "Delta Electronics, Inc.",
           "s": "!tpe/2308",
-          "as": "1.54%",
+          "as": "1.48%",
           "sh": "502,327"
         }
       },
@@ -93,13 +113,13 @@
         "rank": 6,
         "symbol": "!KRX/009150",
         "name": "Samsung Electro-Mechanics Co., Ltd.",
-        "weight_pct": 1.26,
+        "weight_pct": 1.11,
         "shares": 20518,
         "raw": {
           "no": 6,
           "n": "Samsung Electro-Mechanics Co., Ltd.",
           "s": "!krx/009150",
-          "as": "1.26%",
+          "as": "1.11%",
           "sh": "20,518"
         }
       },
@@ -119,124 +139,110 @@
       },
       {
         "rank": 8,
-        "symbol": "!TPE/3711",
-        "name": "ASE Technology Holding Co., Ltd.",
-        "weight_pct": 0.98,
-        "shares": 872322,
-        "raw": {
-          "no": 8,
-          "n": "ASE Technology Holding Co., Ltd.",
-          "s": "!tpe/3711",
-          "as": "0.98%",
-          "sh": "872,322"
-        }
-      },
-      {
-        "rank": 9,
         "symbol": "HDB",
         "name": "HDFC Bank Limited",
-        "weight_pct": 0.92,
+        "weight_pct": 0.98,
         "shares": 723485,
         "raw": {
-          "no": 9,
+          "no": 8,
           "n": "HDFC Bank Limited",
           "s": "$HDB",
-          "as": "0.92%",
+          "as": "0.98%",
           "sh": "723,485"
         }
       },
       {
-        "rank": 10,
+        "rank": 9,
         "symbol": "IBN",
         "name": "ICICI Bank Limited",
-        "weight_pct": 0.88,
+        "weight_pct": 0.9,
         "shares": 604335,
         "raw": {
-          "no": 10,
+          "no": 9,
           "n": "ICICI Bank Limited",
           "s": "$IBN",
-          "as": "0.88%",
+          "as": "0.90%",
           "sh": "604,335"
         }
       },
       {
-        "rank": 11,
-        "symbol": "!KRX/402340",
-        "name": "SK Square Co., Ltd.",
-        "weight_pct": 0.86,
-        "shares": 17608,
+        "rank": 10,
+        "symbol": "!TPE/3711",
+        "name": "ASE Technology Holding Co., Ltd.",
+        "weight_pct": 0.88,
+        "shares": 872322,
         "raw": {
-          "no": 11,
-          "n": "SK Square Co., Ltd.",
-          "s": "!krx/402340",
-          "as": "0.86%",
-          "sh": "17,608"
+          "no": 10,
+          "n": "ASE Technology Holding Co., Ltd.",
+          "s": "!tpe/3711",
+          "as": "0.88%",
+          "sh": "872,322"
         }
       },
       {
-        "rank": 12,
+        "rank": 11,
         "symbol": "!NSE/RELIANCE",
         "name": "Reliance Industries Limited",
-        "weight_pct": 0.83,
+        "weight_pct": 0.84,
         "shares": 1219737,
         "raw": {
-          "no": 12,
+          "no": 11,
           "n": "Reliance Industries Limited",
           "s": "!nse/RELIANCE",
-          "as": "0.83%",
+          "as": "0.84%",
           "sh": "1,219,737"
         }
       },
       {
-        "rank": 13,
-        "symbol": "IHC",
-        "name": "International Holdings Co PJSC",
-        "weight_pct": 0.82,
+        "rank": 12,
+        "symbol": "!ADX/IHC",
+        "name": "International Holding Company PJSC",
+        "weight_pct": 0.84,
         "shares": 160428,
         "raw": {
-          "no": 13,
-          "n": "International Holdings Co PJSC",
-          "s": "IHC",
-          "as": "0.82%",
+          "no": 12,
+          "n": "International Holding Company PJSC",
+          "s": "!adx/IHC",
+          "as": "0.84%",
           "sh": "160,428"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!KRX/402340",
+        "name": "SK Square Co., Ltd.",
+        "weight_pct": 0.78,
+        "shares": 17608,
+        "raw": {
+          "no": 13,
+          "n": "SK Square Co., Ltd.",
+          "s": "!krx/402340",
+          "as": "0.78%",
+          "sh": "17,608"
         }
       },
       {
         "rank": 14,
         "symbol": "!KRX/006400",
         "name": "Samsung SDI Co., Ltd.",
-        "weight_pct": 0.74,
+        "weight_pct": 0.72,
         "shares": 49308,
         "raw": {
           "no": 14,
           "n": "Samsung SDI Co., Ltd.",
           "s": "!krx/006400",
-          "as": "0.74%",
+          "as": "0.72%",
           "sh": "49,308"
         }
       },
       {
         "rank": 15,
-        "symbol": "!TPE/2303",
-        "name": "United Microelectronics Corporation",
-        "weight_pct": 0.74,
-        "shares": 2870006,
-        "raw": {
-          "no": 15,
-          "n": "United Microelectronics Corporation",
-          "s": "!tpe/2303",
-          "as": "0.74%",
-          "sh": "2,870,006"
-        }
-      },
-      {
-        "rank": 16,
         "symbol": "#SMH",
         "name": "VanEck Semiconductor ETF",
         "weight_pct": 0.72,
         "shares": 24601,
         "raw": {
-          "no": 16,
+          "no": 15,
           "n": "VanEck Semiconductor ETF",
           "s": "#SMH",
           "as": "0.72%",
@@ -244,53 +250,53 @@
         }
       },
       {
-        "rank": 17,
+        "rank": 16,
         "symbol": "#SOXX",
         "name": "iShares Semiconductor ETF",
-        "weight_pct": 0.71,
+        "weight_pct": 0.7,
         "shares": 25372,
         "raw": {
-          "no": 17,
+          "no": 16,
           "n": "iShares Semiconductor ETF",
           "s": "#SOXX",
-          "as": "0.71%",
+          "as": "0.70%",
           "sh": "25,372"
         }
       },
       {
-        "rank": 18,
-        "symbol": "!TPE/2383",
-        "name": "Elite Material Co., Ltd.",
+        "rank": 17,
+        "symbol": "!TPE/2303",
+        "name": "United Microelectronics Corporation",
         "weight_pct": 0.68,
-        "shares": 77466,
+        "shares": 2870006,
+        "raw": {
+          "no": 17,
+          "n": "United Microelectronics Corporation",
+          "s": "!tpe/2303",
+          "as": "0.68%",
+          "sh": "2,870,006"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "COLUMBIA SHORT TERM CASH FUND",
+        "weight_pct": 0.67,
+        "shares": 13334231,
         "raw": {
           "no": 18,
-          "n": "Elite Material Co., Ltd.",
-          "s": "!tpe/2383",
-          "as": "0.68%",
-          "sh": "77,466"
+          "n": "COLUMBIA SHORT TERM CASH FUND",
+          "as": "0.67%",
+          "sh": "13,334,231"
         }
       },
       {
         "rank": 19,
-        "name": "Columbia Short-Term Cash",
-        "weight_pct": 0.66,
-        "shares": 13313781,
-        "raw": {
-          "no": 19,
-          "n": "Columbia Short-Term Cash",
-          "as": "0.66%",
-          "sh": "13,313,781"
-        }
-      },
-      {
-        "rank": 20,
         "symbol": "!TADAWUL/1120",
         "name": "Al Rajhi Banking and Investment Corporation",
         "weight_pct": 0.66,
         "shares": 751947,
         "raw": {
-          "no": 20,
+          "no": 19,
           "n": "Al Rajhi Banking and Investment Corporation",
           "s": "!tadawul/1120",
           "as": "0.66%",
@@ -298,73 +304,87 @@
         }
       },
       {
-        "rank": 21,
-        "symbol": "!TPE/3037",
-        "name": "Unimicron Technology Corp.",
+        "rank": 20,
+        "symbol": "!TPE/2383",
+        "name": "Elite Material Co., Ltd.",
         "weight_pct": 0.63,
-        "shares": 412102,
+        "shares": 77466,
         "raw": {
-          "no": 21,
-          "n": "Unimicron Technology Corp.",
-          "s": "!tpe/3037",
+          "no": 20,
+          "n": "Elite Material Co., Ltd.",
+          "s": "!tpe/2383",
           "as": "0.63%",
-          "sh": "412,102"
+          "sh": "77,466"
         }
       },
       {
-        "rank": 22,
+        "rank": 21,
         "symbol": "!TPE/2891",
         "name": "CTBC Financial Holding Co., Ltd.",
-        "weight_pct": 0.62,
+        "weight_pct": 0.63,
         "shares": 5746524,
         "raw": {
-          "no": 22,
+          "no": 21,
           "n": "CTBC Financial Holding Co., Ltd.",
           "s": "!tpe/2891",
-          "as": "0.62%",
+          "as": "0.63%",
           "sh": "5,746,524"
         }
       },
       {
-        "rank": 23,
-        "symbol": "!TPE/2327",
-        "name": "Yageo Corporation",
-        "weight_pct": 0.6,
-        "shares": 368778,
-        "raw": {
-          "no": 23,
-          "n": "Yageo Corporation",
-          "s": "!tpe/2327",
-          "as": "0.60%",
-          "sh": "368,778"
-        }
-      },
-      {
-        "rank": 24,
+        "rank": 22,
         "symbol": "DELTA-R.BK",
-        "name": "Delta Electronics (Thailand) PCL Units Non-Voting Depository Receipt",
+        "name": "DELTA ELECTRONICS THAILAND PCL",
         "weight_pct": 0.58,
         "shares": 1240200,
         "raw": {
-          "no": 24,
-          "n": "Delta Electronics (Thailand) PCL Units Non-Voting Depository Receipt",
+          "no": 22,
+          "n": "DELTA ELECTRONICS THAILAND PCL",
           "s": "DELTA-R.BK",
           "as": "0.58%",
           "sh": "1,240,200"
         }
       },
       {
-        "rank": 25,
+        "rank": 23,
+        "symbol": "!KRX/105560",
+        "name": "KB Financial Group Inc.",
+        "weight_pct": 0.55,
+        "shares": 97769,
+        "raw": {
+          "no": 23,
+          "n": "KB Financial Group Inc.",
+          "s": "!krx/105560",
+          "as": "0.55%",
+          "sh": "97,769"
+        }
+      },
+      {
+        "rank": 24,
         "symbol": "!WSE/PKO",
         "name": "Powszechna Kasa Oszczednosci Bank Polski Spólka Akcyjna",
         "weight_pct": 0.55,
         "shares": 395521,
         "raw": {
-          "no": 25,
+          "no": 24,
           "n": "Powszechna Kasa Oszczednosci Bank Polski Spólka Akcyjna",
           "s": "!wse/PKO",
           "as": "0.55%",
           "sh": "395,521"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "!KRX/005380",
+        "name": "Hyundai Motor Company",
+        "weight_pct": 0.54,
+        "shares": 34520,
+        "raw": {
+          "no": 25,
+          "n": "Hyundai Motor Company",
+          "s": "!krx/005380",
+          "as": "0.54%",
+          "sh": "34,520"
         }
       }
     ],
@@ -511,8 +531,8 @@
         "country": "Czechia"
       }
     ],
-    "holding_count": 461,
-    "holdings_updated": "Jul 3, 2026",
+    "holding_count": 471,
+    "holdings_updated": "Jul 7, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -528,51 +548,51 @@
       "expenseRatio": "0.16%",
       "peRatio": "20.59",
       "sharesOut": "39.75M",
-      "dividendYield": "2.49%",
+      "dividendYield": "2.47%",
       "beta": "0.90",
       "inception": "Sep 2, 2015",
       "provider_page": "columbia-threadneedle",
       "etf_website": "https://www.columbiathreadneedleus.com/investment-products/exchange-traded-funds/Columbia-EM-Core-ex-China-ETF/Class-ETF/details/?cusip=19762B202"
     },
     "performance": {
-      "tr1m": 2.514,
-      "trYTD": 30.735,
-      "tr1y": 51.725,
-      "cagr5y": 11.25,
-      "cagr10y": 12.113,
-      "cagrMAX": 11.762
+      "tr1m": 1.24,
+      "trYTD": 31.908,
+      "tr1y": 52.329,
+      "cagr5y": 11.768,
+      "cagr10y": 12.213,
+      "cagrMAX": 11.851
     },
     "quote": {
-      "p": 50.15,
-      "pd": 50.15,
-      "c": 0.29,
-      "cp": 0.58,
-      "cl": 49.86,
+      "p": 50.6,
+      "pd": 50.6,
+      "c": 0.43,
+      "cp": 0.86,
+      "cl": 50.17,
       "cdr": 1,
-      "o": 49.41,
-      "h": 50.19,
-      "l": 49.21,
-      "v": 79986.688695,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "o": 50.44,
+      "h": 50.88,
+      "l": 50.37,
+      "v": 193196.846087,
+      "ts": 1783627200000,
+      "u": "Jul 9, 2026, 4:00 PM EDT",
+      "td": "2026-07-09",
       "h52": 55.43,
       "l52": 33.76,
       "ex": "NYSEARCA",
       "ms": "closed",
-      "fms": "closed",
-      "e": true,
-      "ep": 50.17,
-      "epd": 50.17,
-      "ec": 0.02,
-      "ecp": 0.04,
-      "eu": "Jul 8, 2026, 8:00 PM EDT",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
       "es": "After-hours",
-      "ets": 1783555200169.8245,
-      "etd": "2026-07-08",
+      "ets": 1783641600113.99,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783584900000,
+      "exp": 1783690158586,
       "symbol": "XCEM",
       "uid": "XCEM"
     },
@@ -582,10 +602,10 @@
         "o": 51.84,
         "h": 52.1,
         "l": 49.205,
-        "c": 50.17,
-        "a": 50.17,
-        "v": 1102449,
-        "ch": -5.12
+        "c": 50.6,
+        "a": 50.6,
+        "v": 1295642,
+        "ch": -4.31
       },
       {
         "t": "2026-06-01",
@@ -700,6 +720,16 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-09",
+          "o": 50.44,
+          "h": 50.88,
+          "l": 50.37,
+          "c": 50.6,
+          "a": 50.6,
+          "v": 193193,
+          "ch": 0.86
+        },
         {
           "t": "2026-07-08",
           "o": 49.41,
@@ -3209,16 +3239,6 @@
           "a": 33.120867,
           "v": 53402,
           "ch": -0.29
-        },
-        {
-          "t": "2025-07-08",
-          "o": 34.28,
-          "h": 34.36,
-          "l": 34.21,
-          "c": 34.36,
-          "a": 33.217542,
-          "v": 78853,
-          "ch": 0.5
         }
       ],
       "weekly_1y": [
@@ -3227,10 +3247,10 @@
           "o": 51.62,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 548712,
-          "ch": -0.91
+          "c": 50.6,
+          "a": 50.6,
+          "v": 741905,
+          "ch": -0.06
         },
         {
           "t": "2026-06-29",
@@ -3749,10 +3769,10 @@
           "o": 51.84,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 1102449,
-          "ch": -5.12
+          "c": 50.6,
+          "a": 50.6,
+          "v": 1295642,
+          "ch": -4.31
         },
         {
           "t": "2026-06-01",
@@ -3871,10 +3891,10 @@
           "o": 51.62,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 548712,
-          "ch": -0.91
+          "c": 50.6,
+          "a": 50.6,
+          "v": 741905,
+          "ch": -0.06
         },
         {
           "t": "2026-06-29",
@@ -4393,10 +4413,10 @@
           "o": 51.84,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 1102449,
-          "ch": -5.12
+          "c": 50.6,
+          "a": 50.6,
+          "v": 1295642,
+          "ch": -4.31
         },
         {
           "t": "2026-06-01",
@@ -4515,10 +4535,10 @@
           "o": 51.84,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 1102449,
-          "ch": -5.12
+          "c": 50.6,
+          "a": 50.6,
+          "v": 1295642,
+          "ch": -4.31
         },
         {
           "t": "2026-06-01",
@@ -5114,48 +5134,1874 @@
     }
   },
   "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "XCEM",
+        "lastChecked": 1783690087998,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$2.00B",
+      "nav": "$25.57",
+      "expenseRatio": "0.16%",
+      "peRatio": "20.59",
+      "sharesOut": "39.75M",
+      "dps": "$1.25",
+      "dividendYield": "2.47%",
+      "payoutRatio": "50.77%",
+      "exDivDate": "Dec 18, 2025",
+      "ch1y": "+47.26%",
+      "payoutFrequency": "Annual",
+      "beta": "0.90",
+      "holdings": 471,
+      "inception": "Sep 2, 2015",
+      "chart": {
+        "expiration": 1783690200000,
+        "data": [
+          {
+            "t": 1783589400
+          },
+          {
+            "t": 1783589460
+          },
+          {
+            "t": 1783589520
+          },
+          {
+            "t": 1783589580
+          },
+          {
+            "t": 1783589640
+          },
+          {
+            "t": 1783589700
+          },
+          {
+            "t": 1783589760
+          },
+          {
+            "t": 1783589820
+          },
+          {
+            "t": 1783589880
+          },
+          {
+            "t": 1783589940
+          },
+          {
+            "t": 1783590000
+          },
+          {
+            "t": 1783590060
+          },
+          {
+            "t": 1783590120
+          },
+          {
+            "t": 1783590180
+          },
+          {
+            "t": 1783590240
+          },
+          {
+            "t": 1783590300
+          },
+          {
+            "t": 1783590360
+          },
+          {
+            "c": 50.59,
+            "o": 50.68,
+            "t": 1783590420
+          },
+          {
+            "c": 50.59,
+            "t": 1783590480
+          },
+          {
+            "c": null,
+            "t": 1783590540
+          },
+          {
+            "c": 50.59,
+            "t": 1783590600
+          },
+          {
+            "c": 50.68,
+            "t": 1783590660
+          },
+          {
+            "c": null,
+            "t": 1783590720
+          },
+          {
+            "c": null,
+            "t": 1783590780
+          },
+          {
+            "c": null,
+            "t": 1783590840
+          },
+          {
+            "c": 50.66,
+            "t": 1783590900
+          },
+          {
+            "c": null,
+            "t": 1783590960
+          },
+          {
+            "c": null,
+            "t": 1783591020
+          },
+          {
+            "c": null,
+            "t": 1783591080
+          },
+          {
+            "c": null,
+            "t": 1783591140
+          },
+          {
+            "c": 50.75,
+            "t": 1783591200
+          },
+          {
+            "c": null,
+            "t": 1783591260
+          },
+          {
+            "c": 50.77,
+            "t": 1783591320
+          },
+          {
+            "c": null,
+            "t": 1783591380
+          },
+          {
+            "c": null,
+            "t": 1783591440
+          },
+          {
+            "c": null,
+            "t": 1783591500
+          },
+          {
+            "c": 50.76,
+            "t": 1783591560
+          },
+          {
+            "c": 50.77,
+            "t": 1783591620
+          },
+          {
+            "c": 50.687,
+            "t": 1783591680
+          },
+          {
+            "c": null,
+            "t": 1783591740
+          },
+          {
+            "c": null,
+            "t": 1783591800
+          },
+          {
+            "c": null,
+            "t": 1783591860
+          },
+          {
+            "c": 50.61,
+            "t": 1783591920
+          },
+          {
+            "c": 50.63,
+            "t": 1783591980
+          },
+          {
+            "c": null,
+            "t": 1783592040
+          },
+          {
+            "c": 50.54,
+            "t": 1783592100
+          },
+          {
+            "c": 50.51,
+            "t": 1783592160
+          },
+          {
+            "c": null,
+            "t": 1783592220
+          },
+          {
+            "c": 50.5,
+            "t": 1783592280
+          },
+          {
+            "c": null,
+            "t": 1783592340
+          },
+          {
+            "c": null,
+            "t": 1783592400
+          },
+          {
+            "c": null,
+            "t": 1783592460
+          },
+          {
+            "c": null,
+            "t": 1783592520
+          },
+          {
+            "c": null,
+            "t": 1783592580
+          },
+          {
+            "c": null,
+            "t": 1783592640
+          },
+          {
+            "c": null,
+            "t": 1783592700
+          },
+          {
+            "c": null,
+            "t": 1783592760
+          },
+          {
+            "c": null,
+            "t": 1783592820
+          },
+          {
+            "c": null,
+            "t": 1783592880
+          },
+          {
+            "c": null,
+            "t": 1783592940
+          },
+          {
+            "c": null,
+            "t": 1783593000
+          },
+          {
+            "c": null,
+            "t": 1783593060
+          },
+          {
+            "c": null,
+            "t": 1783593120
+          },
+          {
+            "c": null,
+            "t": 1783593180
+          },
+          {
+            "c": null,
+            "t": 1783593240
+          },
+          {
+            "c": null,
+            "t": 1783593300
+          },
+          {
+            "c": 50.53,
+            "t": 1783593360
+          },
+          {
+            "c": null,
+            "t": 1783593420
+          },
+          {
+            "c": 50.59,
+            "t": 1783593480
+          },
+          {
+            "c": null,
+            "t": 1783593540
+          },
+          {
+            "c": null,
+            "t": 1783593600
+          },
+          {
+            "c": null,
+            "t": 1783593660
+          },
+          {
+            "c": null,
+            "t": 1783593720
+          },
+          {
+            "c": 50.65,
+            "t": 1783593780
+          },
+          {
+            "c": null,
+            "t": 1783593840
+          },
+          {
+            "c": null,
+            "t": 1783593900
+          },
+          {
+            "c": 50.69,
+            "t": 1783593960
+          },
+          {
+            "c": null,
+            "t": 1783594020
+          },
+          {
+            "c": null,
+            "t": 1783594080
+          },
+          {
+            "c": null,
+            "t": 1783594140
+          },
+          {
+            "c": null,
+            "t": 1783594200
+          },
+          {
+            "c": null,
+            "t": 1783594260
+          },
+          {
+            "c": 50.5,
+            "t": 1783594320
+          },
+          {
+            "c": null,
+            "t": 1783594380
+          },
+          {
+            "c": null,
+            "t": 1783594440
+          },
+          {
+            "c": null,
+            "t": 1783594500
+          },
+          {
+            "c": null,
+            "t": 1783594560
+          },
+          {
+            "c": null,
+            "t": 1783594620
+          },
+          {
+            "c": null,
+            "t": 1783594680
+          },
+          {
+            "c": 50.46,
+            "t": 1783594740
+          },
+          {
+            "c": null,
+            "t": 1783594800
+          },
+          {
+            "c": null,
+            "t": 1783594860
+          },
+          {
+            "c": null,
+            "t": 1783594920
+          },
+          {
+            "c": null,
+            "t": 1783594980
+          },
+          {
+            "c": null,
+            "t": 1783595040
+          },
+          {
+            "c": null,
+            "t": 1783595100
+          },
+          {
+            "c": 50.56,
+            "t": 1783595160
+          },
+          {
+            "c": 50.67,
+            "t": 1783595220
+          },
+          {
+            "c": null,
+            "t": 1783595280
+          },
+          {
+            "c": null,
+            "t": 1783595340
+          },
+          {
+            "c": null,
+            "t": 1783595400
+          },
+          {
+            "c": null,
+            "t": 1783595460
+          },
+          {
+            "c": null,
+            "t": 1783595520
+          },
+          {
+            "c": null,
+            "t": 1783595580
+          },
+          {
+            "c": null,
+            "t": 1783595640
+          },
+          {
+            "c": null,
+            "t": 1783595700
+          },
+          {
+            "c": null,
+            "t": 1783595760
+          },
+          {
+            "c": 50.62,
+            "t": 1783595820
+          },
+          {
+            "c": null,
+            "t": 1783595880
+          },
+          {
+            "c": 50.56,
+            "t": 1783595940
+          },
+          {
+            "c": 50.61,
+            "t": 1783596000
+          },
+          {
+            "c": 50.65,
+            "t": 1783596060
+          },
+          {
+            "c": null,
+            "t": 1783596120
+          },
+          {
+            "c": 50.63,
+            "t": 1783596180
+          },
+          {
+            "c": null,
+            "t": 1783596240
+          },
+          {
+            "c": null,
+            "t": 1783596300
+          },
+          {
+            "c": null,
+            "t": 1783596360
+          },
+          {
+            "c": null,
+            "t": 1783596420
+          },
+          {
+            "c": null,
+            "t": 1783596480
+          },
+          {
+            "c": null,
+            "t": 1783596540
+          },
+          {
+            "c": null,
+            "t": 1783596600
+          },
+          {
+            "c": null,
+            "t": 1783596660
+          },
+          {
+            "c": null,
+            "t": 1783596720
+          },
+          {
+            "c": null,
+            "t": 1783596780
+          },
+          {
+            "c": null,
+            "t": 1783596840
+          },
+          {
+            "c": null,
+            "t": 1783596900
+          },
+          {
+            "c": null,
+            "t": 1783596960
+          },
+          {
+            "c": null,
+            "t": 1783597020
+          },
+          {
+            "c": null,
+            "t": 1783597080
+          },
+          {
+            "c": null,
+            "t": 1783597140
+          },
+          {
+            "c": null,
+            "t": 1783597200
+          },
+          {
+            "c": 50.65,
+            "t": 1783597260
+          },
+          {
+            "c": 50.67,
+            "t": 1783597320
+          },
+          {
+            "c": null,
+            "t": 1783597380
+          },
+          {
+            "c": null,
+            "t": 1783597440
+          },
+          {
+            "c": null,
+            "t": 1783597500
+          },
+          {
+            "c": null,
+            "t": 1783597560
+          },
+          {
+            "c": null,
+            "t": 1783597620
+          },
+          {
+            "c": null,
+            "t": 1783597680
+          },
+          {
+            "c": null,
+            "t": 1783597740
+          },
+          {
+            "c": 50.71,
+            "t": 1783597800
+          },
+          {
+            "c": null,
+            "t": 1783597860
+          },
+          {
+            "c": null,
+            "t": 1783597920
+          },
+          {
+            "c": null,
+            "t": 1783597980
+          },
+          {
+            "c": null,
+            "t": 1783598040
+          },
+          {
+            "c": 50.77,
+            "t": 1783598100
+          },
+          {
+            "c": null,
+            "t": 1783598160
+          },
+          {
+            "c": 50.74,
+            "t": 1783598220
+          },
+          {
+            "c": null,
+            "t": 1783598280
+          },
+          {
+            "c": null,
+            "t": 1783598340
+          },
+          {
+            "c": 50.7,
+            "t": 1783598400
+          },
+          {
+            "c": 50.703,
+            "t": 1783598460
+          },
+          {
+            "c": null,
+            "t": 1783598520
+          },
+          {
+            "c": null,
+            "t": 1783598580
+          },
+          {
+            "c": 50.654,
+            "t": 1783598640
+          },
+          {
+            "c": null,
+            "t": 1783598700
+          },
+          {
+            "c": null,
+            "t": 1783598760
+          },
+          {
+            "c": null,
+            "t": 1783598820
+          },
+          {
+            "c": null,
+            "t": 1783598880
+          },
+          {
+            "c": null,
+            "t": 1783598940
+          },
+          {
+            "c": null,
+            "t": 1783599000
+          },
+          {
+            "c": null,
+            "t": 1783599060
+          },
+          {
+            "c": null,
+            "t": 1783599120
+          },
+          {
+            "c": 50.72,
+            "t": 1783599180
+          },
+          {
+            "c": null,
+            "t": 1783599240
+          },
+          {
+            "c": null,
+            "t": 1783599300
+          },
+          {
+            "c": null,
+            "t": 1783599360
+          },
+          {
+            "c": null,
+            "t": 1783599420
+          },
+          {
+            "c": 50.71,
+            "t": 1783599480
+          },
+          {
+            "c": null,
+            "t": 1783599540
+          },
+          {
+            "c": null,
+            "t": 1783599600
+          },
+          {
+            "c": 50.705,
+            "t": 1783599660
+          },
+          {
+            "c": null,
+            "t": 1783599720
+          },
+          {
+            "c": 50.705,
+            "t": 1783599780
+          },
+          {
+            "c": null,
+            "t": 1783599840
+          },
+          {
+            "c": null,
+            "t": 1783599900
+          },
+          {
+            "c": 50.69,
+            "t": 1783599960
+          },
+          {
+            "c": 50.69,
+            "t": 1783600020
+          },
+          {
+            "c": null,
+            "t": 1783600080
+          },
+          {
+            "c": 50.64,
+            "t": 1783600140
+          },
+          {
+            "c": null,
+            "t": 1783600200
+          },
+          {
+            "c": null,
+            "t": 1783600260
+          },
+          {
+            "c": null,
+            "t": 1783600320
+          },
+          {
+            "c": null,
+            "t": 1783600380
+          },
+          {
+            "c": 50.63,
+            "t": 1783600440
+          },
+          {
+            "c": null,
+            "t": 1783600500
+          },
+          {
+            "c": 50.6,
+            "t": 1783600560
+          },
+          {
+            "c": null,
+            "t": 1783600620
+          },
+          {
+            "c": null,
+            "t": 1783600680
+          },
+          {
+            "c": null,
+            "t": 1783600740
+          },
+          {
+            "c": null,
+            "t": 1783600800
+          },
+          {
+            "c": 50.63,
+            "t": 1783600860
+          },
+          {
+            "c": null,
+            "t": 1783600920
+          },
+          {
+            "c": null,
+            "t": 1783600980
+          },
+          {
+            "c": 50.63,
+            "t": 1783601040
+          },
+          {
+            "c": null,
+            "t": 1783601100
+          },
+          {
+            "c": null,
+            "t": 1783601160
+          },
+          {
+            "c": null,
+            "t": 1783601220
+          },
+          {
+            "c": 50.63,
+            "t": 1783601280
+          },
+          {
+            "c": null,
+            "t": 1783601340
+          },
+          {
+            "c": null,
+            "t": 1783601400
+          },
+          {
+            "c": null,
+            "t": 1783601460
+          },
+          {
+            "c": 50.63,
+            "t": 1783601520
+          },
+          {
+            "c": 50.63,
+            "t": 1783601580
+          },
+          {
+            "c": null,
+            "t": 1783601640
+          },
+          {
+            "c": null,
+            "t": 1783601700
+          },
+          {
+            "c": null,
+            "t": 1783601760
+          },
+          {
+            "c": 50.62,
+            "t": 1783601820
+          },
+          {
+            "c": null,
+            "t": 1783601880
+          },
+          {
+            "c": null,
+            "t": 1783601940
+          },
+          {
+            "c": null,
+            "t": 1783602000
+          },
+          {
+            "c": null,
+            "t": 1783602060
+          },
+          {
+            "c": null,
+            "t": 1783602120
+          },
+          {
+            "c": 50.6,
+            "t": 1783602180
+          },
+          {
+            "c": null,
+            "t": 1783602240
+          },
+          {
+            "c": null,
+            "t": 1783602300
+          },
+          {
+            "c": null,
+            "t": 1783602360
+          },
+          {
+            "c": null,
+            "t": 1783602420
+          },
+          {
+            "c": null,
+            "t": 1783602480
+          },
+          {
+            "c": null,
+            "t": 1783602540
+          },
+          {
+            "c": null,
+            "t": 1783602600
+          },
+          {
+            "c": null,
+            "t": 1783602660
+          },
+          {
+            "c": null,
+            "t": 1783602720
+          },
+          {
+            "c": null,
+            "t": 1783602780
+          },
+          {
+            "c": null,
+            "t": 1783602840
+          },
+          {
+            "c": null,
+            "t": 1783602900
+          },
+          {
+            "c": null,
+            "t": 1783602960
+          },
+          {
+            "c": null,
+            "t": 1783603020
+          },
+          {
+            "c": null,
+            "t": 1783603080
+          },
+          {
+            "c": null,
+            "t": 1783603140
+          },
+          {
+            "c": null,
+            "t": 1783603200
+          },
+          {
+            "c": null,
+            "t": 1783603260
+          },
+          {
+            "c": null,
+            "t": 1783603320
+          },
+          {
+            "c": null,
+            "t": 1783603380
+          },
+          {
+            "c": null,
+            "t": 1783603440
+          },
+          {
+            "c": null,
+            "t": 1783603500
+          },
+          {
+            "c": null,
+            "t": 1783603560
+          },
+          {
+            "c": null,
+            "t": 1783603620
+          },
+          {
+            "c": null,
+            "t": 1783603680
+          },
+          {
+            "c": null,
+            "t": 1783603740
+          },
+          {
+            "c": null,
+            "t": 1783603800
+          },
+          {
+            "c": null,
+            "t": 1783603860
+          },
+          {
+            "c": null,
+            "t": 1783603920
+          },
+          {
+            "c": null,
+            "t": 1783603980
+          },
+          {
+            "c": null,
+            "t": 1783604040
+          },
+          {
+            "c": null,
+            "t": 1783604100
+          },
+          {
+            "c": null,
+            "t": 1783604160
+          },
+          {
+            "c": null,
+            "t": 1783604220
+          },
+          {
+            "c": null,
+            "t": 1783604280
+          },
+          {
+            "c": null,
+            "t": 1783604340
+          },
+          {
+            "c": null,
+            "t": 1783604400
+          },
+          {
+            "c": null,
+            "t": 1783604460
+          },
+          {
+            "c": 50.8,
+            "t": 1783604520
+          },
+          {
+            "c": 50.79,
+            "t": 1783604580
+          },
+          {
+            "c": 50.8,
+            "t": 1783604640
+          },
+          {
+            "c": 50.81,
+            "t": 1783604700
+          },
+          {
+            "c": null,
+            "t": 1783604760
+          },
+          {
+            "c": 50.83,
+            "t": 1783604820
+          },
+          {
+            "c": 50.87,
+            "t": 1783604880
+          },
+          {
+            "c": 50.83,
+            "t": 1783604940
+          },
+          {
+            "c": null,
+            "t": 1783605000
+          },
+          {
+            "c": null,
+            "t": 1783605060
+          },
+          {
+            "c": null,
+            "t": 1783605120
+          },
+          {
+            "c": null,
+            "t": 1783605180
+          },
+          {
+            "c": null,
+            "t": 1783605240
+          },
+          {
+            "c": 50.83,
+            "t": 1783605300
+          },
+          {
+            "c": null,
+            "t": 1783605360
+          },
+          {
+            "c": 50.805,
+            "t": 1783605420
+          },
+          {
+            "c": 50.77,
+            "t": 1783605480
+          },
+          {
+            "c": 50.81,
+            "t": 1783605540
+          },
+          {
+            "c": 50.83,
+            "t": 1783605600
+          },
+          {
+            "c": 50.805,
+            "t": 1783605660
+          },
+          {
+            "c": 50.805,
+            "t": 1783605720
+          },
+          {
+            "c": 50.86,
+            "t": 1783605780
+          },
+          {
+            "c": 50.805,
+            "t": 1783605840
+          },
+          {
+            "c": 50.78,
+            "t": 1783605900
+          },
+          {
+            "c": 50.82,
+            "t": 1783605960
+          },
+          {
+            "c": null,
+            "t": 1783606020
+          },
+          {
+            "c": null,
+            "t": 1783606080
+          },
+          {
+            "c": 50.82,
+            "t": 1783606140
+          },
+          {
+            "c": null,
+            "t": 1783606200
+          },
+          {
+            "c": 50.82,
+            "t": 1783606260
+          },
+          {
+            "c": 50.79,
+            "t": 1783606320
+          },
+          {
+            "c": null,
+            "t": 1783606380
+          },
+          {
+            "c": null,
+            "t": 1783606440
+          },
+          {
+            "c": null,
+            "t": 1783606500
+          },
+          {
+            "c": 50.805,
+            "t": 1783606560
+          },
+          {
+            "c": 50.805,
+            "t": 1783606620
+          },
+          {
+            "c": null,
+            "t": 1783606680
+          },
+          {
+            "c": 50.8,
+            "t": 1783606740
+          },
+          {
+            "c": 50.805,
+            "t": 1783606800
+          },
+          {
+            "c": 50.805,
+            "t": 1783606860
+          },
+          {
+            "c": null,
+            "t": 1783606920
+          },
+          {
+            "c": null,
+            "t": 1783606980
+          },
+          {
+            "c": 50.805,
+            "t": 1783607040
+          },
+          {
+            "c": 50.805,
+            "t": 1783607100
+          },
+          {
+            "c": null,
+            "t": 1783607160
+          },
+          {
+            "c": 50.78,
+            "t": 1783607220
+          },
+          {
+            "c": 50.775,
+            "t": 1783607280
+          },
+          {
+            "c": null,
+            "t": 1783607340
+          },
+          {
+            "c": null,
+            "t": 1783607400
+          },
+          {
+            "c": 50.74,
+            "t": 1783607460
+          },
+          {
+            "c": null,
+            "t": 1783607520
+          },
+          {
+            "c": null,
+            "t": 1783607580
+          },
+          {
+            "c": null,
+            "t": 1783607640
+          },
+          {
+            "c": 50.805,
+            "t": 1783607700
+          },
+          {
+            "c": null,
+            "t": 1783607760
+          },
+          {
+            "c": null,
+            "t": 1783607820
+          },
+          {
+            "c": null,
+            "t": 1783607880
+          },
+          {
+            "c": 50.765,
+            "t": 1783607940
+          },
+          {
+            "c": null,
+            "t": 1783608000
+          },
+          {
+            "c": null,
+            "t": 1783608060
+          },
+          {
+            "c": 50.79,
+            "t": 1783608120
+          },
+          {
+            "c": 50.765,
+            "t": 1783608180
+          },
+          {
+            "c": null,
+            "t": 1783608240
+          },
+          {
+            "c": null,
+            "t": 1783608300
+          },
+          {
+            "c": null,
+            "t": 1783608360
+          },
+          {
+            "c": null,
+            "t": 1783608420
+          },
+          {
+            "c": null,
+            "t": 1783608480
+          },
+          {
+            "c": null,
+            "t": 1783608540
+          },
+          {
+            "c": 50.76,
+            "t": 1783608600
+          },
+          {
+            "c": null,
+            "t": 1783608660
+          },
+          {
+            "c": 50.79,
+            "t": 1783608720
+          },
+          {
+            "c": 50.805,
+            "t": 1783608780
+          },
+          {
+            "c": null,
+            "t": 1783608840
+          },
+          {
+            "c": 50.82,
+            "t": 1783608900
+          },
+          {
+            "c": null,
+            "t": 1783608960
+          },
+          {
+            "c": null,
+            "t": 1783609020
+          },
+          {
+            "c": 50.77,
+            "t": 1783609080
+          },
+          {
+            "c": null,
+            "t": 1783609140
+          },
+          {
+            "c": 50.77,
+            "t": 1783609200
+          },
+          {
+            "c": 50.805,
+            "t": 1783609260
+          },
+          {
+            "c": null,
+            "t": 1783609320
+          },
+          {
+            "c": 50.805,
+            "t": 1783609380
+          },
+          {
+            "c": 50.805,
+            "t": 1783609440
+          },
+          {
+            "c": 50.805,
+            "t": 1783609500
+          },
+          {
+            "c": null,
+            "t": 1783609560
+          },
+          {
+            "c": null,
+            "t": 1783609620
+          },
+          {
+            "c": null,
+            "t": 1783609680
+          },
+          {
+            "c": null,
+            "t": 1783609740
+          },
+          {
+            "c": 50.715,
+            "t": 1783609800
+          },
+          {
+            "c": null,
+            "t": 1783609860
+          },
+          {
+            "c": null,
+            "t": 1783609920
+          },
+          {
+            "c": null,
+            "t": 1783609980
+          },
+          {
+            "c": null,
+            "t": 1783610040
+          },
+          {
+            "c": 50.805,
+            "t": 1783610100
+          },
+          {
+            "c": 50.67,
+            "t": 1783610160
+          },
+          {
+            "c": null,
+            "t": 1783610220
+          },
+          {
+            "c": 50.805,
+            "t": 1783610280
+          },
+          {
+            "c": 50.805,
+            "t": 1783610340
+          },
+          {
+            "c": null,
+            "t": 1783610400
+          },
+          {
+            "c": 50.75,
+            "t": 1783610460
+          },
+          {
+            "c": 50.805,
+            "t": 1783610520
+          },
+          {
+            "c": null,
+            "t": 1783610580
+          },
+          {
+            "c": 50.79,
+            "t": 1783610640
+          },
+          {
+            "c": 50.805,
+            "t": 1783610700
+          },
+          {
+            "c": 50.805,
+            "t": 1783610760
+          },
+          {
+            "c": 50.805,
+            "t": 1783610820
+          },
+          {
+            "c": 50.805,
+            "t": 1783610880
+          },
+          {
+            "c": null,
+            "t": 1783610940
+          },
+          {
+            "c": 50.805,
+            "t": 1783611000
+          },
+          {
+            "c": 50.805,
+            "t": 1783611060
+          },
+          {
+            "c": null,
+            "t": 1783611120
+          },
+          {
+            "c": 50.675,
+            "t": 1783611180
+          },
+          {
+            "c": 50.74,
+            "t": 1783611240
+          },
+          {
+            "c": 50.675,
+            "t": 1783611300
+          },
+          {
+            "c": null,
+            "t": 1783611360
+          },
+          {
+            "c": null,
+            "t": 1783611420
+          },
+          {
+            "c": null,
+            "t": 1783611480
+          },
+          {
+            "c": 50.685,
+            "t": 1783611540
+          },
+          {
+            "c": 50.675,
+            "t": 1783611600
+          },
+          {
+            "c": null,
+            "t": 1783611660
+          },
+          {
+            "c": 50.68,
+            "t": 1783611720
+          },
+          {
+            "c": 50.68,
+            "t": 1783611780
+          },
+          {
+            "c": null,
+            "t": 1783611840
+          },
+          {
+            "c": 50.68,
+            "t": 1783611900
+          },
+          {
+            "c": null,
+            "t": 1783611960
+          },
+          {
+            "c": 50.68,
+            "t": 1783612020
+          },
+          {
+            "c": null,
+            "t": 1783612080
+          },
+          {
+            "c": 50.675,
+            "t": 1783612140
+          },
+          {
+            "c": 50.675,
+            "t": 1783612200
+          },
+          {
+            "c": 50.675,
+            "t": 1783612260
+          },
+          {
+            "c": null,
+            "t": 1783612320
+          },
+          {
+            "c": 50.64,
+            "t": 1783612380
+          },
+          {
+            "c": 50.675,
+            "t": 1783612440
+          },
+          {
+            "c": 50.59,
+            "t": 1783612500
+          },
+          {
+            "c": 50.59,
+            "t": 1783612560
+          },
+          {
+            "c": 50.73,
+            "t": 1783612620
+          },
+          {
+            "c": 50.675,
+            "t": 1783612680
+          },
+          {
+            "c": 50.74,
+            "t": 1783612740
+          },
+          {
+            "c": 50.6,
+            "t": 1783612800
+          }
+        ]
+      },
+      "description": "The Columbia EM Core ex-China ETF (XCEM) is an exchange-traded fund that mostly invests in total market equity. The fund tracks a market-cap-weighted index that provides broad equity exposure to emerging markets excluding China. XCEM was launched on Sep 2, 2015 and is issued by Columbia Threadneedle.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Diversified Emerging Mkts"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "XCEM"
+        ],
+        [
+          "Provider",
+          "Columbia Threadneedle"
+        ],
+        [
+          "Index Tracked",
+          "Beta Thematic Emerging Markets ex-China Index"
+        ]
+      ],
+      "etf_website": "https://www.columbiathreadneedleus.com/investment-products/exchange-traded-funds/Columbia-EM-Core-ex-China-ETF/Class-ETF/details/?cusip=19762B202",
+      "provider_page": "columbia-threadneedle",
+      "holdingsTable": {
+        "count": 471,
+        "updated": "Jul 7, 2026",
+        "top10": 36.29,
+        "holdings": [
+          {
+            "n": "Taiwan Semiconductor Manufacturing Company Limited",
+            "s": "!tpe/2330",
+            "as": "15.46%",
+            "sh": "4,072,765"
+          },
+          {
+            "n": "Samsung Electronics Co., Ltd.",
+            "s": "!krx/005930",
+            "as": "8.98%",
+            "sh": "926,836"
+          },
+          {
+            "n": "SK hynix Inc.",
+            "s": "!krx/000660",
+            "as": "3.96%",
+            "sh": "55,010"
+          },
+          {
+            "n": "MediaTek Inc.",
+            "s": "!tpe/2454",
+            "as": "1.52%",
+            "sh": "242,487"
+          },
+          {
+            "n": "Delta Electronics, Inc.",
+            "s": "!tpe/2308",
+            "as": "1.48%",
+            "sh": "502,327"
+          },
+          {
+            "n": "Samsung Electro-Mechanics Co., Ltd.",
+            "s": "!krx/009150",
+            "as": "1.11%",
+            "sh": "20,518"
+          },
+          {
+            "n": "Hon Hai Precision Industry Co., Ltd.",
+            "s": "!tpe/2317",
+            "as": "1.02%",
+            "sh": "2,760,982"
+          },
+          {
+            "n": "HDFC Bank Limited",
+            "s": "$HDB",
+            "as": "0.98%",
+            "sh": "723,485"
+          },
+          {
+            "n": "ICICI Bank Limited",
+            "s": "$IBN",
+            "as": "0.90%",
+            "sh": "604,335"
+          },
+          {
+            "n": "ASE Technology Holding Co., Ltd.",
+            "s": "!tpe/3711",
+            "as": "0.88%",
+            "sh": "872,322"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2025-12-18",
+          "amt": 1.24747,
+          "pay": "2025-12-26"
+        },
+        {
+          "dt": "2024-12-18",
+          "amt": 0.81728,
+          "pay": "2024-12-26"
+        },
+        {
+          "dt": "2023-12-18",
+          "amt": 0.36911,
+          "pay": "2023-12-26"
+        },
+        {
+          "dt": "2022-12-19",
+          "amt": 0.61753,
+          "pay": "2022-12-27"
+        },
+        {
+          "dt": "2021-12-20",
+          "amt": 0.61535,
+          "pay": "2021-12-27"
+        },
+        {
+          "dt": "2020-12-18",
+          "amt": 0.48995,
+          "pay": "2020-12-28"
+        }
+      ],
+      "news": {
+        "exp": "1783675185692",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/ai-ex-china-rewriting-emerging-markets-etf-playbook/",
+            "img": "https://cdn.snapi.dev/images/v1/i/g/9/etf35-3790947.jpg",
+            "title": "AI & “Ex-China” Rewriting the Emerging Markets ETF Playbook",
+            "text": "The action in Emerging Markets ETFs this year has been really interesting to watch. From record-breaking asset flows to impressive results, albeit massively dispersed, this category of funds has had q...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#AVEM",
+              "#EMXC",
+              "#IEMG",
+              "#IVV",
+              "#VWO"
+            ],
+            "time": "Jul 8, 2026, 8:15 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/thematic-investing-content-hub/ex-china-files-etfs-watch-trumps-high-stakes-visit/",
+            "img": "https://cdn.snapi.dev/images/v1/c/m/g/etf23-3699173.jpg",
+            "title": "The Ex-China Files: ETFs to Watch Amid Trump's High-Stakes Visit",
+            "text": "Investing in emerging markets (EM) used to be synonymous with getting exposure to China. It's an ideal notion, given that it's the second largest economy and thus commands a heavy weight in standard E...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#AVXC",
+              "$EM",
+              "#EMM",
+              "#EMXC",
+              "#FRDM",
+              "#NSI",
+              "#REXC"
+            ],
+            "time": "May 13, 2026, 3:33 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/emerging-market-funds-exclude-china-beating-index-464427eb",
+            "img": "https://cdn.snapi.dev/images/v1/w/w/j/etf19-1967572.jpg",
+            "title": "Emerging Market Funds That Exclude China Are Beating the Index",
+            "text": "Ex-China funds are attracting assets as geopolitical tensions with the U.S. grab headlines and China underperforms other emerging market countries.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "#EMXC",
+              "#FRDM",
+              "#IEMG"
+            ],
+            "time": "Jul 12, 2023, 2:00 AM EDT",
+            "ago": "3 years ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/5-emerging-market-etfs-that-limit-investments-in-china-51666993202",
+            "img": "https://cdn.snapi.dev/images/v1/1/5/p/etf27-1607042.jpg",
+            "title": "5 Emerging Market ETFs That Limit China Investments",
+            "text": "Emerging market exchange-traded funds that limit exposure to China may be a better bet for investors as China's stocks get battered.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "#EMXC",
+              "#FRDM",
+              "#KEMX",
+              "#XC"
+            ],
+            "time": "Oct 29, 2022, 6:30 AM EDT",
+            "ago": "4 years ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 50.63,
+        "price1m": 49.98,
+        "price3m": 43.96,
+        "price6m": 39.77,
+        "priceYTD": 38.36,
+        "price1y": 34.36,
+        "price5y": 32.596,
+        "priceMAX": 20.52
+      },
+      "performance": {
+        "tr1m": 1.24,
+        "trYTD": 31.908,
+        "tr1y": 52.329,
+        "cagr5y": 11.768,
+        "cagr10y": 12.213,
+        "cagrMAX": 11.851
+      }
+    },
     "holdings": {
       "holdings": [
         {
           "no": 1,
           "n": "Taiwan Semiconductor Manufacturing Company Limited",
           "s": "!tpe/2330",
-          "as": "15.58%",
+          "as": "15.46%",
           "sh": "4,072,765"
         },
         {
           "no": 2,
           "n": "Samsung Electronics Co., Ltd.",
           "s": "!krx/005930",
-          "as": "8.45%",
+          "as": "8.98%",
           "sh": "926,836"
         },
         {
           "no": 3,
           "n": "SK hynix Inc.",
           "s": "!krx/000660",
-          "as": "3.83%",
+          "as": "3.96%",
           "sh": "55,010"
         },
         {
           "no": 4,
           "n": "MediaTek Inc.",
           "s": "!tpe/2454",
-          "as": "1.64%",
+          "as": "1.52%",
           "sh": "242,487"
         },
         {
           "no": 5,
           "n": "Delta Electronics, Inc.",
           "s": "!tpe/2308",
-          "as": "1.54%",
+          "as": "1.48%",
           "sh": "502,327"
         },
         {
           "no": 6,
           "n": "Samsung Electro-Mechanics Co., Ltd.",
           "s": "!krx/009150",
-          "as": "1.26%",
+          "as": "1.11%",
           "sh": "20,518"
         },
         {
@@ -5167,128 +7013,128 @@
         },
         {
           "no": 8,
-          "n": "ASE Technology Holding Co., Ltd.",
-          "s": "!tpe/3711",
-          "as": "0.98%",
-          "sh": "872,322"
-        },
-        {
-          "no": 9,
           "n": "HDFC Bank Limited",
           "s": "$HDB",
-          "as": "0.92%",
+          "as": "0.98%",
           "sh": "723,485"
         },
         {
-          "no": 10,
+          "no": 9,
           "n": "ICICI Bank Limited",
           "s": "$IBN",
-          "as": "0.88%",
+          "as": "0.90%",
           "sh": "604,335"
         },
         {
-          "no": 11,
-          "n": "SK Square Co., Ltd.",
-          "s": "!krx/402340",
-          "as": "0.86%",
-          "sh": "17,608"
+          "no": 10,
+          "n": "ASE Technology Holding Co., Ltd.",
+          "s": "!tpe/3711",
+          "as": "0.88%",
+          "sh": "872,322"
         },
         {
-          "no": 12,
+          "no": 11,
           "n": "Reliance Industries Limited",
           "s": "!nse/RELIANCE",
-          "as": "0.83%",
+          "as": "0.84%",
           "sh": "1,219,737"
         },
         {
-          "no": 13,
-          "n": "International Holdings Co PJSC",
-          "s": "IHC",
-          "as": "0.82%",
+          "no": 12,
+          "n": "International Holding Company PJSC",
+          "s": "!adx/IHC",
+          "as": "0.84%",
           "sh": "160,428"
+        },
+        {
+          "no": 13,
+          "n": "SK Square Co., Ltd.",
+          "s": "!krx/402340",
+          "as": "0.78%",
+          "sh": "17,608"
         },
         {
           "no": 14,
           "n": "Samsung SDI Co., Ltd.",
           "s": "!krx/006400",
-          "as": "0.74%",
+          "as": "0.72%",
           "sh": "49,308"
         },
         {
           "no": 15,
-          "n": "United Microelectronics Corporation",
-          "s": "!tpe/2303",
-          "as": "0.74%",
-          "sh": "2,870,006"
-        },
-        {
-          "no": 16,
           "n": "VanEck Semiconductor ETF",
           "s": "#SMH",
           "as": "0.72%",
           "sh": "24,601"
         },
         {
-          "no": 17,
+          "no": 16,
           "n": "iShares Semiconductor ETF",
           "s": "#SOXX",
-          "as": "0.71%",
+          "as": "0.70%",
           "sh": "25,372"
         },
         {
-          "no": 18,
-          "n": "Elite Material Co., Ltd.",
-          "s": "!tpe/2383",
+          "no": 17,
+          "n": "United Microelectronics Corporation",
+          "s": "!tpe/2303",
           "as": "0.68%",
-          "sh": "77,466"
+          "sh": "2,870,006"
+        },
+        {
+          "no": 18,
+          "n": "COLUMBIA SHORT TERM CASH FUND",
+          "as": "0.67%",
+          "sh": "13,334,231"
         },
         {
           "no": 19,
-          "n": "Columbia Short-Term Cash",
-          "as": "0.66%",
-          "sh": "13,313,781"
-        },
-        {
-          "no": 20,
           "n": "Al Rajhi Banking and Investment Corporation",
           "s": "!tadawul/1120",
           "as": "0.66%",
           "sh": "751,947"
         },
         {
-          "no": 21,
-          "n": "Unimicron Technology Corp.",
-          "s": "!tpe/3037",
+          "no": 20,
+          "n": "Elite Material Co., Ltd.",
+          "s": "!tpe/2383",
           "as": "0.63%",
-          "sh": "412,102"
+          "sh": "77,466"
         },
         {
-          "no": 22,
+          "no": 21,
           "n": "CTBC Financial Holding Co., Ltd.",
           "s": "!tpe/2891",
-          "as": "0.62%",
+          "as": "0.63%",
           "sh": "5,746,524"
         },
         {
-          "no": 23,
-          "n": "Yageo Corporation",
-          "s": "!tpe/2327",
-          "as": "0.60%",
-          "sh": "368,778"
-        },
-        {
-          "no": 24,
-          "n": "Delta Electronics (Thailand) PCL Units Non-Voting Depository Receipt",
+          "no": 22,
+          "n": "DELTA ELECTRONICS THAILAND PCL",
           "s": "DELTA-R.BK",
           "as": "0.58%",
           "sh": "1,240,200"
         },
         {
-          "no": 25,
+          "no": 23,
+          "n": "KB Financial Group Inc.",
+          "s": "!krx/105560",
+          "as": "0.55%",
+          "sh": "97,769"
+        },
+        {
+          "no": 24,
           "n": "Powszechna Kasa Oszczednosci Bank Polski Spólka Akcyjna",
           "s": "!wse/PKO",
           "as": "0.55%",
           "sh": "395,521"
+        },
+        {
+          "no": 25,
+          "n": "Hyundai Motor Company",
+          "s": "!krx/005380",
+          "as": "0.54%",
+          "sh": "34,520"
         }
       ],
       "asset_allocation": null,
@@ -5434,12 +7280,139 @@
           "country": "Czechia"
         }
       ],
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 28.8
+          },
+          {
+            "name": "Financials",
+            "y": 21.17
+          },
+          {
+            "name": "Industrials",
+            "y": 9.13
+          },
+          {
+            "name": "Other",
+            "y": 8.96
+          },
+          {
+            "name": "Consumer Discretionary",
+            "y": 6.1
+          },
+          {
+            "name": "Materials",
+            "y": 5.75
+          },
+          {
+            "name": "Communication Services",
+            "y": 5.13
+          },
+          {
+            "name": "Consumer Staples",
+            "y": 4.15
+          },
+          {
+            "name": "Energy",
+            "y": 3.74
+          },
+          {
+            "name": "Health Care",
+            "y": 2.97
+          },
+          {
+            "name": "Utilities",
+            "y": 2.2
+          },
+          {
+            "name": "Real Estate",
+            "y": 1.9
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "Taiwan",
+            "y": 28.78425
+          },
+          {
+            "name": "India",
+            "y": 20.23183
+          },
+          {
+            "name": "Korea",
+            "y": 18.28351
+          },
+          {
+            "name": "Brazil",
+            "y": 4.99169
+          },
+          {
+            "name": "South Africa",
+            "y": 4.89943
+          },
+          {
+            "name": "Mexico",
+            "y": 3.57654
+          },
+          {
+            "name": "Thailand",
+            "y": 1.78649
+          },
+          {
+            "name": "Malaysia",
+            "y": 1.55111
+          },
+          {
+            "name": "Poland",
+            "y": 1.55064
+          },
+          {
+            "name": "Indonesia",
+            "y": 1.29733
+          },
+          {
+            "name": "Hungary",
+            "y": 0.65965
+          },
+          {
+            "name": "Greece",
+            "y": 0.65512
+          },
+          {
+            "name": "Philippines",
+            "y": 0.54584
+          },
+          {
+            "name": "Chile",
+            "y": 0.49295
+          },
+          {
+            "name": "Turkey",
+            "y": 0.42028
+          },
+          {
+            "name": "United States",
+            "y": 0.13473
+          },
+          {
+            "name": "Colombia",
+            "y": 0.1078
+          },
+          {
+            "name": "Czechia",
+            "y": 0.0826
+          }
+        ]
+      },
       "news": [
         {
           "t": "AI & “Ex-China” Rewriting the Emerging Markets ETF Playbook",
           "u": "https://www.etftrends.com/equity-etf-content-hub/ai-ex-china-rewriting-emerging-markets-etf-playbook/",
           "n": "ETF Trends",
-          "d": "14 hours ago"
+          "d": "2 days ago"
         },
         {
           "t": "The Ex-China Files: ETFs to Watch Amid Trump's High-Stakes Visit",
@@ -5460,1817 +7433,70 @@
           "d": "4 years ago"
         }
       ],
-      "infoBox": "XCEM is an equity ETF with a total of 461 individual holdings. The top holdings are Taiwan Semiconductor Manufacturing Company stock at 15.58%, Samsung Electronics at 8.45%, SK hynix at 3.83%, MediaTek at 1.64%, and Delta Electronics at 1.54%.",
+      "infoBox": "XCEM is an equity ETF with a total of 471 individual holdings. The top holdings are Taiwan Semiconductor Manufacturing Company stock at 15.46%, Samsung Electronics at 8.98%, SK hynix at 3.96%, MediaTek at 1.52%, and Delta Electronics at 1.48%.",
       "infoTable": {
-        "count": 461,
-        "top10": 36.12,
+        "count": 471,
+        "top10": 36.29,
         "assetClass": "Equity",
         "category": "Diversified Emerging Mkts",
+        "categoryLabel": "ETF Category",
         "aum": 1996093953,
         "peRatio": 20.59218
       },
-      "date": "Jul 3, 2026",
-      "count": 461
-    },
-    "overview": {
-      "type": "etf",
-      "aum": "$2.00B",
-      "nav": "$25.57",
-      "expenseRatio": "0.16%",
-      "peRatio": "20.59",
-      "sharesOut": "39.75M",
-      "dps": "$1.25",
-      "dividendYield": "2.49%",
-      "payoutRatio": "50.74%",
-      "exDivDate": "Dec 18, 2025",
-      "ch1y": "+46.68%",
-      "payoutFrequency": "Annual",
-      "beta": "0.90",
-      "holdings": 461,
-      "inception": "Sep 2, 2015",
-      "chart": {
-        "expiration": 1783559817906,
-        "data": [
-          {
-            "t": 1783503000
-          },
-          {
-            "t": 1783503060
-          },
-          {
-            "t": 1783503120
-          },
-          {
-            "t": 1783503180
-          },
-          {
-            "t": 1783503240
-          },
-          {
-            "t": 1783503300
-          },
-          {
-            "t": 1783503360
-          },
-          {
-            "t": 1783503420
-          },
-          {
-            "t": 1783503480
-          },
-          {
-            "t": 1783503540
-          },
-          {
-            "t": 1783503600
-          },
-          {
-            "t": 1783503660
-          },
-          {
-            "t": 1783503720
-          },
-          {
-            "t": 1783503780
-          },
-          {
-            "t": 1783503840
-          },
-          {
-            "t": 1783503900
-          },
-          {
-            "t": 1783503960
-          },
-          {
-            "t": 1783504020
-          },
-          {
-            "t": 1783504080
-          },
-          {
-            "t": 1783504140
-          },
-          {
-            "t": 1783504200
-          },
-          {
-            "t": 1783504260
-          },
-          {
-            "t": 1783504320
-          },
-          {
-            "t": 1783504380
-          },
-          {
-            "t": 1783504440
-          },
-          {
-            "t": 1783504500
-          },
-          {
-            "t": 1783504560
-          },
-          {
-            "t": 1783504620
-          },
-          {
-            "t": 1783504680
-          },
-          {
-            "t": 1783504740
-          },
-          {
-            "t": 1783504800
-          },
-          {
-            "t": 1783504860
-          },
-          {
-            "t": 1783504920
-          },
-          {
-            "t": 1783504980
-          },
-          {
-            "t": 1783505040
-          },
-          {
-            "t": 1783505100
-          },
-          {
-            "t": 1783505160
-          },
-          {
-            "t": 1783505220
-          },
-          {
-            "t": 1783505280
-          },
-          {
-            "t": 1783505340
-          },
-          {
-            "t": 1783505400
-          },
-          {
-            "t": 1783505460
-          },
-          {
-            "c": 49.45,
-            "o": 49.56,
-            "t": 1783505520
-          },
-          {
-            "c": 49.57,
-            "t": 1783505580
-          },
-          {
-            "c": null,
-            "t": 1783505640
-          },
-          {
-            "c": 49.55,
-            "t": 1783505700
-          },
-          {
-            "c": null,
-            "t": 1783505760
-          },
-          {
-            "c": 49.58,
-            "t": 1783505820
-          },
-          {
-            "c": null,
-            "t": 1783505880
-          },
-          {
-            "c": null,
-            "t": 1783505940
-          },
-          {
-            "c": null,
-            "t": 1783506000
-          },
-          {
-            "c": null,
-            "t": 1783506060
-          },
-          {
-            "c": null,
-            "t": 1783506120
-          },
-          {
-            "c": null,
-            "t": 1783506180
-          },
-          {
-            "c": null,
-            "t": 1783506240
-          },
-          {
-            "c": null,
-            "t": 1783506300
-          },
-          {
-            "c": null,
-            "t": 1783506360
-          },
-          {
-            "c": null,
-            "t": 1783506420
-          },
-          {
-            "c": 49.58,
-            "t": 1783506480
-          },
-          {
-            "c": 49.73,
-            "t": 1783506540
-          },
-          {
-            "c": null,
-            "t": 1783506600
-          },
-          {
-            "c": 49.69,
-            "t": 1783506660
-          },
-          {
-            "c": 49.694,
-            "t": 1783506720
-          },
-          {
-            "c": null,
-            "t": 1783506780
-          },
-          {
-            "c": 49.66,
-            "t": 1783506840
-          },
-          {
-            "c": 49.69,
-            "t": 1783506900
-          },
-          {
-            "c": 49.57,
-            "t": 1783506960
-          },
-          {
-            "c": 49.66,
-            "t": 1783507020
-          },
-          {
-            "c": 49.58,
-            "t": 1783507080
-          },
-          {
-            "c": null,
-            "t": 1783507140
-          },
-          {
-            "c": 49.62,
-            "t": 1783507200
-          },
-          {
-            "c": 49.56,
-            "t": 1783507260
-          },
-          {
-            "c": null,
-            "t": 1783507320
-          },
-          {
-            "c": 49.66,
-            "t": 1783507380
-          },
-          {
-            "c": 49.66,
-            "t": 1783507440
-          },
-          {
-            "c": 49.57,
-            "t": 1783507500
-          },
-          {
-            "c": null,
-            "t": 1783507560
-          },
-          {
-            "c": 49.54,
-            "t": 1783507620
-          },
-          {
-            "c": null,
-            "t": 1783507680
-          },
-          {
-            "c": null,
-            "t": 1783507740
-          },
-          {
-            "c": null,
-            "t": 1783507800
-          },
-          {
-            "c": null,
-            "t": 1783507860
-          },
-          {
-            "c": 49.66,
-            "t": 1783507920
-          },
-          {
-            "c": 49.57,
-            "t": 1783507980
-          },
-          {
-            "c": 49.66,
-            "t": 1783508040
-          },
-          {
-            "c": 49.66,
-            "t": 1783508100
-          },
-          {
-            "c": 49.66,
-            "t": 1783508160
-          },
-          {
-            "c": null,
-            "t": 1783508220
-          },
-          {
-            "c": null,
-            "t": 1783508280
-          },
-          {
-            "c": 49.53,
-            "t": 1783508340
-          },
-          {
-            "c": null,
-            "t": 1783508400
-          },
-          {
-            "c": null,
-            "t": 1783508460
-          },
-          {
-            "c": null,
-            "t": 1783508520
-          },
-          {
-            "c": null,
-            "t": 1783508580
-          },
-          {
-            "c": 49.57,
-            "t": 1783508640
-          },
-          {
-            "c": null,
-            "t": 1783508700
-          },
-          {
-            "c": null,
-            "t": 1783508760
-          },
-          {
-            "c": 49.49,
-            "t": 1783508820
-          },
-          {
-            "c": null,
-            "t": 1783508880
-          },
-          {
-            "c": null,
-            "t": 1783508940
-          },
-          {
-            "c": null,
-            "t": 1783509000
-          },
-          {
-            "c": null,
-            "t": 1783509060
-          },
-          {
-            "c": null,
-            "t": 1783509120
-          },
-          {
-            "c": 49.45,
-            "t": 1783509180
-          },
-          {
-            "c": null,
-            "t": 1783509240
-          },
-          {
-            "c": null,
-            "t": 1783509300
-          },
-          {
-            "c": 49.33,
-            "t": 1783509360
-          },
-          {
-            "c": 49.31,
-            "t": 1783509420
-          },
-          {
-            "c": null,
-            "t": 1783509480
-          },
-          {
-            "c": null,
-            "t": 1783509540
-          },
-          {
-            "c": null,
-            "t": 1783509600
-          },
-          {
-            "c": null,
-            "t": 1783509660
-          },
-          {
-            "c": 49.31,
-            "t": 1783509720
-          },
-          {
-            "c": 49.24,
-            "t": 1783509780
-          },
-          {
-            "c": null,
-            "t": 1783509840
-          },
-          {
-            "c": null,
-            "t": 1783509900
-          },
-          {
-            "c": 49.22,
-            "t": 1783509960
-          },
-          {
-            "c": null,
-            "t": 1783510020
-          },
-          {
-            "c": 49.21,
-            "t": 1783510080
-          },
-          {
-            "c": null,
-            "t": 1783510140
-          },
-          {
-            "c": null,
-            "t": 1783510200
-          },
-          {
-            "c": null,
-            "t": 1783510260
-          },
-          {
-            "c": 49.27,
-            "t": 1783510320
-          },
-          {
-            "c": 49.27,
-            "t": 1783510380
-          },
-          {
-            "c": 49.21,
-            "t": 1783510440
-          },
-          {
-            "c": 49.31,
-            "t": 1783510500
-          },
-          {
-            "c": 49.34,
-            "t": 1783510560
-          },
-          {
-            "c": 49.39,
-            "t": 1783510620
-          },
-          {
-            "c": 49.38,
-            "t": 1783510680
-          },
-          {
-            "c": 49.35,
-            "t": 1783510740
-          },
-          {
-            "c": 49.39,
-            "t": 1783510800
-          },
-          {
-            "c": null,
-            "t": 1783510860
-          },
-          {
-            "c": null,
-            "t": 1783510920
-          },
-          {
-            "c": 49.4,
-            "t": 1783510980
-          },
-          {
-            "c": 49.36,
-            "t": 1783511040
-          },
-          {
-            "c": null,
-            "t": 1783511100
-          },
-          {
-            "c": 49.39,
-            "t": 1783511160
-          },
-          {
-            "c": 49.39,
-            "t": 1783511220
-          },
-          {
-            "c": 49.36,
-            "t": 1783511280
-          },
-          {
-            "c": 49.4,
-            "t": 1783511340
-          },
-          {
-            "c": null,
-            "t": 1783511400
-          },
-          {
-            "c": null,
-            "t": 1783511460
-          },
-          {
-            "c": 49.39,
-            "t": 1783511520
-          },
-          {
-            "c": 49.39,
-            "t": 1783511580
-          },
-          {
-            "c": null,
-            "t": 1783511640
-          },
-          {
-            "c": 49.31,
-            "t": 1783511700
-          },
-          {
-            "c": 49.39,
-            "t": 1783511760
-          },
-          {
-            "c": 49.39,
-            "t": 1783511820
-          },
-          {
-            "c": 49.39,
-            "t": 1783511880
-          },
-          {
-            "c": 49.39,
-            "t": 1783511940
-          },
-          {
-            "c": 49.4,
-            "t": 1783512000
-          },
-          {
-            "c": null,
-            "t": 1783512060
-          },
-          {
-            "c": null,
-            "t": 1783512120
-          },
-          {
-            "c": null,
-            "t": 1783512180
-          },
-          {
-            "c": null,
-            "t": 1783512240
-          },
-          {
-            "c": null,
-            "t": 1783512300
-          },
-          {
-            "c": null,
-            "t": 1783512360
-          },
-          {
-            "c": null,
-            "t": 1783512420
-          },
-          {
-            "c": 49.44,
-            "t": 1783512480
-          },
-          {
-            "c": 49.39,
-            "t": 1783512540
-          },
-          {
-            "c": 49.39,
-            "t": 1783512600
-          },
-          {
-            "c": 49.39,
-            "t": 1783512660
-          },
-          {
-            "c": null,
-            "t": 1783512720
-          },
-          {
-            "c": 49.44,
-            "t": 1783512780
-          },
-          {
-            "c": null,
-            "t": 1783512840
-          },
-          {
-            "c": null,
-            "t": 1783512900
-          },
-          {
-            "c": null,
-            "t": 1783512960
-          },
-          {
-            "c": 49.61,
-            "t": 1783513020
-          },
-          {
-            "c": null,
-            "t": 1783513080
-          },
-          {
-            "c": null,
-            "t": 1783513140
-          },
-          {
-            "c": 49.61,
-            "t": 1783513200
-          },
-          {
-            "c": null,
-            "t": 1783513260
-          },
-          {
-            "c": null,
-            "t": 1783513320
-          },
-          {
-            "c": null,
-            "t": 1783513380
-          },
-          {
-            "c": 49.69,
-            "t": 1783513440
-          },
-          {
-            "c": 49.69,
-            "t": 1783513500
-          },
-          {
-            "c": 49.69,
-            "t": 1783513560
-          },
-          {
-            "c": 49.64,
-            "t": 1783513620
-          },
-          {
-            "c": 49.67,
-            "t": 1783513680
-          },
-          {
-            "c": null,
-            "t": 1783513740
-          },
-          {
-            "c": 49.67,
-            "t": 1783513800
-          },
-          {
-            "c": 49.72,
-            "t": 1783513860
-          },
-          {
-            "c": 49.7,
-            "t": 1783513920
-          },
-          {
-            "c": 49.7,
-            "t": 1783513980
-          },
-          {
-            "c": 49.7,
-            "t": 1783514040
-          },
-          {
-            "c": 49.73,
-            "t": 1783514100
-          },
-          {
-            "c": 49.65,
-            "t": 1783514160
-          },
-          {
-            "c": 49.65,
-            "t": 1783514220
-          },
-          {
-            "c": 49.73,
-            "t": 1783514280
-          },
-          {
-            "c": 49.71,
-            "t": 1783514340
-          },
-          {
-            "c": 49.74,
-            "t": 1783514400
-          },
-          {
-            "c": 49.72,
-            "t": 1783514460
-          },
-          {
-            "c": 49.83,
-            "t": 1783514520
-          },
-          {
-            "c": 49.72,
-            "t": 1783514580
-          },
-          {
-            "c": 49.881,
-            "t": 1783514640
-          },
-          {
-            "c": 49.86,
-            "t": 1783514700
-          },
-          {
-            "c": 49.88,
-            "t": 1783514760
-          },
-          {
-            "c": 49.94,
-            "t": 1783514820
-          },
-          {
-            "c": 49.88,
-            "t": 1783514880
-          },
-          {
-            "c": 49.93,
-            "t": 1783514940
-          },
-          {
-            "c": 49.93,
-            "t": 1783515000
-          },
-          {
-            "c": 49.93,
-            "t": 1783515060
-          },
-          {
-            "c": 49.965,
-            "t": 1783515120
-          },
-          {
-            "c": 49.965,
-            "t": 1783515180
-          },
-          {
-            "c": 49.93,
-            "t": 1783515240
-          },
-          {
-            "c": 49.965,
-            "t": 1783515300
-          },
-          {
-            "c": 49.965,
-            "t": 1783515360
-          },
-          {
-            "c": null,
-            "t": 1783515420
-          },
-          {
-            "c": null,
-            "t": 1783515480
-          },
-          {
-            "c": null,
-            "t": 1783515540
-          },
-          {
-            "c": 49.965,
-            "t": 1783515600
-          },
-          {
-            "c": 50.04,
-            "t": 1783515660
-          },
-          {
-            "c": null,
-            "t": 1783515720
-          },
-          {
-            "c": 49.99,
-            "t": 1783515780
-          },
-          {
-            "c": null,
-            "t": 1783515840
-          },
-          {
-            "c": 49.99,
-            "t": 1783515900
-          },
-          {
-            "c": 50.035,
-            "t": 1783515960
-          },
-          {
-            "c": 50.035,
-            "t": 1783516020
-          },
-          {
-            "c": 50.1,
-            "t": 1783516080
-          },
-          {
-            "c": 50.035,
-            "t": 1783516140
-          },
-          {
-            "c": 50.035,
-            "t": 1783516200
-          },
-          {
-            "c": 50.035,
-            "t": 1783516260
-          },
-          {
-            "c": 50,
-            "t": 1783516320
-          },
-          {
-            "c": null,
-            "t": 1783516380
-          },
-          {
-            "c": 50.015,
-            "t": 1783516440
-          },
-          {
-            "c": 49.99,
-            "t": 1783516500
-          },
-          {
-            "c": 50.02,
-            "t": 1783516560
-          },
-          {
-            "c": null,
-            "t": 1783516620
-          },
-          {
-            "c": null,
-            "t": 1783516680
-          },
-          {
-            "c": 50.035,
-            "t": 1783516740
-          },
-          {
-            "c": 50.035,
-            "t": 1783516800
-          },
-          {
-            "c": 50.035,
-            "t": 1783516860
-          },
-          {
-            "c": null,
-            "t": 1783516920
-          },
-          {
-            "c": null,
-            "t": 1783516980
-          },
-          {
-            "c": 50.035,
-            "t": 1783517040
-          },
-          {
-            "c": 50.16,
-            "t": 1783517100
-          },
-          {
-            "c": null,
-            "t": 1783517160
-          },
-          {
-            "c": 50.16,
-            "t": 1783517220
-          },
-          {
-            "c": 50.16,
-            "t": 1783517280
-          },
-          {
-            "c": 50.16,
-            "t": 1783517340
-          },
-          {
-            "c": null,
-            "t": 1783517400
-          },
-          {
-            "c": 50.15,
-            "t": 1783517460
-          },
-          {
-            "c": 50.15,
-            "t": 1783517520
-          },
-          {
-            "c": null,
-            "t": 1783517580
-          },
-          {
-            "c": 50.15,
-            "t": 1783517640
-          },
-          {
-            "c": 50.15,
-            "t": 1783517700
-          },
-          {
-            "c": null,
-            "t": 1783517760
-          },
-          {
-            "c": null,
-            "t": 1783517820
-          },
-          {
-            "c": null,
-            "t": 1783517880
-          },
-          {
-            "c": 50.165,
-            "t": 1783517940
-          },
-          {
-            "c": 50.16,
-            "t": 1783518000
-          },
-          {
-            "c": 50.16,
-            "t": 1783518060
-          },
-          {
-            "c": 50.06,
-            "t": 1783518120
-          },
-          {
-            "c": 50.16,
-            "t": 1783518180
-          },
-          {
-            "c": null,
-            "t": 1783518240
-          },
-          {
-            "c": 50.16,
-            "t": 1783518300
-          },
-          {
-            "c": null,
-            "t": 1783518360
-          },
-          {
-            "c": 50.1,
-            "t": 1783518420
-          },
-          {
-            "c": 50.16,
-            "t": 1783518480
-          },
-          {
-            "c": 50.16,
-            "t": 1783518540
-          },
-          {
-            "c": 50.16,
-            "t": 1783518600
-          },
-          {
-            "c": 50.097,
-            "t": 1783518660
-          },
-          {
-            "c": null,
-            "t": 1783518720
-          },
-          {
-            "c": 50.16,
-            "t": 1783518780
-          },
-          {
-            "c": 49.97,
-            "t": 1783518840
-          },
-          {
-            "c": 49.965,
-            "t": 1783518900
-          },
-          {
-            "c": 49.965,
-            "t": 1783518960
-          },
-          {
-            "c": null,
-            "t": 1783519020
-          },
-          {
-            "c": null,
-            "t": 1783519080
-          },
-          {
-            "c": 49.965,
-            "t": 1783519140
-          },
-          {
-            "c": 49.965,
-            "t": 1783519200
-          },
-          {
-            "c": 49.965,
-            "t": 1783519260
-          },
-          {
-            "c": 50.035,
-            "t": 1783519320
-          },
-          {
-            "c": 50.065,
-            "t": 1783519380
-          },
-          {
-            "c": 50.065,
-            "t": 1783519440
-          },
-          {
-            "c": 50.065,
-            "t": 1783519500
-          },
-          {
-            "c": 50.05,
-            "t": 1783519560
-          },
-          {
-            "c": null,
-            "t": 1783519620
-          },
-          {
-            "c": 50.08,
-            "t": 1783519680
-          },
-          {
-            "c": 50.041,
-            "t": 1783519740
-          },
-          {
-            "c": 50.15,
-            "t": 1783519800
-          },
-          {
-            "c": 50.08,
-            "t": 1783519860
-          },
-          {
-            "c": 50.08,
-            "t": 1783519920
-          },
-          {
-            "c": 50.08,
-            "t": 1783519980
-          },
-          {
-            "c": null,
-            "t": 1783520040
-          },
-          {
-            "c": null,
-            "t": 1783520100
-          },
-          {
-            "c": 50.05,
-            "t": 1783520160
-          },
-          {
-            "c": 50.08,
-            "t": 1783520220
-          },
-          {
-            "c": 50.1,
-            "t": 1783520280
-          },
-          {
-            "c": 50.105,
-            "t": 1783520340
-          },
-          {
-            "c": null,
-            "t": 1783520400
-          },
-          {
-            "c": null,
-            "t": 1783520460
-          },
-          {
-            "c": 50.105,
-            "t": 1783520520
-          },
-          {
-            "c": 50.08,
-            "t": 1783520580
-          },
-          {
-            "c": null,
-            "t": 1783520640
-          },
-          {
-            "c": 50.08,
-            "t": 1783520700
-          },
-          {
-            "c": 50.01,
-            "t": 1783520760
-          },
-          {
-            "c": null,
-            "t": 1783520820
-          },
-          {
-            "c": 50.168,
-            "t": 1783520880
-          },
-          {
-            "c": 50.105,
-            "t": 1783520940
-          },
-          {
-            "c": 50.105,
-            "t": 1783521000
-          },
-          {
-            "c": 50.105,
-            "t": 1783521060
-          },
-          {
-            "c": null,
-            "t": 1783521120
-          },
-          {
-            "c": 50.105,
-            "t": 1783521180
-          },
-          {
-            "c": null,
-            "t": 1783521240
-          },
-          {
-            "c": 49.97,
-            "t": 1783521300
-          },
-          {
-            "c": 50.05,
-            "t": 1783521360
-          },
-          {
-            "c": 50.08,
-            "t": 1783521420
-          },
-          {
-            "c": 50.11,
-            "t": 1783521480
-          },
-          {
-            "c": 50.08,
-            "t": 1783521540
-          },
-          {
-            "c": 50.11,
-            "t": 1783521600
-          },
-          {
-            "c": 50.11,
-            "t": 1783521660
-          },
-          {
-            "c": null,
-            "t": 1783521720
-          },
-          {
-            "c": null,
-            "t": 1783521780
-          },
-          {
-            "c": 50.112,
-            "t": 1783521840
-          },
-          {
-            "c": 50.012,
-            "t": 1783521900
-          },
-          {
-            "c": null,
-            "t": 1783521960
-          },
-          {
-            "c": null,
-            "t": 1783522020
-          },
-          {
-            "c": 50.1,
-            "t": 1783522080
-          },
-          {
-            "c": 50.07,
-            "t": 1783522140
-          },
-          {
-            "c": 50.105,
-            "t": 1783522200
-          },
-          {
-            "c": null,
-            "t": 1783522260
-          },
-          {
-            "c": 50.105,
-            "t": 1783522320
-          },
-          {
-            "c": null,
-            "t": 1783522380
-          },
-          {
-            "c": null,
-            "t": 1783522440
-          },
-          {
-            "c": 50.105,
-            "t": 1783522500
-          },
-          {
-            "c": 50.105,
-            "t": 1783522560
-          },
-          {
-            "c": null,
-            "t": 1783522620
-          },
-          {
-            "c": 50.105,
-            "t": 1783522680
-          },
-          {
-            "c": null,
-            "t": 1783522740
-          },
-          {
-            "c": 50.05,
-            "t": 1783522800
-          },
-          {
-            "c": 50.105,
-            "t": 1783522860
-          },
-          {
-            "c": 50.145,
-            "t": 1783522920
-          },
-          {
-            "c": null,
-            "t": 1783522980
-          },
-          {
-            "c": null,
-            "t": 1783523040
-          },
-          {
-            "c": 50.105,
-            "t": 1783523100
-          },
-          {
-            "c": 50.105,
-            "t": 1783523160
-          },
-          {
-            "c": null,
-            "t": 1783523220
-          },
-          {
-            "c": 50.105,
-            "t": 1783523280
-          },
-          {
-            "c": 50.105,
-            "t": 1783523340
-          },
-          {
-            "c": 50.105,
-            "t": 1783523400
-          },
-          {
-            "c": 50.28,
-            "t": 1783523460
-          },
-          {
-            "c": 50.18,
-            "t": 1783523520
-          },
-          {
-            "c": null,
-            "t": 1783523580
-          },
-          {
-            "c": 50.105,
-            "t": 1783523640
-          },
-          {
-            "c": 50.235,
-            "t": 1783523700
-          },
-          {
-            "c": 50.19,
-            "t": 1783523760
-          },
-          {
-            "c": null,
-            "t": 1783523820
-          },
-          {
-            "c": null,
-            "t": 1783523880
-          },
-          {
-            "c": 50.175,
-            "t": 1783523940
-          },
-          {
-            "c": 50.105,
-            "t": 1783524000
-          },
-          {
-            "c": 50.2,
-            "t": 1783524060
-          },
-          {
-            "c": 50.16,
-            "t": 1783524120
-          },
-          {
-            "c": null,
-            "t": 1783524180
-          },
-          {
-            "c": null,
-            "t": 1783524240
-          },
-          {
-            "c": 50.18,
-            "t": 1783524300
-          },
-          {
-            "c": 50.18,
-            "t": 1783524360
-          },
-          {
-            "c": 50.18,
-            "t": 1783524420
-          },
-          {
-            "c": null,
-            "t": 1783524480
-          },
-          {
-            "c": null,
-            "t": 1783524540
-          },
-          {
-            "c": 50.18,
-            "t": 1783524600
-          },
-          {
-            "c": 50.24,
-            "t": 1783524660
-          },
-          {
-            "c": 50.18,
-            "t": 1783524720
-          },
-          {
-            "c": null,
-            "t": 1783524780
-          },
-          {
-            "c": null,
-            "t": 1783524840
-          },
-          {
-            "c": 50.165,
-            "t": 1783524900
-          },
-          {
-            "c": 50.165,
-            "t": 1783524960
-          },
-          {
-            "c": 50.205,
-            "t": 1783525020
-          },
-          {
-            "c": 50.255,
-            "t": 1783525080
-          },
-          {
-            "c": 50.255,
-            "t": 1783525140
-          },
-          {
-            "c": 50.255,
-            "t": 1783525200
-          },
-          {
-            "c": 50.199,
-            "t": 1783525260
-          },
-          {
-            "c": 50.12,
-            "t": 1783525320
-          },
-          {
-            "c": null,
-            "t": 1783525380
-          },
-          {
-            "c": null,
-            "t": 1783525440
-          },
-          {
-            "c": 50.255,
-            "t": 1783525500
-          },
-          {
-            "c": 50.16,
-            "t": 1783525560
-          },
-          {
-            "c": 50.255,
-            "t": 1783525620
-          },
-          {
-            "c": 50.255,
-            "t": 1783525680
-          },
-          {
-            "c": 50.255,
-            "t": 1783525740
-          },
-          {
-            "c": 50.255,
-            "t": 1783525800
-          },
-          {
-            "c": 50.31,
-            "t": 1783525860
-          },
-          {
-            "c": 50.245,
-            "t": 1783525920
-          },
-          {
-            "c": 50.205,
-            "t": 1783525980
-          },
-          {
-            "c": 50.245,
-            "t": 1783526040
-          },
-          {
-            "c": 50.245,
-            "t": 1783526100
-          },
-          {
-            "c": 50.22,
-            "t": 1783526160
-          },
-          {
-            "c": 50.245,
-            "t": 1783526220
-          },
-          {
-            "c": 50.245,
-            "t": 1783526280
-          },
-          {
-            "c": 50.16,
-            "t": 1783526340
-          },
-          {
-            "c": 50.15,
-            "t": 1783526400
+      "date": "Jul 7, 2026",
+      "count": 471,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
           }
-        ]
-      },
-      "description": "The Columbia EM Core ex-China ETF (XCEM) is an exchange-traded fund that mostly invests in total market equity. The fund tracks a market-cap-weighted index that provides broad equity exposure to emerging markets excluding China. XCEM was launched on Sep 2, 2015 and is issued by Columbia Threadneedle.",
-      "infoTable": [
-        [
-          "Asset Class",
-          "Equity"
         ],
-        [
-          "Category",
-          "Diversified Emerging Mkts"
-        ],
-        [
-          "Region",
-          "Global"
-        ],
-        [
-          "Stock Exchange",
-          "NYSEARCA"
-        ],
-        [
-          "Ticker Symbol",
-          "XCEM"
-        ],
-        [
-          "Provider",
-          "Columbia Threadneedle"
-        ],
-        [
-          "Index Tracked",
-          "Beta Thematic Emerging Markets ex-China Index"
-        ]
-      ],
-      "etf_website": "https://www.columbiathreadneedleus.com/investment-products/exchange-traded-funds/Columbia-EM-Core-ex-China-ETF/Class-ETF/details/?cusip=19762B202",
-      "provider_page": "columbia-threadneedle",
-      "holdingsTable": {
-        "count": 461,
-        "updated": "Jul 3, 2026",
-        "top10": 36.12,
-        "holdings": [
-          {
-            "n": "Taiwan Semiconductor Manufacturing Company Limited",
-            "s": "!tpe/2330",
-            "as": "15.58%",
-            "sh": "4,072,765"
-          },
-          {
-            "n": "Samsung Electronics Co., Ltd.",
-            "s": "!krx/005930",
-            "as": "8.45%",
-            "sh": "926,836"
-          },
-          {
-            "n": "SK hynix Inc.",
-            "s": "!krx/000660",
-            "as": "3.83%",
-            "sh": "55,010"
-          },
-          {
-            "n": "MediaTek Inc.",
-            "s": "!tpe/2454",
-            "as": "1.64%",
-            "sh": "242,487"
-          },
-          {
-            "n": "Delta Electronics, Inc.",
-            "s": "!tpe/2308",
-            "as": "1.54%",
-            "sh": "502,327"
-          },
-          {
-            "n": "Samsung Electro-Mechanics Co., Ltd.",
-            "s": "!krx/009150",
-            "as": "1.26%",
-            "sh": "20,518"
-          },
-          {
-            "n": "Hon Hai Precision Industry Co., Ltd.",
-            "s": "!tpe/2317",
-            "as": "1.02%",
-            "sh": "2,760,982"
-          },
-          {
-            "n": "ASE Technology Holding Co., Ltd.",
-            "s": "!tpe/3711",
-            "as": "0.98%",
-            "sh": "872,322"
-          },
-          {
-            "n": "HDFC Bank Limited",
-            "s": "$HDB",
-            "as": "0.92%",
-            "sh": "723,485"
-          },
-          {
-            "n": "ICICI Bank Limited",
-            "s": "$IBN",
-            "as": "0.88%",
-            "sh": "604,335"
-          }
-        ]
-      },
-      "dividendTable": [
-        {
-          "dt": "2025-12-18",
-          "amt": 1.24747,
-          "pay": "2025-12-26"
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 7, 2026",
+        "lastChecked": 1783681943898,
+        "topic": "holdings",
+        "ticker": "XCEM",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
         },
-        {
-          "dt": "2024-12-18",
-          "amt": 0.81728,
-          "pay": "2024-12-26"
-        },
-        {
-          "dt": "2023-12-18",
-          "amt": 0.36911,
-          "pay": "2023-12-26"
-        },
-        {
-          "dt": "2022-12-19",
-          "amt": 0.61753,
-          "pay": "2022-12-27"
-        },
-        {
-          "dt": "2021-12-20",
-          "amt": 0.61535,
-          "pay": "2021-12-27"
-        },
-        {
-          "dt": "2020-12-18",
-          "amt": 0.48995,
-          "pay": "2020-12-28"
-        }
-      ],
-      "news": {
-        "exp": "1783556731781",
-        "data": [
-          {
-            "url": "https://www.etftrends.com/equity-etf-content-hub/ai-ex-china-rewriting-emerging-markets-etf-playbook/",
-            "img": "https://cdn.snapi.dev/images/v1/i/g/9/etf35-3790947.jpg",
-            "title": "AI & “Ex-China” Rewriting the Emerging Markets ETF Playbook",
-            "text": "The action in Emerging Markets ETFs this year has been really interesting to watch. From record-breaking asset flows to impressive results, albeit massively dispersed, this category of funds has had q...",
-            "source": "ETF Trends",
-            "type": "Article",
-            "tickers": [
-              "#AVEM",
-              "#EMXC",
-              "#IEMG",
-              "#IVV",
-              "#VWO"
-            ],
-            "time": "Jul 8, 2026, 8:15 AM EDT",
-            "ago": "14 hours ago"
-          },
-          {
-            "url": "https://www.etftrends.com/thematic-investing-content-hub/ex-china-files-etfs-watch-trumps-high-stakes-visit/",
-            "img": "https://cdn.snapi.dev/images/v1/c/m/g/etf23-3699173.jpg",
-            "title": "The Ex-China Files: ETFs to Watch Amid Trump's High-Stakes Visit",
-            "text": "Investing in emerging markets (EM) used to be synonymous with getting exposure to China. It's an ideal notion, given that it's the second largest economy and thus commands a heavy weight in standard E...",
-            "source": "ETF Trends",
-            "type": "Article",
-            "tickers": [
-              "#AVXC",
-              "$EM",
-              "#EMM",
-              "#EMXC",
-              "#FRDM",
-              "#NSI",
-              "#REXC"
-            ],
-            "time": "May 13, 2026, 3:33 PM EDT",
-            "ago": "2 months ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/emerging-market-funds-exclude-china-beating-index-464427eb",
-            "img": "https://cdn.snapi.dev/images/v1/w/w/j/etf19-1967572.jpg",
-            "title": "Emerging Market Funds That Exclude China Are Beating the Index",
-            "text": "Ex-China funds are attracting assets as geopolitical tensions with the U.S. grab headlines and China underperforms other emerging market countries.",
-            "source": "Barrons",
-            "type": "Article",
-            "tickers": [
-              "#EMXC",
-              "#FRDM",
-              "#IEMG"
-            ],
-            "time": "Jul 12, 2023, 2:00 AM EDT",
-            "ago": "3 years ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/5-emerging-market-etfs-that-limit-investments-in-china-51666993202",
-            "img": "https://cdn.snapi.dev/images/v1/1/5/p/etf27-1607042.jpg",
-            "title": "5 Emerging Market ETFs That Limit China Investments",
-            "text": "Emerging market exchange-traded funds that limit exposure to China may be a better bet for investors as China's stocks get battered.",
-            "source": "Barrons",
-            "type": "Article",
-            "tickers": [
-              "#EMXC",
-              "#FRDM",
-              "#KEMX",
-              "#XC"
-            ],
-            "time": "Oct 29, 2022, 6:30 AM EDT",
-            "ago": "4 years ago"
-          }
-        ]
-      },
-      "config": {
-        "no1d": false
-      },
-      "changes": {
-        "price1w": 51.14,
-        "price1m": 48.92,
-        "priceYTD": 38.36,
-        "price1y": 34.19,
-        "price5y": 33.065,
-        "priceMAX": 20.52
-      },
-      "performance": {
-        "tr1m": 2.514,
-        "trYTD": 30.735,
-        "tr1y": 51.725,
-        "cagr5y": 11.25,
-        "cagr10y": 12.113,
-        "cagrMAX": 11.762
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 50.15,
-      "pd": 50.15,
-      "c": 0.29,
-      "cp": 0.58,
-      "cl": 49.86,
+      "p": 50.6,
+      "pd": 50.6,
+      "c": 0.43,
+      "cp": 0.86,
+      "cl": 50.17,
       "cdr": 1,
-      "o": 49.41,
-      "h": 50.19,
-      "l": 49.21,
-      "v": 79986.688695,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "o": 50.44,
+      "h": 50.88,
+      "l": 50.37,
+      "v": 193196.846087,
+      "ts": 1783627200000,
+      "u": "Jul 9, 2026, 4:00 PM EDT",
+      "td": "2026-07-09",
       "h52": 55.43,
       "l52": 33.76,
       "ex": "NYSEARCA",
       "ms": "closed",
-      "fms": "closed",
-      "e": true,
-      "ep": 50.17,
-      "epd": 50.17,
-      "ec": 0.02,
-      "ecp": 0.04,
-      "eu": "Jul 8, 2026, 8:00 PM EDT",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
       "es": "After-hours",
-      "ets": 1783555200169.8245,
-      "etd": "2026-07-08",
+      "ets": 1783641600113.99,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783584900000,
+      "exp": 1783690158586,
       "symbol": "XCEM",
       "uid": "XCEM"
     },
@@ -7280,10 +7506,10 @@
         "o": 51.84,
         "h": 52.1,
         "l": 49.205,
-        "c": 50.17,
-        "a": 50.17,
-        "v": 1102449,
-        "ch": -5.12
+        "c": 50.6,
+        "a": 50.6,
+        "v": 1295642,
+        "ch": -4.31
       },
       {
         "t": "2026-06-01",
@@ -7398,6 +7624,16 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-09",
+          "o": 50.44,
+          "h": 50.88,
+          "l": 50.37,
+          "c": 50.6,
+          "a": 50.6,
+          "v": 193193,
+          "ch": 0.86
+        },
         {
           "t": "2026-07-08",
           "o": 49.41,
@@ -9907,16 +10143,6 @@
           "a": 33.120867,
           "v": 53402,
           "ch": -0.29
-        },
-        {
-          "t": "2025-07-08",
-          "o": 34.28,
-          "h": 34.36,
-          "l": 34.21,
-          "c": 34.36,
-          "a": 33.217542,
-          "v": 78853,
-          "ch": 0.5
         }
       ],
       "weekly_1y": [
@@ -9925,10 +10151,10 @@
           "o": 51.62,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 548712,
-          "ch": -0.91
+          "c": 50.6,
+          "a": 50.6,
+          "v": 741905,
+          "ch": -0.06
         },
         {
           "t": "2026-06-29",
@@ -10447,10 +10673,10 @@
           "o": 51.84,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 1102449,
-          "ch": -5.12
+          "c": 50.6,
+          "a": 50.6,
+          "v": 1295642,
+          "ch": -4.31
         },
         {
           "t": "2026-06-01",
@@ -10569,10 +10795,10 @@
           "o": 51.62,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 548712,
-          "ch": -0.91
+          "c": 50.6,
+          "a": 50.6,
+          "v": 741905,
+          "ch": -0.06
         },
         {
           "t": "2026-06-29",
@@ -11091,10 +11317,10 @@
           "o": 51.84,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 1102449,
-          "ch": -5.12
+          "c": 50.6,
+          "a": 50.6,
+          "v": 1295642,
+          "ch": -4.31
         },
         {
           "t": "2026-06-01",
@@ -11213,10 +11439,10 @@
           "o": 51.84,
           "h": 52.1,
           "l": 49.205,
-          "c": 50.17,
-          "a": 50.17,
-          "v": 1102449,
-          "ch": -5.12
+          "c": 50.6,
+          "a": 50.6,
+          "v": 1295642,
+          "ch": -4.31
         },
         {
           "t": "2026-06-01",

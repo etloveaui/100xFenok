@@ -3,10 +3,10 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "IBDS",
-  "fetched_at": "2026-07-09T02:24:37Z",
+  "fetched_at": "2026-07-10T13:30:08Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/IBDS/holdings",
-    "overview": "/api/symbol/e/IBDS/overview",
+    "holdings": "/etf/ibds/holdings/__data.json",
+    "overview": "/etf/ibds/__data.json",
     "quote": "/api/quotes/e/IBDS",
     "history_periods": {
       "daily_1y": "/api/symbol/e/IBDS/history?range=1Y&period=Daily",
@@ -15,6 +15,26 @@
       "weekly_3y": "/api/symbol/e/IBDS/history?range=3Y&period=Weekly",
       "monthly_3y": "/api/symbol/e/IBDS/history?range=3Y&period=Monthly",
       "monthly_5y": "/api/symbol/e/IBDS/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
     }
   },
   "normalized": {
@@ -388,7 +408,7 @@
       "aum": "$3.81B",
       "nav": "$23.45",
       "expenseRatio": "0.10%",
-      "sharesOut": "157.00M",
+      "sharesOut": "157.20M",
       "dividendYield": "4.31%",
       "beta": "0.18",
       "inception": "Sep 12, 2017",
@@ -396,43 +416,44 @@
       "etf_website": "https://www.ishares.com/us/products/290315/"
     },
     "performance": {
-      "tr1m": 0.2662,
-      "trYTD": 1.544,
-      "tr1y": 4.338,
-      "cagr5y": 1.375,
-      "cagrMAX": 3.153
+      "tr1m": 0.2467,
+      "trYTD": 1.524,
+      "tr1y": 4.361,
+      "cagr5y": 1.371,
+      "cagr10y": null,
+      "cagrMAX": 3.15
     },
     "quote": {
-      "p": 24.1397,
-      "pd": 24.14,
-      "c": 0,
-      "cp": 0,
+      "p": 24.15,
+      "pd": 24.15,
+      "c": 0.01,
+      "cp": 0.06,
       "cl": 24.14,
-      "cdr": -1,
-      "o": 24.13,
-      "h": 24.14,
+      "cdr": 1,
+      "o": 24.15,
+      "h": 24.15,
       "l": 24.13,
-      "v": 1240514,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "v": 813708.597179,
+      "ts": 1783684158108.9927,
+      "u": "Jul 10, 2026, 7:49 AM EDT",
+      "td": "2026-07-10",
       "h52": 24.38,
       "l52": 24.11,
       "ex": "NYSEARCA",
-      "ms": "closed",
-      "fms": "closed",
-      "e": true,
-      "ep": 24.14,
-      "epd": 24.14,
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": 24.15,
+      "epd": 24.15,
       "ec": 0,
       "ecp": 0,
-      "eu": "Jul 8, 2026, 8:00 PM EDT",
-      "es": "After-hours",
-      "ets": 1783555200093.168,
-      "etd": "2026-07-08",
-      "epv": null,
+      "eu": null,
+      "es": null,
+      "ets": 1783684158108.993,
+      "etd": null,
+      "epv": 402,
       "days": 0,
-      "exp": 1783584900000,
+      "exp": 1783690212363,
       "symbol": "IBDS",
       "uid": "IBDS"
     },
@@ -442,10 +463,10 @@
         "o": 24.13,
         "h": 24.16,
         "l": 24.12,
-        "c": 24.14,
-        "a": 24.14,
-        "v": 5049648,
-        "ch": 0.02
+        "c": 24.135,
+        "a": 24.135,
+        "v": 5863256,
+        "ch": 0
       },
       {
         "t": "2026-06-01",
@@ -560,6 +581,16 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-09",
+          "o": 24.15,
+          "h": 24.15,
+          "l": 24.13,
+          "c": 24.135,
+          "a": 24.135,
+          "v": 813608,
+          "ch": -0.02
+        },
         {
           "t": "2026-07-08",
           "o": 24.13,
@@ -3069,16 +3100,6 @@
           "a": 23.145714,
           "v": 700438,
           "ch": 0.08
-        },
-        {
-          "t": "2025-07-08",
-          "o": 24.14,
-          "h": 24.15,
-          "l": 24.14,
-          "c": 24.14,
-          "a": 23.126553,
-          "v": 528590,
-          "ch": -0.04
         }
       ],
       "weekly_1y": [
@@ -3087,10 +3108,10 @@
           "o": 24.15,
           "h": 24.16,
           "l": 24.13,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 3849312,
-          "ch": 0
+          "c": 24.135,
+          "a": 24.135,
+          "v": 4662920,
+          "ch": -0.02
         },
         {
           "t": "2026-06-29",
@@ -3609,10 +3630,10 @@
           "o": 24.13,
           "h": 24.16,
           "l": 24.12,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 5049648,
-          "ch": 0.02
+          "c": 24.135,
+          "a": 24.135,
+          "v": 5863256,
+          "ch": 0
         },
         {
           "t": "2026-06-01",
@@ -3731,10 +3752,10 @@
           "o": 24.15,
           "h": 24.16,
           "l": 24.13,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 3849312,
-          "ch": 0
+          "c": 24.135,
+          "a": 24.135,
+          "v": 4662920,
+          "ch": -0.02
         },
         {
           "t": "2026-06-29",
@@ -4253,10 +4274,10 @@
           "o": 24.13,
           "h": 24.16,
           "l": 24.12,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 5049648,
-          "ch": 0.02
+          "c": 24.135,
+          "a": 24.135,
+          "v": 5863256,
+          "ch": 0
         },
         {
           "t": "2026-06-01",
@@ -4375,10 +4396,10 @@
           "o": 24.13,
           "h": 24.16,
           "l": 24.12,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 5049648,
-          "ch": 0.02
+          "c": 24.135,
+          "a": 24.135,
+          "v": 5863256,
+          "ch": 0
         },
         {
           "t": "2026-06-01",
@@ -4974,200 +4995,49 @@
     }
   },
   "raw": {
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "BlackRock Cash Funds Treasury SL Agency",
-          "s": "XTSLA",
-          "as": "1.42%",
-          "sh": "53,840,000"
-        },
-        {
-          "no": 2,
-          "n": "T-Mobile USA, Inc. 3.75%",
-          "s": "TMUS.3.75 04.15.27",
-          "as": "0.75%",
-          "sh": "28,242,000"
-        },
-        {
-          "no": 3,
-          "n": "Microsoft Corp. 3.3%",
-          "s": "MSFT.3.3 02.06.27",
-          "as": "0.74%",
-          "sh": "27,927,000"
-        },
-        {
-          "no": 4,
-          "n": "Citigroup Inc. 4.45%",
-          "s": "C.4.45 09.29.27",
-          "as": "0.73%",
-          "sh": "27,318,000"
-        },
-        {
-          "no": 5,
-          "n": "Amazon.com, Inc. 3.15%",
-          "s": "AMZN.3.15 08.22.27",
-          "as": "0.64%",
-          "sh": "24,103,000"
-        },
-        {
-          "no": 6,
-          "n": "Morgan Stanley 3.625%",
-          "s": "MS.3.625 01.20.27",
-          "as": "0.57%",
-          "sh": "21,157,000"
-        },
-        {
-          "no": 7,
-          "n": "Goldman Sachs Group, Inc. 3.85%",
-          "s": "GS.3.85 01.26.27",
-          "as": "0.56%",
-          "sh": "20,751,000"
-        },
-        {
-          "no": 8,
-          "n": "Oracle Corp. 3.25%",
-          "s": "ORCL.3.25 11.15.27",
-          "as": "0.50%",
-          "sh": "19,365,000"
-        },
-        {
-          "no": 9,
-          "n": "Meta Platforms Inc 3.5%",
-          "s": "META.3.5 08.15.27",
-          "as": "0.48%",
-          "sh": "18,236,000"
-        },
-        {
-          "no": 10,
-          "n": "Wells Fargo & Co. 4.3%",
-          "s": "WFC.4.3 07.22.27 GMTN",
-          "as": "0.48%",
-          "sh": "17,851,000"
-        },
-        {
-          "no": 11,
-          "n": "AT&T Inc 2.3%",
-          "s": "T.2.3 06.01.27",
-          "as": "0.47%",
-          "sh": "18,017,000"
-        },
-        {
-          "no": 12,
-          "n": "Alibaba Group Holding Ltd. 3.4%",
-          "s": "BABA.3.4 12.06.27",
-          "as": "0.46%",
-          "sh": "17,606,000"
-        },
-        {
-          "no": 13,
-          "n": "Bank of America Corp. 3.248%",
-          "s": "BAC.3.248 10.21.27 MTN",
-          "as": "0.46%",
-          "sh": "17,405,000"
-        },
-        {
-          "no": 14,
-          "n": "AbbVie Inc. 4.8%",
-          "s": "ABBV.4.8 03.15.27",
-          "as": "0.42%",
-          "sh": "15,779,000"
-        },
-        {
-          "no": 15,
-          "n": "B.A.T. Capital Corporation 3.557%",
-          "s": "BATSLN.3.557 08.15.27",
-          "as": "0.42%",
-          "sh": "15,934,000"
-        },
-        {
-          "no": 16,
-          "n": "Citibank, N.A. 4.576%",
-          "s": "C.4.576 05.29.27 BKNT",
-          "as": "0.42%",
-          "sh": "15,877,000"
-        },
-        {
-          "no": 17,
-          "n": "Oracle Corp. 2.8%",
-          "s": "ORCL.2.8 04.01.27",
-          "as": "0.42%",
-          "sh": "15,951,000"
-        },
-        {
-          "no": 18,
-          "n": "CVS Health Corp 1.3%",
-          "s": "CVS.1.3 08.21.27",
-          "as": "0.41%",
-          "sh": "15,888,000"
-        },
-        {
-          "no": 19,
-          "n": "Apple Inc. 3.35%",
-          "s": "AAPL.3.35 02.09.27",
-          "as": "0.40%",
-          "sh": "15,061,000"
-        },
-        {
-          "no": 20,
-          "n": "Morgan Stanley 3.95%",
-          "s": "MS.3.95 04.23.27",
-          "as": "0.39%",
-          "sh": "14,682,000"
-        },
-        {
-          "no": 21,
-          "n": "Boeing Co. 5.04%",
-          "s": "BA.5.04 05.01.27",
-          "as": "0.38%",
-          "sh": "14,327,000"
-        },
-        {
-          "no": 22,
-          "n": "Bank of America Corp. 4.183%",
-          "s": "BAC.4.183 11.25.27 L",
-          "as": "0.38%",
-          "sh": "14,391,000"
-        },
-        {
-          "no": 23,
-          "n": "NextEra Energy Capital Holdings Inc 4.685%",
-          "s": "NEE.4.685 09.01.27",
-          "as": "0.38%",
-          "sh": "14,087,000"
-        },
-        {
-          "no": 24,
-          "n": "Cisco Systems, Inc. 4.8%",
-          "s": "CSCO.4.8 02.26.27",
-          "as": "0.38%",
-          "sh": "13,975,000"
-        },
-        {
-          "no": 25,
-          "n": "Apple Inc. 3.2%",
-          "s": "AAPL.3.2 05.11.27",
-          "as": "0.38%",
-          "sh": "14,258,000"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": null,
-      "countries": null,
-      "date": "Jul 2, 2026",
-      "count": 660
-    },
     "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "IBDS",
+        "lastChecked": 1783689545727,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
       "type": "etf",
       "aum": "$3.81B",
       "nav": "$23.45",
       "expenseRatio": "0.10%",
-      "sharesOut": "157.00M",
+      "peRatio": null,
+      "sharesOut": "157.20M",
       "dps": "$1.04",
       "dividendYield": "4.31%",
+      "payoutRatio": null,
       "exDivDate": "Jul 1, 2026",
-      "ch1y": "-0.04%",
+      "ch1y": "-0.02%",
       "payoutFrequency": "Monthly",
       "beta": "0.18",
       "holdings": 660,
@@ -6754,52 +6624,264 @@
         "no1d": false
       },
       "changes": {
-        "price1w": 24.12,
+        "price1w": 24.14,
         "price1m": 24.16,
+        "price3m": 24.19,
+        "price6m": 24.28,
         "priceYTD": 24.28,
-        "price1y": 24.15,
+        "price1y": 24.14,
         "price5y": 27.15,
         "priceMAX": 24.9
       },
       "performance": {
-        "tr1m": 0.2662,
-        "trYTD": 1.544,
-        "tr1y": 4.338,
-        "cagr5y": 1.375,
-        "cagrMAX": 3.153
+        "tr1m": 0.2467,
+        "trYTD": 1.524,
+        "tr1y": 4.361,
+        "cagr5y": 1.371,
+        "cagr10y": null,
+        "cagrMAX": 3.15
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "BlackRock Cash Funds Treasury SL Agency",
+          "s": "XTSLA",
+          "as": "1.42%",
+          "sh": "53,840,000"
+        },
+        {
+          "no": 2,
+          "n": "T-Mobile USA, Inc. 3.75%",
+          "s": "TMUS.3.75 04.15.27",
+          "as": "0.75%",
+          "sh": "28,242,000"
+        },
+        {
+          "no": 3,
+          "n": "Microsoft Corp. 3.3%",
+          "s": "MSFT.3.3 02.06.27",
+          "as": "0.74%",
+          "sh": "27,927,000"
+        },
+        {
+          "no": 4,
+          "n": "Citigroup Inc. 4.45%",
+          "s": "C.4.45 09.29.27",
+          "as": "0.73%",
+          "sh": "27,318,000"
+        },
+        {
+          "no": 5,
+          "n": "Amazon.com, Inc. 3.15%",
+          "s": "AMZN.3.15 08.22.27",
+          "as": "0.64%",
+          "sh": "24,103,000"
+        },
+        {
+          "no": 6,
+          "n": "Morgan Stanley 3.625%",
+          "s": "MS.3.625 01.20.27",
+          "as": "0.57%",
+          "sh": "21,157,000"
+        },
+        {
+          "no": 7,
+          "n": "Goldman Sachs Group, Inc. 3.85%",
+          "s": "GS.3.85 01.26.27",
+          "as": "0.56%",
+          "sh": "20,751,000"
+        },
+        {
+          "no": 8,
+          "n": "Oracle Corp. 3.25%",
+          "s": "ORCL.3.25 11.15.27",
+          "as": "0.50%",
+          "sh": "19,365,000"
+        },
+        {
+          "no": 9,
+          "n": "Meta Platforms Inc 3.5%",
+          "s": "META.3.5 08.15.27",
+          "as": "0.48%",
+          "sh": "18,236,000"
+        },
+        {
+          "no": 10,
+          "n": "Wells Fargo & Co. 4.3%",
+          "s": "WFC.4.3 07.22.27 GMTN",
+          "as": "0.48%",
+          "sh": "17,851,000"
+        },
+        {
+          "no": 11,
+          "n": "AT&T Inc 2.3%",
+          "s": "T.2.3 06.01.27",
+          "as": "0.47%",
+          "sh": "18,017,000"
+        },
+        {
+          "no": 12,
+          "n": "Alibaba Group Holding Ltd. 3.4%",
+          "s": "BABA.3.4 12.06.27",
+          "as": "0.46%",
+          "sh": "17,606,000"
+        },
+        {
+          "no": 13,
+          "n": "Bank of America Corp. 3.248%",
+          "s": "BAC.3.248 10.21.27 MTN",
+          "as": "0.46%",
+          "sh": "17,405,000"
+        },
+        {
+          "no": 14,
+          "n": "AbbVie Inc. 4.8%",
+          "s": "ABBV.4.8 03.15.27",
+          "as": "0.42%",
+          "sh": "15,779,000"
+        },
+        {
+          "no": 15,
+          "n": "B.A.T. Capital Corporation 3.557%",
+          "s": "BATSLN.3.557 08.15.27",
+          "as": "0.42%",
+          "sh": "15,934,000"
+        },
+        {
+          "no": 16,
+          "n": "Citibank, N.A. 4.576%",
+          "s": "C.4.576 05.29.27 BKNT",
+          "as": "0.42%",
+          "sh": "15,877,000"
+        },
+        {
+          "no": 17,
+          "n": "Oracle Corp. 2.8%",
+          "s": "ORCL.2.8 04.01.27",
+          "as": "0.42%",
+          "sh": "15,951,000"
+        },
+        {
+          "no": 18,
+          "n": "CVS Health Corp 1.3%",
+          "s": "CVS.1.3 08.21.27",
+          "as": "0.41%",
+          "sh": "15,888,000"
+        },
+        {
+          "no": 19,
+          "n": "Apple Inc. 3.35%",
+          "s": "AAPL.3.35 02.09.27",
+          "as": "0.40%",
+          "sh": "15,061,000"
+        },
+        {
+          "no": 20,
+          "n": "Morgan Stanley 3.95%",
+          "s": "MS.3.95 04.23.27",
+          "as": "0.39%",
+          "sh": "14,682,000"
+        },
+        {
+          "no": 21,
+          "n": "Boeing Co. 5.04%",
+          "s": "BA.5.04 05.01.27",
+          "as": "0.38%",
+          "sh": "14,327,000"
+        },
+        {
+          "no": 22,
+          "n": "Bank of America Corp. 4.183%",
+          "s": "BAC.4.183 11.25.27 L",
+          "as": "0.38%",
+          "sh": "14,391,000"
+        },
+        {
+          "no": 23,
+          "n": "NextEra Energy Capital Holdings Inc 4.685%",
+          "s": "NEE.4.685 09.01.27",
+          "as": "0.38%",
+          "sh": "14,087,000"
+        },
+        {
+          "no": 24,
+          "n": "Cisco Systems, Inc. 4.8%",
+          "s": "CSCO.4.8 02.26.27",
+          "as": "0.38%",
+          "sh": "13,975,000"
+        },
+        {
+          "no": 25,
+          "n": "Apple Inc. 3.2%",
+          "s": "AAPL.3.2 05.11.27",
+          "as": "0.38%",
+          "sh": "14,258,000"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "date": "Jul 2, 2026",
+      "count": 660,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 2, 2026",
+        "lastChecked": 1783679848801,
+        "topic": "holdings",
+        "ticker": "IBDS",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 24.1397,
-      "pd": 24.14,
-      "c": 0,
-      "cp": 0,
+      "p": 24.15,
+      "pd": 24.15,
+      "c": 0.01,
+      "cp": 0.06,
       "cl": 24.14,
-      "cdr": -1,
-      "o": 24.13,
-      "h": 24.14,
+      "cdr": 1,
+      "o": 24.15,
+      "h": 24.15,
       "l": 24.13,
-      "v": 1240514,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "v": 813708.597179,
+      "ts": 1783684158108.9927,
+      "u": "Jul 10, 2026, 7:49 AM EDT",
+      "td": "2026-07-10",
       "h52": 24.38,
       "l52": 24.11,
       "ex": "NYSEARCA",
-      "ms": "closed",
-      "fms": "closed",
-      "e": true,
-      "ep": 24.14,
-      "epd": 24.14,
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": 24.15,
+      "epd": 24.15,
       "ec": 0,
       "ecp": 0,
-      "eu": "Jul 8, 2026, 8:00 PM EDT",
-      "es": "After-hours",
-      "ets": 1783555200093.168,
-      "etd": "2026-07-08",
-      "epv": null,
+      "eu": null,
+      "es": null,
+      "ets": 1783684158108.993,
+      "etd": null,
+      "epv": 402,
       "days": 0,
-      "exp": 1783584900000,
+      "exp": 1783690212363,
       "symbol": "IBDS",
       "uid": "IBDS"
     },
@@ -6809,10 +6891,10 @@
         "o": 24.13,
         "h": 24.16,
         "l": 24.12,
-        "c": 24.14,
-        "a": 24.14,
-        "v": 5049648,
-        "ch": 0.02
+        "c": 24.135,
+        "a": 24.135,
+        "v": 5863256,
+        "ch": 0
       },
       {
         "t": "2026-06-01",
@@ -6927,6 +7009,16 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-09",
+          "o": 24.15,
+          "h": 24.15,
+          "l": 24.13,
+          "c": 24.135,
+          "a": 24.135,
+          "v": 813608,
+          "ch": -0.02
+        },
         {
           "t": "2026-07-08",
           "o": 24.13,
@@ -9436,16 +9528,6 @@
           "a": 23.145714,
           "v": 700438,
           "ch": 0.08
-        },
-        {
-          "t": "2025-07-08",
-          "o": 24.14,
-          "h": 24.15,
-          "l": 24.14,
-          "c": 24.14,
-          "a": 23.126553,
-          "v": 528590,
-          "ch": -0.04
         }
       ],
       "weekly_1y": [
@@ -9454,10 +9536,10 @@
           "o": 24.15,
           "h": 24.16,
           "l": 24.13,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 3849312,
-          "ch": 0
+          "c": 24.135,
+          "a": 24.135,
+          "v": 4662920,
+          "ch": -0.02
         },
         {
           "t": "2026-06-29",
@@ -9976,10 +10058,10 @@
           "o": 24.13,
           "h": 24.16,
           "l": 24.12,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 5049648,
-          "ch": 0.02
+          "c": 24.135,
+          "a": 24.135,
+          "v": 5863256,
+          "ch": 0
         },
         {
           "t": "2026-06-01",
@@ -10098,10 +10180,10 @@
           "o": 24.15,
           "h": 24.16,
           "l": 24.13,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 3849312,
-          "ch": 0
+          "c": 24.135,
+          "a": 24.135,
+          "v": 4662920,
+          "ch": -0.02
         },
         {
           "t": "2026-06-29",
@@ -10620,10 +10702,10 @@
           "o": 24.13,
           "h": 24.16,
           "l": 24.12,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 5049648,
-          "ch": 0.02
+          "c": 24.135,
+          "a": 24.135,
+          "v": 5863256,
+          "ch": 0
         },
         {
           "t": "2026-06-01",
@@ -10742,10 +10824,10 @@
           "o": 24.13,
           "h": 24.16,
           "l": 24.12,
-          "c": 24.14,
-          "a": 24.14,
-          "v": 5049648,
-          "ch": 0.02
+          "c": 24.135,
+          "a": 24.135,
+          "v": 5863256,
+          "ch": 0
         },
         {
           "t": "2026-06-01",
