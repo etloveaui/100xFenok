@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-09T09:38:01Z",
+  "generated_at": "2026-07-10T04:57:45Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -23,35 +23,37 @@
       "etf_screener": 5472,
       "new_etfs": 100
     },
-    "detail_files": 5440,
-    "covered_detail_files": 5419,
-    "missing_detail_files": 53,
+    "detail_files": 5441,
+    "covered_detail_files": 5420,
+    "missing_detail_files": 52,
     "extra_detail_files": 21,
-    "stockanalysis_detail_files": 4722,
+    "stockanalysis_detail_files": 4723,
     "yahoo_fallback_files": 718,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.03,
-    "primary_stockanalysis_pct": 85.91,
+    "coverage_pct": 99.05,
+    "primary_stockanalysis_pct": 85.93,
     "missing_by_source": {
-      "etf_universe": 53,
-      "etf_screener": 53,
+      "etf_universe": 52,
+      "etf_screener": 52,
       "new_etfs": 11
     },
     "missing_status_breakdown": {
-      "retry_cooldown": 53
+      "retry_cooldown": 51,
+      "retry_pending": 1
     },
     "missing_failure_breakdown": {
-      "external_quote_type_mismatch": 53
+      "external_quote_type_mismatch": 52
     },
     "pending_tracked": 75,
-    "pending_cooldown": 65,
-    "pending_tracked_missing": 53
+    "pending_cooldown": 63,
+    "pending_tracked_missing": 52
   },
   "missing_reason_summary": {
-    "external_quote_type_mismatch": 53
+    "external_quote_type_mismatch": 52
   },
   "missing_status_summary": {
-    "retry_cooldown": 53
+    "retry_cooldown": 51,
+    "retry_pending": 1
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
@@ -77,12 +79,15 @@
       "AIQD",
       "AIQU",
       "AMHI",
-      "ASMZ",
       "BAVA",
       "CLNK",
       "CLOO",
       "CRIB",
-      "DISK"
+      "DISK",
+      "ECHX"
+    ],
+    "retry_pending": [
+      "ASMZ"
     ]
   },
   "missing_tickers": [
@@ -105,7 +110,6 @@
     "FECM",
     "FESC",
     "GISC",
-    "GOLI",
     "IDEQ",
     "JPO",
     "KRYP",
@@ -905,7 +909,6 @@
       "FECM",
       "FESC",
       "GISC",
-      "GOLI",
       "IDEQ",
       "JPO",
       "KRYP",
@@ -935,7 +938,8 @@
       "XLCI",
       "XLFI",
       "XLII",
-      "XLRI"
+      "XLRI",
+      "XLVI"
     ],
     "missing_retry_cooldown": [
       "ACII",
@@ -944,12 +948,15 @@
       "AIQD",
       "AIQU",
       "AMHI",
-      "ASMZ",
       "BAVA",
       "CLNK",
       "CLOO",
       "CRIB",
-      "DISK"
+      "DISK",
+      "ECHX"
+    ],
+    "missing_retry_pending": [
+      "ASMZ"
     ],
     "missing_external_quote_type_mismatch": [
       "ACII",

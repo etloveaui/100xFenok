@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "WDE",
   "asset_type": "etf",
-  "generated_at": "2026-07-09T09:28:38Z",
+  "generated_at": "2026-07-10T04:58:11Z",
   "identity": {
     "name": "Principal Securitized Debt ETF",
     "exchange": "BTS",
@@ -227,9 +227,17 @@
           "fetched_at": "2026-07-09T09:25:40Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 0.7515,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_ytd": {
       "value": 1.1553745170171592,
@@ -660,14 +668,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/WDE.json",
     "stockanalysis": "stockanalysis/etfs/WDE.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

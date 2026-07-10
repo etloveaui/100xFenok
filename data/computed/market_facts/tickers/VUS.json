@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "VUS",
   "asset_type": "etf",
-  "generated_at": "2026-07-09T09:28:38Z",
+  "generated_at": "2026-07-10T04:58:11Z",
   "identity": {
     "name": "Virtus U.S. Dividend ETF",
     "exchange": "PCX",
@@ -248,9 +248,17 @@
           "fetched_at": "2026-07-09T09:25:33Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 1.42,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 19.84919391353854,
@@ -315,6 +323,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 18.402,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 19.33704,
           "source": "yf",
           "as_of": null,
@@ -323,7 +339,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_1y": {
       "value": 20.570576117705958,
@@ -779,14 +795,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/VUS.json",
     "stockanalysis": "stockanalysis/etfs/VUS.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

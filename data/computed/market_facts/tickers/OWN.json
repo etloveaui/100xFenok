@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "OWN",
   "asset_type": "etf",
-  "generated_at": "2026-07-09T09:28:38Z",
+  "generated_at": "2026-07-10T04:58:11Z",
   "identity": {
     "name": "Inside Ownership 100 ETF",
     "exchange": "BTS",
@@ -187,9 +187,17 @@
           "fetched_at": "2026-07-09T09:23:18Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 0.9867,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": -1.1331395777866358,
@@ -667,14 +675,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/OWN.json",
     "stockanalysis": "stockanalysis/etfs/OWN.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

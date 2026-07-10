@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "VDI",
   "asset_type": "etf",
-  "generated_at": "2026-07-09T09:28:38Z",
+  "generated_at": "2026-07-10T04:58:11Z",
   "identity": {
     "name": "Virtus International Dividend ETF",
     "exchange": "PCX",
@@ -248,9 +248,17 @@
           "fetched_at": "2026-07-09T09:25:27Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 2.323,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 12.869453432253708,
@@ -315,6 +323,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 14.159,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-09T02:22:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 13.87488,
           "source": "yf",
           "as_of": null,
@@ -323,7 +339,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_1y": {
       "value": 18.66886678883927,
@@ -779,14 +795,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/VDI.json",
     "stockanalysis": "stockanalysis/etfs/VDI.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
