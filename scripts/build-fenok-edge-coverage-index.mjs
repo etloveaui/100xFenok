@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
 import { buildScoredEtfDaily1yFetchablePlan } from "./write-fenok-etf-daily1y-readiness.mjs";
 import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
+import { recomputeFenokEdgeSourceAsOf } from "./lib/fenok-edge-source-stamp.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -1043,26 +1044,11 @@ function buildS1PromotionGateEvidence() {
 const s1PromotionGateEvidence = buildS1PromotionGateEvidence();
 const generatedAt = new Date().toISOString();
 
-// Root source-freshness stamp (KPI v2 SLA basis, contract §5). OLDEST of this
-// index's declared daily SOURCE dates — the true source dates, never rebuild
-// times. Deterministic named input list; do not add generated_at/rebuild fields.
-const SOURCE_AS_OF_INPUTS = [
-  { id: "krx_issuer_daily_latest_full_proof", date: koreaCountedSourceDate },
-  { id: "us_finra_flow_proxy", date: flowSourceDate },
-  { id: "us_occ_options_proxy", date: occSourceDate },
-  { id: "us_class_yf_daily_source", date: usClassYfOldestSourceDate },
-  { id: "asia_ex_taiwan_yf_daily_source", date: asiaYfOldestSourceDate },
-];
-// Fail-closed: if ANY declared counted-source date is missing/unparseable, the
-// stamp is null (KPI reads unavailable), never the oldest of the survivors.
-const sourceAsOfDates = SOURCE_AS_OF_INPUTS.map((entry) => toIsoDate(entry.date));
-const sourceAsOf = sourceAsOfDates.some((date) => !date) ? null : [...sourceAsOfDates].sort()[0] ?? null;
-
 const index = {
   schema_version: "fenok-edge-coverage-index/v0.2",
   generated_at: generatedAt,
-  source_as_of: sourceAsOf,
-  source_as_of_inputs: SOURCE_AS_OF_INPUTS.map((entry) => ({ id: entry.id, source_date: toIsoDate(entry.date) })),
+  source_as_of: null,
+  source_as_of_inputs: [],
   purpose: "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   raw_policy: {
     raw_public: false,
@@ -1584,6 +1570,11 @@ preservePriorPrivateBackedEvidence(index, priorIndex, {
   latestUsRunMissing,
   taiwanHistoricalMissing,
 });
+
+// Compute the root SLA stamp only after private-backed evidence preservation.
+// Otherwise a no-private rebuild restores the KRX row/freshness but leaves the
+// root source_as_of null, making strict KPI disagree with the preserved row.
+recomputeFenokEdgeSourceAsOf(index);
 
 const publicIndex = compactPublicCoverageIndex(index);
 writeJson(OUT_PATH, index);

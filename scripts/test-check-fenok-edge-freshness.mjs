@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import "./test-fenok-edge-source-stamp.mjs";
 
 import {
   activeS0DailyGatedReady,
