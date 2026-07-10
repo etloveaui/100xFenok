@@ -1427,10 +1427,41 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(second["counts"]["tracked"], 0)
         self.assertEqual(second["cleared"], ["BETA"])
 
+    def test_yahoo_candidate_success_keeps_missing_primary_in_retry_ledger(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                self.fetcher.OUT_DIR = Path(tmp) / "stockanalysis"
+                self.fetcher.PUBLIC_DIR = Path(tmp) / "public" / "stockanalysis"
+                summary = self.fetcher.update_pending_ledger(
+                    results=[
+                        {
+                            "ticker": "ADIU",
+                            "asset_type": "etf",
+                            "status": "fallback_candidate_ok",
+                            "provider": "yahoo_finance",
+                            "stockanalysis_error": "URLError: HTTP Error 404: Not Found",
+                            "error": None,
+                        }
+                    ],
+                    selected_rows=[{"ticker": "ADIU"}],
+                    cooldown_days=7,
+                    failure_threshold=1,
+                    mirror_public=False,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
+        self.assertEqual(summary["counts"]["tracked"], 1)
+        self.assertEqual(summary["entries"]["ADIU"]["last_provider"], "yahoo_finance")
+
     def test_etf_404_uses_yahoo_fallback_when_enabled(self) -> None:
         original_fetch_etf = self.fetcher.fetch_etf
         original_fallback = self.fetcher.fetch_yahoo_etf_fallback
         original_write_payload = self.fetcher.write_payload
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
         writes = []
 
         def fake_fetch_etf(_ticker: str, _timeout: int) -> dict:
@@ -1455,61 +1486,259 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.fetcher.fetch_yahoo_etf_fallback = fake_fallback
         self.fetcher.write_payload = fake_write_payload
         try:
-            result = self.fetcher.run_one("etf", "ADIU", timeout=1, mirror_public=False, yf_fallback=True)
+            with tempfile.TemporaryDirectory() as tmp:
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = Path(tmp) / "data-supply-state" / "v1"
+                result = self.fetcher.run_one("etf", "ADIU", timeout=1, mirror_public=False, yf_fallback=True)
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
         finally:
             self.fetcher.fetch_etf = original_fetch_etf
             self.fetcher.fetch_yahoo_etf_fallback = original_fallback
             self.fetcher.write_payload = original_write_payload
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
-        self.assertEqual(result["status"], "fallback_ok")
+        self.assertEqual(result["status"], "fallback_candidate_ok")
         self.assertEqual(result["provider"], "yahoo_finance")
         self.assertIn("HTTP Error 404", result["stockanalysis_error"])
-        self.assertEqual(writes[0][0], "etfs/ADIU.json")
-        self.assertEqual(writes[0][1]["source_provider"], "yahoo_finance")
+        self.assertEqual(result["candidate_path"], "data/yf/etf-details/ADIU.json")
+        self.assertIsNone(result["selected_provider"])
+        self.assertFalse(result["canonical_write"])
+        self.assertEqual(writes, [])
+        self.assertEqual(len(observations), 1)
+        self.assertEqual(observations[0]["provider"], "stockanalysis")
+        self.assertEqual(observations[0]["validation_status"], "invalid")
+
+    def test_schema_and_network_primary_failures_still_materialize_yahoo_candidate(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_loader = self.fetcher.load_yf_finance_module
+        original_yf_out_dir = self.fetcher.YF_OUT_DIR
+        original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+
+        class FakeYahooModule:
+            @staticmethod
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
+                return {
+                    "info": {"symbol": "VYMI", "quoteType": "ETF", "currentPrice": 70.0},
+                    "funds_data": {"top_holdings": []},
+                    "history_1y": [],
+                }, 10, None
+
+        try:
+            for label, failure in (
+                ("schema", ValueError("schema drift")),
+                ("network", urllib.error.URLError("timed out")),
+            ):
+                with self.subTest(label=label), tempfile.TemporaryDirectory() as tmp:
+                    temp_root = Path(tmp)
+                    self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                    self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
+                    self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                    self.fetcher.fetch_etf = lambda _ticker, _timeout, exc=failure: (_ for _ in ()).throw(exc)
+                    self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
+                    result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
+                    candidate_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "VYMI.json").exists()
+                    history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                    observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+                    self.assertEqual(result["status"], "fallback_candidate_ok")
+                    self.assertTrue(candidate_exists)
+                    self.assertEqual(
+                        [(row["provider"], row["validation_status"]) for row in observations],
+                        [("stockanalysis", "invalid"), ("yahoo_finance", "valid")],
+                    )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.YF_OUT_DIR = original_yf_out_dir
+            self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+    def test_stockanalysis_success_writes_only_primary_truth_and_observation(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        original_yf_out_dir = self.fetcher.YF_OUT_DIR
+        original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        original_fetch_etf = self.fetcher.fetch_etf
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                self.fetcher.PUBLIC_DIR = temp_root / "public" / "data" / "stockanalysis"
+                self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
+                self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                    "schema_version": self.fetcher.SCHEMA_VERSION,
+                    "source": "stockanalysis",
+                    "asset_type": "etf",
+                    "ticker": ticker,
+                    "fetched_at": "2026-07-10T00:00:00Z",
+                    "normalized": {"overview": {"aum": 1}},
+                }
+                result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
+                primary_exists = (self.fetcher.OUT_DIR / "etfs" / "VYMI.json").exists()
+                raw_yf_exists = (self.fetcher.YF_OUT_DIR / "VYMI.json").exists()
+                normalized_yf_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "VYMI.json").exists()
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+            self.fetcher.YF_OUT_DIR = original_yf_out_dir
+            self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+            self.fetcher.fetch_etf = original_fetch_etf
+
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["canonical_write"])
+        self.assertTrue(primary_exists)
+        self.assertFalse(raw_yf_exists)
+        self.assertFalse(normalized_yf_exists)
+        self.assertEqual(observations[0]["provider"], "stockanalysis")
+        self.assertEqual(observations[0]["validation_status"], "valid")
+
+    def test_stockanalysis_path_rejects_cross_provider_payload(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                self.fetcher.OUT_DIR = Path(tmp) / "data" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = Path(tmp) / "data" / "admin" / "data-supply-state" / "v1"
+                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                    "schema_version": "yf-etf-detail/v1",
+                    "source": "yahoo_finance",
+                    "source_provider": "yahoo_finance",
+                    "asset_type": "etf",
+                    "ticker": ticker,
+                    "fetched_at": "2026-07-10T00:00:00Z",
+                }
+                result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=False)
+                primary_exists = (self.fetcher.OUT_DIR / "etfs" / "VYMI.json").exists()
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+        self.assertEqual(result["status"], "error")
+        self.assertIn("schema mismatch", result["error"])
+        self.assertFalse(primary_exists)
+        self.assertEqual(observations[0]["validation_status"], "invalid")
+        self.assertEqual(observations[0]["reason_code"], "schema_invalid")
+
+    def test_malformed_primary_stamp_preserves_existing_primary_bytes(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                detail_path = self.fetcher.OUT_DIR / "etfs" / "VYMI.json"
+                detail_path.parent.mkdir(parents=True)
+                original_bytes = b'{"source":"stockanalysis","ticker":"VYMI","fetched_at":"2026-07-09T00:00:00Z"}\n'
+                detail_path.write_bytes(original_bytes)
+                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                    "schema_version": self.fetcher.SCHEMA_VERSION,
+                    "source": "stockanalysis",
+                    "asset_type": "etf",
+                    "ticker": ticker,
+                    "fetched_at": "not-a-timeZ",
+                    "normalized": {"overview": {"aum": 1}},
+                }
+                result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=False)
+                after_bytes = detail_path.read_bytes()
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+        self.assertEqual(result["status"], "error")
+        self.assertIn("malformed", result["error"])
+        self.assertEqual(after_bytes, original_bytes)
+        self.assertEqual(observations[0]["reason_code"], "schema_invalid")
 
     def test_yahoo_fallback_never_overwrites_existing_stockanalysis_detail(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         original_fetch_etf = self.fetcher.fetch_etf
-        original_fallback = self.fetcher.fetch_yahoo_etf_fallback
-        original_write_payload = self.fetcher.write_payload
-        writes = []
+        original_loader = self.fetcher.load_yf_finance_module
+        original_yf_out_dir = self.fetcher.YF_OUT_DIR
+        original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+
+        class FakeYahooModule:
+            @staticmethod
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
+                return {
+                    "info": {
+                        "symbol": "VYMI",
+                        "quoteType": "ETF",
+                        "currentPrice": 70.0,
+                        "previousClose": 69.5,
+                    },
+                    "funds_data": {"top_holdings": []},
+                    "history_1y": [],
+                }, 10, None
+
         try:
             with tempfile.TemporaryDirectory() as tmp:
-                self.fetcher.OUT_DIR = Path(tmp) / "stockanalysis"
+                temp_root = Path(tmp)
+                self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
+                self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
                 detail_dir = self.fetcher.OUT_DIR / "etfs"
                 detail_dir.mkdir(parents=True)
-                canonical = {
-                    "source": "stockanalysis",
-                    "ticker": "VYMI",
-                    "fetched_at": "2026-07-09T00:00:00Z",
-                }
+                canonical_bytes = b'{\n  "source": "stockanalysis",\n  "ticker": "VYMI",\n  "fetched_at": "2026-07-09T00:00:00Z"\n}\n'
                 detail_path = detail_dir / "VYMI.json"
-                detail_path.write_text(json.dumps(canonical), encoding="utf-8")
+                detail_path.write_bytes(canonical_bytes)
 
                 self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
                     urllib.error.URLError("HTTP Error 404: Not Found")
                 )
-                self.fetcher.fetch_yahoo_etf_fallback = lambda ticker, _mirror: {
-                    "source": "yahoo_finance",
-                    "source_provider": "yahoo_finance",
-                    "detail_status": "yf_fallback",
-                    "ticker": ticker,
-                }
-                self.fetcher.write_payload = lambda rel_path, payload, _mirror: writes.append((rel_path, payload))
+                self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
 
                 result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
-                after = json.loads(detail_path.read_text(encoding="utf-8"))
+                after_bytes = detail_path.read_bytes()
+                raw_path = self.fetcher.YF_OUT_DIR / "VYMI.json"
+                candidate_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "VYMI.json"
+                history_path = (
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT
+                    / "history"
+                    / "observations"
+                    / f"{datetime.now(timezone.utc).date().isoformat()}.jsonl"
+                )
+                observations = [json.loads(line) for line in history_path.read_text(encoding="utf-8").splitlines()]
+                raw_exists = raw_path.exists()
+                candidate_exists = candidate_path.exists()
         finally:
             self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.fetch_etf = original_fetch_etf
-            self.fetcher.fetch_yahoo_etf_fallback = original_fallback
-            self.fetcher.write_payload = original_write_payload
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.YF_OUT_DIR = original_yf_out_dir
+            self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
         self.assertEqual(result["status"], "fallback_observed_primary_preserved")
         self.assertEqual(result["selected_provider"], "stockanalysis")
         self.assertFalse(result["canonical_write"])
-        self.assertEqual(after, canonical)
-        self.assertEqual(writes, [])
+        self.assertEqual(after_bytes, canonical_bytes)
+        self.assertTrue(raw_exists)
+        self.assertTrue(candidate_exists)
+        self.assertEqual(
+            [(row["provider"], row["validation_status"]) for row in observations],
+            [("stockanalysis", "invalid"), ("yahoo_finance", "valid")],
+        )
+        self.assertEqual(observations[1]["provider_path"], "data/yf/etf-details/VYMI.json")
 
     def test_yahoo_etf_payload_normalizes_source_tags_quote_and_fund_profile(self) -> None:
         payload = self.fetcher.yahoo_etf_payload(
@@ -1519,6 +1748,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "fetched_at": "2026-06-18T07:30:51Z",
                 "data": {
                     "info": {
+                        "symbol": "BSJY",
                         "quoteType": "ETF",
                         "longName": "Invesco BulletShares 2034 High Yield Corporate Bond ETF",
                         "currentPrice": 25.07,
@@ -1549,6 +1779,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         )
 
         self.assertEqual(payload["source"], "yahoo_finance")
+        self.assertEqual(payload["schema_version"], "yf-etf-detail/v1")
+        self.assertEqual(payload["source_as_of"], "2026-06-18T07:30:51Z")
         self.assertEqual(payload["source_provider"], "yahoo_finance")
         self.assertEqual(payload["detail_status"], "yf_fallback")
         self.assertEqual(payload["normalized"]["quote"]["ex"], "yahoo_finance")
@@ -1567,34 +1799,135 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     "ticker": "ADIU",
                     "fetched_at": "2026-06-18T07:30:51Z",
                     "data": {
-                        "info": {"quoteType": "EQUITY", "currentPrice": 14.5},
+                        "info": {"symbol": "ADIU", "quoteType": "EQUITY", "currentPrice": 14.5},
                     },
                 },
             )
 
-    def test_invalid_yahoo_fallback_does_not_write_raw_yf_payload(self) -> None:
+    def test_yahoo_etf_payload_rejects_missing_type_and_symbol_mismatch(self) -> None:
+        with self.assertRaisesRegex(ValueError, "quoteType"):
+            self.fetcher.yahoo_etf_payload(
+                "ADIU",
+                {"ticker": "ADIU", "fetched_at": "2026-06-18T00:00:00Z", "data": {"info": {"symbol": "ADIU"}}},
+            )
+        with self.assertRaisesRegex(ValueError, "symbol mismatch"):
+            self.fetcher.yahoo_etf_payload(
+                "ADIU",
+                {
+                    "ticker": "ADIU",
+                    "fetched_at": "2026-06-18T00:00:00Z",
+                    "data": {"info": {"symbol": "WRONG", "quoteType": "ETF"}},
+                },
+            )
+        with self.assertRaisesRegex(ValueError, "minimum ETF detail"):
+            self.fetcher.yahoo_etf_payload(
+                "ADIU",
+                {
+                    "ticker": "ADIU",
+                    "fetched_at": "2026-06-18T00:00:00Z",
+                    "data": {"info": {"symbol": "ADIU", "quoteType": "ETF"}},
+                },
+            )
+        with self.assertRaisesRegex(ValueError, "asset_classes"):
+            self.fetcher.yahoo_etf_payload(
+                "ADIU",
+                {
+                    "ticker": "ADIU",
+                    "fetched_at": "2026-06-18T00:00:00Z",
+                    "data": {
+                        "info": {"symbol": "ADIU", "quoteType": "ETF", "currentPrice": 10},
+                        "funds_data": {"asset_classes": ["malformed"]},
+                    },
+                },
+            )
+        with self.assertRaisesRegex(ValueError, "history rows"):
+            self.fetcher.yahoo_etf_payload(
+                "ADIU",
+                {
+                    "ticker": "ADIU",
+                    "fetched_at": "2026-06-18T00:00:00Z",
+                    "data": {
+                        "info": {"symbol": "ADIU", "quoteType": "ETF", "currentPrice": 10},
+                        "history_1y": ["malformed"],
+                    },
+                },
+            )
+
+    def test_invalid_yahoo_fallback_writes_raw_evidence_and_invalid_observation_only(self) -> None:
         original_loader = self.fetcher.load_yf_finance_module
-        original_write_json = self.fetcher.write_json
-        writes = []
+        original_yf_out_dir = self.fetcher.YF_OUT_DIR
+        original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
 
         class FakeYahooModule:
             @staticmethod
             def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
-                return {"info": {"quoteType": "EQUITY", "currentPrice": 14.5}}, 10, None
-
-        def fake_write_json(path: Path, payload: dict) -> None:
-            writes.append((path, payload))
+                return {"info": {"symbol": "ADIU", "quoteType": "EQUITY", "currentPrice": 14.5}}, 10, None
 
         self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
-        self.fetcher.write_json = fake_write_json
         try:
-            with self.assertRaises(ValueError):
-                self.fetcher.fetch_yahoo_etf_fallback("ADIU", mirror_public=True)
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
+                self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                with self.assertRaises(ValueError):
+                    self.fetcher.fetch_yahoo_etf_fallback("ADIU", mirror_public=False)
+                raw_path = self.fetcher.YF_OUT_DIR / "ADIU.json"
+                candidate_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "ADIU.json"
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+                raw_exists = raw_path.exists()
+                candidate_exists = candidate_path.exists()
         finally:
             self.fetcher.load_yf_finance_module = original_loader
-            self.fetcher.write_json = original_write_json
+            self.fetcher.YF_OUT_DIR = original_yf_out_dir
+            self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
-        self.assertEqual(writes, [])
+        self.assertTrue(raw_exists)
+        self.assertFalse(candidate_exists)
+        self.assertEqual(len(observations), 1)
+        self.assertEqual(observations[0]["validation_status"], "invalid")
+        self.assertEqual(observations[0]["provider_path"], "data/yf/finance/ADIU.json")
+
+    def test_malformed_yahoo_container_still_records_invalid_observation(self) -> None:
+        original_loader = self.fetcher.load_yf_finance_module
+        original_yf_out_dir = self.fetcher.YF_OUT_DIR
+        original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+
+        class FakeYahooModule:
+            @staticmethod
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
+                return {
+                    "info": {"symbol": "ADIU", "quoteType": "ETF", "currentPrice": 10},
+                    "funds_data": {"asset_classes": ["malformed"]},
+                }, 10, None
+
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
+                self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
+                self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                with self.assertRaisesRegex(ValueError, "asset_classes"):
+                    self.fetcher.fetch_yahoo_etf_fallback("ADIU", mirror_public=False)
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+                raw_exists = (self.fetcher.YF_OUT_DIR / "ADIU.json").exists()
+                candidate_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "ADIU.json").exists()
+        finally:
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.YF_OUT_DIR = original_yf_out_dir
+            self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+        self.assertTrue(raw_exists)
+        self.assertFalse(candidate_exists)
+        self.assertEqual(len(observations), 1)
+        self.assertEqual(observations[0]["validation_status"], "invalid")
 
     def test_etf_classification_separates_index_and_single_stock_leverage(self) -> None:
         index_etf = self.fetcher.classify_etf(

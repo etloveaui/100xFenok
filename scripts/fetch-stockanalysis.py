@@ -14,27 +14,41 @@ Output:
   data/stockanalysis/stocks/{TICKER}.json
   data/stockanalysis/surfaces/{NAME}.json
   data/stockanalysis/index.json
+  data/yf/finance/{TICKER}.json
+  data/yf/etf-details/{TICKER}.json
 """
 
 from __future__ import annotations
 
 import argparse
 from datetime import datetime, timedelta, timezone
+import hashlib
 from html.parser import HTMLParser
 import importlib.util
 import json
+import math
 from pathlib import Path
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
 
 
 ROOT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = ROOT / "scripts"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
+
+
 OUT_DIR = ROOT / "data" / "stockanalysis"
 PUBLIC_DIR = ROOT / "100xfenok-next" / "public" / "data" / "stockanalysis"
 YF_OUT_DIR = ROOT / "data" / "yf" / "finance"
 YF_PUBLIC_DIR = ROOT / "100xfenok-next" / "public" / "data" / "yf" / "finance"
+YF_ETF_DETAIL_OUT_DIR = ROOT / "data" / "yf" / "etf-details"
+DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
@@ -1863,6 +1877,31 @@ def write_payload(rel_path: str, payload: dict, mirror_public: bool) -> None:
         write_json(PUBLIC_DIR / rel_path, payload)
 
 
+def validate_aware_timestamp(value, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{label} is missing")
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise ValueError(f"{label} is malformed") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError(f"{label} is timezone-naive")
+    return value
+
+
+def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
+    if payload.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError("StockAnalysis ETF detail schema mismatch")
+    if (
+        payload.get("source") != "stockanalysis"
+        or payload.get("asset_type") != "etf"
+        or payload.get("ticker") != ticker
+    ):
+        raise ValueError("StockAnalysis ETF detail identity mismatch")
+    validate_aware_timestamp(payload.get("fetched_at"), "StockAnalysis ETF detail source stamp")
+
+
 def read_json(path: Path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -1900,6 +1939,90 @@ def write_yf_payload(ticker: str, data: dict, mirror_public: bool, fetched_at: s
     if mirror_public:
         write_json(YF_PUBLIC_DIR / f"{ticker}.json", payload)
     return payload
+
+
+def write_yf_etf_detail_payload(ticker: str, payload: dict) -> Path:
+    if payload.get("schema_version") != "yf-etf-detail/v1":
+        raise ValueError("Yahoo ETF detail candidate schema mismatch")
+    if payload.get("source_provider") != "yahoo_finance" or payload.get("ticker") != ticker:
+        raise ValueError("Yahoo ETF detail candidate identity mismatch")
+    validate_aware_timestamp(payload.get("source_as_of"), "Yahoo ETF detail candidate source stamp")
+    path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
+    write_json(path, payload)
+    return path
+
+
+def record_etf_detail_observation(
+    *,
+    provider: str,
+    endpoint_family: str,
+    ticker: str,
+    provider_path: str,
+    payload_path: Path,
+    provider_schema: str,
+    source_as_of: str,
+    observed_at: str,
+    validation_status: str,
+    reason_code: str,
+) -> dict:
+    row = {
+        "schema_version": "data-supply-observation/v1",
+        "provider": provider,
+        "endpoint_family": endpoint_family,
+        "domain": "etf_detail",
+        "entity": ticker,
+        "provider_path": provider_path,
+        "payload_sha256": hashlib.sha256(payload_path.read_bytes()).hexdigest(),
+        "provider_schema": provider_schema,
+        "source_as_of": source_as_of,
+        "observed_at": observed_at,
+        "validation_status": validation_status,
+        "reason_code": reason_code,
+    }
+    row["event_id"] = deterministic_event_id("observation", row)
+    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
+    return row
+
+
+def record_etf_detail_failure_observation(
+    *,
+    provider: str,
+    endpoint_family: str,
+    ticker: str,
+    provider_path: str,
+    provider_schema: str,
+    reason_code: str,
+    failure_detail: str,
+) -> dict:
+    observed_at = now_iso()
+    failure_descriptor = {
+        "provider": provider,
+        "endpoint_family": endpoint_family,
+        "domain": "etf_detail",
+        "entity": ticker,
+        "observed_at": observed_at,
+        "reason_code": reason_code,
+        "failure_detail_sha256": hashlib.sha256(failure_detail.encode("utf-8")).hexdigest(),
+    }
+    row = {
+        "schema_version": "data-supply-observation/v1",
+        "provider": provider,
+        "endpoint_family": endpoint_family,
+        "domain": "etf_detail",
+        "entity": ticker,
+        "provider_path": provider_path,
+        "payload_sha256": canonical_sha256(failure_descriptor),
+        "provider_schema": provider_schema,
+        "source_as_of": observed_at,
+        "observed_at": observed_at,
+        "validation_status": "invalid",
+        "reason_code": reason_code,
+        "payload_available": False,
+        "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
+    }
+    row["event_id"] = deterministic_event_id("observation", row)
+    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
+    return row
 
 
 def parse_iso_timestamp(value: str | None) -> datetime | None:
@@ -2144,11 +2267,14 @@ def update_pending_ledger(
         if not ticker or ticker not in selected:
             continue
         error = result.get("error")
-        if error is None:
+        primary_error = result.get("stockanalysis_error") if result.get("provider") == "yahoo_finance" else None
+        if error is None and primary_error is None:
             if ticker in entries:
                 entries.pop(ticker, None)
                 cleared.append(ticker)
             continue
+        if error is None:
+            error = primary_error
         if not is_expected_missing_error(error):
             continue
 
@@ -2817,21 +2943,65 @@ def normalize_yahoo_holdings(rows) -> list[dict]:
 
 def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
     data = yf_payload.get("data") or {}
+    if not isinstance(data, dict):
+        raise ValueError("Yahoo fallback data container must be an object")
     info = data.get("info") or {}
     fast_info = data.get("fast_info") or {}
     funds_data = data.get("funds_data") or {}
+    if not isinstance(info, dict) or not isinstance(fast_info, dict) or not isinstance(funds_data, dict):
+        raise ValueError("Yahoo fallback detail containers must be objects")
     history_1y = data.get("history_1y")
-    fund_overview = funds_data.get("fund_overview") if isinstance(funds_data, dict) else {}
-    description = funds_data.get("description") if isinstance(funds_data, dict) else None
+    if history_1y is not None and not isinstance(history_1y, list):
+        raise ValueError("Yahoo fallback history_1y must be a list")
+    normalized_history = []
+    for row in history_1y or []:
+        if not isinstance(row, dict) or not isinstance(row.get("date"), str) or not row["date"].strip():
+            raise ValueError("Yahoo fallback history rows must be dated objects")
+        close = row.get("close", row.get("Close"))
+        if close is None:
+            continue
+        if not isinstance(close, (int, float)) or isinstance(close, bool) or not math.isfinite(close):
+            raise ValueError("Yahoo fallback history close must be finite numeric")
+        normalized_history.append(row)
+    fund_overview = funds_data.get("fund_overview") or {}
+    if not isinstance(fund_overview, dict):
+        raise ValueError("Yahoo fallback fund_overview must be an object")
+    description = funds_data.get("description")
+    if description is not None and not isinstance(description, str):
+        raise ValueError("Yahoo fallback description must be a string")
+    top_holdings = funds_data.get("top_holdings")
+    asset_classes = funds_data.get("asset_classes")
+    sector_weightings = funds_data.get("sector_weightings")
+    if top_holdings is not None and not isinstance(top_holdings, list):
+        raise ValueError("Yahoo fallback top_holdings must be a list")
+    if asset_classes is not None and not isinstance(asset_classes, dict):
+        raise ValueError("Yahoo fallback asset_classes must be an object")
+    if sector_weightings is not None and not isinstance(sector_weightings, dict):
+        raise ValueError("Yahoo fallback sector_weightings must be an object")
+    if any(not isinstance(row, dict) for row in top_holdings or []):
+        raise ValueError("Yahoo fallback holding rows must be objects")
+    for field, values in (("asset_classes", asset_classes), ("sector_weightings", sector_weightings)):
+        for key, value in (values or {}).items():
+            if (
+                not isinstance(key, str)
+                or not key
+                or not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                or not math.isfinite(value)
+            ):
+                raise ValueError(f"Yahoo fallback {field} entries must be finite numeric mappings")
     quote_type = str(info.get("quoteType") or funds_data.get("quote_type") or "").upper()
-    if quote_type and quote_type not in {"ETF", "MUTUALFUND"}:
+    if quote_type not in {"ETF", "MUTUALFUND"}:
         raise ValueError(f"Yahoo fallback quoteType is not ETF/MUTUALFUND: {quote_type}")
+    response_symbol = clean_symbol(str(info.get("symbol") or funds_data.get("symbol") or ""))
+    if response_symbol != ticker:
+        raise ValueError(f"Yahoo fallback symbol mismatch: requested={ticker} response={response_symbol}")
 
     price = first_number(info.get("currentPrice"), fast_info.get("last_price"), fast_info.get("lastPrice"))
     previous_close = first_number(info.get("previousClose"), fast_info.get("previous_close"), fast_info.get("previousClose"))
     change = None if price is None or previous_close is None else price - previous_close
     change_pct = None if change is None or previous_close in (None, 0) else (change / previous_close) * 100
-    holdings = normalize_yahoo_holdings(funds_data.get("top_holdings") if isinstance(funds_data, dict) else None)
+    holdings = normalize_yahoo_holdings(top_holdings)
     inception = first_present(
         normalize_yahoo_date(info.get("fundInceptionDate")),
         normalize_yahoo_date(info.get("inceptionDate")),
@@ -2860,21 +3030,34 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
         overview={"description": description} if description else overview,
         holdings=holdings,
     )
+    has_minimum_detail = any(
+        (
+            price is not None,
+            bool(holdings),
+            bool(overview),
+            bool(normalized_history),
+            bool(asset_classes),
+            bool(sector_weightings),
+        )
+    )
+    if not has_minimum_detail:
+        raise ValueError("Yahoo fallback does not satisfy the minimum ETF detail contract")
 
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": "yf-etf-detail/v1",
         "source": "yahoo_finance",
         "source_provider": "yahoo_finance",
         "detail_status": "yf_fallback",
         "asset_type": "etf",
         "ticker": ticker,
+        "source_as_of": yf_payload.get("fetched_at"),
         "inceptionDate": inception,
         "fetched_at": yf_payload.get("fetched_at") or now_iso(),
         "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
         "normalized": {
             "holdings": holdings,
-            "asset_allocation": funds_data.get("asset_classes") if isinstance(funds_data, dict) else None,
-            "sectors": funds_data.get("sector_weightings") if isinstance(funds_data, dict) else None,
+            "asset_allocation": asset_classes,
+            "sectors": sector_weightings,
             "countries": None,
             "holding_count": len(holdings) if holdings else None,
             "holdings_updated": yf_payload.get("fetched_at"),
@@ -2892,9 +3075,9 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
                 }.items()
                 if value is not None
             },
-            "history": history_1y,
+            "history": normalized_history,
             "history_periods": {
-                "daily_1y": history_1y if isinstance(history_1y, list) else [],
+                "daily_1y": normalized_history,
             },
         },
         "raw": {
@@ -2910,8 +3093,37 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
         raise RuntimeError(error or "Yahoo fallback returned no data")
     fetched_at = now_iso()
     yf_payload = build_yf_payload(ticker, data, fetched_at)
-    etf_payload = yahoo_etf_payload(ticker, yf_payload)
-    write_yf_payload(ticker, data, mirror_public, fetched_at)
+    raw_payload = write_yf_payload(ticker, data, mirror_public, fetched_at)
+    raw_path = YF_OUT_DIR / f"{ticker}.json"
+    try:
+        etf_payload = yahoo_etf_payload(ticker, yf_payload)
+    except ValueError:
+        record_etf_detail_observation(
+            provider="yahoo_finance",
+            endpoint_family="yahoo_etf_detail",
+            ticker=ticker,
+            provider_path=f"data/yf/finance/{ticker}.json",
+            payload_path=raw_path,
+            provider_schema=raw_payload["schema_version"],
+            source_as_of=fetched_at,
+            observed_at=fetched_at,
+            validation_status="invalid",
+            reason_code="normalization_invalid",
+        )
+        raise
+    candidate_path = write_yf_etf_detail_payload(ticker, etf_payload)
+    record_etf_detail_observation(
+        provider="yahoo_finance",
+        endpoint_family="yahoo_etf_detail",
+        ticker=ticker,
+        provider_path=f"data/yf/etf-details/{ticker}.json",
+        payload_path=candidate_path,
+        provider_schema=etf_payload["schema_version"],
+        source_as_of=etf_payload["source_as_of"],
+        observed_at=fetched_at,
+        validation_status="valid",
+        reason_code="contract_valid",
+    )
     return etf_payload
 
 
@@ -2978,7 +3190,23 @@ def run_one(
                 stockanalysis_error = None
             except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
                 stockanalysis_error = f"{type(exc).__name__}: {exc}"
-                if not (yf_fallback and is_expected_missing_error(stockanalysis_error)):
+                failure_reason = (
+                    "endpoint_missing"
+                    if is_expected_missing_error(stockanalysis_error)
+                    else "schema_invalid"
+                    if isinstance(exc, (json.JSONDecodeError, ValueError))
+                    else "fetch_failed"
+                )
+                record_etf_detail_failure_observation(
+                    provider="stockanalysis",
+                    endpoint_family="stockanalysis_etf_detail",
+                    ticker=ticker,
+                    provider_path=f"data/stockanalysis/etfs/{ticker}.json",
+                    provider_schema=SCHEMA_VERSION,
+                    reason_code=failure_reason,
+                    failure_detail=stockanalysis_error,
+                )
+                if not yf_fallback:
                     raise
                 try:
                     payload = fetch_yahoo_etf_fallback(ticker, mirror_public)
@@ -3007,8 +3235,37 @@ def run_one(
             rel_path = f"stocks/{ticker}.json"
             provider = "stockanalysis"
             stockanalysis_error = None
-        if not preserved_primary:
+        if provider == "stockanalysis":
+            if kind == "etf":
+                try:
+                    validate_stockanalysis_etf_payload(ticker, payload)
+                except ValueError as exc:
+                    record_etf_detail_failure_observation(
+                        provider="stockanalysis",
+                        endpoint_family="stockanalysis_etf_detail",
+                        ticker=ticker,
+                        provider_path=f"data/stockanalysis/etfs/{ticker}.json",
+                        provider_schema=SCHEMA_VERSION,
+                        reason_code="schema_invalid",
+                        failure_detail=f"{type(exc).__name__}: {exc}",
+                    )
+                    raise
             write_payload(rel_path, payload, mirror_public)
+            if kind == "etf":
+                provider_path = OUT_DIR / rel_path
+                source_as_of = payload.get("fetched_at") or now_iso()
+                record_etf_detail_observation(
+                    provider="stockanalysis",
+                    endpoint_family="stockanalysis_etf_detail",
+                    ticker=ticker,
+                    provider_path=f"data/stockanalysis/{rel_path}",
+                    payload_path=provider_path,
+                    provider_schema=payload.get("schema_version") or SCHEMA_VERSION,
+                    source_as_of=source_as_of,
+                    observed_at=source_as_of,
+                    validation_status="valid",
+                    reason_code="contract_valid",
+                )
         if financials is not None and financials_rel_path is not None:
             write_payload(financials_rel_path, financials, mirror_public)
         return {
@@ -3019,12 +3276,13 @@ def run_one(
                 if provider == "stockanalysis"
                 else "fallback_observed_primary_preserved"
                 if preserved_primary
-                else "fallback_ok"
+                else "fallback_candidate_ok"
             ),
             "provider": provider,
-            "selected_provider": "stockanalysis" if preserved_primary else provider,
-            "canonical_write": not preserved_primary,
-            "path": rel_path,
+            "selected_provider": "stockanalysis" if preserved_primary else provider if provider == "stockanalysis" else None,
+            "canonical_write": provider == "stockanalysis",
+            "path": rel_path if provider == "stockanalysis" or preserved_primary else None,
+            "candidate_path": f"data/yf/etf-details/{ticker}.json" if provider == "yahoo_finance" else None,
             "financials_path": financials_rel_path,
             "latency_ms": round((time.perf_counter() - start) * 1000),
             "stockanalysis_error": stockanalysis_error,

@@ -146,6 +146,33 @@ class DataSupplyStateTests(unittest.TestCase):
         with self.assertRaises(SchemaError):
             self.store.record_observation(bad_path)
 
+    def test_payload_unavailable_observation_extension_is_digest_bound(self):
+        row = observation(status="invalid")
+        row["payload_available"] = False
+        row["failure_detail_sha256"] = "f" * 64
+        descriptor = {
+            "provider": row["provider"],
+            "endpoint_family": row["endpoint_family"],
+            "domain": row["domain"],
+            "entity": row["entity"],
+            "observed_at": row["observed_at"],
+            "reason_code": row["reason_code"],
+            "failure_detail_sha256": row["failure_detail_sha256"],
+        }
+        row["payload_sha256"] = canonical_sha256(descriptor)
+        row["event_id"] = deterministic_event_id("observation", row)
+        self.assertTrue(self.store.record_observation(row))
+        bad = dict(row)
+        bad["failure_detail_sha256"] = "e" * 64
+        bad["event_id"] = deterministic_event_id("observation", bad)
+        with self.assertRaises(SchemaError):
+            self.store.record_observation(bad)
+        invalid_valid = dict(row)
+        invalid_valid["validation_status"] = "valid"
+        invalid_valid["event_id"] = deterministic_event_id("observation", invalid_valid)
+        with self.assertRaises(SchemaError):
+            self.store.record_observation(invalid_valid)
+
     def test_partial_jsonl_tail_is_recovered_and_duplicate_stays_single(self):
         row = observation()
         self.store.record_observation(row)

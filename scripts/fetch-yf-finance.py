@@ -111,7 +111,7 @@ def ticker_timeout(seconds, ticker):
 
 INFO_KEYS = [
     # identity
-    "quoteType", "shortName", "longName", "currency", "exchange", "country",
+    "symbol", "quoteType", "shortName", "longName", "currency", "exchange", "country",
     "sector", "industry", "fullTimeEmployees",
     # fund / ETF
     "fundFamily", "category", "legalType", "totalAssets", "netAssets",

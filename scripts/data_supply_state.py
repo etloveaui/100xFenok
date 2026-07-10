@@ -167,6 +167,24 @@ def validate_observation(record: Mapping[str, Any], *, require_valid: bool = Fal
         raise SchemaError("observed_at cannot precede source_as_of")
     if row["validation_status"] not in {"valid", "invalid"}:
         raise SchemaError("validation_status must be valid or invalid")
+    has_failure_extension = "payload_available" in row or "failure_detail_sha256" in row
+    if has_failure_extension:
+        if row["validation_status"] != "invalid" or row.get("payload_available") is not False:
+            raise SchemaError("payload-unavailable extension is allowed only for invalid observations")
+        failure_detail_sha256 = _validate_sha(
+            row.get("failure_detail_sha256"), "failure_detail_sha256"
+        )
+        failure_descriptor = {
+            "provider": row["provider"],
+            "endpoint_family": row["endpoint_family"],
+            "domain": row["domain"],
+            "entity": row["entity"],
+            "observed_at": row["observed_at"],
+            "reason_code": row["reason_code"],
+            "failure_detail_sha256": failure_detail_sha256,
+        }
+        if row["payload_sha256"] != canonical_sha256(failure_descriptor):
+            raise SchemaError("payload-unavailable observation descriptor digest mismatch")
     if require_valid and row["validation_status"] != "valid":
         raise SchemaError("invalid observations cannot participate in a promotion")
     expected = deterministic_event_id("observation", row)
