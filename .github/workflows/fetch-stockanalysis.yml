@@ -105,7 +105,11 @@ concurrency:
 jobs:
   fetch-stockanalysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 60 was structurally too short for post-outage catch-up: 261 rate-limited
+    # ETF fetches x ~20s ≈ 87min, so the job died before its commit step and
+    # the backlog could never drain (run 29117945172 cancelled at 60m, 171/261
+    # done, zero committed). YF lane precedent is 240.
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
 
