@@ -732,6 +732,13 @@ function MarketHero({
   );
 }
 
+// §H rule 2: vendor payload labels (typos like "Ressell 2000") must not leak; route through a label table.
+const SECONDARY_INDEX_LABELS_KO: Record<string, string> = {
+  nasdaq100: "나스닥 100",
+  nasdaq_composite: "나스닥 종합",
+  russell2000: "러셀 2000",
+};
+
 function SecondaryIndexTable({ indices }: { indices: MarketIndexValuation[] }) {
   const secondary = indices.filter((index) => index.id !== "sp500");
 
@@ -758,7 +765,7 @@ function SecondaryIndexTable({ indices }: { indices: MarketIndexValuation[] }) {
           return (
             <div key={index.id} className="cpw5-mv-index-row" role="row">
               <span role="cell">
-                <strong>{index.name}</strong>
+                <strong>{SECONDARY_INDEX_LABELS_KO[index.id] ?? "지수"}</strong>
                 <small>{index.nameEn}</small>
               </span>
               <span role="cell" className="tabular-nums">
