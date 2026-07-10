@@ -37,20 +37,52 @@ import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-st
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
 const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
-const COMMITTED_V1 = path.join(__dirname, "..", "data", "admin", "fenok-data-health-kpi.json");
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 
-// Build a genuinely-ready v2 doc pair (real committed lanes + a v2 runtime) so the
-// checker's status/lane gate is satisfied and only runtime/sla/projection is exercised.
-function seedReadyV2(tmp, { now, runtime, sla }) {
-  const base = JSON.parse(fs.readFileSync(COMMITTED_V1, "utf8"));
-  const root = {
-    ...base,
+// The eight lanes the checker's validateCoreShape (check-...:36 REQUIRED_LANES) demands.
+// Kept in lockstep with that set; a divergence hard-fails validateCoreShape immediately.
+const REQUIRED_LANE_IDS = [
+  "stock_s0_active_daily_gate",
+  "stock_s1_candidate_gate",
+  "etf_public_and_daily_gate",
+  "rim_inputs",
+  "product_surface_freshness",
+  "finra_occ_plain_us_and_mapping_policy",
+  "automation_contract",
+  "public_mirror_safety",
+];
+
+// HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
+// data/admin KPI doc. validateCoreShape (check-...:104-129) hard-requires status=="ready",
+// the raw_policy flags, every REQUIRED_LANE ready, and totals.required_not_ready==0.
+// Reading the real doc (previous behavior) leaked cf:build's regenerated BLOCKED status/
+// lanes into the "ready" fixture — the OpenNext-only fixture-4b deploy failure. By
+// constructing every gate field here, seedReadyV2 is fully decoupled from live data state.
+function readyCoreV2(now) {
+  return {
     schema_version: "fenok-data-health-kpi/v2",
     generated_at: now,
-    runtime,
-    source_sla: sla,
+    status: "ready",
+    status_label: "정상",
+    purpose: "KPI v2 runtime self-proof fixture (hermetic ready core)",
+    raw_policy: {
+      public_mirror_allowed: true,
+      raw_rows_included: false,
+      private_artifact_paths_included: false,
+      private_ledgers_included: false,
+      source_artifacts_are_referenced_by_id_only: true,
+    },
+    lanes: REQUIRED_LANE_IDS.map((id) => ({ id, label: id, status: "ready", status_label: "정상", required: true, checks: [] })),
+    totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0 },
+    non_ready_checks: [],
+    source_artifacts: [],
   };
+}
+
+// Build a genuinely-ready v2 doc pair (synthesized ready core + a v2 runtime) so the
+// checker's status/lane gate is satisfied and only runtime/sla/projection is exercised.
+function seedReadyV2(tmp, { now, runtime, sla }) {
+  const root = { ...readyCoreV2(now), runtime, source_sla: sla };
   const pub = projectPublicKpi(root, now);
   writeJson(path.join(tmp, "data", KPI_REL), root);
   writeJson(path.join(tmp, "public", "data", KPI_REL), pub);
@@ -334,6 +366,35 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(runChecker(tmp, now).exit, 0, "checker green on ready v2 doc (fresh sources)");
   assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict mode also green when everything fresh");
   ok("checker passes end-to-end on a ready v2 doc in both warn-only and strict modes");
+}
+
+// 4c. HERMETICITY — seedReadyV2 must NOT inherit a live/regenerated doc's state. Simulate
+// the cf:build failure condition: a deliberately-BLOCKED KPI doc already sits at the seed's
+// data/admin target (as build:fenok-data-health-kpi emits when a real lane is blocked, e.g.
+// etf_public_and_daily_gate on a fetchable ticker). seedReadyV2 must overwrite it with a
+// synthesized ready core so the checker still passes — the exact OpenNext fixture-4b failure.
+{
+  const tmp = mkTmp("hermetic");
+  const now = "2026-07-10T02:35:00.000Z";
+  // Pre-seed the seed target with a BLOCKED doc (the cf:build regenerated-real-doc state).
+  writeJson(path.join(tmp, "data", KPI_REL), {
+    schema_version: "fenok-data-health-kpi/v2", generated_at: now, status: "degraded", status_label: "차단",
+    raw_policy: { public_mirror_allowed: true, raw_rows_included: false, private_artifact_paths_included: false, private_ledgers_included: false },
+    lanes: REQUIRED_LANE_IDS.map((id, i) => ({ id, status: i === 2 ? "blocked" : "ready", required: true, checks: [] })),
+    totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length - 1, warning: 0, blocked: 1, unavailable: 0, required_not_ready: 1 },
+    non_ready_checks: [{ lane_id: "etf_public_and_daily_gate", check_id: "fetchable_zero", status: "blocked", required: true }],
+    source_artifacts: [], runtime: null, source_sla: [],
+  });
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "hermetic" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  // The synthesized core owes NOTHING to the blocked doc that was sitting there.
+  assert.equal(root.status, "ready", "seed synthesizes status=ready regardless of a blocked doc at the target");
+  assert.equal(root.totals.required_not_ready, 0, "seed synthesizes totals.required_not_ready=0 (no blocked leak)");
+  assert.ok(REQUIRED_LANE_IDS.every((id) => root.lanes.find((l) => l.id === id)?.status === "ready"), "every required lane synthesized ready");
+  assert.equal(runChecker(tmp, now).exit, 0, "checker green even though a BLOCKED doc preceded the seed (cf:build repro)");
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict also green — fixture is fully hermetic");
+  ok("hermeticity: seedReadyV2 ignores a pre-existing BLOCKED data/admin doc (cf:build fixture-4b root cause fixed)");
 }
 
 // 5. delayed run outside grace -> slotless (historical extremes +368m / +364m)
