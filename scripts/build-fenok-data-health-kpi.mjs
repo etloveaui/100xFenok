@@ -933,7 +933,7 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
 
 function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
-  const rimInputs = readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT) || readJson("computed/rim-index/inputs.json");
+  const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
   const productCoverage = readJson("admin/product-surface-coverage.json");
   const finraOccLedger = readJson("admin/fenok-s0-finra-occ-mapping-ledger.json");
   const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json");

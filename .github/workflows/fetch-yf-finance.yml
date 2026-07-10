@@ -211,8 +211,7 @@ jobs:
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: |
           node scripts/build-rim-index.mjs
-          mkdir -p 100xfenok-next/public/data/computed/rim-index
-          cp data/computed/rim-index/inputs.json 100xfenok-next/public/data/computed/rim-index/inputs.json
+          node scripts/build-rim-index.mjs --check
 
       - name: Build market source parity
         if: ${{ env.YF_PLAN_ONLY != 'true' }}

@@ -204,7 +204,7 @@ function sanitizePublicRimMirror(node) {
   return node;
 }
 
-function buildPublicRimMirror(payload) {
+export function buildPublicRimMirror(payload) {
   return {
     ...sanitizePublicRimMirror(payload),
     public_mirror_policy: {

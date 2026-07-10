@@ -9,6 +9,7 @@ import {
   buildRimIndexInputs,
   parseArgs,
   validateRimIndexInputs,
+  buildPublicRimMirror,
 } from "./build-rim-index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -325,6 +326,9 @@ assert.equal(validateRimIndexInputs(badProxyPayload).ok, false);
 const publicText = JSON.stringify(payload);
 assert.equal(publicText.includes('"fair_value"'), false);
 assert.equal(publicText.includes('"target_price"'), false);
+const projected = buildPublicRimMirror({ source: "_private/admin/rim.json", value: 1 });
+assert.equal(projected.source, "admin_private_path_redacted");
+assert.equal(projected.public_mirror_policy.raw_public, false);
 
 assert.deepEqual(parseArgs(["--check", "--min-covered-weight", "0.8"]).check, true);
 

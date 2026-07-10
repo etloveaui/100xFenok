@@ -241,8 +241,7 @@ jobs:
       - name: Rebuild RIM index inputs
         run: |
           node scripts/build-rim-index.mjs
-          mkdir -p 100xfenok-next/public/data/computed/rim-index
-          cp data/computed/rim-index/inputs.json 100xfenok-next/public/data/computed/rim-index/inputs.json
+          node scripts/build-rim-index.mjs --check
 
       - name: Build market source parity
         run: python3 scripts/build-market-source-parity.py

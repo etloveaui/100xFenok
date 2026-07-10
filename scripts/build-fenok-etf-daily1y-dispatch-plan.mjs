@@ -9,6 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -51,8 +52,37 @@ function chunk(values, size) {
   for (let i = 0; i < values.length; i += size) out.push(values.slice(i, i + size));
   return out;
 }
+function readHistoryGapReport(plan) {
+  const relPath = plan?.source_files?.history_gap_report;
+  return relPath ? readJson(relPath) : null;
+}
 
-export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, generatedAt = new Date() } = {}) {
+function sourceHash(plan, historyGapReport = readHistoryGapReport(plan)) {
+  const report = historyGapReport ?? {};
+  const profile = Array.isArray(report.required_history_periods)
+    ? [...report.required_history_periods].map(String).sort()
+    : report.profile ?? null;
+  const fetchable = report.daily_1y_gap?.samples?.fetchable ?? report.fetchable ?? [];
+  const fetchableTickers = fetchable
+    .map((row) => typeof row === "string" ? row : row?.ticker)
+    .filter(Boolean)
+    .map((ticker) => String(ticker).trim().toUpperCase())
+    .sort();
+  const canonical = JSON.stringify({
+    history_gap_report: {
+      profile,
+      generated_at: report.generated_at ?? null,
+      scored_fetchable_list: fetchableTickers,
+    },
+    fetchable_plan: {
+      generated_at: plan.generated_at ?? null,
+      tickers: [...new Set((plan.tickers ?? []).map(String))].map((ticker) => ticker.trim().toUpperCase()).sort(),
+    },
+  });
+  return crypto.createHash("sha256").update(canonical).digest("hex");
+}
+
+export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapReport = null, generatedAt = new Date() } = {}) {
   const plan = sourcePlan ?? readJson(SOURCE_PLAN_REL);
   const tickers = Array.isArray(plan.tickers)
     ? [...new Set(plan.tickers.map((ticker) => String(ticker).trim().toUpperCase()).filter(Boolean))].sort()
@@ -68,6 +98,8 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, generatedAt = n
     generated_at: generatedAt.toISOString(),
     source_file: SOURCE_PLAN_REL,
     source_generated_at: plan.generated_at ?? null,
+    source_hash_algo: "sha256",
+    source_hash: sourceHash(plan, historyGapReport ?? readHistoryGapReport(plan)),
     formula_version: FORMULA_VERSION,
     contract_doc: CONTRACT_DOC,
     owner_gated: true,
@@ -107,9 +139,10 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, generatedAt = n
   };
 }
 
-export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null) {
+export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null, historyGapReport = null) {
   const errors = [];
   const source = sourcePlan ?? readJson(SOURCE_PLAN_REL);
+  if (payload?.source_hash_algo !== "sha256" || payload?.source_hash !== sourceHash(source, historyGapReport ?? readHistoryGapReport(source))) errors.push("source hash binding mismatch");
   const tickers = Array.isArray(source.tickers) ? source.tickers : [];
   const shards = Array.isArray(payload?.shards) ? payload.shards : [];
   const totalPlanned = shards.reduce((sum, shard) => sum + (Array.isArray(shard.tickers) ? shard.tickers.length : 0), 0);
@@ -131,7 +164,7 @@ export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null) {
     if (!Array.isArray(shard.tickers)) errors.push(`shard ${shard.shard ?? "?"} missing tickers`);
     else if (shard.tickers.length > SHARD_SIZE) errors.push(`shard ${shard.shard ?? "?"} exceeds ${SHARD_SIZE}`);
   }
-  for (const key of ["source_count_equation_ok", "source_matches_coverage_index", "source_matches_coverage_index_daily_check"]) {
+  for (const key of ["source_count_equation_ok", "source_matches_history_gap_report", "source_matches_coverage_index", "source_matches_coverage_index_daily_check"]) {
     if (payload?.counts?.[key] !== true) errors.push(`${key} must be true`);
   }
 
