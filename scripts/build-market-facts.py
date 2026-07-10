@@ -126,14 +126,16 @@ def collection_date(value) -> str | None:
     """YYYY-MM-DD date part of a collection-time fetched_at, real-calendar validated
     (KPI v2 source stamp). date.fromisoformat rejects impossible dates (2026-02-31);
     NEVER pass a rebuild generated_at here — only fetched_at-class collection times."""
-    if not isinstance(value, str):
+    if not isinstance(value, str) or not value.strip():
         return None
-    head = value.strip()[:10]
     try:
-        date.fromisoformat(head)
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
     except ValueError:
         return None
-    return head
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    day = parsed.astimezone(timezone.utc).date()
+    return day.isoformat() if day <= datetime.now(timezone.utc).date() else None
 
 
 def oldest_collection_date(values) -> str | None:
@@ -152,7 +154,11 @@ def load_core_surface_members() -> set[str] | None:
     etf_tickers = ((etf_payload.get("daily_refresh_universe") or {}).get("tickers")) if isinstance(etf_payload, dict) else None
     if not isinstance(stock_rows, list) or not isinstance(etf_tickers, list) or not stock_rows or not etf_tickers:
         return None
-    stocks = [clean_ticker(row.get("symbol")) for row in stock_rows if isinstance(row, dict)]
+    if any(not isinstance(row, dict) or not isinstance(row.get("symbol"), str) for row in stock_rows):
+        return None
+    if any(not isinstance(ticker, str) for ticker in etf_tickers):
+        return None
+    stocks = [clean_ticker(row.get("symbol")) for row in stock_rows]
     etfs = [clean_ticker(ticker) for ticker in etf_tickers]
     if not all(stocks) or not all(etfs) or len(set(stocks)) != len(stocks) or len(set(etfs)) != len(etfs):
         return None
@@ -162,7 +168,9 @@ def load_core_surface_members() -> set[str] | None:
 
 def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, ticker_root: Path | None = None) -> dict:
     ticker_root = ticker_root or (OUT / "tickers")
-    row_tickers = [clean_ticker(row.get("ticker")) for row in rows if isinstance(row, dict)]
+    if not isinstance(rows, list) or any(not isinstance(row, dict) or not isinstance(row.get("ticker"), str) for row in rows):
+        return {"core_surface_source_as_of": None, "full_universe_floor_as_of": None, "source_stamp_diagnostics": {"status": "invalid_index_rows"}}
+    row_tickers = [clean_ticker(row.get("ticker")) for row in rows]
     if not row_tickers or not all(row_tickers) or len(set(row_tickers)) != len(row_tickers):
         return {"core_surface_source_as_of": None, "full_universe_floor_as_of": None, "source_stamp_diagnostics": {"status": "invalid_index_rows"}}
     row_set = set(row_tickers)

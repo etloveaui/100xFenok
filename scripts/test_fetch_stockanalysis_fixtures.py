@@ -79,6 +79,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             ]
             with self.assertRaisesRegex(RuntimeError, "refusing to publish a truncated discovery"):
                 self.fetcher.fetch_etf_universe(max_pages=1, timeout=1, sleep=0)
+            with self.assertRaisesRegex(ValueError, "at least 1"):
+                self.fetcher.fetch_etf_universe(max_pages=0, timeout=1, sleep=0)
         finally:
             self.fetcher.fetch_text = original_fetch_text
             self.fetcher.parse_etf_universe_page = original_parse
@@ -106,6 +108,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.fetcher.parse_surface_names("missing_surface", "core")
 
+    def test_collection_date_rejects_future_and_malformed_values(self) -> None:
+        self.assertEqual(self.fetcher.collection_date("2026-07-09T01:00:00Z"), "2026-07-09")
+        self.assertIsNone(self.fetcher.collection_date("2026-02-31T00:00:00Z"))
+        self.assertIsNone(self.fetcher.collection_date("2026-07-09junk"))
+        self.assertIsNone(self.fetcher.collection_date("2099-01-01T00:00:00Z"))
+
     def test_surface_stamp_map_uses_consumer_ownership_and_partial_preservation(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
@@ -128,6 +136,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 stamps = self.fetcher.build_surface_stamp_map([row["surface"] for row in ok_rows], ok_rows, None)
                 self.assertEqual(stamps, {"market_events": "2026-07-08", "sectors": "2026-07-07", "etf_center": "2026-07-06"})
 
+                duplicated_results = [*ok_rows, ok_rows[0]]
+                duplicated = self.fetcher.build_surface_stamp_map(
+                    [row["surface"] for row in duplicated_results], duplicated_results, None
+                )
+                self.assertIsNone(duplicated["market_events"], "duplicate result rows fail the affected domain closed")
+
                 prior = {"source_as_of": {"market_events": "2026-06-30", "sectors": "2026-06-29", "etf_center": "2026-06-28"}}
                 partial = self.fetcher.build_surface_stamp_map(["event_a"], [ok_rows[0]], prior)
                 self.assertEqual(partial, prior["source_as_of"], "partial domain fetch preserves prior stamps")
@@ -136,6 +150,15 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 failed_rows[1] = {"surface": "event_b", "status": "error", "error": "fixture"}
                 failed = self.fetcher.build_surface_stamp_map([row["surface"] for row in failed_rows], failed_rows, prior)
                 self.assertIsNone(failed["market_events"], "known full-domain failure clears the domain stamp")
+
+                malformed_consumers = json.loads(json.dumps(consumers))
+                malformed_consumers["surfaces"][0]["consumers"] = [{}]
+                (out_dir / "surface_consumers.json").write_text(json.dumps(malformed_consumers), encoding="utf-8")
+                self.assertEqual(
+                    self.fetcher.build_surface_stamp_map([], [], prior),
+                    {"market_events": None, "sectors": None, "etf_center": None},
+                    "malformed ownership fails every domain closed",
+                )
 
                 consumers["surfaces"].append({"surface": "event_a", "consumers": [{"route": "/market/events"}]})
                 (out_dir / "surface_consumers.json").write_text(json.dumps(consumers), encoding="utf-8")

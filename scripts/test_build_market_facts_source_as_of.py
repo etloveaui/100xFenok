@@ -16,6 +16,8 @@ spec.loader.exec_module(bmf)
 assert bmf.collection_date("2026-07-09T02:32:56Z") == "2026-07-09"
 assert bmf.collection_date("2026-02-31T00:00:00Z") is None, "impossible calendar date rejected"
 assert bmf.collection_date("2026-13-01T00:00:00Z") is None, "month 13 rejected"
+assert bmf.collection_date("2026-07-09junk") is None, "trailing junk rejected"
+assert bmf.collection_date("2099-01-01T00:00:00Z") is None, "future collection date rejected"
 assert bmf.collection_date(123) is None
 assert bmf.collection_date(None) is None
 
@@ -48,5 +50,27 @@ with tempfile.TemporaryDirectory() as tmp:
     assert stamps["full_universe_floor_as_of"] == "2026-06-17"
     assert stamps["source_stamp_diagnostics"]["core_price_stamped_count"] == 2
     assert bmf.market_fact_source_stamps(rows, {"MISSING"}, root)["core_surface_source_as_of"] is None
+    assert bmf.market_fact_source_stamps([None], {"AAA"}, root)["source_stamp_diagnostics"]["status"] == "invalid_index_rows"
+
+# Exact denominator artifact shape: malformed rows/tickers fail closed rather than
+# silently shrinking the service universe.
+with tempfile.TemporaryDirectory() as tmp:
+    original_data = bmf.DATA
+    try:
+        bmf.DATA = Path(tmp)
+        (bmf.DATA / "computed").mkdir(parents=True)
+        (bmf.DATA / "admin").mkdir(parents=True)
+        stock_path = bmf.DATA / "computed" / "stock_action_index.json"
+        etf_path = bmf.DATA / "admin" / "fenok-etf-core-daily-basket.json"
+        stock_path.write_text(json.dumps({"rows": [{"symbol": "AAA"}]}), encoding="utf-8")
+        etf_path.write_text(json.dumps({"daily_refresh_universe": {"tickers": ["BBB"]}}), encoding="utf-8")
+        assert bmf.load_core_surface_members() == {"AAA", "BBB"}
+        stock_path.write_text(json.dumps({"rows": [{"symbol": "AAA"}, None]}), encoding="utf-8")
+        assert bmf.load_core_surface_members() is None
+        stock_path.write_text(json.dumps({"rows": [{"symbol": "AAA"}]}), encoding="utf-8")
+        etf_path.write_text(json.dumps({"daily_refresh_universe": {"tickers": [123]}}), encoding="utf-8")
+        assert bmf.load_core_surface_members() is None
+    finally:
+        bmf.DATA = original_data
 
 print("test_build_market_facts_source_as_of: ok")

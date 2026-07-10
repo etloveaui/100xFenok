@@ -505,7 +505,8 @@ def collection_date(value: str | None) -> str | None:
         return None
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc).date().isoformat()
+    day = parsed.astimezone(timezone.utc).date()
+    return day.isoformat() if day <= datetime.now(timezone.utc).date() else None
 
 
 def normalize_space(value: str | None) -> str:
@@ -1282,12 +1283,16 @@ def surface_stamp_membership(consumers: dict | None) -> dict[str, set[str]] | No
         surface = str((row or {}).get("surface") or "").strip() if isinstance(row, dict) else ""
         if not surface or surface in routes_by_surface:
             return None
-        consumer_rows = row.get("consumers") if isinstance(row.get("consumers"), list) else []
-        routes_by_surface[surface] = [
-            str((consumer or {}).get("route") or "").strip()
-            for consumer in consumer_rows
-            if isinstance(consumer, dict) and str(consumer.get("route") or "").strip()
-        ]
+        consumer_rows = row.get("consumers")
+        if not isinstance(consumer_rows, list) or not consumer_rows:
+            return None
+        routes = []
+        for consumer in consumer_rows:
+            route = str((consumer or {}).get("route") or "").strip() if isinstance(consumer, dict) else ""
+            if not route:
+                return None
+            routes.append(route)
+        routes_by_surface[surface] = routes
     membership: dict[str, set[str]] = {}
     for domain, route_prefix in SURFACE_STAMP_ROUTES.items():
         owned = {
@@ -1313,11 +1318,6 @@ def build_surface_stamp_map(
         return {domain: None for domain in SURFACE_STAMP_ROUTES}
 
     requested_set = set(requested)
-    results_by_surface = {
-        str(row.get("surface") or ""): row
-        for row in results
-        if isinstance(row, dict) and str(row.get("surface") or "")
-    }
     stamps: dict[str, str | None] = {}
     for domain, required in membership.items():
         attempted = bool(required & requested_set)
@@ -1328,7 +1328,11 @@ def build_surface_stamp_map(
         dates: list[str] = []
         complete = True
         for surface in sorted(required):
-            result = results_by_surface.get(surface)
+            matches = [
+                row for row in results
+                if isinstance(row, dict) and str(row.get("surface") or "") == surface
+            ]
+            result = matches[0] if len(matches) == 1 else None
             payload = read_json(OUT_DIR / "surfaces" / f"{surface}.json")
             fetched = collection_date((payload or {}).get("fetched_at")) if isinstance(payload, dict) else None
             if not result or result.get("error") is not None or not fetched:
@@ -1413,6 +1417,8 @@ def next_etf_page_path(html: str) -> str | None:
 
 
 def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
+    if max_pages < 1:
+        raise ValueError("max_pages must be at least 1")
     records = []
     seen = set()
     pages = []

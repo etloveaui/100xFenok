@@ -117,7 +117,18 @@ function oldestSourceDate(values) {
 // stamp), real-calendar validated. Only for artifacts whose generated_at is a fetch-run
 // timestamp (verified writer-exclusive), NEVER a rebuild generated_at.
 function collectionDate(value) {
-  const day = dateOnly(firstDate(value));
+  const raw = firstDate(value);
+  if (!raw) return null;
+  let day = null;
+  if (isRealCalendarDate(raw)) {
+    day = raw;
+  } else {
+    const stampMatch = raw.match(/^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/);
+    if (!stampMatch || !isRealCalendarDate(stampMatch[1])) return null;
+    const parsed = new Date(raw);
+    if (!Number.isFinite(parsed.getTime())) return null;
+    day = parsed.toISOString().slice(0, 10);
+  }
   const today = new Date().toISOString().slice(0, 10);
   return day && isRealCalendarDate(day) && day <= today ? day : null;
 }
@@ -229,9 +240,9 @@ function strictRouteSurfaceNames(consumers, routePrefix) {
     const name = String(row?.surface || "").trim();
     if (!name || seen.has(name)) return null;
     seen.add(name);
-    const routes = (Array.isArray(row?.consumers) ? row.consumers : [])
-      .map((consumer) => String(consumer?.route || "").trim())
-      .filter(Boolean);
+    if (!Array.isArray(row?.consumers) || row.consumers.length === 0) return null;
+    const routes = row.consumers.map((consumer) => String(consumer?.route || "").trim());
+    if (routes.some((route) => !route)) return null;
     if (routes.some((route) => route === routePrefix || route.startsWith(`${routePrefix}/`))) names.push(name);
   }
   return names.length > 0 ? names.sort() : null;

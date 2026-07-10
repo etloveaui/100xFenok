@@ -1054,6 +1054,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   // FUTURE collection evidence fails closed in the generator before aggregation.
   const future = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-20T00:00:00Z", etfUniverse: "2026-07-07T22:37:04Z" });
   assert.equal(future("market_events"), null, "future collection date fails closed");
+  const impossible = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-02-31T00:00:00Z", etfUniverse: "2026-07-07T22:37:04Z" });
+  assert.equal(impossible("market_events"), null, "impossible collection timestamp fails closed");
 
   // NULL fail-closed: missing market_facts stamp -> stock_detail & sectors stay null
   const partial = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: undefined, surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z" });
