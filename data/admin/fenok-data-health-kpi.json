@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-10T02:06:18.849Z",
+  "generated_at": "2026-07-10T02:51:31.794Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -14,11 +14,11 @@
   "runtime": {
     "producer_context": null,
     "last_rebuild_context": {
-      "built_at": "2026-07-10T02:06:18.849Z",
-      "run_id": "29063801909",
+      "built_at": "2026-07-10T02:51:31.794Z",
+      "run_id": "29065478460",
       "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "72f2edbcb12815562fc8a07387a1ee86326de5a6"
+      "event_name": "push",
+      "sha": "8e7955ba47b43660b0b99f8569bcb097018156ad"
     },
     "cadence": {
       "crons_utc": [
@@ -90,15 +90,46 @@
     },
     {
       "source_id": "product_surface_coverage",
-      "freshness_basis": ".surfaces[required].as_of (OLDEST)",
-      "source_date": null,
+      "freshness_basis": ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)",
       "unit": "business_days",
       "calendar": "us_market",
       "max_staleness": 3,
       "required": true,
+      "source_stamp_version": 1,
+      "required_surface_rows": [
+        {
+          "id": "stock_detail",
+          "source_as_of": null
+        },
+        {
+          "id": "market_valuation",
+          "source_as_of": "2026-07-03"
+        },
+        {
+          "id": "market_events",
+          "source_as_of": null
+        },
+        {
+          "id": "sectors",
+          "source_as_of": null
+        },
+        {
+          "id": "etf_center",
+          "source_as_of": null
+        },
+        {
+          "id": "screener",
+          "source_as_of": "2026-07-02"
+        }
+      ],
+      "source_date": null,
       "age": null,
       "status": "unavailable_pending_source_stamp",
-      "pending_source_stamp": true
+      "pending_source_stamp": true,
+      "pending": {
+        "pending_since": "2026-07-10T02:51:31.794Z",
+        "ever_stamped": false
+      }
     },
     {
       "source_id": "etf_daily1y_readiness_admin",
@@ -108,7 +139,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 10.96,
+      "age": 11.71,
       "status": "ready"
     }
   ],
@@ -121,13 +152,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T02:06:18.121Z",
+      "generated_at": "2026-07-10T02:51:31.004Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T02:06:18.702Z",
+      "generated_at": "2026-07-10T02:51:31.638Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -429,7 +460,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T02:06:18.121Z",
+      "as_of": "2026-07-10T02:51:31.004Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -545,7 +576,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T02:06:18.702Z",
+      "as_of": "2026-07-10T02:51:31.638Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -562,7 +593,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T02:06:18.702Z"
+          "detail": "2026-07-10T02:51:31.638Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -673,7 +704,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T02:06:18.870Z",
+      "as_of": "2026-07-10T02:51:31.815Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
