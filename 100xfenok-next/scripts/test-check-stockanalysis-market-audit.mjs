@@ -27,6 +27,11 @@ function baseReport({ periods = ["daily_1y"], fetchable = 0, scoredDailyFetchabl
   return {
     schema_version: "stockanalysis-history-gap-report/v1",
     generated_at: "2026-07-10T00:00:00.000Z",
+    report_profile: {
+      key: periods.slice().sort().join(","),
+      required_history_periods: periods.slice().sort(),
+      generated_at: "2026-07-10T00:00:00.000Z",
+    },
     required_history_periods: periods,
     primary_stockanalysis_detail_files: 100,
     missing_required_history: missing,

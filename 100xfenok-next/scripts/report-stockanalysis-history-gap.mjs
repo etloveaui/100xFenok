@@ -45,6 +45,10 @@ const MONTH_NAME_TO_INDEX = new Map([
 const args = parseArgs(process.argv.slice(2));
 const WRITE_REPORT = args.flags.has("--write-report");
 const REQUIRED_PERIODS = parseRequiredPeriods(args.options.get("--required-history-periods") || process.env.INPUT_REQUIRED_HISTORY_PERIODS || "");
+const REPORT_PROFILE = {
+  key: REQUIRED_PERIODS.slice().sort().join(","),
+  required_history_periods: REQUIRED_PERIODS.slice().sort(),
+};
 const ENFORCE_INCREMENTAL_PLAN = REQUIRED_PERIODS.join(",") === DEFAULT_REQUIRED_PERIODS.join(",");
 const RECENT_TERMINAL_MAX_AGE_HOURS = 48;
 
@@ -570,6 +574,10 @@ function main() {
   const report = {
     schema_version: "stockanalysis-history-gap-report/v1",
     generated_at: new Date().toISOString(),
+    report_profile: {
+      ...REPORT_PROFILE,
+      generated_at: null,
+    },
     required_history_periods: REQUIRED_PERIODS,
     primary_stockanalysis_detail_files: primaryRows.length,
     complete_required_history: completeRows.length,
@@ -686,6 +694,7 @@ function main() {
             note: "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires.",
           },
   };
+  report.report_profile.generated_at = report.generated_at;
 
   console.log(JSON.stringify(report, null, 2));
 

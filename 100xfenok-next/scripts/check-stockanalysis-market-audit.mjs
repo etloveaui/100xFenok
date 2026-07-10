@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { pathToFileURL } from "node:url";
 
 import { DISPATCH_STATUS, DISPATCH_STATUS_VALUES } from "./stockanalysis-dispatch-status.mjs";
+import { isProfileConsistent } from "./history-gap-profile.mjs";
 
 const ROOT = process.cwd();
 
@@ -227,6 +228,7 @@ export function assertHistoryGapReportContract(report, incrementalPlan, audit, e
   const enforceIncrementalPlan = report?.incremental_plan?.enforcement?.enforced !== false;
 
   assert(report?.schema_version === "stockanalysis-history-gap-report/v1", "ETF history gap report: schema version is required", errors);
+  assert(isProfileConsistent(report), "ETF history gap report: report_profile is missing or inconsistent", errors);
   assert(typeof report?.generated_at === "string" && report.generated_at.length >= 10, "ETF history gap report: generated_at is required", errors);
   assert(requiredPeriods.length > 0, "ETF history gap report: at least one required history period is required", errors);
   assert(requiredPeriods.join(",") === planRequiredPeriods.join(","), "ETF history gap report: required periods must match incremental plan", errors);

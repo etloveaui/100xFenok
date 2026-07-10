@@ -331,5 +331,11 @@ assert.equal(projected.source, "admin_private_path_redacted");
 assert.equal(projected.public_mirror_policy.raw_public, false);
 
 assert.deepEqual(parseArgs(["--check", "--min-covered-weight", "0.8"]).check, true);
+const cliRoot = path.join(os.tmpdir(), "rim-cli-data-root");
+const cliPublicRoot = path.join(os.tmpdir(), "rim-cli-public-root");
+assert.equal(parseArgs(["--data-root", cliRoot]).dataRoot, path.resolve(cliRoot));
+assert.equal(parseArgs([`--data-root=${cliRoot}`]).dataRoot, path.resolve(cliRoot));
+assert.equal(parseArgs(["--public-data-root", cliPublicRoot]).publicDataRoot, path.resolve(cliPublicRoot));
+assert.equal(parseArgs([`--public-data-root=${cliPublicRoot}`]).publicDataRoot, path.resolve(cliPublicRoot));
 
 console.log("test-build-rim-index: ok");

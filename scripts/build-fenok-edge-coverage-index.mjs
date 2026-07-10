@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
 import { buildScoredEtfDaily1yFetchablePlan } from "./write-fenok-etf-daily1y-readiness.mjs";
+import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -468,6 +469,9 @@ const marketFacts = readJson("data/computed/market_facts/index.json", {});
 const s1PromotionDryRun = readJson("data/admin/fenok-s1-stock-public-promotion-dry-run.json", {});
 const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
 const etfHistoryGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", {});
+if (!isDaily1yReport(etfHistoryGap)) {
+  throw new Error("history gap report profile mismatch: expected daily_1y report_profile");
+}
 const etfCoreDailyBasket = readJson("data/admin/fenok-etf-core-daily-basket.json", {});
 const priorIndex = readJson("data/admin/fenok-edge-coverage-index.json", {});
 const etfDaily1yExactPlan = buildScoredEtfDaily1yFetchablePlan({

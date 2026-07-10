@@ -19,6 +19,11 @@ const sourcePlan = {
 const report = {
   required_history_periods: ["daily_1y"],
   generated_at: "2026-07-10T00:00:00.000Z",
+  report_profile: {
+    key: "daily_1y",
+    required_history_periods: ["daily_1y"],
+    generated_at: "2026-07-10T00:00:00.000Z",
+  },
   daily_1y_gap: { samples: { fetchable: [{ ticker: "GOLI" }] } },
 };
 const payload = buildEtfDaily1yDispatchPlan({ sourcePlan, historyGapReport: report, generatedAt: new Date("2026-07-10T00:01:00.000Z") });
@@ -28,6 +33,13 @@ const staleReport = { ...report, generated_at: "2026-07-09T00:00:00.000Z" };
 const staleResult = validateEtfDaily1yDispatchPlan(payload, sourcePlan, staleReport);
 assert.equal(staleResult.ok, false);
 assert.ok(staleResult.errors.includes("source hash binding mismatch"));
+
+const badProfile = { ...report, report_profile: { ...report.report_profile, key: "monthly_3y" } };
+assert.throws(
+  () => buildEtfDaily1yDispatchPlan({ sourcePlan, historyGapReport: badProfile }),
+  /history gap report profile mismatch/,
+);
+assert.ok(validateEtfDaily1yDispatchPlan(payload, sourcePlan, badProfile).errors.includes("history gap report profile mismatch"));
 
 const mixedPayload = structuredClone(payload);
 mixedPayload.counts.source_matches_history_gap_report = false;

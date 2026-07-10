@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -84,6 +85,10 @@ function sourceHash(plan, historyGapReport = readHistoryGapReport(plan)) {
 
 export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapReport = null, generatedAt = new Date() } = {}) {
   const plan = sourcePlan ?? readJson(SOURCE_PLAN_REL);
+  const report = historyGapReport ?? readHistoryGapReport(plan);
+  if (!isDaily1yReport(report)) {
+    throw new Error("history gap report profile mismatch: expected daily_1y report_profile");
+  }
   const tickers = Array.isArray(plan.tickers)
     ? [...new Set(plan.tickers.map((ticker) => String(ticker).trim().toUpperCase()).filter(Boolean))].sort()
     : [];
@@ -99,7 +104,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
     source_file: SOURCE_PLAN_REL,
     source_generated_at: plan.generated_at ?? null,
     source_hash_algo: "sha256",
-    source_hash: sourceHash(plan, historyGapReport ?? readHistoryGapReport(plan)),
+    source_hash: sourceHash(plan, report),
     formula_version: FORMULA_VERSION,
     contract_doc: CONTRACT_DOC,
     owner_gated: true,
@@ -142,7 +147,9 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
 export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null, historyGapReport = null) {
   const errors = [];
   const source = sourcePlan ?? readJson(SOURCE_PLAN_REL);
-  if (payload?.source_hash_algo !== "sha256" || payload?.source_hash !== sourceHash(source, historyGapReport ?? readHistoryGapReport(source))) errors.push("source hash binding mismatch");
+  const report = historyGapReport ?? readHistoryGapReport(source);
+  if (!isDaily1yReport(report)) errors.push("history gap report profile mismatch");
+  if (payload?.source_hash_algo !== "sha256" || payload?.source_hash !== sourceHash(source, report)) errors.push("source hash binding mismatch");
   const tickers = Array.isArray(source.tickers) ? source.tickers : [];
   const shards = Array.isArray(payload?.shards) ? payload.shards : [];
   const totalPlanned = shards.reduce((sum, shard) => sum + (Array.isArray(shard.tickers) ? shard.tickers.length : 0), 0);

@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -48,35 +49,41 @@ const MONTH_NAME_TO_INDEX = new Map([
 ]);
 
 function parseArgs(argv) {
+  const dataRootIndex = argv.indexOf("--data-root");
+  const dataRootEquals = argv.find((arg) => arg.startsWith("--data-root="));
   return {
     check: argv.includes("--check"),
     noWrite: argv.includes("--no-write"),
     json: argv.includes("--json"),
+    dataRoot: path.resolve(
+      dataRootEquals?.slice("--data-root=".length)
+        ?? (dataRootIndex >= 0 ? argv[dataRootIndex + 1] : REPO_ROOT),
+    ),
   };
 }
 
-function abs(relPath) {
-  return path.join(REPO_ROOT, relPath);
+function abs(relPath, rootDir = REPO_ROOT) {
+  return path.join(rootDir, relPath);
 }
 
-function readJson(relPath) {
+function readJson(relPath, rootDir = REPO_ROOT) {
   try {
-    return JSON.parse(fs.readFileSync(abs(relPath), "utf8"));
+    return JSON.parse(fs.readFileSync(abs(relPath, rootDir), "utf8"));
   } catch (error) {
     throw new Error(`${relPath} read failed: ${error.message}`);
   }
 }
 
-function readJsonOrNull(relPath) {
+function readJsonOrNull(relPath, rootDir = REPO_ROOT) {
   try {
-    return readJson(relPath);
+    return readJson(relPath, rootDir);
   } catch {
     return null;
   }
 }
 
-function fileExists(relPath) {
-  return fs.existsSync(abs(relPath));
+function fileExists(relPath, rootDir = REPO_ROOT) {
+  return fs.existsSync(abs(relPath, rootDir));
 }
 
 function asArray(value) {
@@ -92,8 +99,8 @@ function asNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function writeJson(relPath, payload) {
-  const target = abs(relPath);
+function writeJson(relPath, payload, rootDir = REPO_ROOT) {
+  const target = abs(relPath, rootDir);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
@@ -316,9 +323,9 @@ export function classifyDaily1yGap(payload, now = new Date(), pendingEntry = nul
   };
 }
 
-function yfHistoryRows(ticker) {
+function yfHistoryRows(ticker, rootDir = REPO_ROOT) {
   const relPath = `${YF_FINANCE_DIR_REL}/${ticker}.json`;
-  const payload = readJsonOrNull(relPath);
+  const payload = readJsonOrNull(relPath, rootDir);
   const rows = payload?.data?.history_1y;
   return Array.isArray(rows) ? rows.length : null;
 }
@@ -332,14 +339,14 @@ function compactRows(rows) {
   }));
 }
 
-export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex, now = new Date() } = {}) {
+export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex, now = new Date(), rootDir = REPO_ROOT } = {}) {
   const summaryRows = asArray(signalSummary?.rows);
   const summaryTickers = [...new Set(summaryRows.map((row) => normalizeTicker(row?.ticker)).filter(Boolean))].sort();
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
   const generatedDailyCheck = findDailyCheck(readiness, "etf_no_fetchable_daily_1y_gap");
-  const pendingEntries = asObject(readJsonOrNull(PENDING_LEDGER_REL)?.entries);
+  const pendingEntries = asObject(readJsonOrNull(PENDING_LEDGER_REL, rootDir)?.entries);
 
   const completeRows = [];
   const fetchableRows = [];
@@ -351,7 +358,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
   };
 
   for (const ticker of summaryTickers) {
-    const yfRowsCount = yfHistoryRows(ticker);
+    const yfRowsCount = yfHistoryRows(ticker, rootDir);
     const pendingEntry = asObject(pendingEntries[ticker]);
     const yfMissing = yfRowsCount == null || yfRowsCount < DAILY_1Y_MIN_ROWS;
     const yfRow = {
@@ -363,7 +370,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
     else yfRows.complete.push(yfRow);
 
     const detailRelPath = `${STOCKANALYSIS_DETAIL_DIR_REL}/${ticker}.json`;
-    if (!fileExists(detailRelPath)) {
+    if (!fileExists(detailRelPath, rootDir)) {
       const terminalLimitSource = terminalDaily1yGapSource(null, pendingEntry, now);
       const row = {
         ticker,
@@ -384,7 +391,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       continue;
     }
 
-    const payload = readJson(detailRelPath);
+    const payload = readJson(detailRelPath, rootDir);
     const gap = classifyDaily1yGap(payload, now, pendingEntry);
     if (gap.complete) {
       completeRows.push({
@@ -463,7 +470,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
 
   return {
     schema_version: "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-    generated_at: new Date().toISOString(),
+    generated_at: now.toISOString(),
     purpose: "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
     source_files: {
       etf_signal_summary: "data/computed/fenok_etf_signals_summary.json",
@@ -527,14 +534,17 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
   };
 }
 
-export function buildEtfDaily1yReadiness() {
-  const signalSummary = readJson("data/computed/fenok_etf_signals_summary.json");
-  const historyGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json");
-  const coverageIndex = readJsonOrNull("data/admin/fenok-edge-coverage-index.json");
+export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date() } = {}) {
+  const signalSummary = readJson("data/computed/fenok_etf_signals_summary.json", rootDir);
+  const historyGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", rootDir);
+  if (!isDaily1yReport(historyGap)) {
+    throw new Error("history gap report profile mismatch: expected daily_1y report_profile");
+  }
+  const coverageIndex = readJsonOrNull("data/admin/fenok-edge-coverage-index.json", rootDir);
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
   const generatedDailyCheck = findDailyCheck(readiness, "etf_no_fetchable_daily_1y_gap");
-  const fetchablePlan = buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex });
+  const fetchablePlan = buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex, now, rootDir });
 
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
   const denominator = asNumber(fetchablePlan.counts.scored_etf_count);
@@ -609,7 +619,7 @@ export function buildEtfDaily1yReadiness() {
   const payload = {
     ok: errors.length === 0,
     schema_version: "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-    generated_at: new Date().toISOString(),
+    generated_at: now.toISOString(),
     purpose: "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
     asset_type: "etf",
     stage: s3Track?.stage ?? null,
@@ -704,11 +714,11 @@ function printHuman(payload) {
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const args = parseArgs(process.argv.slice(2));
-  const payload = buildEtfDaily1yReadiness();
+  const payload = buildEtfDaily1yReadiness({ rootDir: args.dataRoot });
 
   if (!args.noWrite) {
-    writeJson(OUT_REL_PATH, payload);
-    writeJson(FETCHABLE_PLAN_REL_PATH, payload.fetchable_plan);
+    writeJson(OUT_REL_PATH, payload, args.dataRoot);
+    writeJson(FETCHABLE_PLAN_REL_PATH, payload.fetchable_plan, args.dataRoot);
   }
   if (args.json) process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
   else printHuman(payload);

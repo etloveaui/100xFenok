@@ -2254,6 +2254,8 @@ export function parseArgs(argv) {
     publicMirror: true,
     check: false,
     minCoveredWeight: DEFAULT_MIN_COVERED_WEIGHT,
+    dataRoot: dataRoot,
+    publicDataRoot: publicDataRoot,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -2274,6 +2276,14 @@ export function parseArgs(argv) {
       args.minCoveredWeight = Number(arg.slice("--min-covered-weight=".length));
     } else if (arg === "--min-covered-weight") {
       args.minCoveredWeight = Number(argv[++i]);
+    } else if (arg.startsWith("--data-root=")) {
+      args.dataRoot = path.resolve(arg.slice("--data-root=".length));
+    } else if (arg === "--data-root") {
+      args.dataRoot = path.resolve(argv[++i]);
+    } else if (arg.startsWith("--public-data-root=")) {
+      args.publicDataRoot = path.resolve(arg.slice("--public-data-root=".length));
+    } else if (arg === "--public-data-root") {
+      args.publicDataRoot = path.resolve(argv[++i]);
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }
@@ -2286,12 +2296,12 @@ function main() {
   if (!finite(args.minCoveredWeight) || args.minCoveredWeight <= 0 || args.minCoveredWeight > 1) {
     throw new Error("--min-covered-weight must be between 0 and 1");
   }
-  const outputPath = path.join(dataRoot, args.output);
+  const outputPath = path.join(args.dataRoot, args.output);
   const currentPayload = fs.existsSync(outputPath) ? readJson(outputPath) : null;
   const generatedAt = args.check && currentPayload?.generated_at
     ? currentPayload.generated_at
     : new Date().toISOString();
-  const payload = buildRimIndexInputs({ generatedAt, minCoveredWeight: args.minCoveredWeight });
+  const payload = buildRimIndexInputs({ dataRootOverride: args.dataRoot, generatedAt, minCoveredWeight: args.minCoveredWeight });
   const validation = validateRimIndexInputs(payload, { minCoveredWeight: args.minCoveredWeight });
   if (!validation.ok) throw new Error(validation.errors.join("\n"));
   if (args.check) {
@@ -2300,7 +2310,7 @@ function main() {
       throw new Error(`${path.join("data", args.output)} is not up to date`);
     }
     if (args.publicMirror) {
-      const mirrorPath = path.join(publicDataRoot, args.output);
+      const mirrorPath = path.join(args.publicDataRoot, args.output);
       const currentMirror = fs.existsSync(mirrorPath) ? readJson(mirrorPath) : null;
       const publicPayload = buildPublicRimMirror(payload);
       if (!currentMirror) throw new Error(`${path.join("100xfenok-next/public/data", args.output)} is missing`);
@@ -2310,9 +2320,9 @@ function main() {
     }
   }
   if (args.write) {
-    writeJson(args.output, payload, [dataRoot]);
+    writeJson(args.output, payload, [args.dataRoot]);
     if (args.publicMirror) {
-      writeJson(args.output, buildPublicRimMirror(payload), [publicDataRoot]);
+      writeJson(args.output, buildPublicRimMirror(payload), [args.publicDataRoot]);
     }
   }
   const report = {

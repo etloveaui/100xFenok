@@ -55,27 +55,15 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:edgar-summaries
 
-      - name: Build data entity graph
+      - name: Reconcile derived data
         working-directory: 100xfenok-next
-        run: npm run build:data-entity-graph
+        run: npm run reconcile:derived
 
-      - name: Verify data entity graph
+      - name: Verify derived data
         working-directory: 100xfenok-next
-        run: npm run qa:data-graph
+        run: npm run reconcile:verify
 
-      - name: Build product surface coverage
-        working-directory: 100xfenok-next
-        run: npm run build:product-surface-coverage
-
-      - name: Build data health KPI
-        working-directory: 100xfenok-next
-        run: npm run build:fenok-data-health-kpi
-
-      - name: Verify product data freshness
-        working-directory: 100xfenok-next
-        run: npm run qa:data-freshness
-
-      - name: Verify data health KPI
+      - name: Verify data health KPI contract
         working-directory: 100xfenok-next
         run: npm run qa:fenok-data-health-kpi
 
