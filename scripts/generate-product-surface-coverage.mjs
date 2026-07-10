@@ -9,10 +9,25 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { isRealCalendarDate } from "./lib/market-calendar.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
-const DATA_ROOT = path.join(ROOT, "data");
-const PUBLIC_DATA_ROOT = path.join(ROOT, "100xfenok-next", "public", "data");
+
+// Injectable data root so fixtures can run the REAL generator against a temp root
+// (env PS_DATA_ROOT or --data-root <dir>). When set: reads <dir>/data, writes both
+// <dir>/data and <dir>/public/data. Default = live repo layout.
+function resolveDataRootArg() {
+  const flagIdx = process.argv.indexOf("--data-root");
+  if (flagIdx >= 0 && flagIdx + 1 < process.argv.length) return process.argv[flagIdx + 1];
+  const eq = process.argv.find((a) => a.startsWith("--data-root="));
+  if (eq) return eq.slice("--data-root=".length);
+  return process.env.PS_DATA_ROOT || null;
+}
+const DATA_ROOT_ARG = resolveDataRootArg();
+const DATA_ROOT = DATA_ROOT_ARG ? path.join(DATA_ROOT_ARG, "data") : path.join(ROOT, "data");
+const PUBLIC_DATA_ROOT = DATA_ROOT_ARG
+  ? path.join(DATA_ROOT_ARG, "public", "data")
+  : path.join(ROOT, "100xfenok-next", "public", "data");
 
 function readJson(relPath) {
   try {
@@ -85,6 +100,16 @@ function latestDate(...values) {
     .filter((item) => item.raw && item.key)
     .sort((a, b) => a.key.localeCompare(b.key))
     .at(-1)?.raw ?? null;
+}
+
+// TRUE source stamp (KPI v2 §5): OLDEST of a surface's genuine nested SOURCE dates.
+// Fail-closed — if ANY listed input is missing OR not a REAL-CALENDAR date (full
+// YYYY-MM-DD, real month/day, no trailing junk — rev5.5), the stamp is null (the KPI
+// keeps the surface pending; no guessing). NEVER pass a rebuild generated_at here.
+function oldestSourceDate(values) {
+  const cleaned = values.map((value) => (typeof value === "string" ? value.trim() : value));
+  if (cleaned.length === 0 || cleaned.some((value) => !isRealCalendarDate(value))) return null;
+  return [...cleaned].sort()[0];
 }
 
 function ageDays(value, now = Date.now()) {
@@ -231,6 +256,20 @@ const yardneyAsOf = latestDate(
   yardneyModel?.meta?.last_update?.last_public_date,
   yardneyModel?.meta?.generated_at,
 );
+// Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
+// carry genuine nested source dates get a real stamp; the rest stay null until
+// their upstream artifacts expose one (the KPI reports them pending, not fresh).
+//  - market_valuation: RIM observed price as_of (KOSPI/SOX) + Yardeni published date.
+//  - screener: stocks_analyzer.source_date.
+//  - stock_detail / market_events / sectors / etf_center: inputs expose only rebuild
+//    generated_at/fetched_at today -> null (no true source date to stamp).
+const marketValuationSourceAsOf = oldestSourceDate([
+  rimIndexInputs?.indices?.KOSPI?.observed?.price?.as_of,
+  rimIndexInputs?.indices?.SOX?.observed?.price?.as_of,
+  yardneyLatest?.date ?? yardneyModel?.meta?.last_update?.last_public_date,
+]);
+const screenerSourceAsOf = oldestSourceDate([stocksAnalyzer?.source_date]);
+
 const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/market/events");
 const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sectors");
 const stockSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/stock/[ticker]");
@@ -289,7 +328,7 @@ const surfaces = [
       freshness("공시 요약 기준일", edgarAsOf, 14),
     ],
     "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
-    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf) },
+    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), source_as_of: null },
   ),
   surface(
     "market_valuation",
@@ -309,7 +348,7 @@ const surfaces = [
       freshness("시장 데이터 기준일", marketFactsAsOf, 7),
     ],
     "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
-    { as_of: marketFactsAsOf },
+    { as_of: marketFactsAsOf, source_as_of: marketValuationSourceAsOf },
   ),
   surface(
     "market_events",
@@ -325,7 +364,7 @@ const surfaces = [
       freshness("이벤트 표면 기준일", eventSurfaceAsOf, 7),
     ],
     "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
-    { as_of: eventSurfaceAsOf },
+    { as_of: eventSurfaceAsOf, source_as_of: null },
   ),
   surface(
     "sectors",
@@ -340,7 +379,7 @@ const surfaces = [
       freshness("섹터 데이터 기준일", latestDate(eventSurfaceAsOf, marketFactsAsOf), 14),
     ],
     "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
-    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf) },
+    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), source_as_of: null },
   ),
   surface(
     "etf_center",
@@ -355,7 +394,7 @@ const surfaces = [
       freshness("ETF 기준일", etfAsOf, 7),
     ],
     "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
-    { as_of: etfAsOf },
+    { as_of: etfAsOf, source_as_of: null },
   ),
   surface(
     "screener",
@@ -369,7 +408,7 @@ const surfaces = [
       freshness("스크리너 기준일", screenerAsOf, 7),
     ],
     "스크리너는 종목 발견 화면이며 필드 사용 감사와 함께 미사용 데이터를 줄여간다.",
-    { as_of: screenerAsOf },
+    { as_of: screenerAsOf, source_as_of: screenerSourceAsOf },
   ),
   surface(
     "admin_data_lab",
@@ -384,7 +423,7 @@ const surfaces = [
       freshness("준비도 기준일", generatedAt, 1),
     ],
     "Data Lab은 파일 기준 감사에서 제품 화면 기준 감사까지 이어지는 운영 화면이다.",
-    { as_of: generatedAt },
+    { as_of: generatedAt, source_as_of: null },
   ),
 ];
 
@@ -395,6 +434,11 @@ const summary = surfaces.reduce((acc, item) => {
 
 const payload = {
   schema_version: "product-surface-coverage/v1",
+  // Deterministic source-stamp marker (KPI v2 rev5.6): its PRESENCE means this
+  // artifact was produced by the stamp-aware generator, so EVERY surface carries an
+  // own-property source_as_of. Its ABSENCE means a genuine pre-stamp-era artifact
+  // (bootstrap pending). The KPI never guesses bootstrap from row absence alone.
+  source_stamp_version: 1,
   generated_at: generatedAt,
   source: "local DataPack coverage files",
   raw_policy: {

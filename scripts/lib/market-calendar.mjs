@@ -59,6 +59,24 @@ export function isoDateOf(value) {
   return match ? `${match[1]}-${match[2]}-${match[3]}` : null;
 }
 
+/**
+ * Strict real-calendar date check: the WHOLE string must be exactly YYYY-MM-DD AND a
+ * real calendar date (month 1-12, day valid for that month/year). Rejects prefix
+ * matches with trailing junk ("2026-07-09junk"), impossible dates ("2026-00-00",
+ * "2026-02-31"), and non-strings. Prefix-only isoDateOf must NOT be used for validity.
+ */
+export function isRealCalendarDate(value) {
+  if (typeof value !== "string") return false;
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const dt = new Date(Date.UTC(year, month - 1, day));
+  return dt.getUTCFullYear() === year && dt.getUTCMonth() === month - 1 && dt.getUTCDate() === day;
+}
+
 function toUtcDate(isoDate) {
   return new Date(`${isoDate}T00:00:00Z`);
 }

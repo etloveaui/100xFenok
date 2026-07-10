@@ -21,8 +21,9 @@ import {
 import {
   evaluateSlaAge,
   slaStatusForAge,
+  classifyProductSurface,
 } from "./build-fenok-data-health-kpi.mjs";
-import { SOURCE_SLA_DEF } from "./lib/kpi-contract-constants.mjs";
+import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS } from "./lib/kpi-contract-constants.mjs";
 import { ETF_CORE_DAILY_BASKET_CONFIG } from "./build-fenok-etf-core-daily-basket.mjs";
 import {
   checkV2Runtime,
@@ -69,8 +70,27 @@ function slaEntry(def, sourceDate, now, extra = {}) {
   const age = sourceDate == null ? null : evaluateSlaAge({ sourceDate, unit: def.unit, calendar: def.calendar, nowIso: now });
   return { ...def, source_date: sourceDate, age, status: slaStatusForAge(age, def.max_staleness), ...extra };
 }
+
+// Mirror the builder's buildProductSurfaceEntry (shape-strict + sticky pending_since)
+// so seedReadyV2 docs carry a product_surface entry the new checker accepts.
+function productSurfaceEntry(now, { stampById = {}, defaultStamp = "2026-07-09", pendingSince, rawRows, priorEverStamped = false, markerless = false, stampMarkerValue = 1 } = {}) {
+  const def = SOURCE_SLA_DEF.find((d) => d.source_id === "product_surface_coverage");
+  const requiredRows = rawRows ?? REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: id in stampById ? stampById[id] : defaultStamp }));
+  const stampMarkerPresent = !markerless;
+  const cls = classifyProductSurface(requiredRows, now, { stampMarkerPresent, stampMarkerValue });
+  const everStamped = priorEverStamped || cls.kind === "stamped";
+  const base = { source_id: def.source_id, freshness_basis: def.freshness_basis, unit: def.unit, calendar: def.calendar, max_staleness: def.max_staleness, required: def.required, ...(stampMarkerPresent ? { source_stamp_version: stampMarkerValue } : {}), required_surface_rows: requiredRows };
+  if (cls.kind === "shape_error") return { ...base, source_date: null, age: null, status: "error", shape_error: true, shape_errors: cls.shape_errors, pending: { pending_since: null, ever_stamped: everStamped } };
+  if (cls.kind === "future") return { ...base, source_date: cls.source_date, age: evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso: now }), status: "future_date_anomaly", future_date_anomaly: true, pending: { pending_since: null, ever_stamped: everStamped } };
+  if (cls.kind === "pending") return { ...base, source_date: null, age: null, status: "unavailable_pending_source_stamp", pending_source_stamp: true, pending: { pending_since: pendingSince ?? now, ever_stamped: everStamped } };
+  const age = evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso: now });
+  return { ...base, source_date: cls.source_date, age, status: slaStatusForAge(age, def.max_staleness), pending: { pending_since: null, ever_stamped: true } };
+}
+
 function readySla(now, overrides = {}) {
-  const list = SOURCE_SLA_DEF.map((def) => slaEntry(def, READY_DATES[def.source_id], now));
+  const list = SOURCE_SLA_DEF.map((def) => (def.source_id === "product_surface_coverage"
+    ? productSurfaceEntry(now, overrides.productSurface)
+    : slaEntry(def, READY_DATES[def.source_id], now)));
   if (overrides.staleFinra) {
     const e = list.find((x) => x.source_id === "s0_finra_occ_mapping_ledger");
     e.source_date = "2026-06-01";
@@ -86,6 +106,15 @@ function readySla(now, overrides = {}) {
   if (overrides.futureRequired) {
     const e = list.find((x) => x.source_id === "s0_finra_occ_mapping_ledger");
     e.source_date = "2026-07-20"; e.age = 0; e.status = "future_date_anomaly"; e.future_date_anomaly = true;
+  }
+  if (overrides.coverageUnavailable) {
+    const e = list.find((x) => x.source_id === "fenok_edge_coverage_index");
+    e.source_date = null; e.age = null; e.status = "unavailable";
+  }
+  if (overrides.coverageFakePending) {
+    // The generic-flag-bypass probe: pending_source_stamp on a NON-product_surface row.
+    const e = list.find((x) => x.source_id === "fenok_edge_coverage_index");
+    e.source_date = null; e.age = null; e.status = "ready"; e.pending_source_stamp = true;
   }
   if (typeof overrides.tamper === "function") overrides.tamper(list);
   return list;
@@ -123,6 +152,21 @@ function seedPrior(tmp, priorDoc) {
   writeJson(path.join(tmp, "data", KPI_REL), priorDoc);
 }
 
+// Seed product-surface-coverage with per-surface source_as_of (true source stamps).
+// stampById overrides specific surfaces; default stamp applies to the rest. absentIds
+// OMIT the source_as_of key entirely (bootstrap/structural probes). rawSurfaces fully
+// overrides the surfaces array (typo-property probe).
+function seedProductCoverage(tmp, { defaultStamp = null, stampById = {}, absentIds = [], rawSurfaces, markerless = false, stampMarkerValue = 1 } = {}) {
+  const surfaces = rawSurfaces ?? REQUIRED_SURFACE_IDS.map((id) => {
+    const base = { id, as_of: "2026-07-09T00:00:00.000Z" };
+    if (absentIds.includes(id)) return base; // no source_as_of key (absent own-property)
+    return { ...base, source_as_of: id in stampById ? stampById[id] : defaultStamp };
+  });
+  const doc = { schema_version: "product-surface-coverage/v1", generated_at: "2026-07-10T00:00:00.000Z", surfaces };
+  if (!markerless) doc.source_stamp_version = stampMarkerValue; // stamp-aware generator marker (rev5.6)
+  writeJson(path.join(tmp, "data", "admin", "product-surface-coverage.json"), doc);
+}
+
 function seedFinraOccLedger(tmp, { finra, occ }) {
   writeJson(path.join(tmp, "data", "admin", "fenok-s0-finra-occ-mapping-ledger.json"), {
     generated_at: "2026-07-10T00:00:00.000Z",
@@ -141,6 +185,7 @@ function runBuilder(tmp, env, nowIso, { expectExit = 0 } = {}) {
     status = error.status ?? 1;
   }
   assert.equal(status, expectExit, `builder exit ${status} != ${expectExit}`);
+  if (expectExit !== 0) return { exit: status }; // build hard-failed: no output to read
   return {
     root: JSON.parse(fs.readFileSync(path.join(tmp, "data", KPI_REL), "utf8")),
     public: JSON.parse(fs.readFileSync(path.join(tmp, "public", "data", KPI_REL), "utf8")),
@@ -715,6 +760,411 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, `strict: ${label} is a hard error (exit 1)`);
   }
   ok("SLA tamper: unit/calendar mutation + duplicate row + unknown extra row all hard-error in Phase A AND strict");
+}
+
+// 22. Product-surface stamp classification (builder, via real generator-shaped input)
+{
+  const now = "2026-07-10T05:00:00.000Z";
+  const psEntry = (root) => root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  const buildWith = (seedOpts) => {
+    const tmp = mkTmp("prod-surface");
+    seedProductCoverage(tmp, seedOpts);
+    const { root } = runBuilder(tmp, {
+      GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main",
+      GITHUB_RUN_ID: "ps", GITHUB_RUN_ATTEMPT: "1",
+    }, now);
+    return psEntry(root);
+  };
+
+  // (a) all required surfaces stamped fresh -> OLDEST, ready; ever_stamped true
+  const ready = buildWith({ defaultStamp: "2026-07-09" });
+  assert.equal(ready.source_date, "2026-07-09", "stamped: aggregate = OLDEST");
+  assert.equal(ready.status, "ready");
+  assert.ok(!ready.pending_source_stamp, "stamped is not pending");
+  assert.equal(ready.pending.ever_stamped, true, "stamped sets ever_stamped=true");
+  // (b) all stamped OLD -> stale
+  assert.equal(buildWith({ defaultStamp: "2026-06-01" }).status, "stale", "stamped old -> stale");
+  // (c) ALL null -> pending (with pending marker); ever_stamped false (never stamped)
+  const pending = buildWith({ defaultStamp: null });
+  assert.equal(pending.status, "unavailable_pending_source_stamp", "all-null -> pending");
+  assert.equal(pending.pending_source_stamp, true);
+  assert.ok(typeof pending.pending.pending_since === "string", "pending carries pending.pending_since");
+  assert.equal(pending.pending.ever_stamped, false, "bootstrap pending: ever_stamped false");
+  // (c2) MIXED (some stamped, some null) -> validly PENDING (rev5.4), NOT partial
+  const mixed = buildWith({ defaultStamp: "2026-07-09", stampById: { market_events: null } });
+  assert.equal(mixed.status, "unavailable_pending_source_stamp", "mixed stamped/null -> validly pending");
+  assert.equal(mixed.pending_source_stamp, true, "mixed is pending (at least one null)");
+  // (d) all future -> anomaly
+  const future = buildWith({ defaultStamp: "2026-07-20" });
+  assert.equal(future.status, "future_date_anomaly");
+  assert.equal(future.future_date_anomaly, true);
+  ok("Product-surface: all-stamped->ready/stale, all-null & mixed->pending, future->anomaly");
+}
+
+// 23. FIX 1 — MIXED-FUTURE: future detected PER value BEFORE the OLDEST fold
+{
+  const now = "2026-07-10T05:00:00.000Z";
+  const tmp = mkTmp("mixed-future");
+  seedProductCoverage(tmp, { defaultStamp: "2026-07-09", stampById: { screener: "2026-07-20" } }); // 5 fresh + 1 future
+  const { root } = runBuilder(tmp, {
+    GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main",
+    GITHUB_RUN_ID: "mf", GITHUB_RUN_ATTEMPT: "1",
+  }, now);
+  const ps = root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  assert.equal(ps.status, "future_date_anomaly", "one future stamp among fresh -> anomaly, NOT clean 2026-07-09");
+  assert.equal(ps.future_date_anomaly, true);
+  ok("FIX 1: mixed fresh+future stamps flag future_date_anomaly (per-value future before OLDEST fold)");
+}
+
+// 24. FIX 2 — SHAPE-STRICT pending: duplicate / missing / malformed = hard error (Phase A + strict)
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const runShape = (rawRows) => {
+    const tmp = mkTmp("ps-shape");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "sh" });
+    rt.cadence.v2_activated_at = now;
+    seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { productSurface: { rawRows } }) });
+    return tmp;
+  };
+  const baseRows = REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: null }));
+  const cases = [
+    ["duplicate required id", [...baseRows, { id: "market_valuation", source_as_of: null }]],
+    ["missing required row", baseRows.filter((r) => r.id !== "screener")],
+    ["malformed value (number)", baseRows.map((r) => (r.id === "sectors" ? { id: "sectors", source_as_of: 123 } : r))],
+    ["malformed value (garbage string)", baseRows.map((r) => (r.id === "sectors" ? { id: "sectors", source_as_of: "not-a-date" } : r))],
+  ];
+  for (const [label, rawRows] of cases) {
+    const tmp = runShape(rawRows);
+    assert.equal(runChecker(tmp, now).exit, 1, `Phase A: product_surface ${label} is a hard error`);
+    assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, `strict: product_surface ${label} is a hard error`);
+  }
+  ok("FIX 2: shape-strict pending — duplicate/missing/malformed required surface rows hard-error (Phase A + strict)");
+}
+
+// 25. FIX 3 — sticky pending_since: preservation, 13d strict warn, 15d strict hard, invalid hard
+{
+  // preservation across rebuild: prior committed KPI pending_since must survive a rebuild
+  const now = "2026-07-10T02:35:00.000Z";
+  const priorSince = "2026-07-01T00:00:00.000Z";
+  const tmp = mkTmp("pending-preserve");
+  const prior = makeProducerRuntime({ builtAt: now, slotKey: null, runId: "prev" });
+  prior.cadence.v2_activated_at = now;
+  prior.slots = { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] };
+  seedPrior(tmp, v2Doc(prior, {
+    source_sla: [{ source_id: "product_surface_coverage", freshness_basis: ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true, source_date: null, age: null, status: "unavailable_pending_source_stamp", pending_source_stamp: true, pending: { pending_since: priorSince, ever_stamped: false } }],
+  }));
+  seedProductCoverage(tmp, { defaultStamp: null }); // still all-null -> still pending
+  const { root } = runBuilder(tmp, {
+    GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main",
+    GITHUB_RUN_ID: "pp", GITHUB_RUN_ATTEMPT: "1",
+  }, now);
+  const ps = root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  assert.equal(ps.pending.pending_since, priorSince, "pending_since preserved across rebuild (not reset to now)");
+  ok("FIX 3a: pending_since is sticky — preserved across rebuilds from the prior committed KPI");
+
+  // checker: pending_since age gate vs canonical PENDING_MAX_AGE_DAYS=14 (clock near
+  // 07-10 so the OTHER sources stay fresh; only pending_since varies).
+  const checkerNow = "2026-07-10T02:35:00.000Z";
+  const mkPending = (pendingSince) => {
+    const t = mkTmp("pending-age");
+    const rt = makeProducerRuntime({ builtAt: checkerNow, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "pa" });
+    rt.cadence.v2_activated_at = checkerNow;
+    seedReadyV2(t, { now: checkerNow, runtime: rt, sla: readySla(checkerNow, { productSurface: { defaultStamp: null, pendingSince } }) });
+    return t;
+  };
+  const at13d = new Date(new Date(checkerNow).getTime() - 13 * 86400000).toISOString();
+  const at15d = new Date(new Date(checkerNow).getTime() - 15 * 86400000).toISOString();
+  assert.equal(runChecker(mkPending(at13d), checkerNow, { strict: true }).exit, 0, "13d pending -> strict WARN (exit 0)");
+  assert.equal(runChecker(mkPending(at15d), checkerNow, { strict: true }).exit, 1, "15d pending -> strict HARD (exit 1)");
+  assert.equal(runChecker(mkPending(at15d), checkerNow).exit, 0, "15d pending -> Phase A warn-only (exit 0, no time-bomb)");
+  assert.equal(runChecker(mkPending("garbage"), checkerNow).exit, 1, "invalid pending_since -> hard error even Phase A");
+  const futurePs = new Date(new Date(checkerNow).getTime() + 3 * 86400000).toISOString();
+  assert.equal(runChecker(mkPending(futurePs), checkerNow).exit, 1, "future pending_since -> hard error even Phase A");
+  ok("FIX 3b: pending within 14d = strict WARN; beyond 14d = strict hard / Phase A warn; invalid/future = hard");
+}
+
+// 25c. ANTI-OSCILLATION — once ever_stamped, regression to pending = strict HARD (no fresh grace)
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const tmp = mkTmp("oscillation");
+  const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "os" });
+  rt.cadence.v2_activated_at = now;
+  // pending, ever_stamped=true, pending_since FRESH (0d) — regression must still hard-error under strict.
+  seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { productSurface: { defaultStamp: null, priorEverStamped: true, pendingSince: now } }) });
+  assert.equal(runChecker(tmp, now).exit, 0, "Phase A: post-stamped regression is warn-only");
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "strict: regression to pending after ever_stamped = hard error, NO fresh 14d grace");
+  ok("ANTI-OSCILLATION: ever_stamped -> pending regression is a strict hard error immediately (no grace reset)");
+}
+
+// 25d. ever_stamped preservation across a TWO-BUILD sequence (non-auth rebuild retains true)
+{
+  const now = "2026-07-10T05:00:00.000Z";
+  const tmp = mkTmp("two-build");
+  const env = { GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "b", GITHUB_RUN_ATTEMPT: "1" };
+  // build 1: all stamped -> ever_stamped true, written to the temp root.
+  seedProductCoverage(tmp, { defaultStamp: "2026-07-09" });
+  const b1 = runBuilder(tmp, env, now).root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  assert.equal(b1.pending.ever_stamped, true, "build 1 (all stamped) sets ever_stamped true");
+  // build 2: non-authoritative rebuild that REGRESSES to all-null; ever_stamped must persist.
+  seedProductCoverage(tmp, { defaultStamp: null });
+  const b2 = runBuilder(tmp, env, now).root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  assert.equal(b2.status, "unavailable_pending_source_stamp", "build 2 regressed to pending");
+  assert.equal(b2.pending.ever_stamped, true, "build 2 retains ever_stamped=true from the prior committed doc (never reset to false)");
+  ok("ever_stamped preserved across a two-build non-authoritative rebuild (monotonic true)");
+}
+
+// 26. FIX 4 — coverage_index has NO strict exemption (plain unavailable stays strict hard)
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const tmp = mkTmp("coverage-noexempt");
+  const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "cv" });
+  rt.cadence.v2_activated_at = now;
+  seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { coverageUnavailable: true }) });
+  assert.equal(runChecker(tmp, now).exit, 0, "Phase A: coverage unavailable is warn-only");
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "strict: coverage unavailable is a hard error (NO pending exemption)");
+  ok("FIX 4: fenok_edge_coverage_index plain unavailable stays a strict hard error (no exemption)");
+}
+
+// 27. FIX 5 — run the REAL generator against a temp root and assert the stamps
+{
+  const tmp = mkTmp("real-generator");
+  writeJson(path.join(tmp, "data", "computed", "rim-index", "inputs.json"), { indices: { KOSPI: { observed: { price: { as_of: "2026-07-03" } } }, SOX: { observed: { price: { as_of: "2026-07-01" } } } } });
+  writeJson(path.join(tmp, "data", "yardney", "yardney_model.json"), { data: [{ date: "2026-07-02" }] });
+  writeJson(path.join(tmp, "data", "global-scouter", "core", "stocks_analyzer.json"), { source_date: "2026-06-30" });
+  execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], {
+    env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"],
+  });
+  const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
+  const stamp = (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
+  assert.equal(stamp("market_valuation"), "2026-07-01", "real generator: market_valuation = OLDEST(rim KOSPI/SOX, yardeni)");
+  assert.equal(stamp("screener"), "2026-06-30", "real generator: screener = stocks_analyzer.source_date");
+  assert.equal(stamp("stock_detail"), null, "real generator: no-true-source surface stays null");
+  ok("FIX 5: real generate-product-surface-coverage.mjs runs on a temp root and stamps source_as_of correctly");
+}
+
+// 28. rev5.5 STRICT-BYPASS PROBES
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const psBuild = (seedOpts, { expectExit = 0 } = {}) => {
+    const tmp = mkTmp("r55");
+    seedProductCoverage(tmp, seedOpts);
+    const r = runBuilder(tmp, { GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "r55", GITHUB_RUN_ATTEMPT: "1" }, now, { expectExit });
+    return expectExit === 0 ? r.root.source_sla.find((s) => s.source_id === "product_surface_coverage") : r;
+  };
+  const checkRows = (rawRows) => {
+    const tmp = mkTmp("r55c");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "r55c" });
+    rt.cadence.v2_activated_at = now;
+    seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { productSurface: { rawRows } }) });
+    return tmp;
+  };
+  const allPresent = (mut) => REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: mut(id) }));
+
+  // (1) REAL-CALENDAR: impossible / junk dates classify as shape_error (hard)
+  for (const bad of ["2026-00-00", "2026-02-31", "2026-07-09junk"]) {
+    const entry = psBuild({ defaultStamp: "2026-07-09", stampById: { screener: bad } });
+    assert.equal(entry.status, "error", `builder: bad calendar date ${bad} -> shape_error`);
+    const tmp = checkRows(allPresent((id) => (id === "screener" ? bad : "2026-07-09")));
+    assert.equal(runChecker(tmp, now).exit, 1, `checker Phase A: bad calendar date ${bad} -> hard`);
+    assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, `checker strict: bad calendar date ${bad} -> hard`);
+  }
+  ok("rev5.5(1) REAL-CALENDAR: 2026-00-00 / 2026-02-31 / trailing-junk dates hard-error in generator+classifier");
+
+  // (2) SCHEMA MARKER + OWN-PROPERTY: markerless legacy all-absent = bootstrap; a
+  // MARKED artifact demands every row carry source_as_of (all-typo / partial-absent = hard).
+  const bootstrap = psBuild({ absentIds: [...REQUIRED_SURFACE_IDS], markerless: true });
+  assert.equal(bootstrap.status, "unavailable_pending_source_stamp", "markerless all-absent -> bootstrap pending");
+  assert.equal(bootstrap.pending.ever_stamped, false, "bootstrap ever_stamped false");
+  // MARKED + all-rows-typo (source_As_of) -> every row lacks source_as_of -> HARD (kills the fake-bootstrap collapse)
+  const allTypo = psBuild({ rawSurfaces: REQUIRED_SURFACE_IDS.map((id) => ({ id, as_of: "x", source_As_of: "2026-07-09" })) });
+  assert.equal(allTypo.status, "error", "MARKED all-rows-typo -> hard (not fake bootstrap)");
+  // MARKED + partial-absent -> hard
+  const partialAbsent = psBuild({ defaultStamp: "2026-07-09", absentIds: ["market_events"] });
+  assert.equal(partialAbsent.status, "error", "MARKED partial-absent -> hard");
+  assert.ok(partialAbsent.shape_error, "partial-absent flags shape_error");
+  // MARKERLESS but a row carries source_as_of -> structural corruption -> hard
+  const markerlessPresent = psBuild({ defaultStamp: "2026-07-09", markerless: true });
+  assert.equal(markerlessPresent.status, "error", "markerless artifact carrying source_as_of -> structural hard");
+  ok("rev5.6(1) SCHEMA MARKER: markerless all-absent=bootstrap; MARKED all-typo/partial-absent=hard; markerless-with-value=hard");
+
+  // (3) GENERIC FLAG BYPASS: pending_source_stamp on a non-product_surface row = hard
+  {
+    const tmp = mkTmp("r55-flag");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "flag" });
+    rt.cadence.v2_activated_at = now;
+    seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { coverageFakePending: true }) });
+    assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "coverage row w/ pending_source_stamp+status=ready -> strict hard (bypass killed)");
+    assert.equal(runChecker(tmp, now).exit, 1, "pending_source_stamp on non-product_surface is hard even in Phase A");
+    ok("rev5.5(3) generic pending_source_stamp bypass killed — flag on any non-product_surface row is a hard error");
+  }
+
+  // (4) PRIOR CORRUPTION FAIL-CLOSED: corrupt prior v2 -> BUILD hard-fails; missing/v1 -> bootstrap
+  {
+    const mkCorrupt = (badPending) => {
+      const tmp = mkTmp("r55-prior");
+      const prior = makeProducerRuntime({ builtAt: now, slotKey: null, runId: "p" });
+      prior.cadence.v2_activated_at = now;
+      prior.slots = { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] };
+      seedPrior(tmp, v2Doc(prior, { source_sla: [{ source_id: "product_surface_coverage", status: "unavailable_pending_source_stamp", pending: badPending }] }));
+      seedProductCoverage(tmp, { absentIds: [...REQUIRED_SURFACE_IDS], markerless: true });
+      return tmp;
+    };
+    for (const badPending of [{ pending_since: 123, ever_stamped: false }, { pending_since: "2026-07-01T00:00:00Z", ever_stamped: "yes" }, { pending_since: "garbage", ever_stamped: false }]) {
+      const tmp = mkCorrupt(badPending);
+      let status = 0;
+      try { execFileSync("node", [BUILDER, "--data-root", tmp], { env: { ...baseEnv(), KPI_FAKE_NOW: now, GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "pc", GITHUB_RUN_ATTEMPT: "1" }, stdio: ["ignore", "pipe", "pipe"] }); }
+      catch (e) { status = e.status ?? 1; }
+      assert.equal(status, 1, `corrupt prior v2 pending ${JSON.stringify(badPending)} -> build hard-fails`);
+    }
+    // missing prior + v1 prior still bootstrap (markerless legacy artifact)
+    const missing = psBuild({ absentIds: [...REQUIRED_SURFACE_IDS], markerless: true });
+    assert.equal(missing.pending.ever_stamped, false, "missing prior -> bootstrap");
+    const tmpV1 = mkTmp("r55-v1");
+    seedPrior(tmpV1, { schema_version: "fenok-data-health-kpi/v1", generated_at: "2026-07-09T00:00:00Z", status: "ready" });
+    seedProductCoverage(tmpV1, { absentIds: [...REQUIRED_SURFACE_IDS], markerless: true });
+    const v1boot = runBuilder(tmpV1, { GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "v1", GITHUB_RUN_ATTEMPT: "1" }, now).root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+    assert.equal(v1boot.status, "unavailable_pending_source_stamp", "v1 prior -> bootstrap pending");
+    assert.equal(v1boot.pending.ever_stamped, false, "v1 prior bootstrap ever_stamped false");
+    ok("rev5.6(4) prior corruption fail-closed: malformed prior-v2 pending hard-fails the BUILD; missing/v1 prior still bootstrap");
+  }
+
+  // (5) STATE-SPECIFIC MARKER SHAPE: numeric / future pending_since (no band) / future-on-stamped = hard
+  {
+    const mkMut = (mut) => {
+      const tmp = mkTmp("r55-marker");
+      const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "mk" });
+      rt.cadence.v2_activated_at = now;
+      const sla = readySla(now);
+      mut(sla.find((s) => s.source_id === "product_surface_coverage"));
+      seedReadyV2(tmp, { now, runtime: rt, sla });
+      return tmp;
+    };
+    // numeric pending_since (make it pending first, then numeric)
+    const numeric = mkMut((e) => { e.status = "unavailable_pending_source_stamp"; e.pending_source_stamp = true; e.source_date = null; e.age = null; e.required_surface_rows = REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: null })); e.pending = { pending_since: 123, ever_stamped: false }; });
+    assert.equal(runChecker(numeric, now).exit, 1, "numeric pending_since -> hard even Phase A");
+    // +5m future pending_since must be HARD (no tolerance band, unlike producer age)
+    const future5m = mkMut((e) => { e.status = "unavailable_pending_source_stamp"; e.pending_source_stamp = true; e.source_date = null; e.age = null; e.required_surface_rows = REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: null })); e.pending = { pending_since: new Date(new Date(now).getTime() + 5 * 60000).toISOString(), ever_stamped: false }; });
+    assert.equal(runChecker(future5m, now).exit, 1, "+5m future pending_since -> hard (NO tolerance band)");
+    // future pending_since on a STAMPED row (must be null on stamped)
+    const stampedFuture = mkMut((e) => { /* e is stamped ready by default */ e.pending = { pending_since: "2026-07-20", ever_stamped: true }; });
+    assert.equal(runChecker(stampedFuture, now).exit, 1, "non-null pending_since on stamped row -> hard");
+    ok("rev5.5(5) marker shape: numeric pending_since hard; +5m future hard (no band); pending_since on stamped row hard");
+  }
+}
+
+// 29. rev5.6 STATE-MACHINE PROBES (anomaly-preserve, prior edge-cases, validation order)
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const env = { GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "sm", GITHUB_RUN_ATTEMPT: "1" };
+  const day10 = "2026-06-30T00:00:00.000Z"; // ~10 days before now
+  const priorPendingDoc = (pending) => {
+    const prior = makeProducerRuntime({ builtAt: now, slotKey: null, runId: "prev" });
+    prior.cadence.v2_activated_at = now;
+    prior.slots = { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] };
+    return v2Doc(prior, { source_sla: [{ source_id: "product_surface_coverage", status: "unavailable_pending_source_stamp", source_stamp_version: 1, required_surface_rows: REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: null })), pending }] });
+  };
+  const psOf = (root) => root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+
+  // (2) ANOMALY STATES PRESERVE MARKERS: pending(day10) -> future anomaly -> pending
+  // must RESUME the day-10 clock (no reset-to-now laundering).
+  {
+    const tmp = mkTmp("anomaly-preserve");
+    seedPrior(tmp, priorPendingDoc({ pending_since: day10, ever_stamped: false }));
+    seedProductCoverage(tmp, { defaultStamp: "2026-07-09", stampById: { screener: "2026-07-20" } }); // future anomaly
+    const b1 = psOf(runBuilder(tmp, env, now).root);
+    assert.equal(b1.status, "future_date_anomaly", "transition into future anomaly");
+    assert.equal(b1.pending.pending_since, day10, "anomaly PRESERVES pending_since (not null, not now)");
+    seedProductCoverage(tmp, { defaultStamp: null }); // back to all-null pending
+    const b2 = psOf(runBuilder(tmp, env, now).root);
+    assert.equal(b2.status, "unavailable_pending_source_stamp", "future -> pending again");
+    assert.equal(b2.pending.pending_since, day10, "pending RESUMES the day-10 clock (no restart at now)");
+    ok("rev5.6(2) anomaly states preserve pending_since — future->pending resumes the original clock (no laundering)");
+  }
+
+  // (3a) unreadable prior JSON (file EXISTS but corrupt) = build hard-fail; missing = bootstrap
+  {
+    const tmp = mkTmp("corrupt-prior-json");
+    fs.writeFileSync(path.join(tmp, "data", KPI_REL), "{ not valid json", "utf8");
+    seedProductCoverage(tmp, { absentIds: [...REQUIRED_SURFACE_IDS], markerless: true });
+    runBuilder(tmp, env, now, { expectExit: 1 });
+    // (3c) stamp-era lineage present but pending marker DELETED = build hard-fail
+    const tmp2 = mkTmp("deleted-marker");
+    const prior = makeProducerRuntime({ builtAt: now, slotKey: null, runId: "prev" });
+    prior.cadence.v2_activated_at = now;
+    prior.slots = { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] };
+    seedPrior(tmp2, v2Doc(prior, { source_sla: [{ source_id: "product_surface_coverage", status: "unavailable_pending_source_stamp", required_surface_rows: REQUIRED_SURFACE_IDS.map((id) => ({ id, source_as_of: null })) /* lineage but NO pending */ }] }));
+    seedProductCoverage(tmp2, { absentIds: [...REQUIRED_SURFACE_IDS], markerless: true });
+    runBuilder(tmp2, env, now, { expectExit: 1 });
+    ok("rev5.6(3) prior edge-cases: unreadable-existing-JSON & stamp-era-lineage-with-deleted-pending both hard-fail the BUILD");
+  }
+
+  // (4) VALIDATION ORDER: object pending_since on a FUTURE row = hard (before the future early-exit)
+  {
+    const tmp = mkTmp("future-obj-since");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "vo" });
+    rt.cadence.v2_activated_at = now;
+    const futureEntry = productSurfaceEntry(now, { defaultStamp: "2026-07-09", stampById: { screener: "2026-07-20" } }); // future_date_anomaly
+    futureEntry.pending = { pending_since: {}, ever_stamped: false }; // OBJECT pending_since on a future row
+    const sla = readySla(now).map((e) => (e.source_id === "product_surface_coverage" ? futureEntry : e));
+    seedReadyV2(tmp, { now, runtime: rt, sla });
+    assert.equal(runChecker(tmp, now).exit, 1, "object pending_since on a future row -> hard even Phase A (validated before future early-exit)");
+    ok("rev5.6(5) validation order: object pending_since on a future row is hard (not a warning past the future branch)");
+  }
+}
+
+// 30. rev5.6 ADDENDUM — marker value EXACTLY 1 + checker-side lineage/deletion detection
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const env = { GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "mv", GITHUB_RUN_ATTEMPT: "1" };
+  const psOf = (root) => root.source_sla.find((s) => s.source_id === "product_surface_coverage");
+
+  // (a) bad source_stamp_version values -> HARD in BOTH builder classifier and checker
+  for (const badMarker of [2, "1", true, {}]) {
+    const tmpB = mkTmp("marker-build");
+    seedProductCoverage(tmpB, { defaultStamp: "2026-07-09", stampMarkerValue: badMarker });
+    const bEntry = psOf(runBuilder(tmpB, env, now).root);
+    assert.equal(bEntry.status, "error", `builder: source_stamp_version=${JSON.stringify(badMarker)} -> shape_error`);
+
+    const tmpC = mkTmp("marker-check");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "mc" });
+    rt.cadence.v2_activated_at = now;
+    const entry = productSurfaceEntry(now, { defaultStamp: "2026-07-09", stampMarkerValue: badMarker });
+    const sla = readySla(now).map((e) => (e.source_id === "product_surface_coverage" ? entry : e));
+    seedReadyV2(tmpC, { now, runtime: rt, sla });
+    assert.equal(runChecker(tmpC, now).exit, 1, `checker Phase A: source_stamp_version=${JSON.stringify(badMarker)} -> hard`);
+    assert.equal(runChecker(tmpC, now, { strict: true }).exit, 1, `checker strict: source_stamp_version=${JSON.stringify(badMarker)} -> hard`);
+  }
+  ok("rev5.6-addendum(a): source_stamp_version must be EXACTLY the number 1 — 2/'1'/true/{} hard in builder+checker");
+
+  // (b) checker-side: a doc with stamp-slice lineage (required_surface_rows) but the
+  // pending marker DELETED must fail at the CHECKER independently (not just the builder).
+  {
+    const tmp = mkTmp("checker-deletion");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "cd" });
+    rt.cadence.v2_activated_at = now;
+    const entry = productSurfaceEntry(now, { defaultStamp: "2026-07-09" }); // stamped, has lineage + pending
+    delete entry.pending; // hand-edited: lineage present, pending marker deleted
+    const sla = readySla(now).map((e) => (e.source_id === "product_surface_coverage" ? entry : e));
+    seedReadyV2(tmp, { now, runtime: rt, sla });
+    assert.equal(runChecker(tmp, now).exit, 1, "checker: lineage present but pending marker deleted -> hard (independent of builder)");
+    ok("rev5.6-addendum(b): checker independently rejects a lineage-present artifact whose pending marker was deleted");
+  }
+
+  // (c) checker-side: stamp-era DATA present (rows carry source_as_of) but the
+  // source_stamp_version marker DELETED -> markerless+present = structural hard. This
+  // is the hand-edit that tries to force the bootstrap path onto real stamp data.
+  {
+    const tmp = mkTmp("checker-marker-del");
+    const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "md" });
+    rt.cadence.v2_activated_at = now;
+    const entry = productSurfaceEntry(now, { defaultStamp: "2026-07-09" }); // marked + rows carry source_as_of
+    delete entry.source_stamp_version; // marker deleted, but rows still carry source_as_of
+    const sla = readySla(now).map((e) => (e.source_id === "product_surface_coverage" ? entry : e));
+    seedReadyV2(tmp, { now, runtime: rt, sla });
+    assert.equal(runChecker(tmp, now).exit, 1, "Phase A: source_stamp_version deleted while rows carry source_as_of -> hard");
+    assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "strict: same -> hard");
+    ok("rev5.6-addendum(c): checker rejects source_stamp_version deletion on rows carrying stamp data (markerless-with-value structural hard)");
+  }
 }
 
 console.log(`\n# ${passed} fixtures passed`);

@@ -12,12 +12,14 @@ import {
   SLA_DEFINITIONAL_KEYS,
   PUBLIC_RUNTIME_DENY_KEYS,
   TOLERANCE_MINUTES,
+  PENDING_MAX_AGE_DAYS,
 } from "../../scripts/lib/kpi-contract-constants.mjs";
 import {
   enumerateDueSlots,
   deriveMissedSlots,
   evaluateSlaAge,
   slaStatusForAge,
+  classifyProductSurface,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -233,7 +235,7 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
   }
 }
 
-export function checkSourceSla(rootDoc, { errors, warnings }) {
+export function checkSourceSla(rootDoc, { errors, warnings }, nowIso = new Date().toISOString()) {
   const entries = Array.isArray(rootDoc?.source_sla) ? rootDoc.source_sla : null;
   push(errors, entries != null, "source_sla array is required in v2");
   if (!entries) return;
@@ -269,6 +271,94 @@ export function checkSourceSla(rootDoc, { errors, warnings }) {
       `${entry.source_id}: SLA definitional fields tampered — got ${JSON.stringify(entryDef)} vs canonical ${JSON.stringify(canonDef)}`);
     const required = def.required; // canonical
 
+    // product_surface_coverage: shape-strict re-derivation from the emitted evidence
+    // (required_surface_rows). Re-classify with the SHARED classifier and validate
+    // (rev5.4). Shape errors / status mismatch = hard error always.
+    if (entry.source_id === "product_surface_coverage") {
+      const rows = entry.required_surface_rows;
+      const hasLineage = Object.prototype.hasOwnProperty.call(entry, "required_surface_rows");
+      push(errors, Array.isArray(rows), "product_surface_coverage: required_surface_rows evidence missing");
+      // Re-derive the schema marker INDEPENDENTLY (own-property presence + exact value),
+      // and re-classify with it. The exact-1 check lives in the shared classifier.
+      const stampMarkerPresent = Object.prototype.hasOwnProperty.call(entry, "source_stamp_version");
+      const cls = classifyProductSurface(Array.isArray(rows) ? rows : [], buildNow, { stampMarkerPresent, stampMarkerValue: entry.source_stamp_version });
+      // Marker shape validated BEFORE any state early-exit (rev5.6): ever_stamped must
+      // be boolean; pending_since must be string OR null on EVERY state (an object /
+      // number pending_since on a future or stamped row is hard, not warn). A doc with
+      // stamp-slice lineage but the pending marker DELETED must fail HERE too (rev5.6
+      // addendum) — the checker never relies on the builder alone.
+      const pending = entry.pending;
+      push(errors, pending && typeof pending === "object" && typeof pending.ever_stamped === "boolean",
+        `product_surface_coverage: pending.{pending_since,ever_stamped} marker missing/malformed${hasLineage ? " (lineage present, marker deleted)" : ""}`);
+      push(errors, pending == null || pending.pending_since === null || typeof pending.pending_since === "string",
+        `product_surface_coverage: pending.pending_since must be string or null, got ${JSON.stringify(pending?.pending_since)}`);
+      const everStamped = pending?.ever_stamped === true;
+      if (cls.kind === "shape_error") {
+        for (const m of cls.shape_errors) errors.push(`product_surface_coverage shape error: ${m}`);
+        continue;
+      }
+      const expectedStatus = {
+        future: "future_date_anomaly",
+        pending: "unavailable_pending_source_stamp",
+        stamped: slaStatusForAge(evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso: buildNow }), def.max_staleness),
+      }[cls.kind];
+      push(errors, entry.status === expectedStatus,
+        `product_surface_coverage status mismatch: stored ${entry.status} vs re-derived ${expectedStatus}`);
+
+      if (cls.kind === "future") {
+        push(errors, entry.future_date_anomaly === true, "product_surface_coverage future must flag future_date_anomaly");
+        strictBucket.push("product_surface_coverage: required source date in the future (anomaly)");
+        continue;
+      }
+      if (cls.kind === "pending") {
+        // ANTI-OSCILLATION (rev5.4): if product_surface has EVER been fully stamped,
+        // any later regression to pending is a strict hard error immediately — no
+        // fresh 14-day grace.
+        if (everStamped) {
+          strictBucket.push("product_surface_coverage: regressed to pending after having been fully stamped (ever_stamped) — no grace");
+          continue;
+        }
+        // Bootstrap pending: pending_since must be a valid past-or-present ISO STRING
+        // (numeric = hard; ANY future = hard with NO tolerance band — the skew band is
+        // for producer age only, rev5.5), then age vs CHECKER clock + PENDING_MAX_AGE_DAYS.
+        const ps = pending?.pending_since;
+        if (typeof ps !== "string") { errors.push(`product_surface_coverage pending.pending_since must be a string, got ${JSON.stringify(ps)}`); continue; }
+        const psMs = new Date(ps).getTime();
+        if (!Number.isFinite(psMs)) { errors.push(`product_surface_coverage pending.pending_since unparseable: ${ps}`); continue; }
+        if (psMs > new Date(nowIso).getTime()) {
+          errors.push(`product_surface_coverage pending.pending_since is in the future (no tolerance): ${ps}`); continue;
+        }
+        const ageDays = (new Date(nowIso).getTime() - psMs) / 86400000;
+        if (ageDays > PENDING_MAX_AGE_DAYS) {
+          // exemption expired: hard error under --strict (Phase B), warn in Phase A.
+          strictBucket.push(`product_surface_coverage pending exceeded ${PENDING_MAX_AGE_DAYS}d grace (${ageDays.toFixed(1)}d since ${ps})`);
+        } else {
+          // within grace: warn-only even under --strict (the pending exemption is active).
+          warnings.push(`product_surface_coverage pending within ${PENDING_MAX_AGE_DAYS}d grace (${ageDays.toFixed(1)}d)`);
+        }
+        continue;
+      }
+      // stamped: ever_stamped must be true (monotonic); pending_since must be null on a
+      // stamped row (a non-null/future pending_since on a stamped row is corruption).
+      push(errors, everStamped, "product_surface_coverage stamped entry must carry pending.ever_stamped=true");
+      push(errors, pending?.pending_since === null,
+        `product_surface_coverage stamped entry must have pending.pending_since=null, got ${JSON.stringify(pending?.pending_since)}`);
+      push(errors, entry.source_date === cls.source_date,
+        `product_surface_coverage source_date mismatch: ${entry.source_date} vs ${cls.source_date}`);
+      const stampedAge = evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso: buildNow });
+      const parityPS = (stampedAge == null && entry.age == null)
+        || (stampedAge != null && entry.age != null && Math.abs(stampedAge - entry.age) < 0.01);
+      push(errors, parityPS, `product_surface_coverage age mismatch: ${entry.age} vs ${stampedAge}`);
+      if (entry.status === "stale") strictBucket.push("product_surface_coverage: required source stale");
+      continue;
+    }
+
+    // KILL THE GENERIC FLAG BYPASS (rev5.6): pending_source_stamp is honored ONLY in
+    // the product_surface dedicated branch above. Its PRESENCE (by own-property, even
+    // pending_source_stamp:false) on ANY other source row is a hard error.
+    push(errors, !Object.prototype.hasOwnProperty.call(entry, "pending_source_stamp"),
+      `${entry.source_id}: pending_source_stamp property is only valid on product_surface_coverage`);
+
     // Future-dated source: recompute the anomaly and require the honest status.
     const future = isFutureSource(entry.source_date, buildNow, def.unit);
     if (future || entry.future_date_anomaly) {
@@ -289,9 +379,10 @@ export function checkSourceSla(rootDoc, { errors, warnings }) {
     const parity = (recomputedAge == null && entry.age == null)
       || (recomputedAge != null && entry.age != null && Math.abs(recomputedAge - entry.age) < 0.01);
     push(errors, parity, `${entry.source_id}: SLA age mismatch stored ${entry.age} vs recomputed ${recomputedAge}`);
-    // Status must match recompute unless a documented override flag is set.
+    // Status must match recompute unless the basket gate override forced stale.
+    // (pending_source_stamp is NOT honored here — rejected above for non-product_surface.)
     const recomputedStatus = slaStatusForAge(recomputedAge, def.max_staleness);
-    if (!entry.gate_override_stale && !entry.pending_source_stamp) {
+    if (!entry.gate_override_stale) {
       push(errors, entry.status === recomputedStatus,
         `${entry.source_id}: SLA status mismatch stored ${entry.status} vs recomputed ${recomputedStatus}`);
     }
@@ -373,7 +464,7 @@ function validateV2({ rootDoc, publicDoc, publicKpiPath, nowIso }) {
   validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2);
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso);
-  checkSourceSla(rootDoc, { errors, warnings });
+  checkSourceSla(rootDoc, { errors, warnings }, nowIso);
   checkPublicProjection(rootDoc, publicDoc, { errors, warnings });
   const report = { schema: SCHEMA_VERSION_V2, freshness: freshnessReport(rootDoc, nowIso) };
   return { errors, warnings, report };

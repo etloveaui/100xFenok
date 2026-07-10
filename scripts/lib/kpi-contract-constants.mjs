@@ -64,7 +64,7 @@ export const SOURCE_SLA_DEF = Object.freeze([
   Object.freeze({ source_id: "rim_index_inputs", freshness_basis: ".indices[SPX,NDX,KOSPI,SOX].observed.price.as_of (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: 10, required: true }),
   Object.freeze({ source_id: "etf_core_daily_basket_admin", freshness_basis: ".rows[].proof.quote_date (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: ETF_CORE_MAX_QUOTE_AGE_DAYS, required: true }),
   Object.freeze({ source_id: "fenok_edge_coverage_index", freshness_basis: ".source_as_of", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
-  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[required].as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
+  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
   Object.freeze({ source_id: "etf_daily1y_readiness_admin", freshness_basis: ".generated_at", unit: "hours", calendar: "wall_clock", max_staleness: 50, required: false }),
 ]);
 
@@ -91,3 +91,8 @@ export const PUBLIC_RUNTIME_DENY_KEYS = Object.freeze([
 
 // Clock-skew tolerance band (minutes) between projector and checker clocks (§4).
 export const TOLERANCE_MINUTES = 10;
+
+// Max age of a labelled product_surface_coverage pending state (rev5.3). Pending
+// carries a sticky pending_since; within this window it is warn-only (even under
+// strict), beyond it the exemption expires and becomes a hard error.
+export const PENDING_MAX_AGE_DAYS = 14;

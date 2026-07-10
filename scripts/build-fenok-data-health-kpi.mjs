@@ -9,6 +9,7 @@ import {
   hoursAge,
   isoDateOf,
   isFutureSource,
+  isRealCalendarDate,
 } from "./lib/market-calendar.mjs";
 import {
   CADENCE,
@@ -16,6 +17,7 @@ import {
   SOURCE_SLA_DEF,
   SOURCE_WORKFLOW_CRONS,
   REQUIRED_RIM_INDICES,
+  REQUIRED_SURFACE_IDS,
 } from "./lib/kpi-contract-constants.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -384,6 +386,76 @@ function oldestRequiredIsoDate(values) {
   return [...dates].sort()[0] ?? null;
 }
 
+function hasOwn(obj, key) {
+  return obj != null && Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+// Shared shape-strict classifier for product_surface_coverage (rev5.6). Both the
+// builder and the checker call this on the SAME required-surface rows + stamp marker
+// so they agree by construction. hasStampMarker = artifact carried root
+// source_stamp_version.
+//  - Markerless artifact: EVERY required row absent => genuine bootstrap pending;
+//    any present source_as_of on a markerless artifact => structural corruption (hard).
+//  - Marked artifact: EVERY required row MUST carry own-property source_as_of; ANY
+//    absence (one row or ALL rows — e.g. an all-typo-key artifact) => hard.
+//  - shape_error (ALWAYS hard): missing/duplicate id; absence under a marker; a
+//    non-null source_as_of that is not a REAL-CALENDAR date.
+//  - future: any present value is a future date (PER value, BEFORE the fold).
+//  - pending: every id present exactly once, each value EXACTLY null or a real
+//    NON-FUTURE date, AT LEAST ONE null.  stamped: all values real dates.
+export const STAMP_MARKER_VALUE = 1;
+
+export function classifyProductSurface(requiredRows, nowIso, { stampMarkerPresent = false, stampMarkerValue } = {}) {
+  const rows = Array.isArray(requiredRows) ? requiredRows : [];
+  const counts = new Map();
+  for (const row of rows) counts.set(row?.id, (counts.get(row?.id) || 0) + 1);
+  const shapeErrors = [];
+  for (const id of REQUIRED_SURFACE_IDS) {
+    const c = counts.get(id) || 0;
+    if (c === 0) shapeErrors.push(`missing required surface ${id}`);
+    else if (c > 1) shapeErrors.push(`duplicate required surface ${id}`);
+  }
+  if (shapeErrors.length) return { kind: "shape_error", source_date: null, shape_errors: shapeErrors };
+
+  // Marker value must be EXACTLY the number 1 when present ("1"/true/2/{} all hard).
+  if (stampMarkerPresent && stampMarkerValue !== STAMP_MARKER_VALUE) {
+    return { kind: "shape_error", source_date: null, shape_errors: [`source_stamp_version must be exactly ${STAMP_MARKER_VALUE} (number), got ${JSON.stringify(stampMarkerValue)}`] };
+  }
+  const hasStampMarker = stampMarkerPresent; // value === 1 guaranteed past the guard
+
+  const byId = new Map();
+  for (const row of rows) if (REQUIRED_SURFACE_IDS.includes(row?.id)) byId.set(row.id, row);
+  const presentValues = [];
+  const absentIds = [];
+  for (const id of REQUIRED_SURFACE_IDS) {
+    const row = byId.get(id);
+    if (hasOwn(row, "source_as_of")) presentValues.push({ id, value: row.source_as_of });
+    else absentIds.push(id);
+  }
+
+  if (!hasStampMarker) {
+    // Markerless = genuine pre-stamp-era artifact. Bootstrap ONLY if EVERY row absent.
+    if (presentValues.length === 0) return { kind: "pending", source_date: null, bootstrap: true };
+    return { kind: "shape_error", source_date: null, shape_errors: ["markerless artifact carries source_as_of on some rows (structural)"] };
+  }
+  // Marked = stamp-aware generator. EVERY required row MUST carry the property.
+  if (absentIds.length > 0) {
+    return { kind: "shape_error", source_date: null, shape_errors: [`marked artifact lacks own-property source_as_of on: ${absentIds.join(", ")}`] };
+  }
+  for (const { id, value } of presentValues) {
+    if (value !== null && !isRealCalendarDate(value)) shapeErrors.push(`malformed source_as_of for ${id}: ${JSON.stringify(value)}`);
+  }
+  if (shapeErrors.length) return { kind: "shape_error", source_date: null, shape_errors: shapeErrors };
+
+  const values = presentValues.map((p) => p.value);
+  const dates = values.filter((v) => v !== null);
+  if (dates.some((d) => isFutureSource(d, nowIso, "business_days"))) {
+    return { kind: "future", source_date: oldestRequiredIsoDate(dates) };
+  }
+  if (values.some((v) => v === null)) return { kind: "pending", source_date: null };
+  return { kind: "stamped", source_date: oldestRequiredIsoDate(dates) };
+}
+
 function readJson(relPath, root = DATA_ROOT) {
   try {
     return JSON.parse(fs.readFileSync(path.join(root, relPath), "utf8"));
@@ -712,14 +784,77 @@ function summarize(lanes) {
   return { overallStatus, totals };
 }
 
-// product_surface_coverage: its surface as_of values derive from upstream
-// generated_at/fetched_at (REBUILD timestamps), which §5 forbids as freshness
-// evidence. Until generate-product-surface-coverage.mjs stamps true per-surface
-// source dates, the KPI marks it unavailable_pending_source_stamp — honest, never
-// consuming rebuild timestamps (same bootstrap posture as the coverage-index stamp).
-const PRODUCT_SURFACE_PENDING_SOURCE_STAMP = true;
+// product_surface_coverage source stamp = OLDEST of the required surfaces' TRUE
+// source dates (.surfaces[REQUIRED_SURFACE_IDS].source_as_of), stamped by
+// generate-product-surface-coverage.mjs — NEVER the rebuild as_of. Fail-closed: if
+// ANY required surface lacks a real stamp (source_as_of null), the aggregate is null
+// and the KPI keeps it unavailable_pending_source_stamp (no guessing). It lifts to
+// ready/stale automatically once every required surface carries a true stamp.
+function productSurfaceRequiredRows(productCoverage) {
+  // Preserve duplicates (do NOT collapse via a Map) AND preserve own-property presence
+  // of source_as_of (do NOT `?? null` normalize) so the classifier can distinguish
+  // ABSENT (bootstrap / structural) from EXACT null (rev5.5).
+  return (Array.isArray(productCoverage?.surfaces) ? productCoverage.surfaces : [])
+    .filter((s) => REQUIRED_SURFACE_IDS.includes(s?.id))
+    .map((s) => (hasOwn(s, "source_as_of") ? { id: s.id, source_as_of: s.source_as_of } : { id: s.id }));
+}
 
-function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, etfDaily1y }) {
+function buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending }) {
+  const requiredRows = productSurfaceRequiredRows(productCoverage);
+  const stampMarkerPresent = hasOwn(productCoverage, "source_stamp_version");
+  const stampMarkerValue = stampMarkerPresent ? productCoverage.source_stamp_version : undefined;
+  const cls = classifyProductSurface(requiredRows, nowIso, { stampMarkerPresent, stampMarkerValue });
+  const priorPendingSince = priorPending?.pending_since ?? null;
+  const priorEverStamped = priorPending?.ever_stamped === true;
+  // ever_stamped is MONOTONIC: true once fully-stamped is ever observed; no build path
+  // may write it back to false (anti-oscillation, rev5.4).
+  const everStamped = priorEverStamped || cls.kind === "stamped";
+  const base = {
+    source_id: def.source_id,
+    freshness_basis: def.freshness_basis,
+    unit: def.unit,
+    calendar: def.calendar,
+    max_staleness: def.max_staleness,
+    required: def.required,
+    // Emit source_stamp_version as an OWN property ONLY when the artifact carried it
+    // (mirrors the artifact so the checker re-derives absent-vs-present, incl. bad values).
+    ...(stampMarkerPresent ? { source_stamp_version: stampMarkerValue } : {}),
+    required_surface_rows: requiredRows,
+  };
+  // ANOMALY / hard states PRESERVE the prior pending_since UNCHANGED (rev5.6) — never
+  // reset it to null (that laundered the 14d clock: pending -> future -> pending
+  // restarted at now). Only pending sets it, only stamped clears it.
+  if (cls.kind === "shape_error") {
+    return { ...base, source_date: null, age: null, status: "error", shape_error: true, shape_errors: cls.shape_errors, pending: { pending_since: priorPendingSince, ever_stamped: everStamped } };
+  }
+  if (cls.kind === "future") {
+    return {
+      ...base,
+      source_date: cls.source_date,
+      age: evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso }),
+      status: "future_date_anomaly",
+      future_date_anomaly: true,
+      pending: { pending_since: priorPendingSince, ever_stamped: everStamped },
+    };
+  }
+  if (cls.kind === "pending") {
+    // Sticky pending_since: preserve the prior first-seen timestamp (incl. one carried
+    // THROUGH an anomaly state); only initialize to now when there was truly no prior.
+    return {
+      ...base,
+      source_date: null,
+      age: null,
+      status: "unavailable_pending_source_stamp",
+      pending_source_stamp: true,
+      pending: { pending_since: priorPendingSince ?? nowIso, ever_stamped: everStamped },
+    };
+  }
+  // stamped: clears the pending clock (pending_since null), ever_stamped true.
+  const age = evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso });
+  return { ...base, source_date: cls.source_date, age, status: slaStatusForAge(age, def.max_staleness), pending: { pending_since: null, ever_stamped: true } };
+}
+
+function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, productCoverage, etfDaily1y, priorProductSurfacePending }) {
   const sourceDates = {
     s0_finra_occ_mapping_ledger: oldestRequiredIsoDate([
       finraOccLedger?.source_audit?.source_dates?.finra_source_date,
@@ -732,30 +867,19 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
       (Array.isArray(etfCoreBasket?.rows) ? etfCoreBasket.rows : []).map((row) => row?.proof?.quote_date),
     ),
     fenok_edge_coverage_index: isoDateOf(coverageIndex?.source_as_of),
-    product_surface_coverage: null, // see note above; rebuild timestamps are not freshness
+    // product_surface_coverage handled by buildProductSurfaceEntry (shape-strict).
     // hours unit keeps the raw timestamp (not date-truncated).
     etf_daily1y_readiness_admin: etfDaily1y?.generated_at ?? null,
   };
 
   return SOURCE_SLA_DEF.map((def) => {
+    // product_surface_coverage: shape-strict classify + sticky pending_since (rev5.3).
+    if (def.source_id === "product_surface_coverage") {
+      return buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending: priorProductSurfacePending });
+    }
+
     const sourceDate = sourceDates[def.source_id] ?? null;
     const flags = {};
-
-    // Honest pending stamp for the rebuild-timestamp-only source.
-    if (def.source_id === "product_surface_coverage" && PRODUCT_SURFACE_PENDING_SOURCE_STAMP) {
-      return {
-        source_id: def.source_id,
-        freshness_basis: def.freshness_basis,
-        source_date: null,
-        unit: def.unit,
-        calendar: def.calendar,
-        max_staleness: def.max_staleness,
-        required: def.required,
-        age: null,
-        status: "unavailable_pending_source_stamp",
-        pending_source_stamp: true,
-      };
-    }
 
     // Future-dated source: age helpers clamp future to 0 (would read fresh); flag it.
     if (isFutureSource(sourceDate, nowIso, def.unit)) {
@@ -799,7 +923,7 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
   });
 }
 
-function buildPayload(nowIso, priorRuntime) {
+function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const rimInputs = readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT) || readJson("computed/rim-index/inputs.json");
   const productCoverage = readJson("admin/product-surface-coverage.json");
@@ -836,7 +960,9 @@ function buildPayload(nowIso, priorRuntime) {
     rimInputs,
     etfCoreBasket,
     coverageIndex,
+    productCoverage,
     etfDaily1y,
+    priorProductSurfacePending,
   });
   const runtime = buildRuntime({ nowIso, env: process.env, priorRuntime, overallStatus });
 
@@ -869,16 +995,61 @@ function buildPayload(nowIso, priorRuntime) {
   };
 }
 
-function readPriorRuntime() {
+function readPriorKpiDoc() {
+  const priorPath = path.join(DATA_ROOT, KPI_REL_PATH);
+  let text;
   try {
-    const prior = JSON.parse(fs.readFileSync(path.join(DATA_ROOT, KPI_REL_PATH), "utf8"));
-    if (prior?.schema_version === SCHEMA_VERSION && prior.runtime && typeof prior.runtime === "object") {
-      return prior.runtime;
-    }
+    text = fs.readFileSync(priorPath, "utf8");
   } catch {
-    // missing prior or v1 -> no runtime carry-forward (bootstrap).
+    return null; // file MISSING -> genuine bootstrap
   }
-  return null;
+  // File EXISTS: unparseable = corruption, FAIL-CLOSED (never silently bootstrap).
+  let prior;
+  try {
+    prior = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`prior KPI at ${KPI_REL_PATH} exists but is unparseable JSON: ${error.message}`);
+  }
+  return prior?.schema_version === SCHEMA_VERSION ? prior : null; // v1/other -> bootstrap
+}
+
+function priorRuntimeOf(priorDoc) {
+  return priorDoc?.runtime && typeof priorDoc.runtime === "object" ? priorDoc.runtime : null;
+}
+
+// Carry-forward the prior product_surface pending marker { pending_since, ever_stamped }
+// from the prior committed root KPI (rev5.6, FAIL-CLOSED).
+//  - priorDoc null (missing / v1) -> genuine bootstrap.
+//  - prior v2 with NO stamp-slice lineage (no `pending` AND no required_surface_rows —
+//    a pre-stamp-slice Phase-A doc) -> legitimate migration, init as bootstrap.
+//  - prior v2 WITH stamp-slice lineage but the `pending` marker DELETED -> hard.
+//  - `pending` present but malformed (non-object / non-boolean ever_stamped /
+//    non-string-non-null / unparseable pending_since) -> hard.
+//  - `pending` present, status pending, pending_since === null -> hard (a pending
+//    state must carry a pending_since; never init a fresh clock).
+// pending_since is carried for ANY prior state (incl. one preserved through an anomaly
+// state), never gated on prior status — that gating was the clock-reset laundering path.
+function priorProductSurfacePendingOf(priorDoc) {
+  if (!priorDoc) return { pending_since: null, ever_stamped: false }; // genuine bootstrap
+  const entry = (Array.isArray(priorDoc.source_sla) ? priorDoc.source_sla : [])
+    .find((s) => s?.source_id === "product_surface_coverage");
+  const hasLineage = entry && (hasOwn(entry, "required_surface_rows") || hasOwn(entry, "source_stamp_version") || hasOwn(entry, "pending"));
+  if (!entry || !hasLineage) return { pending_since: null, ever_stamped: false }; // pre-stamp-slice -> init
+  const prior = entry.pending;
+  if (prior == null) {
+    throw new Error("prior product_surface has stamp-slice lineage but its pending marker is deleted");
+  }
+  if (typeof prior !== "object" || Array.isArray(prior) || typeof prior.ever_stamped !== "boolean") {
+    throw new Error(`prior product_surface pending marker malformed (ever_stamped): ${JSON.stringify(prior)}`);
+  }
+  if (prior.pending_since !== null
+    && (typeof prior.pending_since !== "string" || !Number.isFinite(new Date(prior.pending_since).getTime()))) {
+    throw new Error(`prior product_surface pending.pending_since malformed: ${JSON.stringify(prior.pending_since)}`);
+  }
+  if (entry.status === "unavailable_pending_source_stamp" && prior.pending_since === null) {
+    throw new Error("prior product_surface is pending but pending_since is null (malformed)");
+  }
+  return { pending_since: prior.pending_since, ever_stamped: prior.ever_stamped === true };
 }
 
 // temp-file -> validate -> rename (contract §4, both mirrors).
@@ -892,8 +1063,8 @@ function writeJsonAtomic(absPath, payload) {
 }
 
 export function buildKpiDocuments(nowIso = resolveNow()) {
-  const priorRuntime = readPriorRuntime();
-  const rootDoc = buildPayload(nowIso, priorRuntime);
+  const priorDoc = readPriorKpiDoc();
+  const rootDoc = buildPayload(nowIso, priorRuntimeOf(priorDoc), priorProductSurfacePendingOf(priorDoc));
   const publicDoc = projectPublicKpi(rootDoc, nowIso);
   return { rootDoc, publicDoc };
 }
