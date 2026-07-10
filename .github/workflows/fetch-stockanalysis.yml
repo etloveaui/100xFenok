@@ -294,6 +294,7 @@ jobs:
           node scripts/build-fenok-etf-signals.mjs
           node scripts/build-fenok-etf-action-index.mjs
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
+          npm --prefix 100xfenok-next run build:history-gap-daily1y
 
       - name: Fetch discovered Core Daily Basket delta once
         id: core-basket-delta
@@ -354,6 +355,7 @@ jobs:
           node scripts/build-fenok-etf-signals.mjs
           node scripts/build-fenok-etf-action-index.mjs
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
+          npm --prefix 100xfenok-next run build:history-gap-daily1y
 
       - name: Build Fenok Edge ETF derived readiness
         run: |

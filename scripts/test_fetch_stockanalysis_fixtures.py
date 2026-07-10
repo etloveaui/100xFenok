@@ -311,6 +311,22 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(rebuild.count(report_command), 1, "KRX lane reuses the canonical report target exactly once")
         self.assertLess(rebuild.index(report_command), rebuild.index(coverage_command))
 
+    def test_stockanalysis_workflow_refreshes_daily1y_report_after_signal_materialization(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
+        report_command = "npm --prefix 100xfenok-next run build:history-gap-daily1y"
+        signal_command = "node scripts/build-fenok-etf-signals.mjs"
+
+        primary = workflow.split("- name: Materialize Fenok Edge ETF Core Daily Basket candidate", 1)[1]
+        primary = primary.split("- name: Fetch discovered Core Daily Basket delta once", 1)[0]
+        self.assertEqual(primary.count(report_command), 1)
+        self.assertLess(primary.index(signal_command), primary.index(report_command))
+
+        delta = workflow.split("- name: Rebuild StockAnalysis consumers after Core Basket delta", 1)[1]
+        delta = delta.split("- name: Build Fenok Edge ETF derived readiness", 1)[0]
+        self.assertEqual(delta.count(report_command), 1)
+        self.assertLess(delta.index(signal_command), delta.index(report_command))
+        self.assertEqual(workflow.count(report_command), 2)
+
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
         tables = self.fetcher.parse_html_tables(html)
