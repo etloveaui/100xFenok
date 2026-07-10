@@ -211,6 +211,7 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
       watermarkIso: watermark,
       nowIso: buildNow,
       retentionDays: CADENCE.slot_retention_days,
+      graceMinutes: CADENCE.slot_grace_minutes,
     });
     const missed = deriveMissedSlots({
       dueSlots: due,

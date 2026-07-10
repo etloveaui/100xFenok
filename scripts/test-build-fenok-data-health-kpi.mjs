@@ -22,8 +22,10 @@ import {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
+  enumerateDueSlots,
+  deriveMissedSlots,
 } from "./build-fenok-data-health-kpi.mjs";
-import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS } from "./lib/kpi-contract-constants.mjs";
+import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, TRACKED_CRONS, CADENCE } from "./lib/kpi-contract-constants.mjs";
 import { ETF_CORE_DAILY_BASKET_CONFIG } from "./build-fenok-etf-core-daily-basket.mjs";
 import {
   checkV2Runtime,
@@ -1164,6 +1166,43 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.equal(runChecker(tmp, now).exit, 1, "Phase A: source_stamp_version deleted while rows carry source_as_of -> hard");
     assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "strict: same -> hard");
     ok("rev5.6-addendum(c): checker rejects source_stamp_version deletion on rows carrying stamp data (markerless-with-value structural hard)");
+  }
+}
+
+// 31. GRACE-AWARE MISSED SLOTS (hotfix for deploy run 29064993375) — a slot is missed
+// ONLY when now > slot_time + slot_grace_minutes; within grace it is NOT yet missable.
+{
+  const slotKey = "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z"; // 02:30Z slot
+  const watermark = "2026-07-10T00:00:00.000Z"; // before the slot
+  const grace = CADENCE.slot_grace_minutes; // 360
+  const enumAt = (nowIso) => enumerateDueSlots({ trackedCrons: TRACKED_CRONS, watermarkIso: watermark, nowIso, retentionDays: CADENCE.slot_retention_days, graceMinutes: grace });
+
+  // (a) slot due but within grace (+7m), unsatisfied => NOT missed
+  const inGrace = enumAt("2026-07-10T02:37:00.000Z");
+  assert.ok(!inGrace.includes(slotKey), "slot +7m is within 360m grace -> NOT due/missable");
+  assert.ok(!deriveMissedSlots({ dueSlots: inGrace, satisfiedSlotKeys: [], cronDeferrals: [] }).includes(slotKey),
+    "in-grace unsatisfied slot is NOT missed");
+
+  // (b) slot past grace (+361m), unsatisfied => missed
+  const pastGrace = enumAt("2026-07-10T08:31:00.000Z"); // 02:30 + 361m
+  assert.ok(pastGrace.includes(slotKey), "slot +361m is past 360m grace -> due");
+  assert.ok(deriveMissedSlots({ dueSlots: pastGrace, satisfiedSlotKeys: [], cronDeferrals: [] }).includes(slotKey),
+    "past-grace unsatisfied slot IS missed");
+  ok("hotfix(a/b): in-grace unsatisfied slot NOT missed; past-grace unsatisfied slot IS missed");
+
+  // (c) EXACT CI scenario: non-auth deploy rebuild refreshed generated_at to slot+6m with
+  // preserved empty slots; checker at slot+7m must re-derive [] and stay GREEN.
+  {
+    const buildAt = "2026-07-10T02:36:00.000Z"; // generated_at (slot+6m)
+    const checkAt = "2026-07-10T02:37:00.000Z"; // checker clock (slot+7m)
+    const tmp = mkTmp("ci-grace");
+    const rt = makeProducerRuntime({ builtAt: buildAt, slotKey: null, runId: "deploy" });
+    rt.cadence.v2_activated_at = watermark; // watermark BEFORE the 02:30 slot
+    rt.slots = { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] };
+    seedReadyV2(tmp, { now: buildAt, runtime: rt, sla: readySla(buildAt) });
+    assert.equal(runChecker(tmp, checkAt).exit, 0, "CI scenario: build slot+6m, preserved missed=[], check slot+7m -> GREEN");
+    assert.equal(runChecker(tmp, checkAt, { strict: true }).exit, 0, "CI scenario stays green under strict too");
+    ok("hotfix(c): exact CI repro (29064993375) — build slot+6m preserved empty slots, check slot+7m is GREEN");
   }
 }
 

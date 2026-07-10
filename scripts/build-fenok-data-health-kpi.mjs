@@ -142,10 +142,16 @@ export function inferSlotKey({ crons, workflowFile, jobStartedAtIso, graceMinute
   return occurrenceKey(workflowFile, best.cron, best.occMs);
 }
 
-export function enumerateDueSlots({ trackedCrons, watermarkIso, nowIso, retentionDays }) {
+// GRACE-AWARE (hotfix): a slot only becomes MISSABLE after its grace window expires —
+// now > occurrence + slot_grace_minutes. A slot still inside grace (a delayed
+// scheduled run can still legitimately claim it) must NOT be enumerated as due, or
+// builder emission (missed=[]) and checker re-derivation would disagree the moment a
+// deploy rebuild refreshes generated_at a few minutes past the slot.
+export function enumerateDueSlots({ trackedCrons, watermarkIso, nowIso, retentionDays, graceMinutes }) {
   const now = new Date(nowIso).getTime();
   const watermark = new Date(watermarkIso).getTime();
   if (!Number.isFinite(now) || !Number.isFinite(watermark)) return [];
+  const graceMs = Number(graceMinutes) * 60000;
   const startMs = Math.max(watermark, now - Number(retentionDays) * 86400000);
   const startDay = new Date(startMs);
   startDay.setUTCHours(0, 0, 0, 0);
@@ -156,7 +162,8 @@ export function enumerateDueSlots({ trackedCrons, watermarkIso, nowIso, retentio
       const parsed = parseCron(cron);
       if (!cronAllowsDay(parsed, day.getUTCDay())) continue;
       const occ = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), parsed.hour, parsed.minute, 0, 0);
-      if (occ < startMs || occ > now) continue;
+      // Missable only once past retention floor AND past the grace window.
+      if (occ < startMs || occ + graceMs >= now) continue;
       out.push(occurrenceKey(workflow_file, cron, occ));
     }
   }
@@ -337,6 +344,7 @@ export function buildRuntime({ nowIso, env, priorRuntime, overallStatus }) {
     watermarkIso: v2ActivatedAt,
     nowIso,
     retentionDays: CADENCE.slot_retention_days,
+    graceMinutes: CADENCE.slot_grace_minutes,
   });
   const missed = deriveMissedSlots({ dueSlots, satisfiedSlotKeys: satisfied, cronDeferrals });
   const historyEntry = {
