@@ -16,7 +16,7 @@ Output:
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import json
 from pathlib import Path
 import sys
@@ -120,6 +120,29 @@ INDEX_SOURCE_FILES = [
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def collection_date(value) -> str | None:
+    """YYYY-MM-DD date part of a collection-time fetched_at, real-calendar validated
+    (KPI v2 source stamp). date.fromisoformat rejects impossible dates (2026-02-31);
+    NEVER pass a rebuild generated_at here — only fetched_at-class collection times."""
+    if not isinstance(value, str):
+        return None
+    head = value.strip()[:10]
+    try:
+        date.fromisoformat(head)
+    except ValueError:
+        return None
+    return head
+
+
+def oldest_collection_date(values) -> str | None:
+    """OLDEST of the given collection dates; None if empty or any value is invalid
+    (fail-closed — a missing collection date must not be silently dropped)."""
+    dates = [collection_date(v) for v in values]
+    if not dates or any(d is None for d in dates):
+        return None
+    return min(dates)
 
 
 def load_json(path: Path):
@@ -820,6 +843,7 @@ def main(argv=None) -> None:
         rows_by_ticker = {}
 
     updated_rows = []
+    fetched_dates = []  # collection-time fetched_at dates for the KPI source_as_of stamp
     generated_at = now_iso()
     for ticker in tickers:
         yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
@@ -844,6 +868,10 @@ def main(argv=None) -> None:
         rel = Path("tickers") / f"{ticker}.json"
         payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
         assert_market_facts_payload(payload, ticker=ticker)
+        for fact_value in (payload.get("facts") or {}).values():
+            fetched = collection_date((fact_value or {}).get("fetched_at"))
+            if fetched:
+                fetched_dates.append(fetched)
         write_json(OUT / rel, payload)
         if mirror_public:
             write_json(PUBLIC_OUT / rel, payload)
@@ -859,9 +887,19 @@ def main(argv=None) -> None:
 
     rows = [rows_by_ticker[ticker] for ticker in sorted(rows_by_ticker)] if target_tickers else updated_rows
 
+    # KPI v2 source stamp (BACKLOG #331): OLDEST collection-time fetched_at across the
+    # tickers the stock_detail surface verifies. Additive root field; NEVER generated_at.
+    # For a partial (--tickers) refresh, fold with the prior stamp so a targeted refresh
+    # of a few fresh tickers cannot spuriously freshen the whole-universe stamp.
+    source_as_of = min(fetched_dates) if fetched_dates else None
+    if target_tickers:
+        prior_stamp = collection_date((load_json(OUT / "index.json") or {}).get("source_as_of"))
+        source_as_of = oldest_collection_date([source_as_of, prior_stamp]) if (source_as_of and prior_stamp) else (source_as_of or prior_stamp)
+
     index = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
+        "source_as_of": source_as_of,
         "count": len(rows),
         "source_files": INDEX_SOURCE_FILES,
         "resolver": {

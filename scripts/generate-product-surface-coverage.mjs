@@ -112,6 +112,20 @@ function oldestSourceDate(values) {
   return [...cleaned].sort()[0];
 }
 
+// Collection-RUN date (BACKLOG #331): the YYYY-MM-DD part of a fetch-run collection
+// timestamp (an exclusively-fetched artifact's generated_at, or an OLDEST fetched_at
+// stamp), real-calendar validated. Only for artifacts whose generated_at is a fetch-run
+// timestamp (verified writer-exclusive), NEVER a rebuild generated_at.
+function collectionDate(value) {
+  const day = dateOnly(firstDate(value));
+  return day && isRealCalendarDate(day) ? day : null;
+}
+function oldestCollectionDate(values) {
+  const dates = values.map(collectionDate);
+  if (dates.length === 0 || dates.some((date) => !date)) return null;
+  return [...dates].sort()[0];
+}
+
 function ageDays(value, now = Date.now()) {
   if (!value) return null;
   const time = new Date(value).getTime();
@@ -270,6 +284,16 @@ const marketValuationSourceAsOf = oldestSourceDate([
 ]);
 const screenerSourceAsOf = oldestSourceDate([stocksAnalyzer?.source_date]);
 
+// BACKLOG #331 — the remaining four surfaces, from VERIFIED writer-exclusive fetch-run
+// collection times (build-market-facts stamps market_facts.index.source_as_of = OLDEST
+// facts.*.fetched_at; fetch-stockanalysis owns surfaces/index.json + etf_universe.json,
+// whose generated_at is the fetch run, not a rebuild). Null (surface stays pending) if
+// its required collection input is missing — no guessing.
+const stockDetailSourceAsOf = collectionDate(marketFactsIndex?.source_as_of);
+const marketEventsSourceAsOf = collectionDate(surfaceIndex?.generated_at);
+const etfCenterSourceAsOf = collectionDate(etfUniverse?.generated_at);
+const sectorsSourceAsOf = oldestCollectionDate([surfaceIndex?.generated_at, marketFactsIndex?.source_as_of]);
+
 const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/market/events");
 const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sectors");
 const stockSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/stock/[ticker]");
@@ -328,7 +352,7 @@ const surfaces = [
       freshness("공시 요약 기준일", edgarAsOf, 14),
     ],
     "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
-    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), source_as_of: null },
+    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), source_as_of: stockDetailSourceAsOf },
   ),
   surface(
     "market_valuation",
@@ -364,7 +388,7 @@ const surfaces = [
       freshness("이벤트 표면 기준일", eventSurfaceAsOf, 7),
     ],
     "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
-    { as_of: eventSurfaceAsOf, source_as_of: null },
+    { as_of: eventSurfaceAsOf, source_as_of: marketEventsSourceAsOf },
   ),
   surface(
     "sectors",
@@ -379,7 +403,7 @@ const surfaces = [
       freshness("섹터 데이터 기준일", latestDate(eventSurfaceAsOf, marketFactsAsOf), 14),
     ],
     "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
-    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), source_as_of: null },
+    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), source_as_of: sectorsSourceAsOf },
   ),
   surface(
     "etf_center",
@@ -394,7 +418,7 @@ const surfaces = [
       freshness("ETF 기준일", etfAsOf, 7),
     ],
     "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
-    { as_of: etfAsOf, source_as_of: null },
+    { as_of: etfAsOf, source_as_of: etfCenterSourceAsOf },
   ),
   surface(
     "screener",

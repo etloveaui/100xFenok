@@ -204,7 +204,13 @@ function runChecker(tmp, nowIso, { strict = false } = {}) {
     });
     return { exit: 0 };
   } catch (error) {
-    return { exit: error.status ?? 1, stderr: String(error.stderr ?? "") };
+    const stderr = String(error.stderr ?? "");
+    const stdout = String(error.stdout ?? "");
+    // Surface the child's real failure in CI logs — a swallowed checker error
+    // turns an exit-code assertion into an undiagnosable AssertionError.
+    console.error(`[runChecker exit=${error.status ?? 1}] stderr:\n${stderr.slice(0, 2048)}`);
+    if (stdout) console.error(`[runChecker] stdout:\n${stdout.slice(0, 2048)}`);
+    return { exit: error.status ?? 1, stderr };
   }
 }
 
@@ -927,21 +933,45 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("FIX 4: fenok_edge_coverage_index plain unavailable stays a strict hard error (no exemption)");
 }
 
-// 27. FIX 5 — run the REAL generator against a temp root and assert the stamps
+// 27. real generator on temp root — ALL 6 surfaces stamp collection-time source dates (#331)
 {
-  const tmp = mkTmp("real-generator");
-  writeJson(path.join(tmp, "data", "computed", "rim-index", "inputs.json"), { indices: { KOSPI: { observed: { price: { as_of: "2026-07-03" } } }, SOX: { observed: { price: { as_of: "2026-07-01" } } } } });
-  writeJson(path.join(tmp, "data", "yardney", "yardney_model.json"), { data: [{ date: "2026-07-02" }] });
-  writeJson(path.join(tmp, "data", "global-scouter", "core", "stocks_analyzer.json"), { source_date: "2026-06-30" });
-  execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], {
-    env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"],
-  });
-  const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
-  const stamp = (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
-  assert.equal(stamp("market_valuation"), "2026-07-01", "real generator: market_valuation = OLDEST(rim KOSPI/SOX, yardeni)");
-  assert.equal(stamp("screener"), "2026-06-30", "real generator: screener = stocks_analyzer.source_date");
-  assert.equal(stamp("stock_detail"), null, "real generator: no-true-source surface stays null");
-  ok("FIX 5: real generate-product-surface-coverage.mjs runs on a temp root and stamps source_as_of correctly");
+  const runGen = (seed) => {
+    const tmp = mkTmp("real-generator");
+    const w = (rel, o) => writeJson(path.join(tmp, "data", ...rel), o);
+    w(["computed", "rim-index", "inputs.json"], { indices: { KOSPI: { observed: { price: { as_of: seed.rim } } }, SOX: { observed: { price: { as_of: seed.rim } } } } });
+    w(["yardney", "yardney_model.json"], { data: [{ date: seed.yard }] });
+    w(["global-scouter", "core", "stocks_analyzer.json"], { source_date: seed.screener });
+    w(["computed", "market_facts", "index.json"], { count: 3, source_as_of: seed.marketFacts, rows: [] });
+    w(["stockanalysis", "surfaces", "index.json"], { generated_at: seed.surfaces, results: [] });
+    w(["stockanalysis", "etf_universe.json"], { generated_at: seed.etfUniverse, records: [] });
+    execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"] });
+    const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
+    return (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
+  };
+
+  // READY: all six carry a real collection-time source date
+  const ready = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z" });
+  assert.equal(ready("market_valuation"), "2026-07-03");
+  assert.equal(ready("screener"), "2026-07-02");
+  assert.equal(ready("stock_detail"), "2026-07-08", "stock_detail = market_facts.source_as_of (OLDEST fetched_at, Python-stamped)");
+  assert.equal(ready("market_events"), "2026-07-09", "market_events = date(surfaces/index fetch-run generated_at)");
+  assert.equal(ready("etf_center"), "2026-07-07", "etf_center = date(etf_universe fetch-run generated_at)");
+  assert.equal(ready("sectors"), "2026-07-08", "sectors = OLDEST(surfaces fetch date, market_facts stamp)");
+
+  // STALE (old collection dates) still stamp — the KPI decides stale, not the generator
+  const stale = runGen({ rim: "2026-06-01", yard: "2026-06-01", screener: "2026-06-01", marketFacts: "2026-06-01", surfaces: "2026-06-01T00:00:00Z", etfUniverse: "2026-06-01T00:00:00Z" });
+  for (const id of ["stock_detail", "market_events", "etf_center", "sectors"]) assert.equal(stale(id), "2026-06-01", `${id} stamps an old date (stale decided downstream)`);
+
+  // FUTURE collection date flows through as a (future) stamp — the KPI flags the anomaly
+  const future = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-20T00:00:00Z", etfUniverse: "2026-07-07T22:37:04Z" });
+  assert.equal(future("market_events"), "2026-07-20", "future collection date is stamped verbatim (KPI classifies future_date_anomaly)");
+
+  // NULL fail-closed: missing market_facts stamp -> stock_detail & sectors stay null
+  const partial = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: undefined, surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z" });
+  assert.equal(partial("stock_detail"), null, "no market_facts stamp -> stock_detail null (fail-closed)");
+  assert.equal(partial("sectors"), null, "no market_facts stamp -> sectors null (OLDEST-required fail-closed)");
+  assert.equal(partial("market_events"), "2026-07-09", "market_events still stamps from surfaces alone");
+  ok("#331: real generator stamps all 6 surfaces (ready/stale/future) from collection-time dates; fail-closed to null when an input is missing");
 }
 
 // 28. rev5.5 STRICT-BYPASS PROBES
@@ -1204,6 +1234,55 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.equal(runChecker(tmp, checkAt, { strict: true }).exit, 0, "CI scenario stays green under strict too");
     ok("hotfix(c): exact CI repro (29064993375) — build slot+6m preserved empty slots, check slot+7m is GREEN");
   }
+}
+
+// 32. EXACT GRACE BOUNDARY (auditor-pinned) — a slot becomes missable ONLY when now is
+// STRICTLY past occ + grace. At exactly occ+360m it is NOT missed; one millisecond later
+// it is. Pins the live-measured boundary the hotfix relies on (enumerateDueSlots line:
+// `occ + graceMs >= now` => the grace edge is inclusive).
+{
+  const slotKey = "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z"; // occ 02:30Z
+  const watermark = "2026-07-10T00:00:00.000Z";
+  const grace = CADENCE.slot_grace_minutes; // 360 -> occ+grace = 08:30:00.000Z
+  const missedAt = (nowIso) => deriveMissedSlots({
+    dueSlots: enumerateDueSlots({ trackedCrons: TRACKED_CRONS, watermarkIso: watermark, nowIso, retentionDays: CADENCE.slot_retention_days, graceMinutes: grace }),
+    satisfiedSlotKeys: [], cronDeferrals: [],
+  });
+  assert.ok(!missedAt("2026-07-10T08:30:00.000Z").includes(slotKey), "exactly occ+360m (grace edge inclusive) -> NOT missed");
+  assert.ok(missedAt("2026-07-10T08:30:00.001Z").includes(slotKey), "occ+360m +1ms (strictly past grace) -> missed");
+  ok("exact grace boundary: +360m NOT missed, +360m+1ms missed (matches auditor's live measurement)");
+}
+
+// 33. BUILDER-INVOKED CI repro (auditor ride-along for hotfix(c)) — hotfix(c) hand-seeds
+// the v2 artifact; here the REAL builder emits the build-side runtime, then the checker
+// re-derives grace-aware at slot+7m and stays GREEN. Proves the emitted runtime (not a
+// synthetic one) survives the exact failing scenario of deploy run 29064993375.
+{
+  const watermark = "2026-07-10T00:00:00.000Z"; // BEFORE the 02:30Z slot
+  const buildAt = "2026-07-10T02:36:00.000Z";    // slot+6m: non-auth deploy rebuild
+  const checkAt = "2026-07-10T02:37:00.000Z";    // slot+7m: checker clock
+  const tmp = mkTmp("ci-grace-real");
+  // Prior v2 doc: watermark before the slot, empty slots, a real preserved producer.
+  const prior = makeProducerRuntime({ builtAt: "2026-07-10T02:00:00.000Z", slotKey: null, runId: "prior" });
+  prior.cadence.v2_activated_at = watermark;
+  prior.slots = { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] };
+  seedPrior(tmp, v2Doc(prior));
+  // INVOKE the builder as a non-authoritative deploy rebuild (push, no cron envelope).
+  const built = runBuilder(tmp, {
+    GITHUB_EVENT_NAME: "push",
+    GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main",
+    GITHUB_RUN_ID: "deploy", GITHUB_RUN_ATTEMPT: "1", GITHUB_ACTOR: "someuser", GITHUB_REF: "refs/heads/main",
+  }, buildAt).root;
+  // Build-side: non-auth rebuild preserves the empty slots + the pre-slot watermark verbatim.
+  assert.equal(built.runtime.authoritative_context.authoritative, false, "deploy rebuild is non-authoritative");
+  assert.deepEqual(built.runtime.slots.missed_slot_keys, [], "builder preserved empty missed slots (did not fabricate the in-grace 02:30 slot)");
+  assert.equal(built.runtime.cadence.v2_activated_at, watermark, "watermark preserved before the 02:30 slot (checker re-derives against it)");
+  // Transplant the REAL builder runtime into a lane-ready doc so the checker's status/lane
+  // gate is satisfied and only the grace-aware slot re-derivation is under test.
+  seedReadyV2(tmp, { now: buildAt, runtime: built.runtime, sla: readySla(buildAt) });
+  assert.equal(runChecker(tmp, checkAt).exit, 0, "checker re-derives the 02:30 slot as in-grace at slot+7m -> GREEN");
+  assert.equal(runChecker(tmp, checkAt, { strict: true }).exit, 0, "stays green under strict too");
+  ok("#331 ride-along: real builder output survives the 29064993375 scenario (build slot+6m -> check slot+7m GREEN)");
 }
 
 console.log(`\n# ${passed} fixtures passed`);
