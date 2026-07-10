@@ -184,6 +184,15 @@ jobs:
             echo "EFFECTIVE_HISTORY_GAPS_ONLY=${INPUT_HISTORY_GAPS_ONLY:-false}"
             echo "EFFECTIVE_REQUIRED_HISTORY_PERIODS=${INPUT_REQUIRED_HISTORY_PERIODS:-}"
             echo "EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS=${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}"
+            echo "EFFECTIVE_CORE_BASKET_DELTA_PASS=$(
+              if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ] || [ "${INPUT_DISCOVER_UNIVERSE:-false}" = "true" ]; then
+                echo true
+              else
+                echo false
+              fi
+            )"
+            echo "EFFECTIVE_STOCKANALYSIS_SLEEP=${INPUT_SLEEP:-0.25}"
+            echo "EFFECTIVE_YF_ETF_FALLBACK=${INPUT_YF_ETF_FALLBACK:-true}"
           } >> "$GITHUB_ENV"
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
@@ -220,8 +229,14 @@ jobs:
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
+            if [ "${INPUT_YF_ETF_FALLBACK:-true}" != "true" ] && [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --fail-on-error"; fi
           fi
-          python3 scripts/fetch-stockanalysis.py $ARGS
+          set -o pipefail
+          PRIMARY_FETCH_LOG="$RUNNER_TEMP/stockanalysis-primary-fetch.log"
+          PRIMARY_FETCHED_TICKERS="$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt"
+          python3 scripts/fetch-stockanalysis.py $ARGS | tee "$PRIMARY_FETCH_LOG"
+          awk '/^\[etf [0-9]+\/[0-9]+\]/ && $4 != "FAIL" { print $3 }' "$PRIMARY_FETCH_LOG" \
+            | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
       - name: Refresh history-gap plan after live backfill
         if: ${{ github.event.inputs.history_gaps_only == 'true' || github.event.schedule == '50 22 * * 1-5' }}
@@ -274,11 +289,74 @@ jobs:
           if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
           npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
 
-      - name: Build Fenok Edge ETF derived readiness
+      - name: Materialize Fenok Edge ETF Core Daily Basket candidate
         run: |
           node scripts/build-fenok-etf-signals.mjs
           node scripts/build-fenok-etf-action-index.mjs
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
+
+      - name: Fetch discovered Core Daily Basket delta once
+        id: core-basket-delta
+        run: |
+          echo "delta_count=0" >> "$GITHUB_OUTPUT"
+          if [ "${EFFECTIVE_CORE_BASKET_DELTA_PASS:-false}" != "true" ]; then
+            echo "[core-basket-delta] disabled for this run profile"
+            exit 0
+          fi
+
+          PLAN_PATH="$RUNNER_TEMP/stockanalysis-core-basket-delta.json"
+          DELTA_PATH="$RUNNER_TEMP/stockanalysis-core-basket-delta.txt"
+          node scripts/plan-stockanalysis-core-basket-delta.mjs \
+            --basket data/admin/fenok-etf-core-daily-basket.json \
+            --fetched "$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt" \
+            --output "$DELTA_PATH" \
+            --limit 40 \
+            --json > "$PLAN_PATH"
+
+          DELTA_COUNT="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(String(payload.delta_count));' "$PLAN_PATH")"
+          echo "delta_count=$DELTA_COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$DELTA_COUNT" = "0" ]; then
+            echo "[core-basket-delta] no newly selected tickers"
+            exit 0
+          fi
+
+          DELTA_ETFS="$(paste -sd, "$DELTA_PATH")"
+          DELTA_ARGS=(--etfs "$DELTA_ETFS" --sleep "${EFFECTIVE_STOCKANALYSIS_SLEEP:-0.25}" --classify-etf-catalogs)
+          if [ "${EFFECTIVE_YF_ETF_FALLBACK:-true}" = "true" ]; then
+            DELTA_ARGS+=(--yf-etf-fallback)
+          else
+            DELTA_ARGS+=(--fail-on-error)
+          fi
+          python3 scripts/fetch-stockanalysis.py "${DELTA_ARGS[@]}"
+
+      - name: Rebuild StockAnalysis consumers after Core Basket delta
+        if: ${{ steps.core-basket-delta.outputs.delta_count != '0' }}
+        env:
+          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
+          INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
+        run: |
+          python3 scripts/build-market-facts.py
+          node scripts/build-rim-index.mjs
+          node scripts/build-rim-index.mjs --check
+          python3 scripts/build-market-source-parity.py
+
+          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
+          MAX_AGE_HOURS="${EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS:-${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}}"
+          PLAN_ARGS=(--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0)
+          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then PLAN_ARGS+=(--required-history-periods "$REQUIRED_HISTORY_PERIODS"); fi
+          if [ -n "$MAX_AGE_HOURS" ]; then PLAN_ARGS+=(--incremental-etf-max-age-hours "$MAX_AGE_HOURS"); fi
+          python3 scripts/fetch-stockanalysis.py "${PLAN_ARGS[@]}"
+
+          REPORT_ARGS=(--write-report)
+          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then REPORT_ARGS+=(--required-history-periods "$REQUIRED_HISTORY_PERIODS"); fi
+          npm --prefix 100xfenok-next run qa:history-gap -- "${REPORT_ARGS[@]}"
+
+          node scripts/build-fenok-etf-signals.mjs
+          node scripts/build-fenok-etf-action-index.mjs
+          node scripts/build-fenok-etf-core-daily-basket.mjs --check
+
+      - name: Build Fenok Edge ETF derived readiness
+        run: |
           node scripts/build-fenok-edge-coverage-index.mjs
           node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
           node scripts/write-fenok-etf-daily1y-readiness.mjs --check

@@ -7,6 +7,7 @@ import importlib.util
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 import urllib.error
@@ -90,6 +91,105 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIn("20 23 * * 0", workflow)
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', workflow)
         self.assertNotIn("STOCKANALYSIS_WEEKLY_MAX_UNIVERSE_PAGES", workflow)
+
+    def test_discovery_growth_uses_one_bounded_core_basket_delta_pass(self) -> None:
+        fixture = json.loads((FIXTURE_DIR / "core_basket_discovery_growth.fixture.json").read_text(encoding="utf-8"))
+        planner = ROOT / "scripts" / "plan-stockanalysis-core-basket-delta.mjs"
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            basket_path = tmp_path / "basket.json"
+            fetched_path = tmp_path / "fetched.txt"
+            delta_path = tmp_path / "delta.txt"
+            basket_path.write_text(
+                json.dumps({"daily_refresh_universe": {"tickers": fixture["selected_tickers"]}}),
+                encoding="utf-8",
+            )
+            fetched_path.write_text("\n".join(fixture["fetched_tickers"]) + "\n", encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    "node",
+                    str(planner),
+                    "--basket",
+                    str(basket_path),
+                    "--fetched",
+                    str(fetched_path),
+                    "--output",
+                    str(delta_path),
+                    "--limit",
+                    "40",
+                    "--json",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            plan = json.loads(result.stdout)
+            self.assertEqual(plan["delta_tickers"], fixture["expected_delta_tickers"])
+            self.assertEqual(delta_path.read_text(encoding="utf-8").splitlines(), fixture["expected_delta_tickers"])
+
+            basket_path.write_text(
+                json.dumps({"daily_refresh_universe": {"tickers": [f"NEW{i:02d}" for i in range(40)]}}),
+                encoding="utf-8",
+            )
+            fetched_path.write_text("", encoding="utf-8")
+            at_limit = subprocess.run(
+                [
+                    "node",
+                    str(planner),
+                    "--basket",
+                    str(basket_path),
+                    "--fetched",
+                    str(fetched_path),
+                    "--output",
+                    str(delta_path),
+                    "--limit",
+                    "40",
+                    "--json",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(json.loads(at_limit.stdout)["delta_count"], 40)
+
+            basket_path.write_text(
+                json.dumps({"daily_refresh_universe": {"tickers": [f"NEW{i:02d}" for i in range(41)]}}),
+                encoding="utf-8",
+            )
+            fetched_path.write_text("", encoding="utf-8")
+            overflow = subprocess.run(
+                [
+                    "node",
+                    str(planner),
+                    "--basket",
+                    str(basket_path),
+                    "--fetched",
+                    str(fetched_path),
+                    "--output",
+                    str(delta_path),
+                    "--limit",
+                    "40",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(overflow.returncode, 0)
+            self.assertIn("delta 41 exceeds limit 40", overflow.stderr)
+
+        workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
+        delta_step = workflow.split("- name: Fetch discovered Core Daily Basket delta once", 1)[1]
+        delta_step = delta_step.split("- name: Rebuild StockAnalysis consumers after Core Basket delta", 1)[0]
+        self.assertIn("--limit 40", delta_step)
+        self.assertEqual(delta_step.count('python3 scripts/fetch-stockanalysis.py "${DELTA_ARGS[@]}"'), 1)
+        self.assertIn("DELTA_ARGS+=(--fail-on-error)", delta_step)
+        self.assertNotRegex(delta_step, r"(?m)^\s*(?:for|while)\s")
+
+        primary_step = workflow.split("- name: Run StockAnalysis fetch", 1)[1]
+        primary_step = primary_step.split("- name: Refresh history-gap plan after live backfill", 1)[0]
+        self.assertIn('ARGS="$ARGS --fail-on-error"', primary_step)
 
     def test_krx_workflow_refreshes_daily1y_report_before_coverage_builder(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fenok-edge-krx-daily.yml").read_text(encoding="utf-8")
