@@ -183,8 +183,9 @@ def validate_observation(record: Mapping[str, Any], *, require_valid: bool = Fal
         "natural",
         "cache",
         "rebuild",
+        "migration",
     }:
-        raise SchemaError("observation_origin must be natural, cache, or rebuild")
+        raise SchemaError("observation_origin must be natural, cache, rebuild, or migration")
     has_failure_extension = "payload_available" in row or "failure_detail_sha256" in row
     if has_failure_extension:
         if row["validation_status"] != "invalid" or row.get("payload_available") is not False:
@@ -478,6 +479,7 @@ class DataSupplyStateStore:
         allowed_provider_truth_roots: tuple[str, ...] = ("data/stockanalysis", "data/yf"),
         provider_truth_root: Path | str | None = None,
         now_fn: Callable[[], dt.datetime] | None = None,
+        defer_maintenance: bool = False,
     ):
         self.root = Path(root).expanduser().resolve(strict=False)
         missing: list[Path] = []
@@ -501,6 +503,10 @@ class DataSupplyStateStore:
         )
         self.provider_truth_root = Path(provider_truth_root).expanduser().resolve() if provider_truth_root else None
         self._now_fn = now_fn or (lambda: dt.datetime.now(dt.timezone.utc))
+        if not isinstance(defer_maintenance, bool):
+            raise SchemaError("defer_maintenance must be a boolean")
+        self._defer_maintenance = defer_maintenance
+        self._generation_cache: dict[tuple[str, str], dict[str, Any]] = {}
 
     def _now(self) -> dt.datetime:
         value = self._now_fn()
@@ -801,6 +807,9 @@ class DataSupplyStateStore:
 
     def _validate_generation(self, domain: str, transaction_id: str) -> dict[str, Any]:
         _safe_component(transaction_id, "transaction_id")
+        cache_key = (domain, transaction_id)
+        if self._defer_maintenance and cache_key in self._generation_cache:
+            return dict(self._generation_cache[cache_key])
         generation = self._domain_dir(domain) / "generations" / transaction_id
         manifest_path = generation / "manifest.json"
         manifest = self._read_json(manifest_path)
@@ -904,7 +913,7 @@ class DataSupplyStateStore:
             self._validate_payload_refs(lkg)
         except SchemaError as exc:
             raise IntegrityError("generation payload ref violates its allowlist") from exc
-        return {
+        result = {
             "transaction_id": transaction_id,
             "current": current,
             "lkg": lkg,
@@ -915,6 +924,9 @@ class DataSupplyStateStore:
             "prepared_at": prepared_at,
             "prepared_expires_at": prepared_expires_at,
         }
+        if self._defer_maintenance:
+            self._generation_cache[cache_key] = dict(result)
+        return result
 
     def _read_active_domain_unlocked(self, domain: str) -> dict[str, Any]:
         domain_dir = self._domain_dir(domain)
@@ -1076,6 +1088,7 @@ class DataSupplyStateStore:
         self._failpoint("after_generation_directory_fsync")
         generation.rmdir()
         self._fsync_directory(generation_root)
+        self._generation_cache.pop((domain, transaction_id), None)
 
     def _remove_incomplete_generation_directory_unlocked(
         self,
@@ -1096,6 +1109,7 @@ class DataSupplyStateStore:
         self._fsync_directory(generation)
         generation.rmdir()
         self._fsync_directory(generation_root)
+        self._generation_cache.pop((domain, transaction_id), None)
 
     def _reconcile_stale_prepared_unlocked(
         self,
@@ -1272,18 +1286,19 @@ class DataSupplyStateStore:
             if active["transaction_id"] != expected_active_transaction_id:
                 raise ConcurrencyError("stale expected_active_transaction_id")
             now = self._now()
-            self._reconcile_stale_prepared_unlocked(
-                domain,
-                now=now,
-                active=active,
-            )
-            live_prepared = self._live_prepared_generation_ids_unlocked(
-                domain,
-                now=now,
-                active=active,
-            )
-            if len(live_prepared) >= MAX_LIVE_PREPARED_GENERATIONS:
-                raise ConcurrencyError("live prepared generation cap reached")
+            if not self._defer_maintenance:
+                self._reconcile_stale_prepared_unlocked(
+                    domain,
+                    now=now,
+                    active=active,
+                )
+                live_prepared = self._live_prepared_generation_ids_unlocked(
+                    domain,
+                    now=now,
+                    active=active,
+                )
+                if len(live_prepared) >= MAX_LIVE_PREPARED_GENERATIONS:
+                    raise ConcurrencyError("live prepared generation cap reached")
             prior_current = active["current"]
             prior_lkg = active["lkg"]
             prior_recovery = active["recovery"]
@@ -1462,19 +1477,20 @@ class DataSupplyStateStore:
             if active["transaction_id"] != expected_active_transaction_id:
                 raise ConcurrencyError("stale expected_active_transaction_id")
             now = self._now()
-            self._reconcile_stale_prepared_unlocked(
-                domain,
-                now=now,
-                active=active,
-            )
-            if len(
-                self._live_prepared_generation_ids_unlocked(
+            if not self._defer_maintenance:
+                self._reconcile_stale_prepared_unlocked(
                     domain,
                     now=now,
                     active=active,
                 )
-            ) >= MAX_LIVE_PREPARED_GENERATIONS:
-                raise ConcurrencyError("live prepared generation cap reached")
+                if len(
+                    self._live_prepared_generation_ids_unlocked(
+                        domain,
+                        now=now,
+                        active=active,
+                    )
+                ) >= MAX_LIVE_PREPARED_GENERATIONS:
+                    raise ConcurrencyError("live prepared generation cap reached")
             prior_current = active["current"]
             prior_selected = prior_current.get(entity)
             audit_lkg = active["lkg"].get(entity, prior_selected)
@@ -1487,7 +1503,7 @@ class DataSupplyStateStore:
                     raise SchemaError("unexpired selected LKG prevents unavailable")
 
             next_current = dict(prior_current)
-            next_current.pop(entity)
+            next_current.pop(entity, None)
             next_lkg = dict(active["lkg"])
             if prior_selected is not None:
                 next_lkg.setdefault(entity, prior_selected)
@@ -1583,10 +1599,11 @@ class DataSupplyStateStore:
                 self._clear_matching_pending_unlocked(generation)
             except DataSupplyStateError:
                 pass
-            self._prune_domain_unlocked(
-                domain,
-                in_flight_generation_ids={transaction_id},
-            )
+            if not self._defer_maintenance:
+                self._prune_domain_unlocked(
+                    domain,
+                    in_flight_generation_ids={transaction_id},
+                )
             return self._read_active_domain_unlocked(domain)
 
     def recover_domain(self, domain: str) -> dict[str, Any]:
@@ -1601,10 +1618,11 @@ class DataSupplyStateStore:
                 self._clear_matching_pending_unlocked(active)
             except DataSupplyStateError:
                 pass
-            self._prune_domain_unlocked(
-                domain,
-                in_flight_generation_ids={active["transaction_id"]},
-            )
+            if not self._defer_maintenance:
+                self._prune_domain_unlocked(
+                    domain,
+                    in_flight_generation_ids={active["transaction_id"]},
+                )
             return active
 
     def rollback_domain(
@@ -1662,10 +1680,11 @@ class DataSupplyStateStore:
             self._failpoint("after_active_replace")
             self._failpoint("before_resolution_append")
             self._record_resolution(decision)
-            self._prune_domain_unlocked(
-                domain,
-                in_flight_generation_ids={target_transaction_id},
-            )
+            if not self._defer_maintenance:
+                self._prune_domain_unlocked(
+                    domain,
+                    in_flight_generation_ids={target_transaction_id},
+                )
             return self._read_active_domain_unlocked(domain)
 
     def _validate_pending_pointer(
@@ -1779,6 +1798,68 @@ class DataSupplyStateStore:
             raise IntegrityError("provider LKG latest object digest mismatch")
         return pointer
 
+    def _committed_transaction_ids_from_history(self, domain: str) -> set[str]:
+        directory = self.root / "history" / "resolutions"
+        if not directory.exists():
+            return set()
+        if directory.is_symlink() or not directory.is_dir():
+            raise IntegrityError("resolution history root is unsafe")
+        committed: set[str] = set()
+        for history in sorted(directory.glob("*.jsonl")):
+            day = history.stem
+            with self._lock(directory / f".{day}.lock", shared=True):
+                payload = history.read_bytes()
+            if payload and not payload.endswith(b"\n"):
+                raise IntegrityError("resolution history has an uncommitted tail")
+            for line in payload.splitlines():
+                try:
+                    record = json.loads(line.decode("utf-8"))
+                    decision = _validate_decision(record)
+                except (UnicodeDecodeError, json.JSONDecodeError, SchemaError) as exc:
+                    raise IntegrityError("resolution history contains an invalid event") from exc
+                transaction_id = decision.get("transaction_id")
+                if decision["domain"] == domain and transaction_id is not None:
+                    committed.add(transaction_id)
+        return committed
+
+    def _consumed_observation_ids_from_history(self, domain: str) -> set[str]:
+        directory = self.root / "history" / "resolutions"
+        if not directory.exists():
+            return set()
+        consumed: set[str] = set()
+        for history in sorted(directory.glob("*.jsonl")):
+            day = history.stem
+            with self._lock(directory / f".{day}.lock", shared=True):
+                payload = history.read_bytes()
+            if payload and not payload.endswith(b"\n"):
+                raise IntegrityError("resolution history has an uncommitted tail")
+            for line in payload.splitlines():
+                try:
+                    decision = _validate_decision(json.loads(line.decode("utf-8")))
+                except (UnicodeDecodeError, json.JSONDecodeError, SchemaError) as exc:
+                    raise IntegrityError("resolution history contains an invalid event") from exc
+                if decision["domain"] == domain and decision.get("transaction_id") is not None:
+                    consumed.update(decision["candidate_event_ids"])
+                    consumed.update(decision["evidence_event_ids"])
+        return consumed
+
+    def _live_prepared_generation_ids_deferred(
+        self,
+        domain: str,
+        *,
+        now: dt.datetime,
+        retained_generation_ids: set[str],
+    ) -> list[str]:
+        committed = self._committed_transaction_ids_from_history(domain)
+        live: list[str] = []
+        for path in self._generation_directories(domain):
+            if path.name in retained_generation_ids or path.name in committed:
+                continue
+            generation = self._validate_generation(domain, path.name)
+            if now < generation["prepared_expires_at"]:
+                live.append(path.name)
+        return live
+
     def _collect_domain_pins_unlocked(
         self,
         domain: str,
@@ -1788,13 +1869,22 @@ class DataSupplyStateStore:
         active = self._read_active_domain_unlocked(domain)
         now = self._now()
         retained = set(active.get("retained_generation_ids", []))
-        live_prepared = set(
-            self._live_prepared_generation_ids_unlocked(
-                domain,
-                now=now,
-                active=active,
+        if self._defer_maintenance:
+            live_prepared = set(
+                self._live_prepared_generation_ids_deferred(
+                    domain,
+                    now=now,
+                    retained_generation_ids=retained,
+                )
             )
-        )
+        else:
+            live_prepared = set(
+                self._live_prepared_generation_ids_unlocked(
+                    domain,
+                    now=now,
+                    active=active,
+                )
+            )
         generation_pins = retained | live_prepared | set(in_flight_generation_ids or set())
         object_pins: set[str] = set()
         for transaction_id in sorted(generation_pins):
@@ -1955,7 +2045,8 @@ class DataSupplyStateStore:
             generation_candidates: list[str] = []
             if prune_generations:
                 for path in self._generation_directories(domain):
-                    self._validate_generation(domain, path.name)
+                    if not self._defer_maintenance or path.name in generation_pins:
+                        self._validate_generation(domain, path.name)
                     if path.name not in generation_pins:
                         generation_candidates.append(path.name)
         except (DataSupplyStateError, OSError, ValueError):
@@ -1990,7 +2081,42 @@ class DataSupplyStateStore:
         domain = _safe_component(domain, "domain")
         domain_dir = self._domain_dir(domain)
         with self._lock(domain_dir / ".lock"):
+            self._generation_cache.clear()
             return self._prune_domain_unlocked(domain)
+
+    def reconcile_committed_pending(self, domain: str) -> int:
+        """Remove only pending pointers cited by transaction-bound committed decisions."""
+
+        domain = _safe_component(domain, "domain")
+        with self._lock(self._domain_dir(domain) / ".lock"):
+            consumed = self._consumed_observation_ids_from_history(domain)
+            providers_root = self.root / "providers"
+            if not providers_root.exists():
+                return 0
+            cleared = 0
+            for provider_dir in sorted(providers_root.iterdir(), key=lambda path: path.name):
+                provider = _safe_component(provider_dir.name, "provider")
+                provider_domain = provider_dir / domain
+                pending_root = provider_domain / "pending"
+                if not pending_root.exists():
+                    continue
+                for pending in sorted(pending_root.glob("*.json")):
+                    entity = _safe_component(pending.stem, "pending entity")
+                    with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
+                        if not pending.exists():
+                            continue
+                        pointer = self._validate_pending_pointer(
+                            pending,
+                            provider=provider,
+                            domain=domain,
+                            entity=entity,
+                        )
+                        if pointer["observation_event_id"] not in consumed:
+                            continue
+                        pending.unlink()
+                        self._fsync_directory(pending.parent)
+                        cleared += 1
+            return cleared
 
     def _clear_matching_pending_unlocked(self, generation: Mapping[str, Any]) -> bool:
         decision = generation.get("decision", {})
@@ -1998,33 +2124,47 @@ class DataSupplyStateStore:
         if not isinstance(entity, str) or entity == "domain":
             return False
         selected = generation.get("current", {}).get(entity)
-        if not isinstance(selected, Mapping):
+        domain = decision.get("domain")
+        if not isinstance(domain, str):
             return False
-        provider = selected["provider"]
-        domain = selected["domain"]
-        pending = self.root / "providers" / provider / domain / "pending" / f"{entity}.json"
-        if not pending.exists():
+        consumed_event_ids = set(decision.get("candidate_event_ids", [])) | set(
+            decision.get("evidence_event_ids", [])
+        )
+        if not consumed_event_ids:
             return False
-        provider_domain = self.root / "providers" / provider / domain
-        with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
+        providers_root = self.root / "providers"
+        if not providers_root.exists():
+            return False
+        cleared = False
+        for provider_dir in sorted(providers_root.iterdir(), key=lambda path: path.name):
+            if provider_dir.is_symlink() or not provider_dir.is_dir():
+                raise IntegrityError("providers root contains an unsafe entry")
+            provider = _safe_component(provider_dir.name, "provider")
+            provider_domain = provider_dir / domain
+            pending = provider_domain / "pending" / f"{entity}.json"
             if not pending.exists():
-                return False
-            pointer = self._validate_pending_pointer(
-                pending,
-                provider=provider,
-                domain=domain,
-                entity=entity,
-            )
-            ref = selected["payload_ref"]
-            if (
-                pointer["observation_event_id"] != selected.get("candidate_event_id")
-                or pointer["sha256"] != ref["sha256"]
-                or pointer["path"] != ref["path"]
-            ):
-                return False
-            pending.unlink()
-            self._fsync_directory(pending.parent)
-            return True
+                continue
+            with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
+                if not pending.exists():
+                    continue
+                pointer = self._validate_pending_pointer(
+                    pending,
+                    provider=provider,
+                    domain=domain,
+                    entity=entity,
+                )
+                if pointer["observation_event_id"] not in consumed_event_ids:
+                    continue
+                if isinstance(selected, Mapping) and selected.get("provider") == provider:
+                    ref = selected["payload_ref"]
+                    if pointer["sha256"] != ref["sha256"]:
+                        continue
+                    if ref["kind"] == "provider_object" and pointer["path"] != ref["path"]:
+                        continue
+                pending.unlink()
+                self._fsync_directory(pending.parent)
+                cleared = True
+        return cleared
 
     def preserve_current_as_provider_lkg(
         self,
@@ -2116,11 +2256,12 @@ class DataSupplyStateStore:
         domain_dir = self._domain_dir(domain)
         with self._lock(domain_dir / ".lock"):
             active = self._read_active_domain_unlocked(domain)
-            self._reconcile_stale_prepared_unlocked(
-                domain,
-                now=self._now(),
-                active=active,
-            )
+            if not self._defer_maintenance:
+                self._reconcile_stale_prepared_unlocked(
+                    domain,
+                    now=self._now(),
+                    active=active,
+                )
             with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
                 object_path = self.root / relative_path
                 self._write_immutable_bytes(
@@ -2151,10 +2292,11 @@ class DataSupplyStateStore:
                     failpoint_prefix="provider_pending",
                 )
                 self._failpoint("after_provider_pending")
-                self._prune_domain_unlocked(
-                    domain,
-                    prune_generations=False,
-                )
+                if not self._defer_maintenance:
+                    self._prune_domain_unlocked(
+                        domain,
+                        prune_generations=False,
+                    )
         return {
             "sha256": payload_sha,
             "path": relative_path,

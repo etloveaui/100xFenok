@@ -320,6 +320,8 @@ class DataSupplyStateTests(unittest.TestCase):
         pending = self.root / "providers/stockanalysis/etf_detail/pending/VYMI.json"
         pointer = json.loads(pending.read_text(encoding="utf-8"))
         self.assertEqual(pointer["path"], newer_ref["path"])
+        self.assertEqual(self.store.reconcile_committed_pending("etf_detail"), 0)
+        self.assertTrue(pending.exists())
         self.assertTrue((self.root / newer_ref["path"]).exists())
         self.assertTrue((self.root / prepared_selected["payload_ref"]["path"]).exists())
 
