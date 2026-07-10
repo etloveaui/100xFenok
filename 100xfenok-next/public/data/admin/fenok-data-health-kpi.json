@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-10T18:27:44.843Z",
+  "generated_at": "2026-07-10T20:34:36.462Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -14,7 +14,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v1",
     "built_at": "2026-07-10T12:47:25.889Z",
-    "evaluated_at": "2026-07-10T18:27:44.843Z",
+    "evaluated_at": "2026-07-10T20:34:36.462Z",
     "fresh": true,
     "missed_slot_count": 0,
     "hard_age_ok": true
@@ -56,13 +56,13 @@
     {
       "source_id": "fenok_edge_coverage_index",
       "freshness_basis": ".source_as_of",
-      "source_date": null,
+      "source_date": "2026-07-07",
       "unit": "business_days",
       "calendar": "us_market",
       "max_staleness": 3,
       "required": true,
-      "age": null,
-      "status": "unavailable"
+      "age": 3,
+      "status": "ready"
     },
     {
       "source_id": "product_surface_coverage",
@@ -109,49 +109,49 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-10T18:07:05.001Z",
+      "source_date": "2026-07-10T20:30:54.028Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.34,
+      "age": 0.06,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-10T13:50:25.579Z",
+      "generated_at": "2026-07-10T20:30:53.597Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T18:27:44.231Z",
+      "generated_at": "2026-07-10T20:34:35.675Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T18:27:44.684Z",
+      "generated_at": "2026-07-10T20:34:36.261Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-10T13:50:25.774Z",
+      "generated_at": "2026-07-10T20:30:53.872Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-10T18:07:05.001Z",
+      "generated_at": "2026-07-10T20:30:54.028Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-10T13:50:00.821Z",
+      "generated_at": "2026-07-10T20:30:39.147Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -171,7 +171,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T13:50:25.579Z",
+      "as_of": "2026-07-10T20:30:53.597Z",
       "counts": {
         "active_total": 1172,
         "by_market": [
@@ -369,7 +369,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T18:07:05.001Z",
+      "as_of": "2026-07-10T20:30:54.028Z",
       "counts": {
         "eligible_etf_count": 4515,
         "scored_public_etf": 4515,
@@ -435,7 +435,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T18:27:44.231Z",
+      "as_of": "2026-07-10T20:34:35.675Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -546,7 +546,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T18:27:44.684Z",
+      "as_of": "2026-07-10T20:34:36.261Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -563,7 +563,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T18:27:44.684Z"
+          "detail": "2026-07-10T20:34:36.261Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -594,7 +594,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T13:50:25.774Z",
+      "as_of": "2026-07-10T20:30:53.872Z",
       "counts": {
         "active_us_total": 744,
         "plain_us_finra_denominator": 685,
@@ -606,10 +606,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-10T12:47:20.138Z",
+          "signals_generated_at": "2026-07-10T20:30:27.281Z",
           "finra_source_date": "20260708",
           "occ_source_date": "20260707",
-          "coverage_index_generated_at": "2026-07-10T13:50:25.579Z",
+          "coverage_index_generated_at": "2026-07-10T20:30:53.597Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -636,7 +636,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T13:50:25.774Z"
+          "detail": "2026-07-10T20:30:53.872Z"
         },
         {
           "id": "finra_plain_us_ready",
@@ -674,7 +674,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T18:27:44.859Z",
+      "as_of": "2026-07-10T20:34:36.482Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -716,6 +716,27 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "deploy post-smoke contract"
+        },
+        {
+          "id": "phase_b_checker_strict",
+          "label": "Phase B checker strict mode",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "strict checker wiring"
+        },
+        {
+          "id": "phase_b_pending_max_age",
+          "label": "Phase B pending age enforcement",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "14-day pending exemption expiry is active under strict"
+        },
+        {
+          "id": "deploy_worker_smoke_strict",
+          "label": "Worker live KPI smoke strict mode",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "live producer freshness fails closed"
         },
         {
           "id": "yf_daily_no_default_cap",
