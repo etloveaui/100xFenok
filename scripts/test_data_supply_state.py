@@ -1028,6 +1028,34 @@ class DataSupplyStateTests(unittest.TestCase):
         self.assertEqual(selection_age_status("fresh_primary", 168 * 3600 + 1), "stale")
         self.assertEqual(selection_age_status("lkg_primary", 14 * 86400), "stale")
         self.assertEqual(selection_age_status("lkg_primary", 14 * 86400 + 1), "unavailable")
+        self.assertEqual(
+            selection_age_status("fresh_primary", 168 * 3600, domain="stock_detail"),
+            "fresh",
+        )
+        self.assertEqual(
+            selection_age_status("lkg_primary", 14 * 86400 + 1, domain="stock_detail"),
+            "unavailable",
+        )
+        with self.assertRaises(SchemaError):
+            selection_age_status("fresh_primary", 0, domain="unknown_detail")
+
+    def test_stock_detail_crash_probe_defaults_can_be_overridden(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(CRASH_PROBE),
+                    tmp,
+                    "--domain",
+                    "stock_detail",
+                    "--entity",
+                    "AAPL",
+                ],
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0)
+            active = DataSupplyStateStore(Path(tmp)).read_active_domain("stock_detail")
+            self.assertIn("AAPL", active["current"])
 
     def test_future_naive_and_malformed_source_stamps_are_rejected(self):
         for source_as_of in ("2026-07-11T00:00:00Z", "2026-07-10T00:00:00", "not-a-date"):

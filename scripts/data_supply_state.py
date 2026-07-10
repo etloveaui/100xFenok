@@ -21,12 +21,15 @@ import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterator, Mapping
 
+from data_supply_policy import get_domain_policy
+
 
 GENERATIONS_RETAINED = 3
 MAX_LIVE_PREPARED_GENERATIONS = 4
 PREPARATION_LEASE_HOURS = 24
-ETF_DETAIL_FRESH_TTL_HOURS = 168
-ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS = 14
+_ETF_DETAIL_POLICY = get_domain_policy("etf_detail")
+ETF_DETAIL_FRESH_TTL_HOURS = _ETF_DETAIL_POLICY.fresh_ttl_hours
+ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS = _ETF_DETAIL_POLICY.emergency_lkg_ttl_days
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _COMPONENT = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -379,13 +382,22 @@ def restate_selection(
     return _validate_selection(rebound)
 
 
-def selection_age_status(resolution_state: str, age_seconds: int) -> str:
+def selection_age_status(
+    resolution_state: str,
+    age_seconds: int,
+    *,
+    domain: str = "etf_detail",
+) -> str:
     if not isinstance(age_seconds, int) or isinstance(age_seconds, bool) or age_seconds < 0:
         raise SchemaError("age_seconds must be a non-negative integer")
+    try:
+        policy = get_domain_policy(domain)
+    except KeyError as exc:
+        raise SchemaError("unavailable authority proof is not configured for this domain") from exc
     if resolution_state in {"fresh_primary", "fresh_fallback"}:
-        return "fresh" if age_seconds <= ETF_DETAIL_FRESH_TTL_HOURS * 3600 else "stale"
+        return "fresh" if age_seconds <= policy.fresh_ttl_hours * 3600 else "stale"
     if resolution_state in {"lkg_primary", "lkg_fallback"}:
-        return "stale" if age_seconds <= ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS * 86400 else "unavailable"
+        return "stale" if age_seconds <= policy.emergency_lkg_ttl_days * 86400 else "unavailable"
     raise SchemaError("unsupported resolution_state")
 
 
@@ -1446,13 +1458,21 @@ class DataSupplyStateStore:
             entity=entity,
             evidence_observations=evidence_observations,
         )
-        if domain != "etf_detail":
-            raise SchemaError("unavailable authority proof is not configured for this domain")
-        required_providers = {"stockanalysis", "yahoo_finance"}
+        try:
+            policy = get_domain_policy(domain)
+        except KeyError as exc:
+            raise SchemaError("unavailable authority proof is not configured for this domain") from exc
+        required_providers = set(policy.provider_names)
         latest_by_provider: dict[str, dict[str, Any]] = {}
         for row in evidence:
             if row["provider"] not in required_providers:
                 raise SchemaError("evidence provider is outside the domain authority set")
+            provider_policy = policy.provider(row["provider"])
+            if (
+                row["endpoint_family"] != provider_policy.endpoint_family
+                or row["provider_schema"] != provider_policy.schema
+            ):
+                raise SchemaError("evidence provider contract mismatch")
             observed = _parse_timestamp(row["observed_at"], "observed_at")
             if observed > decided:
                 raise SchemaError("evidence observation cannot follow the decision time")
@@ -1468,7 +1488,7 @@ class DataSupplyStateStore:
             age_seconds = int((decided - source).total_seconds())
             if age_seconds < 0:
                 raise SchemaError("provider evidence source time follows the decision")
-            if age_seconds <= ETF_DETAIL_FRESH_TTL_HOURS * 3600:
+            if age_seconds <= policy.fresh_ttl_hours * 3600:
                 raise SchemaError(f"fresh {provider} evidence prevents unavailable")
 
         domain_dir = self._domain_dir(domain)
@@ -1499,7 +1519,7 @@ class DataSupplyStateStore:
                 lkg_age_seconds = int((decided - lkg_source).total_seconds())
                 if lkg_age_seconds < 0:
                     raise SchemaError("LKG source time follows the decision")
-                if lkg_age_seconds <= ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS * 86400:
+                if lkg_age_seconds <= policy.emergency_lkg_ttl_days * 86400:
                     raise SchemaError("unexpired selected LKG prevents unavailable")
 
             next_current = dict(prior_current)
