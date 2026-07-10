@@ -335,6 +335,12 @@ SURFACE_SETS = {
     "etf": ("new_etfs", "etf_screener", "etf_provider_blackrock", "etf_provider_proshares", "list_bitcoin_etfs"),
 }
 
+SURFACE_STAMP_ROUTES = {
+    "market_events": "/market/events",
+    "sectors": "/sectors",
+    "etf_center": "/etfs",
+}
+
 
 class ETFUniverseParser(HTMLParser):
     """Extract ETF list table rows from StockAnalysis HTML."""
@@ -486,6 +492,20 @@ def utc_iso(value: datetime) -> str:
 
 def now_iso() -> str:
     return utc_iso(datetime.now(timezone.utc))
+
+
+def collection_date(value: str | None) -> str | None:
+    """Normalize a collection timestamp/date to an exact real-calendar UTC date."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).date().isoformat()
 
 
 def normalize_space(value: str | None) -> str:
@@ -1252,7 +1272,75 @@ def parse_surface_names(value: str, surface_set: str) -> list[str]:
     return out
 
 
+def surface_stamp_membership(consumers: dict | None) -> dict[str, set[str]] | None:
+    """Derive stamp-domain membership from the surface-consumer ownership SSOT."""
+    rows = consumers.get("surfaces") if isinstance(consumers, dict) else None
+    if not isinstance(rows, list):
+        return None
+    routes_by_surface: dict[str, list[str]] = {}
+    for row in rows:
+        surface = str((row or {}).get("surface") or "").strip() if isinstance(row, dict) else ""
+        if not surface or surface in routes_by_surface:
+            return None
+        consumer_rows = row.get("consumers") if isinstance(row.get("consumers"), list) else []
+        routes_by_surface[surface] = [
+            str((consumer or {}).get("route") or "").strip()
+            for consumer in consumer_rows
+            if isinstance(consumer, dict) and str(consumer.get("route") or "").strip()
+        ]
+    membership: dict[str, set[str]] = {}
+    for domain, route_prefix in SURFACE_STAMP_ROUTES.items():
+        owned = {
+            surface
+            for surface, routes in routes_by_surface.items()
+            if any(route == route_prefix or route.startswith(f"{route_prefix}/") for route in routes)
+        }
+        if not owned:
+            return None
+        membership[domain] = owned
+    return membership
+
+
+def build_surface_stamp_map(
+    requested: list[str],
+    results: list[dict],
+    previous_index: dict | None,
+) -> dict[str, str | None]:
+    previous = previous_index.get("source_as_of") if isinstance(previous_index, dict) else None
+    previous = previous if isinstance(previous, dict) else {}
+    membership = surface_stamp_membership(read_json(OUT_DIR / "surface_consumers.json"))
+    if membership is None:
+        return {domain: None for domain in SURFACE_STAMP_ROUTES}
+
+    requested_set = set(requested)
+    results_by_surface = {
+        str(row.get("surface") or ""): row
+        for row in results
+        if isinstance(row, dict) and str(row.get("surface") or "")
+    }
+    stamps: dict[str, str | None] = {}
+    for domain, required in membership.items():
+        attempted = bool(required & requested_set)
+        full_attempt = required.issubset(requested_set)
+        if not attempted or not full_attempt:
+            stamps[domain] = collection_date(previous.get(domain))
+            continue
+        dates: list[str] = []
+        complete = True
+        for surface in sorted(required):
+            result = results_by_surface.get(surface)
+            payload = read_json(OUT_DIR / "surfaces" / f"{surface}.json")
+            fetched = collection_date((payload or {}).get("fetched_at")) if isinstance(payload, dict) else None
+            if not result or result.get("error") is not None or not fetched:
+                complete = False
+                break
+            dates.append(fetched)
+        stamps[domain] = min(dates) if complete and dates else None
+    return stamps
+
+
 def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_public: bool) -> dict:
+    previous_index = read_json(OUT_DIR / "surfaces" / "index.json")
     results = []
     for idx, name in enumerate(surface_names, 1):
         definition = SURFACE_DEFINITIONS[name]
@@ -1303,6 +1391,7 @@ def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_
         "source": "stockanalysis",
         "asset_type": "surface_index",
         "generated_at": now_iso(),
+        "source_as_of": build_surface_stamp_map(surface_names, results, previous_index),
         "counts": {
             "surfaces_requested": len(surface_names),
             "ok": sum(1 for item in results if item["error"] is None),
@@ -1329,6 +1418,7 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
     pages = []
     warnings = []
     path = "/etf/"
+    next_path = None
 
     for page_idx in range(1, max_pages + 1):
         page = 1
@@ -1363,14 +1453,22 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         path = next_path
         time.sleep(sleep)
 
+    if next_path:
+        raise RuntimeError(
+            f"ETF universe pagination exceeded max_pages={max_pages}; "
+            "refusing to publish a truncated discovery"
+        )
+
     records.sort(key=lambda row: row["ticker"])
     records = enrich_etf_records(records)
     classification_counts = etf_classification_counts(records)
+    collected_at = now_iso()
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "asset_type": "etf",
-        "generated_at": now_iso(),
+        "generated_at": collected_at,
+        "source_as_of": collection_date(collected_at),
         "endpoint": "/etf/",
         "counts": {
             "records": len(records),
@@ -2919,10 +3017,24 @@ def main() -> None:
 
     etf_detail_coverage = write_etf_detail_coverage(mirror_public)
     etf_detail_coverage_counts = etf_detail_coverage.get("counts") or {}
+    prior_index = read_json(OUT_DIR / "index.json") or {}
+    prior_source_as_of = prior_index.get("source_as_of") if isinstance(prior_index.get("source_as_of"), dict) else {}
+    prior_surface_stamps = prior_source_as_of.get("surfaces") if isinstance(prior_source_as_of.get("surfaces"), dict) else {}
+    current_surface_stamps = (surface_summary or {}).get("source_as_of") if isinstance((surface_summary or {}).get("source_as_of"), dict) else prior_surface_stamps
+    current_universe = universe_payload if isinstance(universe_payload, dict) else (read_json(OUT_DIR / "etf_universe.json") or {})
+    universe_stamp = collection_date(current_universe.get("source_as_of")) or collection_date(prior_source_as_of.get("etf_universe"))
+    source_as_of = {
+        "surfaces": {
+            domain: collection_date(current_surface_stamps.get(domain))
+            for domain in SURFACE_STAMP_ROUTES
+        },
+        "etf_universe": universe_stamp,
+    }
     summary = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "generated_at": now_iso(),
+        "source_as_of": source_as_of,
         "counts": {
             "etf_universe": etf_universe_record_count(universe_payload),
             "etf_candidate_total": etf_detail_coverage_counts.get("candidate_total", 0),

@@ -64,7 +64,7 @@ export const SOURCE_SLA_DEF = Object.freeze([
   Object.freeze({ source_id: "rim_index_inputs", freshness_basis: ".indices[SPX,NDX,KOSPI,SOX].observed.price.as_of (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: 10, required: true }),
   Object.freeze({ source_id: "etf_core_daily_basket_admin", freshness_basis: ".rows[].proof.quote_date (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: ETF_CORE_MAX_QUOTE_AGE_DAYS, required: true }),
   Object.freeze({ source_id: "fenok_edge_coverage_index", freshness_basis: ".source_as_of", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
-  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
+  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 10, required: true }),
   Object.freeze({ source_id: "etf_daily1y_readiness_admin", freshness_basis: ".generated_at", unit: "hours", calendar: "wall_clock", max_staleness: 50, required: false }),
 ]);
 

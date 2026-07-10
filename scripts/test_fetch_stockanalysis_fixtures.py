@@ -67,6 +67,28 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         finally:
             self.fetcher.OUT_DIR = original_out_dir
 
+    def test_etf_universe_refuses_truncated_pagination(self) -> None:
+        original_fetch_text = self.fetcher.fetch_text
+        original_parse = self.fetcher.parse_etf_universe_page
+        try:
+            self.fetcher.fetch_text = lambda _path, _timeout: (
+                '<link rel="next" href="https://stockanalysis.com/etf/?page=2">'
+            )
+            self.fetcher.parse_etf_universe_page = lambda _html, page: [
+                {"ticker": "AAA", "name": "Alpha ETF", "source_page": page}
+            ]
+            with self.assertRaisesRegex(RuntimeError, "refusing to publish a truncated discovery"):
+                self.fetcher.fetch_etf_universe(max_pages=1, timeout=1, sleep=0)
+        finally:
+            self.fetcher.fetch_text = original_fetch_text
+            self.fetcher.parse_etf_universe_page = original_parse
+
+    def test_weekly_workflow_uses_fixed_complete_discovery_ceiling(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
+        self.assertIn("20 23 * * 0", workflow)
+        self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', workflow)
+        self.assertNotIn("STOCKANALYSIS_WEEKLY_MAX_UNIVERSE_PAGES", workflow)
+
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
         tables = self.fetcher.parse_html_tables(html)
@@ -83,6 +105,64 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         with self.assertRaises(SystemExit):
             self.fetcher.parse_surface_names("missing_surface", "core")
+
+    def test_surface_stamp_map_uses_consumer_ownership_and_partial_preservation(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                consumers = {
+                    "surfaces": [
+                        {"surface": "event_a", "consumers": [{"route": "/market/events"}]},
+                        {"surface": "event_b", "consumers": [{"route": "/market/events"}]},
+                        {"surface": "sector_a", "consumers": [{"route": "/sectors"}]},
+                        {"surface": "etf_a", "consumers": [{"route": "/etfs"}]},
+                    ]
+                }
+                (out_dir / "surface_consumers.json").write_text(json.dumps(consumers), encoding="utf-8")
+                for name, stamp in {"event_a": "2026-07-09T01:00:00Z", "event_b": "2026-07-08T01:00:00Z", "sector_a": "2026-07-07T01:00:00Z", "etf_a": "2026-07-06T01:00:00Z"}.items():
+                    (out_dir / "surfaces" / f"{name}.json").write_text(json.dumps({"fetched_at": stamp}), encoding="utf-8")
+                ok_rows = [{"surface": name, "status": "ok", "error": None} for name in ("event_a", "event_b", "sector_a", "etf_a")]
+                stamps = self.fetcher.build_surface_stamp_map([row["surface"] for row in ok_rows], ok_rows, None)
+                self.assertEqual(stamps, {"market_events": "2026-07-08", "sectors": "2026-07-07", "etf_center": "2026-07-06"})
+
+                prior = {"source_as_of": {"market_events": "2026-06-30", "sectors": "2026-06-29", "etf_center": "2026-06-28"}}
+                partial = self.fetcher.build_surface_stamp_map(["event_a"], [ok_rows[0]], prior)
+                self.assertEqual(partial, prior["source_as_of"], "partial domain fetch preserves prior stamps")
+
+                failed_rows = [*ok_rows]
+                failed_rows[1] = {"surface": "event_b", "status": "error", "error": "fixture"}
+                failed = self.fetcher.build_surface_stamp_map([row["surface"] for row in failed_rows], failed_rows, prior)
+                self.assertIsNone(failed["market_events"], "known full-domain failure clears the domain stamp")
+
+                consumers["surfaces"].append({"surface": "event_a", "consumers": [{"route": "/market/events"}]})
+                (out_dir / "surface_consumers.json").write_text(json.dumps(consumers), encoding="utf-8")
+                self.assertEqual(
+                    self.fetcher.build_surface_stamp_map([], [], prior),
+                    {"market_events": None, "sectors": None, "etf_center": None},
+                    "duplicate ownership fails every domain closed",
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+    def test_etf_classification_preserves_collection_stamp(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                self.fetcher.OUT_DIR = Path(tmp) / "data"
+                self.fetcher.PUBLIC_DIR = Path(tmp) / "public"
+                self.fetcher.OUT_DIR.mkdir(parents=True)
+                payload = {"source_as_of": "2026-07-08", "records": [{"ticker": "AAA", "name": "AAA ETF"}], "counts": {}}
+                (self.fetcher.OUT_DIR / "etf_universe.json").write_text(json.dumps(payload), encoding="utf-8")
+                self.fetcher.classify_existing_etf_catalog("etf_universe.json", mirror_public=False)
+                classified = json.loads((self.fetcher.OUT_DIR / "etf_universe.json").read_text(encoding="utf-8"))
+                self.assertEqual(classified["source_as_of"], "2026-07-08")
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
 
     def test_parse_history_periods_dedupe_and_validation(self) -> None:
         periods = self.fetcher.parse_history_periods("monthly_3y,monthly_3y,monthly_5y")

@@ -145,6 +145,58 @@ def oldest_collection_date(values) -> str | None:
     return min(dates)
 
 
+def load_core_surface_members() -> set[str] | None:
+    stock_payload = load_json(DATA / "computed" / "stock_action_index.json")
+    etf_payload = load_json(DATA / "admin" / "fenok-etf-core-daily-basket.json")
+    stock_rows = stock_payload.get("rows") if isinstance(stock_payload, dict) else None
+    etf_tickers = ((etf_payload.get("daily_refresh_universe") or {}).get("tickers")) if isinstance(etf_payload, dict) else None
+    if not isinstance(stock_rows, list) or not isinstance(etf_tickers, list) or not stock_rows or not etf_tickers:
+        return None
+    stocks = [clean_ticker(row.get("symbol")) for row in stock_rows if isinstance(row, dict)]
+    etfs = [clean_ticker(ticker) for ticker in etf_tickers]
+    if not all(stocks) or not all(etfs) or len(set(stocks)) != len(stocks) or len(set(etfs)) != len(etfs):
+        return None
+    members = set(stocks) | set(etfs)
+    return members if members else None
+
+
+def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, ticker_root: Path | None = None) -> dict:
+    ticker_root = ticker_root or (OUT / "tickers")
+    row_tickers = [clean_ticker(row.get("ticker")) for row in rows if isinstance(row, dict)]
+    if not row_tickers or not all(row_tickers) or len(set(row_tickers)) != len(row_tickers):
+        return {"core_surface_source_as_of": None, "full_universe_floor_as_of": None, "source_stamp_diagnostics": {"status": "invalid_index_rows"}}
+    row_set = set(row_tickers)
+    core_valid = bool(core_members) and set(core_members).issubset(row_set)
+    full_dates: list[str] = []
+    core_dates: list[str] = []
+    missing_fact_stamps = 0
+    core_price_stamped = 0
+    for ticker in row_tickers:
+        payload = load_json(ticker_root / f"{ticker}.json")
+        facts = payload.get("facts") if isinstance(payload, dict) else None
+        values = list(facts.values()) if isinstance(facts, dict) and facts else []
+        dates = [collection_date((value or {}).get("fetched_at")) for value in values if isinstance(value, dict)]
+        full_dates.extend(date_value for date_value in dates if date_value)
+        missing_fact_stamps += sum(1 for date_value in dates if not date_value)
+        if core_members and ticker in core_members:
+            price_date = collection_date(((facts or {}).get("price") or {}).get("fetched_at")) if isinstance(facts, dict) else None
+            if price_date:
+                core_dates.append(price_date)
+                core_price_stamped += 1
+            else:
+                core_valid = False
+    return {
+        "core_surface_source_as_of": min(core_dates) if core_valid and core_dates else None,
+        "full_universe_floor_as_of": min(full_dates) if full_dates else None,
+        "source_stamp_diagnostics": {
+            "core_member_count": len(core_members or []),
+            "core_price_stamped_count": core_price_stamped,
+            "full_fact_stamped_count": len(full_dates),
+            "full_fact_missing_stamp_count": missing_fact_stamps,
+        },
+    }
+
+
 def load_json(path: Path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -843,7 +895,6 @@ def main(argv=None) -> None:
         rows_by_ticker = {}
 
     updated_rows = []
-    fetched_dates = []  # collection-time fetched_at dates for the KPI source_as_of stamp
     generated_at = now_iso()
     for ticker in tickers:
         yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
@@ -868,10 +919,6 @@ def main(argv=None) -> None:
         rel = Path("tickers") / f"{ticker}.json"
         payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
         assert_market_facts_payload(payload, ticker=ticker)
-        for fact_value in (payload.get("facts") or {}).values():
-            fetched = collection_date((fact_value or {}).get("fetched_at"))
-            if fetched:
-                fetched_dates.append(fetched)
         write_json(OUT / rel, payload)
         if mirror_public:
             write_json(PUBLIC_OUT / rel, payload)
@@ -887,19 +934,14 @@ def main(argv=None) -> None:
 
     rows = [rows_by_ticker[ticker] for ticker in sorted(rows_by_ticker)] if target_tickers else updated_rows
 
-    # KPI v2 source stamp (BACKLOG #331): OLDEST collection-time fetched_at across the
-    # tickers the stock_detail surface verifies. Additive root field; NEVER generated_at.
-    # For a partial (--tickers) refresh, fold with the prior stamp so a targeted refresh
-    # of a few fresh tickers cannot spuriously freshen the whole-universe stamp.
-    source_as_of = min(fetched_dates) if fetched_dates else None
-    if target_tickers:
-        prior_stamp = collection_date((load_json(OUT / "index.json") or {}).get("source_as_of"))
-        source_as_of = oldest_collection_date([source_as_of, prior_stamp]) if (source_as_of and prior_stamp) else (source_as_of or prior_stamp)
+    # KPI v2 BACKLOG #331 two-stamp split. Recompute from the current post-write
+    # denominator even on targeted runs: core is SLA-bound; full floor is diagnostic.
+    source_stamps = market_fact_source_stamps(rows, load_core_surface_members())
 
     index = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
-        "source_as_of": source_as_of,
+        **source_stamps,
         "count": len(rows),
         "source_files": INDEX_SOURCE_FILES,
         "resolver": {

@@ -118,7 +118,8 @@ function oldestSourceDate(values) {
 // timestamp (verified writer-exclusive), NEVER a rebuild generated_at.
 function collectionDate(value) {
   const day = dateOnly(firstDate(value));
-  return day && isRealCalendarDate(day) ? day : null;
+  const today = new Date().toISOString().slice(0, 10);
+  return day && isRealCalendarDate(day) && day <= today ? day : null;
 }
 function oldestCollectionDate(values) {
   const dates = values.map(collectionDate);
@@ -220,12 +221,52 @@ function surfaceRowsForRoute(surfaceIndex, consumers, routePrefix) {
   };
 }
 
+function strictRouteSurfaceNames(consumers, routePrefix) {
+  const rows = Array.isArray(consumers?.surfaces) ? consumers.surfaces : [];
+  const seen = new Set();
+  const names = [];
+  for (const row of rows) {
+    const name = String(row?.surface || "").trim();
+    if (!name || seen.has(name)) return null;
+    seen.add(name);
+    const routes = (Array.isArray(row?.consumers) ? row.consumers : [])
+      .map((consumer) => String(consumer?.route || "").trim())
+      .filter(Boolean);
+    if (routes.some((route) => route === routePrefix || route.startsWith(`${routePrefix}/`))) names.push(name);
+  }
+  return names.length > 0 ? names.sort() : null;
+}
+
+function routePayloadSourceAsOf(surfaceIndex, consumers, routePrefix) {
+  const names = strictRouteSurfaceNames(consumers, routePrefix);
+  if (!names) return null;
+  const rows = Array.isArray(surfaceIndex?.results) ? surfaceIndex.results : [];
+  const dates = [];
+  for (const name of names) {
+    const matches = rows.filter((row) => String(row?.surface || "") === name);
+    if (matches.length !== 1 || matches[0]?.status !== "ok" || !matches[0]?.path) return null;
+    const payload = readJson(`stockanalysis/${matches[0].path}`);
+    const date = collectionDate(payload?.fetched_at);
+    if (!date) return null;
+    dates.push(date);
+  }
+  return oldestCollectionDate(dates);
+}
+
+function crossCheckedSurfaceDomain(domain, routePrefix) {
+  const payloadStamp = routePayloadSourceAsOf(surfaceIndex, surfaceConsumers, routePrefix);
+  const indexStamp = collectionDate(surfaceIndex?.source_as_of?.[domain]);
+  const mirrorStamp = collectionDate(stockanalysisIndex?.source_as_of?.surfaces?.[domain]);
+  return payloadStamp && payloadStamp === indexStamp && indexStamp === mirrorStamp ? payloadStamp : null;
+}
+
 const marketFactsIndex = readJson("computed/market_facts/index.json");
 const marketAudit = readJson("computed/market_data_audit.json");
 const sourceParity = readJson("computed/market_source_parity.json");
 const etfCoverage = readJson("stockanalysis/coverage/etf_detail.json");
 const surfaceIndex = readJson("stockanalysis/surfaces/index.json");
 const surfaceConsumers = readJson("stockanalysis/surface_consumers.json");
+const stockanalysisIndex = readJson("stockanalysis/index.json");
 const etfUniverse = readJson("stockanalysis/etf_universe.json");
 const dataUsage = readJson("admin/data-usage-manifest.json");
 const stockFieldManifest = readJson("admin/stock-field-usage-manifest.json");
@@ -275,8 +316,8 @@ const yardneyAsOf = latestDate(
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).
 //  - market_valuation: RIM observed price as_of (KOSPI/SOX) + Yardeni published date.
 //  - screener: stocks_analyzer.source_date.
-//  - stock_detail / market_events / sectors / etf_center: inputs expose only rebuild
-//    generated_at/fetched_at today -> null (no true source date to stamp).
+//  - stock_detail / market_events / sectors / etf_center: dedicated collection-date
+//    stamps cross-checked against their fetch-owned payloads and index mirror.
 const marketValuationSourceAsOf = oldestSourceDate([
   rimIndexInputs?.indices?.KOSPI?.observed?.price?.as_of,
   rimIndexInputs?.indices?.SOX?.observed?.price?.as_of,
@@ -284,15 +325,22 @@ const marketValuationSourceAsOf = oldestSourceDate([
 ]);
 const screenerSourceAsOf = oldestSourceDate([stocksAnalyzer?.source_date]);
 
-// BACKLOG #331 — the remaining four surfaces, from VERIFIED writer-exclusive fetch-run
-// collection times (build-market-facts stamps market_facts.index.source_as_of = OLDEST
-// facts.*.fetched_at; fetch-stockanalysis owns surfaces/index.json + etf_universe.json,
-// whose generated_at is the fetch run, not a rebuild). Null (surface stays pending) if
-// its required collection input is missing — no guessing.
-const stockDetailSourceAsOf = collectionDate(marketFactsIndex?.source_as_of);
-const marketEventsSourceAsOf = collectionDate(surfaceIndex?.generated_at);
-const etfCenterSourceAsOf = collectionDate(etfUniverse?.generated_at);
-const sectorsSourceAsOf = oldestCollectionDate([surfaceIndex?.generated_at, marketFactsIndex?.source_as_of]);
+// BACKLOG #331 — the remaining four surfaces. Market facts exposes OLDEST per-fact
+// collection evidence. StockAnalysis route domains require payload aggregate ==
+// surfaces/index stamp == stockanalysis/index mirror; ETF universe follows the same
+// owning-artifact + mirror rule. Any missing/malformed/future/mismatch stays null.
+const marketFactsCoreSourceAsOf = collectionDate(marketFactsIndex?.core_surface_source_as_of);
+const marketFactsFullUniverseFloor = collectionDate(marketFactsIndex?.full_universe_floor_as_of);
+const stockDetailSourceAsOf = marketFactsCoreSourceAsOf;
+const marketEventsSourceAsOf = crossCheckedSurfaceDomain("market_events", "/market/events");
+const sectorSurfaceStamp = crossCheckedSurfaceDomain("sectors", "/sectors");
+const etfSurfaceStamp = crossCheckedSurfaceDomain("etf_center", "/etfs");
+const etfUniverseStamp = collectionDate(etfUniverse?.source_as_of);
+const etfUniverseMirror = collectionDate(stockanalysisIndex?.source_as_of?.etf_universe);
+const sectorsSourceAsOf = oldestCollectionDate([sectorSurfaceStamp, marketFactsCoreSourceAsOf]);
+const etfCenterSourceAsOf = etfUniverseStamp && etfUniverseStamp === etfUniverseMirror
+  ? oldestCollectionDate([etfUniverseStamp, etfSurfaceStamp, marketFactsCoreSourceAsOf])
+  : null;
 
 const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/market/events");
 const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sectors");
@@ -470,6 +518,14 @@ const payload = {
     raw_rows_included: false,
     private_artifact_paths_included: false,
     derived_counts_and_status_only: true,
+  },
+  source_stamp_diagnostics: {
+    market_facts_core_surface_source_as_of: marketFactsCoreSourceAsOf,
+    market_facts_full_universe_floor_as_of: marketFactsFullUniverseFloor,
+    full_universe_floor_sla_bound: false,
+    stockanalysis_surface_domains: surfaceIndex?.source_as_of ?? null,
+    stockanalysis_index_mirror: stockanalysisIndex?.source_as_of ?? null,
+    etf_universe_source_as_of: etfUniverseStamp,
   },
   source_files: [
     "computed/market_facts/index.json",

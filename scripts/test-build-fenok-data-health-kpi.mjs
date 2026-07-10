@@ -38,6 +38,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
 const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
+const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
+assert.equal(PRODUCT_SURFACE_SLA?.unit, "business_days");
+assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadence + grace must fit inside the product-surface SLA");
 
 // The eight lanes the checker's validateCoreShape (check-...:36 REQUIRED_LANES) demands.
 // Kept in lockstep with that set; a divergence hard-fails validateCoreShape immediately.
@@ -1002,12 +1005,35 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     w(["computed", "rim-index", "inputs.json"], { indices: { KOSPI: { observed: { price: { as_of: seed.rim } } }, SOX: { observed: { price: { as_of: seed.rim } } } } });
     w(["yardney", "yardney_model.json"], { data: [{ date: seed.yard }] });
     w(["global-scouter", "core", "stocks_analyzer.json"], { source_date: seed.screener });
-    w(["computed", "market_facts", "index.json"], { count: 3, source_as_of: seed.marketFacts, rows: [] });
-    w(["stockanalysis", "surfaces", "index.json"], { generated_at: seed.surfaces, results: [] });
-    w(["stockanalysis", "etf_universe.json"], { generated_at: seed.etfUniverse, records: [] });
+    w(["computed", "market_facts", "index.json"], {
+      count: 3,
+      core_surface_source_as_of: seed.marketFacts,
+      full_universe_floor_as_of: seed.marketFactsFloor ?? seed.marketFacts,
+      rows: [],
+    });
+    const surfaceDay = String(seed.surfaces || "").slice(0, 10) || null;
+    const universeDay = String(seed.etfUniverse || "").slice(0, 10) || null;
+    const domainStamps = { market_events: surfaceDay, sectors: surfaceDay, etf_center: surfaceDay };
+    w(["stockanalysis", "surface_consumers.json"], { surfaces: [
+      { surface: "event_fixture", consumers: [{ route: "/market/events" }] },
+      { surface: "sector_fixture", consumers: [{ route: "/sectors" }] },
+      { surface: "etf_fixture", consumers: [{ route: "/etfs" }] },
+    ] });
+    for (const name of ["event_fixture", "sector_fixture", "etf_fixture"]) {
+      w(["stockanalysis", "surfaces", `${name}.json`], { fetched_at: seed.surfaces });
+    }
+    w(["stockanalysis", "surfaces", "index.json"], { source_as_of: domainStamps, results: [
+      { surface: "event_fixture", status: "ok", path: "surfaces/event_fixture.json" },
+      { surface: "sector_fixture", status: "ok", path: "surfaces/sector_fixture.json" },
+      { surface: "etf_fixture", status: "ok", path: "surfaces/etf_fixture.json" },
+    ] });
+    w(["stockanalysis", "etf_universe.json"], { source_as_of: universeDay, records: [] });
+    w(["stockanalysis", "index.json"], { source_as_of: { surfaces: domainStamps, etf_universe: universeDay } });
     execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"] });
     const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
-    return (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
+    const getSurfaceStamp = (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
+    getSurfaceStamp.diagnostics = out.source_stamp_diagnostics;
+    return getSurfaceStamp;
   };
 
   // READY: all six carry a real collection-time source date
@@ -1015,23 +1041,26 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(ready("market_valuation"), "2026-07-03");
   assert.equal(ready("screener"), "2026-07-02");
   assert.equal(ready("stock_detail"), "2026-07-08", "stock_detail = market_facts.source_as_of (OLDEST fetched_at, Python-stamped)");
-  assert.equal(ready("market_events"), "2026-07-09", "market_events = date(surfaces/index fetch-run generated_at)");
-  assert.equal(ready("etf_center"), "2026-07-07", "etf_center = date(etf_universe fetch-run generated_at)");
-  assert.equal(ready("sectors"), "2026-07-08", "sectors = OLDEST(surfaces fetch date, market_facts stamp)");
+  assert.equal(ready("market_events"), "2026-07-09", "market_events = payload OLDEST == surfaces index == mirror");
+  assert.equal(ready("etf_center"), "2026-07-07", "etf_center = OLDEST(universe, ETF route payloads, market facts)");
+  assert.equal(ready("sectors"), "2026-07-08", "sectors = OLDEST(sector route payloads, market facts)");
+  assert.equal(ready.diagnostics.market_facts_full_universe_floor_as_of, "2026-07-08", "full-universe floor remains visible as a diagnostic");
+  assert.equal(ready.diagnostics.full_universe_floor_sla_bound, false, "full-universe floor is never SLA-bound");
 
   // STALE (old collection dates) still stamp — the KPI decides stale, not the generator
   const stale = runGen({ rim: "2026-06-01", yard: "2026-06-01", screener: "2026-06-01", marketFacts: "2026-06-01", surfaces: "2026-06-01T00:00:00Z", etfUniverse: "2026-06-01T00:00:00Z" });
   for (const id of ["stock_detail", "market_events", "etf_center", "sectors"]) assert.equal(stale(id), "2026-06-01", `${id} stamps an old date (stale decided downstream)`);
 
-  // FUTURE collection date flows through as a (future) stamp — the KPI flags the anomaly
+  // FUTURE collection evidence fails closed in the generator before aggregation.
   const future = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-20T00:00:00Z", etfUniverse: "2026-07-07T22:37:04Z" });
-  assert.equal(future("market_events"), "2026-07-20", "future collection date is stamped verbatim (KPI classifies future_date_anomaly)");
+  assert.equal(future("market_events"), null, "future collection date fails closed");
 
   // NULL fail-closed: missing market_facts stamp -> stock_detail & sectors stay null
   const partial = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: undefined, surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z" });
   assert.equal(partial("stock_detail"), null, "no market_facts stamp -> stock_detail null (fail-closed)");
   assert.equal(partial("sectors"), null, "no market_facts stamp -> sectors null (OLDEST-required fail-closed)");
   assert.equal(partial("market_events"), "2026-07-09", "market_events still stamps from surfaces alone");
+  assert.equal(partial("etf_center"), null, "no market_facts stamp -> ETF center null");
   ok("#331: real generator stamps all 6 surfaces (ready/stale/future) from collection-time dates; fail-closed to null when an input is missing");
 }
 

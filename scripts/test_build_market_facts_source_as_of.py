@@ -4,7 +4,9 @@
 collection-date helpers + the OLDEST/fold semantics against fixture fetched_at values
 — the honest test boundary noted in the report."""
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 
 spec = importlib.util.spec_from_file_location("bmf", str(Path(__file__).with_name("build-market-facts.py")))
 bmf = importlib.util.module_from_spec(spec)
@@ -29,5 +31,22 @@ assert min(d for d in dates if d) == "2026-07-05", "OLDEST fetched_at across the
 assert bmf.oldest_collection_date(["2026-07-09", "garbage"]) is None
 assert bmf.oldest_collection_date(["2026-07-09T00:00Z", "2026-07-01"]) == "2026-07-01"
 assert bmf.oldest_collection_date([]) is None
+
+# Two-stamp split: core service denominator drives SLA; full floor stays diagnostic.
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    rows = [{"ticker": "AAA"}, {"ticker": "BBB"}, {"ticker": "ZZZ"}]
+    payloads = {
+        "AAA": {"facts": {"price": {"fetched_at": "2026-07-09T00:00:00Z"}}},
+        "BBB": {"facts": {"price": {"fetched_at": "2026-07-08T00:00:00Z"}}},
+        "ZZZ": {"facts": {"price": {"fetched_at": "2026-06-17T00:00:00Z"}}},
+    }
+    for ticker, payload in payloads.items():
+        (root / f"{ticker}.json").write_text(json.dumps(payload), encoding="utf-8")
+    stamps = bmf.market_fact_source_stamps(rows, {"AAA", "BBB"}, root)
+    assert stamps["core_surface_source_as_of"] == "2026-07-08"
+    assert stamps["full_universe_floor_as_of"] == "2026-06-17"
+    assert stamps["source_stamp_diagnostics"]["core_price_stamped_count"] == 2
+    assert bmf.market_fact_source_stamps(rows, {"MISSING"}, root)["core_surface_source_as_of"] is None
 
 print("test_build_market_facts_source_as_of: ok")

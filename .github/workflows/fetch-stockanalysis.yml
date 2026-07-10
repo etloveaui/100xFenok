@@ -171,6 +171,13 @@ jobs:
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
+              if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
+                # BACKLOG #331: one complete weekly universe collection. Current
+                # measured universe is 11 pages; 100 preserves headroom without
+                # turning weekday bounded runs into broad discovery.
+                INPUT_DISCOVER_UNIVERSE="true"
+                INPUT_MAX_UNIVERSE_PAGES="100"
+              fi
             fi
           fi
           {
