@@ -236,7 +236,13 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
   }
 }
 
-export function checkSourceSla(rootDoc, { errors, warnings }, nowIso = new Date().toISOString()) {
+export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
+  // No real-clock fallback: staleness must be judged against the caller's injected clock
+  // (KPI_FAKE_NOW in CI/tests, resolveNow() in prod). A missing clock is a caller bug, not
+  // a silent Date.now() — fail-closed so the trap class this contract kills cannot regrow.
+  if (typeof nowIso !== "string" || nowIso.length < 10) {
+    throw new Error("checkSourceSla requires an explicit nowIso clock (no real-clock fallback)");
+  }
   const entries = Array.isArray(rootDoc?.source_sla) ? rootDoc.source_sla : null;
   push(errors, entries != null, "source_sla array is required in v2");
   if (!entries) return;

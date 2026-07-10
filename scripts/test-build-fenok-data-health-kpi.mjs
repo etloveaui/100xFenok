@@ -534,7 +534,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const errors = [];
   const warnings = [];
   checkV2Runtime(root, { errors, warnings }, now);
-  checkSourceSla(root, { errors, warnings });
+  checkSourceSla(root, { errors, warnings }, now);
   checkPublicProjection(root, pub, { errors, warnings });
   assert.equal(errors.length, 0, `no hard errors: ${errors.join("; ")}`);
   ok("checker validation functions accept a well-formed v2 doc with no hard errors");
