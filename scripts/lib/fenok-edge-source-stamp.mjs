@@ -30,3 +30,7 @@ export function recomputeFenokEdgeSourceAsOf(index) {
     : [...dates].sort()[0] ?? null;
   return index;
 }
+
+export function shouldPreserveKoreaPrivateEvidence({ proofDates }) {
+  return !Array.isArray(proofDates) || proofDates.length === 0;
+}

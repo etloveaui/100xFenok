@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   FENOK_EDGE_SOURCE_AS_OF_IDS,
   recomputeFenokEdgeSourceAsOf,
+  shouldPreserveKoreaPrivateEvidence,
 } from "./lib/fenok-edge-source-stamp.mjs";
 
 function source(id, sourceDate) {
@@ -57,6 +58,15 @@ assert.equal(missingRequiredSource.source_as_of, null);
 assert.equal(
   missingRequiredSource.source_as_of_inputs.find((row) => row.id === "krx_issuer_daily_latest_full_proof")?.source_date,
   null,
+);
+
+// Partial-private state: an old raw corpus remains, but the current bridge's
+// manifest is absent. Raw intersection must not defeat prior-proof preservation.
+assert.equal(shouldPreserveKoreaPrivateEvidence({ proofDates: [], rawIntersectionCount: 337 }), true);
+assert.equal(shouldPreserveKoreaPrivateEvidence({ proofDates: [], rawIntersectionCount: 0 }), true);
+assert.equal(
+  shouldPreserveKoreaPrivateEvidence({ proofDates: ["2026-07-09"], rawIntersectionCount: 337 }),
+  false,
 );
 
 console.log("test-fenok-edge-source-stamp: ok");

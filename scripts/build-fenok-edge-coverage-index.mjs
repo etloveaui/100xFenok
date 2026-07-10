@@ -12,7 +12,10 @@ import { fileURLToPath } from "node:url";
 import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
 import { buildScoredEtfDaily1yFetchablePlan } from "./write-fenok-etf-daily1y-readiness.mjs";
 import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
-import { recomputeFenokEdgeSourceAsOf } from "./lib/fenok-edge-source-stamp.mjs";
+import {
+  recomputeFenokEdgeSourceAsOf,
+  shouldPreserveKoreaPrivateEvidence,
+} from "./lib/fenok-edge-source-stamp.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -576,7 +579,10 @@ const asiaYfLatestSourceDate = asiaYfSourceDates.at(-1) ?? null;
 
 const taiwanBridge = readJson("data/admin/taiwan-data-bridge-index.json", readJson("data/computed/taiwan-data-bridge-index.json", {}));
 const taiwanHistorical = readJson("_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json", {});
-const koreaProofMissing = koreaIntersection.length === 0 && koreaProofDates.length === 0 && !hasManifestPayload(koreaProofManifest);
+const koreaProofMissing = shouldPreserveKoreaPrivateEvidence({
+  proofDates: koreaProofDates,
+  rawIntersectionCount: koreaIntersection.length,
+});
 const latestUsRunMissing = latestUsIntersection.length === 0 && !latestUsTargetUniverse && !hasManifestPayload(latestUsManifest);
 const taiwanHistoricalMissing = !hasManifestPayload(taiwanHistorical);
 
