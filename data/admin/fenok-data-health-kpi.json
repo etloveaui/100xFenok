@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-10T06:26:03.758Z",
+  "generated_at": "2026-07-10T08:26:53.652Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -24,11 +24,11 @@
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-10T06:26:03.758Z",
-      "run_id": "29073710082",
+      "built_at": "2026-07-10T08:26:53.652Z",
+      "run_id": "29079672465",
       "workflow": "Update Manifest",
-      "event_name": "schedule",
-      "sha": "67f522a07824d26726cf0dd8003628d26b4e7369"
+      "event_name": "workflow_dispatch",
+      "sha": "5451326dc1f9c3043aa0032db824703d24f91b35"
     },
     "cadence": {
       "crons_utc": [
@@ -61,8 +61,8 @@
       }
     ],
     "authoritative_context": {
-      "authoritative": true,
-      "reason": "schedule"
+      "authoritative": false,
+      "reason": "non_authoritative_context"
     }
   },
   "source_sla": [
@@ -160,7 +160,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 1.44,
+      "age": 3.45,
       "status": "ready"
     }
   ],
@@ -173,13 +173,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T06:26:02.984Z",
+      "generated_at": "2026-07-10T08:26:52.874Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T06:26:03.600Z",
+      "generated_at": "2026-07-10T08:26:53.496Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -481,7 +481,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T06:26:02.984Z",
+      "as_of": "2026-07-10T08:26:52.874Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -592,7 +592,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T06:26:03.600Z",
+      "as_of": "2026-07-10T08:26:53.496Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -609,7 +609,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T06:26:03.600Z"
+          "detail": "2026-07-10T08:26:53.496Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -720,7 +720,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T06:26:03.779Z",
+      "as_of": "2026-07-10T08:26:53.673Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
