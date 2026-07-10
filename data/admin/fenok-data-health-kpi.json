@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-10T12:47:25.889Z",
+  "generated_at": "2026-07-10T17:30:38.051Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -30,11 +30,11 @@
       }
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-10T12:47:25.889Z",
-      "run_id": "29093588242",
+      "built_at": "2026-07-10T17:30:38.051Z",
+      "run_id": "29111105973",
       "workflow": "Update Manifest",
       "event_name": "workflow_dispatch",
-      "sha": "13e4f98f0008f281325ab2e1fe01dd40a95b4a72"
+      "sha": "c1bd49ed5eb27e3e16442b469c2f08bb6998a417"
     },
     "cadence": {
       "crons_utc": [
@@ -87,8 +87,8 @@
       }
     ],
     "authoritative_context": {
-      "authoritative": true,
-      "reason": "valid_dispatch"
+      "authoritative": false,
+      "reason": "non_authoritative_context"
     }
   },
   "source_sla": [
@@ -117,24 +117,24 @@
     {
       "source_id": "etf_core_daily_basket_admin",
       "freshness_basis": ".rows[].proof.quote_date (OLDEST)",
-      "source_date": "2026-07-08",
+      "source_date": "2026-07-09",
       "unit": "calendar_days",
       "calendar": "us_market",
       "max_staleness": 7,
       "required": true,
-      "age": 2,
+      "age": 1,
       "status": "ready"
     },
     {
       "source_id": "fenok_edge_coverage_index",
       "freshness_basis": ".source_as_of",
-      "source_date": "2026-07-07",
+      "source_date": null,
       "unit": "business_days",
       "calendar": "us_market",
       "max_staleness": 3,
       "required": true,
-      "age": 3,
-      "status": "ready"
+      "age": null,
+      "status": "unavailable"
     },
     {
       "source_id": "product_surface_coverage",
@@ -147,7 +147,7 @@
       "required_surface_rows": [
         {
           "id": "stock_detail",
-          "source_as_of": null
+          "source_as_of": "2026-06-27"
         },
         {
           "id": "market_valuation",
@@ -155,76 +155,75 @@
         },
         {
           "id": "market_events",
-          "source_as_of": null
+          "source_as_of": "2026-07-10"
         },
         {
           "id": "sectors",
-          "source_as_of": null
+          "source_as_of": "2026-06-27"
         },
         {
           "id": "etf_center",
-          "source_as_of": null
+          "source_as_of": "2026-06-27"
         },
         {
           "id": "screener",
           "source_as_of": "2026-07-02"
         }
       ],
-      "source_date": null,
-      "age": null,
-      "status": "unavailable_pending_source_stamp",
-      "pending_source_stamp": true,
+      "source_date": "2026-06-27",
+      "age": 9,
+      "status": "ready",
       "pending": {
-        "pending_since": "2026-07-10T11:09:04.741Z",
+        "pending_since": null,
         "ever_stamped": true
       }
     },
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-10T12:43:23.685Z",
+      "source_date": "2026-07-10T13:50:25.829Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.07,
+      "age": 3.67,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-10T12:43:23.230Z",
+      "generated_at": "2026-07-10T13:50:25.579Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-10T12:47:25.038Z",
+      "generated_at": "2026-07-10T17:30:37.214Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-10T12:47:25.663Z",
+      "generated_at": "2026-07-10T17:30:37.835Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-10T12:43:23.526Z",
+      "generated_at": "2026-07-10T13:50:25.774Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-10T12:43:23.685Z",
+      "generated_at": "2026-07-10T13:50:25.829Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-10T12:43:10.798Z",
+      "generated_at": "2026-07-10T13:50:00.821Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -244,7 +243,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T12:43:23.230Z",
+      "as_of": "2026-07-10T13:50:25.579Z",
       "counts": {
         "active_total": 1172,
         "by_market": [
@@ -442,15 +441,15 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T12:43:23.685Z",
+      "as_of": "2026-07-10T13:50:25.829Z",
       "counts": {
-        "eligible_etf_count": 4508,
-        "scored_public_etf": 4508,
+        "eligible_etf_count": 4515,
+        "scored_public_etf": 4515,
         "fetchable_daily_1y_gap": 0,
         "inception_limited_daily_1y_gap": 715,
-        "terminal_limited_daily_1y_gap": 87,
-        "core_selected_count": 115,
-        "core_fresh_selected_count": 115,
+        "terminal_limited_daily_1y_gap": 94,
+        "core_selected_count": 98,
+        "core_fresh_selected_count": 98,
         "core_stale_selected_count": 0
       },
       "details": {
@@ -491,7 +490,7 @@
           "label": "ETF core daily basket",
           "status": "ready",
           "status_label": "정상",
-          "detail": "115 fresh / 115 selected"
+          "detail": "98 fresh / 98 selected"
         },
         {
           "id": "route_caveat_consistent",
@@ -508,7 +507,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T12:47:25.038Z",
+      "as_of": "2026-07-10T17:30:37.214Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -619,7 +618,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T12:47:25.663Z",
+      "as_of": "2026-07-10T17:30:37.835Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -636,7 +635,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T12:47:25.663Z"
+          "detail": "2026-07-10T17:30:37.835Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -667,7 +666,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T12:43:23.526Z",
+      "as_of": "2026-07-10T13:50:25.774Z",
       "counts": {
         "active_us_total": 744,
         "plain_us_finra_denominator": 685,
@@ -679,10 +678,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-10T12:42:58.115Z",
+          "signals_generated_at": "2026-07-10T12:47:20.138Z",
           "finra_source_date": "20260708",
           "occ_source_date": "20260707",
-          "coverage_index_generated_at": "2026-07-10T12:43:23.230Z",
+          "coverage_index_generated_at": "2026-07-10T13:50:25.579Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -709,7 +708,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-10T12:43:23.526Z"
+          "detail": "2026-07-10T13:50:25.774Z"
         },
         {
           "id": "finra_plain_us_ready",
@@ -747,7 +746,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-10T12:47:25.910Z",
+      "as_of": "2026-07-10T17:30:38.073Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,

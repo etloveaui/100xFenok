@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v1",
   "source_stamp_version": 1,
-  "generated_at": "2026-07-10T12:47:25.663Z",
+  "generated_at": "2026-07-10T17:30:37.835Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -10,12 +10,23 @@
     "derived_counts_and_status_only": true
   },
   "source_stamp_diagnostics": {
-    "market_facts_core_surface_source_as_of": null,
-    "market_facts_full_universe_floor_as_of": null,
+    "market_facts_core_surface_source_as_of": "2026-06-27",
+    "market_facts_full_universe_floor_as_of": "2026-06-17",
     "full_universe_floor_sla_bound": false,
-    "stockanalysis_surface_domains": null,
-    "stockanalysis_index_mirror": null,
-    "etf_universe_source_as_of": null
+    "stockanalysis_surface_domains": {
+      "market_events": "2026-07-10",
+      "sectors": "2026-07-10",
+      "etf_center": "2026-07-10"
+    },
+    "stockanalysis_index_mirror": {
+      "surfaces": {
+        "market_events": "2026-07-10",
+        "sectors": "2026-07-10",
+        "etf_center": "2026-07-10"
+      },
+      "etf_universe": "2026-07-10"
+    },
+    "etf_universe_source_as_of": "2026-07-10"
   },
   "source_files": [
     "computed/market_facts/index.json",
@@ -44,19 +55,19 @@
     "error": 0
   },
   "counts": {
-    "marketFactsTickers": 6621,
-    "marketFactsEtfs": 5443,
+    "marketFactsTickers": 6629,
+    "marketFactsEtfs": 5451,
     "marketFactsStocks": 1178,
     "yfFinance": 2077,
     "globalScouterDetails": 1064,
-    "stockanalysisEtfs": 5441,
+    "stockanalysisEtfs": 4731,
     "stockanalysisStocks": 49,
     "stockanalysisFinancials": 43,
     "sec13fJson": 78,
     "edgarByTicker": 202,
     "slickchartsJson": 568,
-    "dataUsageRootJson": 17947,
-    "dataUsagePublicJson": 17982
+    "dataUsageRootJson": 18847,
+    "dataUsagePublicJson": 17999
   },
   "surfaces": [
     {
@@ -73,8 +84,8 @@
           "label": "통합 시세",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "6,621개 티커",
-          "count": 6621
+          "detail": "6,629개 티커",
+          "count": 6629
         },
         {
           "label": "기본 분석",
@@ -125,7 +136,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-10 · 0일 전",
-          "as_of": "2026-07-10T04:59:04Z",
+          "as_of": "2026-07-10T13:49:35Z",
           "age_days": 0,
           "max_age_days": 7
         },
@@ -149,7 +160,7 @@
         }
       ],
       "as_of": "2026-07-10T09:50:38.103Z",
-      "source_as_of": null
+      "source_as_of": "2026-06-27"
     },
     {
       "id": "market_valuation",
@@ -171,8 +182,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "17,947개 루트 JSON",
-          "count": 17947
+          "detail": "18,847개 루트 JSON",
+          "count": 18847
         },
         {
           "label": "시장 구조",
@@ -184,8 +195,8 @@
           "label": "소스 일치성",
           "status": "partial",
           "status_label": "부분 준비",
-          "detail": "30,186개 복수 후보",
-          "count": 30186,
+          "detail": "30,182개 복수 후보",
+          "count": 30182,
           "reason": "차이·오래됨·부호 차이를 Data Lab에서 계속 노출"
         },
         {
@@ -226,7 +237,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-10 · 0일 전",
-          "as_of": "2026-07-10T12:47:25.038Z",
+          "as_of": "2026-07-10T17:30:37.214Z",
           "age_days": 0,
           "max_age_days": 2
         },
@@ -253,12 +264,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-10 · 0일 전",
-          "as_of": "2026-07-10T04:59:04Z",
+          "as_of": "2026-07-10T13:49:35Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-10T04:59:04Z",
+      "as_of": "2026-07-10T13:49:35Z",
       "source_as_of": "2026-07-03"
     },
     {
@@ -275,9 +286,9 @@
           "label": "이벤트 수집 표면",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "16개 항목 · 8,164행",
+          "detail": "16개 항목 · 8,154행",
           "count": 16,
-          "rows": 8164
+          "rows": 8154
         },
         {
           "label": "어닝 일정",
@@ -307,14 +318,14 @@
           "label": "이벤트 표면 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-09 · 1일 전",
-          "as_of": "2026-07-09T02:23:02Z",
-          "age_days": 1,
+          "detail": "기준 2026-07-10 · 0일 전",
+          "as_of": "2026-07-10T13:29:05Z",
+          "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-09T02:23:02Z",
-      "source_as_of": null
+      "as_of": "2026-07-10T13:29:05Z",
+      "source_as_of": "2026-07-10"
     },
     {
       "id": "sectors",
@@ -361,13 +372,13 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-10 · 0일 전",
-          "as_of": "2026-07-10T04:59:04Z",
+          "as_of": "2026-07-10T13:49:35Z",
           "age_days": 0,
           "max_age_days": 14
         }
       ],
-      "as_of": "2026-07-10T04:59:04Z",
-      "source_as_of": null
+      "as_of": "2026-07-10T13:49:35Z",
+      "source_as_of": "2026-06-27"
     },
     {
       "id": "etf_center",
@@ -383,46 +394,46 @@
           "label": "ETF 전체 목록",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "5,415개 ETF",
-          "count": 5415
+          "detail": "5,423개 ETF",
+          "count": 5423
         },
         {
           "label": "ETF 상세",
           "status": "partial",
           "status_label": "부분 준비",
-          "detail": "5,420 / 5,472개",
-          "count": 5420,
-          "total": 5472,
-          "missing": 52,
-          "coverage_pct": 99.05
+          "detail": "5,427 / 5,480개",
+          "count": 5427,
+          "total": 5480,
+          "missing": 53,
+          "coverage_pct": 99.03
         },
         {
           "label": "기간 수익률",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "1Y 4,472개",
-          "count": 4472
+          "detail": "1Y 4,473개",
+          "count": 4473
         },
         {
           "label": "신규·전략 ETF",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "5개 항목 · 6,304행",
+          "detail": "5개 항목 · 6,312행",
           "count": 5,
-          "rows": 6304
+          "rows": 6312
         },
         {
           "label": "ETF 기준일",
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-10 · 0일 전",
-          "as_of": "2026-07-10T04:57:45Z",
+          "as_of": "2026-07-10T13:48:28Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-10T04:57:45Z",
-      "source_as_of": null
+      "as_of": "2026-07-10T13:48:28Z",
+      "source_as_of": "2026-06-27"
     },
     {
       "id": "screener",
@@ -481,9 +492,9 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "17,947 / 17,982 JSON",
-          "root": 17947,
-          "public": 17982
+          "detail": "18,847 / 17,999 JSON",
+          "root": 18847,
+          "public": 17999
         },
         {
           "label": "시장 데이터 감사",
@@ -509,12 +520,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-10 · 0일 전",
-          "as_of": "2026-07-10T12:47:25.663Z",
+          "as_of": "2026-07-10T17:30:37.835Z",
           "age_days": 0,
           "max_age_days": 1
         }
       ],
-      "as_of": "2026-07-10T12:47:25.663Z",
+      "as_of": "2026-07-10T17:30:37.835Z",
       "source_as_of": null
     }
   ]
