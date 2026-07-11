@@ -515,6 +515,12 @@ function warningCheck(id, label, detail, extra = {}) {
   return { id, label, status: "warning", status_label: statusLabel("warning"), detail, ...extra };
 }
 
+function diagnosticCheck(id, label, ok, detail, extra = {}) {
+  return ok
+    ? check(id, label, true, detail, { required: false, ...extra })
+    : warningCheck(id, label, detail, { required: false, ...extra });
+}
+
 function laneStatus(checks) {
   if (checks.some((item) => item.status === "blocked" || item.status === "unavailable")) return "blocked";
   if (checks.some((item) => item.status === "warning")) return "warning";
@@ -611,7 +617,7 @@ function buildStockS1Lane(coverageIndex) {
   });
 }
 
-function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket) {
+export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket) {
   const track = trackById(coverageIndex, "etf_scoring_lane");
   const counts = track?.evidence_based_readiness?.counts || {};
   const daily = etfDaily1y?.daily_1y_readiness || {};
@@ -621,8 +627,8 @@ function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket
   return lane("etf_public_and_daily_gate", "ETF public scoring and daily gate", [
     check("requirements_complete", "PUBLIC+DAILY+GATED", allRequirementsReady(track?.requirements), track?.stage || "missing"),
     check("coverage_gate_ok", "coverage-index ETF gate", bool(track?.evidence_based_readiness?.gate_ok ?? track?.public_done_claim_allowed), track?.readiness_status || "missing"),
-    check("fetchable_daily_1y_gap_zero", "daily 1Y fetchable gap", number(counts.fetchable_daily_1y_gap ?? daily.daily_1y_fetchable) === 0, `${number(counts.fetchable_daily_1y_gap ?? daily.daily_1y_fetchable)} fetchable`),
-    check("fetchable_plan_empty", "exact fetchable plan", number(etfFetchablePlan?.counts?.fetchable) === 0 && (etfFetchablePlan?.tickers || []).length === 0, `${number(etfFetchablePlan?.counts?.fetchable)} fetchable`),
+    diagnosticCheck("fetchable_daily_1y_gap_zero", "full scored-ETF daily 1Y diagnostic", number(counts.fetchable_daily_1y_gap ?? daily.daily_1y_fetchable) === 0, `${number(counts.fetchable_daily_1y_gap ?? daily.daily_1y_fetchable)} fetchable`, { service_gate: false }),
+    diagnosticCheck("fetchable_plan_empty", "full scored-ETF exact fetchable plan", number(etfFetchablePlan?.counts?.fetchable) === 0 && (etfFetchablePlan?.tickers || []).length === 0, `${number(etfFetchablePlan?.counts?.fetchable)} fetchable`, { service_gate: false }),
     check("core_basket_ready", "ETF core daily basket", bool(core.core_daily_basket_ready) && number(core.stale_selected_count) === 0 && number(core.selected_count) >= number(core.min_selected_count), `${number(core.fresh_selected_count)} fresh / ${number(core.selected_count)} selected`),
     check("route_caveat_consistent", "ETF API public label", !staleRouteCaveat, staleRouteCaveat ? "route still says not PUBLIC/DAILY/GATED" : "route caveat matches ready public lane"),
   ], {

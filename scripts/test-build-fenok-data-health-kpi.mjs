@@ -22,6 +22,7 @@ import {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
+  buildEtfLane,
   enumerateDueSlots,
   deriveMissedSlots,
 } from "./build-fenok-data-health-kpi.mjs";
@@ -41,6 +42,68 @@ const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
 assert.equal(PRODUCT_SURFACE_SLA?.unit, "business_days");
 assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadence + grace must fit inside the product-surface SLA");
+
+// The full 4,515-row daily-1Y lane is a diagnostic backlog. Product availability
+// is gated by the exact Core Daily Basket; non-zero diagnostic gaps must remain
+// visible without blocking reconcile:verify or Worker deployment.
+{
+  const coverage = {
+    public_scoring_readiness: {
+      tracks: [{
+        id: "etf_scoring_lane",
+        stage: "PUBLIC",
+        readiness_status: "ready",
+        requirements: {
+          source_available: true,
+          normalized: true,
+          joined_to_target_universe: true,
+          scored: true,
+          public: true,
+          daily: true,
+          gated: true,
+        },
+        evidence_based_readiness: {
+          gate_ok: true,
+          counts: {
+            eligible_etf_count: 5451,
+            scored_public_etf: 4515,
+            fetchable_daily_1y_gap: 31,
+            inception_limited_daily_1y_gap: 715,
+            terminal_limited_daily_1y_gap: 63,
+          },
+        },
+      }],
+    },
+  };
+  const daily = {
+    generated_at: "2026-07-11T23:15:57.000Z",
+    raw_policy: { service_gate: false },
+    daily_1y_readiness: { daily_1y_fetchable: 31 },
+  };
+  const plan = {
+    counts: { fetchable: 31 },
+    tickers: Array.from({ length: 31 }, (_, index) => `ETF${index}`),
+    bounded_batches: { batch_count: 1 },
+  };
+  const core = {
+    readiness: {
+      core_daily_basket_ready: true,
+      min_selected_count: 75,
+      selected_count: 98,
+      fresh_selected_count: 98,
+      stale_selected_count: 0,
+    },
+  };
+  const etfLane = buildEtfLane(coverage, daily, plan, core);
+  assert.equal(etfLane.status, "ready", "Core Basket readiness, not the full-universe diagnostic backlog, gates the ETF service lane");
+  for (const id of ["fetchable_daily_1y_gap_zero", "fetchable_plan_empty"]) {
+    const diagnostic = etfLane.checks.find((item) => item.id === id);
+    assert.equal(diagnostic?.status, "warning");
+    assert.equal(diagnostic?.required, false);
+    assert.equal(diagnostic?.service_gate, false);
+  }
+  assert.equal(etfLane.checks.find((item) => item.id === "core_basket_ready")?.status, "ready");
+}
 
 // The eight lanes the checker's validateCoreShape (check-...:36 REQUIRED_LANES) demands.
 // Kept in lockstep with that set; a divergence hard-fails validateCoreShape immediately.

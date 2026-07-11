@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-11T23:08:29.124Z",
+  "generated_at": "2026-07-11T23:37:44.057Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -14,7 +14,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v1",
     "built_at": "2026-07-11T10:50:30.103Z",
-    "evaluated_at": "2026-07-11T23:08:29.124Z",
+    "evaluated_at": "2026-07-11T23:37:44.057Z",
     "fresh": true,
     "missed_slot_count": 0,
     "hard_age_ok": true
@@ -109,19 +109,19 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-11T04:01:02.571Z",
+      "source_date": "2026-07-11T23:16:09.998Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 19.12,
+      "age": 0.36,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-11T07:44:20.217Z",
+      "generated_at": "2026-07-11T23:16:01.191Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -139,19 +139,19 @@
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-11T04:01:02.408Z",
+      "generated_at": "2026-07-11T23:17:55.835Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-11T04:01:02.571Z",
+      "generated_at": "2026-07-11T23:16:09.998Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-11T04:00:44.097Z",
+      "generated_at": "2026-07-11T23:15:36.191Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -171,7 +171,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T07:44:20.217Z",
+      "as_of": "2026-07-11T23:16:01.191Z",
       "counts": {
         "active_total": 1172,
         "by_market": [
@@ -369,20 +369,20 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T04:01:02.571Z",
+      "as_of": "2026-07-11T23:16:09.998Z",
       "counts": {
         "eligible_etf_count": 4515,
         "scored_public_etf": 4515,
-        "fetchable_daily_1y_gap": 0,
+        "fetchable_daily_1y_gap": 31,
         "inception_limited_daily_1y_gap": 715,
-        "terminal_limited_daily_1y_gap": 94,
+        "terminal_limited_daily_1y_gap": 63,
         "core_selected_count": 98,
         "core_fresh_selected_count": 98,
         "core_stale_selected_count": 0
       },
       "details": {
         "full_daily_1y_diagnostic_service_gate": false,
-        "exact_plan_batch_count": 0
+        "exact_plan_batch_count": 1
       },
       "checks": [
         {
@@ -401,17 +401,21 @@
         },
         {
           "id": "fetchable_daily_1y_gap_zero",
-          "label": "daily 1Y fetchable gap",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "0 fetchable"
+          "label": "full scored-ETF daily 1Y diagnostic",
+          "status": "warning",
+          "status_label": "주의",
+          "detail": "31 fetchable",
+          "required": false,
+          "service_gate": false
         },
         {
           "id": "fetchable_plan_empty",
-          "label": "exact fetchable plan",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "0 fetchable"
+          "label": "full scored-ETF exact fetchable plan",
+          "status": "warning",
+          "status_label": "주의",
+          "detail": "31 fetchable",
+          "required": false,
+          "service_gate": false
         },
         {
           "id": "core_basket_ready",
@@ -594,7 +598,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T04:01:02.408Z",
+      "as_of": "2026-07-11T23:17:55.835Z",
       "counts": {
         "active_us_total": 744,
         "plain_us_finra_denominator": 685,
@@ -606,10 +610,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-11T04:00:28.465Z",
+          "signals_generated_at": "2026-07-11T12:36:32.444Z",
           "finra_source_date": "20260710",
           "occ_source_date": "20260710",
-          "coverage_index_generated_at": "2026-07-11T04:01:02.111Z",
+          "coverage_index_generated_at": "2026-07-11T23:16:01.191Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -636,7 +640,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-11T04:01:02.408Z"
+          "detail": "2026-07-11T23:17:55.835Z"
         },
         {
           "id": "finra_plain_us_ready",
@@ -674,7 +678,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T23:08:29.146Z",
+      "as_of": "2026-07-11T23:37:44.071Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -814,6 +818,22 @@
     }
   ],
   "non_ready_checks": [
+    {
+      "lane_id": "etf_public_and_daily_gate",
+      "check_id": "fetchable_daily_1y_gap_zero",
+      "status": "warning",
+      "label": "full scored-ETF daily 1Y diagnostic",
+      "detail": "31 fetchable",
+      "required": false
+    },
+    {
+      "lane_id": "etf_public_and_daily_gate",
+      "check_id": "fetchable_plan_empty",
+      "status": "warning",
+      "label": "full scored-ETF exact fetchable plan",
+      "detail": "31 fetchable",
+      "required": false
+    },
     {
       "lane_id": "rim_inputs",
       "check_id": "rim_ccmp_input_only",
