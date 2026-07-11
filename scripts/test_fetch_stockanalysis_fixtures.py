@@ -1458,6 +1458,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["entries"]["ADIU"]["last_provider"], "yahoo_finance")
 
     def test_etf_404_uses_yahoo_fallback_when_enabled(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
         original_fetch_etf = self.fetcher.fetch_etf
         original_fallback = self.fetcher.fetch_yahoo_etf_fallback
         original_write_payload = self.fetcher.write_payload
@@ -1487,11 +1488,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.fetcher.write_payload = fake_write_payload
         try:
             with tempfile.TemporaryDirectory() as tmp:
-                self.fetcher.DATA_SUPPLY_STATE_ROOT = Path(tmp) / "data-supply-state" / "v1"
+                temp_root = Path(tmp)
+                self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data-supply-state" / "v1"
                 result = self.fetcher.run_one("etf", "ADIU", timeout=1, mirror_public=False, yf_fallback=True)
                 history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
                 observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
         finally:
+            self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.fetch_etf = original_fetch_etf
             self.fetcher.fetch_yahoo_etf_fallback = original_fallback
             self.fetcher.write_payload = original_write_payload
