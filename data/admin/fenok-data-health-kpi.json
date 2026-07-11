@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-11T09:26:33.924Z",
+  "generated_at": "2026-07-11T10:50:30.103Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -13,22 +13,22 @@
   },
   "runtime": {
     "producer_context": {
-      "built_at": "2026-07-11T05:25:56.240Z",
-      "duration_ms": 24,
-      "run_id": "29141153425",
+      "built_at": "2026-07-11T10:50:30.103Z",
+      "duration_ms": 25,
+      "run_id": "29149658987",
       "run_attempt": 1,
       "event_name": "schedule",
       "workflow": "Update Manifest",
-      "sha": "493dee39d2a8b9e562d4dc112f1e6751903d0062",
-      "slot_key": "update-manifest.yml:30 2 * * *@2026-07-11T02:30Z",
+      "sha": "02a28ec591521ea2ab96fa2fea48a92bf93f7916",
+      "slot_key": "update-manifest.yml:30 9 * * *@2026-07-11T09:30Z",
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-11T09:26:33.924Z",
-      "run_id": "29147675306",
+      "built_at": "2026-07-11T10:50:30.103Z",
+      "run_id": "29149658987",
       "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "bc85d675b1ea0706b6e29adb9131af4dd1813480"
+      "event_name": "schedule",
+      "sha": "02a28ec591521ea2ab96fa2fea48a92bf93f7916"
     },
     "cadence": {
       "crons_utc": [
@@ -47,9 +47,10 @@
         "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-10T10:30Z",
         "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z",
         "update-manifest.yml:30 2 * * *@2026-07-11T02:30Z",
-        "update-manifest.yml:30 9 * * *@2026-07-10T09:30Z"
+        "update-manifest.yml:30 9 * * *@2026-07-10T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-07-11T09:30Z"
       ],
-      "last_satisfied_slot_key": "update-manifest.yml:30 2 * * *@2026-07-11T02:30Z",
+      "last_satisfied_slot_key": "update-manifest.yml:30 9 * * *@2026-07-11T09:30Z",
       "missed_slot_keys": [],
       "cron_deferrals": []
     },
@@ -98,11 +99,20 @@
         "workflow": "Update Manifest",
         "status": "ready",
         "duration_ms": 24
+      },
+      {
+        "built_at": "2026-07-11T10:50:30.103Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-07-11T09:30Z",
+        "run_id": "29149658987",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 25
       }
     ],
     "authoritative_context": {
-      "authoritative": false,
-      "reason": "non_authoritative_context"
+      "authoritative": true,
+      "reason": "schedule"
     }
   },
   "source_sla": [
@@ -200,7 +210,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 5.43,
+      "age": 6.82,
       "status": "ready"
     }
   ],
@@ -213,13 +223,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-11T09:26:33.120Z",
+      "generated_at": "2026-07-11T10:50:29.297Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-11T09:26:33.715Z",
+      "generated_at": "2026-07-11T10:50:29.900Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -521,7 +531,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T09:26:33.120Z",
+      "as_of": "2026-07-11T10:50:29.297Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -632,7 +642,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T09:26:33.715Z",
+      "as_of": "2026-07-11T10:50:29.900Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -649,7 +659,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-11T09:26:33.715Z"
+          "detail": "2026-07-11T10:50:29.900Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -760,7 +770,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T09:26:33.946Z",
+      "as_of": "2026-07-11T10:50:30.125Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
