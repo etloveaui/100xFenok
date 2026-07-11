@@ -1,0 +1,374 @@
+name: KRX Pure-Git Persistence Synthetic Proof (INCOMPLETE)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_synthetic_only:
+        description: 'Confirm: synthetic fixtures only; this cannot satisfy production A0.3'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: krx-persistence-pure-git-proof
+  cancel-in-progress: false
+
+env:
+  PROOF_REMOTE: git@github.com:etloveaui/fenok-krx-persistence-proof.git
+  PROOF_BRANCH: proof/krx-daily/run-${{ github.run_id }}-${{ github.run_attempt }}
+  PROOF_SCRIPT: scripts/krx-persistence-pure-git-proof.mjs
+
+jobs:
+  bootstrap:
+    name: Bootstrap synthetic G0
+    if: >-
+      github.repository == 'etloveaui/100xFenok' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm_synthetic_only == true
+    environment: krx-persistence-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      commit: ${{ steps.push.outputs.commit }}
+      semantic_sha256: ${{ steps.pack.outputs.semantic_sha256 }}
+    steps:
+      - name: Checkout public proof code without credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Run hermetic proof tests
+        run: node --test scripts/test-krx-persistence-pure-git-proof.mjs
+
+      - name: Clone main with read-only key and prove push denial
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.KRX_PERSIST_PROOF_SSH_READ_KEY }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          key_file="$RUNNER_TEMP/krx-proof-read"
+          known_hosts="$RUNNER_TEMP/krx-proof-known-hosts"
+          negative_out="$RUNNER_TEMP/krx-proof-ro-negative"
+          cleanup() {
+            rm -f "$key_file" "$known_hosts" "$negative_out"
+            unset SSH_PRIVATE_KEY GIT_SSH_COMMAND GIT_TERMINAL_PROMPT SSH_AUTH_SOCK
+          }
+          trap cleanup EXIT INT TERM
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+          unset SSH_PRIVATE_KEY SSH_AUTH_SOCK
+          printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          test "$(ssh-keygen -lf "$known_hosts" -E sha256 | awk '{print $2}')" = 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
+          export GIT_TERMINAL_PROMPT=0
+          export GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts -o GlobalKnownHostsFile=/dev/null -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519"
+          repo="$RUNNER_TEMP/krx-proof-bootstrap-repo"
+          git clone --quiet --no-tags --single-branch --branch main "$PROOF_REMOTE" "$repo"
+          canary="${PROOF_BRANCH}-ro-canary"
+          test -z "$(git ls-remote --heads "$PROOF_REMOTE" "refs/heads/$canary")"
+          if git -C "$repo" push --dry-run --porcelain origin "HEAD:refs/heads/$canary" >"$negative_out" 2>&1; then
+            echo 'RO_PUSH_UNEXPECTEDLY_ALLOWED'
+            exit 1
+          fi
+          grep -Eiq 'denied|read.?only|permission|repository not found|could not read' "$negative_out"
+          test -z "$(git ls-remote --heads "$PROOF_REMOTE" "refs/heads/$canary")"
+
+      - name: Prepare synthetic G0 after authenticated read scope ends
+        run: |
+          node "$PROOF_SCRIPT" prepare-bootstrap \
+            --repo "$RUNNER_TEMP/krx-proof-bootstrap-repo" \
+            --branch "$PROOF_BRANCH" \
+            --stage "$RUNNER_TEMP/krx-proof-bootstrap-stage"
+
+      - name: Encrypt and commit G0 with AES scope only
+        id: pack
+        shell: bash
+        env:
+          KRX_PERSIST_PROOF_AES_KEY_V1: ${{ secrets.KRX_PERSIST_PROOF_AES_KEY_V1 }}
+        run: |
+          set -euo pipefail
+          set +x
+          stage="$RUNNER_TEMP/krx-proof-bootstrap-stage"
+          cleanup() {
+            rm -f "$stage/candidate-state.json"
+            unset KRX_PERSIST_PROOF_AES_KEY_V1
+          }
+          trap cleanup EXIT INT TERM
+          evidence="$RUNNER_TEMP/krx-proof-bootstrap-pack.json"
+          node "$PROOF_SCRIPT" pack-bootstrap \
+            --repo "$RUNNER_TEMP/krx-proof-bootstrap-repo" \
+            --stage "$stage" \
+            --evidence "$evidence"
+          semantic="$(node -e 'const e=require(process.argv[1]); if(!/^[0-9a-f]{64}$/.test(e.semantic_sha256)) process.exit(1); process.stdout.write(e.semantic_sha256)' "$evidence")"
+          echo "semantic_sha256=$semantic" >> "$GITHUB_OUTPUT"
+
+      - name: Prove write-key repository scope, then push G0
+        id: push
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.KRX_PERSIST_PROOF_SSH_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          key_file="$RUNNER_TEMP/krx-proof-write"
+          known_hosts="$RUNNER_TEMP/krx-proof-known-hosts"
+          negative_out="$RUNNER_TEMP/krx-proof-rw-negative"
+          cleanup() {
+            rm -f "$key_file" "$known_hosts" "$negative_out"
+            unset SSH_PRIVATE_KEY GIT_SSH_COMMAND GIT_TERMINAL_PROMPT SSH_AUTH_SOCK
+          }
+          trap cleanup EXIT INT TERM
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+          unset SSH_PRIVATE_KEY SSH_AUTH_SOCK
+          printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          test "$(ssh-keygen -lf "$known_hosts" -E sha256 | awk '{print $2}')" = 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
+          export GIT_TERMINAL_PROMPT=0
+          export GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts -o GlobalKnownHostsFile=/dev/null -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519"
+          unrelated_ref="refs/heads/krx-proof-negative-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test -z "$(git ls-remote --heads https://github.com/etloveaui/100xFenok.git "$unrelated_ref")"
+          if git -C "$GITHUB_WORKSPACE" push --dry-run --porcelain git@github.com:etloveaui/100xFenok.git "HEAD:$unrelated_ref" >"$negative_out" 2>&1; then
+            echo 'RW_KEY_REACHED_UNRELATED_REPOSITORY'
+            exit 1
+          fi
+          grep -Eiq 'denied|permission|repository not found|could not read' "$negative_out"
+          test -z "$(git ls-remote --heads https://github.com/etloveaui/100xFenok.git "$unrelated_ref")"
+          evidence="$RUNNER_TEMP/krx-proof-bootstrap-push.json"
+          node "$PROOF_SCRIPT" push-bootstrap \
+            --repo "$RUNNER_TEMP/krx-proof-bootstrap-repo" \
+            --branch "$PROOF_BRANCH" \
+            --evidence "$evidence"
+          commit="$(node -e 'const e=require(process.argv[1]); if(!/^[0-9a-f]{40}$/.test(e.commit)) process.exit(1); process.stdout.write(e.commit)' "$evidence")"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+      - name: Verify bootstrap secret files are absent
+        if: always()
+        run: |
+          test ! -e "$RUNNER_TEMP/krx-proof-read"
+          test ! -e "$RUNNER_TEMP/krx-proof-write"
+          test ! -e "$RUNNER_TEMP/krx-proof-bootstrap-stage/candidate-state.json"
+
+  cold-one:
+    name: Cold 1 restore, inject, promote, and race
+    needs: bootstrap
+    if: needs.bootstrap.result == 'success'
+    environment: krx-persistence-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      commit: ${{ steps.push.outputs.commit }}
+      semantic_sha256: ${{ steps.push.outputs.semantic_sha256 }}
+    steps:
+      - name: Checkout public proof code without credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Clone three same-head workspaces with read-only key
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.KRX_PERSIST_PROOF_SSH_READ_KEY }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          key_file="$RUNNER_TEMP/krx-proof-read"
+          known_hosts="$RUNNER_TEMP/krx-proof-known-hosts"
+          negative_out="$RUNNER_TEMP/krx-proof-ro-negative"
+          cleanup() {
+            rm -f "$key_file" "$known_hosts" "$negative_out"
+            unset SSH_PRIVATE_KEY GIT_SSH_COMMAND GIT_TERMINAL_PROMPT SSH_AUTH_SOCK
+          }
+          trap cleanup EXIT INT TERM
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+          unset SSH_PRIVATE_KEY SSH_AUTH_SOCK
+          printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          test "$(ssh-keygen -lf "$known_hosts" -E sha256 | awk '{print $2}')" = 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
+          export GIT_TERMINAL_PROMPT=0
+          export GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts -o GlobalKnownHostsFile=/dev/null -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519"
+          for name in restore writer-a writer-b; do
+            git clone --quiet --no-tags --single-branch --branch "$PROOF_BRANCH" "$PROOF_REMOTE" "$RUNNER_TEMP/krx-proof-$name"
+          done
+          canary="${PROOF_BRANCH}-ro-canary"
+          test -z "$(git ls-remote --heads "$PROOF_REMOTE" "refs/heads/$canary")"
+          if git -C "$RUNNER_TEMP/krx-proof-restore" push --dry-run --porcelain origin "HEAD:refs/heads/$canary" >"$negative_out" 2>&1; then
+            echo 'RO_PUSH_UNEXPECTEDLY_ALLOWED'
+            exit 1
+          fi
+          grep -Eiq 'denied|read.?only|permission|repository not found|could not read' "$negative_out"
+          test -z "$(git ls-remote --heads "$PROOF_REMOTE" "refs/heads/$canary")"
+
+      - name: Restore G0, preserve LKG, promote G1, and encrypt two writers
+        id: pack
+        shell: bash
+        env:
+          KRX_PERSIST_PROOF_AES_KEY_V1: ${{ secrets.KRX_PERSIST_PROOF_AES_KEY_V1 }}
+        run: |
+          set -euo pipefail
+          set +x
+          stage="$RUNNER_TEMP/krx-proof-cold-one-stage"
+          cleanup() {
+            rm -f "$stage/restored-state.json"
+            unset KRX_PERSIST_PROOF_AES_KEY_V1
+          }
+          trap cleanup EXIT INT TERM
+          node "$PROOF_SCRIPT" restore-existing \
+            --repo "$RUNNER_TEMP/krx-proof-restore" \
+            --stage "$stage"
+          node "$PROOF_SCRIPT" pack-race \
+            --writer-a "$RUNNER_TEMP/krx-proof-writer-a" \
+            --writer-b "$RUNNER_TEMP/krx-proof-writer-b" \
+            --stage "$stage"
+
+      - name: Push one winner, reject stale writer, and reconcile UNKNOWN
+        id: push
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.KRX_PERSIST_PROOF_SSH_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          key_file="$RUNNER_TEMP/krx-proof-write"
+          known_hosts="$RUNNER_TEMP/krx-proof-known-hosts"
+          cleanup() {
+            rm -f "$key_file" "$known_hosts"
+            unset SSH_PRIVATE_KEY GIT_SSH_COMMAND GIT_TERMINAL_PROMPT SSH_AUTH_SOCK
+          }
+          trap cleanup EXIT INT TERM
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+          unset SSH_PRIVATE_KEY SSH_AUTH_SOCK
+          printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          test "$(ssh-keygen -lf "$known_hosts" -E sha256 | awk '{print $2}')" = 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
+          export GIT_TERMINAL_PROMPT=0
+          export GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts -o GlobalKnownHostsFile=/dev/null -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519"
+          evidence="$RUNNER_TEMP/krx-proof-cold-one-push.json"
+          node "$PROOF_SCRIPT" push-race \
+            --writer-a "$RUNNER_TEMP/krx-proof-writer-a" \
+            --writer-b "$RUNNER_TEMP/krx-proof-writer-b" \
+            --branch "$PROOF_BRANCH" \
+            --stage "$RUNNER_TEMP/krx-proof-cold-one-stage" \
+            --evidence "$evidence"
+          node - "$evidence" "$GITHUB_OUTPUT" <<'NODE'
+          const fs = require('node:fs');
+          const [file, output] = process.argv.slice(2);
+          const evidence = JSON.parse(fs.readFileSync(file, 'utf8'));
+          if (!/^[0-9a-f]{40}$/.test(evidence.commit)) process.exit(1);
+          if (!/^[0-9a-f]{64}$/.test(evidence.semantic_sha256)) process.exit(1);
+          fs.appendFileSync(output, `commit=${evidence.commit}\nsemantic_sha256=${evidence.semantic_sha256}\n`);
+          NODE
+
+      - name: Verify cold-one secret and plaintext files are absent
+        if: always()
+        run: |
+          test ! -e "$RUNNER_TEMP/krx-proof-read"
+          test ! -e "$RUNNER_TEMP/krx-proof-write"
+          test ! -e "$RUNNER_TEMP/krx-proof-cold-one-stage/restored-state.json"
+
+  cold-two:
+    name: Cold 2 restore and network-denied selection
+    needs: [bootstrap, cold-one]
+    if: needs.bootstrap.result == 'success' && needs.cold-one.result == 'success'
+    environment: krx-persistence-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout public proof code without credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Fresh clone G1 with read-only key
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.KRX_PERSIST_PROOF_SSH_READ_KEY }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          key_file="$RUNNER_TEMP/krx-proof-read"
+          known_hosts="$RUNNER_TEMP/krx-proof-known-hosts"
+          cleanup() {
+            rm -f "$key_file" "$known_hosts"
+            unset SSH_PRIVATE_KEY GIT_SSH_COMMAND GIT_TERMINAL_PROMPT SSH_AUTH_SOCK
+          }
+          trap cleanup EXIT INT TERM
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+          unset SSH_PRIVATE_KEY SSH_AUTH_SOCK
+          printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          test "$(ssh-keygen -lf "$known_hosts" -E sha256 | awk '{print $2}')" = 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
+          export GIT_TERMINAL_PROMPT=0
+          export GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts -o GlobalKnownHostsFile=/dev/null -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519"
+          git clone --quiet --no-tags --single-branch --branch "$PROOF_BRANCH" "$PROOF_REMOTE" "$RUNNER_TEMP/krx-proof-cold-two"
+
+      - name: Decrypt and verify G1 with AES scope only
+        shell: bash
+        env:
+          KRX_PERSIST_PROOF_AES_KEY_V1: ${{ secrets.KRX_PERSIST_PROOF_AES_KEY_V1 }}
+        run: |
+          set -euo pipefail
+          set +x
+          trap 'unset KRX_PERSIST_PROOF_AES_KEY_V1' EXIT INT TERM
+          node "$PROOF_SCRIPT" restore-existing \
+            --repo "$RUNNER_TEMP/krx-proof-cold-two" \
+            --stage "$RUNNER_TEMP/krx-proof-cold-two-stage"
+
+      - name: Select identical effective state with all network disabled
+        id: offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/krx-proof-offline.json"
+          : > "$evidence"
+          chmod 600 "$evidence"
+          node_bin="$(command -v node)"
+          sudo unshare --net -- "$node_bin" "$PROOF_SCRIPT" offline-select \
+            --stage "$RUNNER_TEMP/krx-proof-cold-two-stage" \
+            --expected "${{ needs.cold-one.outputs.semantic_sha256 }}" \
+            --evidence "$evidence"
+          effective="$(node -e 'const e=require(process.argv[1]); if(!/^[0-9a-f]{64}$/.test(e.effective_state_sha256)||e.krx_network_calls!==0||e.offline_selection_match!==true) process.exit(1); process.stdout.write(e.effective_state_sha256)' "$evidence")"
+          echo "effective_sha256=$effective" >> "$GITHUB_OUTPUT"
+
+      - name: Publish digest-only incomplete proof summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## INCOMPLETE / PURE-GIT SEMANTIC PROOF ONLY
+
+          - Synthetic fixtures only; no real KRX bytes.
+          - Bootstrap commit: \`${{ needs.bootstrap.outputs.commit }}\`
+          - Race winner commit: \`${{ needs.cold-one.outputs.commit }}\`
+          - Effective state SHA-256: \`${{ steps.offline.outputs.effective_sha256 }}\`
+          - Proved here: SSH restore ordering, digest closure, synthetic LKG preservation, complete-promotion save gate, one-winner non-fast-forward race, UNKNOWN reconciliation, current-tree namespace cleanup, and second cold restore/offline selection.
+          - Accepted synthetic-only boundary: encrypted non-KRX fixtures remain in private Git history; this is never permission for production or KRX-derived bytes.
+          - Not proved: no-private-object-in-Git, finite retention or historical erasure, Release assets, production state-engine integration, KRX/Koscom permission, or A0.3 completion.
+          EOF
+
+      - name: Verify cold-two secret and plaintext files are absent
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/krx-proof-cold-two-stage/restored-state.json"
+          test ! -e "$RUNNER_TEMP/krx-proof-read"
+          test ! -e "$RUNNER_TEMP/krx-proof-cold-two-stage/restored-state.json"
