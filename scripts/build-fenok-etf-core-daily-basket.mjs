@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ETF_CORE_MAX_QUOTE_AGE_DAYS } from "./lib/kpi-contract-constants.mjs";
+import { createEffectiveEtfDetailReader } from "./effective-etf-detail-reader.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -23,6 +24,7 @@ const ETF_DETAIL_COVERAGE_REL = "data/stockanalysis/coverage/etf_detail.json";
 const NEW_ETFS_REL = "data/stockanalysis/surfaces/new_etfs.json";
 const ETF_DETAIL_DIR_REL = "data/stockanalysis/etfs";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md";
+const effectiveDetailReader = createEffectiveEtfDetailReader({ rootDir: REPO_ROOT });
 
 export const ETF_CORE_DAILY_BASKET_CONFIG = Object.freeze({
   schema_version: "fenok-etf-core-daily-basket/v0.1",
@@ -215,7 +217,12 @@ function normalizeGenerated(payload) {
 }
 
 function detailPayload(ticker) {
-  return readJsonOrNull(`${ETF_DETAIL_DIR_REL}/${ticker}.json`);
+  const resolved = effectiveDetailReader.resolve(ticker);
+  return {
+    payload: resolved.status === "available" ? resolved.payload : null,
+    enrolled: resolved.enrolled === true,
+    resolutionState: resolved.selection?.resolution_state ?? (resolved.status === "unavailable" ? "unavailable" : null),
+  };
 }
 
 function derivativeIncomeReason({ ticker, actionRow, detail }) {
@@ -232,14 +239,14 @@ function derivativeIncomeReason({ ticker, actionRow, detail }) {
   return matched ? "single_stock_or_concentrated_derivative_income_strategy" : null;
 }
 
-function structuralReasons({ ticker, actionRow, detail, missingDetailSet, yahooFallbackSet, newEtfSet }) {
+function structuralReasons({ ticker, actionRow, detail, enrolled, missingDetailSet, yahooFallbackSet, newEtfSet }) {
   const reasons = [];
   if (!actionRow) reasons.push("action_index_missing");
   if (newEtfSet.has(ticker)) reasons.push("new_etf_radar_only");
-  if (missingDetailSet.has(ticker)) reasons.push("detail_missing");
-  if (yahooFallbackSet.has(ticker)) reasons.push("yahoo_fallback_detail");
+  if (missingDetailSet.has(ticker) && !enrolled) reasons.push("detail_missing");
+  if (yahooFallbackSet.has(ticker) && !enrolled) reasons.push("yahoo_fallback_detail");
   if (!detail) reasons.push("detail_file_missing");
-  if (detail && detail.source !== "stockanalysis") reasons.push("non_stockanalysis_detail");
+  if (detail && detail.source !== "stockanalysis" && !enrolled) reasons.push("non_stockanalysis_detail");
 
   const normalized = asObject(detail?.normalized);
   const classification = asObject(normalized.classification);
@@ -317,8 +324,17 @@ function buildRows({ signalSummary, actionIndex, detailCoverage, newEtfs, now })
     const ticker = normTicker(sourceRow.ticker);
     if (!ticker) continue;
     const actionRow = actionByTicker.get(ticker);
-    const detail = detailPayload(ticker);
-    const reasons = structuralReasons({ ticker, actionRow, detail, missingDetailSet, yahooFallbackSet, newEtfSet });
+    const effectiveDetail = detailPayload(ticker);
+    const detail = effectiveDetail.payload;
+    const reasons = structuralReasons({
+      ticker,
+      actionRow,
+      detail,
+      enrolled: effectiveDetail.enrolled,
+      missingDetailSet,
+      yahooFallbackSet,
+      newEtfSet,
+    });
     if (reasons.length > 0) {
       for (const reason of reasons) {
         inc(excludedReasonCounts, reason);

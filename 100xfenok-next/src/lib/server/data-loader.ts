@@ -1,5 +1,5 @@
 import type { Dirent } from "node:fs";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
 import type { z } from "zod";
@@ -69,6 +69,7 @@ type JsonFileEntry = {
 type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
 type DataJsonFilesByPath = Record<string, readonly DataJsonManifestEntry[]>;
 type JsonRecord = Record<string, unknown>;
+export type PublicJsonDocument = { raw: string; value: JsonRecord };
 export type StockanalysisAssetKind = "etfs" | "stocks" | "financials";
 
 let dataJsonFilesByPathPromise: Promise<DataJsonFilesByPath> | null = null;
@@ -111,6 +112,26 @@ function asJsonRecord(value: unknown): JsonRecord | null {
 async function readOptionalJsonRecord(filePath: string): Promise<JsonRecord | null> {
   try {
     return asJsonRecord(JSON.parse(await readPublicDataFile(filePath)) as unknown);
+  } catch {
+    return null;
+  }
+}
+
+async function readStrictPublicJsonDocument(filePath: string): Promise<PublicJsonDocument | null> {
+  try {
+    const info = await lstat(filePath);
+    if (!info.isFile() || info.isSymbolicLink()) return null;
+  } catch (error) {
+    const code = error && typeof error === "object" && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : "";
+    if (code !== "ENOENT") return null;
+  }
+
+  try {
+    const raw = await readPublicDataFile(filePath);
+    const value = asJsonRecord(JSON.parse(raw) as unknown);
+    return value ? { raw, value } : null;
   } catch {
     return null;
   }
@@ -703,6 +724,45 @@ export async function getStockanalysisAsset(
 ) {
   const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${ticker}.json`);
   return readOptionalJsonRecord(assetPath);
+}
+
+export async function getStockanalysisAssetDocument(
+  assetKind: StockanalysisAssetKind,
+  ticker: string,
+) {
+  const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${ticker}.json`);
+  return readStrictPublicJsonDocument(assetPath);
+}
+
+export async function getDataSupplyEtfEnrollmentDocument() {
+  return readStrictPublicJsonDocument(path.join(
+    PUBLIC_DATA_ROOT,
+    "computed",
+    "data-supply",
+    "etf-detail",
+    "enrollment.json",
+  ));
+}
+
+export async function getDataSupplyEtfIndexDocument() {
+  return readStrictPublicJsonDocument(path.join(
+    PUBLIC_DATA_ROOT,
+    "computed",
+    "data-supply",
+    "etf-detail",
+    "index.json",
+  ));
+}
+
+export async function getDataSupplyEtfPayloadDocument(ticker: string) {
+  return readStrictPublicJsonDocument(path.join(
+    PUBLIC_DATA_ROOT,
+    "computed",
+    "data-supply",
+    "etf-detail",
+    "payloads",
+    `${ticker}.json`,
+  ));
 }
 
 export async function getStockanalysisEtfUniverse() {
