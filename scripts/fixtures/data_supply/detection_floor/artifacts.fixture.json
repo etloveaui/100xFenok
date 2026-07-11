@@ -1,0 +1,469 @@
+{
+  "schema_version": "data-supply-detection-artifacts/v1",
+  "documents": [
+    {
+      "id": "fred_current",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "series": {
+          "M2SL": [{ "date": "2026-07-10", "value": 1 }],
+          "WALCL": [{ "date": "2026-07-10", "value": 1 }],
+          "RRPONTSYD": [{ "date": "2026-07-10", "value": 1 }],
+          "SOFR": [{ "date": "2026-07-10", "value": 1 }],
+          "IORB": [{ "date": "2026-07-10", "value": 1 }],
+          "WRESBAL": [{ "date": "2026-07-10", "value": 1 }],
+          "GDP": [{ "date": "2026-03-31", "value": 1 }]
+        }
+      }
+    },
+    {
+      "id": "fred_stale",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "series": {
+          "M2SL": [{ "date": "2026-01-01", "value": 1 }],
+          "WALCL": [{ "date": "2026-01-01", "value": 1 }],
+          "RRPONTSYD": [{ "date": "2026-01-01", "value": 1 }],
+          "SOFR": [{ "date": "2026-01-01", "value": 1 }],
+          "IORB": [{ "date": "2026-01-01", "value": 1 }],
+          "WRESBAL": [{ "date": "2026-01-01", "value": 1 }],
+          "GDP": [{ "date": "2026-01-01", "value": 1 }]
+        }
+      }
+    },
+    {
+      "id": "fred_future",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "series": {
+          "M2SL": [{ "date": "2026-07-12", "value": 1 }],
+          "WALCL": [{ "date": "2026-07-12", "value": 1 }],
+          "RRPONTSYD": [{ "date": "2026-07-12", "value": 1 }],
+          "SOFR": [{ "date": "2026-07-12", "value": 1 }],
+          "IORB": [{ "date": "2026-07-12", "value": 1 }],
+          "WRESBAL": [{ "date": "2026-07-12", "value": 1 }],
+          "GDP": [{ "date": "2026-07-12", "value": 1 }]
+        }
+      }
+    },
+    {
+      "id": "fred_empty",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "series": {
+          "M2SL": [],
+          "WALCL": [{ "date": "2026-07-10", "value": 1 }],
+          "RRPONTSYD": [{ "date": "2026-07-10", "value": 1 }],
+          "SOFR": [{ "date": "2026-07-10", "value": 1 }],
+          "IORB": [{ "date": "2026-07-10", "value": 1 }],
+          "WRESBAL": [{ "date": "2026-07-10", "value": 1 }],
+          "GDP": [{ "date": "2026-03-31", "value": 1 }]
+        }
+      }
+    },
+    {
+      "id": "fred_missing_source",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "series": {
+          "M2SL": [{ "value": 1 }],
+          "WALCL": [{ "value": 1 }],
+          "RRPONTSYD": [{ "value": 1 }],
+          "SOFR": [{ "value": 1 }],
+          "IORB": [{ "value": 1 }],
+          "WRESBAL": [{ "value": 1 }],
+          "GDP": [{ "value": 1 }]
+        }
+      }
+    },
+    {
+      "id": "fred_schema_drift",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "series": {
+          "EXTRA": [{ "date": "2026-07-10", "value": 1 }],
+          "WALCL": [{ "date": "2026-07-10", "value": 1 }],
+          "RRPONTSYD": [{ "date": "2026-07-10", "value": 1 }],
+          "SOFR": [{ "date": "2026-07-10", "value": 1 }],
+          "IORB": [{ "date": "2026-07-10", "value": 1 }],
+          "WRESBAL": [{ "date": "2026-07-10", "value": 1 }],
+          "GDP": [{ "date": "2026-03-31", "value": 1 }]
+        }
+      }
+    },
+    {
+      "id": "malformed_json",
+      "encoding": "raw_utf8",
+      "content": "{\"series\":{\"M2SL\":["
+    },
+    {
+      "id": "banking_daily",
+      "encoding": "json",
+      "content": { "updated": "2026-07-11T00:00:00Z", "type": "daily", "series": { "DGS10": [{ "date": "2026-07-10", "value": 1 }], "BAMLH0A0HYM2": [{ "date": "2026-07-10", "value": 1 }], "IRLTLT01KRM156N": [{ "date": "2026-07-10", "value": 1 }] } }
+    },
+    {
+      "id": "banking_weekly",
+      "encoding": "json",
+      "content": { "updated": "2026-07-11T00:00:00Z", "type": "weekly", "series": { "TOTLL": [{ "date": "2026-07-04", "value": 1 }], "DPSACBW027SBOG": [{ "date": "2026-07-04", "value": 1 }] } }
+    },
+    {
+      "id": "banking_quarterly",
+      "encoding": "json",
+      "content": { "updated": "2026-07-11T00:00:00Z", "type": "quarterly", "series": { "BOGZ1FL010000016Q": [{ "date": "2026-03-31", "value": 1 }], "CORALACBN": [{ "date": "2026-03-31", "value": 1 }], "CORBLACBS": [{ "date": "2026-03-31", "value": 1 }], "CORCACBS": [{ "date": "2026-03-31", "value": 1 }], "CORCCACBS": [{ "date": "2026-03-31", "value": 1 }], "CORCREXFACBS": [{ "date": "2026-03-31", "value": 1 }], "DRALACBN": [{ "date": "2026-03-31", "value": 1 }], "DRBLACBS": [{ "date": "2026-03-31", "value": 1 }], "DRCCLACBS": [{ "date": "2026-03-31", "value": 1 }], "DRCLACBS": [{ "date": "2026-03-31", "value": 1 }], "DRCRELEXFACBS": [{ "date": "2026-03-31", "value": 1 }] } }
+    },
+    {
+      "id": "yardeni",
+      "encoding": "json",
+      "content": { "meta": { "public_schema_version": "yardney_model_public_v1", "model_version": "feno_yardeni_fred_v1", "last_update": { "last_public_date": "2026-07-03" } }, "data": [{ "date": "2026-07-03", "value": 1 }] }
+    },
+    {
+      "id": "fdic",
+      "encoding": "json",
+      "content": { "updated": "2026-07-11T00:00:00Z", "source": "FDIC", "data": [{ "date": "2026-03-31", "value": 13.3, "banks": 4352 }] }
+    },
+    {
+      "id": "tga",
+      "encoding": "json",
+      "content": { "updated": "2026-07-11T00:00:00Z", "source": "Treasury FiscalData", "endpoint": "accounting/dts/operating_cash_balance", "series": [{ "date": "2026-07-10", "val": 1 }], "raw": {} }
+    },
+    {
+      "id": "yahoo",
+      "encoding": "json",
+      "content": { "updated": "2026-07-11T00:00:00Z", "source": "ticker-api-worker (yahoo-finance origin)", "endpoint": "https://ticker-api.etloveaui.workers.dev/api/ticker", "tickers": { "TQQQ": { "regularMarketTime": 1783720800 } } }
+    },
+    {
+      "id": "vix",
+      "encoding": "json",
+      "content": [{ "date": "2026-07-10", "value": 15.03 }]
+    },
+    {
+      "id": "vix_empty",
+      "encoding": "json",
+      "content": []
+    },
+    {
+      "id": "slick_daily",
+      "encoding": "json",
+      "content": { "updated": "2026-07-10T20:00:00+00:00", "source": "slickcharts", "history": [{ "date": "2026-07-10", "count": 1, "gainers": [{ "symbol": "AAA" }] }] }
+    },
+    {
+      "id": "slick_weekly",
+      "encoding": "json",
+      "content": { "updated": "2026-07-10T20:00:00+00:00", "source": "slickcharts", "count": 1, "holdings": [{ "symbol": "AAA" }] }
+    },
+    {
+      "id": "slick_monthly",
+      "encoding": "json",
+      "content": { "updated": "2026-07-10T20:00:00+00:00", "source": "slickcharts", "count": 1, "returns": [{ "year": 2026, "return": 1 }] }
+    },
+    {
+      "id": "slick_history",
+      "encoding": "json",
+      "content": { "updated": "2026-07-10T20:00:00+00:00", "source": "slickcharts", "count": 1, "stocks": [{ "symbol": "AAA", "returns": [] }] }
+    },
+    {
+      "id": "slick_symbols",
+      "encoding": "json",
+      "content": { "updated": "2026-07-10T20:00:00+00:00", "source": "slickcharts", "history": [{ "date": "2026-07-10", "count": 1, "stocks": [{ "symbol": "AAA" }] }] }
+    },
+    {
+      "id": "edgar",
+      "encoding": "json",
+      "content": { "schemaVersion": 1, "artifactType": "edgar_korean_summary_index", "updated": "2026-07-10", "generatedAt": "2026-07-11T00:00:00Z", "tickers": ["AAA"], "byTicker": { "AAA": {} } }
+    },
+    {
+      "id": "edgar_bad_schema",
+      "encoding": "json",
+      "content": { "schemaVersion": 2, "artifactType": "edgar_korean_summary_index", "updated": "2026-07-10", "generatedAt": "2026-07-11T00:00:00Z", "tickers": ["AAA"], "byTicker": { "AAA": {} } }
+    },
+    {
+      "id": "edgar_ticker_a",
+      "encoding": "json",
+      "content": { "schemaVersion": 1, "artifactType": "edgar_korean_summary_ticker_manifest", "source": "SEC EDGAR submissions and feno-edgar Korean summary artifacts", "ticker": "AAA", "filings": [{ "filingDate": "2026-07-09", "form": "8-K" }] }
+    },
+    {
+      "id": "edgar_ticker_b",
+      "encoding": "json",
+      "content": { "schemaVersion": 1, "artifactType": "edgar_korean_summary_ticker_manifest", "source": "SEC EDGAR submissions and feno-edgar Korean summary artifacts", "ticker": "BBB", "filings": [{ "filingDate": "2026-07-10", "form": "10-Q" }] }
+    },
+    {
+      "id": "sec13f",
+      "encoding": "json",
+      "content": { "metadata": { "version": "3.3.3", "quarters_covered": ["2026-Q2"] }, "investors": { "sample": {} }, "top_stocks": { "AAA": {} } }
+    },
+    {
+      "id": "finra",
+      "encoding": "json",
+      "content": { "schema_version": 1, "generated_at": "2026-07-11T00:00:00Z", "formula_version": "fenok-flow-proxies-v0.1-finra-daily", "rows": [{ "ticker": "AAA", "as_of": "2026-07-10", "source_date": "20260710" }] }
+    },
+    {
+      "id": "occ",
+      "encoding": "json",
+      "content": { "schema_version": 1, "generated_at": "2026-07-11T00:00:00Z", "formula_version": "fenok-occ-options-volume-v0.1", "rows": [{ "ticker": "AAA", "as_of": "2026-07-10", "source_date": "20260710" }] }
+    },
+    {
+      "id": "apewisdom",
+      "encoding": "json",
+      "content": { "schema_version": 1, "generated_at": "2026-07-11T00:00:00Z", "source": { "source_date": "20260710" }, "rows": [{ "ticker": "AAA", "as_of": "2026-07-10" }] }
+    },
+    {
+      "id": "gdelt",
+      "encoding": "json",
+      "content": { "schema_version": 1, "generated_at": "2026-07-11T00:00:00Z", "rows": [{ "ticker": "AAA", "as_of": "2026-07-10" }] }
+    }
+  ],
+  "layouts": [
+    {
+      "id": "all_valid",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "fred_current"
+        },
+        {
+          "path": "data/macro/fred-banking-daily.json",
+          "node_type": "regular",
+          "document_id": "banking_daily"
+        },
+        {
+          "path": "data/macro/fred-banking-weekly.json",
+          "node_type": "regular",
+          "document_id": "banking_weekly"
+        },
+        {
+          "path": "data/macro/fred-banking-quarterly.json",
+          "node_type": "regular",
+          "document_id": "banking_quarterly"
+        },
+        {
+          "path": "data/yardney/yardney_model.json",
+          "node_type": "regular",
+          "document_id": "yardeni"
+        },
+        {
+          "path": "data/macro/fdic-tier1.json",
+          "node_type": "regular",
+          "document_id": "fdic"
+        },
+        {
+          "path": "data/macro/tga.json",
+          "node_type": "regular",
+          "document_id": "tga"
+        },
+    {
+      "path": "data/macro/yahoo-ticker.json",
+      "node_type": "regular",
+          "document_id": "yahoo"
+    },
+        {
+          "path": "data/sentiment/vix.json",
+          "node_type": "regular",
+          "document_id": "vix"
+        },
+        {
+          "path": "data/slickcharts/gainers.json",
+          "node_type": "regular",
+          "document_id": "slick_daily"
+        },
+        {
+          "path": "data/slickcharts/sp500.json",
+          "node_type": "regular",
+          "document_id": "slick_weekly"
+        },
+        {
+          "path": "data/slickcharts/sp500-returns.json",
+          "node_type": "regular",
+          "document_id": "slick_monthly"
+        },
+        {
+          "path": "data/slickcharts/stocks-returns.json",
+          "node_type": "regular",
+          "document_id": "slick_history"
+        },
+        {
+          "path": "data/slickcharts/symbols.json",
+          "node_type": "regular",
+          "document_id": "slick_symbols"
+        },
+        {
+          "path": "data/edgar-korean-summaries/index.json",
+          "node_type": "regular",
+          "document_id": "edgar"
+        },
+        {
+          "path": "data/edgar-korean-summaries/by-ticker/aaa.json",
+          "node_type": "regular",
+          "document_id": "edgar_ticker_a"
+        },
+        {
+          "path": "data/edgar-korean-summaries/by-ticker/bbb.json",
+          "node_type": "regular",
+          "document_id": "edgar_ticker_b"
+        },
+        {
+          "path": "data/sec-13f/summary.json",
+          "node_type": "regular",
+          "document_id": "sec13f"
+        },
+        {
+          "path": "data/computed/fenok_flow_proxies.json",
+          "node_type": "regular",
+          "document_id": "finra"
+        },
+        {
+          "path": "data/computed/fenok_occ_options_volume.json",
+          "node_type": "regular",
+          "document_id": "occ"
+        },
+        {
+          "path": "data/computed/fenok_social_attention_proxy.json",
+          "node_type": "regular",
+          "document_id": "apewisdom"
+        },
+        {
+          "path": "data/computed/fenok_news_tone_proxy.json",
+          "node_type": "regular",
+          "document_id": "gdelt"
+        }
+      ]
+    },
+    {
+      "id": "missing_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "missing"
+        }
+      ]
+    },
+    {
+      "id": "malformed_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "malformed_json"
+        }
+      ]
+    },
+    {
+      "id": "empty_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "fred_empty"
+        }
+      ]
+    },
+    {
+      "id": "schema_drift_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "fred_schema_drift"
+        }
+      ]
+    },
+    {
+      "id": "missing_source_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "fred_missing_source"
+        }
+      ]
+    },
+    {
+      "id": "schema_version_mismatch",
+      "nodes": [
+        {
+          "path": "data/edgar-korean-summaries/index.json",
+          "node_type": "regular",
+          "document_id": "edgar_bad_schema"
+        }
+      ]
+    },
+    {
+      "id": "root_empty_artifact",
+      "nodes": [
+        {
+          "path": "data/sentiment/vix.json",
+          "node_type": "regular",
+          "document_id": "vix_empty"
+        }
+      ]
+    },
+    {
+      "id": "empty_bounded_glob",
+      "nodes": [
+        {
+          "path": "data/edgar-korean-summaries/by-ticker/aaa.json",
+          "node_type": "missing"
+        },
+        {
+          "path": "data/edgar-korean-summaries/by-ticker/bbb.json",
+          "node_type": "missing"
+        }
+      ]
+    },
+    {
+      "id": "future_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "fred_future"
+        }
+      ]
+    },
+    {
+      "id": "stale_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "regular",
+          "document_id": "fred_stale"
+        }
+      ]
+    },
+    {
+      "id": "symlink_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "symlink",
+          "target": "data/macro/other.json"
+        }
+      ]
+    },
+    {
+      "id": "directory_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "directory"
+        }
+      ]
+    },
+    {
+      "id": "special_artifact",
+      "nodes": [
+        {
+          "path": "data/macro/fred-macro.json",
+          "node_type": "special",
+          "special_kind": "fifo"
+        }
+      ]
+    }
+  ]
+}
