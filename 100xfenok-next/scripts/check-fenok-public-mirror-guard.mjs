@@ -405,7 +405,7 @@ export function checkPublicMirror({ appRoot, repoRoot }) {
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultAppRoot = path.resolve(scriptDir, "..");
 const isMain = process.argv[1]
-  && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+  && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url));
 
 if (isMain) {
   const result = checkPublicMirror({ appRoot: defaultAppRoot, repoRoot: path.resolve(defaultAppRoot, "..") });
