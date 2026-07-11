@@ -46,6 +46,12 @@ import {
   loadFenokSignalsSummaryMap,
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import {
+  getEtfDataSupplyPresentation,
+  parseEtfApiResponse,
+  parseEtfDataSupply,
+  type EtfDataSupply,
+} from "@/lib/data-supply-etf-ui";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -176,6 +182,7 @@ interface StockanalysisEtfPayload {
   asset_type?: string;
   fetched_at?: string;
   detail_status?: string;
+  data_supply?: EtfDataSupply;
   normalized?: {
     holdings?: StockanalysisEtfHolding[];
     asset_allocation?: StockanalysisWeightedRow[] | null;
@@ -230,12 +237,19 @@ function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload |
   const symbol = normalizeForEntityKey(ticker);
   if (!symbol) return Promise.resolve(null);
   return fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}`, { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => (
-      data && typeof data === "object" && !Array.isArray(data)
-        ? data as StockanalysisEtfPayload
-        : null
-    ))
+    .then((response) => parseEtfApiResponse<StockanalysisEtfPayload>(response))
+    .then((result) => {
+      if (result.kind === "ok") return result.data;
+      if (result.kind === "unavailable") {
+        return {
+          ticker: symbol,
+          asset_type: "etf",
+          detail_status: "data_supply_unavailable",
+          data_supply: result.dataSupply,
+        };
+      }
+      return null;
+    })
     .catch(() => null);
 }
 
@@ -4208,21 +4222,26 @@ function EtfDataPanel({
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const totalWeight = holdings.reduce((sum, item) => sum + (isFiniteNumber(item.weight_pct) ? item.weight_pct : 0), 0);
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
+  const dataSupply = parseEtfDataSupply(data?.data_supply);
+  const supplyPresentation = getEtfDataSupplyPresentation(dataSupply);
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
-  const detailStatusText = detailStatus === "surface_only"
+  const supplyStatusText = supplyPresentation.label
+    ? `${supplyPresentation.label}${supplyPresentation.sourceDate ? ` · ${fmtDateish(supplyPresentation.sourceDate)}` : ""}${supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}`
+    : null;
+  const detailStatusText = supplyStatusText ?? (detailStatus === "surface_only"
     ? "보유 구성 확인 전 · 신규 상장 정보로 요약 표시"
     : detailStatus === "universe_only"
       ? "보유 구성 확인 전 · ETF 기본 정보로 요약 표시"
       : detailStatus === "yf_fallback"
         ? "가격 정보 연결됨 · 보유 구성은 확인된 항목부터 반영"
-      : null;
+      : null);
   const holdingsDate = fmtDateish(holdingsUpdated);
   const quoteDate = fmtDateish(quote.u);
   const externalSourceAsOf = holdingsDate !== "—"
     ? holdingsDate
     : quoteDate !== "—"
       ? quoteDate
-      : fmtDateish(data?.fetched_at);
+      : fmtDateish(dataSupply?.source_as_of ?? (dataSupply ? null : data?.fetched_at));
 
   const cards = [
     { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: fmtDateish(quote.u) },
@@ -4267,7 +4286,9 @@ function EtfDataPanel({
             ticker={ticker}
             kind="etf"
             statusLine={detailStatusText}
-            asOf={externalSourceAsOf}
+            asOf={dataSupply?.resolution_state === "unavailable"
+              ? externalSourceAsOf
+              : dataSupply?.source_as_of ?? externalSourceAsOf}
             compact
             className="mb-3"
           />

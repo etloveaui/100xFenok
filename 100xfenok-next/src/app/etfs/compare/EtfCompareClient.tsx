@@ -6,6 +6,11 @@ import { formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { MAX_COMPARE_TICKERS, buildCompareCsv, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
 import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
+import {
+  getEtfDataSupplyPresentation,
+  parseEtfApiResponse,
+  parseEtfDataSupply,
+} from "@/lib/data-supply-etf-ui";
 
 function rawText(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -37,15 +42,24 @@ function fmtSigned(value: number | null | undefined): string {
 async function loadEtf(ticker: string): Promise<EtfCompareRow> {
   try {
     const response = await fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(ticker)}/`, { cache: "no-store" });
-    if (!response.ok) return { ticker, data: null, failed: true };
-    const data = await response.json() as EtfPayload;
-    return { ticker, data, failed: false };
+    const result = await parseEtfApiResponse<EtfPayload>(response);
+    if (result.kind === "ok") return { ticker, data: result.data, failed: false };
+    if (result.kind === "unavailable") {
+      return {
+        ticker,
+        data: { ticker, data_supply: result.dataSupply } as unknown as EtfPayload,
+        failed: false,
+      };
+    }
+    return { ticker, data: null, failed: true };
   } catch {
     return { ticker, data: null, failed: true };
   }
 }
 
 function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
+  const dataSupply = parseEtfDataSupply((row.data as unknown as { data_supply?: unknown } | null)?.data_supply);
+  const supplyPresentation = getEtfDataSupplyPresentation(dataSupply);
   const overview = row.data?.normalized?.overview ?? {};
   const performance = row.data?.normalized?.performance ?? {};
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
@@ -75,6 +89,11 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보유 <b className="tabular-nums text-[var(--c-ink)]">{holdingCount.toLocaleString("ko-KR")}</b></span>
       </div>
       {row.failed ? <p className="mt-2 text-[10px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
+      {supplyPresentation.label ? (
+        <p className="mt-2 text-[10px] font-bold text-amber-800" data-etf-data-supply-state={dataSupply?.resolution_state}>
+          {supplyPresentation.label}{supplyPresentation.sourceDate ? ` · ${fmtDateish(supplyPresentation.sourceDate)}` : ""}{supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}
+        </p>
+      ) : null}
     </div>
   );
 }

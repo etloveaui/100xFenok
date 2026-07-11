@@ -69,6 +69,15 @@ async function fetchJson(url) {
   }
 }
 
+async function fetchJsonResponse(url) {
+  const { response, text } = await fetchText(url);
+  try {
+    return { response, payload: JSON.parse(text) };
+  } catch (error) {
+    fail(`${url} did not return JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 function assert(condition, message) {
   if (!condition) fail(message);
 }
@@ -165,7 +174,11 @@ async function checkEtfDetails(root) {
   const adiu = await fetchJson(`${root}/api/data/stockanalysis/etfs/ADIU`);
   assert(adiu?.ticker === "ADIU", "ADIU fallback ticker mismatch");
   assert(adiu?.asset_type === "etf", "ADIU fallback must be ETF");
-  assert(["surface_only", "universe_only", "yf_fallback"].includes(adiu?.detail_status), `ADIU fallback status invalid: ${adiu?.detail_status}`);
+  assert(adiu?.data_supply?.enrollment_state === "enrolled", "ADIU R2 enrollment metadata missing");
+  assert(
+    ["fresh_fallback", "lkg_fallback", "unavailable"].includes(adiu?.data_supply?.resolution_state),
+    `ADIU R2 resolution invalid: ${adiu?.data_supply?.resolution_state}`,
+  );
   // yf_fallback (Yahoo) carries classification but may lack a stockanalysis overview name; require the name only for stockanalysis-sourced fallbacks.
   if (adiu?.detail_status !== "yf_fallback") {
     assert(adiu?.normalized?.overview?.name, "ADIU fallback overview name missing");
@@ -190,6 +203,31 @@ async function checkEtfDetails(root) {
     },
     missingFallbacks,
   };
+}
+
+async function checkR2EtfResolution(root) {
+  const index = await fetchJson(`${root}/data/computed/data-supply/etf-detail/index.json`);
+  const entries = index?.entries && typeof index.entries === "object" ? Object.values(index.entries) : [];
+  const selected = entries.find((entry) => entry?.resolution_state !== "unavailable");
+  const unavailable = entries.find((entry) => entry?.resolution_state === "unavailable");
+  assert(selected?.ticker, "R2 selected fixture missing");
+  assert(unavailable?.ticker, "R2 unavailable fixture missing");
+
+  const selectedPayload = await fetchJson(`${root}/api/data/stockanalysis/etfs/${encodeURIComponent(selected.ticker)}`);
+  assert(selectedPayload?.data_supply?.resolution_state === selected.resolution_state, "R2 selected API state mismatch");
+  assert(selectedPayload?.data_supply?.projection_digest === index.index_sha256, "R2 selected projection digest mismatch");
+
+  const result = await fetchJsonResponse(`${root}/api/data/stockanalysis/etfs/${encodeURIComponent(unavailable.ticker)}`);
+  assert([200, 503].includes(result.response.status), `R2 unavailable returned HTTP ${result.response.status}`);
+  assert(result.payload?.data_supply?.resolution_state === "unavailable", "R2 unavailable API label missing");
+  if (result.response.status === 503) {
+    const cacheControl = result.response.headers.get("cache-control") ?? "";
+    assert(result.payload?.error === "DATA_SUPPLY_UNAVAILABLE", "R2 typed unavailable error missing");
+    assert(cacheControl.includes("max-age=15"), "R2 negative cache browser TTL missing");
+    assert(cacheControl.includes("s-maxage=60"), "R2 negative cache edge TTL missing");
+    assert(!cacheControl.includes("stale"), "R2 negative cache must not serve stale");
+  }
+  return { selected: selected.ticker, unavailable: unavailable.ticker, unavailableStatus: result.response.status };
 }
 
 async function checkMissingEtfDetailFallbacks(root) {
@@ -278,6 +316,7 @@ async function main() {
   const snapshot = await checkEtfSnapshot(root);
   const universe = await checkEtfUniverse(root);
   const details = await checkEtfDetails(root);
+  const r2Resolution = await checkR2EtfResolution(root);
   const surfaces = await checkSurfaceContracts(root);
 
   console.log(JSON.stringify({
@@ -287,6 +326,7 @@ async function main() {
     snapshot,
     universe,
     details,
+    r2Resolution,
     surfaces,
   }, null, 2));
 }

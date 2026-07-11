@@ -275,6 +275,7 @@ const marketFactsIndex = readJson("computed/market_facts/index.json");
 const marketAudit = readJson("computed/market_data_audit.json");
 const sourceParity = readJson("computed/market_source_parity.json");
 const etfCoverage = readJson("stockanalysis/coverage/etf_detail.json");
+const dataSupplyEtfIndex = readJson("computed/data-supply/etf-detail/index.json");
 const surfaceIndex = readJson("stockanalysis/surfaces/index.json");
 const surfaceConsumers = readJson("stockanalysis/surface_consumers.json");
 const stockanalysisIndex = readJson("stockanalysis/index.json");
@@ -305,6 +306,25 @@ const counts = {
 };
 
 const etfCounts = etfCoverage?.counts || {};
+const r2EtfCounts = dataSupplyEtfIndex?.schema_version === "data-supply-etf-detail-public-index/v1"
+  ? {
+      enrolled: number(dataSupplyEtfIndex.enrolled_count),
+      selected: number(dataSupplyEtfIndex.selected_count),
+      unavailable: number(dataSupplyEtfIndex.unavailable_count),
+    }
+  : null;
+const effectiveEtfDetail = r2EtfCounts
+  ? {
+      available: counts.stockanalysisEtfs + r2EtfCounts.selected,
+      total: counts.stockanalysisEtfs + r2EtfCounts.enrolled,
+      unavailable: r2EtfCounts.unavailable,
+    }
+  : {
+      available: number(etfCounts.covered_detail_files),
+      total: number(etfCounts.candidate_total),
+      unavailable: number(etfCounts.missing_detail_files),
+    };
+effectiveEtfDetail.coveragePct = pct(effectiveEtfDetail.available, effectiveEtfDetail.total);
 const paritySummary = sourceParity?.summary || marketAudit?.market_source_parity?.summary || {};
 const returnCoverage = marketAudit?.market_facts?.return_field_coverage || {};
 const generatedAt = new Date().toISOString();
@@ -471,7 +491,7 @@ const surfaces = [
     "ETF center",
     [
       check("ETF 전체 목록", number(etfUniverse?.counts?.records) > 0 ? "ready" : "unavailable", `${number(etfUniverse?.counts?.records).toLocaleString("ko-KR")}개 ETF`, { count: number(etfUniverse?.counts?.records) }),
-      check("ETF 상세", number(etfCounts.covered_detail_files) > 0 ? (number(etfCounts.missing_detail_files) > 0 ? "partial" : "ready") : "unavailable", `${number(etfCounts.covered_detail_files).toLocaleString("ko-KR")} / ${number(etfCounts.candidate_total).toLocaleString("ko-KR")}개`, { count: number(etfCounts.covered_detail_files), total: number(etfCounts.candidate_total), missing: number(etfCounts.missing_detail_files), coverage_pct: number(etfCounts.coverage_pct) }),
+      check("ETF 상세", effectiveEtfDetail.available > 0 ? (effectiveEtfDetail.unavailable > 0 ? "partial" : "ready") : "unavailable", `${effectiveEtfDetail.available.toLocaleString("ko-KR")} / ${effectiveEtfDetail.total.toLocaleString("ko-KR")}개`, { count: effectiveEtfDetail.available, total: effectiveEtfDetail.total, missing: effectiveEtfDetail.unavailable, coverage_pct: effectiveEtfDetail.coveragePct, authority: r2EtfCounts ? "data_supply_r2_plus_strict_unenrolled_primary" : "legacy_coverage" }),
       check("기간 수익률", number(returnCoverage.return_1y?.etf) > 0 ? "ready" : "pending", `1Y ${number(returnCoverage.return_1y?.etf).toLocaleString("ko-KR")}개`, { count: number(returnCoverage.return_1y?.etf) }),
       check("신규·전략 ETF", etfSurfaces.surfaceCount > 0 ? "ready" : "pending", `${etfSurfaces.surfaceCount}개 항목 · ${etfSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: etfSurfaces.surfaceCount, rows: etfSurfaces.rowCount }),
       freshness("ETF 기준일", etfAsOf, 7),
@@ -542,6 +562,7 @@ const payload = {
     "computed/market_facts/index.json",
     "computed/market_data_audit.json",
     "computed/market_source_parity.json",
+    "computed/data-supply/etf-detail/index.json",
     "global-scouter/core/stocks_analyzer.json",
     "computed/stock_action_summary.json",
     "computed/rim-index/inputs.json",

@@ -6,11 +6,22 @@ import {
   normalizeStockanalysisAssetKind,
   normalizeStockanalysisTicker,
 } from "@/lib/server/data-loader";
+import {
+  buildUnavailableEtfRepresentation,
+  mergeEtfDataSupply,
+  resolveDataSupplyEtfDetail,
+  type EtfDetailResolution,
+} from "@/lib/server/data-supply-etf-detail";
 import { withResponseCache } from "@/lib/server/response-cache";
 import { normalizeForFilePath } from "@/lib/ticker";
 
 const STOCKANALYSIS_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
+} as const;
+
+const DATA_SUPPLY_NEGATIVE_CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=15, s-maxage=60",
+  "X-100x-Data-Supply-SLO": "typed-unavailable",
 } as const;
 
 export const dynamic = "force-dynamic";
@@ -130,7 +141,7 @@ async function getEtfSurfaceFallback(ticker: string) {
   if (expenseRatio !== undefined && expenseRatio !== null) overview.expenseRatio = expenseRatio;
   if (dividendYield !== undefined && dividendYield !== null) overview.dividendYield = dividendYield;
   if (inception !== undefined && inception !== null) overview.inception = inception;
-  const fetchedAt = primary?.fetched_at ?? universeFetchedAt ?? new Date().toISOString();
+  const fetchedAt = primary?.fetched_at ?? universeFetchedAt ?? null;
   const detailStatus = primary ? "surface_only" : "universe_only";
 
   return {
@@ -182,6 +193,44 @@ async function getEtfSurfaceFallback(ticker: string) {
   };
 }
 
+async function buildEtfResponse(resolution: EtfDetailResolution, ticker: string) {
+  if (resolution.kind === "selected") {
+    return NextResponse.json(
+      mergeEtfDataSupply(resolution.payload, resolution.dataSupply),
+      { headers: STOCKANALYSIS_CACHE_HEADERS },
+    );
+  }
+  if (resolution.kind === "direct") {
+    return NextResponse.json(resolution.payload, { headers: STOCKANALYSIS_CACHE_HEADERS });
+  }
+  if (resolution.kind === "unavailable") {
+    const summary = await getEtfSurfaceFallback(ticker);
+    const representation = buildUnavailableEtfRepresentation(ticker, resolution.dataSupply, summary);
+    if (representation.kind === "summary") {
+      return NextResponse.json(
+        representation.body,
+        { headers: { "Cache-Control": "public, max-age=15, s-maxage=60" } },
+      );
+    }
+    return NextResponse.json(
+      representation.body,
+      { status: 503, headers: DATA_SUPPLY_NEGATIVE_CACHE_HEADERS },
+    );
+  }
+  if (resolution.kind === "error") {
+    return NextResponse.json(
+      { error: resolution.code, ticker },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  const summary = await getEtfSurfaceFallback(ticker);
+  if (summary) return NextResponse.json(summary, { headers: STOCKANALYSIS_CACHE_HEADERS });
+  return NextResponse.json(
+    { error: "STOCKANALYSIS_ASSET_NOT_FOUND", assetType: "etfs", ticker },
+    { status: 404, headers: { "Cache-Control": "no-store" } },
+  );
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ assetType: string; ticker: string }> },
@@ -200,17 +249,27 @@ export async function GET(
     );
   }
 
+  if (normalizedAssetKind === "etfs") {
+    const resolution = await resolveDataSupplyEtfDetail(normalizedTicker);
+    const digest = resolution.projectionDigest ?? "guard-unavailable";
+    const negative = resolution.kind === "unavailable";
+    return withResponseCache(
+      `stockanalysis:etfs:${negative ? "unavailable" : "payload"}:${normalizedTicker}:${digest}`,
+      negative ? 60 : 300,
+      () => buildEtfResponse(resolution, normalizedTicker),
+      {
+        isCacheable: (response) => response.ok
+          || (response.status === 503 && response.headers.get("X-100x-Data-Supply-SLO") === "typed-unavailable"),
+        preserveCacheControl: true,
+      },
+    );
+  }
+
   return withResponseCache(
     `stockanalysis:${normalizedAssetKind}:${normalizedTicker}`,
     300,
     async () => {
       const payload = await getStockanalysisAsset(normalizedAssetKind, normalizedTicker);
-      if (!payload && normalizedAssetKind === "etfs") {
-        const fallback = await getEtfSurfaceFallback(normalizedTicker);
-        if (fallback) {
-          return NextResponse.json(fallback, { headers: STOCKANALYSIS_CACHE_HEADERS });
-        }
-      }
       if (!payload) {
         return NextResponse.json(
           {

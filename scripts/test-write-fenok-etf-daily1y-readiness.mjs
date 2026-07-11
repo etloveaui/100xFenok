@@ -294,8 +294,9 @@ writeFixture(effectiveRoot, "data/yf/etf-details/MISS.json", {
 });
 
 const effectiveReader = createEffectiveEtfDetailReader({ rootDir: effectiveRoot });
-assert.equal(effectiveReader.resolve("PRI").sourceKind, "stockanalysis_primary");
-assert.equal(effectiveReader.resolve("PRI").payload.source, "stockanalysis");
+assert.equal(effectiveReader.resolve("PRI").sourceKind, "r2_active_selection");
+assert.equal(effectiveReader.resolve("PRI").payload.source_provider, "yahoo_finance");
+assert.equal(effectiveReader.resolve("PRI").primaryPresent, false);
 assert.equal(effectiveReader.resolve("FBC").sourceKind, "r2_active_selection");
 assert.equal(effectiveReader.resolve("FBC").payload.detail_status, "yf_fallback");
 assert.equal(effectiveReader.resolve("UNAV").status, "unavailable");
@@ -346,9 +347,13 @@ assert.deepEqual(
     inception_limited: effectiveScored.inception_limited,
     terminal_limited: effectiveScored.terminal_limited,
   },
-  { scored_etf_count: 4, complete: 2, fetchable: 0, inception_limited: 1, terminal_limited: 1 },
+  { scored_etf_count: 4, complete: 1, fetchable: 0, inception_limited: 2, terminal_limited: 1 },
 );
 assert.deepEqual(effectiveScored.samples.fetchable, []);
+assert.equal(
+  effectiveScored.samples.inception_limited.find((row) => row.ticker === "PRI")?.detail_source_kind,
+  "r2_active_selection",
+);
 assert.deepEqual(effectiveScored.samples.terminal_limited.map((row) => row.ticker), ["UNAV"]);
 assert.equal(effectiveScored.samples.terminal_limited[0].daily_1y_gap_source, "data_supply_unavailable");
 
@@ -364,13 +369,13 @@ writeFixture(effectiveRoot, "data/admin/fenok-edge-coverage-index.json", {
         counts: {
           scored_public_etf: 4,
           fetchable_daily_1y_gap: 0,
-          inception_limited_daily_1y_gap: 1,
+          inception_limited_daily_1y_gap: 2,
           terminal_limited_daily_1y_gap: 1,
         },
         daily_checks: [{
           id: "etf_no_fetchable_daily_1y_gap",
           fetchable_daily_1y_gap: 0,
-          inception_limited_daily_1y_gap: 1,
+          inception_limited_daily_1y_gap: 2,
           terminal_limited_daily_1y_gap: 1,
         }],
       },

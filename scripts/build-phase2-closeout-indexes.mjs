@@ -68,6 +68,11 @@ const GENERATED_OUTPUTS = [
   "computed/stock_action_summary.json",
   "computed/market_structure_index.json",
 ];
+const PRIVATE_DATA_SUPPLY_ROOTS = [
+  "admin/data-supply-state/",
+  "yf/etf-details/",
+  "yf/migration-evidence/",
+];
 
 const ESTIMATE_HORIZONS = ["fy1", "fy2", "fy3"];
 
@@ -112,7 +117,12 @@ const DYNAMIC_PATTERNS = [
   {
     pattern: "stockanalysis/etfs/*.json",
     category: "stockanalysis",
-    usage: "ETF detail pages and StockAnalysis asset API load per-ETF detail files on demand",
+    usage: "Strict unenrolled ETF detail fallback only; enrolled authority comes from the R2 projection",
+  },
+  {
+    pattern: "computed/data-supply/etf-detail/payloads/*.json",
+    category: "computed",
+    usage: "ETF detail API loads exact committed R2 selections for enrolled tickers",
   },
   {
     pattern: "stockanalysis/stocks/*.json",
@@ -1142,11 +1152,12 @@ function buildMarketStructureIndex() {
 }
 
 function buildUsageManifest() {
-  const rootFiles = collectJsonFiles(dataRoot);
-  const publicFiles = collectJsonFiles(publicDataRoot);
+  const isPrivateDataSupplyPath = (file) => PRIVATE_DATA_SUPPLY_ROOTS.some((root) => file.startsWith(root));
+  const rootFiles = collectJsonFiles(dataRoot).filter((file) => !isPrivateDataSupplyPath(file));
+  const publicFiles = collectJsonFiles(publicDataRoot).filter((file) => !isPrivateDataSupplyPath(file));
   const rootSet = new Set(rootFiles);
   const publicSet = new Set(publicFiles);
-  const usedPaths = scanUsedDataPaths();
+  const usedPaths = scanUsedDataPaths().filter((item) => !isPrivateDataSupplyPath(item.dataPath));
   const directUsedSet = new Set(usedPaths.map((item) => item.dataPath));
   const generatedSourceSet = new Set([...STOCK_ACTION_SOURCES, ...MARKET_STRUCTURE_SOURCES]);
   const categories = Array.from(new Set([...rootFiles.map(categoryOf), ...Object.keys(CATEGORY_USAGE)])).sort();
@@ -1209,6 +1220,17 @@ function buildUsageManifest() {
 }
 
 function main() {
+  const usageManifestOnly = process.argv.includes("--usage-manifest-only");
+  if (usageManifestOnly) {
+    const usageManifest = buildUsageManifest();
+    writeJsonToBoth("admin/data-usage-manifest.json", usageManifest);
+    console.log(JSON.stringify({
+      generated_at: usageManifest.generated_at,
+      usage_root_json: usageManifest.totals.rootJsonCount,
+      usage_direct_fetches: usageManifest.totals.directDataFetchCount,
+    }, null, 2));
+    return;
+  }
   const stockActionIndex = buildStockActionIndex();
   writeJsonToBoth("computed/stock_action_index.json", stockActionIndex);
 

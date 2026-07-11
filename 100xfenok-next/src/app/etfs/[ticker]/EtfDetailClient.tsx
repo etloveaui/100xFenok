@@ -23,6 +23,12 @@ import {
 } from "@/lib/data-entity-graph/stock-index";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
+import {
+  getEtfDataSupplyPresentation,
+  parseEtfApiResponse,
+  parseEtfDataSupply,
+  type EtfDataSupply,
+} from "@/lib/data-supply-etf-ui";
 
 type MaybeNumber = number | null | undefined;
 
@@ -75,6 +81,7 @@ interface EtfPayload {
   asset_type?: string;
   fetched_at?: string;
   detail_status?: string;
+  data_supply?: EtfDataSupply;
   normalized?: {
     holdings?: EtfHolding[];
     asset_allocation?: WeightedRow[] | null;
@@ -179,6 +186,7 @@ interface EtfPeerCollectionsData {
 type EtfClassification = NonNullable<NonNullable<MarketFactsPayload["etf"]>["classification"]>;
 type LoadResult<T> =
   | { kind: "load_result"; status: "ok"; data: T }
+  | { kind: "load_result"; status: "unavailable"; data: null; dataSupply: EtfDataSupply }
   | { kind: "load_result"; status: "missing"; data: null }
   | { kind: "load_result"; status: "failed"; data: null };
 
@@ -245,7 +253,7 @@ function okResult<T>(data: T): LoadResult<T> {
 function isLoadResult<T>(value: unknown): value is LoadResult<T> {
   const record = asRecord(value);
   return record?.kind === "load_result"
-    && (record.status === "ok" || record.status === "missing" || record.status === "failed");
+    && (record.status === "ok" || record.status === "unavailable" || record.status === "missing" || record.status === "failed");
 }
 
 function clearEtfRuntimeCache(ticker: string) {
@@ -264,23 +272,17 @@ function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
   if (cached !== undefined) return Promise.resolve(okResult(cached));
 
   const request = fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}/`, { cache: "no-store" })
-    .then((res) => {
-      if (res.ok) return res.json();
-      return res.status === 404 ? missingResult<EtfPayload>() : failedResult<EtfPayload>();
-    })
-    .then((payload) => {
-      if (isLoadResult<EtfPayload>(payload)) {
-        delete etfCache[symbol];
-        return payload;
+    .then((response) => parseEtfApiResponse<EtfPayload>(response))
+    .then((result): LoadResult<EtfPayload> => {
+      if (result.kind === "ok") {
+        etfCache[symbol] = result.data;
+        return okResult(result.data);
       }
-      const parsed = asRecord(payload) ? payload as EtfPayload : null;
-      if (parsed) {
-        etfCache[symbol] = parsed;
-        return okResult(parsed);
-      } else {
-        delete etfCache[symbol];
-        return missingResult<EtfPayload>();
+      delete etfCache[symbol];
+      if (result.kind === "unavailable") {
+        return { kind: "load_result", status: "unavailable", data: null, dataSupply: result.dataSupply };
       }
+      return result.kind === "missing" ? missingResult<EtfPayload>() : failedResult<EtfPayload>();
     })
     .catch(() => {
       delete etfCache[symbol];
@@ -1315,6 +1317,10 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const factsResult = currentState ? state.factsResult : undefined;
   const signalsResult = currentState ? state.signalsResult : undefined;
   const etfData = etfResult?.status === "ok" ? etfResult.data : etfResult === undefined ? undefined : null;
+  const dataSupply = etfResult?.status === "unavailable"
+    ? etfResult.dataSupply
+    : parseEtfDataSupply(etfData?.data_supply);
+  const dataSupplyPresentation = getEtfDataSupplyPresentation(dataSupply);
   const marketFacts = factsResult?.status === "ok" ? factsResult.data : factsResult === undefined ? undefined : null;
   const etfSignals = signalsResult?.status === "ok" ? signalsResult.data : signalsResult === undefined ? undefined : null;
   const etfLoadFailed = etfResult?.status === "failed";
@@ -1353,7 +1359,17 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const [historyMode, setHistoryMode] = useState<HistoryMode>("monthly");
   const [historyRange, setHistoryRange] = useState<HistoryRange>("1Y");
   const performance = performanceFromPayload(etfData, normalized, marketFacts);
-  const statusMeta = detailStatusMeta(etfData?.detail_status ?? null);
+  const legacyStatusMeta = detailStatusMeta(etfData?.detail_status ?? null);
+  const statusMeta = dataSupplyPresentation.label
+    ? {
+        title: dataSupplyPresentation.label,
+        description: [
+          dataSupplyPresentation.description ?? "ETF 세부 데이터 공급 상태를 확인해 주세요.",
+          dataSupplyPresentation.sourceDate ? `원래 기준일 ${fmtDateish(dataSupplyPresentation.sourceDate)}` : null,
+          dataSupplyPresentation.ageDays !== null ? `현재 기준 ${dataSupplyPresentation.ageDays}일 경과` : null,
+        ].filter(Boolean).join(" · "),
+      }
+    : legacyStatusMeta;
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
   const underlyingService = useMemo(
     () => getUnderlyingStockForEtf(stockServicesIndex, symbol),
@@ -1373,7 +1389,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const quoteDate = fmtDateish(quote.u);
   const updateDate = factDate(marketFacts, "price")
     ?? (quoteDate !== "—" ? quoteDate : null)
-    ?? etfData?.fetched_at
+    ?? dataSupply?.source_as_of
+    ?? (dataSupply ? null : etfData?.fetched_at)
     ?? marketFacts?.generated_at
     ?? null;
   const holdingsDate = fmtDateish(holdingsUpdated);
@@ -1475,6 +1492,20 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               onRetry={retryLoads}
             />
             <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 일시 확인 불가" className="mt-4" />
+            <TransitionLink href={ROUTES.etfs} className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+          </div>
+        </div>
+      );
+    }
+    if (etfResult?.status === "unavailable") {
+      return (
+        <div className="stock-shell">
+          <div className="panel stock-empty" data-etf-data-supply-state="unavailable">
+            <p className="text-lg font-black text-[var(--c-ink)]">세부 데이터 일시 이용 불가</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--c-ink-3)]">
+              검증된 {symbol} 세부 값이 아직 없어 빈 상태로 안내합니다. 확인되지 않은 예전 파일은 대신 표시하지 않습니다.
+            </p>
+            <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="세부 데이터 일시 이용 불가" className="mt-4" />
             <TransitionLink href={ROUTES.etfs} className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
         </div>
@@ -1601,7 +1632,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 ticker={symbol}
                 kind="etf"
                 statusLine={statusMeta.title}
-                asOf={externalSourceAsOf}
+                asOf={dataSupplyPresentation.sourceDate ?? externalSourceAsOf}
                 compact
                 className="mb-3"
               />

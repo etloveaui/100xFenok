@@ -31,9 +31,9 @@ function cloneWithCacheState(response: Response, state: CacheState): Response {
   });
 }
 
-function toStoredResponse(response: Response, ttlSeconds: number): Response {
+function toStoredResponse(response: Response, ttlSeconds: number, preserveCacheControl: boolean): Response {
   const headers = new Headers(response.headers);
-  headers.set("Cache-Control", `public, max-age=${ttlSeconds}`);
+  if (!preserveCacheControl) headers.set("Cache-Control", `public, max-age=${ttlSeconds}`);
   headers.set("X-100x-Cache", "HIT");
 
   return new Response(response.clone().body, {
@@ -47,6 +47,10 @@ export async function withResponseCache(
   cacheKey: string,
   ttlSeconds: number,
   loadResponse: () => Promise<Response>,
+  options: {
+    isCacheable?: (response: Response) => boolean;
+    preserveCacheControl?: boolean;
+  } = {},
 ): Promise<Response> {
   const cache = getDefaultCache();
   if (!cache) {
@@ -65,12 +69,13 @@ export async function withResponseCache(
   }
 
   const response = await loadResponse();
-  if (!response.ok || response.headers.get("Cache-Control")?.includes("no-store")) {
+  const cacheable = options.isCacheable ? options.isCacheable(response) : response.ok;
+  if (!cacheable || response.headers.get("Cache-Control")?.includes("no-store")) {
     return response;
   }
 
   try {
-    await cache.put(cacheRequest, toStoredResponse(response, ttlSeconds));
+    await cache.put(cacheRequest, toStoredResponse(response, ttlSeconds, options.preserveCacheControl === true));
   } catch {
     // Cache API writes are best-effort in local preview and production.
   }

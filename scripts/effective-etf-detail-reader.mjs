@@ -225,24 +225,10 @@ export function createEffectiveEtfDetailReader({ rootDir }) {
   return {
     resolve(value) {
       const ticker = normalizeTicker(value);
-      const primary = readPrimary(resolvedRoot, ticker);
-      if (primary) {
-        return {
-          status: "available",
-          sourceKind: "stockanalysis_primary",
-          primaryPresent: true,
-          ticker,
-          payload: primary.payload,
-          payloadPath: primary.relPath,
-          selection: null,
-          activeTransactionId: null,
-          generationManifestSha256: null,
-        };
-      }
-
       const generation = active();
+      const recovery = generation.recovery[ticker];
       const selection = generation.current[ticker];
-      if (selection) {
+      if (recovery && selection) {
         const selected = readSelectedPayload(generation, ticker, selection);
         return {
           status: "available",
@@ -259,8 +245,7 @@ export function createEffectiveEtfDetailReader({ rootDir }) {
         };
       }
 
-      const recovery = generation.recovery[ticker];
-      if (recovery?.last_transition === "unavailable") {
+      if (recovery && recovery.last_transition === "unavailable") {
         return {
           status: "unavailable",
           sourceKind: "r2_unavailable",
@@ -270,6 +255,28 @@ export function createEffectiveEtfDetailReader({ rootDir }) {
           payloadPath: null,
           selection: null,
           enrolled: true,
+          activeTransactionId: generation.transaction_id,
+          generationManifestSha256: generation.manifest_sha256,
+        };
+      }
+
+      if (recovery) {
+        throw new EffectiveEtfDetailIntegrityError(
+          `R2 enrolled entity ${ticker} is neither selected nor unavailable`,
+        );
+      }
+
+      const primary = readPrimary(resolvedRoot, ticker);
+      if (primary) {
+        return {
+          status: "available",
+          sourceKind: "stockanalysis_primary",
+          primaryPresent: true,
+          ticker,
+          payload: primary.payload,
+          payloadPath: primary.relPath,
+          selection: null,
+          enrolled: false,
           activeTransactionId: generation.transaction_id,
           generationManifestSha256: generation.manifest_sha256,
         };

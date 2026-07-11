@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -457,6 +458,78 @@ class BuildMarketFactsTest(unittest.TestCase):
         )
 
         self.mod.assert_market_facts_payload(payload, ticker="VALID")
+
+    def test_enrolled_etf_uses_committed_projection_without_mutable_bypass(self) -> None:
+        original_data = self.mod.DATA
+        original_out = self.mod.OUT
+        original_public_out = self.mod.PUBLIC_OUT
+        original_now_iso = self.mod.now_iso
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_root = root / "data"
+            canonical = data_root / "computed" / "data-supply" / "etf-detail"
+            (canonical / "payloads").mkdir(parents=True)
+            (data_root / "yf" / "finance").mkdir(parents=True)
+            (data_root / "stockanalysis" / "etfs").mkdir(parents=True)
+
+            selected = {
+                "schema_version": "yf-etf-detail/v1",
+                "ticker": "R2X",
+                "asset_type": "etf",
+                "source": "yahoo_finance",
+                "detail_status": "yf_fallback",
+                "normalized": {"quote": {"p": 123.0}, "overview": {}, "holdings": []},
+            }
+            selected_bytes = json.dumps(selected, separators=(",", ":")).encode()
+            (canonical / "payloads" / "R2X.json").write_bytes(selected_bytes)
+            digest = hashlib.sha256(selected_bytes).hexdigest()
+            (canonical / "enrollment.json").write_text(json.dumps({
+                "schema_version": "data-supply-etf-detail-enrollment/v1",
+                "tickers": ["R2X"],
+            }), encoding="utf-8")
+            (canonical / "index.json").write_text(json.dumps({
+                "schema_version": "data-supply-etf-detail-public-index/v1",
+                "entries": {
+                    "R2X": {
+                        "ticker": "R2X",
+                        "enrollment_state": "enrolled",
+                        "resolution_state": "fresh_fallback",
+                        "payload_path": "payloads/R2X.json",
+                        "payload_sha256": digest,
+                    }
+                },
+            }), encoding="utf-8")
+            (data_root / "yf" / "finance" / "R2X.json").write_text(json.dumps({
+                "data": {"info": {"quoteType": "ETF", "currentPrice": 999.0}},
+            }), encoding="utf-8")
+            (data_root / "stockanalysis" / "etfs" / "R2X.json").write_text(json.dumps({
+                "schema_version": "stockanalysis/v1",
+                "ticker": "R2X",
+                "asset_type": "etf",
+                "source": "stockanalysis",
+                "normalized": {"quote": {"p": 777.0}},
+            }), encoding="utf-8")
+
+            self.mod.DATA = data_root
+            self.mod.OUT = data_root / "computed" / "market_facts"
+            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
+            self.mod.now_iso = lambda: "2026-07-11T00:00:00Z"
+            try:
+                self.mod.main(["--no-public-mirror"])
+                result = self.mod.load_json(self.mod.OUT / "tickers" / "R2X.json")
+            finally:
+                self.mod.DATA = original_data
+                self.mod.OUT = original_out
+                self.mod.PUBLIC_OUT = original_public_out
+                self.mod.now_iso = original_now_iso
+
+        self.assertEqual(result["facts"]["price"]["value"], 123.0)
+        self.assertEqual(result["resolver"]["detail_authority"], "data_supply:fresh_fallback")
+        self.assertEqual(
+            result["source_files"]["stockanalysis_yf_fallback"],
+            "computed/data-supply/etf-detail/payloads/R2X.json",
+        )
+        self.assertFalse(result["sources"]["yf"])
 
     def test_market_facts_contract_rejects_malformed_fact(self) -> None:
         payload = self.mod.build_one(

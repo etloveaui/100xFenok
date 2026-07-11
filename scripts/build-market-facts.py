@@ -4,6 +4,7 @@ Build normalized market facts from source-layer JSON.
 
 Inputs:
   data/yf/finance/{TICKER}.json
+  data/computed/data-supply/etf-detail/{enrollment,index,payloads/*.json}
   data/stockanalysis/etfs/{TICKER}.json
   data/stockanalysis/stocks/{TICKER}.json
   data/slickcharts/stocks/{TICKER}.json
@@ -17,8 +18,10 @@ from __future__ import annotations
 
 import argparse
 from datetime import date, datetime, timezone
+import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 
 
@@ -109,6 +112,9 @@ STOCKANALYSIS_PERFORMANCE_FIELD_MAP = {
 }
 INDEX_SOURCE_FILES = [
     "yf/finance/*.json",
+    "computed/data-supply/etf-detail/enrollment.json",
+    "computed/data-supply/etf-detail/index.json",
+    "computed/data-supply/etf-detail/payloads/*.json",
     "stockanalysis/etfs/*.json",
     "stockanalysis/stocks/*.json",
     "stockanalysis/financials/*.json",
@@ -116,6 +122,8 @@ INDEX_SOURCE_FILES = [
     "stockanalysis/surfaces/etf_screener.json",
     "slickcharts/stocks/*.json",
 ]
+DATA_SUPPLY_ETF_DETAIL = Path("computed/data-supply/etf-detail")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def now_iso() -> str:
@@ -655,7 +663,16 @@ def slick_market_cap_fact(slick_payload):
     return fact(value, "slickcharts", as_of=as_of)
 
 
-def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=None):
+def build_one(
+    ticker,
+    yf_payload,
+    sa_payload,
+    slick_payload,
+    sa_catalog_payload=None,
+    *,
+    detail_source_path=None,
+    detail_authority=None,
+):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     sa_norm = (sa_payload or {}).get("normalized") or {}
@@ -790,11 +807,13 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=
         "source_files": {
             "yf": f"yf/finance/{ticker}.json" if yf_payload else None,
             "stockanalysis": (
-                f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
+                detail_source_path
+                or f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
                 if sa_payload and not sa_is_yahoo_fallback else None
             ),
             "stockanalysis_yf_fallback": (
-                f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
+                detail_source_path
+                or f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
                 if sa_payload and sa_is_yahoo_fallback else None
             ),
             "stockanalysis_etf_catalog": (
@@ -806,6 +825,7 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=
         },
         "resolver": {
             "version": "market-facts-resolver/v1",
+            "detail_authority": detail_authority,
             "field_source_policy": FIELD_SOURCE_POLICY,
             "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value.",
         },
@@ -855,6 +875,83 @@ def build_etf_catalog_map() -> dict[str, dict]:
     return rows
 
 
+def load_data_supply_etf_detail() -> tuple[set[str], dict[str, dict]]:
+    """Load the committed R2 ETF-detail projection without following index paths.
+
+    The projection is the sole detail authority for enrolled tickers. Its payload
+    path is reconstructed from the normalized ticker, and bytes are checked
+    against the committed digest before they can enter market facts.
+    """
+    root = DATA / DATA_SUPPLY_ETF_DETAIL
+    enrollment_path = root / "enrollment.json"
+    index_path = root / "index.json"
+    if not enrollment_path.exists() and not index_path.exists():
+        return set(), {}
+    enrollment = load_json(enrollment_path)
+    index = load_json(index_path)
+    if not isinstance(enrollment, dict) or enrollment.get("schema_version") != "data-supply-etf-detail-enrollment/v1":
+        raise SystemExit("invalid R2 ETF-detail enrollment projection")
+    if not isinstance(index, dict) or index.get("schema_version") != "data-supply-etf-detail-public-index/v1":
+        raise SystemExit("invalid R2 ETF-detail public index")
+    tickers = enrollment.get("tickers")
+    entries = index.get("entries")
+    if not isinstance(tickers, list) or not isinstance(entries, dict):
+        raise SystemExit("invalid R2 ETF-detail membership/index shape")
+    enrolled = {clean_ticker(ticker) for ticker in tickers}
+    if len(enrolled) != len(tickers) or not enrolled or enrolled != set(entries):
+        raise SystemExit("R2 ETF-detail membership/index mismatch")
+
+    selected = {}
+    for ticker in sorted(enrolled):
+        entry = entries[ticker]
+        if not isinstance(entry, dict) or entry.get("ticker") != ticker or entry.get("enrollment_state") != "enrolled":
+            raise SystemExit(f"invalid R2 ETF-detail entry: {ticker}")
+        state = entry.get("resolution_state")
+        if state == "unavailable":
+            if entry.get("payload_path") is not None or entry.get("payload_sha256") is not None:
+                raise SystemExit(f"unavailable R2 ETF-detail entry exposes payload: {ticker}")
+            continue
+        digest = entry.get("payload_sha256")
+        expected_rel = f"computed/data-supply/etf-detail/payloads/{ticker}.json"
+        if entry.get("payload_path") != f"payloads/{ticker}.json" or not isinstance(digest, str) or not SHA256_RE.fullmatch(digest):
+            raise SystemExit(f"invalid R2 ETF-detail payload binding: {ticker}")
+        payload_path = DATA / expected_rel
+        try:
+            payload_bytes = payload_path.read_bytes()
+            payload = json.loads(payload_bytes)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise SystemExit(f"cannot read R2 ETF-detail payload {ticker}: {exc}") from exc
+        if hashlib.sha256(payload_bytes).hexdigest() != digest:
+            raise SystemExit(f"R2 ETF-detail payload digest mismatch: {ticker}")
+        if not isinstance(payload, dict) or payload.get("ticker") != ticker or payload.get("asset_type") != "etf":
+            raise SystemExit(f"R2 ETF-detail payload identity mismatch: {ticker}")
+        selected[ticker] = {
+            "payload": payload,
+            "source_path": expected_rel,
+            "resolution_state": state,
+        }
+    return enrolled, selected
+
+
+def load_strict_stockanalysis_etf(path: Path, ticker: str) -> dict:
+    payload = load_json(path)
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema_version") != "stockanalysis/v1"
+        or payload.get("ticker") != ticker
+        or payload.get("asset_type") != "etf"
+        or payload.get("source") == "yahoo_finance"
+        or payload.get("source_provider") == "yahoo_finance"
+        or payload.get("detail_status") == "yf_fallback"
+        or (
+            payload.get("source") != "stockanalysis"
+            and payload.get("source_provider") != "stockanalysis"
+        )
+    ):
+        raise SystemExit(f"invalid strict StockAnalysis ETF detail: {ticker}")
+    return payload
+
+
 def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -882,7 +979,8 @@ def main(argv=None) -> None:
     sa_financial_files = {p.stem: p for p in (DATA / "stockanalysis" / "financials").glob("*.json")}
     slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
     sa_catalog_rows = build_etf_catalog_map()
-    all_tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows))
+    enrolled_etfs, selected_etf_details = load_data_supply_etf_detail()
+    all_tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows) | enrolled_etfs)
     available_tickers = set(all_tickers)
     if target_tickers:
         missing = sorted(target_tickers - available_tickers)
@@ -905,12 +1003,40 @@ def main(argv=None) -> None:
     updated_rows = []
     generated_at = now_iso()
     for ticker in tickers:
-        yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
-        sa_path = sa_etf_files.get(ticker) or sa_stock_files.get(ticker)
-        sa_payload = load_json(sa_path) if sa_path else None
+        detail_authority = None
+        detail_source_path = None
+        if ticker in enrolled_etfs:
+            # Enrolled ETF detail is committed R2 truth. Mutable Yahoo and direct
+            # StockAnalysis detail files must not bypass that selection.
+            yf_payload = None
+            selected_detail = selected_etf_details.get(ticker)
+            sa_payload = selected_detail["payload"] if selected_detail else None
+            detail_source_path = selected_detail["source_path"] if selected_detail else None
+            detail_authority = (
+                f"data_supply:{selected_detail['resolution_state']}"
+                if selected_detail else "data_supply:unavailable"
+            )
+        else:
+            yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
+            sa_path = sa_etf_files.get(ticker) or sa_stock_files.get(ticker)
+            sa_payload = (
+                load_strict_stockanalysis_etf(sa_path, ticker)
+                if ticker in sa_etf_files
+                else (load_json(sa_path) if sa_path else None)
+            )
+            if sa_payload and ticker in sa_etf_files:
+                detail_authority = "stockanalysis:strict_unenrolled"
         sa_financials = load_json(sa_financial_files[ticker]) if ticker in sa_financial_files else None
         slick_payload = load_json(slick_files[ticker]) if ticker in slick_files else None
-        payload = build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_rows.get(ticker))
+        payload = build_one(
+            ticker,
+            yf_payload,
+            sa_payload,
+            slick_payload,
+            sa_catalog_rows.get(ticker),
+            detail_source_path=detail_source_path,
+            detail_authority=detail_authority,
+        )
         payload["generated_at"] = generated_at
         if sa_financials and payload["asset_type"] != "etf":
             payload["financials"] = {

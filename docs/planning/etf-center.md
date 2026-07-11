@@ -1,19 +1,19 @@
 # ETF Center
 
 > Scope: public ETF surfaces in 100xFenok (`/etfs`, `/etfs/new`, `/etfs/[ticker]`).
-> Last updated: 2026-06-30.
+> Last updated: 2026-07-11.
 
 ## 1. Overview
 
-The ETF Center is the dedicated surface for discovering, filtering, and inspecting exchange-traded funds. It consolidates data from the StockAnalysis ETF universe, the StockAnalysis ETF screener, individual ETF detail files, and Yahoo Finance fallback facts.
+The ETF Center is the dedicated surface for discovering, filtering, and inspecting exchange-traded funds. It consolidates the StockAnalysis ETF universe and screener with a committed Data Supply R2 detail decision. For the enrolled cohort, that decision—not a mutable provider file—is the only detail authority.
 
-Current coverage (2026-06-30 local DataPack):
+R2.4 cutover baseline (2026-07-11 local DataPack):
 
 - ETF universe records: 5,333
 - ETF candidate symbols: 5,390
-- ETF detail coverage: 98.20% (5,293 covered / 5,390 candidates; 5,306 detail files including extras)
-- Primary StockAnalysis detail files: 4,590
-- Yahoo ETF fallback files: 716
+- Effective ETF detail coverage: 5,237 selected/direct details across 5,449 enrolled-or-direct tickers; 212 enrolled tickers are explicitly unavailable.
+- Strict unenrolled StockAnalysis detail files: 4,731.
+- R2 enrolled ETF details: 718 total = 506 selected fallback payloads + 212 typed unavailable rows.
 - Market-facts normalized ETF rows: 5,308
 - Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
 - Fenok Edge full ETF daily-1Y diagnostic: `4484 = 3703 complete + 243 fetchable + 538 inception-limited`; this is a rolling universe-health/backfill lane, not the ETF Center service gate.
@@ -27,7 +27,7 @@ Design principles:
 
 - No mock UI; every displayed field is backed by a durable, auto-updating data source.
 - Fallback states are explicit to the user (e.g., "price-only", "summary-only").
-- All public data is mirrored from `data/stockanalysis/**` to `100xfenok-next/public/data/stockanalysis/**`.
+- Enrolled detail is published only through `data/computed/data-supply/etf-detail/**`; strict unenrolled StockAnalysis primaries retain the legacy detail path. Private state, provider candidates, and migration evidence are never mirrored.
 
 ## 2. Page Structure
 
@@ -86,9 +86,12 @@ Detail page for a single ETF.
   - Holdings: top holdings, sector/country/asset allocation breakdowns.
   - History: available period chart + table from detail `history_periods`.
 - Fallback states:
-  - `full`: complete detail available.
+  - `fresh_primary`: current selected primary detail.
+  - `fresh_fallback`: current selected fallback detail.
+  - `lkg_primary` / `lkg_fallback`: last-known-good detail with explicit age.
+  - `unavailable`: enrolled but no committed payload; the API returns an independently labeled summary or typed 503.
+  - `full`: strict direct StockAnalysis detail for a proven unenrolled ticker.
   - `surface_only` / `universe_only`: only price/summary data available; user-facing copy explains missing depth.
-  - `yf_fallback`: Yahoo Finance auxiliary data is used temporarily.
   - transient fetch failures are shown separately from missing/backfill-pending data and expose an in-place retry action.
 
 Implementation pointers:
@@ -105,7 +108,10 @@ Implementation pointers:
 | `data/stockanalysis/etf_universe.json` | Full ETF list: ticker, name, category, AUM | `fetch-stockanalysis.py --discover-etf-universe` |
 | `data/stockanalysis/surfaces/etf_screener.json` | Price, change, volume, holdings, assetClass | `fetch-stockanalysis.py --fetch-surfaces` |
 | `data/stockanalysis/surfaces/new_etfs.json` | Recently listed ETFs | `fetch-stockanalysis.py --fetch-surfaces` |
-| `data/stockanalysis/etfs/{TICKER}.json` | Individual ETF detail (overview, holdings, `history_periods`, performance) | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
+| `data/computed/data-supply/etf-detail/enrollment.json` | Fixed 718-ticker R2 enrollment guard | `materialize_data_supply_public.py` |
+| `data/computed/data-supply/etf-detail/index.json` | Public-safe committed resolution state and payload binding | `materialize_data_supply_public.py` |
+| `data/computed/data-supply/etf-detail/payloads/{TICKER}.json` | Exact immutable bytes for a selected enrolled ticker | `materialize_data_supply_public.py` |
+| `data/stockanalysis/etfs/{TICKER}.json` | Strict StockAnalysis detail for an unenrolled ticker only | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
 | `data/stockanalysis/backfill/incremental_plan_latest.json` | No-network preflight plan for the next incremental ETF detail/history refresh | `fetch-stockanalysis.py --plan-only --write-plan` |
 | `data/stockanalysis/backfill/incremental_latest.json` | Post-run proof from a completed incremental ETF detail refresh | `fetch-stockanalysis.py --incremental-etf-backfill` |
 | `data/stockanalysis/coverage/etf_detail.json` | Coverage counts and missing samples | coverage builder |
@@ -139,16 +145,18 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
 
 `/api/data/stockanalysis/etfs/{ticker}`:
 
-- Returns StockAnalysis detail file if it exists.
-- Falls back to surface/universe data when detail is missing.
-- Preserves `detail_status`: `full`, `surface_only`, `universe_only`, `yf_fallback`.
+- Resolves enrollment first from the committed public-safe index and reconstructs only the fixed projection path.
+- Returns the exact selected payload plus `data_supply` resolution metadata for enrolled selected tickers.
+- Returns an independently labeled surface/universe summary or typed 503 for enrolled unavailable tickers; it never revives a deleted legacy fallback.
+- Reads a legacy StockAnalysis detail only after proving the ticker is unenrolled and the file has strict StockAnalysis identity.
+- Uses a projection digest in the response cache key; typed unavailable responses use a short negative cache without stale serving.
 
 ### 3.5 Fallback Strategy
 
-1. Primary source: StockAnalysis ETF detail endpoints.
-2. If StockAnalysis detail 404s or returns non-ETF quoteType, use Yahoo Finance `yfinance` fallback (`yf_etf_fallback=true`).
-3. If both fail, serve surface/universe summary data with an explicit fallback status.
-4. Retry/cooldown logic tracks missing tickers in `data/stockanalysis/backfill/pending_ledger.json`.
+1. Enrolled ticker: use only the committed R2 selection (`fresh_primary`, `fresh_fallback`, `lkg_primary`, or `lkg_fallback`).
+2. Enrolled unavailable ticker: serve an explicitly independent summary when present; otherwise return typed unavailable 503.
+3. Unenrolled ticker: accept only a strict StockAnalysis primary detail.
+4. Producer retry/cooldown state remains operational input and is not a public resolution authority.
 
 ### 3.6 Refresh Cadence
 
@@ -187,7 +195,8 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
   batch before a live fetch.
 - **History gap QA summary**: run `npm run qa:history-gap` from
   `100xfenok-next/` before dispatching a live history refresh. It directly
-  scans local primary StockAnalysis ETF detail files, reconciles the dispatch
+  resolves scored ETFs enrollment-first (committed R2 selection before any
+  strict unenrolled StockAnalysis primary), reconciles the dispatch
   plan in `incremental_plan_latest.json` against the full-scan report, separates
   fetchable gaps from inception-limited recent-launch ETFs, and prints the
   recommended workflow inputs without making network calls. Use
@@ -275,7 +284,8 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
 | `npm run qa:stockanalysis` | Smoke-tests public routes and API responses. |
 | `npm run qa:surface-consumers` | Validates that every declared surface has an active route/component consumer. |
 | `npm run qa:market-audit` | Validates Data Lab renderer labels and market audit contracts. |
-| `npm run qa:history-gap` | Prints the current primary StockAnalysis ETF multi-year history gap and verifies it matches the no-network plan artifact. |
+| `npm run qa:history-gap` | Prints the effective enrollment-first ETF multi-year history gap and verifies it matches the no-network plan artifact. |
+| `npm run qa:data-supply-public` | Verifies canonical/public parity, redaction, fixed-path binding, and enrolled legacy cleanup. |
 | `npm run qa:history-gap -- --write-report` | Writes the durable history-gap report JSON plus the public mirror for Data Lab. |
 | `npm run qa:copy` | Lints public-facing Korean copy. |
 

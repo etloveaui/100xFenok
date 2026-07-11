@@ -1,7 +1,7 @@
 <!DOCTYPE html><!-- LLM_GUIDE_START
 {
-  "doc_version": "1.5",
-  "generated": "2026-07-02T15:12:00+09:00",
+  "doc_version": "1.6",
+  "generated": "2026-07-11T06:00:00+09:00",
   "hosting": {
     "provider": "Cloudflare Workers",
     "root_url": "https://100xfenok.etloveaui.workers.dev/"
@@ -48,10 +48,12 @@
     "stockanalysis_core": [
       "/data/stockanalysis/index.json",
       "/data/stockanalysis/schema.json",
-      "/data/stockanalysis/etfs/*.json",
+      "/data/computed/data-supply/etf-detail/index.json",
+      "/data/computed/data-supply/etf-detail/payloads/*.json",
       "/data/stockanalysis/surfaces/*.json",
       "/data/stockanalysis/coverage/etf_detail.json"
     ],
+    "etf_detail_authority": "Enrolled tickers resolve only through the committed data-supply index and fixed payload projection. The legacy /data/stockanalysis/etfs/*.json path is valid only for strict, unenrolled StockAnalysis primaries.",
     "alpha_scout_briefings": [
       "/alpha-scout/data/reports-index.json",
       "/alpha-scout/data/metadata/*.json",

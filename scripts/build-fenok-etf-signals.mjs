@@ -13,6 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createEffectiveEtfDetailReader } from "./effective-etf-detail-reader.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -229,12 +230,14 @@ function main() {
     .filter((c) => c.isVanilla);
 
   const vanillaCount = eligibleCandidates.length;
+  const effectiveDetailReader = createEffectiveEtfDetailReader({ rootDir: repoRoot });
 
   // Enrich each candidate with source data.
   const scored = eligibleCandidates.map((c) => {
     const detail = readOptionalJson(path.join("computed", "market_facts", "tickers", `${c.ticker}.json`));
     const facts = detail?.facts ?? {};
-    const saDetail = readOptionalJson(path.join("stockanalysis", "etfs", `${c.ticker}.json`));
+    const resolvedDetail = effectiveDetailReader.resolve(c.ticker);
+    const saDetail = resolvedDetail.status === "available" ? resolvedDetail.payload : null;
     const saNorm = saDetail?.normalized ?? {};
     const saOverview = saNorm.overview ?? {};
     const saPerformance = saNorm.performance ?? {};
