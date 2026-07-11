@@ -7,6 +7,11 @@ import {
   sha256Text,
   type PublicJsonDocument,
 } from "../src/lib/server/data-supply-etf-detail";
+import {
+  buildTypedUnavailableDataPoint,
+  recordTypedUnavailableResponse,
+  unavailableStateAgeHours,
+} from "../src/lib/server/data-supply-etf-telemetry";
 import { withResponseCache } from "../src/lib/server/response-cache";
 
 type JsonRecord = Record<string, unknown>;
@@ -125,6 +130,7 @@ const unavailable = await fixture({ state: "unavailable", payload: null });
 assert.equal(unavailable.kind, "unavailable");
 if (unavailable.kind === "unavailable") {
   assert.equal(unavailable.dataSupply.source_as_of, null);
+  assert.equal(unavailable.stateObservedAt, "2026-07-11T00:00:00Z");
   const rawSummary = { schema_version: "stockanalysis/v1", ticker: "ADIU", detail_status: "surface_only" };
   const summary = mergeEtfDataSupply(rawSummary, unavailable.dataSupply);
   assert.equal((summary.data_supply as JsonRecord).resolution_state, "unavailable");
@@ -134,6 +140,72 @@ if (unavailable.kind === "unavailable") {
   assert.equal(typedRepresentation.kind, "typed_unavailable");
   assert.equal(typedRepresentation.body.error, "DATA_SUPPLY_UNAVAILABLE");
 }
+
+assert.equal(unavailableStateAgeHours(
+  "2026-07-11T00:00:00Z",
+  new Date("2026-07-12T12:00:00Z"),
+), 36);
+const telemetryPoint = buildTypedUnavailableDataPoint({
+  ticker: "ADIU",
+  cacheStatus: "HIT",
+  stateObservedAt: "2026-07-11T00:00:00Z",
+  now: new Date("2026-07-12T12:00:00Z"),
+});
+assert.deepEqual(telemetryPoint.indexes, ["ADIU"]);
+assert.deepEqual(telemetryPoint.blobs, [
+  "2026-07-12",
+  "ADIU",
+  "etf",
+  "unavailable",
+  "HIT",
+  "data-supply-unavailable/v1",
+]);
+assert.deepEqual(telemetryPoint.doubles, [36]);
+
+let writes = 0;
+let scheduledWrite: Promise<unknown> | null = null;
+recordTypedUnavailableResponse({
+  ticker: "ADIU",
+  cacheStatus: "MISS",
+  stateObservedAt: "2026-07-11T00:00:00Z",
+  now: new Date("2026-07-12T12:00:00Z"),
+}, () => ({
+  env: {
+    DATA_SUPPLY_ANALYTICS: {
+      writeDataPoint: () => { writes += 1; },
+    },
+  },
+  ctx: {
+    waitUntil: (promise) => { scheduledWrite = promise; },
+  },
+}));
+assert.equal(writes, 0, "Analytics Engine write must be deferred off the response path");
+assert.ok(scheduledWrite);
+await scheduledWrite;
+assert.equal(writes, 1, "one scheduled call must write exactly one datapoint");
+
+let failedWrite: Promise<unknown> | null = null;
+assert.doesNotThrow(() => recordTypedUnavailableResponse({
+  ticker: "ADIU",
+  cacheStatus: "MISS",
+  stateObservedAt: "2026-07-11T00:00:00Z",
+}, () => ({
+  env: {
+    DATA_SUPPLY_ANALYTICS: {
+      writeDataPoint: () => { throw new Error("quota exceeded"); },
+    },
+  },
+  ctx: {
+    waitUntil: (promise) => { failedWrite = promise; },
+  },
+})));
+assert.ok(failedWrite);
+await failedWrite;
+assert.doesNotThrow(() => recordTypedUnavailableResponse({
+  ticker: "ADIU",
+  cacheStatus: "MISS",
+  stateObservedAt: "2026-07-11T00:00:00Z",
+}, () => { throw new Error("Cloudflare context unavailable"); }));
 
 const missingGuard = await fixture({ guardMissing: true });
 assert.deepEqual(missingGuard, {

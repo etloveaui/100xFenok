@@ -12,6 +12,7 @@ import {
   resolveDataSupplyEtfDetail,
   type EtfDetailResolution,
 } from "@/lib/server/data-supply-etf-detail";
+import { recordTypedUnavailableResponse } from "@/lib/server/data-supply-etf-telemetry";
 import { withResponseCache } from "@/lib/server/response-cache";
 import { normalizeForFilePath } from "@/lib/ticker";
 
@@ -253,7 +254,7 @@ export async function GET(
     const resolution = await resolveDataSupplyEtfDetail(normalizedTicker);
     const digest = resolution.projectionDigest ?? "guard-unavailable";
     const negative = resolution.kind === "unavailable";
-    return withResponseCache(
+    const response = await withResponseCache(
       `stockanalysis:etfs:${negative ? "unavailable" : "payload"}:${normalizedTicker}:${digest}`,
       negative ? 60 : 300,
       () => buildEtfResponse(resolution, normalizedTicker),
@@ -263,6 +264,18 @@ export async function GET(
         preserveCacheControl: true,
       },
     );
+    if (
+      resolution.kind === "unavailable"
+      && response.status === 503
+      && response.headers.get("X-100x-Data-Supply-SLO") === "typed-unavailable"
+    ) {
+      recordTypedUnavailableResponse({
+        ticker: normalizedTicker,
+        cacheStatus: response.headers.get("X-100x-Cache"),
+        stateObservedAt: resolution.stateObservedAt,
+      });
+    }
+    return response;
   }
 
   return withResponseCache(

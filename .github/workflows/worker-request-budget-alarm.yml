@@ -3,6 +3,7 @@ name: Worker Request Budget Alarm
 on:
   schedule:
     - cron: '7 * * * *'
+    - cron: '17 2,14 * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,6 +16,7 @@ concurrency:
 
 jobs:
   check:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '7 * * * *'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -64,4 +66,56 @@ jobs:
 
       - name: Fail on alarm
         if: steps.budget.outcome == 'failure'
+        run: exit 1
+
+  data-supply-analytics:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 2,14 * * *'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check ETF typed-unavailable telemetry budget
+        id: telemetry
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_NAME: ${{ vars.CLOUDFLARE_ACCOUNT_NAME }}
+          DATA_SUPPLY_ANALYTICS_DAILY_THRESHOLD: '80000'
+          DATA_SUPPLY_ANALYTICS_DATASET: fenok_data_supply_unavailable
+          DATA_SUPPLY_ANALYTICS_RESULT: data-supply-analytics-result.json
+        run: node scripts/ops/check-data-supply-etf-telemetry-budget.mjs
+
+      - name: Prepare telemetry issue body
+        if: steps.telemetry.outcome == 'failure'
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const result = JSON.parse(fs.readFileSync('data-supply-analytics-result.json', 'utf8'));
+          fs.writeFileSync('data-supply-analytics-issue.md', result.issueBody || result.message || 'ETF telemetry budget alarm failed.');
+          fs.writeFileSync('data-supply-analytics-title.txt', result.issueTitle || '100xFenok ETF typed-unavailable telemetry budget alarm');
+          NODE
+
+      - name: Open or update telemetry OPS issue
+        if: steps.telemetry.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="$(cat data-supply-analytics-title.txt)"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file data-supply-analytics-issue.md
+          else
+            gh issue create --title "$title" --body-file data-supply-analytics-issue.md
+          fi
+
+      - name: Fail on telemetry alarm
+        if: steps.telemetry.outcome == 'failure'
         run: exit 1

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  ETF_DETAIL_COMPAT_EXPIRES_AT,
   getEtfDataSupplyPresentation,
   isLegacyEtfDetailCompatibilityActive,
   parseEtfApiResponse,
@@ -79,6 +80,9 @@ assert.equal(isLegacyEtfDetailCompatibilityActive(
   "2026-07-18T00:00:00Z",
 ), false);
 assert.equal(isLegacyEtfDetailCompatibilityActive(new Date("2026-07-12T00:00:00Z"), null), false);
+assert.equal(ETF_DETAIL_COMPAT_EXPIRES_AT, "2026-07-25T00:00:00Z");
+assert.equal(isLegacyEtfDetailCompatibilityActive(new Date("2026-07-24T23:59:59Z")), true);
+assert.equal(isLegacyEtfDetailCompatibilityActive(new Date("2026-07-25T00:00:00Z")), false);
 
 console.log("data-supply ETF UI tests passed");
 }

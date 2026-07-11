@@ -27,8 +27,7 @@ export interface EtfDataSupplyPresentation {
   degraded: boolean;
 }
 
-// H must replace this placeholder with a concrete timestamp before deploy.
-export const ETF_DETAIL_COMPAT_EXPIRES_AT: string | null = null;
+export const ETF_DETAIL_COMPAT_EXPIRES_AT = "2026-07-25T00:00:00Z";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)

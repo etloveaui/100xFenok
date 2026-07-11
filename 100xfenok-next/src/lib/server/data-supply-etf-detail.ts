@@ -28,7 +28,12 @@ export interface EtfDataSupplyMetadata {
 
 export type EtfDetailResolution =
   | { kind: "selected"; payload: JsonRecord; dataSupply: EtfDataSupplyMetadata; projectionDigest: string }
-  | { kind: "unavailable"; dataSupply: EtfDataSupplyMetadata; projectionDigest: string }
+  | {
+      kind: "unavailable";
+      dataSupply: EtfDataSupplyMetadata;
+      projectionDigest: string;
+      stateObservedAt: string;
+    }
   | { kind: "direct"; payload: JsonRecord; projectionDigest: string }
   | { kind: "not_found"; projectionDigest: string }
   | {
@@ -133,6 +138,7 @@ async function parseIndex(
   if (
     value.schema_version !== "data-supply-etf-detail-public-index/v1"
     || value.domain !== "etf_detail"
+    || !isIsoTimestamp(value.generated_at)
     || !entries
     || enrolledCount === null
     || selectedCount === null
@@ -151,7 +157,7 @@ async function parseIndex(
     else selectedEntries += 1;
   }
   if (selectedEntries !== selectedCount || unavailableEntries !== unavailableCount) return { kind: "invalid" } as const;
-  return { kind: "ok", entries } as const;
+  return { kind: "ok", entries, generatedAt: value.generated_at as string } as const;
 }
 
 function expectedRole(state: ResolutionState): ProviderRole {
@@ -302,7 +308,12 @@ export async function resolveDataSupplyEtfDetail(
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());
   if (!parsed) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
   if (parsed.metadata.resolution_state === "unavailable") {
-    return { kind: "unavailable", dataSupply: parsed.metadata, projectionDigest: guard.indexSha };
+    return {
+      kind: "unavailable",
+      dataSupply: parsed.metadata,
+      projectionDigest: guard.indexSha,
+      stateObservedAt: parsedIndex.generatedAt,
+    };
   }
 
   const payloadDocument = await dependencies.readProjectionPayload(ticker);
