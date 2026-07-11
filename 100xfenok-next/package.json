@@ -79,7 +79,7 @@
     "qa:etf-daily1y-dispatch-checksum": "node ../scripts/test-fenok-etf-daily1y-dispatch-checksum.mjs",
     "qa:pro-density-audit": "node scripts/check-pro-density-audit.mjs",
     "qa:fenok-public-guard": "node scripts/check-fenok-public-mirror-guard.mjs",
-    "qa:data-supply-public": "python3 ../scripts/materialize_data_supply_public.py --check && node scripts/test-data-supply-public-redaction.mjs && node scripts/check-fenok-public-mirror-guard.mjs",
+    "qa:data-supply-public": "python3 ../scripts/materialize_data_supply_public.py --check && node scripts/test-sync-public-data.mjs && node scripts/test-data-supply-public-redaction.mjs && node scripts/check-fenok-public-mirror-guard.mjs",
     "qa:rim-index": "node ../scripts/test-build-rim-index.mjs && node ../scripts/test-rim-sole-writer.mjs && node ../scripts/build-rim-index.mjs --check && node scripts/check-rim-index-consumer-growth-guard.mjs",
     "qa:fenok-signal-lens": "node scripts/check-fenok-signal-lens-dual-hexagon.mjs",
     "qa:fenok-etf-signal-gate": "node scripts/check-fenok-etf-signal-gate.mjs",

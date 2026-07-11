@@ -12,6 +12,8 @@ const PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS = Object.freeze([
   "public/data/yf/migration-evidence",
 ]);
 
+const STALE_PRIVATE_PUBLIC_FILE = "public/data/admin/data-supply-detection-floor.json";
+
 // temp-file -> validate -> rename, shared by the KPI public-mirror re-projection.
 function writeJsonAtomic(absPath, payload) {
   const body = `${JSON.stringify(payload, null, 2)}\n`;
@@ -89,45 +91,101 @@ function normalizedPrivateDataSupplyRoot(relativePath) {
   return normalized;
 }
 
-function assertPathComponentsAreDirectories(baseDir, targetDir) {
-  const relative = path.relative(baseDir, targetDir);
-  if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error(`refusing public tree outside root: ${targetDir}`);
+function pathInsideRoot(resolvedRoot, target) {
+  const relative = path.relative(resolvedRoot, target);
+  if (relative === "") return ".";
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`refusing public cleanup path outside root: ${target}`);
   }
-
-  let cursor = baseDir;
-  for (const segment of relative.split(path.sep)) {
-    cursor = path.join(cursor, segment);
-    const stat = lstatIfPresent(cursor);
-    if (!stat) return false;
-    if (stat.isSymbolicLink()) {
-      throw new Error(`refusing symlink in private public-tree path: ${cursor}`);
-    }
-    if (!stat.isDirectory()) {
-      throw new Error(`refusing non-directory private public-tree path: ${cursor}`);
-    }
-  }
-  return true;
+  return relative.split(path.sep).join("/");
 }
 
-function collectRemovalTree(directory, files, directories) {
-  const rootStat = fs.lstatSync(directory);
-  if (rootStat.isSymbolicLink()) {
-    throw new Error(`refusing symlink in private public tree: ${directory}`);
+function nodeKind(stat) {
+  if (!stat) return "absent";
+  if (stat.isSymbolicLink()) return "symlink";
+  if (stat.isDirectory()) return "directory";
+  if (stat.isFile()) return "file";
+  return "special";
+}
+
+function boundNode(resolvedRoot, target, stat) {
+  return {
+    path: pathInsideRoot(resolvedRoot, target),
+    kind: nodeKind(stat),
+    identity: stat
+      ? [
+          String(stat.dev),
+          String(stat.ino),
+          String(stat.mode),
+          String(stat.nlink),
+          String(stat.size),
+          String(stat.mtimeMs),
+          String(stat.ctimeMs),
+        ].join(":")
+      : null,
+  };
+}
+
+function sameBoundNode(left, right) {
+  return left.kind === right.kind && left.identity === right.identity;
+}
+
+function bindPath(plan, target) {
+  const stat = lstatIfPresent(target);
+  const bound = boundNode(plan.resolvedRoot, target, stat);
+  const previous = plan.bindings.get(bound.path);
+  if (previous && !sameBoundNode(previous, bound)) {
+    throw new Error(`public cleanup identity drift during preflight: ${target}`);
   }
-  if (!rootStat.isDirectory()) {
-    throw new Error(`refusing non-directory private public tree: ${directory}`);
+  plan.bindings.set(bound.path, bound);
+  return { stat, bound };
+}
+
+function bindDirectoryParents(plan, target) {
+  const relative = path.relative(plan.resolvedRoot, target);
+  if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`refusing public cleanup path outside root: ${target}`);
   }
 
+  const segments = relative.split(path.sep);
+  let cursor = plan.resolvedRoot;
+  bindPath(plan, cursor);
+  let parentsPresent = true;
+  for (const segment of segments.slice(0, -1)) {
+    cursor = path.join(cursor, segment);
+    const { stat } = bindPath(plan, cursor);
+    if (!stat) {
+      parentsPresent = false;
+      continue;
+    }
+    if (stat.isSymbolicLink()) {
+      throw new Error(`refusing symlink in public cleanup parent path: ${cursor}`);
+    }
+    if (!stat.isDirectory()) {
+      throw new Error(`refusing non-directory public cleanup parent path: ${cursor}`);
+    }
+    if (!parentsPresent) {
+      throw new Error(`public cleanup path appeared beneath an absent parent: ${cursor}`);
+    }
+  }
+  return parentsPresent;
+}
+
+function collectBoundRemovalTree(plan, directory, files, directories) {
   directories.push(directory);
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+  const entries = fs.readdirSync(directory, { withFileTypes: true })
+    .sort((left, right) => left.name.localeCompare(right.name));
+  for (const entry of entries) {
     const entryPath = path.join(directory, entry.name);
-    const stat = fs.lstatSync(entryPath);
+    const { stat } = bindPath(plan, entryPath);
+    if (!stat) {
+      throw new Error(`private public tree changed during preflight: ${entryPath}`);
+    }
     if (stat.isSymbolicLink()) {
       throw new Error(`refusing symlink in private public tree: ${entryPath}`);
     }
     if (stat.isDirectory()) {
-      collectRemovalTree(entryPath, files, directories);
+      collectBoundRemovalTree(plan, entryPath, files, directories);
     } else if (stat.isFile()) {
       files.push(entryPath);
     } else {
@@ -136,19 +194,86 @@ function collectRemovalTree(directory, files, directories) {
   }
 }
 
-function removeCollectedTree(files, directories) {
-  for (const filePath of files) {
-    const stat = fs.lstatSync(filePath);
-    if (stat.isSymbolicLink() || !stat.isFile()) {
-      throw new Error(`public tree changed before file removal: ${filePath}`);
+function buildPublicCleanupPlan(resolvedRoot) {
+  const plan = {
+    resolvedRoot,
+    bindings: new Map(),
+    privateRoots: [],
+    staleFile: null,
+  };
+  const { stat: rootStat } = bindPath(plan, resolvedRoot);
+  if (!rootStat || rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`refusing unsafe sync-static root: ${resolvedRoot}`);
+  }
+
+  for (const relativePath of PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS) {
+    const normalized = normalizedPrivateDataSupplyRoot(relativePath);
+    const target = path.resolve(resolvedRoot, ...normalized.split("/"));
+    const parentsPresent = bindDirectoryParents(plan, target);
+    const { stat } = bindPath(plan, target);
+    if (!parentsPresent) {
+      if (stat) throw new Error(`public cleanup target appeared beneath an absent parent: ${target}`);
+      continue;
     }
+    if (!stat) continue;
+    if (stat.isSymbolicLink()) {
+      throw new Error(`refusing symlink in private public tree: ${target}`);
+    }
+    if (!stat.isDirectory()) {
+      throw new Error(`refusing non-directory private public tree: ${target}`);
+    }
+    const files = [];
+    const directories = [];
+    collectBoundRemovalTree(plan, target, files, directories);
+    plan.privateRoots.push({ normalized, files, directories });
+  }
+
+  const staleTarget = path.resolve(resolvedRoot, ...STALE_PRIVATE_PUBLIC_FILE.split("/"));
+  const staleParentsPresent = bindDirectoryParents(plan, staleTarget);
+  const { stat: staleStat } = bindPath(plan, staleTarget);
+  if (!staleParentsPresent) {
+    if (staleStat) throw new Error(`stale public file appeared beneath an absent parent: ${staleTarget}`);
+  } else if (staleStat) {
+    if (staleStat.isSymbolicLink()) {
+      throw new Error(`refusing symlink at stale public file: ${staleTarget}`);
+    }
+    if (!staleStat.isFile()) {
+      throw new Error(`stale public file must be a regular file: ${staleTarget}`);
+    }
+    plan.staleFile = { normalized: STALE_PRIVATE_PUBLIC_FILE, path: staleTarget };
+  }
+  return plan;
+}
+
+function cleanupPlanSignature(plan) {
+  return JSON.stringify(
+    [...plan.bindings.values()]
+      .sort((left, right) => left.path.localeCompare(right.path)),
+  );
+}
+
+function assertBoundRemovalNode(plan, target, expectedKind, stableOnly = false) {
+  const relative = pathInsideRoot(plan.resolvedRoot, target);
+  const expected = plan.bindings.get(relative);
+  const current = boundNode(plan.resolvedRoot, target, lstatIfPresent(target));
+  if (!expected || current.kind !== expectedKind) {
+    throw new Error(`public cleanup node changed before mutation: ${target}`);
+  }
+  const expectedIdentity = String(expected.identity ?? "").split(":");
+  const currentIdentity = String(current.identity ?? "").split(":");
+  const fieldCount = stableOnly ? 3 : expectedIdentity.length;
+  if (expectedIdentity.slice(0, fieldCount).join(":") !== currentIdentity.slice(0, fieldCount).join(":")) {
+    throw new Error(`public cleanup identity drift before mutation: ${target}`);
+  }
+}
+
+function removeCollectedTree(plan, files, directories) {
+  for (const filePath of files) {
+    assertBoundRemovalNode(plan, filePath, "file");
     fs.unlinkSync(filePath);
   }
   for (const directory of [...directories].reverse()) {
-    const stat = fs.lstatSync(directory);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) {
-      throw new Error(`public tree changed before directory removal: ${directory}`);
-    }
+    assertBoundRemovalNode(plan, directory, "directory", true);
     fs.rmdirSync(directory);
   }
 }
@@ -156,27 +281,31 @@ function removeCollectedTree(files, directories) {
 export function removePrivateDataSupplyPublicTrees({
   rootDir: baseDir = rootDir,
   logger = console.log,
+  beforeMutation = null,
 } = {}) {
   const resolvedRoot = path.resolve(baseDir);
-  const rootStat = fs.lstatSync(resolvedRoot);
-  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
-    throw new Error(`refusing unsafe sync-static root: ${resolvedRoot}`);
+  if (beforeMutation !== null && typeof beforeMutation !== "function") {
+    throw new Error("beforeMutation must be a function when provided");
+  }
+  const initialPlan = buildPublicCleanupPlan(resolvedRoot);
+  beforeMutation?.({
+    rootDir: resolvedRoot,
+    privateRoots: [...PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS],
+    staleFile: STALE_PRIVATE_PUBLIC_FILE,
+  });
+  const reboundPlan = buildPublicCleanupPlan(resolvedRoot);
+  if (cleanupPlanSignature(initialPlan) !== cleanupPlanSignature(reboundPlan)) {
+    throw new Error("public cleanup identity drift before mutation");
   }
 
-  const pending = [];
-  for (const relativePath of PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS) {
-    const normalized = normalizedPrivateDataSupplyRoot(relativePath);
-    const target = path.resolve(resolvedRoot, ...normalized.split("/"));
-    if (!assertPathComponentsAreDirectories(resolvedRoot, target)) continue;
-    const files = [];
-    const directories = [];
-    collectRemovalTree(target, files, directories);
-    pending.push({ normalized, files, directories });
-  }
-
-  const result = { rootsRemoved: 0, filesRemoved: 0, directoriesRemoved: 0 };
-  for (const item of pending) {
-    removeCollectedTree(item.files, item.directories);
+  const result = {
+    rootsRemoved: 0,
+    filesRemoved: 0,
+    directoriesRemoved: 0,
+    staleFilesRemoved: 0,
+  };
+  for (const item of reboundPlan.privateRoots) {
+    removeCollectedTree(reboundPlan, item.files, item.directories);
     result.rootsRemoved += 1;
     result.filesRemoved += item.files.length;
     result.directoriesRemoved += item.directories.length;
@@ -189,6 +318,15 @@ export function removePrivateDataSupplyPublicTrees({
     logger(
       `[sync-static-overrides] removed ${result.filesRemoved} files and `
       + `${result.directoriesRemoved} directories from ${result.rootsRemoved} private data-supply roots`,
+    );
+  }
+  if (reboundPlan.staleFile) {
+    assertBoundRemovalNode(reboundPlan, reboundPlan.staleFile.path, "file");
+    fs.unlinkSync(reboundPlan.staleFile.path);
+    result.staleFilesRemoved = 1;
+    logger(
+      `[sync-static-overrides] removed stale private-only public mirror `
+      + reboundPlan.staleFile.normalized,
     );
   }
   return result;

@@ -14,6 +14,7 @@ const FORBIDDEN_PATTERNS = [
   /^admin\/fenok-etf-daily1y-dispatch-plan\.json$/,
   /^admin\/fenok-etf-core-daily-basket\.json$/,
   /^admin\/fenok-s0-finra-occ-mapping-ledger\.json$/,
+  /^admin\/data-supply-detection-floor\.json$/,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
   /^computed\/etf_action_index\.json$/,
@@ -35,6 +36,8 @@ const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "yf/etf-details",
   "yf/migration-evidence",
 ];
+
+const DETECTION_FLOOR_REPORT_RELATIVE_PATH = "admin/data-supply-detection-floor.json";
 
 const FORBIDDEN_PUBLIC_TOKENS = [
   "_private/",
@@ -359,6 +362,13 @@ export function checkPublicMirror({ appRoot, repoRoot }) {
   const publicDataRoot = path.join(appRoot, "public", "data");
   const canonicalDataRoot = path.join(repoRoot, "data");
   const violations = [];
+  const detectionFloorReportPath = path.join(
+    publicDataRoot,
+    ...DETECTION_FLOOR_REPORT_RELATIVE_PATH.split("/"),
+  );
+  if (lstatIfPresent(detectionFloorReportPath)) {
+    violations.push(`public/data/${DETECTION_FLOOR_REPORT_RELATIVE_PATH}: forbidden public node`);
+  }
   const publicFiles = walkRegularFiles(publicDataRoot, violations, "public/data");
   const relativeFiles = publicFiles.map((item) => item.relativePath);
 

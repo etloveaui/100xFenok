@@ -112,6 +112,36 @@ function runGuard() {
   });
 }
 
+const detectionReportRelativePath = "public/data/admin/data-supply-detection-floor.json";
+const detectionReportPath = path.join(appRoot, detectionReportRelativePath);
+
+function removeNodeAt(target) {
+  try {
+    const stat = fs.lstatSync(target);
+    if (stat.isDirectory() && !stat.isSymbolicLink()) {
+      fs.rmSync(target, { recursive: true });
+    } else {
+      fs.unlinkSync(target);
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
+function removeFixtureNode(relativePath) {
+  removeNodeAt(path.join(appRoot, relativePath));
+}
+
+function assertDetectionReportGuardRejected(message) {
+  const result = runGuard();
+  assert.notEqual(result.status, 0, message);
+  assert.match(
+    `${result.stderr}\n${result.stdout}`,
+    /data-supply-detection-floor\.json/,
+    "guard error must name the exact detection-floor report path",
+  );
+}
+
 try {
   fs.mkdirSync(path.dirname(guardFixture), { recursive: true });
   fs.copyFileSync(guardSource, guardFixture);
@@ -138,6 +168,7 @@ try {
     rootsRemoved: 3,
     filesRemoved: 3,
     directoriesRemoved: 7,
+    staleFilesRemoved: 0,
   });
   assert.equal(fs.existsSync(path.join(appRoot, "public/data/admin/data-supply-state")), false);
   assert.equal(fs.existsSync(path.join(appRoot, "public/data/yf/etf-details")), false);
@@ -147,6 +178,136 @@ try {
 
   const guardAfter = runGuard();
   assert.equal(guardAfter.status, 0, guardAfter.stderr || guardAfter.stdout);
+
+  const safeSiblingPath = path.join(appRoot, "public/data/safe/keep.json");
+  const safeSiblingBytes = fs.readFileSync(safeSiblingPath);
+  const reportBody = jsonBody({
+    schema_version: "data-supply-detection-floor/v1",
+    generated_at: "2026-07-11T00:00:00Z",
+    status: "shadow",
+  });
+
+  // Stage 2 RED: an otherwise safe-shaped exact report must be rejected before
+  // cleanup, removed by the existing public-redaction API, then rejected by
+  // neither the guard nor a second idempotent cleanup pass.
+  writeFixture(detectionReportRelativePath, reportBody);
+  assertDetectionReportGuardRejected(
+    "Stage 2 RED: guard must reject the exact detection-floor report file",
+  );
+  const reportOnlyLogs = [];
+  const reportOnlyRemoved = removePrivateDataSupplyPublicTrees({
+    rootDir: appRoot,
+    logger: (line) => reportOnlyLogs.push(line),
+  });
+  assert.equal(reportOnlyRemoved.rootsRemoved, 0);
+  assert.equal(reportOnlyRemoved.filesRemoved, 0);
+  assert.equal(reportOnlyRemoved.directoriesRemoved, 0);
+  assert.equal(reportOnlyRemoved.staleFilesRemoved, 1);
+  assert.equal(fs.existsSync(detectionReportPath), false, "report-only cleanup must remove the exact file");
+  assert.deepEqual(fs.readFileSync(safeSiblingPath), safeSiblingBytes, "report cleanup must preserve safe siblings");
+  assert.ok(
+    reportOnlyLogs.some((line) => /data-supply-detection-floor\.json/.test(line)),
+    "report-only cleanup must log the exact removed path",
+  );
+  const reportGuardAfter = runGuard();
+  assert.equal(reportGuardAfter.status, 0, reportGuardAfter.stderr || reportGuardAfter.stdout);
+
+  const reportOnlyRerun = removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} });
+  assert.equal(reportOnlyRerun.rootsRemoved, 0);
+  assert.equal(reportOnlyRerun.filesRemoved, 0);
+  assert.equal(reportOnlyRerun.directoriesRemoved, 0);
+  assert.equal(reportOnlyRerun.staleFilesRemoved, 0);
+  assert.deepEqual(fs.readFileSync(safeSiblingPath), safeSiblingBytes, "idempotent cleanup must preserve safe siblings");
+
+  // Every non-regular node at the exact report path is fail-closed and remains
+  // untouched. The guard must reject the empty-directory case explicitly; its
+  // generic tree walk already rejects symlinks and special nodes.
+  fs.mkdirSync(detectionReportPath);
+  assertDetectionReportGuardRejected("guard must reject an empty directory at the exact report path");
+  assert.throws(
+    () => removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} }),
+    /directory|regular file|node type|unsafe/i,
+    "cleanup must refuse an empty directory at the exact report path",
+  );
+  assert.equal(fs.lstatSync(detectionReportPath).isDirectory(), true);
+  assert.deepEqual(fs.readFileSync(safeSiblingPath), safeSiblingBytes);
+  removeNodeAt(detectionReportPath);
+
+  const outsideReport = path.join(fixtureRoot, "outside-detection-report.json");
+  fs.writeFileSync(outsideReport, "outside-report\n", "utf8");
+  fs.symlinkSync(outsideReport, detectionReportPath, "file");
+  assertDetectionReportGuardRejected("guard must reject a symlink at the exact report path");
+  assert.throws(
+    () => removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} }),
+    /symlink/i,
+    "cleanup must refuse a symlink at the exact report path",
+  );
+  assert.equal(fs.lstatSync(detectionReportPath).isSymbolicLink(), true);
+  assert.equal(fs.readFileSync(outsideReport, "utf8"), "outside-report\n");
+  assert.deepEqual(fs.readFileSync(safeSiblingPath), safeSiblingBytes);
+  removeNodeAt(detectionReportPath);
+
+  fs.mkdirSync(path.dirname(detectionReportPath), { recursive: true });
+  const mkfifoResult = spawnSync("mkfifo", [detectionReportPath], { encoding: "utf8" });
+  assert.equal(mkfifoResult.status, 0, mkfifoResult.stderr || "mkfifo failed");
+  assertDetectionReportGuardRejected("guard must reject a FIFO at the exact report path");
+  assert.throws(
+    () => removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} }),
+    /special|regular file|node type|fifo|unsafe/i,
+    "cleanup must refuse a FIFO at the exact report path",
+  );
+  assert.equal(fs.lstatSync(detectionReportPath).isFIFO(), true);
+  assert.deepEqual(fs.readFileSync(safeSiblingPath), safeSiblingBytes);
+  removeNodeAt(detectionReportPath);
+
+  // Cross-target direction 1: an unsafe report must prevent an earlier safe
+  // private root from being removed.
+  const reportUnsafePrivateRelative = "public/data/admin/data-supply-state/v1/report-unsafe-must-remain.json";
+  const reportUnsafePrivatePath = path.join(appRoot, reportUnsafePrivateRelative);
+  writeFixture(reportUnsafePrivateRelative, "private-must-remain\n");
+  fs.symlinkSync(outsideReport, detectionReportPath, "file");
+  assert.throws(
+    () => removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} }),
+    /symlink/i,
+    "an unsafe report must block every private-root removal",
+  );
+  assert.equal(fs.readFileSync(reportUnsafePrivatePath, "utf8"), "private-must-remain\n");
+  assert.equal(fs.lstatSync(detectionReportPath).isSymbolicLink(), true);
+  removeNodeAt(detectionReportPath);
+  removeFixtureNode("public/data/admin/data-supply-state");
+
+  // Identity drift between the report preflight and first mutation must abort
+  // before any private-root or report byte is removed.
+  const driftPrivateRelative = "public/data/admin/data-supply-state/v1/drift-must-remain.json";
+  const driftPrivatePath = path.join(appRoot, driftPrivateRelative);
+  const driftReplacementPath = path.join(fixtureRoot, "drift-replacement.json");
+  writeFixture(driftPrivateRelative, "drift-private-must-remain\n");
+  writeFixture(detectionReportRelativePath, "original-report\n");
+  fs.writeFileSync(driftReplacementPath, "replacement-report\n", "utf8");
+  const originalLstatSync = fs.lstatSync;
+  let reportLstatCalls = 0;
+  fs.lstatSync = function driftAwareLstatSync(target, ...args) {
+    if (path.resolve(String(target)) === detectionReportPath) {
+      reportLstatCalls += 1;
+      if (reportLstatCalls === 2) fs.renameSync(driftReplacementPath, detectionReportPath);
+    }
+    return originalLstatSync.call(fs, target, ...args);
+  };
+  try {
+    assert.throws(
+      () => removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} }),
+      /changed|drift|identity/i,
+      "report identity drift must abort before the first mutation",
+    );
+  } finally {
+    fs.lstatSync = originalLstatSync;
+  }
+  assert.ok(reportLstatCalls >= 2, "cleanup must revalidate the report identity before mutation");
+  assert.equal(fs.readFileSync(driftPrivatePath, "utf8"), "drift-private-must-remain\n");
+  assert.equal(fs.readFileSync(detectionReportPath, "utf8"), "replacement-report\n");
+  removeNodeAt(detectionReportPath);
+  removeNodeAt(driftReplacementPath);
+  removeFixtureNode("public/data/admin/data-supply-state");
 
   writeFixture("public/data/stockanalysis/etfs/AAA.json", jsonBody({
     schema_version: "yf-etf-detail/v1",
@@ -189,13 +350,14 @@ try {
 
   assert.deepEqual(
     removePrivateDataSupplyPublicTrees({ rootDir: appRoot, logger: () => {} }),
-    { rootsRemoved: 0, filesRemoved: 0, directoriesRemoved: 0 },
+    { rootsRemoved: 0, filesRemoved: 0, directoriesRemoved: 0, staleFilesRemoved: 0 },
     "an absent tree must be an idempotent no-op",
   );
 
   const outside = path.join(fixtureRoot, "outside-state");
   fs.mkdirSync(outside, { recursive: true });
   fs.writeFileSync(path.join(outside, "secret.json"), "{}\n", "utf8");
+  writeFixture(detectionReportRelativePath, "report-must-remain\n");
   writeFixture("public/data/admin/data-supply-state/v1/must-remain.json");
   const symlinkPath = path.join(appRoot, "public/data/yf/etf-details");
   fs.symlinkSync(outside, symlinkPath, "dir");
@@ -210,6 +372,11 @@ try {
     fs.existsSync(path.join(appRoot, "public/data/admin/data-supply-state/v1/must-remain.json")),
     true,
     "preflight refusal must not partially remove an earlier allowlisted tree",
+  );
+  assert.equal(
+    fs.readFileSync(detectionReportPath, "utf8"),
+    "report-must-remain\n",
+    "an unsafe private root must not partially remove the exact report",
   );
 
   const guardSymlink = runGuard();
