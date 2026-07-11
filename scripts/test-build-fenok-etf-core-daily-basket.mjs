@@ -5,6 +5,7 @@ import {
   ETF_CORE_DAILY_BASKET_CONFIG,
   buildEtfCoreDailyBasket,
   selectBasketRows,
+  structuralReasons,
   validateEtfCoreDailyBasket,
 } from "./build-fenok-etf-core-daily-basket.mjs";
 
@@ -68,6 +69,54 @@ if (admin.readiness.core_daily_basket_ready) {
   assert.equal(admin.readiness.blockers.length, 0);
 } else {
   assert.ok(admin.readiness.blockers.length > 0);
+}
+
+{
+  const ticker = "YFONLY";
+  const detail = {
+    source: "yahoo_finance",
+    source_provider: "yahoo_finance",
+    detail_status: "yf_fallback",
+    normalized: {
+      name: "Yahoo fallback test ETF",
+      classification: {
+        confidence: "high",
+        is_leveraged: false,
+        is_inverse: false,
+        is_single_stock: false,
+      },
+      history_periods: {
+        daily_1y: Array.from({ length: ETF_CORE_DAILY_BASKET_CONFIG.minDaily1yRows }, (_, index) => ({
+          date: new Date(Date.UTC(2025, 0, 2 + index)).toISOString().slice(0, 10),
+          Close: 100,
+          Volume: 20_000,
+        })),
+      },
+    },
+  };
+  const actionRow = {
+    ticker,
+    company: "Yahoo fallback test ETF",
+    scored_signal_count: ETF_CORE_DAILY_BASKET_CONFIG.minScoredSignalCount,
+    coverage_ratio: ETF_CORE_DAILY_BASKET_CONFIG.minCoverageRatio,
+    confidence_label: ETF_CORE_DAILY_BASKET_CONFIG.allowedActionConfidence,
+    aum: ETF_CORE_DAILY_BASKET_CONFIG.minAum,
+  };
+  const common = {
+    ticker,
+    actionRow,
+    detail,
+    missingDetailSet: new Set(),
+    yahooFallbackSet: new Set([ticker]),
+    newEtfSet: new Set(),
+  };
+  const unenrolledReasons = structuralReasons({ ...common, enrolled: false });
+  assert.ok(unenrolledReasons.includes("yahoo_fallback_detail"));
+  assert.ok(unenrolledReasons.includes("non_stockanalysis_detail"));
+
+  const enrolledReasons = structuralReasons({ ...common, enrolled: true });
+  assert.equal(enrolledReasons.includes("yahoo_fallback_detail"), false);
+  assert.equal(enrolledReasons.includes("non_stockanalysis_detail"), false);
 }
 
 {

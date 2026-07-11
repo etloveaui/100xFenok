@@ -600,9 +600,11 @@ function main() {
   const report = {
     schema_version: "stockanalysis-history-gap-report/v1",
     generated_at: new Date().toISOString(),
+    classification_as_of: now.toISOString(),
     report_profile: {
       ...REPORT_PROFILE,
       generated_at: null,
+      classification_as_of: null,
     },
     required_history_periods: REQUIRED_PERIODS,
     primary_stockanalysis_detail_files: primaryRows.length,
@@ -721,6 +723,7 @@ function main() {
           },
   };
   report.report_profile.generated_at = report.generated_at;
+  report.report_profile.classification_as_of = report.classification_as_of;
 
   console.log(JSON.stringify(report, null, 2));
 

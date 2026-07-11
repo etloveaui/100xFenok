@@ -1,12 +1,14 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-07-10T18:06:56.922Z",
+  "generated_at": "2026-07-11T23:15:52.100Z",
+  "classification_as_of": "2026-07-11T23:15:46.419Z",
   "report_profile": {
     "key": "daily_1y",
     "required_history_periods": [
       "daily_1y"
     ],
-    "generated_at": "2026-07-10T18:06:56.922Z"
+    "generated_at": "2026-07-11T23:15:52.100Z",
+    "classification_as_of": "2026-07-11T23:15:46.419Z"
   },
   "required_history_periods": [
     "daily_1y"
@@ -351,23 +353,32 @@
     "detail_files_scanned": 4731,
     "complete": 3819,
     "missing": 912,
-    "fetchable": 1,
+    "fetchable": 32,
     "inception_limited": 871,
-    "terminal_limited": 40,
+    "terminal_limited": 9,
     "fetchable_breakdown": {
       "counts": {
-        "stockanalysis_short_rows": 1
+        "stockanalysis_short_rows": 32
       },
       "samples": {
         "stockanalysis_short_rows": [
-          "BHDG"
+          "AMUN",
+          "ASCI",
+          "BGCG",
+          "BGGG",
+          "BHDG",
+          "CMAY",
+          "CRUX",
+          "DDFY",
+          "DDTY",
+          "DHLX"
         ]
       }
     },
     "terminal_limited_breakdown": {
       "counts": {
         "provider_rejected_non_etf": 2,
-        "stockanalysis_recent_short_rows": 38
+        "stockanalysis_recent_short_rows": 7
       },
       "samples": {
         "provider_rejected_non_etf": [
@@ -375,21 +386,66 @@
           "FIVY"
         ],
         "stockanalysis_recent_short_rows": [
-          "AMUN",
-          "ASCI",
-          "BGCG",
-          "BGGG",
-          "CMAY",
-          "CRUX",
-          "DDFY",
-          "DDTY",
-          "DHLX",
-          "DRVR"
+          "DRVR",
+          "IQQ",
+          "SNTQ",
+          "TRUM",
+          "TRUN",
+          "TRUR",
+          "TRUU"
         ]
       }
     },
     "samples": {
       "fetchable": [
+        {
+          "ticker": "AMUN",
+          "actual_rows": 178,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": "1986-03-17",
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "ASCI",
+          "actual_rows": 178,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": "1996-09-30",
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "BGCG",
+          "actual_rows": 25,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": "2017-12-14",
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "BGGG",
+          "actual_rows": 25,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": "2014-06-10",
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
         {
           "ticker": "BHDG",
           "actual_rows": 64,
@@ -398,6 +454,66 @@
           ],
           "inception_limited_missing": [],
           "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "CMAY",
+          "actual_rows": 44,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "CRUX",
+          "actual_rows": 78,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": "1986-01-09",
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "DDFY",
+          "actual_rows": 45,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "DDTY",
+          "actual_rows": 45,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": null
+        },
+        {
+          "ticker": "DHLX",
+          "actual_rows": 193,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": "2021-02-26",
           "daily_1y_gap_source": "stockanalysis_short_rows",
           "source_provider": "stockanalysis",
           "detail_status": null
@@ -517,152 +633,136 @@
       ],
       "terminal_limited": [
         {
-          "ticker": "AMUN",
-          "actual_rows": 178,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": "1986-03-17",
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "ASCI",
-          "actual_rows": 178,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": "1996-09-30",
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "BGCG",
-          "actual_rows": 25,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": "2017-12-14",
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "BGGG",
-          "actual_rows": 25,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": "2014-06-10",
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "CMAY",
-          "actual_rows": 44,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": null,
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "CRUX",
-          "actual_rows": 78,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": "1986-01-09",
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "DDFY",
-          "actual_rows": 45,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": null,
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "DDTY",
-          "actual_rows": 45,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": null,
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
-          "ticker": "DHLX",
-          "actual_rows": 193,
-          "fetchable_missing": [],
-          "inception_limited_missing": [],
-          "terminal_limited_missing": [
-            "daily_1y"
-          ],
-          "terminal_limit_source": "stockanalysis_recent_short_rows",
-          "inception_date": "2021-02-26",
-          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": null,
-          "pending_consecutive_failures": 0,
-          "pending_next_attempt_after_utc": null
-        },
-        {
           "ticker": "DRVR",
           "actual_rows": 0,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "stockanalysis_recent_short_rows",
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "pending_consecutive_failures": 0,
+          "pending_next_attempt_after_utc": null
+        },
+        {
+          "ticker": "FEAT",
+          "actual_rows": 0,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "provider_rejected_non_etf",
+          "inception_date": "2024-12-16",
+          "daily_1y_gap_source": "provider_rejected_non_etf",
+          "source_provider": "stockanalysis",
+          "detail_status": null,
+          "pending_consecutive_failures": 3,
+          "pending_next_attempt_after_utc": "2026-07-16T09:37:56Z"
+        },
+        {
+          "ticker": "FIVY",
+          "actual_rows": 0,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "provider_rejected_non_etf",
+          "inception_date": "2024-12-16",
+          "daily_1y_gap_source": "provider_rejected_non_etf",
+          "source_provider": "stockanalysis",
+          "detail_status": null,
+          "pending_consecutive_failures": 3,
+          "pending_next_attempt_after_utc": "2026-07-16T09:37:56Z"
+        },
+        {
+          "ticker": "IQQ",
+          "actual_rows": 0,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "stockanalysis_recent_short_rows",
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "pending_consecutive_failures": 0,
+          "pending_next_attempt_after_utc": null
+        },
+        {
+          "ticker": "SNTQ",
+          "actual_rows": 1,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "stockanalysis_recent_short_rows",
+          "inception_date": "2025-03-10",
+          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "pending_consecutive_failures": 0,
+          "pending_next_attempt_after_utc": null
+        },
+        {
+          "ticker": "TRUM",
+          "actual_rows": 1,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "stockanalysis_recent_short_rows",
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "pending_consecutive_failures": 0,
+          "pending_next_attempt_after_utc": null
+        },
+        {
+          "ticker": "TRUN",
+          "actual_rows": 1,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "stockanalysis_recent_short_rows",
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "pending_consecutive_failures": 0,
+          "pending_next_attempt_after_utc": null
+        },
+        {
+          "ticker": "TRUR",
+          "actual_rows": 1,
+          "fetchable_missing": [],
+          "inception_limited_missing": [],
+          "terminal_limited_missing": [
+            "daily_1y"
+          ],
+          "terminal_limit_source": "stockanalysis_recent_short_rows",
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_recent_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "pending_consecutive_failures": 0,
+          "pending_next_attempt_after_utc": null
+        },
+        {
+          "ticker": "TRUU",
+          "actual_rows": 1,
           "fetchable_missing": [],
           "inception_limited_missing": [],
           "terminal_limited_missing": [
@@ -704,18 +804,33 @@
       "scored_etf_count": 4515,
       "complete": 3706,
       "missing": 809,
-      "fetchable": 0,
+      "fetchable": 31,
       "inception_limited": 715,
-      "terminal_limited": 94,
+      "terminal_limited": 63,
       "fetchable_breakdown": {
-        "counts": {},
-        "samples": {}
+        "counts": {
+          "stockanalysis_short_rows": 31
+        },
+        "samples": {
+          "stockanalysis_short_rows": [
+            "AMUN",
+            "ASCI",
+            "BGCG",
+            "BGGG",
+            "CMAY",
+            "CRUX",
+            "DDFY",
+            "DDTY",
+            "DHLX",
+            "DUSG"
+          ]
+        }
       },
       "terminal_limited_breakdown": {
         "counts": {
           "data_supply_unavailable": 9,
           "provider_rejected_non_etf": 47,
-          "stockanalysis_recent_short_rows": 38
+          "stockanalysis_recent_short_rows": 7
         },
         "samples": {
           "data_supply_unavailable": [
@@ -742,21 +857,179 @@
             "EDGQ"
           ],
           "stockanalysis_recent_short_rows": [
-            "AMUN",
-            "ASCI",
-            "BGCG",
-            "BGGG",
-            "CMAY",
-            "CRUX",
-            "DDFY",
-            "DDTY",
-            "DHLX",
-            "DRVR"
+            "DRVR",
+            "IQQ",
+            "SNTQ",
+            "TRUM",
+            "TRUN",
+            "TRUR",
+            "TRUU"
           ]
         }
       },
       "samples": {
-        "fetchable": [],
+        "fetchable": [
+          {
+            "ticker": "AMUN",
+            "actual_rows": 178,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "1986-03-17",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "ASCI",
+            "actual_rows": 178,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "1996-09-30",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "BGCG",
+            "actual_rows": 25,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "2017-12-14",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "BGGG",
+            "actual_rows": 25,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "2014-06-10",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "CMAY",
+            "actual_rows": 44,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": null,
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "CRUX",
+            "actual_rows": 78,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "1986-01-09",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "DDFY",
+            "actual_rows": 45,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": null,
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "DDTY",
+            "actual_rows": 45,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": null,
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "DHLX",
+            "actual_rows": 193,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "2021-02-26",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "DUSG",
+            "actual_rows": 42,
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "inception_date": "2012-12-20",
+            "daily_1y_gap_source": "stockanalysis_short_rows",
+            "source_provider": "stockanalysis",
+            "detail_status": null,
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
+            "data_supply_resolution_state": null
+          }
+        ],
         "inception_limited": [
           {
             "ticker": "AAAC",
@@ -975,46 +1248,6 @@
             ]
           },
           {
-            "ticker": "AMUN",
-            "actual_rows": 178,
-            "fetchable_missing": [],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [
-              "daily_1y"
-            ],
-            "terminal_limit_source": "stockanalysis_recent_short_rows",
-            "inception_date": "1986-03-17",
-            "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-            "source_provider": "stockanalysis",
-            "detail_status": null,
-            "pending_consecutive_failures": 0,
-            "pending_next_attempt_after_utc": null,
-            "detail_source_kind": "stockanalysis_primary",
-            "primary_present": true,
-            "data_supply_status": "available",
-            "data_supply_resolution_state": null
-          },
-          {
-            "ticker": "ASCI",
-            "actual_rows": 178,
-            "fetchable_missing": [],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [
-              "daily_1y"
-            ],
-            "terminal_limit_source": "stockanalysis_recent_short_rows",
-            "inception_date": "1996-09-30",
-            "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-            "source_provider": "stockanalysis",
-            "detail_status": null,
-            "pending_consecutive_failures": 0,
-            "pending_next_attempt_after_utc": null,
-            "detail_source_kind": "stockanalysis_primary",
-            "primary_present": true,
-            "data_supply_status": "available",
-            "data_supply_resolution_state": null
-          },
-          {
             "ticker": "BAVA",
             "actual_rows": 0,
             "missing_file": true,
@@ -1031,46 +1264,6 @@
             ]
           },
           {
-            "ticker": "BGCG",
-            "actual_rows": 25,
-            "fetchable_missing": [],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [
-              "daily_1y"
-            ],
-            "terminal_limit_source": "stockanalysis_recent_short_rows",
-            "inception_date": "2017-12-14",
-            "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-            "source_provider": "stockanalysis",
-            "detail_status": null,
-            "pending_consecutive_failures": 0,
-            "pending_next_attempt_after_utc": null,
-            "detail_source_kind": "stockanalysis_primary",
-            "primary_present": true,
-            "data_supply_status": "available",
-            "data_supply_resolution_state": null
-          },
-          {
-            "ticker": "BGGG",
-            "actual_rows": 25,
-            "fetchable_missing": [],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [
-              "daily_1y"
-            ],
-            "terminal_limit_source": "stockanalysis_recent_short_rows",
-            "inception_date": "2014-06-10",
-            "daily_1y_gap_source": "stockanalysis_recent_short_rows",
-            "source_provider": "stockanalysis",
-            "detail_status": null,
-            "pending_consecutive_failures": 0,
-            "pending_next_attempt_after_utc": null,
-            "detail_source_kind": "stockanalysis_primary",
-            "primary_present": true,
-            "data_supply_status": "available",
-            "data_supply_resolution_state": null
-          },
-          {
             "ticker": "BHYP",
             "actual_rows": 0,
             "missing_file": true,
@@ -1085,6 +1278,70 @@
             "primary_present": false,
             "data_supply_status": "unavailable",
             "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "CLNK",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "provider_rejected_non_etf",
+            "terminal_limit_source": "provider_rejected_non_etf",
+            "pending_consecutive_failures": 8,
+            "pending_next_attempt_after_utc": "2026-07-15T23:53:21Z",
+            "detail_source_kind": "missing",
+            "primary_present": false,
+            "data_supply_status": "missing",
+            "data_supply_resolution_state": null,
+            "terminal_limited_missing": [
+              "daily_1y"
+            ]
+          },
+          {
+            "ticker": "CLOO",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "provider_rejected_non_etf",
+            "terminal_limit_source": "provider_rejected_non_etf",
+            "pending_consecutive_failures": 8,
+            "pending_next_attempt_after_utc": "2026-07-15T23:53:21Z",
+            "detail_source_kind": "missing",
+            "primary_present": false,
+            "data_supply_status": "missing",
+            "data_supply_resolution_state": null,
+            "terminal_limited_missing": [
+              "daily_1y"
+            ]
+          },
+          {
+            "ticker": "CRIB",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "provider_rejected_non_etf",
+            "terminal_limit_source": "provider_rejected_non_etf",
+            "pending_consecutive_failures": 5,
+            "pending_next_attempt_after_utc": "2026-07-15T23:53:21Z",
+            "detail_source_kind": "missing",
+            "primary_present": false,
+            "data_supply_status": "missing",
+            "data_supply_resolution_state": null,
+            "terminal_limited_missing": [
+              "daily_1y"
+            ]
+          },
+          {
+            "ticker": "DISK",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "provider_rejected_non_etf",
+            "terminal_limit_source": "provider_rejected_non_etf",
+            "pending_consecutive_failures": 3,
+            "pending_next_attempt_after_utc": "2026-07-15T22:46:50Z",
+            "detail_source_kind": "missing",
+            "primary_present": false,
+            "data_supply_status": "missing",
+            "data_supply_resolution_state": null,
+            "terminal_limited_missing": [
+              "daily_1y"
+            ]
           }
         ],
         "complete": [
@@ -1206,9 +1463,15 @@
     "stockanalysis_universe_denominator": 5423
   },
   "recommended_dispatch": {
-    "status": "not_recommended",
+    "status": "scheduled_backfill_active",
     "workflow": "fetch-stockanalysis.yml",
-    "inputs": null,
-    "note": "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires."
+    "schedule": "50 22 * * 1-5",
+    "schedule_kst": "Tue-Sat 07:50",
+    "inputs": {
+      "history_gaps_only": "true",
+      "required_history_periods": "daily_1y",
+      "incremental_etf_limit": "120"
+    },
+    "note": "The weekday scheduled lane drains scored ETF daily 1Y continuity gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate."
   }
 }

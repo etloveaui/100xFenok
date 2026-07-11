@@ -239,7 +239,7 @@ function derivativeIncomeReason({ ticker, actionRow, detail }) {
   return matched ? "single_stock_or_concentrated_derivative_income_strategy" : null;
 }
 
-function structuralReasons({ ticker, actionRow, detail, enrolled, missingDetailSet, yahooFallbackSet, newEtfSet }) {
+export function structuralReasons({ ticker, actionRow, detail, enrolled, missingDetailSet, yahooFallbackSet, newEtfSet }) {
   const reasons = [];
   if (!actionRow) reasons.push("action_index_missing");
   if (newEtfSet.has(ticker)) reasons.push("new_etf_radar_only");

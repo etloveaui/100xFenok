@@ -73,10 +73,12 @@ function sourceHash(plan, historyGapReport = readHistoryGapReport(plan)) {
     history_gap_report: {
       profile,
       generated_at: report.generated_at ?? null,
+      classification_as_of: report.classification_as_of ?? null,
       scored_fetchable_list: fetchableTickers,
     },
     fetchable_plan: {
       generated_at: plan.generated_at ?? null,
+      classification_as_of: plan.classification_as_of ?? null,
       tickers: [...new Set((plan.tickers ?? []).map(String))].map((ticker) => ticker.trim().toUpperCase()).sort(),
     },
   });
@@ -88,6 +90,9 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
   const report = historyGapReport ?? readHistoryGapReport(plan);
   if (!isDaily1yReport(report)) {
     throw new Error("history gap report profile mismatch: expected daily_1y report_profile");
+  }
+  if (plan.classification_as_of !== report.classification_as_of) {
+    throw new Error("fetchable plan classification_as_of must match the history gap report");
   }
   const tickers = Array.isArray(plan.tickers)
     ? [...new Set(plan.tickers.map((ticker) => String(ticker).trim().toUpperCase()).filter(Boolean))].sort()
@@ -103,6 +108,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
     generated_at: generatedAt.toISOString(),
     source_file: SOURCE_PLAN_REL,
     source_generated_at: plan.generated_at ?? null,
+    source_classification_as_of: plan.classification_as_of ?? null,
     source_hash_algo: "sha256",
     source_hash: sourceHash(plan, report),
     formula_version: FORMULA_VERSION,
@@ -149,6 +155,8 @@ export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null, histo
   const source = sourcePlan ?? readJson(SOURCE_PLAN_REL);
   const report = historyGapReport ?? readHistoryGapReport(source);
   if (!isDaily1yReport(report)) errors.push("history gap report profile mismatch");
+  if (source.classification_as_of !== report?.classification_as_of) errors.push("source classification_as_of mismatch");
+  if (payload?.source_classification_as_of !== source.classification_as_of) errors.push("payload classification_as_of binding mismatch");
   if (payload?.source_hash_algo !== "sha256" || payload?.source_hash !== sourceHash(source, report)) errors.push("source hash binding mismatch");
   const tickers = Array.isArray(source.tickers) ? source.tickers : [];
   const shards = Array.isArray(payload?.shards) ? payload.shards : [];

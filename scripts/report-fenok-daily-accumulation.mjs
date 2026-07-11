@@ -211,6 +211,7 @@ function buildReport() {
       history_gap: historyGap
         ? {
             report_generated_at: historyGap.generated_at ?? null,
+            classification_as_of: historyGap.classification_as_of ?? null,
             required_history_periods: asArray(historyGap.required_history_periods),
             complete_required_history: asNumber(historyGap.complete_required_history),
             missing_required_history: asNumber(historyGap.missing_required_history),
@@ -223,6 +224,7 @@ function buildReport() {
             daily_1y_gap: historyGap.daily_1y_gap?.scored_etfs ?? historyGap.daily_1y_gap ?? null,
             exact_daily_1y_gap: s3Evidence?.counts
               ? {
+                  classification_as_of: s3Evidence.classification_as_of ?? null,
                   fetchable: s3Evidence.counts.fetchable_daily_1y_gap ?? null,
                   inception_limited: s3Evidence.counts.inception_limited_daily_1y_gap ?? null,
                   history_gap_report_match: s3Evidence.counts.history_gap_report_match ?? null,
@@ -244,6 +246,7 @@ function buildReport() {
           market_facts_generated_at: marketFacts?.generated_at ?? null,
           etf_signals_generated_at: etfSignals?.generated_at ?? etfSummary?.generated_at ?? null,
           history_gap_report_generated_at: historyGap?.generated_at ?? null,
+          history_gap_classification_as_of: historyGap?.classification_as_of ?? null,
           history_gap_plan_generated_at: historyGap?.incremental_plan?.generated_at ?? incrementalPlan?.generated_at ?? null,
           public_surface: s3Evidence?.public_ready ? "ready" : s3Evidence ? "blocked" : null,
         },
@@ -295,6 +298,7 @@ function buildReport() {
       fenok_signals_generated_at: signals.generated_at ?? null,
       fenok_etf_signals_generated_at: etfSignals?.generated_at ?? null,
       history_gap_report_generated_at: historyGap?.generated_at ?? null,
+      history_gap_classification_as_of: historyGap?.classification_as_of ?? null,
     },
     tracks,
     warning_count: warnings.length,

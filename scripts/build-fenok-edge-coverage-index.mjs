@@ -11,7 +11,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
 import { buildScoredEtfDaily1yFetchablePlan } from "./write-fenok-etf-daily1y-readiness.mjs";
-import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
+import {
+  isDaily1yReport,
+  reportClassificationDate,
+} from "../100xfenok-next/scripts/history-gap-profile.mjs";
 import {
   recomputeFenokEdgeSourceAsOf,
   shouldPreserveKoreaPrivateEvidence,
@@ -468,6 +471,8 @@ function preservePriorPrivateBackedActiveS0Evidence(evidence, priorIndex, condit
   recomputeBlockingEvidence(evidence);
 }
 
+const buildNow = new Date();
+const generatedAt = buildNow.toISOString();
 const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
 const s1PromotionDryRun = readJson("data/admin/fenok-s1-stock-public-promotion-dry-run.json", {});
@@ -482,6 +487,8 @@ const etfDaily1yExactPlan = buildScoredEtfDaily1yFetchablePlan({
   signalSummary: etfSignals,
   historyGap: etfHistoryGap,
   coverageIndex: null,
+  generatedAt: buildNow,
+  classificationAsOf: reportClassificationDate(etfHistoryGap),
 });
 const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
 const activeScoringTotal = universeRows.length;
@@ -638,7 +645,8 @@ function computeEtfReadinessEvidence() {
   const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.inception_limited) || 0;
   const terminalLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.terminal_limited) || 0;
   const historyGapDaily1yMatches = (
-    Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)
+    etfDaily1yExactPlan.classification_as_of === etfHistoryGap.classification_as_of
+    && Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)
     && Number(scoredDaily1yGap.fetchable) === fetchableDaily1yGap
     && Number(scoredDaily1yGap.inception_limited) === inceptionLimitedDaily1yGap
     && Number(scoredDaily1yGap.terminal_limited) === terminalLimitedDaily1yGap
@@ -670,6 +678,7 @@ function computeEtfReadinessEvidence() {
     {
       id: "etf_no_fetchable_daily_1y_gap",
       ok: fetchableDaily1yGap === 0,
+      classification_as_of: etfDaily1yExactPlan.classification_as_of,
       fetchable_daily_1y_gap: fetchableDaily1yGap,
       inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
       terminal_limited_daily_1y_gap: terminalLimitedDaily1yGap,
@@ -684,6 +693,7 @@ function computeEtfReadinessEvidence() {
   const dailyReady = serviceDailyChecks.every((check) => check.ok);
   const gatedReady = publicReady && dailyReady && etfSignalGate.ok;
   return {
+    classification_as_of: etfDaily1yExactPlan.classification_as_of,
     public_ready: publicReady,
     daily_ready: dailyReady,
     gated_ready: gatedReady,
@@ -1048,7 +1058,6 @@ function buildS1PromotionGateEvidence() {
 }
 
 const s1PromotionGateEvidence = buildS1PromotionGateEvidence();
-const generatedAt = new Date().toISOString();
 
 const index = {
   schema_version: "fenok-edge-coverage-index/v0.2",
@@ -1541,6 +1550,7 @@ const index = {
       {
         id: "etf_daily_1y_gap",
         generated_at: etfHistoryGap.generated_at ?? null,
+        classification_as_of: etfReadinessEvidence.classification_as_of,
         fetchable_daily_1y_gap: etfReadinessEvidence.counts.fetchable_daily_1y_gap,
         inception_limited_daily_1y_gap: etfReadinessEvidence.counts.inception_limited_daily_1y_gap,
         terminal_limited_daily_1y_gap: etfReadinessEvidence.counts.terminal_limited_daily_1y_gap,

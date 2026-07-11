@@ -4,6 +4,7 @@ import { buildEtfDaily1yDispatchPlan, validateEtfDaily1yDispatchPlan } from "./b
 
 const sourcePlan = {
   generated_at: "2026-07-10T00:00:00.000Z",
+  classification_as_of: "2026-07-09T23:59:59.000Z",
   tickers: ["bbb", "AAA"],
   counts: {
     scored_etf_count: 3,
@@ -19,10 +20,12 @@ const sourcePlan = {
 const historyGapReport = {
   required_history_periods: ["daily_1y"],
   generated_at: "2026-07-10T00:00:00.000Z",
+  classification_as_of: "2026-07-09T23:59:59.000Z",
   report_profile: {
     key: "daily_1y",
     required_history_periods: ["daily_1y"],
     generated_at: "2026-07-10T00:00:00.000Z",
+    classification_as_of: "2026-07-09T23:59:59.000Z",
   },
   daily_1y_gap: { samples: { fetchable: [{ ticker: "AAA" }, { ticker: "BBB" }] } },
 };
@@ -32,4 +35,10 @@ assert.match(plan.source_hash, /^[a-f0-9]{64}$/);
 assert.equal(validateEtfDaily1yDispatchPlan(plan, sourcePlan, historyGapReport).ok, true);
 const changed = { ...historyGapReport, daily_1y_gap: { samples: { fetchable: [{ ticker: "AAA" }] } } };
 assert.equal(validateEtfDaily1yDispatchPlan(plan, sourcePlan, changed).ok, false);
+const clockChanged = {
+  ...historyGapReport,
+  classification_as_of: "2026-07-09T23:59:58.000Z",
+  report_profile: { ...historyGapReport.report_profile, classification_as_of: "2026-07-09T23:59:58.000Z" },
+};
+assert.equal(validateEtfDaily1yDispatchPlan(plan, sourcePlan, clockChanged).ok, false);
 console.log("test-fenok-etf-daily1y-dispatch-checksum: ok");

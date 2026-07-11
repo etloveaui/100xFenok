@@ -10,7 +10,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { isDaily1yReport } from "../100xfenok-next/scripts/history-gap-profile.mjs";
+import {
+  isDaily1yReport,
+  reportClassificationDate,
+} from "../100xfenok-next/scripts/history-gap-profile.mjs";
 import { createEffectiveEtfDetailReader } from "./effective-etf-detail-reader.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -336,7 +339,29 @@ function compactRows(rows) {
   }));
 }
 
-export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex, now = new Date(), rootDir = REPO_ROOT } = {}) {
+function requireDate(value, label) {
+  if (value === null || value === undefined || value === "") {
+    throw new TypeError(`${label} must be a valid timestamp`);
+  }
+  const parsed = value instanceof Date ? new Date(value.valueOf()) : new Date(value);
+  if (!Number.isFinite(parsed.valueOf())) throw new TypeError(`${label} must be a valid timestamp`);
+  return parsed;
+}
+
+export function buildScoredEtfDaily1yFetchablePlan({
+  signalSummary,
+  historyGap,
+  coverageIndex,
+  generatedAt = new Date(),
+  classificationAsOf,
+  rootDir = REPO_ROOT,
+} = {}) {
+  const generatedAtDate = requireDate(generatedAt, "generatedAt");
+  const classificationDate = requireDate(classificationAsOf, "classificationAsOf");
+  if (classificationDate.valueOf() > generatedAtDate.valueOf()) {
+    throw new Error("classificationAsOf must not be later than generatedAt");
+  }
+  const classificationIso = classificationDate.toISOString();
   const summaryRows = asArray(signalSummary?.rows);
   const summaryTickers = [...new Set(summaryRows.map((row) => normalizeTicker(row?.ticker)).filter(Boolean))].sort();
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
@@ -397,7 +422,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       continue;
     }
     if (resolved.status === "missing") {
-      const terminalLimitSource = terminalDaily1yGapSource(null, pendingEntry, now);
+      const terminalLimitSource = terminalDaily1yGapSource(null, pendingEntry, classificationDate);
       const row = {
         ticker,
         actual_rows: 0,
@@ -419,7 +444,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
     }
 
     const payload = resolved.payload;
-    const gap = classifyDaily1yGap(payload, now, pendingEntry);
+    const gap = classifyDaily1yGap(payload, classificationDate, pendingEntry);
     if (gap.complete) {
       completeRows.push({
         ticker,
@@ -477,21 +502,27 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
 
   const denominator = summaryTickers.length;
   const equationOk = completeRows.length + fetchableRows.length + inceptionLimitedRows.length + terminalLimitedRows.length === denominator;
+  const historyGapClockOk = historyGap?.classification_as_of === classificationIso;
+  const coverageClockOk = !readiness || readiness.classification_as_of === classificationIso;
+  const dailyCheckClockOk = !generatedDailyCheck || generatedDailyCheck.classification_as_of === classificationIso;
   const historyGapCountOk = (
-    asNumber(scored.scored_etf_count) === denominator
+    historyGapClockOk
+    && asNumber(scored.scored_etf_count) === denominator
     && asNumber(scored.complete) === completeRows.length
     && asNumber(scored.fetchable) === fetchableRows.length
     && asNumber(scored.inception_limited) === inceptionLimitedRows.length
     && asNumber(scored.terminal_limited) === terminalLimitedRows.length
   );
   const coverageCountOk = !readiness?.counts || (
-    asNumber(readiness.counts.scored_public_etf) === denominator
+    coverageClockOk
+    && asNumber(readiness.counts.scored_public_etf) === denominator
     && asNumber(readiness.counts.fetchable_daily_1y_gap) === fetchableRows.length
     && asNumber(readiness.counts.inception_limited_daily_1y_gap) === inceptionLimitedRows.length
     && asNumber(readiness.counts.terminal_limited_daily_1y_gap) === terminalLimitedRows.length
   );
   const dailyCheckCountOk = !generatedDailyCheck || (
-    asNumber(generatedDailyCheck.fetchable_daily_1y_gap) === fetchableRows.length
+    dailyCheckClockOk
+    && asNumber(generatedDailyCheck.fetchable_daily_1y_gap) === fetchableRows.length
     && asNumber(generatedDailyCheck.inception_limited_daily_1y_gap) === inceptionLimitedRows.length
     && asNumber(generatedDailyCheck.terminal_limited_daily_1y_gap) === terminalLimitedRows.length
   );
@@ -501,7 +532,8 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
 
   return {
     schema_version: "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-    generated_at: now.toISOString(),
+    generated_at: generatedAtDate.toISOString(),
+    classification_as_of: classificationIso,
     purpose: "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
     source_files: {
       etf_signal_summary: "data/computed/fenok_etf_signals_summary.json",
@@ -536,6 +568,9 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       matches_history_gap_report: historyGapCountOk,
       matches_coverage_index: coverageCountOk,
       matches_coverage_index_daily_check: dailyCheckCountOk,
+      history_gap_classification_clock_match: historyGapClockOk,
+      coverage_index_classification_clock_match: coverageClockOk,
+      coverage_index_daily_check_classification_clock_match: dailyCheckClockOk,
       fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows).counts,
       terminal_limited_breakdown: summarizeFetchableBreakdown(terminalLimitedRows).counts,
       effective_detail_resolution: effectiveResolutionCounts,
@@ -549,7 +584,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       caveat: "Do not use the raw local YF-only count as the ETF readiness blocker; it is not R2-selected authority and over-selects versus the exact effective-detail continuity check.",
     },
     bounded_batches: {
-      can_drive_bounded_ticker_batches: coverageCountOk && dailyCheckCountOk && equationOk,
+      can_drive_bounded_ticker_batches: historyGapCountOk && coverageCountOk && dailyCheckCountOk && equationOk,
       default_batch_size: batchSize,
       batch_count: Math.ceil(tickers.length / batchSize),
       command_template: "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
@@ -568,6 +603,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
 }
 
 export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date() } = {}) {
+  const generatedAt = requireDate(now, "now");
   const signalSummary = readJson("data/computed/fenok_etf_signals_summary.json", rootDir);
   const historyGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", rootDir);
   if (!isDaily1yReport(historyGap)) {
@@ -577,7 +613,15 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
   const generatedDailyCheck = findDailyCheck(readiness, "etf_no_fetchable_daily_1y_gap");
-  const fetchablePlan = buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, coverageIndex, now, rootDir });
+  const classificationAsOf = reportClassificationDate(historyGap);
+  const fetchablePlan = buildScoredEtfDaily1yFetchablePlan({
+    signalSummary,
+    historyGap,
+    coverageIndex,
+    generatedAt,
+    classificationAsOf,
+    rootDir,
+  });
 
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
   const denominator = asNumber(fetchablePlan.counts.scored_etf_count);
@@ -605,10 +649,13 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
   );
   const noFetchableDaily1yGap = daily1yFetchable === 0;
   const publicDoneClaimAllowed = Boolean(
-    s3Track?.requirements?.public
-    && s3Track?.requirements?.daily
-    && s3Track?.requirements?.gated
+    readiness?.public_ready
+    && readiness?.daily_ready
+    && readiness?.gated_ready
     && noFetchableDaily1yGap
+    && fetchablePlan.counts.matches_history_gap_report
+    && fetchablePlan.counts.matches_coverage_index
+    && fetchablePlan.counts.matches_coverage_index_daily_check
   );
 
   const errors = [];
@@ -642,6 +689,12 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
       detail: "fetchable plan complete+fetchable+inception_limited does not match scored ETF denominator",
     });
   }
+  if (!fetchablePlan.counts.matches_history_gap_report) {
+    errors.push({
+      id: "fetchable_plan_history_gap_report_match",
+      detail: "fetchable plan counts or classification clock differ from the history-gap report",
+    });
+  }
   if (!fetchablePlan.counts.matches_coverage_index || !fetchablePlan.counts.matches_coverage_index_daily_check) {
     errors.push({
       id: "fetchable_plan_coverage_index_match",
@@ -652,7 +705,8 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
   const payload = {
     ok: errors.length === 0,
     schema_version: "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-    generated_at: now.toISOString(),
+    generated_at: generatedAt.toISOString(),
+    classification_as_of: classificationAsOf.toISOString(),
     purpose: "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
     asset_type: "etf",
     stage: s3Track?.stage ?? null,
@@ -705,6 +759,9 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
       coverage_index_inception_limited_daily_1y_gap: readiness?.counts?.inception_limited_daily_1y_gap ?? null,
       coverage_index_terminal_limited_daily_1y_gap: readiness?.counts?.terminal_limited_daily_1y_gap ?? null,
       history_gap_report_count_ok: fetchablePlan.counts.matches_history_gap_report,
+      history_gap_classification_clock_match: fetchablePlan.counts.history_gap_classification_clock_match,
+      coverage_index_classification_clock_match: fetchablePlan.counts.coverage_index_classification_clock_match,
+      coverage_index_daily_check_classification_clock_match: fetchablePlan.counts.coverage_index_daily_check_classification_clock_match,
       history_gap_report_scored_etf_count: asNumber(scored.scored_etf_count),
       history_gap_report_fetchable_daily_1y_gap: asNumber(scored.fetchable),
       history_gap_report_inception_limited_daily_1y_gap: asNumber(scored.inception_limited),

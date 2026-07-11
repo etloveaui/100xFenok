@@ -11,6 +11,7 @@ import {
   EffectiveEtfDetailIntegrityError,
 } from "./effective-etf-detail-reader.mjs";
 import {
+  buildScoredEtfDaily1yFetchablePlan,
   buildEtfDaily1yReadiness,
   classifyDaily1yGap,
   etfInceptionDate,
@@ -20,6 +21,16 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const historyGapScript = path.resolve(scriptDir, "../100xfenok-next/scripts/report-stockanalysis-history-gap.mjs");
 
 const currentNow = new Date("2026-07-09T00:00:00Z");
+assert.throws(
+  () => buildScoredEtfDaily1yFetchablePlan({
+    signalSummary: { rows: [] },
+    historyGap: { classification_as_of: null, daily_1y_gap: { scored_etfs: {} } },
+    coverageIndex: null,
+    generatedAt: currentNow,
+    classificationAsOf: null,
+  }),
+  /classificationAsOf must be a valid timestamp/,
+);
 const recentYahooFallback = {
   source_provider: "yahoo_finance",
   detail_status: "yf_fallback",
@@ -150,11 +161,13 @@ const fixtureGeneratedAt = "2026-07-09T00:00:00.000Z";
 writeFixture(fixtureRoot, "data/computed/fenok_etf_signals_summary.json", { rows: [{ ticker: "AAA" }] });
 writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest.json", {
   generated_at: fixtureGeneratedAt,
+  classification_as_of: fixtureGeneratedAt,
   required_history_periods: ["daily_1y"],
   report_profile: {
     key: "daily_1y",
     required_history_periods: ["daily_1y"],
     generated_at: fixtureGeneratedAt,
+    classification_as_of: fixtureGeneratedAt,
   },
   daily_1y_gap: {
     scored_etfs: {
@@ -181,6 +194,8 @@ writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", {
       stage: "PUBLIC",
       requirements: { public: true, daily: true, gated: true },
       evidence_based_readiness: {
+        classification_as_of: fixtureGeneratedAt,
+        public_ready: true,
         daily_ready: true,
         gated_ready: true,
         counts: {
@@ -191,6 +206,7 @@ writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", {
         },
         daily_checks: [{
           id: "etf_no_fetchable_daily_1y_gap",
+          classification_as_of: fixtureGeneratedAt,
           fetchable_daily_1y_gap: 0,
           inception_limited_daily_1y_gap: 0,
           terminal_limited_daily_1y_gap: 0,
@@ -211,6 +227,24 @@ assert.equal(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).termin
 assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimited, ["daily_1y"]);
 assert.equal(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimitSource, "provider_rejected_non_etf");
 
+const boundaryPayload = {
+  ...recentStockAnalysisShortRows,
+  fetched_at: "2026-07-10T00:00:00.000Z",
+};
+const boundaryPending = {
+  last_attempt_utc: "2026-07-10T00:00:00.000Z",
+  failure_reason: "HTTP Error 500: transient upstream failure",
+};
+const justUnder48h = new Date("2026-07-11T23:59:56.400Z");
+const exactly48h = new Date("2026-07-12T00:00:00.000Z");
+const justOver48h = new Date("2026-07-12T00:00:00.001Z");
+assert.deepEqual(classifyDaily1yGap(boundaryPayload, justUnder48h).terminalLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(boundaryPayload, exactly48h).terminalLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(boundaryPayload, justOver48h).fetchable, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, justUnder48h, boundaryPending).terminalLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, exactly48h, boundaryPending).terminalLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, justOver48h, boundaryPending).fetchable, ["daily_1y"]);
+
 const payload = buildEtfDaily1yReadiness({ rootDir: fixtureRoot, now: currentNow });
 const plan = payload.fetchable_plan;
 const readiness = payload.daily_1y_readiness;
@@ -220,6 +254,8 @@ const planBreakdownTotal = Object.values(plan.fetchable_breakdown?.counts || {})
   .reduce((sum, value) => sum + Number(value || 0), 0);
 
 assert.equal(payload.ok, true);
+assert.equal(payload.classification_as_of, fixtureGeneratedAt);
+assert.equal(plan.classification_as_of, fixtureGeneratedAt);
 assert.ok(readiness.denominator > 0);
 assert.equal(
   readiness.daily_1y_complete
@@ -254,6 +290,9 @@ assert.equal(plan.counts.equation_ok, true);
 assert.equal(typeof plan.counts.matches_history_gap_report, "boolean");
 assert.equal(plan.counts.matches_coverage_index, true);
 assert.equal(plan.counts.matches_coverage_index_daily_check, true);
+assert.equal(plan.counts.history_gap_classification_clock_match, true);
+assert.equal(plan.counts.coverage_index_classification_clock_match, true);
+assert.equal(plan.counts.coverage_index_daily_check_classification_clock_match, true);
 assert.equal(plan.tickers.length, readiness.daily_1y_fetchable);
 assert.equal(new Set(plan.tickers).size, readiness.daily_1y_fetchable);
 assert.deepEqual(plan.tickers, [...plan.tickers].sort());
@@ -266,6 +305,30 @@ assert.equal(plan.bounded_batches.first_batch_tickers.length, Math.min(120, read
 
 assert.equal(plan.yf_local_crosscheck.matches_exact_fetchable_selector, false);
 assert.ok(plan.yf_local_crosscheck.missing_or_lt_min_rows > plan.counts.fetchable);
+
+const fixtureCoveragePath = path.join(fixtureRoot, "data/admin/fenok-edge-coverage-index.json");
+const fixtureCoverage = JSON.parse(fs.readFileSync(fixtureCoveragePath, "utf8"));
+fixtureCoverage.public_scoring_readiness.tracks[0].evidence_based_readiness.classification_as_of = "2026-07-08T23:59:59.000Z";
+writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", fixtureCoverage);
+const coverageClockMismatch = buildEtfDaily1yReadiness({ rootDir: fixtureRoot, now: currentNow });
+assert.equal(coverageClockMismatch.ok, false);
+assert.equal(coverageClockMismatch.public_done_claim_allowed, false);
+assert.equal(coverageClockMismatch.readiness_status, "not_ready");
+assert.equal(coverageClockMismatch.fetchable_plan.counts.coverage_index_classification_clock_match, false);
+assert.equal(coverageClockMismatch.fetchable_plan.bounded_batches.can_drive_bounded_ticker_batches, false);
+
+fixtureCoverage.public_scoring_readiness.tracks[0].evidence_based_readiness.classification_as_of = fixtureGeneratedAt;
+writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", fixtureCoverage);
+const fixtureHistoryPath = path.join(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest.json");
+const fixtureHistory = JSON.parse(fs.readFileSync(fixtureHistoryPath, "utf8"));
+fixtureHistory.daily_1y_gap.scored_etfs.complete = 0;
+writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest.json", fixtureHistory);
+const historyCountMismatch = buildEtfDaily1yReadiness({ rootDir: fixtureRoot, now: currentNow });
+assert.equal(historyCountMismatch.ok, false);
+assert.equal(historyCountMismatch.public_done_claim_allowed, false);
+assert.equal(historyCountMismatch.readiness_status, "not_ready");
+assert.equal(historyCountMismatch.fetchable_plan.counts.matches_history_gap_report, false);
+assert.ok(historyCountMismatch.errors.some((error) => error.id === "fetchable_plan_history_gap_report_match"));
 
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
@@ -364,6 +427,8 @@ writeFixture(effectiveRoot, "data/admin/fenok-edge-coverage-index.json", {
       stage: "PUBLIC",
       requirements: { public: true, daily: true, gated: true },
       evidence_based_readiness: {
+        classification_as_of: effectiveHistoryGap.classification_as_of,
+        public_ready: true,
         daily_ready: true,
         gated_ready: true,
         counts: {
@@ -374,6 +439,7 @@ writeFixture(effectiveRoot, "data/admin/fenok-edge-coverage-index.json", {
         },
         daily_checks: [{
           id: "etf_no_fetchable_daily_1y_gap",
+          classification_as_of: effectiveHistoryGap.classification_as_of,
           fetchable_daily_1y_gap: 0,
           inception_limited_daily_1y_gap: 2,
           terminal_limited_daily_1y_gap: 1,
@@ -384,10 +450,13 @@ writeFixture(effectiveRoot, "data/admin/fenok-edge-coverage-index.json", {
 });
 const effectiveReadiness = buildEtfDaily1yReadiness({
   rootDir: effectiveRoot,
-  now: new Date(effectiveHistoryGap.generated_at),
+  now: new Date(Date.parse(effectiveHistoryGap.generated_at) + 7 * 60_000),
 });
 const effectivePlan = effectiveReadiness.fetchable_plan;
 assert.equal(effectiveReadiness.ok, true);
+assert.equal(effectiveReadiness.classification_as_of, effectiveHistoryGap.classification_as_of);
+assert.equal(effectivePlan.classification_as_of, effectiveHistoryGap.classification_as_of);
+assert.ok(Date.parse(effectiveReadiness.generated_at) > Date.parse(effectiveHistoryGap.generated_at));
 assert.deepEqual(
   {
     complete: effectivePlan.counts.complete,

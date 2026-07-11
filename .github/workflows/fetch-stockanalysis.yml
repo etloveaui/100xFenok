@@ -165,7 +165,7 @@ jobs:
               if [ -n "${STOCKANALYSIS_DAILY1Y_OFFSET:-}" ]; then
                 INPUT_OFFSET="$STOCKANALYSIS_DAILY1Y_OFFSET"
               else
-                INPUT_OFFSET="$(node -e 'const fs = require("fs"); const limit = Math.max(1, Number(process.env.STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT || 120) || 120); let count = 0; try { const payload = JSON.parse(fs.readFileSync("data/admin/fenok-edge-etf-daily1y-fetchable-plan.json", "utf8")); count = Array.isArray(payload.tickers) ? payload.tickers.length : 0; } catch {} const shards = Math.max(1, Math.ceil(count / limit)); const day = Math.floor(Date.now() / 86400000); process.stdout.write(String((day % shards) * limit));')"
+                INPUT_OFFSET="$(node scripts/select-stockanalysis-daily1y-offset.mjs)"
               fi
             else
               INPUT_HISTORY_GAPS_ONLY="false"
@@ -392,6 +392,13 @@ jobs:
           python3 -m unittest scripts/test_stockanalysis_surface_contract.py
           python3 scripts/test-stockanalysis-financials-fixtures.py
           python3 -m unittest scripts/test_audit_market_data.py
+          node scripts/test-select-stockanalysis-daily1y-offset.mjs
+          node scripts/test-write-fenok-etf-daily1y-readiness.mjs
+          node scripts/test-build-fenok-etf-core-daily-basket.mjs
+          ALT_TMPDIR="$RUNNER_TEMP/stockanalysis-contract-alt-tmp"
+          mkdir -p "$ALT_TMPDIR"
+          TMPDIR="$ALT_TMPDIR" node scripts/test-write-fenok-etf-daily1y-readiness.mjs
+          TMPDIR="$ALT_TMPDIR" node scripts/test-build-fenok-etf-core-daily-basket.mjs
 
       - name: Validate StockAnalysis UI QA
         env:

@@ -2258,8 +2258,9 @@ def update_pending_ledger(
     cooldown_days: float,
     failure_threshold: int,
     mirror_public: bool,
+    now_dt: datetime | None = None,
 ) -> dict:
-    now_dt = datetime.now(timezone.utc)
+    now_dt = now_dt or datetime.now(timezone.utc)
     selected = {
         clean_symbol(str(row.get("ticker") or ""))
         for row in selected_rows
@@ -2286,8 +2287,6 @@ def update_pending_ledger(
             continue
         if error is None:
             error = primary_error
-        if not is_expected_missing_error(error):
-            continue
 
         existing = entries.get(ticker) if isinstance(entries.get(ticker), dict) else {}
         failures = (parse_int(existing.get("consecutive_failures")) or 0) + 1
@@ -2298,6 +2297,7 @@ def update_pending_ledger(
             "ticker": ticker,
             "last_attempt_utc": utc_iso(now_dt),
             "failure_reason": result.get("fallback_error") or error,
+            "failure_class": "expected_missing" if is_expected_missing_error(error) else "hard_error",
             "consecutive_failures": failures,
             "next_attempt_after_utc": next_attempt,
             "last_status": result.get("status"),
@@ -2313,7 +2313,7 @@ def update_pending_ledger(
         "policy": {
             "cooldown_days": cooldown_days,
             "failure_threshold": failure_threshold,
-            "rule": "skip ETF detail candidates after consecutive expected-missing failures until next_attempt_after_utc",
+            "rule": "record every failed primary attempt for fair retry rotation; skip after the configured consecutive-failure threshold until next_attempt_after_utc",
         },
         "counts": {
             **pending_ledger_counts({"entries": entries}, now_dt, cooldown_days, failure_threshold),
@@ -2387,9 +2387,11 @@ def daily_1y_plan_candidate_summary(
     cooldown_failure_threshold: int,
     now_dt: datetime,
 ) -> dict:
+    safe_offset = max(0, offset)
+    scheduled_rows = plan_rows[safe_offset : safe_offset + limit] if limit > 0 else plan_rows[safe_offset:]
     candidates = []
     cooldown_rows = []
-    for order, plan_row in enumerate(plan_rows):
+    for order, plan_row in enumerate(scheduled_rows, start=safe_offset):
         ticker = plan_row["ticker"]
         if ticker in exclude:
             continue
@@ -2434,9 +2436,7 @@ def daily_1y_plan_candidate_summary(
             }
         )
 
-    safe_offset = max(0, offset)
-    offset_candidates = candidates[safe_offset:]
-    selected = offset_candidates[:limit] if limit > 0 else offset_candidates
+    selected = candidates
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -2467,7 +2467,8 @@ def daily_1y_plan_candidate_summary(
             "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
             "daily_1y_missing_file": sum(1 for row in candidates if row.get("missing_file")),
             "daily_1y_short_rows": sum(1 for row in candidates if not row.get("missing_file")),
-            "offset_skipped": min(safe_offset, len(candidates)),
+            "offset_skipped": min(safe_offset, len(plan_rows)),
+            "scheduled_plan_rows": len(scheduled_rows),
         },
         "selected": selected,
         "cooldown": cooldown_rows,

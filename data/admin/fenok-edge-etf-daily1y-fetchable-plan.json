@@ -1,6 +1,7 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-07-11T04:01:02.571Z",
+  "generated_at": "2026-07-11T23:16:09.998Z",
+  "classification_as_of": "2026-07-11T23:15:46.419Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -27,19 +28,24 @@
   "counts": {
     "scored_etf_count": 4515,
     "complete": 3706,
-    "fetchable": 0,
+    "fetchable": 31,
     "inception_limited": 715,
-    "terminal_limited": 94,
+    "terminal_limited": 63,
     "missing": 809,
     "equation_ok": true,
     "matches_history_gap_report": true,
     "matches_coverage_index": true,
     "matches_coverage_index_daily_check": true,
-    "fetchable_breakdown": {},
+    "history_gap_classification_clock_match": true,
+    "coverage_index_classification_clock_match": true,
+    "coverage_index_daily_check_classification_clock_match": true,
+    "fetchable_breakdown": {
+      "stockanalysis_short_rows": 31
+    },
     "terminal_limited_breakdown": {
       "data_supply_unavailable": 9,
       "provider_rejected_non_etf": 47,
-      "stockanalysis_recent_short_rows": 38
+      "stockanalysis_recent_short_rows": 7
     },
     "effective_detail_resolution": {
       "stockanalysis_primary": 4022,
@@ -110,18 +116,717 @@
   "bounded_batches": {
     "can_drive_bounded_ticker_batches": true,
     "default_batch_size": 120,
-    "batch_count": 0,
+    "batch_count": 1,
     "command_template": "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
-    "first_batch_tickers": []
+    "first_batch_tickers": [
+      "AMUN",
+      "ASCI",
+      "BGCG",
+      "BGGG",
+      "CMAY",
+      "CRUX",
+      "DDFY",
+      "DDTY",
+      "DHLX",
+      "DUSG",
+      "EMEM",
+      "FREI",
+      "FSTB",
+      "GEQ",
+      "IBCB",
+      "IBHM",
+      "IBTR",
+      "MAUG",
+      "MAYC",
+      "MDCR",
+      "MFEB",
+      "MMAY",
+      "MNVR",
+      "MSEP",
+      "QQMY",
+      "REGS",
+      "SHRD",
+      "TFGZ",
+      "TLG",
+      "WDE",
+      "ZTAX"
+    ]
   },
-  "tickers": [],
-  "rows": [],
+  "tickers": [
+    "AMUN",
+    "ASCI",
+    "BGCG",
+    "BGGG",
+    "CMAY",
+    "CRUX",
+    "DDFY",
+    "DDTY",
+    "DHLX",
+    "DUSG",
+    "EMEM",
+    "FREI",
+    "FSTB",
+    "GEQ",
+    "IBCB",
+    "IBHM",
+    "IBTR",
+    "MAUG",
+    "MAYC",
+    "MDCR",
+    "MFEB",
+    "MMAY",
+    "MNVR",
+    "MSEP",
+    "QQMY",
+    "REGS",
+    "SHRD",
+    "TFGZ",
+    "TLG",
+    "WDE",
+    "ZTAX"
+  ],
+  "rows": [
+    {
+      "ticker": "AMUN",
+      "actual_rows": 178,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1986-03-17",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "ASCI",
+      "actual_rows": 178,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1996-09-30",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "BGCG",
+      "actual_rows": 25,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2017-12-14",
+      "yf_history_rows": 21,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "BGGG",
+      "actual_rows": 25,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2014-06-10",
+      "yf_history_rows": 21,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "CMAY",
+      "actual_rows": 44,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "CRUX",
+      "actual_rows": 78,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1986-01-09",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "DDFY",
+      "actual_rows": 45,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "DDTY",
+      "actual_rows": 45,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "DHLX",
+      "actual_rows": 193,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2021-02-26",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "DUSG",
+      "actual_rows": 42,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2012-12-20",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "EMEM",
+      "actual_rows": 32,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 28,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "FREI",
+      "actual_rows": 12,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2003-02-04",
+      "yf_history_rows": 5,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "FSTB",
+      "actual_rows": 12,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1986-09-15",
+      "yf_history_rows": 7,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "GEQ",
+      "actual_rows": 19,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 7,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "IBCB",
+      "actual_rows": 70,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "IBHM",
+      "actual_rows": 70,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "IBTR",
+      "actual_rows": 70,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MAUG",
+      "actual_rows": 44,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 41,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MAYC",
+      "actual_rows": 45,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MDCR",
+      "actual_rows": 15,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MFEB",
+      "actual_rows": 44,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 41,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MMAY",
+      "actual_rows": 44,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 41,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MNVR",
+      "actual_rows": 45,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 41,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "MSEP",
+      "actual_rows": 16,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 16,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "QQMY",
+      "actual_rows": 45,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "REGS",
+      "actual_rows": 78,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1992-11-20",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "SHRD",
+      "actual_rows": 16,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "TFGZ",
+      "actual_rows": 65,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2000-12-27",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "TLG",
+      "actual_rows": 78,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2009-08-28",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "WDE",
+      "actual_rows": 30,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 27,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    },
+    {
+      "ticker": "ZTAX",
+      "actual_rows": 190,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2023-05-19",
+      "yf_history_rows": null,
+      "daily_1y_gap_source": "stockanalysis_short_rows",
+      "source_provider": "stockanalysis",
+      "detail_status": null,
+      "detail_source_kind": "stockanalysis_primary",
+      "primary_present": true,
+      "data_supply_status": "available",
+      "data_supply_resolution_state": null
+    }
+  ],
   "fetchable_breakdown": {
-    "counts": {},
-    "samples": {}
+    "counts": {
+      "stockanalysis_short_rows": 31
+    },
+    "samples": {
+      "stockanalysis_short_rows": [
+        "AMUN",
+        "ASCI",
+        "BGCG",
+        "BGGG",
+        "CMAY",
+        "CRUX",
+        "DDFY",
+        "DDTY",
+        "DHLX",
+        "DUSG"
+      ]
+    }
   },
   "samples": {
-    "fetchable": [],
+    "fetchable": [
+      {
+        "ticker": "AMUN",
+        "actual_rows": 178,
+        "missing_file": false,
+        "inception_date": "1986-03-17"
+      },
+      {
+        "ticker": "ASCI",
+        "actual_rows": 178,
+        "missing_file": false,
+        "inception_date": "1996-09-30"
+      },
+      {
+        "ticker": "BGCG",
+        "actual_rows": 25,
+        "missing_file": false,
+        "inception_date": "2017-12-14"
+      },
+      {
+        "ticker": "BGGG",
+        "actual_rows": 25,
+        "missing_file": false,
+        "inception_date": "2014-06-10"
+      },
+      {
+        "ticker": "CMAY",
+        "actual_rows": 44,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "CRUX",
+        "actual_rows": 78,
+        "missing_file": false,
+        "inception_date": "1986-01-09"
+      },
+      {
+        "ticker": "DDFY",
+        "actual_rows": 45,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "DDTY",
+        "actual_rows": 45,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "DHLX",
+        "actual_rows": 193,
+        "missing_file": false,
+        "inception_date": "2021-02-26"
+      },
+      {
+        "ticker": "DUSG",
+        "actual_rows": 42,
+        "missing_file": false,
+        "inception_date": "2012-12-20"
+      }
+    ],
     "inception_limited": [
       {
         "ticker": "AAAC",
@@ -210,37 +915,37 @@
         "inception_date": null
       },
       {
-        "ticker": "AMUN",
-        "actual_rows": 178,
-        "missing_file": false,
-        "inception_date": "1986-03-17"
-      },
-      {
-        "ticker": "ASCI",
-        "actual_rows": 178,
-        "missing_file": false,
-        "inception_date": "1996-09-30"
-      },
-      {
         "ticker": "BAVA",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null
       },
       {
-        "ticker": "BGCG",
-        "actual_rows": 25,
-        "missing_file": false,
-        "inception_date": "2017-12-14"
-      },
-      {
-        "ticker": "BGGG",
-        "actual_rows": 25,
-        "missing_file": false,
-        "inception_date": "2014-06-10"
-      },
-      {
         "ticker": "BHYP",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "CLNK",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "CLOO",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "CRIB",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "DISK",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null

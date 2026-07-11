@@ -1,12 +1,13 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-11T04:01:02.571Z",
+  "generated_at": "2026-07-11T23:16:09.998Z",
+  "classification_as_of": "2026-07-11T23:15:46.419Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
-  "readiness_status": "ready",
-  "public_done_claim_allowed": true,
+  "readiness_status": "not_ready",
+  "public_done_claim_allowed": false,
   "raw_policy": {
     "raw_public": false,
     "raw_rows_included": false,
@@ -26,25 +27,42 @@
     "denominator": 4515,
     "daily_1y_complete": 3706,
     "daily_1y_missing": 809,
-    "daily_1y_fetchable": 0,
+    "daily_1y_fetchable": 31,
     "inception_limited_daily_1y_gap": 715,
-    "terminal_limited_daily_1y_gap": 94,
+    "terminal_limited_daily_1y_gap": 63,
     "fetchable_breakdown": {
-      "counts": {},
-      "samples": {}
+      "counts": {
+        "stockanalysis_short_rows": 31
+      },
+      "samples": {
+        "stockanalysis_short_rows": [
+          "AMUN",
+          "ASCI",
+          "BGCG",
+          "BGGG",
+          "CMAY",
+          "CRUX",
+          "DDFY",
+          "DDTY",
+          "DHLX",
+          "DUSG"
+        ]
+      }
     },
     "terminal_limited_breakdown": {
       "data_supply_unavailable": 9,
       "provider_rejected_non_etf": 47,
-      "stockanalysis_recent_short_rows": 38
+      "stockanalysis_recent_short_rows": 7
     },
-    "etf_no_fetchable_daily_1y_gap": 0,
+    "etf_no_fetchable_daily_1y_gap": 31,
     "count_equation": "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap + terminal_limited_daily_1y_gap == denominator",
     "count_equation_ok": true,
-    "no_fetchable_daily_1y_gap": true,
+    "no_fetchable_daily_1y_gap": false,
     "daily_ready": true,
     "gated_ready": true,
-    "blockers": [],
+    "blockers": [
+      "etf_no_fetchable_daily_1y_gap"
+    ],
     "claim_scope": "full_scored_etf_universe_diagnostic",
     "service_gate": false,
     "caveat": "Only immediately fetchable daily 1Y gaps block the full scored-ETF diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves."
@@ -54,17 +72,81 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 0,
+    "coverage_index_fetchable_daily_1y_gap": 31,
     "coverage_index_inception_limited_daily_1y_gap": 715,
-    "coverage_index_terminal_limited_daily_1y_gap": 94,
+    "coverage_index_terminal_limited_daily_1y_gap": 63,
     "history_gap_report_count_ok": true,
+    "history_gap_classification_clock_match": true,
+    "coverage_index_classification_clock_match": true,
+    "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4515,
-    "history_gap_report_fetchable_daily_1y_gap": 0,
+    "history_gap_report_fetchable_daily_1y_gap": 31,
     "history_gap_report_inception_limited_daily_1y_gap": 715,
-    "history_gap_report_terminal_limited_daily_1y_gap": 94
+    "history_gap_report_terminal_limited_daily_1y_gap": 63
   },
   "samples": {
-    "fetchable": [],
+    "fetchable": [
+      {
+        "ticker": "AMUN",
+        "actual_rows": 178,
+        "missing_file": false,
+        "inception_date": "1986-03-17"
+      },
+      {
+        "ticker": "ASCI",
+        "actual_rows": 178,
+        "missing_file": false,
+        "inception_date": "1996-09-30"
+      },
+      {
+        "ticker": "BGCG",
+        "actual_rows": 25,
+        "missing_file": false,
+        "inception_date": "2017-12-14"
+      },
+      {
+        "ticker": "BGGG",
+        "actual_rows": 25,
+        "missing_file": false,
+        "inception_date": "2014-06-10"
+      },
+      {
+        "ticker": "CMAY",
+        "actual_rows": 44,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "CRUX",
+        "actual_rows": 78,
+        "missing_file": false,
+        "inception_date": "1986-01-09"
+      },
+      {
+        "ticker": "DDFY",
+        "actual_rows": 45,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "DDTY",
+        "actual_rows": 45,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "DHLX",
+        "actual_rows": 193,
+        "missing_file": false,
+        "inception_date": "2021-02-26"
+      },
+      {
+        "ticker": "DUSG",
+        "actual_rows": 42,
+        "missing_file": false,
+        "inception_date": "2012-12-20"
+      }
+    ],
     "inception_limited": [
       {
         "ticker": "AAAC",
@@ -153,37 +235,37 @@
         "inception_date": null
       },
       {
-        "ticker": "AMUN",
-        "actual_rows": 178,
-        "missing_file": false,
-        "inception_date": "1986-03-17"
-      },
-      {
-        "ticker": "ASCI",
-        "actual_rows": 178,
-        "missing_file": false,
-        "inception_date": "1996-09-30"
-      },
-      {
         "ticker": "BAVA",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null
       },
       {
-        "ticker": "BGCG",
-        "actual_rows": 25,
-        "missing_file": false,
-        "inception_date": "2017-12-14"
-      },
-      {
-        "ticker": "BGGG",
-        "actual_rows": 25,
-        "missing_file": false,
-        "inception_date": "2014-06-10"
-      },
-      {
         "ticker": "BHYP",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "CLNK",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "CLOO",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "CRIB",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "DISK",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null
@@ -224,20 +306,26 @@
   },
   "exact_fetchable_plan": {
     "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "fetchable_count": 0,
-    "ticker_count": 0,
+    "fetchable_count": 31,
+    "ticker_count": 31,
     "can_drive_bounded_ticker_batches": true,
-    "batch_count": 0,
+    "batch_count": 1,
     "default_batch_size": 120,
     "yf_local_crosscheck_gap_count": 4140,
     "yf_local_crosscheck_matches": false,
     "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
   "recommended_dispatch": {
-    "status": "not_recommended",
+    "status": "scheduled_backfill_active",
     "workflow": "fetch-stockanalysis.yml",
-    "inputs": null,
-    "note": "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires."
+    "schedule": "50 22 * * 1-5",
+    "schedule_kst": "Tue-Sat 07:50",
+    "inputs": {
+      "history_gaps_only": "true",
+      "required_history_periods": "daily_1y",
+      "incremental_etf_limit": "120"
+    },
+    "note": "The weekday scheduled lane drains scored ETF daily 1Y continuity gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate."
   },
   "errors": []
 }

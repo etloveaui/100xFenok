@@ -1057,6 +1057,22 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     ),
                     encoding="utf-8",
                 )
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "backfill" / "pending_ledger.json").write_text(
+                    json.dumps(
+                        {
+                            "entries": {
+                                "PLAN001": {
+                                    "ticker": "PLAN001",
+                                    "consecutive_failures": 3,
+                                    "next_attempt_after_utc": "2026-07-20T00:00:00Z",
+                                    "failure_reason": "HTTP Error 404: Not Found",
+                                }
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
 
                 summary = self.fetcher.incremental_etf_backfill_candidates(
                     universe_payload={
@@ -1117,6 +1133,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     max_age_hours=720,
                     offset=2,
                     exclude=set(),
+                    now_dt=self.fetcher.parse_iso_timestamp("2026-07-12T00:00:00Z"),
                     required_history_periods=("daily_1y",),
                     history_gaps_only=True,
                 )
@@ -1126,6 +1143,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["PLAN003", "PLAN004"])
         self.assertEqual(summary["policy"]["offset"], 2)
         self.assertEqual(summary["counts"]["offset_skipped"], 2)
+        self.assertEqual(summary["counts"]["scheduled_plan_rows"], 2)
+        self.assertEqual(summary["counts"]["cooldown_skipped"], 0)
         self.assertEqual(summary["counts"]["selected"], 2)
 
     def test_incremental_etf_backfill_plan_payload_is_separate_from_run_proof(self) -> None:
@@ -1426,6 +1445,64 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         self.assertEqual(second["counts"]["tracked"], 0)
         self.assertEqual(second["cleared"], ["BETA"])
+
+    def test_hard_failures_rotate_all_missing_candidates_without_starvation(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        now_dt = self.fetcher.parse_iso_timestamp("2026-07-12T00:00:00Z")
+        tickers = [f"ETF{index:02d}" for index in range(31)]
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.PUBLIC_DIR = Path(tmp) / "public" / "stockanalysis"
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "surfaces" / "new_etfs.json").write_text(
+                    json.dumps({"records": [{"s": ticker} for ticker in tickers]}),
+                    encoding="utf-8",
+                )
+
+                attempted = []
+                for _ in range(4):
+                    summary = self.fetcher.incremental_etf_backfill_candidates(
+                        universe_payload={"records": []},
+                        limit=8,
+                        max_age_hours=720,
+                        exclude=set(),
+                        cooldown_days=7,
+                        cooldown_failure_threshold=99,
+                        now_dt=now_dt,
+                    )
+                    selected = summary["selected"]
+                    attempted.extend(row["ticker"] for row in selected)
+                    ledger = self.fetcher.update_pending_ledger(
+                        results=[
+                            {
+                                "ticker": row["ticker"],
+                                "asset_type": "etf",
+                                "status": "error",
+                                "provider": "stockanalysis",
+                                "error": "HTTP Error 500: transient upstream failure",
+                            }
+                            for row in selected
+                        ],
+                        selected_rows=selected,
+                        cooldown_days=7,
+                        failure_threshold=99,
+                        mirror_public=False,
+                        now_dt=now_dt,
+                    )
+                    for row in selected:
+                        self.assertEqual(ledger["entries"][row["ticker"]]["failure_class"], "hard_error")
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
+        self.assertEqual(len(attempted), 32)
+        self.assertEqual(len(set(attempted)), 31)
+        self.assertEqual(sorted(set(attempted)), tickers)
 
     def test_yahoo_candidate_success_keeps_missing_primary_in_retry_ledger(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
