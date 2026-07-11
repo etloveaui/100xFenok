@@ -510,6 +510,12 @@ def now_iso() -> str:
     return utc_iso(datetime.now(timezone.utc))
 
 
+def load_stock_detail_supply():
+    import data_supply_stock_detail
+
+    return data_supply_stock_detail
+
+
 def collection_date(value: str | None) -> str | None:
     """Normalize a collection timestamp/date to an exact real-calendar UTC date."""
     if not isinstance(value, str) or not value.strip():
@@ -3234,9 +3240,31 @@ def run_one(
             financials = None
             financials_rel_path = None
         else:
+            stock_supply = load_stock_detail_supply()
             financials = fetch_financials(ticker, timeout) if include_financials else None
             financials_rel_path = f"financials/{ticker}.json" if financials is not None else None
-            payload = fetch_stock(ticker, timeout, financials)
+            try:
+                payload = fetch_stock(ticker, timeout, financials)
+            except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
+                if stock_supply.is_enrolled_stock_detail(ticker):
+                    observed_at = now_iso()
+                    stock_supply.record_stock_detail_failure(
+                        store=DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=OUT_DIR.parent.parent),
+                        provider="stockanalysis",
+                        entity=ticker,
+                        provider_path=f"data/stockanalysis/stocks/{ticker}.json",
+                        observed_at=observed_at,
+                        reason_code=(
+                            "endpoint_missing"
+                            if is_expected_missing_error(str(exc))
+                            else "schema_invalid"
+                            if isinstance(exc, (json.JSONDecodeError, ValueError))
+                            else "fetch_failed"
+                        ),
+                        failure_detail=f"{type(exc).__name__}: {exc}",
+                        origin="manual",
+                    )
+                raise
             rel_path = f"stocks/{ticker}.json"
             provider = "stockanalysis"
             stockanalysis_error = None
@@ -3255,6 +3283,32 @@ def run_one(
                         failure_detail=f"{type(exc).__name__}: {exc}",
                     )
                     raise
+            stock_candidate = None
+            stock_observed_at = None
+            if kind == "stock" and stock_supply.is_enrolled_stock_detail(ticker):
+                candidate_bytes = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+                stock_observed_at = now_iso()
+                try:
+                    stock_candidate = stock_supply.validate_stock_detail_candidate(
+                        provider="stockanalysis",
+                        entity=ticker,
+                        provider_path=f"data/stockanalysis/{rel_path}",
+                        payload_bytes=candidate_bytes,
+                        observed_at=stock_observed_at,
+                        provider_truth_root=OUT_DIR.parent.parent,
+                    )
+                except stock_supply.StockDetailValidationError as exc:
+                    stock_supply.record_stock_detail_failure(
+                        store=DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=OUT_DIR.parent.parent),
+                        provider="stockanalysis",
+                        entity=ticker,
+                        provider_path=f"data/stockanalysis/{rel_path}",
+                        observed_at=stock_observed_at,
+                        reason_code=exc.reason_code,
+                        failure_detail=exc.detail,
+                        origin="manual",
+                    )
+                    raise
             write_payload(rel_path, payload, mirror_public)
             if kind == "etf":
                 provider_path = OUT_DIR / rel_path
@@ -3270,6 +3324,23 @@ def run_one(
                     observed_at=source_as_of,
                     validation_status="valid",
                     reason_code="contract_valid",
+                )
+            elif stock_candidate is not None:
+                provider_path = OUT_DIR / rel_path
+                verified = stock_supply.validate_stock_detail_candidate(
+                    provider="stockanalysis",
+                    entity=ticker,
+                    provider_path=f"data/stockanalysis/{rel_path}",
+                    payload_bytes=provider_path.read_bytes(),
+                    observed_at=stock_observed_at,
+                    expected_sha256=stock_candidate.payload_sha256,
+                    provider_truth_root=OUT_DIR.parent.parent,
+                )
+                stock_supply.record_stock_detail_success(
+                    store=DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=OUT_DIR.parent.parent),
+                    candidate=verified,
+                    observed_at=stock_observed_at,
+                    origin="manual",
                 )
         if financials is not None and financials_rel_path is not None:
             write_payload(financials_rel_path, financials, mirror_public)

@@ -35,6 +35,19 @@ from pathlib import Path
 import yfinance as yf
 
 ROOT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = ROOT / "scripts"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from data_supply_state import DataSupplyStateStore
+from data_supply_stock_detail import (
+    StockDetailValidationError,
+    is_enrolled_stock_detail,
+    record_stock_detail_failure,
+    record_stock_detail_success,
+    validate_stock_detail_candidate,
+)
+
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
 STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
@@ -44,6 +57,8 @@ SOX_GIW_CONSTITUENTS = ROOT / "data" / "indices" / "nasdaq-giw-sox-constituents.
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
+DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
+DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
 
 SCHEMA_VERSION = "yf-finance/v2"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
@@ -219,6 +234,80 @@ def stable_json(payload, **kwargs):
     kwargs.setdefault("allow_nan", False)
     kwargs.setdefault("default", str)
     return json.dumps(clean_value(payload), **kwargs)
+
+
+def _observed_now():
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def write_finance_payload(ticker, payload):
+    """Write Yahoo canonical truth; publish state only for the frozen stock cohort."""
+    out_path = OUT_DIR / f"{ticker}.json"
+    payload_bytes = stable_json(payload, separators=(",", ":")).encode("utf-8")
+    if not is_enrolled_stock_detail(ticker):
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(payload_bytes)
+        return None
+    observed_at = _observed_now()
+    truth_root = DATA_SUPPLY_PROVIDER_TRUTH_ROOT
+    store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=truth_root)
+    try:
+        candidate = validate_stock_detail_candidate(
+            provider="yahoo_finance",
+            entity=ticker,
+            provider_path=f"data/yf/finance/{ticker}.json",
+            payload_bytes=payload_bytes,
+            observed_at=observed_at,
+            provider_truth_root=truth_root,
+        )
+    except StockDetailValidationError as exc:
+        record_stock_detail_failure(
+            store=store,
+            provider="yahoo_finance",
+            entity=ticker,
+            provider_path=f"data/yf/finance/{ticker}.json",
+            observed_at=observed_at,
+            reason_code=exc.reason_code,
+            failure_detail=exc.detail,
+            origin="manual",
+        )
+        raise
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_bytes(payload_bytes)
+    verified = validate_stock_detail_candidate(
+        provider="yahoo_finance",
+        entity=ticker,
+        provider_path=f"data/yf/finance/{ticker}.json",
+        payload_bytes=out_path.read_bytes(),
+        observed_at=observed_at,
+        expected_sha256=candidate.payload_sha256,
+        provider_truth_root=truth_root,
+    )
+    return record_stock_detail_success(
+        store=store,
+        candidate=verified,
+        observed_at=observed_at,
+        origin="manual",
+    )
+
+
+def record_finance_failure(ticker, error):
+    if not is_enrolled_stock_detail(ticker):
+        return None
+    observed_at = _observed_now()
+    return record_stock_detail_failure(
+        store=DataSupplyStateStore(
+            DATA_SUPPLY_STATE_ROOT,
+            provider_truth_root=DATA_SUPPLY_PROVIDER_TRUTH_ROOT,
+        ),
+        provider="yahoo_finance",
+        entity=ticker,
+        provider_path=f"data/yf/finance/{ticker}.json",
+        observed_at=observed_at,
+        reason_code="fetch_failed",
+        failure_detail=error,
+        origin="manual",
+    )
 
 
 def curated_statement(df, items, periods):
@@ -573,6 +662,30 @@ def merge_existing_payload_data(existing_payload, fetched_data):
     return merged
 
 
+def bind_enrolled_quote_group_to_fresh_fetch(merged_data, fetched_data):
+    """Keep heavy merged fields while preventing cross-observation quote filling."""
+    merged = dict(merged_data or {})
+    merged_info = dict(merged.get("info") or {})
+    fetched_info = dict((fetched_data or {}).get("info") or {})
+    quote_keys = {
+        "symbol",
+        "quoteType",
+        "currentPrice",
+        "previousClose",
+        "regularMarketPrice",
+        "regularMarketPreviousClose",
+        "regularMarketChange",
+        "regularMarketChangePercent",
+        "regularMarketTime",
+    }
+    for key in quote_keys:
+        merged_info.pop(key, None)
+        if fetched_info.get(key) is not None:
+            merged_info[key] = fetched_info[key]
+    merged["info"] = merged_info
+    return merged
+
+
 def load_scouter_etfs():
     try:
         payload = json.loads(ETF_INDEX.read_text(encoding="utf-8"))
@@ -896,8 +1009,11 @@ def main():
             timeout_seconds=args.ticker_timeout,
         )
         if error is None:
+            fresh_data = data
             if args.merge_existing and existing:
-                data = merge_existing_payload_data(existing, data)
+                data = merge_existing_payload_data(existing, fresh_data)
+                if is_enrolled_stock_detail(ticker):
+                    data = bind_enrolled_quote_group_to_fresh_fetch(data, fresh_data)
             payload = {
                 "schema_version": SCHEMA_VERSION,
                 "ticker": ticker,
@@ -905,13 +1021,17 @@ def main():
                 "profile": args.profile,
                 "data": data,
             }
-            out_path.write_text(
-                stable_json(payload, separators=(",", ":")),
-                encoding="utf-8",
-            )
-            size_kb = round(out_path.stat().st_size / 1024, 1)
-            print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
+            try:
+                write_finance_payload(ticker, payload)
+            except StockDetailValidationError as exc:
+                error = f"{type(exc).__name__}: {exc}"
+            if error is None:
+                size_kb = round(out_path.stat().st_size / 1024, 1)
+                print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
+            else:
+                print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
         else:
+            record_finance_failure(ticker, error)
             print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
         results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False})
         time.sleep(args.sleep)

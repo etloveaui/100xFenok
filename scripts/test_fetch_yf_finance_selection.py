@@ -44,7 +44,8 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.fetcher.MARKET_FACTS_INDEX = self.root / "computed" / "market_facts" / "index.json"
         self.fetcher.DASHBOARD_CONSTANTS = self.root / "dashboard" / "constants.ts"
         self.fetcher.PORTFOLIO_TS = self.root / "portfolio.ts"
-        self.fetcher.OUT_DIR = self.root / "yf" / "finance"
+        self.fetcher.OUT_DIR = self.root / "data" / "yf" / "finance"
+        self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT = self.root
         self.fetcher.STOCK_UNIVERSE_DIR.mkdir(parents=True)
 
     def tearDown(self) -> None:
@@ -262,6 +263,123 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(payload["count"], 1)
         self.assertTrue(payload["history_gaps_only"])
         self.assertEqual(payload["priority"], "stockanalysis_etf_aum")
+
+    def test_enrolled_yahoo_write_records_exact_manual_object(self) -> None:
+        self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
+        payload = {
+            "schema_version": "yf-finance/v2", "ticker": "AAPL",
+            "fetched_at": "2026-07-10T10:00:00Z", "profile": "full",
+            "data": {"info": {"symbol": "AAPL", "quoteType": "EQUITY", "currentPrice": 10, "previousClose": 9}, "history_1y": [{"date": "2026-07-10", "Close": 10}]},
+        }
+        row = self.fetcher.write_finance_payload("AAPL", payload)
+        truth = self.fetcher.OUT_DIR / "AAPL.json"
+        pending = self.root / "state" / "providers" / "yahoo_finance" / "stock_detail" / "pending" / "AAPL.json"
+        pointer = json.loads(pending.read_text())
+        self.assertEqual((self.root / "state" / pointer["path"]).read_bytes(), truth.read_bytes())
+        self.assertEqual(row["observation_origin"], "rebuild")
+        self.assertEqual(row["collection_origin"], "manual")
+
+    def test_yahoo_only_write_keeps_canonical_ownership_without_enrollment(self) -> None:
+        self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
+        payload = {
+            "schema_version": "yf-finance/v2", "ticker": "ZZZZ",
+            "fetched_at": "2026-07-10T10:00:00Z", "profile": "full",
+            "data": {"info": {"symbol": "ZZZZ", "quoteType": "EQUITY", "currentPrice": 5, "previousClose": 4}, "history_1y": [{"date": "2026-07-10", "Close": 5}]},
+        }
+        row = self.fetcher.write_finance_payload("ZZZZ", payload)
+        self.assertIsNone(row)
+        self.assertTrue((self.fetcher.OUT_DIR / "ZZZZ.json").exists())
+        self.assertFalse((self.root / "state").exists())
+
+    def test_enrolled_yahoo_invalid_preserves_truth_and_records_evidence_only(self) -> None:
+        self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
+        truth = self.fetcher.OUT_DIR / "AAPL.json"
+        truth.parent.mkdir(parents=True)
+        sentinel = b'{"sentinel":true}'
+        truth.write_bytes(sentinel)
+        payload = {
+            "schema_version": "yf-finance/v2", "ticker": "AAPL",
+            "fetched_at": "2026-07-10T10:00:00Z", "profile": "full",
+            "data": {"info": {"symbol": "AAPL", "quoteType": "ETF", "currentPrice": 10, "previousClose": 9}, "history_1y": [{"date": "2026-07-10", "Close": 10}]},
+        }
+        with self.assertRaises(ValueError):
+            self.fetcher.write_finance_payload("AAPL", payload)
+        observation = json.loads(next((self.root / "state" / "history" / "observations").glob("*.jsonl")).read_text())
+        self.assertEqual(truth.read_bytes(), sentinel)
+        self.assertEqual(observation["validation_status"], "invalid")
+        self.assertFalse((self.root / "state" / "providers").exists())
+
+    def test_enrolled_merge_preserves_heavy_fields_but_never_fills_quote_from_old_payload(self) -> None:
+        existing = {
+            "data": {
+                "info": {"symbol": "AAPL", "quoteType": "EQUITY", "currentPrice": 10, "previousClose": 9, "marketCap": 100},
+                "income_statement": {"2025": {"Revenue": 50}},
+            }
+        }
+        fresh = {"info": {"symbol": "AAPL", "quoteType": "EQUITY", "currentPrice": 11}}
+        merged = self.fetcher.merge_existing_payload_data(existing, fresh)
+        bound = self.fetcher.bind_enrolled_quote_group_to_fresh_fetch(merged, fresh)
+        self.assertEqual(bound["info"]["marketCap"], 100)
+        self.assertEqual(bound["income_statement"], {"2025": {"Revenue": 50}})
+        self.assertEqual(bound["info"]["currentPrice"], 11)
+        self.assertNotIn("previousClose", bound["info"])
+
+    def test_validation_failure_isolated_to_ticker_and_batch_summary_continues(self) -> None:
+        self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
+        truth = self.fetcher.OUT_DIR / "AAPL.json"
+        truth.parent.mkdir(parents=True)
+        sentinel = b'{"sentinel":true}'
+        truth.write_bytes(sentinel)
+
+        def fake_fetch(ticker, **_kwargs):
+            if ticker == "AAPL":
+                return {
+                    "info": {"symbol": ticker, "quoteType": "ETF", "currentPrice": 10, "previousClose": 9},
+                    "history_1y": [{"date": "2026-07-10", "Close": 10}],
+                }, 1, None
+            return {
+                "info": {"symbol": ticker, "quoteType": "EQUITY", "currentPrice": 20, "previousClose": 19},
+                "history_1y": [{"date": "2026-07-10", "Close": 20}],
+            }, 1, None
+
+        self.fetcher.fetch_with_retry = fake_fetch
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", "AAPL,MSFT", "--sleep", "0", "--retries", "0"]
+            sys.stdout = io.StringIO()
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(truth.read_bytes(), sentinel)
+        self.assertTrue((self.fetcher.OUT_DIR / "MSFT.json").exists())
+        self.assertTrue((self.fetcher.OUT_DIR / "_summary.json").exists())
+
+    def test_fresh_enrolled_cache_skip_emits_no_observation(self) -> None:
+        self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
+        write_json(
+            self.fetcher.OUT_DIR / "AAPL.json",
+            {
+                "schema_version": "yf-finance/v2",
+                "ticker": "AAPL",
+                "fetched_at": self.fetcher._observed_now(),
+                "profile": "full",
+                "data": {
+                    "info": {"symbol": "AAPL", "quoteType": "EQUITY", "currentPrice": 10, "previousClose": 9},
+                    "history_1y": [{"date": "2026-07-10", "Close": 10}],
+                },
+            },
+        )
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: self.fail("fresh cache should skip fetch")
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", "AAPL", "--max-age-hours", "24", "--sleep", "0"]
+            sys.stdout = io.StringIO()
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertFalse((self.root / "state").exists())
 
 
 if __name__ == "__main__":

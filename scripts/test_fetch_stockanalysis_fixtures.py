@@ -2074,6 +2074,116 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertFalse(short_vix["is_leveraged"])
         self.assertTrue(short_vix["is_inverse"])
 
+    def test_enrolled_stock_success_records_exact_manual_object(self) -> None:
+        original = (
+            self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR,
+            self.fetcher.DATA_SUPPLY_STATE_ROOT, self.fetcher.fetch_stock,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "state"
+            self.fetcher.fetch_stock = lambda ticker, _timeout, _financials: {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "stock", "ticker": ticker, "fetched_at": "2026-07-10T10:00:00Z",
+                "normalized": {
+                    "overview": {"marketCap": "1T"},
+                    "quote": {"p": 500.0, "cl": 495.0, "symbol": ticker, "uid": ticker},
+                    "history": [{"t": "2026-07-10", "c": 500.0}],
+                },
+            }
+            try:
+                result = self.fetcher.run_one("stock", "AAPL", 1, False)
+            finally:
+                (
+                    self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR,
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT, self.fetcher.fetch_stock,
+                ) = original
+            truth = root / "data" / "stockanalysis" / "stocks" / "AAPL.json"
+            pending = root / "state" / "providers" / "stockanalysis" / "stock_detail" / "pending" / "AAPL.json"
+            pointer = json.loads(pending.read_text())
+            object_path = root / "state" / pointer["path"]
+            observation = json.loads(next((root / "state" / "history" / "observations").glob("*.jsonl")).read_text())
+            self.assertIsNone(result["error"])
+            self.assertEqual(object_path.read_bytes(), truth.read_bytes())
+            self.assertEqual(observation["observation_origin"], "rebuild")
+            self.assertEqual(observation["collection_origin"], "manual")
+
+    def test_unenrolled_stock_success_writes_truth_without_state(self) -> None:
+        original = self.fetcher.fetch_stock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "state"
+            self.fetcher.fetch_stock = lambda ticker, _timeout, _financials: {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "stock", "ticker": ticker, "fetched_at": "2026-07-10T10:00:00Z",
+                "normalized": {"overview": {}, "quote": {}, "history": []},
+            }
+            try:
+                result = self.fetcher.run_one("stock", "SPY", 1, False)
+            finally:
+                self.fetcher.fetch_stock = original
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT = original_dirs
+            self.assertIsNone(result["error"])
+            self.assertTrue((root / "data" / "stockanalysis" / "stocks" / "SPY.json").exists())
+            self.assertFalse((root / "state").exists())
+
+    def test_enrolled_stock_schema_failure_preserves_truth_and_records_invalid(self) -> None:
+        original = self.fetcher.fetch_stock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "state"
+            truth = self.fetcher.OUT_DIR / "stocks" / "AAPL.json"
+            truth.parent.mkdir(parents=True)
+            sentinel = b'{"sentinel":true}\n'
+            truth.write_bytes(sentinel)
+            self.fetcher.fetch_stock = lambda ticker, _timeout, _financials: {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "stock", "ticker": ticker, "fetched_at": "2026-07-10T10:00:00Z",
+                "normalized": {"overview": {"ok": True}, "quote": {"p": 1, "symbol": ticker, "uid": ticker}, "history": [{}]},
+            }
+            try:
+                result = self.fetcher.run_one("stock", "AAPL", 1, False)
+            finally:
+                self.fetcher.fetch_stock = original
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT = original_dirs
+            observation = json.loads(next((root / "state" / "history" / "observations").glob("*.jsonl")).read_text())
+            self.assertIsNotNone(result["error"])
+            self.assertEqual(truth.read_bytes(), sentinel)
+            self.assertEqual(observation["validation_status"], "invalid")
+            self.assertFalse((root / "state" / "providers").exists())
+
+    def test_enrolled_stock_network_failure_records_invalid_without_truth_write(self) -> None:
+        original = self.fetcher.fetch_stock
+        for failure, expected_reason in (
+            (urllib.error.URLError("offline"), "fetch_failed"),
+            (RuntimeError("adapter failed"), "fetch_failed"),
+            (ValueError("decoded schema drift"), "schema_invalid"),
+        ):
+            with self.subTest(failure=type(failure).__name__), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT
+                self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+                self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "state"
+                self.fetcher.fetch_stock = lambda *_args, _failure=failure, **_kwargs: (_ for _ in ()).throw(_failure)
+                try:
+                    result = self.fetcher.run_one("stock", "AAPL", 1, False)
+                finally:
+                    self.fetcher.fetch_stock = original
+                    self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT = original_dirs
+                observation = json.loads(next((root / "state" / "history" / "observations").glob("*.jsonl")).read_text())
+                self.assertIsNotNone(result["error"])
+                self.assertEqual(observation["reason_code"], expected_reason)
+                self.assertFalse((root / "data" / "stockanalysis" / "stocks" / "AAPL.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
