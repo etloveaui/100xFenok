@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 const ROOT = process.cwd();
 
@@ -8,6 +8,14 @@ const SOURCE_UNIVERSE_PATH = `${ROOT}/../data/stockanalysis/etf_universe.json`;
 const PUBLIC_UNIVERSE_PATH = `${ROOT}/public/data/stockanalysis/etf_universe.json`;
 const SOURCE_SCREENER_PATH = `${ROOT}/../data/stockanalysis/surfaces/etf_screener.json`;
 const PUBLIC_SCREENER_PATH = `${ROOT}/public/data/stockanalysis/surfaces/etf_screener.json`;
+const SOURCE_ETF_DETAIL_ROOT = `${ROOT}/../data/stockanalysis/etfs`;
+
+// R2.4 removed 718 Yahoo fallback payloads from the legacy ETF-detail root,
+// leaving 4,731 true-primary files. Keep that cutover population fail-closed,
+// then require 99% catalog participation and expense-ratio coverage within the
+// participating true-primary set; unrelated catalog rows cannot prop it up.
+const R2_4_TRUE_PRIMARY_DETAIL_BASELINE = 4731;
+const MIN_TRUE_PRIMARY_COVERAGE_RATE = 0.99;
 
 const REQUIRED_DETAIL_FILES = ["IEFA", "SQQQ", "TQQQ", "TSLL"];
 const ETF_DETAIL_FIELDS = [
@@ -29,6 +37,12 @@ function readText(path) {
 
 function readJson(path) {
   return JSON.parse(readText(path));
+}
+
+function jsonFileTickerSet(path) {
+  return new Set(readdirSync(path, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => cleanTicker(entry.name.slice(0, -".json".length))));
 }
 
 function assert(condition, message, errors) {
@@ -235,6 +249,21 @@ const universe = readJson(PUBLIC_UNIVERSE_PATH);
 const screener = readJson(PUBLIC_SCREENER_PATH);
 const merged = buildMergedUniverse(universe, screener);
 const counts = merged.counts;
+const truePrimaryDetailTickers = jsonFileTickerSet(SOURCE_ETF_DETAIL_ROOT);
+const truePrimaryDetailCount = truePrimaryDetailTickers.size;
+const truePrimaryMergedRecords = merged.records.filter((row) => (
+  truePrimaryDetailTickers.has(cleanTicker(row.ticker))
+));
+const truePrimaryMergedCount = truePrimaryMergedRecords.length;
+const truePrimaryCatalogFloor = Math.ceil(
+  truePrimaryDetailCount * MIN_TRUE_PRIMARY_COVERAGE_RATE,
+);
+const truePrimaryExpenseRatioCount = truePrimaryMergedRecords.filter((row) => (
+  numericValue(row.expense_ratio ?? row.expenseRatio) !== null
+)).length;
+const expenseRatioCoverageFloor = Math.ceil(
+  truePrimaryMergedCount * MIN_TRUE_PRIMARY_COVERAGE_RATE,
+);
 
 assert(counts.etf_universe >= 5200, `ETF universe source expected >= 5200 rows, got ${counts.etf_universe}`, errors);
 assert(counts.etf_screener >= 5250, `ETF screener source expected >= 5250 rows, got ${counts.etf_screener}`, errors);
@@ -244,7 +273,23 @@ assert(counts.records >= counts.etf_screener, "Merged ETF universe must cover th
 assert(counts.with_price >= 5000, `Merged ETF universe expected price coverage >= 5000, got ${counts.with_price}`, errors);
 assert(counts.with_volume >= 4500, `Merged ETF universe expected volume coverage >= 4500, got ${counts.with_volume}`, errors);
 assert(counts.with_holdings >= 4900, `Merged ETF universe expected holdings coverage >= 4900, got ${counts.with_holdings}`, errors);
-assert(counts.with_expense_ratio >= 5000, `Merged ETF universe expected expense-ratio coverage >= 5000, got ${counts.with_expense_ratio}`, errors);
+assert(
+  truePrimaryDetailCount >= R2_4_TRUE_PRIMARY_DETAIL_BASELINE,
+  `R2.4 true-primary ETF detail root expected >= ${R2_4_TRUE_PRIMARY_DETAIL_BASELINE} JSON files, got ${truePrimaryDetailCount}`,
+  errors,
+);
+assert(
+  truePrimaryMergedCount >= truePrimaryCatalogFloor,
+  `Merged ETF universe expected >= ${truePrimaryCatalogFloor} R2.4 true-primary rows ` +
+    `(${Math.round(MIN_TRUE_PRIMARY_COVERAGE_RATE * 100)}% of ${truePrimaryDetailCount}), got ${truePrimaryMergedCount}`,
+  errors,
+);
+assert(
+  truePrimaryExpenseRatioCount >= expenseRatioCoverageFloor,
+  `Merged ETF universe expected true-primary expense-ratio coverage >= ${expenseRatioCoverageFloor} ` +
+    `(${Math.round(MIN_TRUE_PRIMARY_COVERAGE_RATE * 100)}% of ${truePrimaryMergedCount}), got ${truePrimaryExpenseRatioCount}`,
+  errors,
+);
 assert(counts.with_performance >= 4400, `Merged ETF universe expected performance coverage >= 4400, got ${counts.with_performance}`, errors);
 assert(counts.classification?.classified === counts.records, `Merged ETF universe classification coverage expected ${counts.records}, got ${counts.classification?.classified}`, errors);
 assert(counts.classification?.coverage_pct === 100, `Merged ETF universe classification coverage expected 100%, got ${counts.classification?.coverage_pct}`, errors);
@@ -306,6 +351,8 @@ if (errors.length > 0) {
 console.log(
   `stockanalysis ETF universe check passed ` +
     `(${counts.records} records, ${counts.with_price} prices, ${counts.with_volume} volumes, ` +
-    `${counts.with_holdings} holdings, ${counts.with_expense_ratio} expense ratios, ${counts.with_performance} performance rows, ` +
+    `${counts.with_holdings} holdings, ${counts.with_expense_ratio} expense ratios ` +
+    `(${truePrimaryExpenseRatioCount}/${truePrimaryMergedCount} true-primary, floor ${expenseRatioCoverageFloor}), ` +
+    `${counts.with_performance} performance rows, ` +
     `${counts.classification.leveraged}/${counts.classification.single_stock}/${counts.classification.inverse} classification flags)`,
 );
