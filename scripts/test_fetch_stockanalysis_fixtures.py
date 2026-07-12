@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import subprocess
 import tempfile
@@ -16,6 +16,31 @@ import urllib.error
 ROOT = Path(__file__).resolve().parents[1]
 FETCHER_PATH = ROOT / "scripts" / "fetch-stockanalysis.py"
 FIXTURE_DIR = ROOT / "scripts" / "fixtures" / "stockanalysis"
+
+
+def weekday_rows(start: str, count: int) -> list[dict]:
+    cursor = datetime.fromisoformat(f"{start}T00:00:00+00:00")
+    rows = []
+    while len(rows) < count:
+        if cursor.weekday() < 5:
+            rows.append({"t": cursor.date().isoformat(), "c": 100 + len(rows)})
+        cursor += timedelta(days=1)
+    return rows
+
+
+def sampled_weekday_rows(start: str, end: str, count: int) -> list[dict]:
+    cursor = datetime.fromisoformat(f"{start}T00:00:00+00:00")
+    end_dt = datetime.fromisoformat(f"{end}T00:00:00+00:00")
+    dates = []
+    while cursor <= end_dt:
+        if cursor.weekday() < 5:
+            dates.append(cursor.date().isoformat())
+        cursor += timedelta(days=1)
+    if count >= len(dates):
+        selected = dates
+    else:
+        selected = [dates[round(index * (len(dates) - 1) / (count - 1))] for index in range(count)]
+    return [{"t": value, "c": 100 + index} for index, value in enumerate(selected)]
 
 
 def load_fetcher_module():
@@ -993,6 +1018,207 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["counts"]["missing"], 0)
         self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
+    def test_daily_1y_series_evidence_boundaries(self) -> None:
+        rows_20 = weekday_rows("2026-06-22", 20)
+        at_age_10 = datetime(2026, 7, 31, tzinfo=timezone.utc)
+        at_age_11 = datetime(2026, 8, 3, tzinfo=timezone.utc)
+        evidence = self.fetcher.daily_1y_series_evidence(rows_20, at_age_10)
+        self.assertEqual(evidence["valid_unique_date_count"], 20)
+        self.assertEqual(evidence["density"], 1.0)
+        self.assertEqual(evidence["latest_business_day_age"], 10)
+        self.assertTrue(evidence["eligible"])
+        self.assertFalse(self.fetcher.daily_1y_series_evidence(rows_20, at_age_11)["gates"]["latest_business_day_age"])
+        self.assertFalse(
+            self.fetcher.daily_1y_series_evidence(rows_20[:19], at_age_10)["gates"]["min_rows"]
+        )
+
+        weekdays_25 = weekday_rows("2026-06-01", 25)
+        exact_density = weekdays_25[:10] + weekdays_25[15:]
+        below_density = exact_density[:-1]
+        exact = self.fetcher.daily_1y_series_evidence(exact_density, datetime(2026, 7, 6, tzinfo=timezone.utc))
+        below = self.fetcher.daily_1y_series_evidence(below_density, datetime(2026, 7, 6, tzinfo=timezone.utc))
+        self.assertEqual(exact["density"], 0.8)
+        self.assertTrue(exact["gates"]["density"])
+        self.assertFalse(below["gates"]["density"])
+
+        gap_15 = [{"t": "2026-06-01"}, {"t": "2026-06-16"}]
+        gap_16 = [{"t": "2026-06-01"}, {"t": "2026-06-17"}]
+        self.assertTrue(
+            self.fetcher.daily_1y_series_evidence(gap_15, datetime(2026, 6, 17, tzinfo=timezone.utc))["gates"]["max_internal_gap"]
+        )
+        self.assertFalse(
+            self.fetcher.daily_1y_series_evidence(gap_16, datetime(2026, 6, 17, tzinfo=timezone.utc))["gates"]["max_internal_gap"]
+        )
+
+    def test_daily_1y_history_classification_is_fail_closed_and_provenanced(self) -> None:
+        now_dt = datetime(2026, 7, 12, tzinfo=timezone.utc)
+        recent_rows = weekday_rows("2026-05-04", 45)
+
+        def payload(rows: list[dict], inception: str | None = None) -> dict:
+            overview = {"inception": inception} if inception else {}
+            return {
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "normalized": {
+                    "overview": overview,
+                    "history_periods": {"daily_1y": rows},
+                },
+            }
+
+        unconfirmed = self.fetcher.history_gap_classification(
+            payload(recent_rows),
+            ("daily_1y",),
+            now_dt,
+        )
+        self.assertEqual(unconfirmed["fetchable_missing_history_periods"], ["daily_1y"])
+        self.assertEqual(unconfirmed["daily_1y_classification_reason"], "unconfirmed_short_history")
+        self.assertIsNone(unconfirmed["effective_history_start_date"])
+        pending_once = self.fetcher.history_gap_classification(
+            payload(recent_rows),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 1,
+                "short_history_evidence": {"earliest_date": "2026-05-04"},
+            },
+        )
+        self.assertEqual(pending_once["fetchable_missing_history_periods"], ["daily_1y"])
+
+        stable = self.fetcher.history_gap_classification(
+            payload(recent_rows),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 2,
+                "short_history_evidence": {"earliest_date": "2026-05-04"},
+            },
+        )
+        self.assertEqual(stable["inception_limited_history_periods"], ["daily_1y"])
+        self.assertEqual(stable["daily_1y_classification_reason"], "inception_limited_observation_derived")
+        self.assertEqual(stable["effective_history_start_date"], "2026-05-04")
+        self.assertEqual(stable["effective_history_start_source"], "daily_1y_stable_observation_start")
+        self.assertIsNone(stable["declared_inception_date"])
+
+        yf_confirmed = self.fetcher.history_gap_classification(
+            payload(recent_rows),
+            ("daily_1y",),
+            now_dt,
+            yf_rows=weekday_rows("2026-05-01", 41),
+        )
+        self.assertEqual(yf_confirmed["inception_limited_history_periods"], ["daily_1y"])
+        self.assertEqual(yf_confirmed["effective_history_start_source"], "daily_1y_cross_provider_start")
+
+        declared = self.fetcher.history_gap_classification(
+            payload(recent_rows, "May 1, 2026"),
+            ("daily_1y",),
+            now_dt,
+        )
+        self.assertEqual(declared["inception_limited_history_periods"], ["daily_1y"])
+        self.assertEqual(declared["daily_1y_classification_reason"], "inception_limited_declared")
+        self.assertEqual(declared["declared_inception_date"], "2026-05-01")
+
+        provider_limited = self.fetcher.history_gap_classification(
+            payload(recent_rows, "Jan 1, 2020"),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 2,
+                "short_history_evidence": {"earliest_date": "2026-05-04"},
+            },
+        )
+        self.assertEqual(provider_limited["terminal_limited_history_periods"], ["daily_1y"])
+        self.assertEqual(provider_limited["daily_1y_classification_reason"], "provider_history_start_limited")
+        self.assertEqual(provider_limited["declared_inception_date"], "2020-01-01")
+        self.assertEqual(provider_limited["effective_history_start_date"], "2026-05-04")
+
+        yf_full = weekday_rows("2025-08-01", 200)
+        truncated = self.fetcher.history_gap_classification(
+            payload(recent_rows),
+            ("daily_1y",),
+            now_dt,
+            yf_rows=yf_full,
+            pending_entry={"stable_observation_count": 3},
+        )
+        self.assertTrue(truncated["provider_truncated_suspected"])
+        self.assertEqual(truncated["fetchable_missing_history_periods"], ["daily_1y"])
+        self.assertEqual(truncated["daily_1y_classification_reason"], "provider_truncated_suspected")
+
+        sparse_rows = sampled_weekday_rows("2025-07-08", "2026-07-08", 190)
+        sparse = self.fetcher.history_gap_classification(
+            payload(sparse_rows, "May 19, 2023"),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={"stable_observation_count": 3},
+        )
+        self.assertEqual(sparse["fetchable_missing_history_periods"], ["daily_1y"])
+        self.assertEqual(sparse["daily_1y_classification_reason"], "full_span_sparse_history")
+
+        duplicate_200 = self.fetcher.history_gap_classification(
+            payload([{"t": "2026-06-01"}] * 200),
+            ("daily_1y",),
+            now_dt,
+        )
+        self.assertEqual(duplicate_200["fetchable_missing_history_periods"], ["daily_1y"])
+        self.assertEqual(duplicate_200["history_period_row_counts"]["daily_1y"], 1)
+
+        mismatched_pending = self.fetcher.history_gap_classification(
+            payload(recent_rows),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 2,
+                "short_history_evidence": {"earliest_date": "2026-06-01"},
+            },
+        )
+        self.assertEqual(mismatched_pending["fetchable_missing_history_periods"], ["daily_1y"])
+        self.assertFalse(mismatched_pending["stable_observation_confirmed"])
+
+        future_declared = self.fetcher.history_gap_classification(
+            payload(recent_rows, "Aug 1, 2026"),
+            ("daily_1y",),
+            now_dt,
+            yf_rows=weekday_rows("2026-05-01", 41),
+        )
+        self.assertEqual(future_declared["inception_limited_history_periods"], ["daily_1y"])
+        self.assertTrue(future_declared["declared_inception_invalid_future"])
+        self.assertFalse(future_declared["declared_inception_valid"])
+
+        rolling_rows = weekday_rows("2026-06-03", 25)
+        rolling = self.fetcher.history_gap_classification(
+            payload(rolling_rows),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 2,
+                "confirmed_history_start_date": "2026-05-04",
+                "short_history_evidence": {"earliest_date": "2026-06-03"},
+            },
+        )
+        self.assertEqual(rolling["inception_limited_history_periods"], ["daily_1y"])
+        self.assertEqual(rolling["effective_history_start_date"], "2026-05-04")
+
+        boundary_rows = weekday_rows("2026-06-01", 25)
+        boundary_364 = self.fetcher.history_gap_classification(
+            payload(boundary_rows),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 2,
+                "confirmed_history_start_date": "2025-07-13",
+            },
+        )
+        boundary_365 = self.fetcher.history_gap_classification(
+            payload(boundary_rows),
+            ("daily_1y",),
+            now_dt,
+            pending_entry={
+                "stable_observation_count": 2,
+                "confirmed_history_start_date": "2025-07-12",
+            },
+        )
+        self.assertEqual(boundary_364["inception_limited_history_periods"], ["daily_1y"])
+        self.assertEqual(boundary_365["fetchable_missing_history_periods"], ["daily_1y"])
+
     def test_incremental_etf_backfill_daily1y_uses_exact_fetchable_plan(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
@@ -1057,23 +1283,6 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     ),
                     encoding="utf-8",
                 )
-                (out_dir / "backfill").mkdir(parents=True)
-                (out_dir / "backfill" / "pending_ledger.json").write_text(
-                    json.dumps(
-                        {
-                            "entries": {
-                                "PLAN001": {
-                                    "ticker": "PLAN001",
-                                    "consecutive_failures": 3,
-                                    "next_attempt_after_utc": "2026-07-20T00:00:00Z",
-                                    "failure_reason": "HTTP Error 404: Not Found",
-                                }
-                            }
-                        }
-                    ),
-                    encoding="utf-8",
-                )
-
                 summary = self.fetcher.incremental_etf_backfill_candidates(
                     universe_payload={
                         "records": [
@@ -1103,7 +1312,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["counts"]["missing"], 0)
         self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
-    def test_incremental_etf_backfill_daily1y_honors_offset(self) -> None:
+    def test_incremental_etf_backfill_daily1y_applies_offset_before_cooldown(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
             with tempfile.TemporaryDirectory() as tmp:
@@ -1122,6 +1331,22 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                             "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
                             "tickers": [row["ticker"] for row in plan_rows],
                             "rows": plan_rows,
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "backfill" / "pending_ledger.json").write_text(
+                    json.dumps(
+                        {
+                            "entries": {
+                                "PLAN001": {
+                                    "ticker": "PLAN001",
+                                    "consecutive_failures": 3,
+                                    "next_attempt_after_utc": "2026-07-20T00:00:00Z",
+                                    "failure_reason": "HTTP Error 404: Not Found",
+                                }
+                            }
                         }
                     ),
                     encoding="utf-8",
@@ -1445,6 +1670,180 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         self.assertEqual(second["counts"]["tracked"], 0)
         self.assertEqual(second["cleared"], ["BETA"])
+
+    def test_successful_short_primary_cools_stably_then_complete_success_clears(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.PUBLIC_DIR = Path(tmp) / "public" / "stockanalysis"
+                (out_dir / "etfs").mkdir(parents=True)
+                pre_rows = weekday_rows("2026-05-29", 30)
+                post_rows = weekday_rows("2026-05-29", 31)
+                first_now = self.fetcher.parse_iso_timestamp("2026-07-11T02:00:00Z")
+                selected = [{
+                    "ticker": "SHORT",
+                    "missing_history_periods": ["daily_1y"],
+                    "fetchable_missing_history_periods": ["daily_1y"],
+                    "daily_1y_min_rows": 200,
+                    "pre_fetch_daily_1y_evidence": self.fetcher.daily_1y_series_evidence(pre_rows, first_now),
+                    "pre_fetch_payload_fetched_at": "2026-07-10T00:00:00Z",
+                }]
+                (out_dir / "etfs" / "SHORT.json").write_text(
+                    json.dumps({
+                        "source": "stockanalysis",
+                        "asset_type": "etf",
+                        "fetched_at": "2026-07-11T01:00:00Z",
+                        "normalized": {"history_periods": {"daily_1y": post_rows}},
+                    }),
+                    encoding="utf-8",
+                )
+                first = self.fetcher.update_pending_ledger(
+                    results=[{
+                        "ticker": "SHORT",
+                        "asset_type": "etf",
+                        "status": "ok",
+                        "provider": "stockanalysis",
+                        "error": None,
+                    }],
+                    selected_rows=selected,
+                    cooldown_days=7,
+                    failure_threshold=99,
+                    mirror_public=False,
+                    now_dt=first_now,
+                )
+                first_entry = first["entries"]["SHORT"]
+                self.assertEqual(first_entry["failure_class"], "successful_short_history")
+                self.assertEqual(first_entry["consecutive_failures"], 0)
+                self.assertEqual(first_entry["stable_observation_count"], 2)
+                self.assertTrue(
+                    self.fetcher.pending_entry_in_cooldown(
+                        first_entry,
+                        first_now + timedelta(days=1),
+                        cooldown_days=7,
+                        failure_threshold=0,
+                    )
+                )
+
+                within_24h_rows = post_rows
+                within_24h_now = self.fetcher.parse_iso_timestamp("2026-07-11T13:00:00Z")
+                (out_dir / "etfs" / "SHORT.json").write_text(
+                    json.dumps({
+                        "source": "stockanalysis",
+                        "asset_type": "etf",
+                        "fetched_at": "2026-07-11T12:00:00Z",
+                        "normalized": {"history_periods": {"daily_1y": within_24h_rows}},
+                    }),
+                    encoding="utf-8",
+                )
+                second = self.fetcher.update_pending_ledger(
+                    results=[{
+                        "ticker": "SHORT",
+                        "asset_type": "etf",
+                        "status": "ok",
+                        "provider": "stockanalysis",
+                        "error": None,
+                    }],
+                    selected_rows=[{
+                        "ticker": "SHORT",
+                        "missing_history_periods": ["daily_1y"],
+                        "pre_fetch_daily_1y_evidence": first_entry["short_history_evidence"],
+                        "pre_fetch_payload_fetched_at": "2026-07-11T01:00:00Z",
+                    }],
+                    cooldown_days=7,
+                    failure_threshold=99,
+                    mirror_public=False,
+                    now_dt=within_24h_now,
+                )
+                self.assertEqual(second["entries"]["SHORT"]["stable_observation_count"], 2)
+
+                complete_rows = weekday_rows("2025-09-01", 200)
+                (out_dir / "etfs" / "SHORT.json").write_text(
+                    json.dumps({
+                        "source": "stockanalysis",
+                        "asset_type": "etf",
+                        "fetched_at": "2026-07-12T14:00:00Z",
+                        "normalized": {"history_periods": {"daily_1y": complete_rows}},
+                    }),
+                    encoding="utf-8",
+                )
+                third = self.fetcher.update_pending_ledger(
+                    results=[{
+                        "ticker": "SHORT",
+                        "asset_type": "etf",
+                        "status": "ok",
+                        "provider": "stockanalysis",
+                        "error": None,
+                    }],
+                    selected_rows=[{
+                        "ticker": "SHORT",
+                        "missing_history_periods": ["daily_1y"],
+                    }],
+                    cooldown_days=7,
+                    failure_threshold=99,
+                    mirror_public=False,
+                    now_dt=self.fetcher.parse_iso_timestamp("2026-07-12T15:00:00Z"),
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
+        self.assertEqual(third["counts"]["tracked"], 0)
+        self.assertEqual(third["cleared"], ["SHORT"])
+
+    def test_ineligible_successful_short_series_keep_48h_retry_path(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        now_dt = self.fetcher.parse_iso_timestamp("2026-07-12T00:00:00Z")
+        cases = {
+            "TINY": weekday_rows("2026-06-29", 10),
+            "STALE": weekday_rows("2026-04-01", 25),
+            "SPARSE": sampled_weekday_rows("2025-07-08", "2026-07-08", 190),
+        }
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.PUBLIC_DIR = Path(tmp) / "public" / "stockanalysis"
+                (out_dir / "etfs").mkdir(parents=True)
+                for ticker, rows in cases.items():
+                    evidence = self.fetcher.daily_1y_series_evidence(rows, now_dt)
+                    self.assertFalse(evidence["eligible"])
+                    (out_dir / "etfs" / f"{ticker}.json").write_text(
+                        json.dumps({
+                            "source": "stockanalysis",
+                            "asset_type": "etf",
+                            "fetched_at": "2026-07-11T23:00:00Z",
+                            "normalized": {"history_periods": {"daily_1y": rows}},
+                        }),
+                        encoding="utf-8",
+                    )
+                ledger = self.fetcher.update_pending_ledger(
+                    results=[{
+                        "ticker": ticker,
+                        "asset_type": "etf",
+                        "status": "ok",
+                        "provider": "stockanalysis",
+                        "error": None,
+                    } for ticker in cases],
+                    selected_rows=[{
+                        "ticker": ticker,
+                        "missing_history_periods": ["daily_1y"],
+                        "daily_1y_min_rows": 200,
+                    } for ticker in cases],
+                    cooldown_days=7,
+                    failure_threshold=99,
+                    mirror_public=False,
+                    now_dt=now_dt,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
+        self.assertEqual(ledger["entries"], {})
+        self.assertEqual(ledger["counts"]["cooldown"], 0)
 
     def test_hard_failures_rotate_all_missing_candidates_without_starvation(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

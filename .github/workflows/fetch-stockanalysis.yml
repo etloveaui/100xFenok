@@ -397,6 +397,7 @@ jobs:
           node scripts/test-build-fenok-etf-core-daily-basket.mjs
           ALT_TMPDIR="$RUNNER_TEMP/stockanalysis-contract-alt-tmp"
           mkdir -p "$ALT_TMPDIR"
+          TMPDIR="$ALT_TMPDIR" python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
           TMPDIR="$ALT_TMPDIR" node scripts/test-write-fenok-etf-daily1y-readiness.mjs
           TMPDIR="$ALT_TMPDIR" node scripts/test-build-fenok-etf-core-daily-basket.mjs
 

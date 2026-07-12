@@ -64,6 +64,16 @@ ENDPOINT_CANARY_TICKERS = ("VYMI", "SPY", "GOLI")
 FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH = "admin/fenok-edge-etf-daily1y-fetchable-plan.json"
 FENOK_ETF_CORE_DAILY_BASKET_REL_PATH = "admin/fenok-etf-core-daily-basket.json"
 DAILY_1Y_MIN_ROWS = 200
+DAILY_1Y_HISTORY_EVIDENCE_POLICY = {
+    "min_rows": 20,
+    "min_density": 0.80,
+    "max_internal_gap_days": 15,
+    "max_latest_age_business_days": 10,
+    "cross_provider_start_tolerance_days": 7,
+    "declared_start_tolerance_days": 30,
+    "provider_truncation_days": 30,
+    "required_age_days": 365,
+}
 NON_DIRECTIONAL_SHORT_RE = re.compile(
     r"\b(?:"
     r"short[-\s]?(?:term|duration|maturity|intermediate)"
@@ -2079,7 +2089,12 @@ def missing_history_periods(payload: dict | None, required_periods: tuple[str, .
     for period_key in required_periods:
         rows = history_period_rows(payload, period_key)
         min_rows = history_period_min_rows(period_key)
-        if not rows or (min_rows is not None and len(rows) < min_rows):
+        row_count = (
+            valid_unique_history_date_count(rows)
+            if period_key == "daily_1y"
+            else len(rows or [])
+        )
+        if not rows or (min_rows is not None and row_count < min_rows):
             missing.append(period_key)
     return missing
 
@@ -2088,6 +2103,324 @@ def history_period_min_rows(period_key: str) -> int | None:
     if period_key == "daily_1y":
         return DAILY_1Y_MIN_ROWS
     return None
+
+
+def history_row_utc_date(row: object) -> datetime | None:
+    if not isinstance(row, dict):
+        return None
+    for key in ("date", "t", "time"):
+        value = row.get(key)
+        if isinstance(value, str):
+            parsed = parse_iso_timestamp(value)
+            if parsed is not None:
+                return parsed
+        elif isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+            seconds = value / 1000 if value > 10_000_000_000 else value
+            try:
+                return datetime.fromtimestamp(seconds, tz=timezone.utc)
+            except (OSError, OverflowError, ValueError):
+                continue
+    return None
+
+
+def valid_unique_history_date_count(rows: object) -> int:
+    return len(
+        {
+            parsed.astimezone(timezone.utc).date()
+            for row in (rows if isinstance(rows, list) else [])
+            if (parsed := history_row_utc_date(row)) is not None
+        }
+    )
+
+
+def utc_weekdays_inclusive(start_dt: datetime, end_dt: datetime) -> int:
+    start_date = start_dt.astimezone(timezone.utc).date()
+    end_date = end_dt.astimezone(timezone.utc).date()
+    if end_date < start_date:
+        return 0
+    total = 0
+    cursor = start_date
+    while cursor <= end_date:
+        if cursor.weekday() < 5:
+            total += 1
+        cursor += timedelta(days=1)
+    return total
+
+
+def business_day_age(latest_dt: datetime | None, now_dt: datetime) -> int | None:
+    if latest_dt is None:
+        return None
+    latest_date = latest_dt.astimezone(timezone.utc).date()
+    now_date = now_dt.astimezone(timezone.utc).date()
+    if latest_date > now_date:
+        return None
+    if latest_date == now_date:
+        return 0
+    age = 0
+    cursor = latest_date + timedelta(days=1)
+    while cursor <= now_date:
+        if cursor.weekday() < 5:
+            age += 1
+        cursor += timedelta(days=1)
+    return age
+
+
+def daily_1y_series_evidence(rows: object, now_dt: datetime) -> dict:
+    raw_rows = rows if isinstance(rows, list) else []
+    unique_dates = sorted(
+        {
+            parsed.astimezone(timezone.utc).date()
+            for row in raw_rows
+            if (parsed := history_row_utc_date(row)) is not None
+        }
+    )
+    earliest = (
+        datetime.combine(unique_dates[0], datetime.min.time(), tzinfo=timezone.utc)
+        if unique_dates
+        else None
+    )
+    latest = (
+        datetime.combine(unique_dates[-1], datetime.min.time(), tzinfo=timezone.utc)
+        if unique_dates
+        else None
+    )
+    expected_weekdays = utc_weekdays_inclusive(earliest, latest) if earliest and latest else 0
+    observed_weekdays = sum(1 for value in unique_dates if value.weekday() < 5)
+    density = min(1.0, observed_weekdays / expected_weekdays) if expected_weekdays > 0 else 0.0
+    max_internal_gap = max(
+        ((right - left).days for left, right in zip(unique_dates, unique_dates[1:])),
+        default=0,
+    )
+    latest_age = business_day_age(latest, now_dt)
+    latest_age_days = (
+        (now_dt.astimezone(timezone.utc).date() - latest.date()).days
+        if latest is not None and latest.date() <= now_dt.astimezone(timezone.utc).date()
+        else None
+    )
+    policy = DAILY_1Y_HISTORY_EVIDENCE_POLICY
+    gates = {
+        "min_rows": len(unique_dates) >= policy["min_rows"],
+        "density": density >= policy["min_density"],
+        "max_internal_gap": max_internal_gap <= policy["max_internal_gap_days"],
+        "latest_business_day_age": (
+            latest_age is not None
+            and latest_age <= policy["max_latest_age_business_days"]
+        ),
+    }
+    return {
+        "row_count": len(raw_rows),
+        "raw_row_count": len(raw_rows),
+        "valid_unique_date_count": len(unique_dates),
+        "invalid_or_duplicate_date_count": len(raw_rows) - len(unique_dates),
+        "earliest_observation": earliest.date().isoformat() if earliest else None,
+        "earliest_date": earliest.date().isoformat() if earliest else None,
+        "latest_observation": latest.date().isoformat() if latest else None,
+        "latest_date": latest.date().isoformat() if latest else None,
+        "span_days": (latest.date() - earliest.date()).days if earliest and latest else None,
+        "expected_trading_days": expected_weekdays,
+        "expected_utc_weekdays_inclusive": expected_weekdays,
+        "observed_trading_days": observed_weekdays,
+        "density": round(density, 6),
+        "max_internal_gap_days": max_internal_gap,
+        "max_internal_calendar_gap_days": max_internal_gap,
+        "latest_observation_age_days": latest_age_days,
+        "latest_observation_age_business_days": latest_age,
+        "latest_business_day_age": latest_age,
+        "latest_not_future": latest_age_days is not None,
+        "gates": gates,
+        "evidence_pass": all(gates.values()),
+        "eligible": all(gates.values()),
+    }
+
+
+def evidence_date(evidence: dict | None, key: str) -> datetime | None:
+    if not isinstance(evidence, dict):
+        return None
+    return parse_iso_timestamp(evidence.get(key))
+
+
+def load_yf_daily_1y_rows(ticker: str) -> list:
+    payload = read_json(YF_OUT_DIR / f"{ticker}.json")
+    data = payload.get("data") if isinstance(payload, dict) and isinstance(payload.get("data"), dict) else {}
+    rows = data.get("history_1y")
+    return rows if isinstance(rows, list) else []
+
+
+def pending_stable_observation(pending_entry: dict | None, current_start: datetime | None) -> dict:
+    if not isinstance(pending_entry, dict) or current_start is None:
+        return {"confirmed": False, "pinned_start": None}
+    short_evidence = (
+        pending_entry.get("short_history_evidence")
+        if isinstance(pending_entry.get("short_history_evidence"), dict)
+        else {}
+    )
+    stored_start = parse_iso_timestamp(
+        pending_entry.get("confirmed_history_start_date")
+        or short_evidence.get("earliest_date")
+        or pending_entry.get("observed_history_start_date")
+    )
+    stable_count = parse_int(pending_entry.get("stable_observation_count")) or 0
+    confirmed = bool(
+        stable_count >= 2
+        and stored_start is not None
+        and current_start.date() >= stored_start.date()
+    )
+    return {
+        "confirmed": confirmed,
+        "pinned_start": stored_start if confirmed else None,
+    }
+
+
+def classify_daily_1y_history_gap(
+    payload: dict | None,
+    now_dt: datetime,
+    yf_rows: list | None = None,
+    pending_entry: dict | None = None,
+) -> dict:
+    rows = history_period_rows(payload, "daily_1y")
+    series = daily_1y_series_evidence(rows, now_dt)
+    yf_series = daily_1y_series_evidence(yf_rows, now_dt) if isinstance(yf_rows, list) else None
+    declared, declared_source = etf_declared_inception(payload)
+    series_start = evidence_date(series, "earliest_date")
+    series_latest = evidence_date(series, "latest_date")
+    yf_start = evidence_date(yf_series, "earliest_date")
+    stable_count = parse_int((pending_entry or {}).get("stable_observation_count")) or 0
+    start_delta_yf = (
+        abs((series_start.date() - yf_start.date()).days)
+        if series_start is not None and yf_start is not None
+        else None
+    )
+    yf_confirms_start = bool(
+        series.get("eligible")
+        and isinstance(yf_series, dict)
+        and yf_series.get("eligible")
+        and start_delta_yf is not None
+        and start_delta_yf <= DAILY_1Y_HISTORY_EVIDENCE_POLICY["cross_provider_start_tolerance_days"]
+    )
+    provider_truncated_suspected = bool(
+        series_start is not None
+        and yf_start is not None
+        and isinstance(yf_series, dict)
+        and (parse_int(yf_series.get("valid_unique_date_count")) or 0) >= DAILY_1Y_MIN_ROWS
+        and (series_start.date() - yf_start.date()).days
+        > DAILY_1Y_HISTORY_EVIDENCE_POLICY["provider_truncation_days"]
+    )
+    stable_observation = pending_stable_observation(pending_entry, series_start)
+    stable_confirmed = bool(stable_observation["confirmed"])
+    self_history_authoritative = bool(
+        isinstance(payload, dict)
+        and (
+            payload.get("source_provider") == "yahoo_finance"
+            or payload.get("source") == "yahoo_finance"
+            or payload.get("detail_status") == "yf_fallback"
+        )
+    )
+    confirmed = bool(
+        self_history_authoritative
+        or (series.get("eligible") and (yf_confirms_start or stable_confirmed))
+    )
+    confirmed_series_start = (
+        stable_observation["pinned_start"]
+        if stable_confirmed
+        else series_start
+    )
+    declared_valid = bool(
+        declared is not None
+        and series_latest is not None
+        and declared.date() <= series_latest.date()
+    )
+    declared_invalid_future = bool(
+        declared is not None
+        and series_latest is not None
+        and declared.date() > series_latest.date()
+    )
+    declared_delta_days = (
+        (series_start.date() - declared.date()).days
+        if series_start is not None and declared_valid
+        else None
+    )
+    declared_within_30 = bool(
+        declared_delta_days is not None
+        and abs(declared_delta_days)
+        <= DAILY_1Y_HISTORY_EVIDENCE_POLICY["declared_start_tolerance_days"]
+    )
+    declared_older_than_start = bool(
+        declared_delta_days is not None
+        and declared_delta_days
+        > DAILY_1Y_HISTORY_EVIDENCE_POLICY["declared_start_tolerance_days"]
+    )
+    effective_start = None
+    if declared_valid and confirmed_series_start is not None:
+        effective_start = max(declared, confirmed_series_start)
+    elif declared_valid:
+        effective_start = declared
+    elif confirmed:
+        effective_start = confirmed_series_start
+    effective_age_days = (
+        max(0, (now_dt.astimezone(timezone.utc).date() - effective_start.date()).days)
+        if effective_start is not None
+        else None
+    )
+    effective_young = bool(
+        effective_age_days is not None
+        and effective_age_days < DAILY_1Y_HISTORY_EVIDENCE_POLICY["required_age_days"]
+    )
+
+    disposition = "fetchable"
+    reason = (
+        "full_span_sparse_history"
+        if isinstance(series.get("span_days"), int)
+        and series["span_days"] >= DAILY_1Y_HISTORY_EVIDENCE_POLICY["required_age_days"]
+        else "unconfirmed_short_history"
+    )
+    effective_source = None
+    if provider_truncated_suspected:
+        reason = "provider_truncated_suspected"
+    elif declared_valid and declared_within_30 and effective_young:
+        disposition = "inception_limited"
+        reason = "inception_limited_declared"
+        effective_source = declared_source or "declared_inception"
+    elif confirmed and effective_young:
+        effective_source = (
+            "daily_1y_cross_provider_start"
+            if yf_confirms_start
+            else (
+                "daily_1y_stable_observation_start"
+                if stable_confirmed
+                else "daily_1y_history_start"
+            )
+        )
+        if declared_valid and declared_older_than_start:
+            disposition = "terminal_limited"
+            reason = "provider_history_start_limited"
+        else:
+            disposition = "inception_limited"
+            reason = "inception_limited_observation_derived"
+
+    return {
+        "disposition": disposition,
+        "reason": reason,
+        "declared_inception_date": declared.date().isoformat() if declared else None,
+        "declared_inception_source": declared_source,
+        "declared_inception_source_field": declared_source,
+        "declared_inception_valid": declared_valid,
+        "declared_inception_invalid_future": declared_invalid_future,
+        "effective_history_start_date": effective_start.date().isoformat() if effective_start else None,
+        "effective_history_start_source": effective_source,
+        "series_evidence": series,
+        "yf_series_evidence": yf_series,
+        "yf_start_delta_days": start_delta_yf,
+        "stable_observation_count": stable_count,
+        "stable_observation_confirmed": stable_confirmed,
+        "stable_observation_pinned_start": (
+            stable_observation["pinned_start"].date().isoformat()
+            if stable_observation["pinned_start"] is not None
+            else None
+        ),
+        "provider_truncated_suspected": provider_truncated_suspected,
+        "classification_as_of": now_dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "policy": DAILY_1Y_HISTORY_EVIDENCE_POLICY,
+    }
 
 
 def history_period_required_years(period_key: str) -> int | None:
@@ -2114,31 +2447,46 @@ def parse_stockanalysis_date(value: object) -> datetime | None:
         return None
 
 
-def etf_inception_date(payload: dict | None) -> datetime | None:
+def etf_declared_inception(payload: dict | None) -> tuple[datetime | None, str | None]:
     if not isinstance(payload, dict):
-        return None
+        return None, None
     normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
     raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
     normalized_overview = normalized.get("overview") if isinstance(normalized.get("overview"), dict) else {}
     raw_overview = raw.get("overview") if isinstance(raw.get("overview"), dict) else {}
     candidates = (
-        normalized_overview.get("inception"),
-        raw_overview.get("inception"),
-        normalized.get("inceptionDate"),
-        raw.get("inceptionDate"),
-        payload.get("inceptionDate"),
+        (normalized_overview.get("inception"), "normalized.overview.inception"),
+        (raw_overview.get("inception"), "raw.overview.inception"),
+        (normalized.get("inceptionDate"), "normalized.inceptionDate"),
+        (raw.get("inceptionDate"), "raw.inceptionDate"),
+        (payload.get("inceptionDate"), "inceptionDate"),
     )
-    for candidate in candidates:
+    for candidate, source in candidates:
         parsed = parse_stockanalysis_date(candidate)
         if parsed is not None:
-            return parsed
-    return None
+            return parsed, source
+    return None, None
 
 
-def history_gap_classification(payload: dict | None, required_periods: tuple[str, ...], now_dt: datetime) -> dict:
+def etf_inception_date(payload: dict | None) -> datetime | None:
+    declared, _source = etf_declared_inception(payload)
+    return declared
+
+
+def history_gap_classification(
+    payload: dict | None,
+    required_periods: tuple[str, ...],
+    now_dt: datetime,
+    yf_rows: list | None = None,
+    pending_entry: dict | None = None,
+) -> dict:
     missing = missing_history_periods(payload, required_periods)
     row_counts = {
-        period_key: len(history_period_rows(payload, period_key) or [])
+        period_key: (
+            valid_unique_history_date_count(history_period_rows(payload, period_key))
+            if period_key == "daily_1y"
+            else len(history_period_rows(payload, period_key) or [])
+        )
         for period_key in required_periods
     }
     min_rows = {
@@ -2149,24 +2497,63 @@ def history_gap_classification(payload: dict | None, required_periods: tuple[str
     inception = etf_inception_date(payload)
     fetchable = []
     inception_limited = []
-    if inception is None:
-        fetchable = missing[:]
-    else:
-        age_days = max(0, (now_dt - inception).days)
-        for period_key in missing:
-            required_years = history_period_required_years(period_key)
-            if required_years is not None and age_days < required_years * 365:
+    terminal_limited = []
+    daily_classification = None
+    for period_key in missing:
+        if period_key == "daily_1y":
+            daily_classification = classify_daily_1y_history_gap(
+                payload,
+                now_dt,
+                yf_rows=yf_rows,
+                pending_entry=pending_entry,
+            )
+            if daily_classification["disposition"] == "inception_limited":
                 inception_limited.append(period_key)
+            elif daily_classification["disposition"] == "terminal_limited":
+                terminal_limited.append(period_key)
             else:
                 fetchable.append(period_key)
-    return {
+            continue
+        if inception is None:
+            fetchable.append(period_key)
+            continue
+        age_days = max(0, (now_dt - inception).days)
+        required_years = history_period_required_years(period_key)
+        if required_years is not None and age_days < required_years * 365:
+            inception_limited.append(period_key)
+        else:
+            fetchable.append(period_key)
+    result = {
         "missing_history_periods": missing,
         "fetchable_missing_history_periods": fetchable,
         "inception_limited_history_periods": inception_limited,
+        "terminal_limited_history_periods": terminal_limited,
         "inception_date": inception.date().isoformat() if inception is not None else None,
         "history_period_row_counts": row_counts,
         "history_period_min_rows": min_rows,
     }
+    if daily_classification is not None:
+        if result["inception_date"] is None and daily_classification.get("effective_history_start_date"):
+            result["inception_date"] = daily_classification["effective_history_start_date"]
+        result.update(
+            {
+                "declared_inception_date": daily_classification.get("declared_inception_date"),
+                "declared_inception_source_field": daily_classification.get("declared_inception_source_field"),
+                "declared_inception_valid": daily_classification.get("declared_inception_valid"),
+                "declared_inception_invalid_future": daily_classification.get("declared_inception_invalid_future"),
+                "effective_history_start_date": daily_classification.get("effective_history_start_date"),
+                "effective_history_start_source": daily_classification.get("effective_history_start_source"),
+                "daily_1y_classification_reason": daily_classification.get("reason"),
+                "daily_1y_series_evidence": daily_classification.get("series_evidence"),
+                "yf_daily_1y_series_evidence": daily_classification.get("yf_series_evidence"),
+                "provider_truncated_suspected": daily_classification.get("provider_truncated_suspected"),
+                "stable_observation_count": daily_classification.get("stable_observation_count"),
+                "stable_observation_confirmed": daily_classification.get("stable_observation_confirmed"),
+                "stable_observation_pinned_start": daily_classification.get("stable_observation_pinned_start"),
+                "classification_as_of": daily_classification.get("classification_as_of"),
+            }
+        )
+    return result
 
 
 def load_pending_ledger() -> dict:
@@ -2196,7 +2583,16 @@ def pending_entry_in_cooldown(
     failure_threshold: int,
 ) -> bool:
     if not isinstance(entry, dict) or cooldown_days <= 0 or failure_threshold <= 0:
-        return False
+        if not isinstance(entry, dict) or cooldown_days <= 0:
+            return False
+        if entry.get("failure_class") != "successful_short_history":
+            return False
+    if entry.get("failure_class") == "successful_short_history":
+        next_attempt = parse_iso_timestamp(entry.get("next_attempt_after_utc"))
+        if next_attempt is not None:
+            return now_dt < next_attempt
+        last_attempt = parse_iso_timestamp(entry.get("last_attempt_utc"))
+        return last_attempt is not None and now_dt - last_attempt < timedelta(days=cooldown_days)
     failures = parse_int(entry.get("consecutive_failures")) or 0
     if failures < failure_threshold:
         return False
@@ -2261,12 +2657,14 @@ def update_pending_ledger(
     now_dt: datetime | None = None,
 ) -> dict:
     now_dt = now_dt or datetime.now(timezone.utc)
-    selected = {
-        clean_symbol(str(row.get("ticker") or ""))
-        for row in selected_rows
-        if isinstance(row, dict)
-    }
-    selected.discard(None)
+    selected_by_ticker = {}
+    for row in selected_rows:
+        if not isinstance(row, dict):
+            continue
+        ticker = clean_symbol(str(row.get("ticker") or ""))
+        if ticker:
+            selected_by_ticker.setdefault(ticker, row)
+    selected = set(selected_by_ticker)
     ledger = load_pending_ledger()
     entries = ledger.get("entries") if isinstance(ledger.get("entries"), dict) else {}
     updated = []
@@ -2281,6 +2679,110 @@ def update_pending_ledger(
         error = result.get("error")
         primary_error = result.get("stockanalysis_error") if result.get("provider") == "yahoo_finance" else None
         if error is None and primary_error is None:
+            selected_row = selected_by_ticker.get(ticker) or {}
+            daily_1y_required = any(
+                "daily_1y" in values
+                for values in (
+                    selected_row.get("missing_history_periods"),
+                    selected_row.get("fetchable_missing_history_periods"),
+                    selected_row.get("required_history_periods"),
+                )
+                if isinstance(values, (list, tuple, set))
+            ) or selected_row.get("daily_1y_min_rows") == DAILY_1Y_MIN_ROWS
+            if result.get("provider") == "stockanalysis" and daily_1y_required:
+                post_payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+                post_evidence = daily_1y_series_evidence(
+                    history_period_rows(post_payload, "daily_1y"),
+                    now_dt,
+                )
+                if (
+                    post_evidence["valid_unique_date_count"] < DAILY_1Y_MIN_ROWS
+                    and post_evidence["eligible"] is True
+                ):
+                    existing = entries.get(ticker) if isinstance(entries.get(ticker), dict) else {}
+                    pre_evidence = selected_row.get("pre_fetch_daily_1y_evidence")
+                    if not isinstance(pre_evidence, dict):
+                        pre_evidence = selected_row.get("daily_1y_series_evidence")
+                    pre_fetched_at = parse_iso_timestamp(selected_row.get("pre_fetch_payload_fetched_at"))
+                    post_fetched_at_text = post_payload.get("fetched_at") if isinstance(post_payload, dict) else None
+                    post_fetched_at = parse_iso_timestamp(post_fetched_at_text)
+                    separated = bool(
+                        pre_fetched_at is not None
+                        and post_fetched_at is not None
+                        and post_fetched_at - pre_fetched_at >= timedelta(hours=24)
+                    )
+                    stable_pair = bool(
+                        isinstance(pre_evidence, dict)
+                        and pre_evidence.get("eligible") is True
+                        and post_evidence.get("eligible") is True
+                        and pre_evidence.get("earliest_date")
+                        and pre_evidence.get("earliest_date") == post_evidence.get("earliest_date")
+                        and (pre_evidence.get("latest_date") or "") <= (post_evidence.get("latest_date") or "")
+                        and (parse_int(pre_evidence.get("valid_unique_date_count")) or 0)
+                        <= post_evidence["valid_unique_date_count"]
+                    )
+                    existing_count = (
+                        parse_int(existing.get("stable_observation_count")) or 0
+                        if existing.get("failure_class") == "successful_short_history"
+                        else 0
+                    )
+                    existing_evidence = existing.get("short_history_evidence")
+                    same_chain = bool(
+                        isinstance(existing_evidence, dict)
+                        and existing_evidence.get("earliest_date") == post_evidence.get("earliest_date")
+                    )
+                    confirmed_start = (
+                        existing.get("confirmed_history_start_date")
+                        or (
+                            existing_evidence.get("earliest_date")
+                            if existing_count >= 2 and isinstance(existing_evidence, dict)
+                            else None
+                        )
+                    )
+                    rolling_continuation = bool(
+                        existing_count >= 2
+                        and confirmed_start
+                        and post_evidence.get("earliest_date")
+                        and post_evidence["earliest_date"] >= confirmed_start
+                        and isinstance(existing_evidence, dict)
+                        and (existing_evidence.get("latest_date") or "") <= (post_evidence.get("latest_date") or "")
+                    )
+                    if stable_pair and separated:
+                        stable_count = max(2, (existing_count if same_chain else 0) + 1)
+                        confirmed_start = confirmed_start or post_evidence.get("earliest_date")
+                    elif rolling_continuation:
+                        stable_count = existing_count
+                    elif same_chain:
+                        stable_count = max(1, existing_count)
+                    else:
+                        stable_count = 1
+                        confirmed_start = None
+                    next_attempt = (
+                        utc_iso(now_dt + timedelta(days=cooldown_days))
+                        if cooldown_days > 0
+                        else None
+                    )
+                    entries[ticker] = {
+                        "ticker": ticker,
+                        "last_attempt_utc": utc_iso(now_dt),
+                        "failure_reason": (
+                            "successful StockAnalysis primary fetch still has "
+                            f"{post_evidence['valid_unique_date_count']} unique daily_1y dates "
+                            f"(< {DAILY_1Y_MIN_ROWS})"
+                        ),
+                        "failure_class": "successful_short_history",
+                        "consecutive_failures": 0,
+                        "stable_observation_count": stable_count,
+                        "observed_history_start_date": post_evidence.get("earliest_date"),
+                        "confirmed_history_start_date": confirmed_start,
+                        "short_history_evidence": post_evidence,
+                        "payload_fetched_at": post_fetched_at_text,
+                        "next_attempt_after_utc": next_attempt,
+                        "last_status": result.get("status"),
+                        "last_provider": result.get("provider"),
+                    }
+                    updated.append(ticker)
+                    continue
             if ticker in entries:
                 entries.pop(ticker, None)
                 cleared.append(ticker)
@@ -2313,7 +2815,7 @@ def update_pending_ledger(
         "policy": {
             "cooldown_days": cooldown_days,
             "failure_threshold": failure_threshold,
-            "rule": "record every failed primary attempt for fair retry rotation; skip after the configured consecutive-failure threshold until next_attempt_after_utc",
+            "rule": "record failed primary attempts and evidence-eligible successful-but-short daily_1y observations for fair retry rotation; sparse, stale, tiny, or discontinuous successful series keep the 48-hour fail-closed retry path; error failures use the threshold, eligible successful short histories cool down immediately until next_attempt_after_utc",
         },
         "counts": {
             **pending_ledger_counts({"entries": entries}, now_dt, cooldown_days, failure_threshold),
@@ -2396,6 +2898,14 @@ def daily_1y_plan_candidate_summary(
         if ticker in exclude:
             continue
         pending_entry = pending_entries.get(ticker) if isinstance(pending_entries, dict) else None
+        current_payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+        pre_fetch_evidence = daily_1y_series_evidence(
+            history_period_rows(current_payload, "daily_1y"),
+            now_dt,
+        )
+        pre_fetch_payload_fetched_at = (
+            current_payload.get("fetched_at") if isinstance(current_payload, dict) else None
+        )
         prior_failures = parse_int((pending_entry or {}).get("consecutive_failures")) or 0
         fetchable_missing = plan_row.get("fetchable_missing")
         missing_periods = fetchable_missing if isinstance(fetchable_missing, list) and fetchable_missing else ["daily_1y"]
@@ -2433,6 +2943,8 @@ def daily_1y_plan_candidate_summary(
                 "missing_file": bool(plan_row.get("missing_file")),
                 "pending_consecutive_failures": prior_failures,
                 "pending_next_attempt_after_utc": (pending_entry or {}).get("next_attempt_after_utc"),
+                "pre_fetch_daily_1y_evidence": pre_fetch_evidence,
+                "pre_fetch_payload_fetched_at": pre_fetch_payload_fetched_at,
             }
         )
 
@@ -2769,6 +3281,7 @@ def incremental_etf_backfill_candidates(
     candidates = []
     cooldown_rows = []
     inception_limited_rows = []
+    terminal_limited_rows = []
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
     reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "history_gap": 2, "stale": 3}
@@ -2806,12 +3319,25 @@ def incremental_etf_backfill_candidates(
             }
             if reason == "history_gap":
                 payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
-                gap = history_gap_classification(payload, required_history_periods, now_dt)
+                gap = history_gap_classification(
+                    payload,
+                    required_history_periods,
+                    now_dt,
+                    yf_rows=load_yf_daily_1y_rows(ticker) if "daily_1y" in required_history_periods else None,
+                    pending_entry=pending_entry,
+                )
                 row.update(gap)
                 if gap["missing_history_periods"] and not gap["fetchable_missing_history_periods"]:
-                    row["status"] = "inception_limited"
-                    inception_limited_rows.append(row)
+                    if gap.get("terminal_limited_history_periods"):
+                        row["status"] = "terminal_limited"
+                        terminal_limited_rows.append(row)
+                    else:
+                        row["status"] = "inception_limited"
+                        inception_limited_rows.append(row)
                     continue
+                if "daily_1y" in required_history_periods:
+                    row["pre_fetch_daily_1y_evidence"] = gap.get("daily_1y_series_evidence")
+                    row["pre_fetch_payload_fetched_at"] = payload.get("fetched_at") if isinstance(payload, dict) else None
             candidates.append(row)
 
     candidates.sort(
@@ -2849,7 +3375,12 @@ def incremental_etf_backfill_candidates(
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
             "history_gap": sum(1 for row in candidates if row["reason"] == "history_gap"),
             "inception_limited_history_gap": len(inception_limited_rows),
-            "total_history_gap": sum(1 for row in candidates if row["reason"] == "history_gap") + len(inception_limited_rows),
+            "terminal_limited_history_gap": len(terminal_limited_rows),
+            "total_history_gap": (
+                sum(1 for row in candidates if row["reason"] == "history_gap")
+                + len(inception_limited_rows)
+                + len(terminal_limited_rows)
+            ),
             "stale": sum(1 for row in candidates if row["reason"] == "stale"),
             "cooldown_skipped": len(cooldown_rows),
             "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
@@ -2857,6 +3388,7 @@ def incremental_etf_backfill_candidates(
         "selected": selected,
         "cooldown": cooldown_rows,
         "inception_limited": inception_limited_rows,
+        "terminal_limited": terminal_limited_rows,
     }
 
 
@@ -2885,6 +3417,7 @@ def build_incremental_etf_backfill_plan(
             "incremental_candidates": counts.get("candidates", 0),
             "history_gap": counts.get("history_gap", 0),
             "inception_limited_history_gap": counts.get("inception_limited_history_gap", 0),
+            "terminal_limited_history_gap": counts.get("terminal_limited_history_gap", 0),
             "total_history_gap": counts.get("total_history_gap", counts.get("history_gap", 0)),
             "cooldown_skipped": counts.get("cooldown_skipped", 0),
         },

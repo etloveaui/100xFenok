@@ -15,6 +15,11 @@ import {
   reportClassificationDate,
 } from "../100xfenok-next/scripts/history-gap-profile.mjs";
 import { createEffectiveEtfDetailReader } from "./effective-etf-detail-reader.mjs";
+import {
+  classifyDaily1yShortHistory,
+  daily1yClassificationProjection,
+  daily1ySeriesEvidence,
+} from "./lib/etf-daily1y-history-classifier.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -175,7 +180,12 @@ function parseStockAnalysisDate(value) {
     const month = MONTH_NAME_TO_INDEX.get(match[1].toLowerCase());
     if (month === undefined) return null;
     const date = new Date(Date.UTC(Number(match[3]), month, Number(match[2])));
-    return Number.isFinite(date.valueOf()) ? date : null;
+    return Number.isFinite(date.valueOf())
+      && date.getUTCFullYear() === Number(match[3])
+      && date.getUTCMonth() === month
+      && date.getUTCDate() === Number(match[2])
+      ? date
+      : null;
   }
   const isoMs = Date.parse(text);
   return Number.isFinite(isoMs) ? new Date(isoMs) : null;
@@ -238,6 +248,9 @@ function hasRecentPendingFailure(entry, now = new Date()) {
 function terminalDaily1yGapSource(payload, pendingEntry = null, now = new Date()) {
   const reason = String(pendingEntry?.failure_reason || "");
   if (hasRecentPendingFailure(pendingEntry, now)) {
+    if (pendingEntry?.failure_class === "successful_short_history") {
+      return "successful_short_history_cooldown";
+    }
     if (reason.includes("quoteType is not ETF/MUTUALFUND")) return "provider_rejected_non_etf";
     if (reason.includes("HTTP Error 404")) return "source_unavailable_recent_failure";
     return "provider_recent_failure";
@@ -251,22 +264,28 @@ function terminalDaily1yGapSource(payload, pendingEntry = null, now = new Date()
   return null;
 }
 
-export function etfInceptionDate(payload) {
+function etfDeclaredInception(payload) {
   const normalized = asObject(payload?.normalized);
   const raw = asObject(payload?.raw);
   const normalizedOverview = asObject(normalized.overview);
   const rawOverview = asObject(raw.overview);
   const candidates = [
-    normalizedOverview.inception,
-    rawOverview.inception,
-    normalized.inceptionDate,
-    raw.inceptionDate,
-    payload?.inceptionDate,
+    [normalizedOverview.inception, "normalized.overview.inception"],
+    [rawOverview.inception, "raw.overview.inception"],
+    [normalized.inceptionDate, "normalized.inceptionDate"],
+    [raw.inceptionDate, "raw.inceptionDate"],
+    [payload?.inceptionDate, "inceptionDate"],
   ];
-  for (const candidate of candidates) {
+  for (const [candidate, source] of candidates) {
     const parsed = parseStockAnalysisDate(candidate);
-    if (parsed) return parsed;
+    if (parsed) return { date: parsed, source };
   }
+  return { date: null, source: null };
+}
+
+export function etfInceptionDate(payload) {
+  const declared = etfDeclaredInception(payload);
+  if (declared.date) return declared.date;
   if (isYahooFallbackDetail(payload)) {
     return earliestHistoryDate(rowsForPeriod(payload, "daily_1y"));
   }
@@ -305,21 +324,51 @@ function classifyHistoryGap(payload, missing, now = new Date(), pendingEntry = n
   };
 }
 
-export function classifyDaily1yGap(payload, now = new Date(), pendingEntry = null) {
+export function classifyDaily1yGap(payload, now = new Date(), pendingEntry = null, yfRows = []) {
   const rows = rowsForPeriod(payload, "daily_1y");
-  const actualRows = Array.isArray(rows) ? rows.length : 0;
+  const actualRows = daily1ySeriesEvidence(rows, now).valid_unique_date_count;
   if (actualRows >= DAILY_1Y_MIN_ROWS) {
     return { complete: true, actualRows, fetchable: [], inceptionLimited: [], terminalLimited: [], inceptionDate: null };
   }
-  const gap = classifyHistoryGap(payload, ["daily_1y"], now, pendingEntry);
+  const declared = etfDeclaredInception(payload);
+  const shortHistory = classifyDaily1yShortHistory({
+    rows,
+    yfRows,
+    declaredInception: declared.date,
+    declaredInceptionSource: declared.source,
+    pendingEntry,
+    now,
+    selfHistoryAuthoritative: isYahooFallbackDetail(payload),
+  });
+  const evidence = { ...shortHistory };
+  delete evidence.category;
+  delete evidence.policy;
+  const fetchable = shortHistory.category === "fetchable" ? ["daily_1y"] : [];
+  const inceptionLimited = shortHistory.category === "inception_limited" ? ["daily_1y"] : [];
+  const terminalLimited = shortHistory.category === "terminal_limited" ? ["daily_1y"] : [];
+  let terminalLimitSource = shortHistory.category === "terminal_limited"
+    ? shortHistory.classification_reason
+    : null;
+  if (fetchable.length > 0) {
+    terminalLimitSource = terminalDaily1yGapSource(payload, pendingEntry, now);
+    if (terminalLimitSource) {
+      if (shortHistory.classification_reason === "provider_truncated_suspected") {
+        terminalLimitSource = "provider_truncated_suspected";
+      }
+      fetchable.length = 0;
+      terminalLimited.push("daily_1y");
+    }
+  }
   return {
     complete: false,
     actualRows,
-    fetchable: gap.fetchable,
-    inceptionLimited: gap.inceptionLimited,
-    terminalLimited: gap.terminalLimited,
-    terminalLimitSource: gap.terminalLimitSource,
-    inceptionDate: gap.inceptionDate,
+    fetchable,
+    inceptionLimited,
+    terminalLimited,
+    terminalLimitSource,
+    inceptionDate: shortHistory.effective_start_date,
+    classificationReason: shortHistory.classification_reason,
+    classificationEvidence: evidence,
   };
 }
 
@@ -327,7 +376,15 @@ function yfHistoryRows(ticker, rootDir = REPO_ROOT) {
   const relPath = `${YF_FINANCE_DIR_REL}/${ticker}.json`;
   const payload = readJsonOrNull(relPath, rootDir);
   const rows = payload?.data?.history_1y;
-  return Array.isArray(rows) ? rows.length : null;
+  return Array.isArray(rows) ? rows : null;
+}
+
+function daily1yGapProvenance(gap, payload) {
+  return {
+    classification_reason: gap.classificationReason ?? null,
+    payload_fetched_at: payload?.fetched_at ?? null,
+    daily_1y_classification: gap.classificationEvidence ?? null,
+  };
 }
 
 function compactRows(rows) {
@@ -336,7 +393,43 @@ function compactRows(rows) {
     actual_rows: row?.actual_rows ?? null,
     missing_file: row?.missing_file === true,
     inception_date: row?.inception_date ?? null,
+    classification_reason: row?.classification_reason ?? null,
+    effective_start_source: row?.daily_1y_classification?.effective_start_source ?? null,
   }));
+}
+
+function classificationEvidenceRow(row, bucket) {
+  const evidence = row?.daily_1y_classification ?? {};
+  return {
+    ticker: row?.ticker ?? null,
+    classification_bucket: bucket,
+    classification_reason: row?.classification_reason ?? null,
+    terminal_limit_source: row?.terminal_limit_source ?? null,
+    payload_fetched_at: row?.payload_fetched_at ?? null,
+    classification_as_of: evidence.classification_as_of ?? null,
+    declared_inception_date: evidence.declared_inception_date ?? null,
+    declared_inception_source_field: evidence.declared_inception_source_field ?? null,
+    declared_inception_valid: evidence.declared_inception_valid === true,
+    declared_inception_invalid_future: evidence.declared_inception_invalid_future === true,
+    daily_1y_row_count: evidence.daily_1y_row_count ?? null,
+    daily_1y_valid_unique_date_count: evidence.daily_1y_valid_unique_date_count ?? null,
+    daily_1y_earliest_observation: evidence.daily_1y_earliest_observation ?? null,
+    daily_1y_latest_observation: evidence.daily_1y_latest_observation ?? null,
+    daily_1y_expected_trading_days: evidence.daily_1y_expected_trading_days ?? null,
+    daily_1y_density: evidence.daily_1y_density ?? null,
+    daily_1y_max_internal_gap_days: evidence.daily_1y_max_internal_gap_days ?? null,
+    latest_observation_age_days: evidence.latest_observation_age_days ?? null,
+    latest_observation_age_business_days: evidence.latest_observation_age_business_days ?? null,
+    effective_start_date: evidence.effective_start_date ?? null,
+    effective_start_source: evidence.effective_start_source ?? null,
+    yf_crosscheck_rows: evidence.yf_crosscheck_rows ?? null,
+    yf_crosscheck_earliest: evidence.yf_crosscheck_earliest ?? null,
+    provider_truncation_suspected: evidence.provider_truncation_suspected === true,
+    cross_provider_start_confirmed: evidence.cross_provider_start_confirmed === true,
+    stable_observation_confirmed: evidence.stable_observation_confirmed === true,
+    stable_observation_pinned_start: evidence.stable_observation_pinned_start ?? null,
+    detail_source_kind: row?.detail_source_kind ?? null,
+  };
 }
 
 function requireDate(value, label) {
@@ -387,7 +480,8 @@ export function buildScoredEtfDaily1yFetchablePlan({
   };
 
   for (const ticker of summaryTickers) {
-    const yfRowsCount = yfHistoryRows(ticker, rootDir);
+    const yfHistory = yfHistoryRows(ticker, rootDir);
+    const yfRowsCount = Array.isArray(yfHistory) ? yfHistory.length : null;
     const pendingEntry = asObject(pendingEntries[ticker]);
     const yfMissing = yfRowsCount == null || yfRowsCount < DAILY_1Y_MIN_ROWS;
     const yfRow = {
@@ -444,7 +538,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
     }
 
     const payload = resolved.payload;
-    const gap = classifyDaily1yGap(payload, classificationDate, pendingEntry);
+    const gap = classifyDaily1yGap(payload, classificationDate, pendingEntry, yfHistory || []);
     if (gap.complete) {
       completeRows.push({
         ticker,
@@ -464,6 +558,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
         daily_1y_gap_source: daily1yFetchableSource(payload),
         source_provider: payload.source_provider || payload.source || null,
         detail_status: payload.detail_status || null,
+        ...daily1yGapProvenance(gap, payload),
         ...resolutionEvidence,
       });
     } else if (gap.terminalLimited.length > 0) {
@@ -482,6 +577,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
         detail_status: payload.detail_status || null,
         pending_consecutive_failures: asNumber(pendingEntry.consecutive_failures),
         pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc ?? null,
+        ...daily1yGapProvenance(gap, payload),
         ...resolutionEvidence,
       });
     } else if (gap.inceptionLimited.length > 0) {
@@ -495,12 +591,33 @@ export function buildScoredEtfDaily1yFetchablePlan({
         yf_history_rows: yfRowsCount,
         source_provider: payload.source_provider || payload.source || null,
         detail_status: payload.detail_status || null,
+        ...daily1yGapProvenance(gap, payload),
         ...resolutionEvidence,
       });
     }
   }
 
   const denominator = summaryTickers.length;
+  const classificationProjection = daily1yClassificationProjection({
+    complete: completeRows,
+    fetchable: fetchableRows,
+    inceptionLimited: inceptionLimitedRows,
+    terminalLimited: terminalLimitedRows,
+  });
+  const classificationEvidenceRows = [
+    ...fetchableRows.map((row) => classificationEvidenceRow(row, "fetchable")),
+    ...inceptionLimitedRows.map((row) => classificationEvidenceRow(row, "inception_limited")),
+    ...terminalLimitedRows.map((row) => classificationEvidenceRow(row, "terminal_limited")),
+  ]
+    .filter((row) => row.classification_as_of)
+    .sort((left, right) => left.ticker.localeCompare(right.ticker));
+  const historyGapProjection = scored.classification_projection;
+  const historyGapProjectionOk = Boolean(
+    historyGapProjection
+      && historyGapProjection.row_count === classificationProjection.row_count
+      && historyGapProjection.sha256 === classificationProjection.sha256
+      && JSON.stringify(historyGapProjection.reason_counts) === JSON.stringify(classificationProjection.reason_counts)
+  );
   const equationOk = completeRows.length + fetchableRows.length + inceptionLimitedRows.length + terminalLimitedRows.length === denominator;
   const historyGapClockOk = historyGap?.classification_as_of === classificationIso;
   const coverageClockOk = !readiness || readiness.classification_as_of === classificationIso;
@@ -512,6 +629,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
     && asNumber(scored.fetchable) === fetchableRows.length
     && asNumber(scored.inception_limited) === inceptionLimitedRows.length
     && asNumber(scored.terminal_limited) === terminalLimitedRows.length
+    && historyGapProjectionOk
   );
   const coverageCountOk = !readiness?.counts || (
     coverageClockOk
@@ -571,6 +689,8 @@ export function buildScoredEtfDaily1yFetchablePlan({
       history_gap_classification_clock_match: historyGapClockOk,
       coverage_index_classification_clock_match: coverageClockOk,
       coverage_index_daily_check_classification_clock_match: dailyCheckClockOk,
+      history_gap_classification_projection_match: historyGapProjectionOk,
+      classification_projection: classificationProjection,
       fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows).counts,
       terminal_limited_breakdown: summarizeFetchableBreakdown(terminalLimitedRows).counts,
       effective_detail_resolution: effectiveResolutionCounts,
@@ -589,6 +709,11 @@ export function buildScoredEtfDaily1yFetchablePlan({
       batch_count: Math.ceil(tickers.length / batchSize),
       command_template: "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
       first_batch_tickers: tickers.slice(0, batchSize),
+    },
+    classification_evidence: {
+      schema_version: "fenok-edge-etf-daily1y-classification-evidence/v1",
+      row_count: classificationEvidenceRows.length,
+      rows: classificationEvidenceRows,
     },
     tickers,
     rows: fetchableRows,

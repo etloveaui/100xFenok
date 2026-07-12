@@ -16,11 +16,90 @@ import {
   classifyDaily1yGap,
   etfInceptionDate,
 } from "./write-fenok-etf-daily1y-readiness.mjs";
+import {
+  DAILY_1Y_HISTORY_EVIDENCE_POLICY,
+  classifyDaily1yShortHistory,
+  daily1yClassificationProjection,
+  daily1ySeriesEvidence,
+} from "./lib/etf-daily1y-history-classifier.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const historyGapScript = path.resolve(scriptDir, "../100xfenok-next/scripts/report-stockanalysis-history-gap.mjs");
 
 const currentNow = new Date("2026-07-09T00:00:00Z");
+
+function weekdayRows(count, start = "2026-06-01") {
+  const rows = [];
+  for (let cursor = Date.parse(`${start}T00:00:00Z`); rows.length < count; cursor += 86_400_000) {
+    const date = new Date(cursor);
+    if (![0, 6].includes(date.getUTCDay())) {
+      rows.push({ date: date.toISOString().slice(0, 10), Close: 100 + rows.length });
+    }
+  }
+  return rows;
+}
+
+function classificationBucket(gap) {
+  if (gap.complete) return "complete";
+  if (gap.inceptionLimited.length > 0) return "inception_limited";
+  if (gap.terminalLimited.length > 0) return "terminal_limited";
+  return "fetchable";
+}
+
+function pythonDaily1yClassifications(cases) {
+  const code = String.raw`
+import importlib.util
+import json
+import sys
+from datetime import datetime, timezone
+
+spec = importlib.util.spec_from_file_location("fetch_stockanalysis", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+cases = json.loads(sys.argv[2])
+now_dt = datetime.fromisoformat(sys.argv[3].replace("Z", "+00:00")).astimezone(timezone.utc)
+rows = []
+for case in cases:
+    result = module.history_gap_classification(
+        case["payload"],
+        ("daily_1y",),
+        now_dt,
+        yf_rows=case.get("yf_rows"),
+        pending_entry=case.get("pending_entry"),
+    )
+    if result["inception_limited_history_periods"]:
+        bucket = "inception_limited"
+    elif result["terminal_limited_history_periods"]:
+        bucket = "terminal_limited"
+    else:
+        bucket = "fetchable"
+    rows.append({
+        "id": case["id"],
+        "bucket": bucket,
+        "reason": result.get("daily_1y_classification_reason"),
+        "effective_start_date": result.get("effective_history_start_date"),
+        "effective_start_source": result.get("effective_history_start_source"),
+        "declared_valid": result.get("declared_inception_valid"),
+        "declared_invalid_future": result.get("declared_inception_invalid_future"),
+        "provider_truncated": result.get("provider_truncated_suspected"),
+        "stable_confirmed": result.get("stable_observation_confirmed"),
+        "stable_pinned_start": result.get("stable_observation_pinned_start"),
+        "valid_unique_date_count": (result.get("daily_1y_series_evidence") or {}).get("valid_unique_date_count"),
+        "earliest_observation": (result.get("daily_1y_series_evidence") or {}).get("earliest_observation"),
+        "latest_observation": (result.get("daily_1y_series_evidence") or {}).get("latest_observation"),
+        "density": (result.get("daily_1y_series_evidence") or {}).get("density"),
+        "evidence_pass": (result.get("daily_1y_series_evidence") or {}).get("evidence_pass"),
+    })
+print(json.dumps({"policy": module.DAILY_1Y_HISTORY_EVIDENCE_POLICY, "rows": rows}, sort_keys=True))
+`;
+  const run = spawnSync(
+    "python3",
+    ["-c", code, path.join(scriptDir, "fetch-stockanalysis.py"), JSON.stringify(cases), currentNow.toISOString()],
+    { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+  );
+  assert.equal(run.status, 0, run.stderr || run.stdout);
+  return JSON.parse(run.stdout);
+}
 assert.throws(
   () => buildScoredEtfDaily1yFetchablePlan({
     signalSummary: { rows: [] },
@@ -37,8 +116,7 @@ const recentYahooFallback = {
   normalized: {
     history_periods: {
       daily_1y: [
-        { date: "2026-05-06", Close: 25.4 },
-        { date: "2026-07-08", Close: 25.7 },
+        ...weekdayRows(25, "2026-06-01"),
       ],
     },
   },
@@ -49,8 +127,7 @@ const oldYahooFallback = {
   normalized: {
     history_periods: {
       daily_1y: [
-        { date: "2025-01-03", Close: 20.1 },
-        { date: "2026-07-08", Close: 25.7 },
+        ...weekdayRows(25, "2025-01-03"),
       ],
     },
   },
@@ -176,6 +253,7 @@ writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest
       fetchable: 0,
       inception_limited: 0,
       terminal_limited: 0,
+      classification_projection: daily1yClassificationProjection({ complete: [{ ticker: "AAA" }] }),
     },
   },
   recommended_dispatch: null,
@@ -185,7 +263,7 @@ writeFixture(fixtureRoot, "data/stockanalysis/etfs/AAA.json", {
   ticker: "AAA",
   asset_type: "etf",
   source: "stockanalysis",
-  normalized: { history_periods: { daily_1y: Array.from({ length: 200 }, (_, index) => ({ date: `2026-01-${String((index % 28) + 1).padStart(2, "0")}`, Close: index + 1 })) } },
+  normalized: { history_periods: { daily_1y: weekdayRows(200, "2025-09-01") } },
 });
 writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", {
   public_scoring_readiness: {
@@ -216,7 +294,7 @@ writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", {
   },
 });
 
-assert.equal(etfInceptionDate(recentYahooFallback).toISOString().slice(0, 10), "2026-05-06");
+assert.equal(etfInceptionDate(recentYahooFallback).toISOString().slice(0, 10), "2026-06-01");
 assert.deepEqual(classifyDaily1yGap(recentYahooFallback, currentNow).fetchable, []);
 assert.deepEqual(classifyDaily1yGap(recentYahooFallback, currentNow).inceptionLimited, ["daily_1y"]);
 assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow).fetchable, ["daily_1y"]);
@@ -226,6 +304,308 @@ assert.deepEqual(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).te
 assert.equal(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).terminalLimitSource, "stockanalysis_recent_short_rows");
 assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimited, ["daily_1y"]);
 assert.equal(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimitSource, "provider_rejected_non_etf");
+
+const denseRecentRows = weekdayRows(25, "2026-06-01");
+const denseRecentYfRows = weekdayRows(25, "2026-06-02");
+const primaryNullInception = {
+  asset_type: "etf",
+  source: "stockanalysis",
+  fetched_at: "2026-07-01T00:00:00Z",
+  normalized: { overview: {}, history_periods: { daily_1y: denseRecentRows } },
+};
+const primaryStaleDeclared = {
+  ...primaryNullInception,
+  normalized: {
+    overview: { inception: "Jan 1, 2020" },
+    history_periods: { daily_1y: denseRecentRows },
+  },
+};
+const corroboratedRecent = classifyDaily1yGap(
+  primaryNullInception,
+  currentNow,
+  null,
+  denseRecentYfRows,
+);
+assert.deepEqual(corroboratedRecent.inceptionLimited, ["daily_1y"]);
+assert.equal(corroboratedRecent.classificationReason, "inception_limited_observation_derived");
+assert.equal(corroboratedRecent.classificationEvidence.cross_provider_start_confirmed, true);
+assert.equal(corroboratedRecent.inceptionDate, "2026-06-01");
+
+const staleDeclaredConversion = classifyDaily1yGap(
+  primaryStaleDeclared,
+  currentNow,
+  null,
+  denseRecentYfRows,
+);
+assert.deepEqual(staleDeclaredConversion.terminalLimited, ["daily_1y"]);
+assert.equal(staleDeclaredConversion.terminalLimitSource, "provider_history_start_limited");
+assert.equal(staleDeclaredConversion.classificationEvidence.declared_inception_date, "2020-01-01");
+assert.equal(staleDeclaredConversion.classificationEvidence.effective_start_date, "2026-06-01");
+
+const unconfirmedRecent = classifyDaily1yGap(primaryNullInception, currentNow);
+assert.deepEqual(unconfirmedRecent.fetchable, ["daily_1y"]);
+assert.equal(unconfirmedRecent.classificationReason, "unconfirmed_short_history");
+
+const stableRecent = classifyDaily1yGap(
+  primaryNullInception,
+  currentNow,
+  {
+    stable_observation_count: 2,
+    short_history_evidence: { earliest_date: "2026-06-01" },
+  },
+);
+assert.deepEqual(stableRecent.inceptionLimited, ["daily_1y"]);
+assert.equal(stableRecent.classificationEvidence.stable_observation_confirmed, true);
+
+const mismatchedStable = classifyDaily1yGap(
+  primaryNullInception,
+  currentNow,
+  {
+    stable_observation_count: 2,
+    short_history_evidence: { earliest_date: "2026-06-15" },
+  },
+);
+assert.deepEqual(mismatchedStable.fetchable, ["daily_1y"]);
+assert.equal(mismatchedStable.classificationEvidence.stable_observation_confirmed, false);
+
+const rollingStable = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: { overview: {}, history_periods: { daily_1y: weekdayRows(25, "2026-06-03") } },
+}, currentNow, {
+  stable_observation_count: 2,
+  confirmed_history_start_date: "2026-05-04",
+  short_history_evidence: { earliest_date: "2026-06-03" },
+});
+assert.deepEqual(rollingStable.inceptionLimited, ["daily_1y"]);
+assert.equal(rollingStable.inceptionDate, "2026-05-04");
+assert.equal(rollingStable.classificationEvidence.stable_observation_pinned_start, "2026-05-04");
+
+const providerTruncated = classifyDaily1yGap(
+  primaryNullInception,
+  currentNow,
+  null,
+  weekdayRows(200, "2025-01-03"),
+);
+assert.deepEqual(providerTruncated.fetchable, ["daily_1y"]);
+assert.equal(providerTruncated.classificationReason, "provider_truncated_suspected");
+assert.equal(providerTruncated.classificationEvidence.provider_truncation_suspected, true);
+
+const providerTruncated47h = classifyDaily1yGap({
+  ...primaryNullInception,
+  fetched_at: "2026-07-07T01:00:00Z",
+}, currentNow, null, weekdayRows(200, "2025-01-03"));
+const providerTruncated49h = classifyDaily1yGap({
+  ...primaryNullInception,
+  fetched_at: "2026-07-06T23:00:00Z",
+}, currentNow, null, weekdayRows(200, "2025-01-03"));
+assert.deepEqual(providerTruncated47h.terminalLimited, ["daily_1y"]);
+assert.equal(providerTruncated47h.terminalLimitSource, "provider_truncated_suspected");
+assert.deepEqual(providerTruncated49h.fetchable, ["daily_1y"]);
+
+const successfulShortCooldown = {
+  failure_class: "successful_short_history",
+  failure_reason: "successful StockAnalysis primary fetch still has short daily_1y history",
+  last_attempt_utc: "2026-07-03T00:00:00Z",
+  next_attempt_after_utc: "2026-07-10T00:00:00Z",
+};
+const providerTruncated6d = classifyDaily1yGap({
+  ...primaryNullInception,
+  fetched_at: "2026-07-03T00:00:00Z",
+}, currentNow, successfulShortCooldown, weekdayRows(200, "2025-01-03"));
+const providerTruncated8d = classifyDaily1yGap({
+  ...primaryNullInception,
+  fetched_at: "2026-07-01T00:00:00Z",
+}, currentNow, {
+  ...successfulShortCooldown,
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  next_attempt_after_utc: "2026-07-08T00:00:00Z",
+}, weekdayRows(200, "2025-01-03"));
+assert.deepEqual(providerTruncated6d.terminalLimited, ["daily_1y"]);
+assert.equal(providerTruncated6d.terminalLimitSource, "provider_truncated_suspected");
+assert.deepEqual(providerTruncated8d.fetchable, ["daily_1y"]);
+const genericSuccessfulCooldown = classifyDaily1yGap({
+  ...primaryNullInception,
+  fetched_at: "2026-07-03T00:00:00Z",
+}, currentNow, successfulShortCooldown);
+assert.deepEqual(genericSuccessfulCooldown.terminalLimited, ["daily_1y"]);
+assert.equal(genericSuccessfulCooldown.terminalLimitSource, "successful_short_history_cooldown");
+
+const sparseFullSpanRows = [
+  ...weekdayRows(95, "2025-07-07"),
+  ...weekdayRows(95, "2026-02-25"),
+];
+const sparseFullSpan = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: { overview: {}, history_periods: { daily_1y: sparseFullSpanRows } },
+}, currentNow);
+assert.deepEqual(sparseFullSpan.fetchable, ["daily_1y"]);
+assert.equal(sparseFullSpan.classificationReason, "full_span_sparse_history");
+assert.equal(sparseFullSpan.classificationEvidence.daily_1y_evidence_pass, false);
+
+const tinyDense = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: { overview: {}, history_periods: { daily_1y: weekdayRows(12, "2026-06-23") } },
+}, currentNow, null, weekdayRows(12, "2026-06-23"));
+assert.deepEqual(tinyDense.fetchable, ["daily_1y"]);
+assert.equal(tinyDense.classificationEvidence.daily_1y_evidence_pass, false);
+
+const staleLatest = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: { overview: {}, history_periods: { daily_1y: weekdayRows(25, "2026-04-01") } },
+}, currentNow, null, weekdayRows(25, "2026-04-01"));
+assert.deepEqual(staleLatest.fetchable, ["daily_1y"]);
+assert.equal(staleLatest.classificationEvidence.daily_1y_evidence_pass, false);
+
+const futureDeclared = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: {
+    overview: { inception: "Aug 1, 2026" },
+    history_periods: { daily_1y: denseRecentRows },
+  },
+}, currentNow, null, denseRecentYfRows);
+assert.deepEqual(futureDeclared.inceptionLimited, ["daily_1y"]);
+assert.equal(futureDeclared.classificationEvidence.declared_inception_invalid_future, true);
+
+const boundaryRows = weekdayRows(25, "2026-06-01");
+const boundary364 = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: { overview: {}, history_periods: { daily_1y: boundaryRows } },
+}, currentNow, {
+  stable_observation_count: 2,
+  confirmed_history_start_date: "2025-07-10",
+});
+const boundary365 = classifyDaily1yGap({
+  ...primaryNullInception,
+  normalized: { overview: {}, history_periods: { daily_1y: boundaryRows } },
+}, currentNow, {
+  stable_observation_count: 2,
+  confirmed_history_start_date: "2025-07-09",
+});
+assert.deepEqual(boundary364.inceptionLimited, ["daily_1y"]);
+assert.deepEqual(boundary365.fetchable, ["daily_1y"]);
+
+const parityPayload = (rows, inception = null, extra = {}) => ({
+  asset_type: "etf",
+  source: "stockanalysis",
+  ...extra,
+  normalized: {
+    overview: inception ? { inception } : {},
+    history_periods: { daily_1y: rows },
+  },
+});
+const parityCases = [
+  { id: "dense_unconfirmed", payload: parityPayload(denseRecentRows) },
+  { id: "dense_cross_provider", payload: parityPayload(denseRecentRows), yf_rows: denseRecentYfRows },
+  { id: "declared_accurate", payload: parityPayload(denseRecentRows, "Jun 1, 2026") },
+  { id: "declared_stale", payload: parityPayload(denseRecentRows, "Jan 1, 2020"), yf_rows: denseRecentYfRows },
+  { id: "declared_future", payload: parityPayload(denseRecentRows, "Aug 1, 2026"), yf_rows: denseRecentYfRows },
+  { id: "sparse_full_span", payload: parityPayload(sparseFullSpanRows) },
+  {
+    id: "provider_truncated",
+    payload: parityPayload(denseRecentRows),
+    yf_rows: weekdayRows(200, "2025-01-03"),
+  },
+  {
+    id: "stable_nested",
+    payload: parityPayload(denseRecentRows),
+    pending_entry: {
+      stable_observation_count: 2,
+      short_history_evidence: { earliest_date: "2026-06-01" },
+    },
+  },
+  {
+    id: "rolling_pinned",
+    payload: parityPayload(weekdayRows(25, "2026-06-03")),
+    pending_entry: {
+      stable_observation_count: 2,
+      confirmed_history_start_date: "2026-05-04",
+      short_history_evidence: { earliest_date: "2026-06-03" },
+    },
+  },
+  { id: "tiny", payload: parityPayload(weekdayRows(12, "2026-06-23")) },
+  { id: "stale_latest", payload: parityPayload(weekdayRows(25, "2026-04-01")) },
+  { id: "tiny_declared", payload: parityPayload(weekdayRows(1, "2026-06-23"), "Jun 23, 2026") },
+  { id: "stale_declared", payload: parityPayload(weekdayRows(25, "2026-04-01"), "Apr 1, 2026") },
+  { id: "impossible_declared", payload: parityPayload(denseRecentRows, "Feb 30, 2026"), yf_rows: denseRecentYfRows },
+  { id: "invalid_history_date", payload: parityPayload([...denseRecentRows, { date: "2026-02-30" }]) },
+  {
+    id: "offset_timestamps",
+    payload: parityPayload(denseRecentRows.map((row) => ({
+      ...row,
+      date: `${row.date}T23:00:00-05:00`,
+    }))),
+  },
+  { id: "duplicate_200", payload: parityPayload(Array.from({ length: 200 }, () => ({ date: "2026-06-01" }))) },
+  {
+    id: "self_authoritative",
+    payload: parityPayload(denseRecentRows, null, {
+      source: "yahoo_finance",
+      source_provider: "yahoo_finance",
+      detail_status: "yf_fallback",
+    }),
+  },
+  {
+    id: "tiny_self_authoritative",
+    payload: parityPayload(weekdayRows(12, "2026-06-23"), null, {
+      source: "yahoo_finance",
+      source_provider: "yahoo_finance",
+      detail_status: "yf_fallback",
+    }),
+  },
+  {
+    id: "stale_self_authoritative",
+    payload: parityPayload(weekdayRows(25, "2026-04-01"), null, {
+      source: "yahoo_finance",
+      source_provider: "yahoo_finance",
+      detail_status: "yf_fallback",
+    }),
+  },
+];
+const jsParity = parityCases.map((testCase) => {
+  const gap = classifyDaily1yGap(
+    testCase.payload,
+    currentNow,
+    testCase.pending_entry ?? null,
+    testCase.yf_rows ?? [],
+  );
+  const evidence = gap.classificationEvidence ?? {};
+  return {
+    id: testCase.id,
+    bucket: classificationBucket(gap),
+    reason: gap.classificationReason,
+    effective_start_date: gap.inceptionDate,
+    effective_start_source: evidence.effective_start_source,
+    declared_valid: evidence.declared_inception_valid,
+    declared_invalid_future: evidence.declared_inception_invalid_future,
+    provider_truncated: evidence.provider_truncation_suspected,
+    stable_confirmed: evidence.stable_observation_confirmed,
+    stable_pinned_start: evidence.stable_observation_pinned_start,
+    valid_unique_date_count: evidence.daily_1y_valid_unique_date_count,
+    earliest_observation: evidence.daily_1y_earliest_observation,
+    latest_observation: evidence.daily_1y_latest_observation,
+    density: evidence.daily_1y_density,
+    evidence_pass: evidence.daily_1y_evidence_pass,
+  };
+});
+const pythonParity = pythonDaily1yClassifications(parityCases);
+assert.deepEqual(pythonParity.policy, DAILY_1Y_HISTORY_EVIDENCE_POLICY);
+assert.deepEqual(pythonParity.rows, jsParity);
+const duplicate200 = classifyDaily1yGap(parityCases.find((row) => row.id === "duplicate_200").payload, currentNow);
+assert.equal(duplicate200.complete, false);
+assert.equal(duplicate200.actualRows, 1);
+assert.deepEqual(duplicate200.fetchable, ["daily_1y"]);
+
+const denseEvidence = daily1ySeriesEvidence(denseRecentRows, currentNow);
+assert.equal(denseEvidence.evidence_pass, true);
+assert.ok(denseEvidence.density >= 0.8);
+assert.ok(denseEvidence.max_internal_gap_days <= 3);
+assert.equal(
+  daily1yClassificationProjection({
+    complete: [{ ticker: "AAA" }],
+    fetchable: [{ ticker: "BBB", classification_reason: "unconfirmed_short_history" }],
+  }).row_count,
+  2,
+);
 
 const boundaryPayload = {
   ...recentStockAnalysisShortRows,
@@ -253,7 +633,7 @@ const breakdownTotal = Object.values(readiness.fetchable_breakdown?.counts || re
 const planBreakdownTotal = Object.values(plan.fetchable_breakdown?.counts || {})
   .reduce((sum, value) => sum + Number(value || 0), 0);
 
-assert.equal(payload.ok, true);
+assert.equal(payload.ok, true, JSON.stringify(payload.errors));
 assert.equal(payload.classification_as_of, fixtureGeneratedAt);
 assert.equal(plan.classification_as_of, fixtureGeneratedAt);
 assert.ok(readiness.denominator > 0);
@@ -335,8 +715,8 @@ fs.rmSync(fixtureRoot, { recursive: true, force: true });
 const effectiveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-etf-effective-detail-"));
 seedR2State(effectiveRoot, [
   { ticker: "FBC", fetched_at: "2026-07-10T00:00:00Z", history: dailyRows(200) },
-  { ticker: "FBI", fetched_at: "2026-07-01T00:00:00Z", history: dailyRows(5, "2026-06-01") },
-  { ticker: "PRI", fetched_at: "2026-07-10T00:00:00Z", history: dailyRows(5, "2026-06-01") },
+  { ticker: "FBI", fetched_at: "2026-07-01T00:00:00Z", history: weekdayRows(25, "2026-06-01") },
+  { ticker: "PRI", fetched_at: "2026-07-10T00:00:00Z", history: weekdayRows(25, "2026-06-01") },
   { ticker: "UNAV", fetched_at: "2026-06-18T00:00:00Z", history: dailyRows(200) },
 ]);
 const completePrimary = {
@@ -475,6 +855,25 @@ assert.deepEqual(effectivePlan.tickers, []);
 assert.equal(effectivePlan.counts.matches_history_gap_report, true);
 assert.equal(effectivePlan.counts.matches_coverage_index, true);
 assert.equal(effectivePlan.counts.matches_coverage_index_daily_check, true);
+assert.equal(effectivePlan.classification_evidence.row_count, 2);
+for (const row of effectivePlan.classification_evidence.rows) {
+  assert.equal(Object.hasOwn(row, "daily_1y_classification"), false);
+  for (const key of [
+    "ticker",
+    "classification_bucket",
+    "classification_reason",
+    "payload_fetched_at",
+    "classification_as_of",
+    "declared_inception_date",
+    "declared_inception_source_field",
+    "daily_1y_earliest_observation",
+    "daily_1y_latest_observation",
+    "daily_1y_density",
+    "effective_start_date",
+    "effective_start_source",
+    "provider_truncation_suspected",
+  ]) assert.equal(Object.hasOwn(row, key), true, `${row.ticker} missing ${key}`);
+}
 
 fs.rmSync(effectiveRoot, { recursive: true, force: true });
 console.log("test-write-fenok-etf-daily1y-readiness: ok");
