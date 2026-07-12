@@ -43,6 +43,7 @@ permissions:
 concurrency:
   group: fenok-data-writer-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   # Matrix build for parallel batch execution
