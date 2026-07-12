@@ -203,6 +203,10 @@ function setIntersectionCount(values, set) {
   return count;
 }
 
+function expectedStockPromotionGapCount(stockCandidateTickers, s0Set) {
+  return stockCandidateTickers.length - setIntersectionCount(stockCandidateTickers, s0Set);
+}
+
 function byTickerRows(rows) {
   const map = new Map();
   for (const row of rows) {
@@ -1831,8 +1835,8 @@ function buildAudit({
     },
     {
       id: "s1_gap_formula",
-      ok: gapTickers.length === stockCandidateTickers.length - s0Tickers.length,
-      detail: `${gapTickers.length} vs ${stockCandidateTickers.length}-${s0Tickers.length}`,
+      ok: gapTickers.length === expectedStockPromotionGapCount(stockCandidateTickers, s0Set),
+      detail: `${gapTickers.length} vs ${stockCandidateTickers.length}-${setIntersectionCount(stockCandidateTickers, s0Set)} overlap`,
     },
     {
       id: "s1_no_etf_leakage",
@@ -2292,6 +2296,7 @@ export {
   evidenceFamiliesForTicker,
   corporateActionEvidenceFor,
   localSourceFilesFor,
+  expectedStockPromotionGapCount,
   stockanalysisCorporateActionsByTicker,
   stockanalysisSurfaceTickers,
 };

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-11T03:59:36.778Z",
+  "generated_at": "2026-07-12T12:51:20.293Z",
   "formula_version": "fenok-occ-options-volume-v0.1",
   "contract_doc": "docs/planning/CONTRACT_fenok_flow_sources_20260628.md",
   "public_surface_status": "admin_private_derived_only_public_summary_source",
@@ -44,90 +44,25 @@
     }
   },
   "collection_retry_policy": {
-    "max_walkback_days": 2,
-    "sleep_ms_between_side_queries": 250,
+    "max_walkback_days": 0,
+    "sleep_ms_between_side_queries": 0,
     "exact_release_time_verified": false,
     "empirical_polling_required": true
   },
   "coverage": {
-    "row_count": 2555,
-    "with_options_activity_score": 2555,
-    "total_call_volume": 123556290,
-    "total_put_volume": 75188302,
+    "row_count": 2556,
+    "with_options_activity_score": 2556,
+    "total_call_volume": 124164902,
+    "total_put_volume": 75762638,
     "confidence_counts": {
-      "medium": 2555
+      "medium": 2556
     },
-    "failed_attempts": 4
+    "failed_attempts": 0
   },
   "semantics": {
     "netOptionsProxyScore": "Higher means higher OCC listed-options call-volume share versus put-volume share for the underlying on the source date. This is a volume-skew proxy, not real options flow, OPRA, or buyer/seller direction."
   },
-  "attempts": [
-    {
-      "ticker": "SATS",
-      "status": "no_record",
-      "side_statuses": {
-        "C": "no_record",
-        "P": "no_record"
-      },
-      "accepted_form": null,
-      "accepted_form_policy": null,
-      "scoring_row_eligible": false,
-      "coverage_row_eligible": false,
-      "no_listed_options_policy_status": "pending_owner_acceptance",
-      "attempted_forms": [
-        "SATS"
-      ]
-    },
-    {
-      "ticker": "STE",
-      "status": "no_record",
-      "side_statuses": {
-        "C": "no_record",
-        "P": "no_record"
-      },
-      "accepted_form": null,
-      "accepted_form_policy": null,
-      "scoring_row_eligible": false,
-      "coverage_row_eligible": false,
-      "no_listed_options_policy_status": "pending_owner_acceptance",
-      "attempted_forms": [
-        "STE"
-      ]
-    },
-    {
-      "ticker": "TFII",
-      "status": "no_record",
-      "side_statuses": {
-        "C": "no_record",
-        "P": "no_record"
-      },
-      "accepted_form": null,
-      "accepted_form_policy": null,
-      "scoring_row_eligible": false,
-      "coverage_row_eligible": false,
-      "no_listed_options_policy_status": "pending_owner_acceptance",
-      "attempted_forms": [
-        "TFII"
-      ]
-    },
-    {
-      "ticker": "UI",
-      "status": "no_record",
-      "side_statuses": {
-        "C": "no_record",
-        "P": "no_record"
-      },
-      "accepted_form": null,
-      "accepted_form_policy": null,
-      "scoring_row_eligible": false,
-      "coverage_row_eligible": false,
-      "no_listed_options_policy_status": "pending_owner_acceptance",
-      "attempted_forms": [
-        "UI"
-      ]
-    }
-  ],
+  "attempts": [],
   "rows": [
     {
       "ticker": "A",
@@ -68192,6 +68127,40 @@
       }
     },
     {
+      "ticker": "SPCX",
+      "as_of": "2026-07-10",
+      "source_date": "20260710",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "accepted_form": "SPCX",
+      "accepted_form_policy": "both_sides_loaded",
+      "side_statuses": {
+        "C": "loaded",
+        "P": "loaded"
+      },
+      "zero_volume_sides": [],
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260710/SPCX_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260710/SPCX_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 51.04,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 608612,
+        "put_volume": 574336,
+        "total_volume": 1182948,
+        "call_share": 0.514488,
+        "put_call_volume_ratio": 0.943682,
+        "row_count": 116,
+        "exchange_count": 18,
+        "actdate": "07/10/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
       "ticker": "SPG",
       "as_of": "2026-06-26",
       "source_date": "20260626",
@@ -83197,23 +83166,23 @@
     }
   ],
   "batch_coverage": {
-    "row_count": 181,
-    "with_options_activity_score": 181,
-    "total_call_volume": 8168596,
-    "total_put_volume": 4818984,
+    "row_count": 1,
+    "with_options_activity_score": 1,
+    "total_call_volume": 608612,
+    "total_put_volume": 574336,
     "confidence_counts": {
-      "medium": 181
+      "medium": 1
     },
-    "failed_attempts": 4
+    "failed_attempts": 0
   },
-  "previous_output_generated_at": "2026-07-11T03:57:27.110Z",
+  "previous_output_generated_at": "2026-07-11T03:59:36.778Z",
   "upsert_policy": {
     "key": [
       "ticker",
       "source_date"
     ],
     "replaced_rows": 0,
-    "added_rows": 181,
-    "cumulative_rows": 2555
+    "added_rows": 1,
+    "cumulative_rows": 2556
   }
 }

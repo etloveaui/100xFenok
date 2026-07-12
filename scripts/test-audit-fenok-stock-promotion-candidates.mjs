@@ -6,6 +6,7 @@ import {
   corporateActionEvidenceFor,
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
+  expectedStockPromotionGapCount,
   localSourceFilesFor,
   stockanalysisCorporateActionsByTicker,
   stockanalysisSurfaceTickers,
@@ -101,6 +102,12 @@ assert.equal(
     [{ ticker: "BF.B" }],
   ),
   false,
+);
+
+assert.equal(
+  expectedStockPromotionGapCount(["A", "B", "C"], new Set(["A", "D"])),
+  2,
+  "S0-only tickers must not be subtracted from the S1 candidate denominator",
 );
 
 console.log("test-audit-fenok-stock-promotion-candidates: ok");

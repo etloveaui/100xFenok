@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-12T12:25:48.696Z",
+  "generated_at": "2026-07-12T12:55:09.537Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -14,7 +14,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v1",
     "built_at": "2026-07-12T10:51:19.151Z",
-    "evaluated_at": "2026-07-12T12:25:48.696Z",
+    "evaluated_at": "2026-07-12T12:55:09.537Z",
     "fresh": false,
     "missed_slot_count": 1,
     "hard_age_ok": true
@@ -109,49 +109,49 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-12T12:16:00.051Z",
+      "source_date": "2026-07-12T12:53:52.687Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.16,
+      "age": 0.02,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-12T12:15:49.136Z",
+      "generated_at": "2026-07-12T12:55:04.978Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-12T12:25:47.905Z",
+      "generated_at": "2026-07-12T12:53:36.993Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-12T12:25:48.495Z",
+      "generated_at": "2026-07-12T12:53:57.494Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-12T12:15:59.991Z",
+      "generated_at": "2026-07-12T12:53:52.587Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-12T12:16:00.051Z",
+      "generated_at": "2026-07-12T12:53:52.687Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-12T01:36:53.795Z",
+      "generated_at": "2026-07-12T12:53:43.722Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -171,9 +171,9 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:15:49.136Z",
+      "as_of": "2026-07-12T12:55:04.978Z",
       "counts": {
-        "active_total": 1172,
+        "active_total": 1173,
         "by_market": [
           {
             "market": "HKEX",
@@ -197,7 +197,7 @@
           },
           {
             "market": "US",
-            "count": 685
+            "count": 686
           },
           {
             "market": "US_CLASS",
@@ -205,12 +205,12 @@
           }
         ],
         "buckets": {
-          "us": 744,
+          "us": 745,
           "korea": 337,
           "asia_ex_taiwan": 91,
           "explicit_taiwan": 0
         },
-        "denominator": 1172
+        "denominator": 1173
       },
       "details": {},
       "checks": [
@@ -260,12 +260,12 @@
           "label": "finra_full_us_source_ready",
           "status": "ready",
           "status_label": "정상",
-          "detail": "685 / 685 · 2026-07-10",
+          "detail": "686 / 686 · 2026-07-10",
           "source_date": "2026-07-10",
           "age_days": 2,
           "max_age_days": 4,
-          "covered_count": 685,
-          "denominator": 685,
+          "covered_count": 686,
+          "denominator": 686,
           "missing_count": 0
         },
         {
@@ -273,12 +273,12 @@
           "label": "occ_full_us_source_ready",
           "status": "ready",
           "status_label": "정상",
-          "detail": "685 / 685 · 2026-07-10",
+          "detail": "686 / 686 · 2026-07-10",
           "source_date": "2026-07-10",
           "age_days": 2,
           "max_age_days": 4,
-          "covered_count": 685,
-          "denominator": 685,
+          "covered_count": 686,
+          "denominator": 686,
           "missing_count": 0
         },
         {
@@ -315,14 +315,15 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:15:49.076Z",
+      "as_of": "2026-07-12T12:53:17.698Z",
       "counts": {
         "denominator": 1390,
-        "current_public_stock": 1172,
+        "current_public_stock": 1173,
+        "current_public_candidate_overlap": 1172,
         "s1_gap_total": 218,
         "promotion_count": 0,
         "blocked_excluded_count": 218,
-        "current_public_plus_blocked": 1390
+        "current_public_candidate_overlap_plus_blocked": 1390
       },
       "details": {},
       "checks": [
@@ -338,7 +339,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T12:15:49.076Z"
+          "detail": "2026-07-12T12:53:17.698Z"
         },
         {
           "id": "gap_partition_closed",
@@ -369,7 +370,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:16:00.051Z",
+      "as_of": "2026-07-12T12:53:52.687Z",
       "counts": {
         "eligible_etf_count": 4515,
         "scored_public_etf": 4515,
@@ -439,7 +440,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:25:47.905Z",
+      "as_of": "2026-07-12T12:53:36.993Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -550,7 +551,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:25:48.495Z",
+      "as_of": "2026-07-12T12:53:57.494Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -567,7 +568,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T12:25:48.495Z"
+          "detail": "2026-07-12T12:53:57.494Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -598,22 +599,22 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:15:59.991Z",
+      "as_of": "2026-07-12T12:53:52.587Z",
       "counts": {
-        "active_us_total": 744,
-        "plain_us_finra_denominator": 685,
-        "plain_us_finra_source_ready": 685,
-        "plain_us_occ_denominator": 685,
-        "plain_us_occ_source_ready": 685,
+        "active_us_total": 745,
+        "plain_us_finra_denominator": 686,
+        "plain_us_finra_source_ready": 686,
+        "plain_us_occ_denominator": 686,
+        "plain_us_occ_source_ready": 686,
         "non_plain_daily_ready": 59,
         "mapping_required_count": 109
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-12T12:15:47.141Z",
+          "signals_generated_at": "2026-07-12T12:53:35.620Z",
           "finra_source_date": "20260710",
           "occ_source_date": "20260710",
-          "coverage_index_generated_at": "2026-07-12T12:15:49.136Z",
+          "coverage_index_generated_at": "2026-07-12T12:53:47.844Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -640,21 +641,21 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T12:15:59.991Z"
+          "detail": "2026-07-12T12:53:52.587Z"
         },
         {
           "id": "finra_plain_us_ready",
           "label": "plain US FINRA",
           "status": "ready",
           "status_label": "정상",
-          "detail": "685 / 685"
+          "detail": "686 / 686"
         },
         {
           "id": "occ_plain_us_ready",
           "label": "plain US OCC",
           "status": "ready",
           "status_label": "정상",
-          "detail": "685 / 685"
+          "detail": "686 / 686"
         },
         {
           "id": "non_plain_not_service_blocker",
@@ -678,7 +679,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:25:48.722Z",
+      "as_of": "2026-07-12T12:55:09.549Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,

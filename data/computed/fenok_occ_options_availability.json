@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-occ-options-availability/v0.1",
-  "generated_at": "2026-07-11T03:59:36.751Z",
+  "generated_at": "2026-07-12T12:51:20.255Z",
   "formula_version": "fenok-occ-options-volume-v0.1",
   "purpose": "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
   "raw_policy": {
@@ -9,12 +9,12 @@
     "private_artifact_paths_included": false
   },
   "source_date": "20260710",
-  "collection_mode": "all_eligible_batched",
-  "selected_tickers": 185,
-  "eligible_count": 685,
+  "collection_mode": "explicit_tickers",
+  "selected_tickers": 1,
+  "eligible_count": 1,
   "request_budget": {
-    "estimated_max_live_requests": 740,
-    "max_requests": 1500
+    "estimated_max_live_requests": 2,
+    "max_requests": 2
   },
   "side_attempts": [
     {
@@ -29794,6 +29794,26 @@
       "source_date": "20260710",
       "side": "P",
       "attempted_form": "SOLV",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "loaded",
+      "error_class": null
+    },
+    {
+      "ticker": "SPCX",
+      "source_date": "20260710",
+      "side": "C",
+      "attempted_form": "SPCX",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "loaded",
+      "error_class": null
+    },
+    {
+      "ticker": "SPCX",
+      "source_date": "20260710",
+      "side": "P",
+      "attempted_form": "SPCX",
       "cache_hit": false,
       "no_fetch": false,
       "status": "loaded",
@@ -62752,6 +62772,24 @@
       "evidence_policy": null
     },
     {
+      "ticker": "SPCX",
+      "source_date": "20260710",
+      "attempted_forms": [
+        "SPCX"
+      ],
+      "accepted_form": "SPCX",
+      "accepted_form_policy": "both_sides_loaded",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
+      "status": "options_activity_available",
+      "side_statuses": {
+        "C": "loaded",
+        "P": "loaded"
+      },
+      "evidence_policy": null
+    },
+    {
       "ticker": "SPG",
       "source_date": "20260626",
       "attempted_forms": [
@@ -68852,7 +68890,7 @@
       "evidence_policy": null
     }
   ],
-  "previous_generated_at": "2026-07-11T03:57:27.084Z",
+  "previous_generated_at": "2026-07-11T03:59:36.751Z",
   "upsert_policy": {
     "key": [
       "ticker",
@@ -68860,7 +68898,7 @@
       "attempted_forms"
     ],
     "replaced_rows": 0,
-    "added_rows": 185,
-    "cumulative_rows": 1841
+    "added_rows": 1,
+    "cumulative_rows": 1842
   }
 }

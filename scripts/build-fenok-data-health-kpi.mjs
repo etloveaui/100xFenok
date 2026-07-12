@@ -597,7 +597,7 @@ function buildStockS1Lane(coverageIndex) {
   const promotion = track?.promotion_gate_readiness || {};
   const counts = promotion.counts || {};
   const denominator = number(counts.denominator || track?.denominator);
-  const closedCount = number(counts.current_public_plus_blocked);
+  const closedCount = number(counts.current_public_candidate_overlap_plus_blocked);
   return lane("stock_s1_candidate_gate", "S1 candidate promotion gate", [
     check("requirements_complete", "PUBLIC+DAILY+GATED with blocked ledger", allRequirementsReady(track?.requirements), track?.stage || "missing"),
     check("artifact_present", "promotion artifact", bool(promotion.artifact_present), promotion.artifact_generated_at || "missing"),
@@ -608,10 +608,11 @@ function buildStockS1Lane(coverageIndex) {
     counts: {
       denominator,
       current_public_stock: number(counts.current_public_stock),
+      current_public_candidate_overlap: number(counts.current_public_candidate_overlap),
       s1_gap_total: number(counts.s1_gap_total),
       promotion_count: number(counts.promotion_rows),
       blocked_excluded_count: number(counts.blocked_excluded_rows),
-      current_public_plus_blocked: closedCount,
+      current_public_candidate_overlap_plus_blocked: closedCount,
     },
     asOf: promotion.artifact_generated_at || coverageIndex?.generated_at || null,
   });

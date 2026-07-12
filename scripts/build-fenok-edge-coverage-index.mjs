@@ -993,14 +993,15 @@ function buildS1PromotionGateEvidence() {
   const publicS0Before = Number(counts.public_s0_before) || 0;
   const publicS0AfterIfEnabled = Number(counts.public_s0_after_if_enabled) || 0;
   const s1GapTotal = Number(counts.s1_gap_total) || 0;
+  const currentPublicCandidateOverlap = Math.max(0, denominator - s1GapTotal);
   const promotionRows = Number(counts.promotion_rows) || 0;
   const blockedExcludedRows = Number(counts.excluded_blocked_rows) || 0;
   const artifactPresent = s1PromotionDryRun.schema_version === "fenok-s1-stock-public-promotion-dry-run/v0.1";
   const artifactChecksOk = checksOk(s1PromotionDryRun.acceptance_checks) && checksOk(s1PromotionDryRun.source_acceptance_checks);
   const gapPartitionOk = s1GapTotal === promotionRows + blockedExcludedRows;
-  const preMutationUniverseOk = publicS0Before + s1GapTotal === denominator;
+  const preMutationUniverseOk = currentPublicCandidateOverlap + s1GapTotal === denominator;
   const mutationAppliedToCurrentPublic = publicS0AfterIfEnabled === currentPublicStock;
-  const blockedLedgerClosesCurrentDenominator = currentPublicStock + blockedExcludedRows === denominator;
+  const blockedLedgerClosesCurrentDenominator = currentPublicCandidateOverlap + blockedExcludedRows === denominator;
   const allCandidatesAccounted = artifactPresent
     && artifactChecksOk
     && gapPartitionOk
@@ -1036,12 +1037,13 @@ function buildS1PromotionGateEvidence() {
     counts: {
       denominator,
       current_public_stock: currentPublicStock,
+      current_public_candidate_overlap: currentPublicCandidateOverlap,
       public_s0_before: publicS0Before,
       public_s0_after_if_enabled: publicS0AfterIfEnabled,
       s1_gap_total: s1GapTotal,
       promotion_rows: promotionRows,
       blocked_excluded_rows: blockedExcludedRows,
-      current_public_plus_blocked: currentPublicStock + blockedExcludedRows,
+      current_public_candidate_overlap_plus_blocked: currentPublicCandidateOverlap + blockedExcludedRows,
     },
     checks: [
       { id: "artifact_present", ok: artifactPresent },
@@ -1110,7 +1112,7 @@ const index = {
     collected_asset_total: Number(marketFacts.count) || null,
     collected_stock_candidates: Number(marketFactsCoverage.stock) || null,
     scored_public_stock: activeScoringTotal,
-    stock_promotion_audit_gap: Number(marketFactsCoverage.stock) ? Math.max(0, Number(marketFactsCoverage.stock) - activeScoringTotal) : null,
+    stock_promotion_audit_gap: Number(marketFactsCoverage.stock) ? s1PromotionGateEvidence.counts.s1_gap_total : null,
     stage: s1PromotionGateEvidence.gated_ready ? "PUBLIC_GATED_WITH_BLOCKED_LEDGER" : "NORMALIZED",
     public_done_claim_allowed: s1PromotionGateEvidence.public_done_claim_allowed,
     promotion_gate_readiness: s1PromotionGateEvidence,
