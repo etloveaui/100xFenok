@@ -15,6 +15,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FETCH_PATH = ROOT / "scripts" / "fetch-yf-finance.py"
+YF_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "fetch-yf-finance.yml"
+MANIFEST_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "update-manifest.yml"
 
 
 def load_fetch_module():
@@ -380,6 +382,26 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         finally:
             sys.argv, sys.stdout = original_argv, original_stdout
         self.assertFalse((self.root / "state").exists())
+
+    def test_workflow_persists_candidates_before_public_promotion(self) -> None:
+        workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
+        candidate_start = workflow.index("      - name: Persist fetched Yahoo candidates")
+        coverage_start = workflow.index("      - name: Rebuild local coverage summary")
+        public_start = workflow.index("      - name: Mirror to public")
+        validation_start = workflow.index("      - name: Validate YF and market audit contracts")
+        promotion_start = workflow.index("      - name: Commit and push")
+        candidate_step = workflow[candidate_start:coverage_start]
+
+        self.assertLess(candidate_start, coverage_start)
+        self.assertLess(coverage_start, public_start)
+        self.assertLess(public_start, validation_start)
+        self.assertLess(validation_start, promotion_start)
+        self.assertIn("git add -- data/yf/finance", candidate_step)
+        self.assertIn("git restore --staged -- data/yf/finance/_summary.json", candidate_step)
+        self.assertNotIn("100xfenok-next/public", candidate_step)
+
+        manifest_workflow = MANIFEST_WORKFLOW_PATH.read_text(encoding="utf-8")
+        self.assertIn("      - '!data/yf/**'", manifest_workflow)
 
 
 if __name__ == "__main__":

@@ -196,6 +196,34 @@ jobs:
             python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
           fi
 
+      - name: Persist fetched Yahoo candidates
+        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -- data/yf/finance
+          git restore --staged -- data/yf/finance/_summary.json
+          if git diff --staged --quiet; then
+            echo "No fetched Yahoo candidate changes to persist"
+            exit 0
+          fi
+          git commit -m "data: persist yf finance candidates"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              echo "candidate rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              exit 0
+            fi
+            echo "candidate push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "candidate push failed after retrying concurrent main updates"
+          exit 1
+
       - name: Rebuild local coverage summary
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: python3 scripts/rebuild-yf-finance-summary.py
