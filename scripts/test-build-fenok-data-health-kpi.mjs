@@ -23,6 +23,7 @@ import {
   slaStatusForAge,
   classifyProductSurface,
   buildEtfLane,
+  buildRimLane,
   enumerateDueSlots,
   deriveMissedSlots,
 } from "./build-fenok-data-health-kpi.mjs";
@@ -42,6 +43,43 @@ const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
 assert.equal(PRODUCT_SURFACE_SLA?.unit, "business_days");
 assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadence + grace must fit inside the product-surface SLA");
+
+{
+  const readyIndex = (id) => ({
+    id,
+    role: id === "SPX" || id === "NDX" ? "primary_public_v1" : "secondary_input_only",
+    public_status: "ready_inputs_and_forecast_grid",
+    blockers: [],
+    derived: {
+      forecast_grid_v1: {
+        public_status: id === "KOSPI"
+          ? "input_only_krx_exact_weights_no_fair_value"
+          : id === "SOX"
+            ? "input_only_sox_methodology_weights_no_fair_value"
+            : "ready_inputs_only_no_fair_value",
+      },
+    },
+  });
+  const readyRim = {
+    generated_at: "2026-07-12T01:41:29.000Z",
+    output_scope: "inputs_only_no_fair_value",
+    policy: { no_public_single_target: true },
+    indices: Object.fromEntries(["SPX", "NDX", "KOSPI", "SOX"].map((id) => [id, readyIndex(id)])),
+  };
+  const readyLane = buildRimLane(readyRim);
+  assert.equal(readyLane.status, "ready");
+  assert.equal(readyLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "ready");
+
+  const staleRim = structuredClone(readyRim);
+  staleRim.indices.KOSPI.public_status = "input_only_krx_exact_weights_with_caveats";
+  staleRim.indices.KOSPI.blockers = [{
+    code: "krx_kospi_daily_refresh_recommended",
+    severity: "freshness_blocker",
+  }];
+  const blockedLane = buildRimLane(staleRim);
+  assert.equal(blockedLane.status, "blocked");
+  assert.equal(blockedLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "blocked");
+}
 
 // The full 4,515-row daily-1Y lane is a diagnostic backlog. Product availability
 // is gated by the exact Core Daily Basket; non-zero diagnostic gaps must remain

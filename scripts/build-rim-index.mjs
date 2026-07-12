@@ -3,6 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  businessDayAge,
+  isFutureSource,
+  isRealCalendarDate,
+} from "./lib/market-calendar.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
@@ -154,30 +160,43 @@ function daysBetweenIsoDates(startDate, endDate) {
   return Math.round((end - start) / 86400000);
 }
 
-function krxInputFreshness(asOf, generatedAt) {
+function marketInputFreshness(asOf, generatedAt, { market, maxDays }) {
   const generatedDate = String(generatedAt ?? "").slice(0, 10);
-  const ageDays = daysBetweenIsoDates(asOf, generatedDate);
+  const validDates = isRealCalendarDate(asOf) && isRealCalendarDate(generatedDate);
+  const calendarAgeDays = validDates ? daysBetweenIsoDates(asOf, generatedDate) : null;
+  const businessAgeDays = validDates ? businessDayAge(asOf, generatedDate, market) : null;
+  const futureDateAnomaly = validDates
+    ? isFutureSource(asOf, generatedDate, "business_days")
+    : false;
   return {
-    generated_at_date: generatedDate || null,
-    calendar_age_days: ageDays,
-    max_input_freshness_days: KOSPI_INPUT_FRESHNESS_MAX_DAYS,
-    status: finite(ageDays) && ageDays <= KOSPI_INPUT_FRESHNESS_MAX_DAYS
+    generated_at_date: isRealCalendarDate(generatedDate) ? generatedDate : null,
+    calendar_age_days: calendarAgeDays,
+    business_age_days: businessAgeDays,
+    freshness_unit: "business_days",
+    freshness_calendar: market,
+    max_input_freshness_days: maxDays,
+    future_date_anomaly: futureDateAnomaly,
+    status: validDates
+      && !futureDateAnomaly
+      && finite(businessAgeDays)
+      && businessAgeDays <= maxDays
       ? "fresh_enough_for_input_slice"
       : "refresh_recommended",
   };
 }
 
-function soxInputFreshness(asOf, generatedAt) {
-  const generatedDate = String(generatedAt ?? "").slice(0, 10);
-  const ageDays = daysBetweenIsoDates(asOf, generatedDate);
-  return {
-    generated_at_date: generatedDate || null,
-    calendar_age_days: ageDays,
-    max_input_freshness_days: SOX_INPUT_FRESHNESS_MAX_DAYS,
-    status: finite(ageDays) && ageDays <= SOX_INPUT_FRESHNESS_MAX_DAYS
-      ? "fresh_enough_for_input_slice"
-      : "refresh_recommended",
-  };
+export function krxInputFreshness(asOf, generatedAt) {
+  return marketInputFreshness(asOf, generatedAt, {
+    market: "krx_market",
+    maxDays: KOSPI_INPUT_FRESHNESS_MAX_DAYS,
+  });
+}
+
+export function soxInputFreshness(asOf, generatedAt) {
+  return marketInputFreshness(asOf, generatedAt, {
+    market: "us_market",
+    maxDays: SOX_INPUT_FRESHNESS_MAX_DAYS,
+  });
 }
 
 function writeJson(relPath, payload, roots) {

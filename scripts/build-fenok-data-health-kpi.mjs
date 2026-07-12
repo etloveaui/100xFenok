@@ -650,7 +650,7 @@ export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCor
   });
 }
 
-function buildRimLane(rimInputs) {
+export function buildRimLane(rimInputs) {
   const indexRows = Object.entries(rimInputs?.indices || {}).map(([id, item]) => {
     const blockers = Array.isArray(item?.blockers) ? item.blockers : [];
     return {

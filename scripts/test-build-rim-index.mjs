@@ -10,6 +10,8 @@ import {
   parseArgs,
   validateRimIndexInputs,
   buildPublicRimMirror,
+  krxInputFreshness,
+  soxInputFreshness,
 } from "./build-rim-index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -122,8 +124,80 @@ function makeKrxBridgeFixture() {
   return tempRoot;
 }
 
+const ciSundayKrxFreshness = krxInputFreshness(
+  "2026-07-09",
+  "2026-07-12T01:41:29.000Z",
+);
+assert.equal(ciSundayKrxFreshness.calendar_age_days, 3);
+assert.equal(ciSundayKrxFreshness.business_age_days, 1);
+assert.equal(ciSundayKrxFreshness.freshness_unit, "business_days");
+assert.equal(ciSundayKrxFreshness.freshness_calendar, "krx_market");
+assert.equal(ciSundayKrxFreshness.status, "fresh_enough_for_input_slice");
+
+const staleTuesdayKrxFreshness = krxInputFreshness(
+  "2026-07-09",
+  "2026-07-14T00:00:00.000Z",
+);
+assert.equal(staleTuesdayKrxFreshness.calendar_age_days, 5);
+assert.equal(staleTuesdayKrxFreshness.business_age_days, 3);
+assert.equal(staleTuesdayKrxFreshness.status, "refresh_recommended");
+
+const mondayBoundaryKrxFreshness = krxInputFreshness(
+  "2026-07-09",
+  "2026-07-13T02:30:00.000Z",
+);
+assert.equal(mondayBoundaryKrxFreshness.calendar_age_days, 4);
+assert.equal(mondayBoundaryKrxFreshness.business_age_days, 2);
+assert.equal(mondayBoundaryKrxFreshness.status, "fresh_enough_for_input_slice");
+
+const krxHolidayFreshness = krxInputFreshness(
+  "2026-08-14",
+  "2026-08-18T00:00:00.000Z",
+);
+assert.equal(krxHolidayFreshness.calendar_age_days, 4);
+assert.equal(krxHolidayFreshness.business_age_days, 1);
+assert.equal(krxHolidayFreshness.status, "fresh_enough_for_input_slice");
+
+const holidayWeekendSoxFreshness = soxInputFreshness(
+  "2026-07-02",
+  "2026-07-12T00:00:00.000Z",
+);
+assert.equal(holidayWeekendSoxFreshness.calendar_age_days, 10);
+assert.equal(holidayWeekendSoxFreshness.business_age_days, 5);
+assert.equal(holidayWeekendSoxFreshness.freshness_calendar, "us_market");
+assert.equal(holidayWeekendSoxFreshness.status, "fresh_enough_for_input_slice");
+
+const futureKrxFreshness = krxInputFreshness(
+  "2026-07-13",
+  "2026-07-12T00:00:00.000Z",
+);
+assert.equal(futureKrxFreshness.business_age_days, 0);
+assert.equal(futureKrxFreshness.future_date_anomaly, true);
+assert.equal(futureKrxFreshness.status, "refresh_recommended");
+
+const invalidKrxFreshness = krxInputFreshness(
+  "2026-02-31",
+  "2026-07-12T00:00:00.000Z",
+);
+assert.equal(invalidKrxFreshness.business_age_days, null);
+assert.equal(invalidKrxFreshness.status, "refresh_recommended");
+
+const futureSoxFreshness = soxInputFreshness(
+  "2026-07-13",
+  "2026-07-12T00:00:00.000Z",
+);
+assert.equal(futureSoxFreshness.future_date_anomaly, true);
+assert.equal(futureSoxFreshness.status, "refresh_recommended");
+
+const invalidSoxFreshness = soxInputFreshness(
+  "2026-07-09junk",
+  "2026-07-12T00:00:00.000Z",
+);
+assert.equal(invalidSoxFreshness.business_age_days, null);
+assert.equal(invalidSoxFreshness.status, "refresh_recommended");
+
 const payload = buildRimIndexInputs({
-  generatedAt: "2026-07-08T00:00:00.000Z",
+  generatedAt: "2026-07-12T01:41:29.000Z",
 });
 const validation = validateRimIndexInputs(payload);
 
@@ -277,6 +351,14 @@ try {
   assert.match(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.source, /derived_rim_inputs\.kospi_weights/);
   assert.ok(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.matched_weight_ratio >= 0.75);
   assert.equal(kospiBridge.derived.forecast_grid_v1.public_status, "input_only_krx_exact_weights_no_fair_value");
+
+  const staleBridgePayload = buildRimIndexInputs({
+    dataRootOverride: bridgeFixtureRoot,
+    generatedAt: "2026-07-13T02:30:00.000Z",
+  });
+  const staleKospiBridge = staleBridgePayload.indices.KOSPI;
+  assert.equal(staleKospiBridge.public_status, "input_only_krx_exact_weights_with_caveats");
+  assert.ok(staleKospiBridge.blockers.some((row) => row.code === "krx_kospi_daily_refresh_recommended"));
 } finally {
   fs.rmSync(bridgeFixtureRoot, { recursive: true, force: true });
 }
