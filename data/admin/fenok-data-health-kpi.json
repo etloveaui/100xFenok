@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-12T12:55:09.537Z",
+  "generated_at": "2026-07-12T12:59:01.301Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -24,11 +24,11 @@
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-12T12:55:09.537Z",
-      "run_id": null,
-      "workflow": null,
-      "event_name": null,
-      "sha": null
+      "built_at": "2026-07-12T12:59:01.301Z",
+      "run_id": "29193523913",
+      "workflow": "Update Manifest",
+      "event_name": "push",
+      "sha": "24776639c602d91395da75640da6d9c86b978472"
     },
     "cadence": {
       "crons_utc": [
@@ -217,12 +217,12 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-12T12:53:52.687Z",
+      "source_date": "2026-07-12T12:16:00.051Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.02,
+      "age": 0.72,
       "status": "ready"
     }
   ],
@@ -235,13 +235,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-12T12:53:36.993Z",
+      "generated_at": "2026-07-12T12:59:00.505Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-12T12:53:57.494Z",
+      "generated_at": "2026-07-12T12:59:01.099Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -253,13 +253,13 @@
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-12T12:53:52.687Z",
+      "generated_at": "2026-07-12T12:16:00.051Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-12T12:53:43.722Z",
+      "generated_at": "2026-07-12T01:36:53.795Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -478,7 +478,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:53:52.687Z",
+      "as_of": "2026-07-12T12:16:00.051Z",
       "counts": {
         "eligible_etf_count": 4515,
         "scored_public_etf": 4515,
@@ -548,7 +548,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:53:36.993Z",
+      "as_of": "2026-07-12T12:59:00.505Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -659,7 +659,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:53:57.494Z",
+      "as_of": "2026-07-12T12:59:01.099Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -676,7 +676,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T12:53:57.494Z"
+          "detail": "2026-07-12T12:59:01.099Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -787,7 +787,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T12:55:09.549Z",
+      "as_of": "2026-07-12T12:59:01.328Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
