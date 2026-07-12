@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-12T11:24:04.851Z",
+  "generated_at": "2026-07-12T12:19:25.308Z",
   "status": "ready",
   "status_label": "정상",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
@@ -24,11 +24,11 @@
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-12T11:24:04.851Z",
-      "run_id": "29190705052",
+      "built_at": "2026-07-12T12:19:25.308Z",
+      "run_id": "29192358235",
       "workflow": "Update Manifest",
       "event_name": "workflow_dispatch",
-      "sha": "629433d3a0259320f6dc9662b336758a471feabe"
+      "sha": "bf54f2921a9164a6ddc603585e48fb807f721926"
     },
     "cadence": {
       "crons_utc": [
@@ -217,43 +217,43 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-12T01:37:41.341Z",
+      "source_date": "2026-07-12T12:16:00.051Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 9.77,
+      "age": 0.06,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-12T01:37:10.237Z",
+      "generated_at": "2026-07-12T12:15:49.136Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-12T11:24:04.038Z",
+      "generated_at": "2026-07-12T12:19:24.531Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-12T11:24:04.644Z",
+      "generated_at": "2026-07-12T12:19:25.108Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-12T01:37:30.123Z",
+      "generated_at": "2026-07-12T12:15:59.991Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-12T01:37:41.341Z",
+      "generated_at": "2026-07-12T12:16:00.051Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -279,7 +279,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T01:37:10.237Z",
+      "as_of": "2026-07-12T12:15:49.136Z",
       "counts": {
         "active_total": 1172,
         "by_market": [
@@ -423,14 +423,14 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-11T07:43:23.821Z",
+      "as_of": "2026-07-12T12:15:49.076Z",
       "counts": {
-        "denominator": 1178,
+        "denominator": 1390,
         "current_public_stock": 1172,
-        "s1_gap_total": 6,
+        "s1_gap_total": 218,
         "promotion_count": 0,
-        "blocked_excluded_count": 6,
-        "current_public_plus_blocked": 1178
+        "blocked_excluded_count": 218,
+        "current_public_plus_blocked": 1390
       },
       "details": {},
       "checks": [
@@ -446,14 +446,14 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-11T07:43:23.821Z"
+          "detail": "2026-07-12T12:15:49.076Z"
         },
         {
           "id": "gap_partition_closed",
           "label": "public plus blocked equals denominator",
           "status": "ready",
           "status_label": "정상",
-          "detail": "1,178 / 1,178"
+          "detail": "1,390 / 1,390"
         },
         {
           "id": "promotion_queue_empty",
@@ -477,7 +477,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T01:37:41.341Z",
+      "as_of": "2026-07-12T12:16:00.051Z",
       "counts": {
         "eligible_etf_count": 4515,
         "scored_public_etf": 4515,
@@ -547,7 +547,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T11:24:04.038Z",
+      "as_of": "2026-07-12T12:19:24.531Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -658,7 +658,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T11:24:04.644Z",
+      "as_of": "2026-07-12T12:19:25.108Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -675,7 +675,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T11:24:04.644Z"
+          "detail": "2026-07-12T12:19:25.108Z"
         },
         {
           "id": "no_stale_surfaces",
@@ -706,7 +706,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T01:37:30.123Z",
+      "as_of": "2026-07-12T12:15:59.991Z",
       "counts": {
         "active_us_total": 744,
         "plain_us_finra_denominator": 685,
@@ -718,10 +718,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-11T23:58:54.505Z",
+          "signals_generated_at": "2026-07-12T12:15:47.141Z",
           "finra_source_date": "20260710",
           "occ_source_date": "20260710",
-          "coverage_index_generated_at": "2026-07-12T01:37:10.237Z",
+          "coverage_index_generated_at": "2026-07-12T12:15:49.136Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -748,7 +748,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T01:37:30.123Z"
+          "detail": "2026-07-12T12:15:59.991Z"
         },
         {
           "id": "finra_plain_us_ready",
@@ -786,7 +786,7 @@
       "status": "ready",
       "status_label": "정상",
       "required": true,
-      "as_of": "2026-07-12T11:24:04.877Z",
+      "as_of": "2026-07-12T12:19:25.334Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
