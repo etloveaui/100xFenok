@@ -2,15 +2,15 @@
   "schema_version": "market-facts/v1",
   "ticker": "YBTC",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T10:46:19Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "Roundhill Bitcoin Covered Call Strategy ETF",
-    "exchange": "BTS",
-    "currency": "USD",
+    "name": "YBTC",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
-    "fund_family": "Roundhill Investments",
-    "category": "Digital Assets"
+    "fund_family": null,
+    "category": null
   },
   "facts": {
     "price": {
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 16.7307,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-06-30T00:22:51Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 16.7307,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 16.7307,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-06-30T00:22:51Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": 0.20000030212402464,
@@ -113,8 +106,8 @@
       "candidate_count": 1
     },
     "total_assets": {
-      "value": 152236640,
-      "source": "yf",
+      "value": 152236640.0,
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-06-30T00:22:51Z",
       "confidence": "observed",
@@ -125,13 +118,6 @@
       ],
       "candidates": [
         {
-          "value": 152236640,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "observed"
-        },
-        {
           "value": 152236640.0,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
@@ -139,11 +125,11 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 77.86,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-06-30T00:22:51Z",
       "confidence": "observed",
@@ -157,14 +143,6 @@
       "candidates": [
         {
           "value": 77.86,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 77.86,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
           "fetched_at": "2026-06-30T00:22:51Z",
@@ -172,7 +150,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "beta": {
       "value": 0.0,
@@ -198,7 +176,7 @@
     },
     "expense_ratio": {
       "value": 0.95,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-06-30T00:22:51Z",
       "confidence": "observed",
@@ -211,14 +189,6 @@
       "candidates": [
         {
           "value": 0.95,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 0.95,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
           "fetched_at": "2026-06-30T00:22:51Z",
@@ -226,36 +196,11 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_1m": {
-      "value": -16.182383723417143,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-30T00:22:51Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance"
-      ],
-      "candidates": [
-        {
-          "value": -16.182383723417143,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
       "candidate_count": 1
     },
     "return_3m": {
       "value": -8.989029239264825,
-      "source": "yf.history_1y",
+      "source": "stockanalysis.detail.history",
       "as_of": "2026-06-29",
       "fetched_at": "2026-06-30T00:22:51Z",
       "confidence": "derived",
@@ -267,14 +212,6 @@
       "candidates": [
         {
           "value": -8.989029239264825,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -8.989029239264825,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-06-29",
           "fetched_at": "2026-06-30T00:22:51Z",
@@ -282,75 +219,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_ytd": {
-      "value": -30.426547721061386,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-30T00:22:51Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -30.426547721061386,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -14.43429,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
-    },
-    "return_1y": {
-      "value": -41.54709417729164,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-30T00:22:51Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -41.54709417729164,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -64.127365,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:22:51Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
+      "candidate_count": 1
     }
   },
   "etf": {
@@ -388,25 +257,26 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": true
+    "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/YBTC.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/YBTC.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/YBTC.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:lkg_fallback",
     "field_source_policy": {
       "price": [
         "yf",

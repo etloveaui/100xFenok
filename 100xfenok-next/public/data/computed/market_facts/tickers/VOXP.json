@@ -2,11 +2,11 @@
   "schema_version": "market-facts/v1",
   "ticker": "VOXP",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T10:46:19Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "Advisors Series Trust - Vox Populi ETF",
-    "exchange": "BTS",
-    "currency": "USD",
+    "name": "VOXP",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 37.868,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-06-30T00:21:16Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 37.868,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:21:16Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 37.868,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-06-30T00:21:16Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": 0.4029999999999987,
@@ -112,34 +105,9 @@
       ],
       "candidate_count": 1
     },
-    "return_1m": {
-      "value": -2.125567564897384,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-26",
-      "fetched_at": "2026-06-30T00:21:16Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance"
-      ],
-      "candidates": [
-        {
-          "value": -2.125567564897384,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-30T00:21:16Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
     "return_3m": {
       "value": 13.552345924144602,
-      "source": "yf.history_1y",
+      "source": "stockanalysis.detail.history",
       "as_of": "2026-06-26",
       "fetched_at": "2026-06-30T00:21:16Z",
       "confidence": "derived",
@@ -151,14 +119,6 @@
       "candidates": [
         {
           "value": 13.552345924144602,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-30T00:21:16Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 13.552345924144602,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-06-26",
           "fetched_at": "2026-06-30T00:21:16Z",
@@ -166,67 +126,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_ytd": {
-      "value": 7.356078623202405,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-26",
-      "fetched_at": "2026-06-30T00:21:16Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 7.356078623202405,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-30T00:21:16Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
       "candidate_count": 1
-    },
-    "return_1y": {
-      "value": 19.3650325802794,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-26",
-      "fetched_at": "2026-06-30T00:21:16Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 19.3650325802794,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-30T00:21:16Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 17.336714,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-30T00:21:16Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
     }
   },
   "etf": {
@@ -249,21 +149,22 @@
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/VOXP.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/VOXP.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/VOXP.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:lkg_fallback",
     "field_source_policy": {
       "price": [
         "yf",

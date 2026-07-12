@@ -2,15 +2,15 @@
   "schema_version": "market-facts/v1",
   "ticker": "RMBX",
   "asset_type": "etf",
-  "generated_at": "2026-07-08T22:47:21Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "Tradr 2X Long RMBS Daily ETF",
-    "exchange": "BTS",
-    "currency": "USD",
+    "name": "RMBX",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
-    "fund_family": "AXS",
-    "category": "Trading--Leveraged Equity"
+    "fund_family": null,
+    "category": null
   },
   "facts": {
     "price": {
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 15.3616,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-07-08T22:43:15Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 15.3616,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:43:15Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 15.3616,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-07-08T22:43:15Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": 1.1866006072998054,
@@ -113,8 +106,8 @@
       "candidate_count": 1
     },
     "total_assets": {
-      "value": 250000,
-      "source": "yf",
+      "value": 250000.0,
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-07-08T22:43:15Z",
       "confidence": "observed",
@@ -125,13 +118,6 @@
       ],
       "candidates": [
         {
-          "value": 250000,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:43:15Z",
-          "confidence": "observed"
-        },
-        {
           "value": 250000.0,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
@@ -139,7 +125,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "beta": {
       "value": 0.0,
@@ -165,7 +151,7 @@
     },
     "expense_ratio": {
       "value": 1.49,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-07-08T22:43:15Z",
       "confidence": "observed",
@@ -178,14 +164,6 @@
       "candidates": [
         {
           "value": 1.49,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:43:15Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 1.49,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
           "fetched_at": "2026-07-08T22:43:15Z",
@@ -193,7 +171,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "return_3m": {
       "value": -6.718146444165593,
@@ -217,66 +195,6 @@
         }
       ],
       "candidate_count": 1
-    },
-    "return_ytd": {
-      "value": -25.08736761886736,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-08T22:43:15Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -25.08736761886736,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-08T22:43:15Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_1y": {
-      "value": -25.08736761886736,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-08T22:43:15Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -25.08736761886736,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-08T22:43:15Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 0.0,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:43:15Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
     }
   },
   "etf": {
@@ -295,25 +213,26 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": true
+    "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/RMBX.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/RMBX.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/RMBX.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:fresh_fallback",
     "field_source_policy": {
       "price": [
         "yf",

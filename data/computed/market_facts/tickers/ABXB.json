@@ -2,11 +2,11 @@
   "schema_version": "market-facts/v1",
   "ticker": "ABXB",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T10:46:19Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "Abacus FCF ETF Trust - Abacus Flexible Bond Leaders ETF",
-    "exchange": "BTS",
-    "currency": "USD",
+    "name": "ABXB",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 19.3898,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-06-29T23:05:18Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 19.3898,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-29T23:05:18Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 19.3898,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-06-29T23:05:18Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": 0.025199999999998113,
@@ -112,34 +105,9 @@
       ],
       "candidate_count": 1
     },
-    "return_1m": {
-      "value": 0.6917767517504798,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-26",
-      "fetched_at": "2026-06-29T23:05:18Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance"
-      ],
-      "candidates": [
-        {
-          "value": 0.6917767517504798,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-29T23:05:18Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
     "return_3m": {
       "value": 2.377712787153719,
-      "source": "yf.history_1y",
+      "source": "stockanalysis.detail.history",
       "as_of": "2026-06-26",
       "fetched_at": "2026-06-29T23:05:18Z",
       "confidence": "derived",
@@ -151,14 +119,6 @@
       "candidates": [
         {
           "value": 2.377712787153719,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-29T23:05:18Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 2.377712787153719,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-06-26",
           "fetched_at": "2026-06-29T23:05:18Z",
@@ -166,67 +126,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_ytd": {
-      "value": 0.977552221391491,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-26",
-      "fetched_at": "2026-06-29T23:05:18Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 0.977552221391491,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-29T23:05:18Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
       "candidate_count": 1
-    },
-    "return_1y": {
-      "value": 4.18407575009233,
-      "source": "yf.history_1y",
-      "as_of": "2026-06-26",
-      "fetched_at": "2026-06-29T23:05:18Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 4.18407575009233,
-          "source": "yf.history_1y",
-          "as_of": "2026-06-26",
-          "fetched_at": "2026-06-29T23:05:18Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 0.43444633,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-06-29T23:05:18Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
     }
   },
   "etf": {
@@ -249,21 +149,22 @@
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/ABXB.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/ABXB.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/ABXB.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:lkg_fallback",
     "field_source_policy": {
       "price": [
         "yf",

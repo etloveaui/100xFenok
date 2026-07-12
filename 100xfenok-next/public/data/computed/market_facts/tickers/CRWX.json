@@ -2,15 +2,15 @@
   "schema_version": "market-facts/v1",
   "ticker": "CRWX",
   "asset_type": "etf",
-  "generated_at": "2026-07-08T22:47:21Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "Corgi CRWV 2x Daily ETF",
-    "exchange": "BTS",
-    "currency": "USD",
+    "name": "CRWX",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
-    "fund_family": "Corgi Funds",
-    "category": "Trading--Leveraged Equity"
+    "fund_family": null,
+    "category": null
   },
   "facts": {
     "price": {
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 23.3458,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-07-08T22:42:17Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 23.3458,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:42:17Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 23.3458,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-07-08T22:42:17Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": 3.564300936889648,
@@ -114,7 +107,7 @@
     },
     "expense_ratio": {
       "value": 0.45,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-07-08T22:42:17Z",
       "confidence": "observed",
@@ -127,14 +120,6 @@
       "candidates": [
         {
           "value": 0.45,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:42:17Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 0.45,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
           "fetched_at": "2026-07-08T22:42:17Z",
@@ -142,67 +127,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_ytd": {
-      "value": 7.640403747558594,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-08T22:42:17Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 7.640403747558594,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-08T22:42:17Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
       "candidate_count": 1
-    },
-    "return_1y": {
-      "value": 7.640403747558594,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-08T22:42:17Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 7.640403747558594,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-08T22:42:17Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -6.6168013,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:42:17Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
     }
   },
   "etf": {
@@ -221,25 +146,26 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": true
+    "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/CRWX.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/CRWX.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/CRWX.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:fresh_fallback",
     "field_source_policy": {
       "price": [
         "yf",

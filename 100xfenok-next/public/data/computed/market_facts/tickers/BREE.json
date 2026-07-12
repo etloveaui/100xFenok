@@ -2,15 +2,15 @@
   "schema_version": "market-facts/v1",
   "ticker": "BREE",
   "asset_type": "etf",
-  "generated_at": "2026-07-09T09:28:38Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "MFS Blended Research Emerging Markets Equity ETF",
-    "exchange": "NYQ",
-    "currency": "USD",
+    "name": "BREE",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
-    "fund_family": "MFS",
-    "category": "Diversified Emerging Mkts"
+    "fund_family": null,
+    "category": null
   },
   "facts": {
     "price": {
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 26.6923,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-07-09T09:20:28Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 26.6923,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 26.6923,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-07-09T09:20:28Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": 0.1076992370605474,
@@ -85,16 +78,9 @@
           "as_of": null,
           "fetched_at": "2026-07-09T09:20:28Z",
           "confidence": "observed"
-        },
-        {
-          "value": 0.109299,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change_pct": {
       "value": 0.40348428970357525,
@@ -115,20 +101,13 @@
           "as_of": null,
           "fetched_at": "2026-07-09T09:20:28Z",
           "confidence": "observed"
-        },
-        {
-          "value": 0.409477,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "total_assets": {
-      "value": 26810008,
-      "source": "yf",
+      "value": 26810008.0,
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-07-09T09:20:28Z",
       "confidence": "observed",
@@ -139,36 +118,8 @@
       ],
       "candidates": [
         {
-          "value": 26810008,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed"
-        },
-        {
           "value": 26810008.0,
           "source": "yf.stockanalysis_fallback.overview",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 2
-    },
-    "trailing_pe": {
-      "value": 15.239705,
-      "source": "yf",
-      "as_of": null,
-      "fetched_at": "2026-07-09T09:20:28Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "slickcharts"
-      ],
-      "candidates": [
-        {
-          "value": 15.239705,
-          "source": "yf",
           "as_of": null,
           "fetched_at": "2026-07-09T09:20:28Z",
           "confidence": "observed"
@@ -200,7 +151,7 @@
     },
     "expense_ratio": {
       "value": 0.44,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": null,
       "fetched_at": "2026-07-09T09:20:28Z",
       "confidence": "observed",
@@ -213,14 +164,6 @@
       "candidates": [
         {
           "value": 0.44,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 0.44,
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": null,
           "fetched_at": "2026-07-09T09:20:28Z",
@@ -228,36 +171,11 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_1m": {
-      "value": 3.1165812738579115,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:28Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance"
-      ],
-      "candidates": [
-        {
-          "value": 3.1165812738579115,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
       "candidate_count": 1
     },
     "return_3m": {
       "value": 17.698720677551872,
-      "source": "yf.history_1y",
+      "source": "stockanalysis.detail.history",
       "as_of": "2026-07-08",
       "fetched_at": "2026-07-09T09:20:28Z",
       "confidence": "derived",
@@ -269,14 +187,6 @@
       "candidates": [
         {
           "value": 17.698720677551872,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 17.698720677551872,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-07-08",
           "fetched_at": "2026-07-09T09:20:28Z",
@@ -284,67 +194,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
-    },
-    "return_ytd": {
-      "value": 15.816767259939478,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:28Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 15.816767259939478,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
       "candidate_count": 1
-    },
-    "return_1y": {
-      "value": 15.816767259939478,
-      "source": "yf.history_1y",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:28Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": 15.816767259939478,
-          "source": "yf.history_1y",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": 15.816772,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-09T09:20:28Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
     }
   },
   "etf": {
@@ -493,25 +343,26 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": true
+    "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/BREE.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/BREE.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/BREE.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:fresh_fallback",
     "field_source_policy": {
       "price": [
         "yf",

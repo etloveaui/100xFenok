@@ -2,11 +2,11 @@
   "schema_version": "market-facts/v1",
   "ticker": "CIR",
   "asset_type": "etf",
-  "generated_at": "2026-07-08T22:47:21Z",
+  "generated_at": "2026-07-12T12:15:00Z",
   "identity": {
-    "name": "Corgi CRCL 2x Daily ETF",
-    "exchange": "BTS",
-    "currency": "USD",
+    "name": "CIR",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -39,7 +39,7 @@
     },
     "previous_close": {
       "value": 22.4989,
-      "source": "yf",
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": null,
       "fetched_at": "2026-07-08T22:42:14Z",
       "confidence": "observed",
@@ -51,20 +51,13 @@
       "candidates": [
         {
           "value": 22.4989,
-          "source": "yf",
-          "as_of": null,
-          "fetched_at": "2026-07-08T22:42:14Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 22.4989,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": null,
           "fetched_at": "2026-07-08T22:42:14Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "change": {
       "value": -0.7150006927490224,
@@ -133,21 +126,22 @@
   },
   "financials": null,
   "sources": {
-    "yf": true,
+    "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/CIR.json",
+    "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "stockanalysis/etfs/CIR.json",
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/CIR.json",
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:fresh_fallback",
     "field_source_policy": {
       "price": [
         "yf",
