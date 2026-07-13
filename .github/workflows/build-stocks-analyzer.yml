@@ -14,7 +14,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -25,6 +25,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin main:refs/remotes/origin/main
+          git checkout -B main origin/main
 
       - name: Setup Node.js
         uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
@@ -46,9 +51,6 @@ jobs:
         run: |
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
-
-      - name: Build Explore discovery summary
-        run: node scripts/build-slickcharts-discovery.mjs
 
       - name: Build calendar previous-release values (FRED)
         env:
@@ -91,12 +93,10 @@ jobs:
             data/sec-13f/analytics/guru_holders_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
-            data/slickcharts/discovery-summary.json \
             data/calendar/prev-values.json \
             100xfenok-next/public/data/calendar/prev-values.json \
             100xfenok-next/public/data/global-scouter/core/revision_movers.json \
             100xfenok-next/public/data/damodaran/industry_benchmarks.json \
-            100xfenok-next/public/data/slickcharts/discovery-summary.json \
             100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \
             100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
             100xfenok-next/public/data/global-scouter/core/slick_index.json \
@@ -125,7 +125,7 @@ jobs:
               continue
             fi
             if git push; then
-              gh workflow run update-manifest.yml --ref main
+              gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"

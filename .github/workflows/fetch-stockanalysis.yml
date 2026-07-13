@@ -430,7 +430,12 @@ jobs:
             data/manifest.json \
             100xfenok-next/public/data/manifest.json \
             data/admin/product-surface-coverage.json \
-            100xfenok-next/public/data/admin/product-surface-coverage.json
+            100xfenok-next/public/data/admin/product-surface-coverage.json \
+            data/admin/fenok-edge-coverage-index.json \
+            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
+            data/admin/fenok-s0-finra-occ-mapping-ledger.json \
+            data/admin/fenok-edge-etf-daily1y-readiness.json \
+            data/admin/fenok-edge-etf-daily1y-fetchable-plan.json
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then

@@ -56,7 +56,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -67,6 +67,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin main:refs/remotes/origin/main
+          git checkout -B main origin/main
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -260,43 +265,37 @@ jobs:
             --output data/slickcharts/inflation.json \
             --pretty
 
-      - name: Refresh membership universe
-        run: |
-          python scripts/scrapers/membership-tracker.py --quiet
-
-      - name: Build Explore discovery summary
-        run: node scripts/build-slickcharts-discovery.mjs
-
-      - name: Sync public mirror
-        run: |
-          mkdir -p 100xfenok-next/public/data/slickcharts
-          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
-
-      - name: Rebuild Fenok derived gates
-        run: |
-          node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
-          npm --prefix 100xfenok-next run sync-static
-          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
-          npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated
-
       - name: Commit and push changes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add -A \
-            data/slickcharts/ \
-            data/computed/fenok_signals*.json \
-            data/computed/stock_action_index.json \
-            data/computed/fenok_signal_lens_proxies*.json \
-            data/admin/fenok-edge-coverage-index.json \
-            data/admin/fenok-s1-stock-public-promotion-dry-run.json \
-            100xfenok-next/public/data/slickcharts/ \
-            100xfenok-next/public/data/computed/fenok_signals_summary.json \
-            100xfenok-next/public/data/computed/stock_action_index.json \
-            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
-            100xfenok-next/src/generated/static-route-manifest.ts
+          git add -- \
+            data/slickcharts/sp500-returns.json \
+            data/slickcharts/sp500-returns-details.json \
+            data/slickcharts/nasdaq100-returns.json \
+            data/slickcharts/dowjones-returns.json \
+            data/slickcharts/sp500-drawdown.json \
+            data/slickcharts/btc-returns.json \
+            data/slickcharts/eth-returns.json \
+            data/slickcharts/sp500-performance.json \
+            data/slickcharts/nasdaq100-performance.json \
+            data/slickcharts/dowjones-performance.json \
+            data/slickcharts/sp500-yield.json \
+            data/slickcharts/nasdaq100-yield.json \
+            data/slickcharts/dowjones-yield.json \
+            data/slickcharts/sp500-analysis.json \
+            data/slickcharts/nasdaq100-analysis.json \
+            data/slickcharts/dowjones-analysis.json \
+            data/slickcharts/sp500-marketcap.json \
+            data/slickcharts/nasdaq100-ratio.json \
+            data/slickcharts/nasdaq100.json \
+            data/slickcharts/dowjones.json \
+            data/slickcharts/inflation.json
+          if [ -f data/slickcharts/1929crash.json ]; then
+            git add -- data/slickcharts/1929crash.json
+          fi
           git diff --staged --quiet || git commit -m "chore: update SlickCharts monthly data $(date -u +%Y-%m-%d)"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
@@ -305,8 +304,8 @@ jobs:
               sleep 3
               continue
             fi
-            if git push; then
-              gh workflow run update-manifest.yml --ref main
+            if git push origin HEAD:main; then
+              gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"
