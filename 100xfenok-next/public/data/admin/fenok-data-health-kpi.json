@@ -1,8 +1,9 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-12T23:59:04.258Z",
+  "generated_at": "2026-07-13T01:50:07.439Z",
   "status": "ready",
   "status_label": "정상",
+  "status_message": "All required lanes and platform integrity gates are ready.",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -11,12 +12,24 @@
     "private_ledgers_included": false,
     "source_artifacts_are_referenced_by_id_only": true
   },
+  "deployment_integrity": {
+    "status": "ready",
+    "status_label": "정상",
+    "status_message": "Platform integrity gates are ready; degraded lanes may publish independently.",
+    "blocker_count": 0,
+    "blockers": []
+  },
   "runtime": {
-    "projection": "kpi_runtime_projection.v1",
+    "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-07-12T10:51:19.151Z",
-    "evaluated_at": "2026-07-12T23:59:04.258Z",
-    "fresh": false,
+    "evaluated_at": "2026-07-13T01:50:07.439Z",
+    "verdict": "degraded",
+    "slot_status": "degraded",
+    "status_message": "1 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
+    "fresh": true,
     "missed_slot_count": 1,
+    "recovered_missed_slot_count": 1,
+    "unrecovered_missed_slot_count": 0,
     "hard_age_ok": true
   },
   "source_sla": [
@@ -28,7 +41,7 @@
       "calendar": "us_market",
       "max_staleness": 3,
       "required": true,
-      "age": 0,
+      "age": 1,
       "status": "ready"
     },
     {
@@ -39,7 +52,7 @@
       "calendar": "us_market",
       "max_staleness": 10,
       "required": true,
-      "age": 9,
+      "age": 10,
       "status": "ready"
     },
     {
@@ -50,7 +63,7 @@
       "calendar": "us_market",
       "max_staleness": 7,
       "required": true,
-      "age": 3,
+      "age": 4,
       "status": "ready"
     },
     {
@@ -61,7 +74,7 @@
       "calendar": "us_market",
       "max_staleness": 3,
       "required": true,
-      "age": 1,
+      "age": 2,
       "status": "ready"
     },
     {
@@ -99,7 +112,7 @@
         }
       ],
       "source_date": "2026-06-27",
-      "age": 9,
+      "age": 10,
       "status": "ready",
       "pending": {
         "pending_since": null,
@@ -114,7 +127,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 11.72,
+      "age": 13.57,
       "status": "ready"
     }
   ],
@@ -127,13 +140,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-12T23:59:03.423Z",
+      "generated_at": "2026-07-13T01:50:06.607Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-12T23:59:04.048Z",
+      "generated_at": "2026-07-13T01:50:07.227Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -159,10 +172,12 @@
   "totals": {
     "lanes": 8,
     "ready": 8,
+    "degraded": 0,
     "warning": 0,
     "blocked": 0,
     "unavailable": 0,
-    "required_not_ready": 0
+    "required_not_ready": 0,
+    "platform_blocking_not_ready": 0
   },
   "lanes": [
     {
@@ -170,6 +185,8 @@
       "label": "S0 active stocks daily gate",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "S0 active stocks daily gate is ready.",
+      "deployment_blocking": false,
       "required": true,
       "as_of": "2026-07-12T12:55:04.978Z",
       "counts": {
@@ -219,28 +236,32 @@
           "label": "PUBLIC+DAILY+GATED",
           "status": "ready",
           "status_label": "정상",
-          "detail": "PUBLIC"
+          "detail": "PUBLIC",
+          "platform_blocking": false
         },
         {
           "id": "daily_ready",
           "label": "daily ready",
           "status": "ready",
           "status_label": "정상",
-          "detail": "all active stock source lanes fresh"
+          "detail": "all active stock source lanes fresh",
+          "platform_blocking": false
         },
         {
           "id": "gated_ready",
           "label": "gated ready",
           "status": "ready",
           "status_label": "정상",
-          "detail": "gate blockers empty"
+          "detail": "gate blockers empty",
+          "platform_blocking": false
         },
         {
           "id": "blockers_empty",
           "label": "blockers",
           "status": "ready",
           "status_label": "정상",
-          "detail": "0 blockers"
+          "detail": "0 blockers",
+          "platform_blocking": false
         },
         {
           "id": "krx_full_daily_source_ready",
@@ -248,6 +269,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "337 / 337 · 2026-07-09",
+          "platform_blocking": false,
           "source_date": "2026-07-09",
           "age_days": 1,
           "max_age_days": 4,
@@ -261,6 +283,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "686 / 686 · 2026-07-10",
+          "platform_blocking": false,
           "source_date": "2026-07-10",
           "age_days": 2,
           "max_age_days": 4,
@@ -274,6 +297,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "686 / 686 · 2026-07-10",
+          "platform_blocking": false,
           "source_date": "2026-07-10",
           "age_days": 2,
           "max_age_days": 4,
@@ -287,6 +311,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "59 / 59 · 2026-07-09",
+          "platform_blocking": false,
           "source_date": "2026-07-09",
           "age_days": 3,
           "max_age_days": 4,
@@ -300,6 +325,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "91 / 91 · 2026-07-09",
+          "platform_blocking": false,
           "source_date": "2026-07-09",
           "age_days": 3,
           "max_age_days": 4,
@@ -314,6 +340,8 @@
       "label": "S1 candidate promotion gate",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "S1 candidate promotion gate is ready.",
+      "deployment_blocking": false,
       "required": true,
       "as_of": "2026-07-12T12:53:17.698Z",
       "counts": {
@@ -332,35 +360,40 @@
           "label": "PUBLIC+DAILY+GATED with blocked ledger",
           "status": "ready",
           "status_label": "정상",
-          "detail": "PUBLIC_GATED_WITH_BLOCKED_LEDGER"
+          "detail": "PUBLIC_GATED_WITH_BLOCKED_LEDGER",
+          "platform_blocking": false
         },
         {
           "id": "artifact_present",
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T12:53:17.698Z"
+          "detail": "2026-07-12T12:53:17.698Z",
+          "platform_blocking": false
         },
         {
           "id": "gap_partition_closed",
           "label": "public plus blocked equals denominator",
           "status": "ready",
           "status_label": "정상",
-          "detail": "1,390 / 1,390"
+          "detail": "1,390 / 1,390",
+          "platform_blocking": false
         },
         {
           "id": "promotion_queue_empty",
           "label": "promotion queue",
           "status": "ready",
           "status_label": "정상",
-          "detail": "0 rows"
+          "detail": "0 rows",
+          "platform_blocking": false
         },
         {
           "id": "blockers_empty",
           "label": "gate blockers",
           "status": "ready",
           "status_label": "정상",
-          "detail": "0 blockers"
+          "detail": "0 blockers",
+          "platform_blocking": false
         }
       ]
     },
@@ -369,6 +402,8 @@
       "label": "ETF public scoring and daily gate",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "ETF public scoring and daily gate is ready.",
+      "deployment_blocking": false,
       "required": true,
       "as_of": "2026-07-12T12:16:00.051Z",
       "counts": {
@@ -391,14 +426,16 @@
           "label": "PUBLIC+DAILY+GATED",
           "status": "ready",
           "status_label": "정상",
-          "detail": "PUBLIC"
+          "detail": "PUBLIC",
+          "platform_blocking": false
         },
         {
           "id": "coverage_gate_ok",
           "label": "coverage-index ETF gate",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ready"
+          "detail": "ready",
+          "platform_blocking": false
         },
         {
           "id": "fetchable_daily_1y_gap_zero",
@@ -406,6 +443,7 @@
           "status": "warning",
           "status_label": "주의",
           "detail": "23 fetchable",
+          "platform_blocking": false,
           "required": false,
           "service_gate": false
         },
@@ -415,6 +453,7 @@
           "status": "warning",
           "status_label": "주의",
           "detail": "23 fetchable",
+          "platform_blocking": false,
           "required": false,
           "service_gate": false
         },
@@ -423,14 +462,16 @@
           "label": "ETF core daily basket",
           "status": "ready",
           "status_label": "정상",
-          "detail": "98 fresh / 98 selected"
+          "detail": "98 fresh / 98 selected",
+          "platform_blocking": false
         },
         {
           "id": "route_caveat_consistent",
           "label": "ETF API public label",
           "status": "ready",
           "status_label": "정상",
-          "detail": "route caveat matches ready public lane"
+          "detail": "route caveat matches ready public lane",
+          "platform_blocking": false
         }
       ]
     },
@@ -439,8 +480,10 @@
       "label": "RIM inputs",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "RIM inputs is ready.",
+      "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-12T23:59:03.423Z",
+      "as_of": "2026-07-13T01:50:06.607Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -499,6 +542,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "ready_inputs_only_no_fair_value",
+          "platform_blocking": false,
           "index_id": "SPX",
           "role": "primary_public_v1",
           "blocker_count": 0
@@ -509,6 +553,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "ready_inputs_only_no_fair_value",
+          "platform_blocking": false,
           "index_id": "NDX",
           "role": "primary_public_v1",
           "blocker_count": 0
@@ -519,6 +564,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "input_only_krx_exact_weights_no_fair_value",
+          "platform_blocking": false,
           "index_id": "KOSPI",
           "role": "secondary_input_only",
           "blocker_count": 0
@@ -529,6 +575,7 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "input_only_sox_methodology_weights_no_fair_value",
+          "platform_blocking": false,
           "index_id": "SOX",
           "role": "secondary_input_only",
           "blocker_count": 0
@@ -539,6 +586,7 @@
           "status": "warning",
           "status_label": "주의",
           "detail": "CCMP remains input-only/blocked for public result cards",
+          "platform_blocking": false,
           "required": false,
           "blocker_count": 3,
           "public_status": "blocked_or_input_only"
@@ -550,8 +598,10 @@
       "label": "Product surface freshness",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "Product surface freshness is ready.",
+      "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-12T23:59:04.048Z",
+      "as_of": "2026-07-13T01:50:07.227Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -568,28 +618,32 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T23:59:04.048Z"
+          "detail": "2026-07-13T01:50:07.227Z",
+          "platform_blocking": false
         },
         {
           "id": "no_stale_surfaces",
           "label": "stale surfaces",
           "status": "ready",
           "status_label": "정상",
-          "detail": "0 stale"
+          "detail": "0 stale",
+          "platform_blocking": false
         },
         {
           "id": "no_unavailable_surfaces",
           "label": "unavailable surfaces",
           "status": "ready",
           "status_label": "정상",
-          "detail": "0 unavailable"
+          "detail": "0 unavailable",
+          "platform_blocking": false
         },
         {
           "id": "no_error_surfaces",
           "label": "error surfaces",
           "status": "ready",
           "status_label": "정상",
-          "detail": "0 error"
+          "detail": "0 error",
+          "platform_blocking": false
         }
       ]
     },
@@ -598,6 +652,8 @@
       "label": "FINRA/OCC source gate",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "FINRA/OCC source gate is ready.",
+      "deployment_blocking": false,
       "required": true,
       "as_of": "2026-07-12T12:53:52.587Z",
       "counts": {
@@ -641,35 +697,40 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-12T12:53:52.587Z"
+          "detail": "2026-07-12T12:53:52.587Z",
+          "platform_blocking": true
         },
         {
           "id": "finra_plain_us_ready",
           "label": "plain US FINRA",
           "status": "ready",
           "status_label": "정상",
-          "detail": "686 / 686"
+          "detail": "686 / 686",
+          "platform_blocking": false
         },
         {
           "id": "occ_plain_us_ready",
           "label": "plain US OCC",
           "status": "ready",
           "status_label": "정상",
-          "detail": "686 / 686"
+          "detail": "686 / 686",
+          "platform_blocking": false
         },
         {
           "id": "non_plain_not_service_blocker",
           "label": "non-plain policy",
           "status": "ready",
           "status_label": "정상",
-          "detail": "Plain US FINRA/OCC denominators are source-ready; US_CLASS/non-plain rows remain daily source-ready through YF/market facts and are tracked here as mapping policy work."
+          "detail": "Plain US FINRA/OCC denominators are source-ready; US_CLASS/non-plain rows remain daily source-ready through YF/market facts and are tracked here as mapping policy work.",
+          "platform_blocking": false
         },
         {
           "id": "ledger_private_only",
           "label": "ledger public mirror",
           "status": "ready",
           "status_label": "정상",
-          "detail": "admin-local only"
+          "detail": "admin-local only",
+          "platform_blocking": true
         }
       ]
     },
@@ -678,8 +739,10 @@
       "label": "Daily automation and deploy gates",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "Daily automation and deploy gates is ready.",
+      "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-12T23:59:04.285Z",
+      "as_of": "2026-07-13T01:50:07.467Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -692,84 +755,96 @@
           "label": "sync-static KPI build",
           "status": "ready",
           "status_label": "정상",
-          "detail": "package script wiring"
+          "detail": "package script wiring",
+          "platform_blocking": true
         },
         {
           "id": "sync_static_checks_kpi",
           "label": "sync-static KPI check",
           "status": "ready",
           "status_label": "정상",
-          "detail": "package gate wiring"
+          "detail": "package gate wiring",
+          "platform_blocking": true
         },
         {
           "id": "update_manifest_rebuilds_kpi",
           "label": "manifest reconciliation",
           "status": "ready",
           "status_label": "정상",
-          "detail": "update-manifest rebuild path"
+          "detail": "update-manifest rebuild path",
+          "platform_blocking": true
         },
         {
           "id": "deploy_worker_checks_kpi",
           "label": "Worker deploy gate",
           "status": "ready",
           "status_label": "정상",
-          "detail": "deploy prebuild gate"
+          "detail": "deploy prebuild gate",
+          "platform_blocking": true
         },
         {
           "id": "deploy_worker_smokes_kpi",
           "label": "Worker live KPI smoke",
           "status": "ready",
           "status_label": "정상",
-          "detail": "deploy post-smoke contract"
+          "detail": "deploy post-smoke contract",
+          "platform_blocking": true
         },
         {
           "id": "phase_b_checker_strict",
           "label": "Phase B checker strict mode",
           "status": "ready",
           "status_label": "정상",
-          "detail": "strict checker wiring"
+          "detail": "strict checker wiring",
+          "platform_blocking": true
         },
         {
           "id": "phase_b_pending_max_age",
           "label": "Phase B pending age enforcement",
           "status": "ready",
           "status_label": "정상",
-          "detail": "14-day pending exemption expiry is active under strict"
+          "detail": "14-day pending exemption expiry is active under strict",
+          "platform_blocking": true
         },
         {
           "id": "deploy_worker_smoke_strict",
           "label": "Worker live KPI smoke strict mode",
           "status": "ready",
           "status_label": "정상",
-          "detail": "live producer freshness fails closed"
+          "detail": "live producer freshness fails closed",
+          "platform_blocking": true
         },
         {
           "id": "yf_daily_no_default_cap",
           "label": "YF daily stock shards no silent cap",
           "status": "ready",
           "status_label": "정상",
-          "detail": "future active universe expansion does not silently fall outside freshness"
+          "detail": "future active universe expansion does not silently fall outside freshness",
+          "platform_blocking": true
         },
         {
           "id": "stockanalysis_daily1y_scheduled",
           "label": "StockAnalysis daily-1Y schedule",
           "status": "ready",
           "status_label": "정상",
-          "detail": "weekday catch-up lane"
+          "detail": "weekday catch-up lane",
+          "platform_blocking": true
         },
         {
           "id": "edge_daily_dispatches_manifest",
           "label": "Edge daily manifest dispatch",
           "status": "ready",
           "status_label": "정상",
-          "detail": "manifest/RIM/deploy chain"
+          "detail": "manifest/RIM/deploy chain",
+          "platform_blocking": true
         },
         {
           "id": "krx_daily_dispatches_manifest",
           "label": "KRX daily manifest dispatch",
           "status": "ready",
           "status_label": "정상",
-          "detail": "manifest/RIM/deploy chain"
+          "detail": "manifest/RIM/deploy chain",
+          "platform_blocking": true
         }
       ]
     },
@@ -778,6 +853,8 @@
       "label": "Public mirror safety",
       "status": "ready",
       "status_label": "정상",
+      "status_message": "Public mirror safety is ready.",
+      "deployment_blocking": false,
       "required": true,
       "as_of": null,
       "counts": {},
@@ -792,28 +869,32 @@
           "label": "KPI public mirror",
           "status": "ready",
           "status_label": "정상",
-          "detail": "root and public KPI are written together"
+          "detail": "root and public KPI are written together",
+          "platform_blocking": true
         },
         {
           "id": "rim_public_private_paths_redacted",
           "label": "RIM private paths",
           "status": "ready",
           "status_label": "정상",
-          "detail": "public RIM mirror token scan"
+          "detail": "public RIM mirror token scan",
+          "platform_blocking": true
         },
         {
           "id": "coverage_public_private_paths_absent",
           "label": "coverage private paths",
           "status": "ready",
           "status_label": "정상",
-          "detail": "public coverage mirror token scan"
+          "detail": "public coverage mirror token scan",
+          "platform_blocking": true
         },
         {
           "id": "forbidden_tokens_absent",
           "label": "forbidden public tokens",
           "status": "ready",
           "status_label": "정상",
-          "detail": "aggregate public token scan"
+          "detail": "aggregate public token scan",
+          "platform_blocking": true
         }
       ]
     }
