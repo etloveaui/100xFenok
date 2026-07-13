@@ -34,6 +34,10 @@ DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "currency.json"
 
 def clean_label(value: str) -> str:
     """Remove mojibake/non-breaking-space artifacts from SlickCharts labels."""
+    # Requests may decode UTF-8 as latin-1 when the response omits a charset.
+    # A following NBSP is then split as ``Â`` + whitespace by the name regex;
+    # remove that incomplete UTF-8 prefix before repairing the label bytes.
+    value = value.replace("\u00a0", " ").strip().strip("Â").strip()
     for _ in range(2):
         if not any(marker in value for marker in ("Â", "Ã", "å", "ä", "ç")):
             break
