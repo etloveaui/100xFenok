@@ -12,6 +12,13 @@ import {
   syncPublicData,
 } from "./sync-public-data.mjs";
 import { inspectCloudflareAssetBudget } from "./check-cloudflare-asset-budget.mjs";
+import {
+  MARKET_FACTS_SHARD_COUNT,
+  fetchMarketFactsFromShard,
+  marketFactsFromShard,
+  marketFactsShardFileName,
+  marketFactsShardUrl,
+} from "../src/lib/market-facts-shard.mjs";
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";
 const EXPECTED_PRIVATE_ROOTS = Object.freeze([
@@ -113,6 +120,235 @@ function makeSyncCase(parentRoot, label) {
   write(destinationRoot, "admin/safe-sibling.json", '{"sibling":true}\n');
   seedPrivateRoots(sourceRoot, destinationRoot);
   return { root, sourceRoot, destinationRoot };
+}
+
+async function assertMarketFactsShardProjection(parentRoot) {
+  assert.equal(MARKET_FACTS_SHARD_COUNT, 1024);
+  assert.equal(marketFactsShardFileName("AAPL"), "0779.json");
+  assert.equal(marketFactsShardFileName("NVDA"), "0470.json");
+  assert.equal(marketFactsShardFileName("SPY"), "0509.json");
+  assert.equal(marketFactsShardFileName("BRK.B"), "0570.json");
+  assert.equal(marketFactsShardFileName("BF-B"), "0474.json");
+  assert.equal(marketFactsShardFileName("230360.KQ"), "0153.json");
+  assert.equal(marketFactsShardUrl(" spy "), "/data/computed/market_facts/shards/0509.json");
+
+  const fixture = makeSyncCase(parentRoot, "market-facts-shards");
+  const payloads = {
+    NVDA: {
+      schema_version: "market-facts/v1",
+      ticker: "NVDA",
+      asset_type: "stock",
+      generated_at: "2026-07-13T00:00:00Z",
+      identity: { name: "NVIDIA", exchange: "Nasdaq" },
+      facts: { beta: { value: 1.71, source: "yf", as_of: "2026-07-11" } },
+      financials: { revenue: { value: 130_000_000_000, source: "stockanalysis" } },
+      resolver: { selected_sources: ["yf", "stockanalysis"] },
+    },
+    SPY: {
+      schema_version: "market-facts/v1",
+      ticker: "SPY",
+      asset_type: "etf",
+      generated_at: "2026-07-13T00:00:00Z",
+      identity: { name: "SPDR S&P 500 ETF Trust", exchange: "NYSE Arca" },
+      facts: { beta: { value: 1, source: "stockanalysis.overview" } },
+      etf: { holdings_count: 503, sectors: [{ name: "Technology", weight: 0.3 }] },
+      resolver: { selected_sources: ["stockanalysis.overview"] },
+    },
+    "BRK.B": {
+      schema_version: "market-facts/v1",
+      ticker: "BRK.B",
+      asset_type: "stock",
+      generated_at: "2026-07-13T00:00:00Z",
+      facts: { beta: { value: 0.87, source: "yf" } },
+      resolver: { selected_sources: ["yf"] },
+    },
+    "BF-B": {
+      schema_version: "market-facts/v1",
+      ticker: "BF-B",
+      asset_type: "stock",
+      generated_at: "2026-07-13T00:00:00Z",
+      facts: { beta: { value: 0.68, source: "yf" } },
+      resolver: { selected_sources: ["yf"] },
+    },
+  };
+  const indexBody = `${JSON.stringify({ count: Object.keys(payloads).length, rows: Object.keys(payloads) }, null, 2)}\n`;
+  write(fixture.sourceRoot, "computed/market_facts/index.json", indexBody);
+  for (const [ticker, payload] of Object.entries(payloads)) {
+    write(fixture.sourceRoot, `computed/market_facts/tickers/${ticker}.json`, `${JSON.stringify(payload, null, 2)}\n`);
+  }
+  write(fixture.destinationRoot, "computed/market_facts/tickers/NVDA.json", '{"stale":true}\n');
+  write(fixture.destinationRoot, "computed/market_facts/shards/stale.json", '{"stale":true}\n');
+
+  const sourceBefore = snapshotNode(fixture.sourceRoot);
+  const destinationBefore = snapshotNode(fixture.destinationRoot);
+  const rehearsal = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    dryRun: true,
+    logger: () => {},
+  });
+  assert.equal(rehearsal.filesCopied, 2, "index and safe fixture file remain ordinary mirror files");
+  assert.equal(rehearsal.marketFactsTickerFiles, 4);
+  assert.equal(rehearsal.marketFactsShardFiles, 1024);
+  assert.equal(rehearsal.removedTransformedDestinationRoots, 2);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "sharding must never mutate canonical ticker files");
+  assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationBefore, "dry-run must not mutate the public mirror");
+
+  const result = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    logger: () => {},
+  });
+  assert.equal(result.marketFactsTickerFiles, 4);
+  assert.equal(result.marketFactsShardFiles, 1024);
+  assert.equal(fs.existsSync(path.join(fixture.destinationRoot, "computed/market_facts/tickers")), false);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "computed/market_facts/index.json"), "utf8"), indexBody);
+  const shardRoot = path.join(fixture.destinationRoot, "computed/market_facts/shards");
+  const shardFiles = fs.readdirSync(shardRoot).filter((name) => /^\d{4}\.json$/.test(name)).sort();
+  assert.equal(shardFiles.length, 1024);
+  assert.equal(fs.existsSync(path.join(shardRoot, "stale.json")), false);
+
+  for (const [ticker, payload] of Object.entries(payloads)) {
+    const shard = JSON.parse(fs.readFileSync(path.join(shardRoot, marketFactsShardFileName(ticker)), "utf8"));
+    assert.deepEqual(shard[ticker], payload, `${ticker} must retain every source field in its deterministic shard`);
+    assert.deepEqual(marketFactsFromShard(shard, ticker), payload);
+  }
+  assert.equal(marketFactsFromShard({}, "NVDA"), null);
+
+  let fetchedUrl = null;
+  let fetchedInit = null;
+  const fetched = await fetchMarketFactsFromShard("nvda", {
+    requestInit: { cache: "no-store" },
+    fetchImpl: async (url, init) => {
+      fetchedUrl = url;
+      fetchedInit = init;
+      const shard = JSON.parse(fs.readFileSync(path.join(shardRoot, marketFactsShardFileName("NVDA")), "utf8"));
+      return { ok: true, status: 200, json: async () => shard };
+    },
+  });
+  assert.equal(fetchedUrl, "/data/computed/market_facts/shards/0470.json");
+  assert.deepEqual(fetchedInit, { cache: "no-store" });
+  assert.deepEqual(fetched, payloads.NVDA);
+  assert.equal(fetched.facts.beta.value, 1.71, "beta must survive the public projection unchanged");
+  assert.equal(await fetchMarketFactsFromShard("NVDA", {
+    fetchImpl: async () => ({ ok: false, status: 404, json: async () => null }),
+  }), null);
+  await assert.rejects(
+    () => fetchMarketFactsFromShard("NVDA", {
+      fetchImpl: async () => ({ ok: false, status: 503, json: async () => null }),
+    }),
+    /status 503/i,
+  );
+
+  const destinationAfter = snapshotNode(fixture.destinationRoot);
+  syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationAfter, "market-facts projection must be byte-idempotent");
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "canonical ticker files must remain byte-identical");
+}
+
+function marketFactsFixturePayload(ticker = "AAPL") {
+  return `${JSON.stringify({
+    schema_version: "market-facts/v1",
+    ticker,
+    asset_type: "stock",
+    facts: { beta: { value: 1.23, source: "yf" } },
+  })}\n`;
+}
+
+function assertCanonicalShardSourceFailsClosed(parentRoot) {
+  const fixture = makeSyncCase(parentRoot, "canonical-shards-forbidden");
+  write(fixture.sourceRoot, "computed/market_facts/index.json", "{}\n");
+  write(fixture.sourceRoot, "computed/market_facts/tickers/AAPL.json", marketFactsFixturePayload());
+  write(fixture.sourceRoot, "computed/market_facts/shards/stale.json", '{"must_not_publish":true}\n');
+  const destinationBefore = snapshotNode(fixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: fixture.sourceRoot,
+      destinationRoot: fixture.destinationRoot,
+      logger: () => {},
+    }),
+    /public-only market-facts shards/i,
+  );
+  assert.deepEqual(
+    snapshotNode(fixture.destinationRoot),
+    destinationBefore,
+    "canonical shard input refusal must precede every destination mutation",
+  );
+}
+
+function assertMissingCanonicalTickerSourceFailsClosed(parentRoot) {
+  const fixture = makeSyncCase(parentRoot, "missing-canonical-tickers");
+  write(fixture.sourceRoot, "computed/market_facts/index.json", "{}\n");
+  const destinationBefore = snapshotNode(fixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: fixture.sourceRoot,
+      destinationRoot: fixture.destinationRoot,
+      logger: () => {},
+    }),
+    /market-facts root exists without its ticker source root/i,
+  );
+  assert.deepEqual(
+    snapshotNode(fixture.destinationRoot),
+    destinationBefore,
+    "missing canonical ticker source must fail before destination mutation",
+  );
+}
+
+function assertOrphanedDestinationProjectionFailsClosed(parentRoot) {
+  const fixture = makeSyncCase(parentRoot, "orphaned-destination-market-facts");
+  write(fixture.destinationRoot, "computed/market_facts/tickers/AAPL.json", '{"stale":true}\n');
+  write(fixture.destinationRoot, "computed/market_facts/shards/stale.json", '{"stale":true}\n');
+  const destinationBefore = snapshotNode(fixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: fixture.sourceRoot,
+      destinationRoot: fixture.destinationRoot,
+      logger: () => {},
+    }),
+    /without the canonical market-facts ticker source/i,
+  );
+  assert.deepEqual(
+    snapshotNode(fixture.destinationRoot),
+    destinationBefore,
+    "orphaned public projection must fail before destination mutation",
+  );
+}
+
+function assertMarketFactsSourceDriftFailsBeforeMutation(parentRoot) {
+  const fixture = makeSyncCase(parentRoot, "market-facts-source-drift");
+  write(fixture.sourceRoot, "computed/market_facts/index.json", "{}\n");
+  const tickerPath = write(
+    fixture.sourceRoot,
+    "computed/market_facts/tickers/AAPL.json",
+    marketFactsFixturePayload(),
+  );
+  write(fixture.destinationRoot, "computed/market_facts/tickers/AAPL.json", '{"stale":true}\n');
+  write(fixture.destinationRoot, "computed/market_facts/shards/stale.json", '{"stale":true}\n');
+  const outside = path.join(fixture.root, "outside-market-facts.json");
+  fs.writeFileSync(outside, marketFactsFixturePayload());
+  const destinationBefore = snapshotNode(fixture.destinationRoot);
+  let hookRan = false;
+  const error = captureSyncError({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    logger: () => {},
+    beforeMutation: () => {
+      hookRan = true;
+      fs.unlinkSync(tickerPath);
+      fs.symlinkSync(outside, tickerPath);
+    },
+  });
+  assert.equal(hookRan, true, "source-drift fixture must reach the pre-mutation hook");
+  assert.ok(error, "source ticker replacement must fail closed");
+  assert.match(String(error.message), /source identity drift/i);
+  assert.deepEqual(
+    snapshotNode(fixture.destinationRoot),
+    destinationBefore,
+    "source ticker drift must be rejected before destination mutation",
+  );
+  assert.equal(fs.lstatSync(tickerPath).isSymbolicLink(), true);
+  assert.equal(fs.readFileSync(outside, "utf8"), marketFactsFixturePayload());
 }
 
 function createWrongNode(root, relativePath, kind, label) {
@@ -353,6 +589,11 @@ try {
   }
   assertPrivateRootFailureLeavesReportAndRoots(fixtureRoot);
   assertIdentityDriftFailsBeforeMutation(fixtureRoot);
+  assertCanonicalShardSourceFailsClosed(fixtureRoot);
+  assertMissingCanonicalTickerSourceFailsClosed(fixtureRoot);
+  assertOrphanedDestinationProjectionFailsClosed(fixtureRoot);
+  assertMarketFactsSourceDriftFailsBeforeMutation(fixtureRoot);
+  await assertMarketFactsShardProjection(fixtureRoot);
 
   const buildRoot = path.join(fixtureRoot, "100xfenok-next", ".open-next");
   const assetRoot = path.join(buildRoot, "assets");

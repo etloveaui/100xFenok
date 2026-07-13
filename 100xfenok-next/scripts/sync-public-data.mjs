@@ -3,6 +3,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  MARKET_FACTS_SHARD_COUNT,
+  marketFactsShardFileName,
+  marketFactsShardFileNameForId,
+  marketFactsTickerKey,
+} from "../src/lib/market-facts-shard.mjs";
 
 export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
   "admin/data-supply-state",
@@ -14,86 +20,9 @@ export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze([
   "admin/data-supply-detection-floor.json",
 ]);
 
-function lstatIfPresent(filePath) {
-  try {
-    return fs.lstatSync(filePath);
-  } catch (error) {
-    if (error?.code === "ENOENT") return null;
-    throw error;
-  }
-}
-
-function assertDirectory(filePath, label) {
-  const stat = fs.lstatSync(filePath);
-  if (stat.isSymbolicLink()) throw new Error(`${label} must not be a symlink: ${filePath}`);
-  if (!stat.isDirectory()) throw new Error(`${label} must be a directory: ${filePath}`);
-}
-
-function normalizedRelative(relativePath) {
-  const portable = String(relativePath).split(path.sep).join("/");
-  const normalized = path.posix.normalize(portable).replace(/^\.\//, "");
-  if (!normalized || normalized === "." || normalized.startsWith("../") || path.posix.isAbsolute(normalized)) {
-    throw new Error(`unsafe relative path: ${relativePath}`);
-  }
-  return normalized;
-}
-
-function isExcludedRoot(relativePath) {
-  return EXCLUDED_PUBLIC_DATA_ROOTS.includes(normalizedRelative(relativePath));
-}
-
-function isExcludedFile(relativePath) {
-  return EXCLUDED_PUBLIC_DATA_FILES.includes(normalizedRelative(relativePath));
-}
-
-function collectSourceFiles(sourceRoot) {
-  const files = [];
-  const directories = [];
-  let excludedSourceRoots = 0;
-  const excludedSourceFilePaths = [];
-
-  function visit(directory, relativeDirectory = "") {
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      const relativePath = normalizedRelative(path.posix.join(relativeDirectory, entry.name));
-      const absolutePath = path.join(directory, entry.name);
-      const stat = fs.lstatSync(absolutePath);
-      if (stat.isSymbolicLink()) {
-        throw new Error(`source public-data path is a symlink: ${absolutePath}`);
-      }
-      if (isExcludedFile(relativePath)) {
-        if (!stat.isFile()) {
-          throw new Error(`excluded source file must be a regular file: ${absolutePath}`);
-        }
-        excludedSourceFilePaths.push(relativePath);
-        continue;
-      }
-      if (isExcludedRoot(relativePath)) {
-        if (!stat.isDirectory()) {
-          throw new Error(`excluded source root must be a directory: ${absolutePath}`);
-        }
-        excludedSourceRoots += 1;
-        continue;
-      }
-      if (stat.isDirectory()) {
-        directories.push(relativePath);
-        visit(absolutePath, relativePath);
-      } else if (stat.isFile()) {
-        files.push({ relativePath, absolutePath, size: stat.size });
-      } else {
-        throw new Error(`source public-data path is not a regular file or directory: ${absolutePath}`);
-      }
-    }
-  }
-
-  visit(sourceRoot);
-  return {
-    files,
-    directories,
-    excludedSourceRoots,
-    excludedSourceFiles: excludedSourceFilePaths.length,
-    excludedSourceFilePaths,
-  };
-}
+const MARKET_FACTS_TICKER_ROOT = "computed/market_facts/tickers";
+const MARKET_FACTS_SHARD_ROOT = "computed/market_facts/shards";
+const MARKET_FACTS_ROOT = "computed/market_facts";
 
 const IDENTITY_FIELDS = Object.freeze([
   "dev",
@@ -110,6 +39,21 @@ const IDENTITY_FIELDS = Object.freeze([
   "ctimeNs",
   "birthtimeNs",
 ]);
+
+function lstatIfPresent(filePath) {
+  try {
+    return fs.lstatSync(filePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+function assertDirectory(filePath, label) {
+  const stat = fs.lstatSync(filePath);
+  if (stat.isSymbolicLink()) throw new Error(`${label} must not be a symlink: ${filePath}`);
+  if (!stat.isDirectory()) throw new Error(`${label} must be a directory: ${filePath}`);
+}
 
 function lstatBigintIfPresent(filePath) {
   try {
@@ -129,6 +73,224 @@ function sameIdentity(left, right) {
   return IDENTITY_FIELDS.every((field) => left?.[field] === right?.[field]);
 }
 
+function captureSourceBinding(filePath, label, expectedKind) {
+  const stat = lstatBigintIfPresent(filePath);
+  if (!stat) throw new Error(`${label} is missing: ${filePath}`);
+  if (stat.isSymbolicLink()) throw new Error(`${label} must not be a symlink: ${filePath}`);
+  if (expectedKind === "directory" && !stat.isDirectory()) {
+    throw new Error(`${label} must be a directory: ${filePath}`);
+  }
+  if (expectedKind === "file" && !stat.isFile()) {
+    throw new Error(`${label} must be a regular file: ${filePath}`);
+  }
+  return { filePath, label, expectedKind, identity: statIdentity(stat) };
+}
+
+function revalidateSourceBindings(bindings, phase) {
+  for (const binding of bindings) {
+    const stat = lstatBigintIfPresent(binding.filePath);
+    const identity = statIdentity(stat);
+    const expectedKindMatches = binding.expectedKind === "directory"
+      ? stat?.isDirectory()
+      : stat?.isFile();
+    if (stat?.isSymbolicLink() || !expectedKindMatches || !sameIdentity(binding.identity, identity)) {
+      throw new Error(`source identity drift ${phase}: ${binding.label}: ${binding.filePath}`);
+    }
+  }
+}
+
+function readStableDirectoryEntries(binding) {
+  revalidateSourceBindings([binding], "before directory enumeration");
+  const entries = fs.readdirSync(binding.filePath, { withFileTypes: true });
+  revalidateSourceBindings([binding], "after directory enumeration");
+  return entries;
+}
+
+function normalizedRelative(relativePath) {
+  const portable = String(relativePath).split(path.sep).join("/");
+  const normalized = path.posix.normalize(portable).replace(/^\.\//, "");
+  if (!normalized || normalized === "." || normalized.startsWith("../") || path.posix.isAbsolute(normalized)) {
+    throw new Error(`unsafe relative path: ${relativePath}`);
+  }
+  return normalized;
+}
+
+function isExcludedRoot(relativePath) {
+  return EXCLUDED_PUBLIC_DATA_ROOTS.includes(normalizedRelative(relativePath));
+}
+
+function isExcludedFile(relativePath) {
+  return EXCLUDED_PUBLIC_DATA_FILES.includes(normalizedRelative(relativePath));
+}
+
+function isTransformedRoot(relativePath) {
+  return normalizedRelative(relativePath) === MARKET_FACTS_TICKER_ROOT;
+}
+
+function collectSourceFiles(sourceRoot, sourceRootBinding) {
+  const files = [];
+  const directories = [];
+  let excludedSourceRoots = 0;
+  const excludedSourceFilePaths = [];
+  const transformedSourceRoots = [];
+  let marketFactsRootSeen = false;
+
+  function visit(directory, relativeDirectory = "", directoryBinding = sourceRootBinding) {
+    for (const entry of readStableDirectoryEntries(directoryBinding)) {
+      const relativePath = normalizedRelative(path.posix.join(relativeDirectory, entry.name));
+      const absolutePath = path.join(directory, entry.name);
+      const stat = fs.lstatSync(absolutePath);
+      if (stat.isSymbolicLink()) {
+        throw new Error(`source public-data path is a symlink: ${absolutePath}`);
+      }
+      if (relativePath === MARKET_FACTS_ROOT) {
+        if (!stat.isDirectory()) {
+          throw new Error(`canonical market-facts root must be a directory: ${absolutePath}`);
+        }
+        marketFactsRootSeen = true;
+      }
+      if (relativePath === MARKET_FACTS_SHARD_ROOT) {
+        throw new Error(`canonical source must not contain public-only market-facts shards: ${absolutePath}`);
+      }
+      if (isExcludedFile(relativePath)) {
+        if (!stat.isFile()) {
+          throw new Error(`excluded source file must be a regular file: ${absolutePath}`);
+        }
+        excludedSourceFilePaths.push(relativePath);
+        continue;
+      }
+      if (isExcludedRoot(relativePath)) {
+        if (!stat.isDirectory()) {
+          throw new Error(`excluded source root must be a directory: ${absolutePath}`);
+        }
+        excludedSourceRoots += 1;
+        continue;
+      }
+      if (isTransformedRoot(relativePath)) {
+        if (!stat.isDirectory()) {
+          throw new Error(`transformed source root must be a directory: ${absolutePath}`);
+        }
+        transformedSourceRoots.push({
+          relativeRoot: relativePath,
+          absolutePath,
+          sourceBinding: captureSourceBinding(absolutePath, "market-facts ticker root", "directory"),
+        });
+        continue;
+      }
+      if (stat.isDirectory()) {
+        directories.push(relativePath);
+        visit(
+          absolutePath,
+          relativePath,
+          captureSourceBinding(absolutePath, "source public-data directory", "directory"),
+        );
+      } else if (stat.isFile()) {
+        files.push({ relativePath, absolutePath, size: stat.size });
+      } else {
+        throw new Error(`source public-data path is not a regular file or directory: ${absolutePath}`);
+      }
+    }
+  }
+
+  visit(sourceRoot);
+  return {
+    files,
+    directories,
+    excludedSourceRoots,
+    excludedSourceFiles: excludedSourceFilePaths.length,
+    excludedSourceFilePaths,
+    transformedSourceRoots,
+    marketFactsRootSeen,
+  };
+}
+
+function readBoundMarketFactsFile(filePath) {
+  const binding = captureSourceBinding(filePath, "market-facts source file", "file");
+  if (typeof fs.constants.O_NOFOLLOW !== "number") {
+    throw new Error("market-facts source read requires O_NOFOLLOW support");
+  }
+  let descriptor;
+  try {
+    descriptor = fs.openSync(filePath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    const openedIdentity = statIdentity(fs.fstatSync(descriptor, { bigint: true }));
+    if (!sameIdentity(binding.identity, openedIdentity)) {
+      throw new Error(`source identity drift while opening market-facts source file: ${filePath}`);
+    }
+    const body = fs.readFileSync(descriptor, "utf8");
+    const readIdentity = statIdentity(fs.fstatSync(descriptor, { bigint: true }));
+    if (!sameIdentity(binding.identity, readIdentity)) {
+      throw new Error(`source identity drift while reading market-facts source file: ${filePath}`);
+    }
+    revalidateSourceBindings([binding], "after market-facts source read");
+    return { binding, body };
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+}
+
+function parseMarketFactsPayload(body, filePath, ticker) {
+  let payload;
+  try {
+    payload = JSON.parse(body);
+  } catch (error) {
+    throw new Error(`invalid market-facts JSON ${filePath}: ${error.message}`);
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error(`market-facts payload must be an object: ${filePath}`);
+  }
+  if (marketFactsTickerKey(payload.ticker) !== ticker) {
+    throw new Error(`market-facts ticker mismatch: ${filePath}`);
+  }
+  return payload;
+}
+
+function buildMarketFactsShardProjection(transformedSourceRoots) {
+  if (transformedSourceRoots.length === 0) return null;
+  if (transformedSourceRoots.length !== 1 || transformedSourceRoots[0].relativeRoot !== MARKET_FACTS_TICKER_ROOT) {
+    throw new Error("market-facts public projection requires exactly one canonical ticker root");
+  }
+  const [{ absolutePath, sourceBinding }] = transformedSourceRoots;
+  const shards = Array.from({ length: MARKET_FACTS_SHARD_COUNT }, () => ({}));
+  const sourceBindings = [sourceBinding];
+  let tickerFiles = 0;
+  const entries = readStableDirectoryEntries(sourceBinding)
+    .sort((left, right) => left.name.localeCompare(right.name));
+  for (const entry of entries) {
+    const filePath = path.join(absolutePath, entry.name);
+    const stat = fs.lstatSync(filePath);
+    if (stat.isSymbolicLink()) throw new Error(`market-facts source path is a symlink: ${filePath}`);
+    if (!stat.isFile() || !entry.name.endsWith(".json")) {
+      throw new Error(`market-facts ticker root may contain only JSON files: ${filePath}`);
+    }
+    const ticker = entry.name.slice(0, -5);
+    if (marketFactsTickerKey(ticker) !== ticker) {
+      throw new Error(`market-facts filename must use the canonical ticker: ${filePath}`);
+    }
+    const { binding, body } = readBoundMarketFactsFile(filePath);
+    const payload = parseMarketFactsPayload(body, filePath, ticker);
+    sourceBindings.push(binding);
+    const shardFileName = marketFactsShardFileName(ticker);
+    const shardId = Number.parseInt(shardFileName.slice(0, -5), 10);
+    shards[shardId][ticker] = payload;
+    tickerFiles += 1;
+  }
+  revalidateSourceBindings([sourceBinding], "after market-facts projection");
+  const shardFiles = shards.map((payload, shardId) => {
+    const body = `${JSON.stringify(payload)}\n`;
+    return {
+      relativePath: `${MARKET_FACTS_SHARD_ROOT}/${marketFactsShardFileNameForId(shardId)}`,
+      body,
+      size: Buffer.byteLength(body),
+    };
+  });
+  return {
+    tickerFiles,
+    shardFiles,
+    bytes: shardFiles.reduce((sum, item) => sum + item.size, 0),
+    sourceBindings,
+  };
+}
+
 function collectRemovalTree(directory, stat, files, directories, capture) {
   if (stat.isSymbolicLink()) throw new Error(`destination excluded root is a symlink: ${directory}`);
   if (!stat.isDirectory()) throw new Error(`destination excluded root is not a directory: ${directory}`);
@@ -144,7 +306,7 @@ function collectRemovalTree(directory, stat, files, directories, capture) {
   }
 }
 
-function collectDestinationRemovalPlan(destinationRoot) {
+function collectDestinationRemovalPlan(destinationRoot, transformedRelativeRoots = []) {
   const bindings = [];
   const bindingByPath = new Map();
   function capture(filePath, label) {
@@ -182,6 +344,21 @@ function collectDestinationRemovalPlan(destinationRoot) {
     }
   }
 
+  for (const relativeRoot of transformedRelativeRoots) {
+    const segments = relativeRoot.split("/").slice(0, -1);
+    let cursor = destinationRoot;
+    for (const segment of segments) {
+      cursor = path.join(cursor, segment);
+      const stat = capture(cursor, "destination transformed parent");
+      if (stat?.isSymbolicLink()) {
+        throw new Error(`destination transformed parent is a symlink: ${cursor}`);
+      }
+      if (stat && !stat.isDirectory()) {
+        throw new Error(`destination transformed parent is not a directory: ${cursor}`);
+      }
+    }
+  }
+
   const roots = [];
   for (const relativeRoot of EXCLUDED_PUBLIC_DATA_ROOTS) {
     const target = path.join(destinationRoot, ...relativeRoot.split("/"));
@@ -191,6 +368,17 @@ function collectDestinationRemovalPlan(destinationRoot) {
     const directories = [];
     collectRemovalTree(target, stat, files, directories, capture);
     roots.push({ relativeRoot, files, directories });
+  }
+
+  const transformedRoots = [];
+  for (const relativeRoot of transformedRelativeRoots) {
+    const target = path.join(destinationRoot, ...relativeRoot.split("/"));
+    const stat = capture(target, "destination transformed root");
+    if (!stat) continue;
+    const files = [];
+    const directories = [];
+    collectRemovalTree(target, stat, files, directories, capture);
+    transformedRoots.push({ relativeRoot, files, directories });
   }
 
   const exactFiles = [];
@@ -207,7 +395,7 @@ function collectDestinationRemovalPlan(destinationRoot) {
     exactFiles.push({ relativePath, filePath: target });
   }
 
-  return { roots, exactFiles, bindings };
+  return { roots, transformedRoots, exactFiles, bindings };
 }
 
 function revalidateDestinationRemovalPlan(bindings) {
@@ -236,6 +424,17 @@ function preflightDestinationPaths(destinationRoot, sourcePlan) {
       if (!final && !stat.isDirectory()) throw new Error(`destination public-data parent is not a directory: ${cursor}`);
       if (final && item.expectsDirectory && !stat.isDirectory()) throw new Error(`destination directory path is not a directory: ${cursor}`);
       if (final && !item.expectsDirectory && !stat.isFile()) throw new Error(`destination file path is not a regular file: ${cursor}`);
+    }
+  }
+}
+
+function assertNoOrphanedDestinationMarketFactsProjection(destinationRoot) {
+  for (const relativeRoot of [MARKET_FACTS_TICKER_ROOT, MARKET_FACTS_SHARD_ROOT]) {
+    const target = path.join(destinationRoot, ...relativeRoot.split("/"));
+    if (lstatIfPresent(target)) {
+      throw new Error(
+        `destination contains ${relativeRoot} without the canonical market-facts ticker source: ${target}`,
+      );
     }
   }
 }
@@ -278,11 +477,22 @@ export function planPublicDataSync({ sourceRoot, destinationRoot }) {
   const source = path.resolve(sourceRoot);
   const destination = path.resolve(destinationRoot);
   assertDirectory(source, "source root");
+  const sourceRootBinding = captureSourceBinding(source, "source root", "directory");
   const destinationStat = lstatIfPresent(destination);
   if (destinationStat) assertDirectory(destination, "destination root");
-  const sourcePlan = collectSourceFiles(source);
+  const sourcePlan = collectSourceFiles(source, sourceRootBinding);
+  if (sourcePlan.marketFactsRootSeen && sourcePlan.transformedSourceRoots.length === 0) {
+    throw new Error("canonical market-facts root exists without its ticker source root");
+  }
+  const marketFactsProjection = buildMarketFactsShardProjection(sourcePlan.transformedSourceRoots);
+  if (!marketFactsProjection) {
+    assertNoOrphanedDestinationMarketFactsProjection(destination);
+  }
   preflightDestinationPaths(destination, sourcePlan);
-  const removalPlan = collectDestinationRemovalPlan(destination);
+  const transformedRelativeRoots = marketFactsProjection
+    ? [MARKET_FACTS_TICKER_ROOT, MARKET_FACTS_SHARD_ROOT]
+    : [];
+  const removalPlan = collectDestinationRemovalPlan(destination, transformedRelativeRoots);
   return {
     sourceRoot: source,
     destinationRoot: destination,
@@ -292,8 +502,14 @@ export function planPublicDataSync({ sourceRoot, destinationRoot }) {
     excludedSourceFiles: sourcePlan.excludedSourceFiles,
     excludedSourceFilePaths: sourcePlan.excludedSourceFilePaths,
     removals: removalPlan.roots,
+    transformedRemovals: removalPlan.transformedRoots,
     exactRemovals: removalPlan.exactFiles,
     removalBindings: removalPlan.bindings,
+    sourceBindings: [
+      sourceRootBinding,
+      ...(marketFactsProjection?.sourceBindings ?? []),
+    ],
+    marketFactsProjection,
   };
 }
 
@@ -321,6 +537,11 @@ export function syncPublicData({
     removedDestinationFiles: plan.removals.reduce((sum, item) => sum + item.files.length, 0),
     removedDestinationExactFiles: plan.exactRemovals.length,
     removedDestinationExactFilePaths: plan.exactRemovals.map((item) => item.relativePath),
+    marketFactsTickerFiles: plan.marketFactsProjection?.tickerFiles ?? 0,
+    marketFactsShardFiles: plan.marketFactsProjection?.shardFiles.length ?? 0,
+    marketFactsShardBytes: plan.marketFactsProjection?.bytes ?? 0,
+    removedTransformedDestinationRoots: plan.transformedRemovals.length,
+    removedTransformedDestinationFiles: plan.transformedRemovals.reduce((sum, item) => sum + item.files.length, 0),
   };
   if (dryRun) return result;
 
@@ -328,15 +549,19 @@ export function syncPublicData({
     sourceRoot: plan.sourceRoot,
     destinationRoot: plan.destinationRoot,
     removedDestinationRoots: plan.removals.map((item) => item.relativeRoot),
+    removedTransformedDestinationRoots: plan.transformedRemovals.map((item) => item.relativeRoot),
     removedDestinationExactFilePaths: [...result.removedDestinationExactFilePaths],
   }));
+  revalidateSourceBindings(plan.sourceBindings, "after beforeMutation");
   revalidateDestinationRemovalPlan(plan.removalBindings);
+  revalidateSourceBindings(plan.sourceBindings, "immediately before destination mutation");
   const removalBindingByPath = new Map(
     plan.removalBindings.map((binding) => [binding.filePath, binding]),
   );
   fs.mkdirSync(plan.destinationRoot, { recursive: true });
   removeDestinationExactFiles(plan.exactRemovals, removalBindingByPath);
   removeDestinationRoots(plan.removals, removalBindingByPath);
+  removeDestinationRoots(plan.transformedRemovals, removalBindingByPath);
   for (const relativeDirectory of plan.directories) {
     fs.mkdirSync(path.join(plan.destinationRoot, ...relativeDirectory.split("/")), { recursive: true });
   }
@@ -348,7 +573,15 @@ export function syncPublicData({
     if (targetStat && !targetStat.isFile()) throw new Error(`destination path is not a regular file: ${target}`);
     fs.copyFileSync(item.absolutePath, target);
   }
-  logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files`);
+  for (const item of plan.marketFactsProjection?.shardFiles ?? []) {
+    const target = path.join(plan.destinationRoot, ...item.relativePath.split("/"));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const targetStat = lstatIfPresent(target);
+    if (targetStat?.isSymbolicLink()) throw new Error(`destination shard path is a symlink: ${target}`);
+    if (targetStat && !targetStat.isFile()) throw new Error(`destination shard path is not a regular file: ${target}`);
+    fs.writeFileSync(target, item.body);
+  }
+  logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); sharded ${result.marketFactsTickerFiles} market-facts tickers into ${result.marketFactsShardFiles} files (${result.marketFactsShardBytes} bytes); excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files`);
   return result;
 }
 

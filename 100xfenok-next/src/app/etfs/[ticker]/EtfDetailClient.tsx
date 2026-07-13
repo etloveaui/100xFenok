@@ -23,6 +23,7 @@ import {
 } from "@/lib/data-entity-graph/stock-index";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
+import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
 import {
   getEtfDataSupplyPresentation,
   parseEtfApiResponse,
@@ -299,16 +300,8 @@ function loadMarketFacts(ticker: string): Promise<LoadResult<MarketFactsPayload>
   if (cached instanceof Promise) return cached;
   if (cached !== undefined) return Promise.resolve(okResult(cached));
 
-  const request = fetch(`/data/computed/market_facts/tickers/${encodeURIComponent(symbol)}.json`, { cache: "no-store" })
-    .then((res) => {
-      if (res.ok) return res.json();
-      return res.status === 404 ? missingResult<MarketFactsPayload>() : failedResult<MarketFactsPayload>();
-    })
+  const request = fetchMarketFactsFromShard(symbol, { requestInit: { cache: "no-store" } })
     .then((payload) => {
-      if (isLoadResult<MarketFactsPayload>(payload)) {
-        delete factsCache[symbol];
-        return payload;
-      }
       const parsed = asRecord(payload) ? payload as MarketFactsPayload : null;
       if (parsed) {
         factsCache[symbol] = parsed;

@@ -27,6 +27,7 @@ import {
 } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
 
 export type MaybeNumber = number | null | undefined;
 
@@ -1088,8 +1089,7 @@ export function useMarketFacts(ticker: string, enabled = true) {
     const run = async () => {
       setLoading(true);
       try {
-        const r = await fetch(`/data/computed/market_facts/tickers/${encodeURIComponent(symbol)}.json`);
-        const parsed = r.ok ? normalizeMarketFacts(await r.json()) : null;
+        const parsed = normalizeMarketFacts(await fetchMarketFactsFromShard(symbol));
         MARKET_FACTS_CACHE.set(symbol, parsed);
         if (!cancelled) setData(parsed);
       } catch {
