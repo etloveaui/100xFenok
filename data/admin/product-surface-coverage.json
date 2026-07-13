@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v1",
   "source_stamp_version": 1,
-  "generated_at": "2026-07-13T12:50:15.296Z",
+  "generated_at": "2026-07-13T13:07:57.507Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -137,7 +137,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:49:06Z",
+          "as_of": "2026-07-13T13:06:48Z",
           "age_days": 0,
           "max_age_days": 7
         },
@@ -146,7 +146,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:48:29Z",
+          "as_of": "2026-07-13T13:06:07Z",
           "age_days": 0,
           "max_age_days": 8
         },
@@ -170,7 +170,7 @@
       "owner": "Market valuation",
       "status": "partial",
       "status_label": "부분 준비",
-      "coverage_score": 90,
+      "coverage_score": 80,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -202,17 +202,19 @@
         },
         {
           "label": "KOSPI RIM 입력",
-          "status": "ready",
-          "status_label": "준비됨",
-          "detail": "945개 구성 · 매칭 91.85%",
+          "status": "partial",
+          "status_label": "부분 준비",
+          "detail": "blocked_or_input_only",
           "index_id": "KOSPI",
-          "role": "secondary_input_only",
-          "public_status": "ready_inputs_and_forecast_grid",
-          "blockers": [],
-          "forecast_grid_status": "input_only_krx_exact_weights_no_fair_value",
-          "source_tier": "exact_index_weight_source",
+          "role": "backlog_blocked",
+          "public_status": "blocked_or_input_only",
+          "blockers": [
+            "missing_kospi_constituent_weight_path"
+          ],
+          "forecast_grid_status": null,
+          "source_tier": null,
           "proxy_inputs_present": false,
-          "matched_weight_ratio": 0.918484,
+          "matched_weight_ratio": null,
           "methodology_weight_rows": null,
           "cap_violation_count": null
         },
@@ -238,7 +240,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:50:14.258Z",
+          "as_of": "2026-07-13T13:07:56.474Z",
           "age_days": 0,
           "max_age_days": 2
         },
@@ -256,7 +258,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:48:29Z",
+          "as_of": "2026-07-13T13:06:07Z",
           "age_days": 0,
           "max_age_days": 8
         },
@@ -265,12 +267,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:49:06Z",
+          "as_of": "2026-07-13T13:06:48Z",
           "age_days": 0,
           "max_age_days": 7
         }
       ],
-      "as_of": "2026-07-13T12:49:06Z",
+      "as_of": "2026-07-13T13:06:48Z",
       "source_as_of": "2026-07-03"
     },
     {
@@ -364,7 +366,7 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:48:29Z",
+          "as_of": "2026-07-13T13:06:07Z",
           "age_days": 0,
           "max_age_days": 8
         },
@@ -373,12 +375,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:49:06Z",
+          "as_of": "2026-07-13T13:06:48Z",
           "age_days": 0,
           "max_age_days": 14
         }
       ],
-      "as_of": "2026-07-13T12:49:06Z",
+      "as_of": "2026-07-13T13:06:48Z",
       "source_as_of": null
     },
     {
@@ -522,12 +524,12 @@
           "status": "ready",
           "status_label": "준비됨",
           "detail": "기준 2026-07-13 · 0일 전",
-          "as_of": "2026-07-13T12:50:15.296Z",
+          "as_of": "2026-07-13T13:07:57.507Z",
           "age_days": 0,
           "max_age_days": 1
         }
       ],
-      "as_of": "2026-07-13T12:50:15.296Z",
+      "as_of": "2026-07-13T13:07:57.507Z",
       "source_as_of": null
     }
   ]
