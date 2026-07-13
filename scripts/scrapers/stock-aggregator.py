@@ -418,11 +418,11 @@ def export_split_dividends(
     historical_file = output_dir / "stocks-dividends-historical.json"
 
     recent_file.write_text(
-        json.dumps(recent_output, indent=indent, ensure_ascii=False),
+        json.dumps(recent_output, indent=indent, ensure_ascii=False, allow_nan=False),
         encoding="utf-8"
     )
     historical_file.write_text(
-        json.dumps(historical_output, indent=indent, ensure_ascii=False),
+        json.dumps(historical_output, indent=indent, ensure_ascii=False, allow_nan=False),
         encoding="utf-8"
     )
 
@@ -565,7 +565,7 @@ def main() -> None:
             # Write individual stock file
             indent = 2 if args.pretty else None
             stock_file.write_text(
-                json.dumps(aggregated, indent=indent, ensure_ascii=False),
+                json.dumps(aggregated, indent=indent, ensure_ascii=False, allow_nan=False),
                 encoding="utf-8"
             )
             success_count += 1

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import time
 from datetime import datetime, timedelta, timezone
@@ -203,7 +204,7 @@ def clean_number(value: str, *, chars_to_remove: str = ",%$()+") -> str:
     return result.strip()
 
 
-def to_float(value: str, *, default: float = 0.0) -> float:
+def to_float(value: str, *, default: Optional[float] = 0.0) -> Optional[float]:
     """
     Convert string to float with automatic cleanup.
 
@@ -218,7 +219,8 @@ def to_float(value: str, *, default: float = 0.0) -> float:
     if not stripped:
         return default
     try:
-        return float(stripped)
+        number = float(stripped)
+        return number if math.isfinite(number) else default
     except ValueError:
         return default
 
@@ -526,7 +528,7 @@ def write_output(
         pretty: Pretty-print with indentation (default: False)
     """
     indent = 2 if pretty else None
-    json_str = json.dumps(payload, indent=indent, ensure_ascii=False)
+    json_str = json.dumps(payload, indent=indent, ensure_ascii=False, allow_nan=False)
 
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -677,7 +679,7 @@ def write_cumulative_output(
         pretty: Pretty-print with indentation
     """
     indent = 2 if pretty else None
-    json_str = json.dumps(payload, indent=indent, ensure_ascii=False)
+    json_str = json.dumps(payload, indent=indent, ensure_ascii=False, allow_nan=False)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json_str, encoding="utf-8")

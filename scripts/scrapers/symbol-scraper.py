@@ -146,31 +146,32 @@ def parse_symbol_page(html: str, symbol: str) -> Dict[str, Any]:
 
         # P/E ratios
         if "p/e (trailing)" in label_lower or "trailing p/e" in label_lower:
-            result["pe_trailing"] = to_float(value)
+            result["pe_trailing"] = to_float(value, default=None)
         elif "p/e (forward)" in label_lower or "forward p/e" in label_lower:
-            result["pe_forward"] = to_float(value)
+            result["pe_forward"] = to_float(value, default=None)
         # EPS
         elif "eps (trailing)" in label_lower or "trailing eps" in label_lower:
-            result["eps_trailing"] = to_float(value)
+            result["eps_trailing"] = to_float(value, default=None)
         elif "eps (forward)" in label_lower or "forward eps" in label_lower:
-            result["eps_forward"] = to_float(value)
+            result["eps_forward"] = to_float(value, default=None)
         # Dividend
         elif "dividend yield" in label_lower:
-            result["dividend_yield"] = to_float(value.replace('%', ''))
+            result["dividend_yield"] = to_float(value.replace('%', ''), default=None)
         elif "dividend (ttm)" in label_lower or "dividend ttm" in label_lower:
-            result["dividend_ttm"] = to_float(value)
+            result["dividend_ttm"] = to_float(value, default=None)
         # Market Cap
         elif "market cap" in label_lower:
             value_upper = value.upper()
             if 'T' in value_upper:
-                result["market_cap_billions"] = to_float(value_upper.replace('T', '')) * 1000
+                parsed = to_float(value_upper.replace('T', ''), default=None)
+                result["market_cap_billions"] = parsed * 1000 if parsed is not None else None
             elif 'B' in value_upper:
-                result["market_cap_billions"] = to_float(value_upper.replace('B', ''))
+                result["market_cap_billions"] = to_float(value_upper.replace('B', ''), default=None)
             else:
-                result["market_cap_billions"] = to_float(value)
+                result["market_cap_billions"] = to_float(value, default=None)
         # Price
         elif "price" in label_lower and result["price"] is None:
-            result["price"] = to_float(value)
+            result["price"] = to_float(value, default=None)
 
     for row in soup.find_all("tr"):
         cells = row.find_all("td")
@@ -185,7 +186,7 @@ def parse_symbol_page(html: str, symbol: str) -> Dict[str, Any]:
     if result["price"] is None:
         price_elem = soup.select_one(".quote-price, .current-price, [class*='price']")
         if price_elem:
-            result["price"] = to_float(price_elem.get_text(strip=True))
+            result["price"] = to_float(price_elem.get_text(strip=True), default=None)
 
     return result
 
@@ -312,7 +313,7 @@ def merge_batch_files(
 
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False),
+            json.dumps(payload, indent=2, ensure_ascii=False, allow_nan=False),
             encoding="utf-8"
         )
         print(f"Merged {len(all_stocks)} stocks to {output}")
@@ -408,7 +409,7 @@ def main() -> None:
 
             if success:
                 indent = 2 if args.pretty else None
-                output = json.dumps(data, indent=indent, ensure_ascii=False)
+                output = json.dumps(data, indent=indent, ensure_ascii=False, allow_nan=False)
                 if args.output:
                     args.output.write_text(output, encoding="utf-8")
                     print(f"Saved {args.symbol} to {args.output}")
@@ -465,7 +466,7 @@ def main() -> None:
             }
 
             indent = 2 if args.pretty else None
-            json_output = json.dumps(payload, indent=indent, ensure_ascii=False)
+            json_output = json.dumps(payload, indent=indent, ensure_ascii=False, allow_nan=False)
 
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)

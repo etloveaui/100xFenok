@@ -40,12 +40,19 @@ CRITICAL_MIRROR_FILES = (
 MOJIBAKE_MARKERS = ("Â", "Ã", "å", "ä", "ç")
 
 
+def reject_non_finite_number(token: str) -> None:
+    raise ValueError(f"non-finite numeric constant {token}")
+
+
 def load_json(path: Path) -> dict[str, Any]:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            parse_constant=reject_non_finite_number,
+        )
     except FileNotFoundError:
         raise RuntimeError(f"Missing file: {path}") from None
-    except json.JSONDecodeError as exc:
+    except (json.JSONDecodeError, ValueError) as exc:
         raise RuntimeError(f"Invalid JSON at {path}: {exc}") from exc
 
 
