@@ -50,6 +50,29 @@ export const TRACKED_CRONS = Object.freeze([
   Object.freeze({ workflow_file: "fenok-edge-krx-daily.yml", cron: "30 10 * * 1-5" }),
 ]);
 
+// Only owner-approved platform corruption/integrity checks may halt publication
+// for every lane. Ordinary source freshness/readiness stays lane-local.
+export const PLATFORM_BLOCKING_CHECK_KEYS = Object.freeze([
+  "finra_occ_plain_us_and_mapping_policy/ledger_acceptance",
+  "finra_occ_plain_us_and_mapping_policy/ledger_private_only",
+  "automation_contract/sync_static_builds_kpi",
+  "automation_contract/sync_static_checks_kpi",
+  "automation_contract/update_manifest_rebuilds_kpi",
+  "automation_contract/deploy_worker_checks_kpi",
+  "automation_contract/deploy_worker_smokes_kpi",
+  "automation_contract/phase_b_checker_strict",
+  "automation_contract/phase_b_pending_max_age",
+  "automation_contract/deploy_worker_smoke_strict",
+  "automation_contract/yf_daily_no_default_cap",
+  "automation_contract/stockanalysis_daily1y_scheduled",
+  "automation_contract/edge_daily_dispatches_manifest",
+  "automation_contract/krx_daily_dispatches_manifest",
+  "public_mirror_safety/kpi_public_mirror",
+  "public_mirror_safety/rim_public_private_paths_redacted",
+  "public_mirror_safety/coverage_public_private_paths_absent",
+  "public_mirror_safety/forbidden_tokens_absent",
+]);
+
 // Source workflows allowed to dispatch authoritative rebuilds + their own crons.
 export const SOURCE_WORKFLOW_CRONS = Object.freeze({
   "fenok-edge-daily.yml": Object.freeze(["30 0 * * 2-6"]),

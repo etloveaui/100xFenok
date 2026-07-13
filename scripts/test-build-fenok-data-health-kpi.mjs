@@ -19,6 +19,10 @@ import {
   PUBLIC_RUNTIME_DENY_KEYS,
 } from "./lib/kpi-runtime-projection.mjs";
 import {
+  classifyRuntimeSlots,
+  validateCronDeferrals,
+} from "./lib/kpi-runtime-slots.mjs";
+import {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
@@ -76,9 +80,9 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     code: "krx_kospi_daily_refresh_recommended",
     severity: "freshness_blocker",
   }];
-  const blockedLane = buildRimLane(staleRim);
-  assert.equal(blockedLane.status, "blocked");
-  assert.equal(blockedLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "blocked");
+  const degradedLane = buildRimLane(staleRim);
+  assert.equal(degradedLane.status, "degraded", "RIM readiness lag degrades its lane; RIM integrity remains a separate global gate");
+  assert.equal(degradedLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "blocked");
 }
 
 // The full 4,515-row daily-1Y lane is a diagnostic backlog. Product availability
@@ -141,6 +145,17 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     assert.equal(diagnostic?.service_gate, false);
   }
   assert.equal(etfLane.checks.find((item) => item.id === "core_basket_ready")?.status, "ready");
+
+  const behindCoverage = structuredClone(coverage);
+  behindCoverage.public_scoring_readiness.tracks[0].requirements.daily = false;
+  behindCoverage.public_scoring_readiness.tracks[0].requirements.gated = false;
+  behindCoverage.public_scoring_readiness.tracks[0].stage = "PUBLIC";
+  const degradedEtfLane = buildEtfLane(behindCoverage, daily, plan, core);
+  assert.equal(degradedEtfLane.status, "degraded");
+  assert.equal(degradedEtfLane.deployment_blocking, false);
+  assert.match(degradedEtfLane.status_message, /not ready.*Other lanes may publish/);
+  assert.equal(degradedEtfLane.checks.find((item) => item.id === "requirements_complete")?.status, "blocked",
+    "failed readiness remains visible and is not painted green");
 }
 
 // The eight lanes the checker's validateCoreShape (check-...:36 REQUIRED_LANES) demands.
@@ -157,8 +172,8 @@ const REQUIRED_LANE_IDS = [
 ];
 
 // HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
-// data/admin KPI doc. validateCoreShape (check-...:104-129) hard-requires status=="ready",
-// the raw_policy flags, every REQUIRED_LANE ready, and totals.required_not_ready==0.
+// data/admin KPI doc. validateCoreShape hard-requires canonical deployment integrity,
+// while lane readiness may honestly be degraded.
 // Reading the real doc (previous behavior) leaked cf:build's regenerated BLOCKED status/
 // lanes into the "ready" fixture — the OpenNext-only fixture-4b deploy failure. By
 // constructing every gate field here, seedReadyV2 is fully decoupled from live data state.
@@ -176,8 +191,13 @@ function readyCoreV2(now) {
       private_ledgers_included: false,
       source_artifacts_are_referenced_by_id_only: true,
     },
+    deployment_integrity: {
+      status: "ready", status_label: "정상",
+      status_message: "Platform integrity gates are ready; degraded lanes may publish independently.",
+      blocker_count: 0, blockers: [],
+    },
     lanes: REQUIRED_LANE_IDS.map((id) => ({ id, label: id, status: "ready", status_label: "정상", required: true, checks: [] })),
-    totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0 },
+    totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length, degraded: 0, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0, platform_blocking_not_ready: 0 },
     non_ready_checks: [],
     source_artifacts: [],
   };
@@ -686,7 +706,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("per-source SLA: builder emits stale for old required source and ready for recent one");
 }
 
-// 10b. checker treats a stale REQUIRED source as warn-only in Phase A, blocking in strict
+// 10b. stale REQUIRED source degrades its lane in both modes; it is not corruption.
 {
   const now = "2026-07-10T02:35:00.000Z";
   const tmp = mkTmp("sla-checker");
@@ -694,8 +714,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   runtime.cadence.v2_activated_at = now;
   seedReadyV2(tmp, { now, runtime, sla: readySla(now, { staleFinra: true }) });
   assert.equal(runChecker(tmp, now).exit, 0, "Phase A: stale required source is warn-only (exit 0)");
-  assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "Phase B (strict): stale required source blocks (exit 1)");
-  ok("stale required source: warn-only in Phase A, hard block under --strict (Phase B flip)");
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict: stale required source stays lane-local (exit 0)");
+  ok("stale required source: visible warning without a platform-wide strict block");
 }
 
 // 11. FIX 1 — a delayed 02:30 run at 09:35 must NOT claim the 09:30 slot
@@ -778,7 +798,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("FIX 3: frozen-green producer (48h stale vs checker clock) blocks under strict, warns in Phase A");
 }
 
-// 14. FIX 5a — empty / missing-required / unavailable-required SLA fail closed under strict
+// 14. Missing/unavailable source SLA evidence is lane readiness, not schema corruption.
 {
   const now = "2026-07-10T02:35:00.000Z";
   const mkReady = (overrides) => {
@@ -791,9 +811,9 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   for (const [label, overrides] of [["empty", { emptySla: true }], ["dropped-required", { dropRequired: true }], ["unavailable-required", { unavailableRequired: true }]]) {
     const tmp = mkReady(overrides);
     assert.equal(runChecker(tmp, now).exit, 0, `Phase A: ${label} SLA is warn-only (exit 0)`);
-    assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, `strict: ${label} SLA fails closed (exit 1)`);
+    assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, `strict: ${label} SLA degrades its lane (exit 0)`);
   }
-  ok("FIX 5a: empty / missing-required / unavailable-required SLA is warn-only Phase A, hard block under strict");
+  ok("FIX 5a: empty / missing-required / unavailable-required SLA remains visible without freezing other lanes");
 }
 
 // 15. FIX 5d — future-dated source is an anomaly, never clamped to ready
@@ -810,14 +830,14 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(futureEntry.status, "future_date_anomaly", "future source date is an anomaly, not ready");
   assert.equal(futureEntry.future_date_anomaly, true, "future anomaly flagged");
 
-  // (b) checker: future required source fails closed under strict
+  // (b) checker: future required source is timestamp corruption and always fails closed
   const tmp2 = mkTmp("future-check");
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "fut2" });
   runtime.cadence.v2_activated_at = now;
   seedReadyV2(tmp2, { now, runtime, sla: readySla(now, { futureRequired: true }) });
-  assert.equal(runChecker(tmp2, now).exit, 0, "Phase A: future-dated required source warn-only (exit 0)");
+  assert.equal(runChecker(tmp2, now).exit, 1, "Phase A: future-dated required source is a hard anomaly (exit 1)");
   assert.equal(runChecker(tmp2, now, { strict: true }).exit, 1, "strict: future-dated required source fails closed (exit 1)");
-  ok("FIX 5d: future-dated source flagged as anomaly (builder) and fails closed under strict (checker)");
+  ok("FIX 5d: future-dated source is a global timestamp-integrity anomaly in both modes");
 }
 
 // 16. ROOT — SLA definitional tamper is a HARD error even in Phase A (never warn-only)
@@ -1014,7 +1034,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("FIX 2: shape-strict pending — duplicate/missing/malformed required surface rows hard-error (Phase A + strict)");
 }
 
-// 25. FIX 3 — sticky pending_since: preservation, 13d strict warn, 15d strict hard, invalid hard
+// 25. sticky pending_since: age is lane readiness; malformed/future timestamps remain hard.
 {
   // preservation across rebuild: prior committed KPI pending_since must survive a rebuild
   const now = "2026-07-10T02:35:00.000Z";
@@ -1048,25 +1068,25 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const at13d = new Date(new Date(checkerNow).getTime() - 13 * 86400000).toISOString();
   const at15d = new Date(new Date(checkerNow).getTime() - 15 * 86400000).toISOString();
   assert.equal(runChecker(mkPending(at13d), checkerNow, { strict: true }).exit, 0, "13d pending -> strict WARN (exit 0)");
-  assert.equal(runChecker(mkPending(at15d), checkerNow, { strict: true }).exit, 1, "15d pending -> strict HARD (exit 1)");
+  assert.equal(runChecker(mkPending(at15d), checkerNow, { strict: true }).exit, 0, "15d pending -> strict lane warning (exit 0)");
   assert.equal(runChecker(mkPending(at15d), checkerNow).exit, 0, "15d pending -> Phase A warn-only (exit 0, no time-bomb)");
   assert.equal(runChecker(mkPending("garbage"), checkerNow).exit, 1, "invalid pending_since -> hard error even Phase A");
   const futurePs = new Date(new Date(checkerNow).getTime() + 3 * 86400000).toISOString();
   assert.equal(runChecker(mkPending(futurePs), checkerNow).exit, 1, "future pending_since -> hard error even Phase A");
-  ok("FIX 3b: pending within 14d = strict WARN; beyond 14d = strict hard / Phase A warn; invalid/future = hard");
+  ok("FIX 3b: pending age degrades one lane; invalid/future pending timestamps remain hard");
 }
 
-// 25c. ANTI-OSCILLATION — once ever_stamped, regression to pending = strict HARD (no fresh grace)
+// 25c. ANTI-OSCILLATION evidence remains visible, but is a lane-local regression.
 {
   const now = "2026-07-10T02:35:00.000Z";
   const tmp = mkTmp("oscillation");
   const rt = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "os" });
   rt.cadence.v2_activated_at = now;
-  // pending, ever_stamped=true, pending_since FRESH (0d) — regression must still hard-error under strict.
+  // pending, ever_stamped=true, pending_since FRESH (0d) — regression remains visible.
   seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { productSurface: { defaultStamp: null, priorEverStamped: true, pendingSince: now } }) });
   assert.equal(runChecker(tmp, now).exit, 0, "Phase A: post-stamped regression is warn-only");
-  assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "strict: regression to pending after ever_stamped = hard error, NO fresh 14d grace");
-  ok("ANTI-OSCILLATION: ever_stamped -> pending regression is a strict hard error immediately (no grace reset)");
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict: regression degrades only the product-surface lane");
+  ok("ANTI-OSCILLATION: ever_stamped regression stays visible without a platform freeze");
 }
 
 // 25d. ever_stamped preservation across a TWO-BUILD sequence (non-auth rebuild retains true)
@@ -1086,7 +1106,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("ever_stamped preserved across a two-build non-authoritative rebuild (monotonic true)");
 }
 
-// 26. FIX 4 — coverage_index has NO strict exemption (plain unavailable stays strict hard)
+// 26. Coverage unavailability degrades its source lane; malformed structure remains hard elsewhere.
 {
   const now = "2026-07-10T02:35:00.000Z";
   const tmp = mkTmp("coverage-noexempt");
@@ -1094,8 +1114,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   rt.cadence.v2_activated_at = now;
   seedReadyV2(tmp, { now, runtime: rt, sla: readySla(now, { coverageUnavailable: true }) });
   assert.equal(runChecker(tmp, now).exit, 0, "Phase A: coverage unavailable is warn-only");
-  assert.equal(runChecker(tmp, now, { strict: true }).exit, 1, "strict: coverage unavailable is a hard error (NO pending exemption)");
-  ok("FIX 4: fenok_edge_coverage_index plain unavailable stays a strict hard error (no exemption)");
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict: coverage unavailable stays lane-local");
+  ok("FIX 4: fenok_edge_coverage_index plain unavailable degrades its lane without freezing publication");
 }
 
 // 27. real generator on temp root — ALL 6 surfaces stamp collection-time source dates (#331)
@@ -1476,6 +1496,164 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(runChecker(tmp, checkAt).exit, 0, "checker re-derives the 02:30 slot as in-grace at slot+7m -> GREEN");
   assert.equal(runChecker(tmp, checkAt, { strict: true }).exit, 0, "stays green under strict too");
   ok("#331 ride-along: real builder output survives the 29064993375 scenario (build slot+6m -> check slot+7m GREEN)");
+}
+
+// 34. RECOVERY-AWARE SLOT VERDICT — retained evidence stays visible, but a later
+// authoritative + ready + committed full snapshot changes BLOCKED -> DEGRADED.
+{
+  const miss = "update-manifest.yml:30 2 * * *@2026-07-12T02:30Z";
+  const recovery = "update-manifest.yml:30 9 * * *@2026-07-12T09:30Z";
+  const runtime = makeProducerRuntime({ builtAt: "2026-07-12T10:51:19.151Z", slotKey: recovery, runId: "recovery" });
+  runtime.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
+  runtime.slots.missed_slot_keys = [miss];
+  runtime.slots.satisfied_slot_keys = [recovery];
+  runtime.successful_snapshot_history = [{
+    built_at: "2026-07-12T10:51:19.151Z", slot_key: recovery, run_id: "recovery",
+    run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
+  }];
+  const classification = classifyRuntimeSlots(runtime);
+  assert.equal(classification.status, "degraded");
+  assert.deepEqual(classification.recovered_missed_slot_keys, [miss]);
+  assert.deepEqual(classification.unrecovered_missed_slot_keys, []);
+
+  const pub = projectPublicKpi(v2Doc(runtime), "2026-07-12T13:00:00.000Z");
+  assert.equal(pub.runtime.slot_status, "degraded");
+  assert.equal(pub.runtime.fresh, true);
+  assert.equal(pub.runtime.missed_slot_count, 1);
+  assert.equal(pub.runtime.recovered_missed_slot_count, 1);
+  assert.equal(pub.runtime.unrecovered_missed_slot_count, 0);
+  assert.match(pub.runtime.status_message, /recovered/i);
+  const degradedErrors = [];
+  const degradedWarnings = [];
+  checkV2Runtime(v2Doc(runtime), { errors: degradedErrors, warnings: degradedWarnings }, "2026-07-12T13:00:00.000Z");
+  assert.deepEqual(degradedErrors, [], "recovered historical miss does not hard-fail the checker");
+  assert.ok(degradedWarnings.some((message) => /recovered by later authoritative ready/.test(message)),
+    "checker emits an honest degraded warning");
+  ok("recovered full-snapshot miss remains recorded while public slot verdict is DEGRADED");
+
+  runtime.successful_snapshot_history[0].status = "blocked";
+  const blocked = projectPublicKpi(v2Doc(runtime), "2026-07-12T13:00:00.000Z");
+  assert.equal(blocked.runtime.slot_status, "blocked", "non-ready execution cannot launder a missed slot");
+  assert.equal(blocked.runtime.fresh, false);
+  assert.equal(blocked.runtime.unrecovered_missed_slot_count, 1);
+  const blockedErrors = [];
+  checkV2Runtime(v2Doc(runtime), { errors: blockedErrors, warnings: [] }, "2026-07-12T13:00:00.000Z");
+  assert.ok(blockedErrors.some((message) => /lack a later authoritative ready/.test(message)),
+    "unrecovered miss hard-fails the checker");
+  ok("satisfied key without a later ready snapshot remains BLOCKED");
+
+  const incrementalMiss = "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-10T00:30Z";
+  const incrementalLater = "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-11T00:30Z";
+  const incrementalRuntime = structuredClone(runtime);
+  incrementalRuntime.slots.missed_slot_keys = [incrementalMiss];
+  incrementalRuntime.slots.satisfied_slot_keys = [incrementalLater];
+  incrementalRuntime.successful_snapshot_history = [{
+    built_at: "2026-07-11T01:00:00.000Z", slot_key: incrementalLater, run_id: "edge-later",
+    run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
+  }];
+  assert.equal(classifyRuntimeSlots(incrementalRuntime).status, "blocked",
+    "non-snapshot workflow does not auto-recover without explicit backfill proof");
+  ok("incremental/mixed workflow misses never inherit full-snapshot auto-recovery");
+}
+
+// 35. CRON DEFERRAL GUARD — a valid predeclared exception is accepted; post-hoc
+// declarations and incomplete shapes are structurally rejected by builder + checker.
+{
+  const slotKey = "update-manifest.yml:30 2 * * *@2026-07-12T02:30Z";
+  const valid = {
+    slot_key: slotKey,
+    reason: "planned GitHub Actions maintenance",
+    declared_by: "platform-owner",
+    declared_at: "2026-07-12T01:00:00.000Z",
+    expires_at: "2026-07-12T03:00:00.000Z",
+  };
+  assert.deepEqual(validateCronDeferrals([valid]), []);
+  assert.ok(validateCronDeferrals([{ ...valid, declared_at: "2026-07-12T02:30:00.000Z" }]).length > 0,
+    "declared_at equal to slot time is not BEFORE the slot");
+  assert.ok(validateCronDeferrals([{ ...valid, declared_at: "2026-07-12T03:00:00.000Z" }]).length > 0,
+    "post-hoc deferral is rejected");
+  assert.ok(validateCronDeferrals([{ slot_key: slotKey }]).length > 0, "missing audit fields are rejected");
+
+  const tmp = mkTmp("deferral-valid");
+  const rt = makeProducerRuntime({ builtAt: "2026-07-12T09:35:00.000Z", slotKey: "update-manifest.yml:30 9 * * *@2026-07-12T09:30Z", runId: "valid-deferral" });
+  rt.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
+  rt.slots.cron_deferrals = [valid];
+  seedReadyV2(tmp, { now: "2026-07-12T09:35:00.000Z", runtime: rt, sla: readySla("2026-07-12T09:35:00.000Z") });
+  assert.equal(runChecker(tmp, "2026-07-12T09:35:00.000Z", { strict: true }).exit, 0,
+    "valid non-empty predeclared deferral passes checker");
+
+  const bad = structuredClone(rt);
+  bad.slots.cron_deferrals = [{ ...valid, declared_at: "2026-07-12T03:00:00.000Z" }];
+  const tmpChecker = mkTmp("deferral-posthoc-checker");
+  seedReadyV2(tmpChecker, { now: "2026-07-12T09:35:00.000Z", runtime: bad, sla: readySla("2026-07-12T09:35:00.000Z") });
+  assert.equal(runChecker(tmpChecker, "2026-07-12T09:35:00.000Z", { strict: true }).exit, 1,
+    "checker rejects post-hoc deferral");
+
+  const tmpBuilder = mkTmp("deferral-posthoc-builder");
+  seedPrior(tmpBuilder, v2Doc(bad));
+  runBuilder(tmpBuilder, {
+    GITHUB_EVENT_NAME: "push",
+    GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main",
+    GITHUB_RUN_ID: "posthoc", GITHUB_RUN_ATTEMPT: "1", GITHUB_ACTOR: "github-actions[bot]", GITHUB_REF: "refs/heads/main",
+  }, "2026-07-12T09:36:00.000Z", { expectExit: 1 });
+  ok("cron deferrals require complete pre-slot evidence; post-hoc builder/checker paths fail closed");
+}
+
+// 36. GENERAL LANE DECOUPLING — lane readiness is honest DEGRADED evidence;
+// only canonical platform-integrity checks may hard-stop deployment.
+{
+  const now = "2026-07-12T13:00:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 9 * * *@2026-07-12T09:30Z", runId: "lane-decouple" });
+  runtime.cadence.v2_activated_at = now;
+  const root = { ...readyCoreV2(now), runtime, source_sla: readySla(now) };
+  const etfIndex = root.lanes.findIndex((item) => item.id === "etf_public_and_daily_gate");
+  root.lanes[etfIndex] = {
+    ...root.lanes[etfIndex],
+    status: "degraded",
+    status_label: "저하",
+    status_message: "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
+    deployment_blocking: false,
+    checks: [{
+      id: "requirements_complete", label: "PUBLIC+DAILY+GATED", status: "blocked",
+      status_label: "차단", detail: "PUBLIC", platform_blocking: false,
+    }],
+  };
+  root.status = "degraded";
+  root.status_label = "저하";
+  root.status_message = "1 required lane(s) are not ready; healthy lanes may still publish.";
+  root.totals = { lanes: 8, ready: 7, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
+  const tmp = mkTmp("lane-degraded");
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  assert.equal(runChecker(tmp, now, { strict: true }).exit, 0,
+    "strict checker accepts an honest degraded lane when deployment integrity is ready");
+  ok("lane readiness degradation remains visible while platform integrity stays deployable");
+
+  const blockedRoot = structuredClone(root);
+  const automationIndex = blockedRoot.lanes.findIndex((item) => item.id === "automation_contract");
+  const integrityCheck = {
+    id: "sync_static_builds_kpi", label: "sync-static KPI build", status: "blocked",
+    status_label: "차단", detail: "package script wiring", platform_blocking: true,
+  };
+  blockedRoot.lanes[automationIndex] = {
+    ...blockedRoot.lanes[automationIndex], status: "blocked", status_label: "차단",
+    status_message: "Platform integrity blocked by sync-static KPI build: package script wiring.",
+    deployment_blocking: true, checks: [integrityCheck],
+  };
+  blockedRoot.status = "blocked";
+  blockedRoot.status_label = "차단";
+  blockedRoot.totals = { lanes: 8, ready: 6, degraded: 1, warning: 0, blocked: 1, unavailable: 0, required_not_ready: 2, platform_blocking_not_ready: 1 };
+  blockedRoot.deployment_integrity = {
+    status: "blocked", status_label: "차단",
+    status_message: "1 platform integrity blocker(s) must halt publication.", blocker_count: 1,
+    blockers: [{ lane_id: "automation_contract", check_id: integrityCheck.id, label: integrityCheck.label, detail: integrityCheck.detail }],
+  };
+  const blockedTmp = mkTmp("platform-blocked");
+  writeJson(path.join(blockedTmp, "data", KPI_REL), blockedRoot);
+  writeJson(path.join(blockedTmp, "public", "data", KPI_REL), projectPublicKpi(blockedRoot, now));
+  assert.equal(runChecker(blockedTmp, now, { strict: true }).exit, 1,
+    "canonical platform integrity failure still hard-stops strict verification");
+  ok("global integrity failure remains BLOCKED and cannot be downgraded to a lane warning");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

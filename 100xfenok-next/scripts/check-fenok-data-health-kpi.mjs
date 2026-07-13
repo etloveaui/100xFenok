@@ -2,6 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { projectPublicKpi, projectRuntime } from "../../scripts/lib/kpi-runtime-projection.mjs";
+import {
+  classifyRuntimeSlots,
+  validateCronDeferrals,
+} from "../../scripts/lib/kpi-runtime-slots.mjs";
 import { isFutureSource, calendar_version } from "../../scripts/lib/market-calendar.mjs";
 // Canonical definitions come from the CONSTANTS module, NOT the artifact and NOT
 // the builder — the checker validates the artifact against these.
@@ -13,6 +17,7 @@ import {
   PUBLIC_RUNTIME_DENY_KEYS,
   TOLERANCE_MINUTES,
   PENDING_MAX_AGE_DAYS,
+  PLATFORM_BLOCKING_CHECK_KEYS,
 } from "../../scripts/lib/kpi-contract-constants.mjs";
 import {
   enumerateDueSlots,
@@ -101,26 +106,81 @@ function ageHoursBetween(fromIso, nowIso) {
 
 // ── shared lane/shape validation (v1 + v2) ──────────────────────────────────
 
-function validateCoreShape(payload, errors, expectedVersion) {
+function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
+  const isV2 = expectedVersion === SCHEMA_VERSION_V2;
   push(errors, payload?.schema_version === expectedVersion, `schema_version must be ${expectedVersion}, got ${payload?.schema_version ?? "missing"}`);
   push(errors, typeof payload?.generated_at === "string" && payload.generated_at.length >= 10, "generated_at is required");
-  push(errors, payload?.status === "ready", `status must be ready, got ${payload?.status ?? "missing"}`);
+  if (isV2) {
+    push(errors, ["ready", "degraded", "blocked"].includes(payload?.status),
+      `status must be ready/degraded/blocked, got ${payload?.status ?? "missing"}`);
+  } else {
+    push(errors, payload?.status === "ready", `status must be ready, got ${payload?.status ?? "missing"}`);
+  }
   push(errors, payload?.raw_policy?.public_mirror_allowed === true, "raw_policy.public_mirror_allowed must be true");
   push(errors, payload?.raw_policy?.raw_rows_included === false, "raw_policy.raw_rows_included must be false");
   push(errors, payload?.raw_policy?.private_artifact_paths_included === false, "raw_policy.private_artifact_paths_included must be false");
   push(errors, payload?.raw_policy?.private_ledgers_included === false, "raw_policy.private_ledgers_included must be false");
   push(errors, Array.isArray(payload?.lanes) && payload.lanes.length >= REQUIRED_LANES.size, "lanes are required");
-  push(errors, Number(payload?.totals?.required_not_ready || 0) === 0, "totals.required_not_ready must be zero");
 
   const lanesById = new Map((payload?.lanes || []).map((lane) => [lane?.id, lane]));
+  const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS);
+  const derivedIntegrityBlockers = [];
+  let derivedRequiredNotReady = 0;
   for (const laneId of REQUIRED_LANES) {
     const lane = lanesById.get(laneId);
+    let laneIntegrityBlockerCount = 0;
     push(errors, Boolean(lane), `${laneId}: lane missing`);
-    push(errors, lane?.status === "ready", `${laneId}: lane status must be ready`);
-    for (const check of lane?.checks || []) {
-      if (check?.required === false) continue;
-      push(errors, check?.status === "ready", `${laneId}/${check?.id || "check"}: required check is ${check?.status}`);
+    if (isV2) {
+      push(errors, ["ready", "degraded", "blocked", "warning"].includes(lane?.status),
+        `${laneId}: lane status is invalid (${lane?.status})`);
+      if (lane?.required !== false && lane?.status !== "ready") derivedRequiredNotReady += 1;
+      if (lane?.status !== "ready") warnings.push(`${laneId}: lane is ${lane?.status} — ${lane?.status_message || "not ready"}`);
+    } else {
+      push(errors, lane?.status === "ready", `${laneId}: lane status must be ready`);
     }
+    for (const check of lane?.checks || []) {
+      const key = `${laneId}/${check?.id || "check"}`;
+      const canonicalPlatformBlocking = platformBlockingKeys.has(key);
+      if (isV2) {
+        push(errors, check?.platform_blocking === canonicalPlatformBlocking,
+          `${key}: platform_blocking must match canonical (${canonicalPlatformBlocking})`);
+        if (canonicalPlatformBlocking && check?.status !== "ready") {
+          laneIntegrityBlockerCount += 1;
+          derivedIntegrityBlockers.push({ lane_id: laneId, check_id: check.id, label: check.label, detail: check.detail });
+        } else if (check?.required !== false && check?.status !== "ready") {
+          warnings.push(`${key}: lane-local required check is ${check?.status}`);
+        }
+      } else if (check?.required !== false) {
+        push(errors, check?.status === "ready", `${key}: required check is ${check?.status}`);
+      }
+    }
+    if (isV2) {
+      push(errors, Boolean(lane?.deployment_blocking) === (laneIntegrityBlockerCount > 0),
+        `${laneId}: deployment_blocking does not match canonical integrity checks`);
+    }
+  }
+
+  if (isV2) {
+    push(errors, Number(payload?.totals?.required_not_ready) === derivedRequiredNotReady,
+      `totals.required_not_ready mismatch: ${payload?.totals?.required_not_ready} vs derived ${derivedRequiredNotReady}`);
+    push(errors, Number(payload?.totals?.platform_blocking_not_ready) === derivedIntegrityBlockers.length,
+      `totals.platform_blocking_not_ready mismatch: ${payload?.totals?.platform_blocking_not_ready} vs derived ${derivedIntegrityBlockers.length}`);
+    const integrity = payload?.deployment_integrity;
+    push(errors, integrity && typeof integrity === "object", "deployment_integrity is required in v2");
+    const expectedIntegrityStatus = derivedIntegrityBlockers.length > 0 ? "blocked" : "ready";
+    push(errors, integrity?.status === expectedIntegrityStatus,
+      `deployment_integrity.status mismatch: ${integrity?.status} vs ${expectedIntegrityStatus}`);
+    push(errors, Number(integrity?.blocker_count) === derivedIntegrityBlockers.length,
+      `deployment_integrity.blocker_count mismatch: ${integrity?.blocker_count} vs ${derivedIntegrityBlockers.length}`);
+    push(errors, JSON.stringify(integrity?.blockers || []) === JSON.stringify(derivedIntegrityBlockers),
+      "deployment_integrity.blockers do not match canonical platform-blocking checks");
+    push(errors, expectedIntegrityStatus === "ready",
+      `platform deployment integrity is ${expectedIntegrityStatus}`);
+    const expectedStatus = expectedIntegrityStatus === "blocked"
+      ? "blocked"
+      : derivedRequiredNotReady > 0 ? "degraded" : "ready";
+    push(errors, payload?.status === expectedStatus,
+      `top-level status mismatch: ${payload?.status} vs derived ${expectedStatus}`);
   }
 
   const artifacts = Array.isArray(payload?.source_artifacts) ? payload.source_artifacts : [];
@@ -213,14 +273,23 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
       retentionDays: CADENCE.slot_retention_days,
       graceMinutes: CADENCE.slot_grace_minutes,
     });
-    const missed = deriveMissedSlots({
-      dueSlots: due,
-      satisfiedSlotKeys: runtime.slots?.satisfied_slot_keys ?? [],
-      cronDeferrals: runtime.slots?.cron_deferrals ?? [],
-    });
-    const stored = [...(runtime.slots?.missed_slot_keys ?? [])].sort();
-    push(errors, JSON.stringify(missed) === JSON.stringify(stored),
-      `missed_slot_keys re-derivation mismatch: stored ${JSON.stringify(stored)} vs recomputed ${JSON.stringify(missed)}`);
+    const satisfiedSlotKeys = runtime.slots?.satisfied_slot_keys ?? [];
+    const cronDeferrals = runtime.slots?.cron_deferrals ?? [];
+    const deferralErrors = validateCronDeferrals(cronDeferrals, { satisfiedSlotKeys });
+    for (const error of deferralErrors) errors.push(`invalid cron deferral: ${error}`);
+    if (deferralErrors.length === 0) {
+      const missed = deriveMissedSlots({ dueSlots: due, satisfiedSlotKeys, cronDeferrals });
+      const stored = [...(runtime.slots?.missed_slot_keys ?? [])].sort();
+      push(errors, JSON.stringify(missed) === JSON.stringify(stored),
+        `missed_slot_keys re-derivation mismatch: stored ${JSON.stringify(stored)} vs recomputed ${JSON.stringify(missed)}`);
+    }
+  }
+
+  const slotClassification = classifyRuntimeSlots(runtime);
+  if (slotClassification.status === "blocked") {
+    errors.push(`${slotClassification.unrecovered_missed_slot_keys.length} retained missed slot(s) lack a later authoritative ready full-snapshot recovery`);
+  } else if (slotClassification.status === "degraded") {
+    warnings.push(`${slotClassification.recovered_missed_slot_keys.length} retained missed slot(s) recovered by later authoritative ready full snapshot(s)`);
   }
 
   // Producer freshness judged against the CHECKER'S CURRENT clock (not the doc's
@@ -246,9 +315,8 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
   const entries = Array.isArray(rootDoc?.source_sla) ? rootDoc.source_sla : null;
   push(errors, entries != null, "source_sla array is required in v2");
   if (!entries) return;
-  const strictBucket = STRICT ? errors : warnings;
   // Fail-closed: an empty SLA set is not "all clear".
-  push(strictBucket, entries.length > 0, "source_sla is empty (no source freshness evidence)");
+  push(warnings, entries.length > 0, "source_sla is empty (no source freshness evidence)");
   const buildNow = rootDoc.generated_at;
   const defById = new Map(SOURCE_SLA_DEF.map((d) => [d.source_id, d]));
 
@@ -261,7 +329,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
   push(errors, uniqueIds.size === ids.length, `source_sla has duplicate source_id(s): ${ids.join(", ")}`);
   for (const def of SOURCE_SLA_DEF) {
     if (def.required && !uniqueIds.has(def.source_id)) {
-      strictBucket.push(`${def.source_id}: required source missing from source_sla`);
+      warnings.push(`${def.source_id}: required source missing from source_sla`);
     }
   }
 
@@ -314,7 +382,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
 
       if (cls.kind === "future") {
         push(errors, entry.future_date_anomaly === true, "product_surface_coverage future must flag future_date_anomaly");
-        strictBucket.push("product_surface_coverage: required source date in the future (anomaly)");
+        errors.push("product_surface_coverage: required source date in the future (anomaly)");
         continue;
       }
       if (cls.kind === "pending") {
@@ -322,7 +390,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
         // any later regression to pending is a strict hard error immediately — no
         // fresh 14-day grace.
         if (everStamped) {
-          strictBucket.push("product_surface_coverage: regressed to pending after having been fully stamped (ever_stamped) — no grace");
+          warnings.push("product_surface_coverage: regressed to pending after having been fully stamped (ever_stamped) — lane degraded");
           continue;
         }
         // Bootstrap pending: pending_since must be a valid past-or-present ISO STRING
@@ -337,8 +405,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
         }
         const ageDays = (new Date(nowIso).getTime() - psMs) / 86400000;
         if (ageDays > PENDING_MAX_AGE_DAYS) {
-          // exemption expired: hard error under --strict (Phase B), warn in Phase A.
-          strictBucket.push(`product_surface_coverage pending exceeded ${PENDING_MAX_AGE_DAYS}d grace (${ageDays.toFixed(1)}d since ${ps})`);
+          warnings.push(`product_surface_coverage pending exceeded ${PENDING_MAX_AGE_DAYS}d grace (${ageDays.toFixed(1)}d since ${ps}) — lane degraded`);
         } else {
           // within grace: warn-only even under --strict (the pending exemption is active).
           warnings.push(`product_surface_coverage pending within ${PENDING_MAX_AGE_DAYS}d grace (${ageDays.toFixed(1)}d)`);
@@ -356,7 +423,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
       const parityPS = (stampedAge == null && entry.age == null)
         || (stampedAge != null && entry.age != null && Math.abs(stampedAge - entry.age) < 0.01);
       push(errors, parityPS, `product_surface_coverage age mismatch: ${entry.age} vs ${stampedAge}`);
-      if (entry.status === "stale") strictBucket.push("product_surface_coverage: required source stale");
+      if (entry.status === "stale") warnings.push("product_surface_coverage: required source stale — lane degraded");
       continue;
     }
 
@@ -371,7 +438,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
     if (future || entry.future_date_anomaly) {
       push(errors, entry.status === "future_date_anomaly" && future,
         `${entry.source_id}: future-dated source must be flagged future_date_anomaly (never clamped to ready)`);
-      if (required) strictBucket.push(`${entry.source_id}: required source date ${entry.source_date} is in the future (anomaly)`);
+      if (required) errors.push(`${entry.source_id}: required source date ${entry.source_date} is in the future (anomaly)`);
       continue;
     }
 
@@ -396,9 +463,9 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
     // Fail-closed: a canonical-required source that is stale OR unavailable/unknown is
     // a blocked signal (warn-only in Phase A, hard error under --strict).
     if (required && entry.status === "stale") {
-      strictBucket.push(`${entry.source_id}: required source stale (age ${entry.age} ${def.unit} > ${def.max_staleness})`);
+      warnings.push(`${entry.source_id}: required source stale (age ${entry.age} ${def.unit} > ${def.max_staleness}) — lane degraded`);
     } else if (required && entry.status !== "ready") {
-      strictBucket.push(`${entry.source_id}: required source not ready (status ${entry.status})`);
+      warnings.push(`${entry.source_id}: required source not ready (status ${entry.status}) — lane degraded`);
     }
   }
 }
@@ -466,9 +533,9 @@ export function freshnessReport(rootDoc, nowIso) {
 function validateV2({ rootDoc, publicDoc, publicKpiPath, nowIso }) {
   const errors = [];
   const warnings = [];
-  validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2);
+  validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings);
   // Public mirror keeps the same schema_version + lanes; only runtime is projected.
-  validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2);
+  validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso);
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
