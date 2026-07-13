@@ -12,8 +12,9 @@
  */
 
 import { PUBLIC_RUNTIME_DENY_KEYS } from "./kpi-contract-constants.mjs";
+import { classifyRuntimeSlots } from "./kpi-runtime-slots.mjs";
 
-export const PUBLIC_PROJECTION_VERSION = "kpi_runtime_projection.v1";
+export const PUBLIC_PROJECTION_VERSION = "kpi_runtime_projection.v2";
 
 // Canonical deny-key list lives in kpi-contract-constants.mjs; re-exported here
 // for existing importers of the projection module.
@@ -37,24 +38,40 @@ function ageHours(fromIso, nowIso) {
 export function projectRuntime(runtime, nowIso) {
   const producerContext = runtime && typeof runtime === "object" ? runtime.producer_context : null;
   const cadence = (runtime && typeof runtime === "object" && runtime.cadence) || {};
-  const slots = (runtime && typeof runtime === "object" && runtime.slots) || {};
   const builtAt = producerContext && producerContext.built_at ? producerContext.built_at : null;
   const hardMaxAgeHours = Number(cadence.hard_max_age_hours);
-  const missedSlotCount = Array.isArray(slots.missed_slot_keys) ? slots.missed_slot_keys.length : 0;
+  const slotClassification = classifyRuntimeSlots(runtime);
+  const missedSlotCount = slotClassification.missed_slot_keys.length;
+  const recoveredMissedSlotCount = slotClassification.recovered_missed_slot_keys.length;
+  const unrecoveredMissedSlotCount = slotClassification.unrecovered_missed_slot_keys.length;
 
   let hardAgeOk = false;
   if (builtAt && Number.isFinite(hardMaxAgeHours)) {
     const age = ageHours(builtAt, nowIso);
     hardAgeOk = age != null && age <= hardMaxAgeHours;
   }
-  const fresh = hardAgeOk && missedSlotCount === 0;
+  const slotStatus = slotClassification.status;
+  const verdict = hardAgeOk ? slotStatus : "blocked";
+  const fresh = hardAgeOk && slotStatus !== "blocked";
+  const statusMessage = !hardAgeOk
+    ? "Producer timestamp is missing or exceeds the hard-age limit."
+    : slotStatus === "ready"
+      ? "No retained missed slots; the current producer snapshot is fresh."
+      : slotStatus === "degraded"
+        ? `${recoveredMissedSlotCount} retained missed slot(s) recovered by later authoritative ready full snapshot(s).`
+        : `${unrecoveredMissedSlotCount} retained missed slot(s) have no later authoritative ready full-snapshot recovery.`;
 
   return {
     projection: PUBLIC_PROJECTION_VERSION,
     built_at: builtAt,
     evaluated_at: nowIso,
+    verdict,
+    slot_status: slotStatus,
+    status_message: statusMessage,
     fresh,
     missed_slot_count: missedSlotCount,
+    recovered_missed_slot_count: recoveredMissedSlotCount,
+    unrecovered_missed_slot_count: unrecoveredMissedSlotCount,
     hard_age_ok: hardAgeOk,
   };
 }

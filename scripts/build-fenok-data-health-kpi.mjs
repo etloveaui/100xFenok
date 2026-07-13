@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
+import { assertValidCronDeferrals } from "./lib/kpi-runtime-slots.mjs";
 import {
   calendar_version,
   businessDayAge,
@@ -18,6 +19,7 @@ import {
   SOURCE_WORKFLOW_CRONS,
   REQUIRED_RIM_INDICES,
   REQUIRED_SURFACE_IDS,
+  PLATFORM_BLOCKING_CHECK_KEYS,
 } from "./lib/kpi-contract-constants.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -171,8 +173,9 @@ export function enumerateDueSlots({ trackedCrons, watermarkIso, nowIso, retentio
 }
 
 export function deriveMissedSlots({ dueSlots, satisfiedSlotKeys, cronDeferrals }) {
+  assertValidCronDeferrals(cronDeferrals ?? [], { satisfiedSlotKeys });
   const satisfied = new Set(satisfiedSlotKeys || []);
-  const deferred = new Set((cronDeferrals || []).map((d) => (typeof d === "string" ? d : d?.slot_key)));
+  const deferred = new Set((cronDeferrals || []).map((d) => d.slot_key));
   return dueSlots.filter((s) => !satisfied.has(s) && !deferred.has(s)).sort();
 }
 
@@ -270,7 +273,7 @@ function appendHistory(priorHistory, entry, cap) {
   return combined.slice(-cap);
 }
 
-export function buildRuntime({ nowIso, env, priorRuntime, overallStatus }) {
+export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
   const github = readGithubContext(env);
   const origin = readOriginEnvelope(env);
   const jobStartedAtIso = env.KPI_JOB_STARTED_AT || nowIso;
@@ -294,6 +297,10 @@ export function buildRuntime({ nowIso, env, priorRuntime, overallStatus }) {
   // so a prior malformed/tampered cadence cannot survive a rebuild. Only
   // v2_activated_at (watermark) is preserved state.
   const canonicalCadence = { ...CADENCE, v2_activated_at: priorV2ActivatedAt ?? nowIso, calendar_version };
+  const priorSlots = priorRuntime?.slots;
+  assertValidCronDeferrals(priorSlots?.cron_deferrals ?? [], {
+    satisfiedSlotKeys: priorSlots?.satisfied_slot_keys ?? [],
+  });
 
   if (!auth.authoritative) {
     // Non-authoritative: preserve producer/slots/history verbatim; only rebuild ctx
@@ -353,7 +360,7 @@ export function buildRuntime({ nowIso, env, priorRuntime, overallStatus }) {
     run_id: github.run_id,
     run_attempt: github.run_attempt,
     workflow: github.workflow,
-    status: overallStatus,
+    status: snapshotStatus,
     duration_ms: durationMs,
   };
   return {
@@ -500,6 +507,7 @@ function dateOnly(value) {
 function statusLabel(status) {
   return {
     ready: "정상",
+    degraded: "저하",
     warning: "주의",
     blocked: "차단",
     unavailable: "없음",
@@ -508,11 +516,27 @@ function statusLabel(status) {
 
 function check(id, label, ok, detail, extra = {}) {
   const status = ok ? "ready" : "blocked";
-  return { id, label, status, status_label: statusLabel(status), detail, ...extra };
+  return {
+    id,
+    label,
+    status,
+    status_label: statusLabel(status),
+    detail,
+    platform_blocking: extra.platform_blocking === true,
+    ...extra,
+  };
 }
 
 function warningCheck(id, label, detail, extra = {}) {
-  return { id, label, status: "warning", status_label: statusLabel("warning"), detail, ...extra };
+  return {
+    id,
+    label,
+    status: "warning",
+    status_label: statusLabel("warning"),
+    detail,
+    platform_blocking: false,
+    ...extra,
+  };
 }
 
 function diagnosticCheck(id, label, ok, detail, extra = {}) {
@@ -522,23 +546,39 @@ function diagnosticCheck(id, label, ok, detail, extra = {}) {
 }
 
 function laneStatus(checks) {
-  if (checks.some((item) => item.status === "blocked" || item.status === "unavailable")) return "blocked";
+  const failed = checks.filter((item) => item.status === "blocked" || item.status === "unavailable");
+  if (failed.some((item) => item.platform_blocking === true)) return "blocked";
+  if (failed.length > 0) return "degraded";
   if (checks.some((item) => item.status === "warning")) return "warning";
   return "ready";
 }
 
 function lane(id, label, checks, { required = true, counts = {}, details = {}, asOf = null } = {}) {
-  const status = laneStatus(checks.filter((item) => item.required !== false));
+  const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS);
+  const classifiedChecks = checks.map((item) => ({
+    ...item,
+    platform_blocking: platformBlockingKeys.has(`${id}/${item.id}`),
+  }));
+  const requiredChecks = classifiedChecks.filter((item) => item.required !== false);
+  const status = laneStatus(requiredChecks);
+  const failed = requiredChecks.filter((item) => item.status !== "ready");
+  const statusMessage = status === "ready"
+    ? `${label} is ready.`
+    : status === "blocked"
+      ? `Platform integrity blocked by ${failed.map((item) => `${item.label}: ${item.detail}`).join("; ")}.`
+      : `${label} is not ready: ${failed.map((item) => `${item.label}: ${item.detail}`).join("; ")}. Other lanes may publish.`;
   return {
     id,
     label,
     status,
     status_label: statusLabel(status),
+    status_message: statusMessage,
+    deployment_blocking: failed.some((item) => item.platform_blocking === true),
     required,
     as_of: asOf,
     counts,
     details,
-    checks,
+    checks: classifiedChecks,
   };
 }
 
@@ -722,11 +762,11 @@ function buildFinraOccLane(ledger) {
   const counts = ledger?.counts || {};
   const publicLedgerExists = exists("data/admin/fenok-s0-finra-occ-mapping-ledger.json", PUBLIC_DATA_ROOT);
   return lane("finra_occ_plain_us_and_mapping_policy", "FINRA/OCC source gate", [
-    check("ledger_acceptance", "ledger acceptance", ledger?.source_audit?.acceptance_ok === true, ledger?.generated_at || "missing"),
+    check("ledger_acceptance", "ledger acceptance", ledger?.source_audit?.acceptance_ok === true, ledger?.generated_at || "missing", { platform_blocking: true }),
     check("finra_plain_us_ready", "plain US FINRA", number(counts.plain_us_finra_source_ready) === number(counts.plain_us_finra_denominator), `${number(counts.plain_us_finra_source_ready)} / ${number(counts.plain_us_finra_denominator)}`),
     check("occ_plain_us_ready", "plain US OCC", number(counts.plain_us_occ_source_ready) === number(counts.plain_us_occ_denominator), `${number(counts.plain_us_occ_source_ready)} / ${number(counts.plain_us_occ_denominator)}`),
     check("non_plain_not_service_blocker", "non-plain policy", ledger?.service_boundary?.active_s0_daily_source_gate_blocker === false, ledger?.service_boundary?.reason || "missing"),
-    check("ledger_private_only", "ledger public mirror", !publicLedgerExists && ledger?.raw_policy?.admin_local_only === true, publicLedgerExists ? "public mirror exists" : "admin-local only"),
+    check("ledger_private_only", "ledger public mirror", !publicLedgerExists && ledger?.raw_policy?.admin_local_only === true, publicLedgerExists ? "public mirror exists" : "admin-local only", { platform_blocking: true }),
   ], {
     counts: {
       active_us_total: number(counts.active_us_total),
@@ -751,18 +791,18 @@ function workflowCheck(file, token) {
 
 function buildAutomationLane() {
   return lane("automation_contract", "Daily automation and deploy gates", [
-    check("sync_static_builds_kpi", "sync-static KPI build", workflowCheck("100xfenok-next/package.json", "build:fenok-data-health-kpi"), "package script wiring"),
-    check("sync_static_checks_kpi", "sync-static KPI check", workflowCheck("100xfenok-next/package.json", "qa:fenok-data-health-kpi"), "package gate wiring"),
-    check("update_manifest_rebuilds_kpi", "manifest reconciliation", workflowCheck(".github/workflows/update-manifest.yml", "build:fenok-data-health-kpi"), "update-manifest rebuild path"),
-    check("deploy_worker_checks_kpi", "Worker deploy gate", workflowCheck(".github/workflows/deploy-worker.yml", "qa:fenok-data-health-kpi"), "deploy prebuild gate"),
-    check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract"),
-    check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring"),
-    check("phase_b_pending_max_age", "Phase B pending age enforcement", workflowCheck("100xfenok-next/scripts/check-fenok-data-health-kpi.mjs", "PENDING_MAX_AGE_DAYS") && workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "14-day pending exemption expiry is active under strict"),
-    check("deploy_worker_smoke_strict", "Worker live KPI smoke strict mode", workflowCheck(".github/workflows/deploy-worker.yml", "KPI v2 producer freshness (strict, Phase B)"), "live producer freshness fails closed"),
-    check("yf_daily_no_default_cap", "YF daily stock shards no silent cap", workflowCheck(".github/workflows/fetch-yf-finance.yml", 'INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"'), "future active universe expansion does not silently fall outside freshness"),
-    check("stockanalysis_daily1y_scheduled", "StockAnalysis daily-1Y schedule", workflowCheck(".github/workflows/fetch-stockanalysis.yml", "50 22 * * 1-5") && workflowCheck(".github/workflows/fetch-stockanalysis.yml", "daily_1y"), "weekday catch-up lane"),
-    check("edge_daily_dispatches_manifest", "Edge daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain"),
-    check("krx_daily_dispatches_manifest", "KRX daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-krx-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain"),
+    check("sync_static_builds_kpi", "sync-static KPI build", workflowCheck("100xfenok-next/package.json", "build:fenok-data-health-kpi"), "package script wiring", { platform_blocking: true }),
+    check("sync_static_checks_kpi", "sync-static KPI check", workflowCheck("100xfenok-next/package.json", "qa:fenok-data-health-kpi"), "package gate wiring", { platform_blocking: true }),
+    check("update_manifest_rebuilds_kpi", "manifest reconciliation", workflowCheck(".github/workflows/update-manifest.yml", "build:fenok-data-health-kpi"), "update-manifest rebuild path", { platform_blocking: true }),
+    check("deploy_worker_checks_kpi", "Worker deploy gate", workflowCheck(".github/workflows/deploy-worker.yml", "qa:fenok-data-health-kpi"), "deploy prebuild gate", { platform_blocking: true }),
+    check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract", { platform_blocking: true }),
+    check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring", { platform_blocking: true }),
+    check("phase_b_pending_max_age", "Phase B pending age enforcement", workflowCheck("100xfenok-next/scripts/check-fenok-data-health-kpi.mjs", "PENDING_MAX_AGE_DAYS") && workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "14-day pending exemption expiry is active under strict", { platform_blocking: true }),
+    check("deploy_worker_smoke_strict", "Worker live KPI smoke strict mode", workflowCheck(".github/workflows/deploy-worker.yml", "KPI v2 producer freshness (strict, Phase B)"), "live producer freshness fails closed", { platform_blocking: true }),
+    check("yf_daily_no_default_cap", "YF daily stock shards no silent cap", workflowCheck(".github/workflows/fetch-yf-finance.yml", 'INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"'), "future active universe expansion does not silently fall outside freshness", { platform_blocking: true }),
+    check("stockanalysis_daily1y_scheduled", "StockAnalysis daily-1Y schedule", workflowCheck(".github/workflows/fetch-stockanalysis.yml", "50 22 * * 1-5") && workflowCheck(".github/workflows/fetch-stockanalysis.yml", "daily_1y"), "weekday catch-up lane", { platform_blocking: true }),
+    check("edge_daily_dispatches_manifest", "Edge daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain", { platform_blocking: true }),
+    check("krx_daily_dispatches_manifest", "KRX daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-krx-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain", { platform_blocking: true }),
   ], {
     details: {
       credential_dependent_for_build: false,
@@ -779,10 +819,10 @@ function buildPublicMirrorLane(rimInputs) {
   const forbidden = ["_private/", "\"private_manifest_file\"", "\"manifest_file\""];
   const publicText = `${rimPublicText}\n${coveragePublicText}`;
   return lane("public_mirror_safety", "Public mirror safety", [
-    check("kpi_public_mirror", "KPI public mirror", true, "root and public KPI are written together"),
-    check("rim_public_private_paths_redacted", "RIM private paths", !forbidden.some((token) => rimPublicText.includes(token)), "public RIM mirror token scan"),
-    check("coverage_public_private_paths_absent", "coverage private paths", !forbidden.some((token) => coveragePublicText.includes(token)), "public coverage mirror token scan"),
-    check("forbidden_tokens_absent", "forbidden public tokens", !forbidden.some((token) => publicText.includes(token)), "aggregate public token scan"),
+    check("kpi_public_mirror", "KPI public mirror", true, "root and public KPI are written together", { platform_blocking: true }),
+    check("rim_public_private_paths_redacted", "RIM private paths", !forbidden.some((token) => rimPublicText.includes(token)), "public RIM mirror token scan", { platform_blocking: true }),
+    check("coverage_public_private_paths_absent", "coverage private paths", !forbidden.some((token) => coveragePublicText.includes(token)), "public coverage mirror token scan", { platform_blocking: true }),
+    check("forbidden_tokens_absent", "forbidden public tokens", !forbidden.some((token) => publicText.includes(token)), "aggregate public token scan", { platform_blocking: true }),
   ], {
     details: {
       rim_public_mirror_policy: rimInputs?.public_mirror_policy ?? null,
@@ -797,9 +837,24 @@ function summarize(lanes) {
     acc[item.status] = (acc[item.status] || 0) + 1;
     if (item.required !== false && item.status !== "ready") acc.required_not_ready += 1;
     return acc;
-  }, { lanes: lanes.length, ready: 0, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0 });
-  const overallStatus = totals.required_not_ready > 0 ? "blocked" : "ready";
-  return { overallStatus, totals };
+  }, { lanes: lanes.length, ready: 0, degraded: 0, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0 });
+  const blockers = lanes.flatMap((item) => (item.checks || [])
+    .filter((entry) => entry.platform_blocking === true && entry.status !== "ready")
+    .map((entry) => ({ lane_id: item.id, check_id: entry.id, label: entry.label, detail: entry.detail })));
+  totals.platform_blocking_not_ready = blockers.length;
+  const deploymentIntegrity = {
+    status: blockers.length > 0 ? "blocked" : "ready",
+    status_label: statusLabel(blockers.length > 0 ? "blocked" : "ready"),
+    status_message: blockers.length > 0
+      ? `${blockers.length} platform integrity blocker(s) must halt publication.`
+      : "Platform integrity gates are ready; degraded lanes may publish independently.",
+    blocker_count: blockers.length,
+    blockers,
+  };
+  const overallStatus = deploymentIntegrity.status === "blocked"
+    ? "blocked"
+    : totals.required_not_ready > 0 ? "degraded" : "ready";
+  return { overallStatus, totals, deploymentIntegrity };
 }
 
 // product_surface_coverage source stamp = OLDEST of the required surfaces' TRUE
@@ -960,7 +1015,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
   ];
-  const { overallStatus, totals } = summarize(lanes);
+  const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])
     .filter((entry) => entry.status !== "ready")
     .map((entry) => ({
@@ -982,13 +1037,23 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     etfDaily1y,
     priorProductSurfacePending,
   });
-  const runtime = buildRuntime({ nowIso, env: process.env, priorRuntime, overallStatus });
+  const runtime = buildRuntime({
+    nowIso,
+    env: process.env,
+    priorRuntime,
+    snapshotStatus: deploymentIntegrity.status,
+  });
 
   return {
     schema_version: SCHEMA_VERSION,
     generated_at: nowIso,
     status: overallStatus,
     status_label: statusLabel(overallStatus),
+    status_message: overallStatus === "ready"
+      ? "All required lanes and platform integrity gates are ready."
+      : overallStatus === "degraded"
+        ? `${totals.required_not_ready} required lane(s) are not ready; healthy lanes may still publish.`
+        : deploymentIntegrity.status_message,
     purpose: "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
     raw_policy: {
       public_mirror_allowed: true,
@@ -997,6 +1062,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       private_ledgers_included: false,
       source_artifacts_are_referenced_by_id_only: true,
     },
+    deployment_integrity: deploymentIntegrity,
     runtime,
     source_sla: sourceSla,
     source_artifacts: [
@@ -1094,9 +1160,11 @@ function main() {
   writeJsonAtomic(path.join(PUBLIC_DATA_ROOT, KPI_REL_PATH), publicDoc);
 
   console.log(JSON.stringify({
-    ok: rootDoc.status === "ready",
+    ok: rootDoc.deployment_integrity?.status === "ready",
     schema_version: rootDoc.schema_version,
     status: rootDoc.status,
+    deployment_integrity: rootDoc.deployment_integrity?.status ?? null,
+    degraded_lanes: rootDoc.lanes.filter((lane) => lane.status === "degraded").map((lane) => lane.id),
     generated_at: rootDoc.generated_at,
     lanes: rootDoc.totals.lanes,
     non_ready_checks: rootDoc.non_ready_checks.length,
