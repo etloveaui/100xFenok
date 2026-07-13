@@ -90,7 +90,11 @@ def parse_currency(html: str) -> Dict[str, object]:
             rank = int(clean_number(cells[0].get_text(strip=True)))
             
             # Column 1: Name (Symbol) -> "Bitcoin (BTC)"
-            name_cell_text = cells[1].get_text(strip=True)
+            # Read the linked label, not the whole cell. The cell also contains
+            # an image and NBSP separators that can be decoded as ``Â`` bytes
+            # and make an otherwise repairable UTF-8 label fail as one string.
+            name_link = cells[1].find("a")
+            name_cell_text = (name_link or cells[1]).get_text(strip=True)
             # Regex to separate Name and (Symbol)
             # Example: "Bitcoin (BTC)" -> Name: Bitcoin, Symbol: BTC
             # Some might not have parens? Assuming format is Name (Symbol)
