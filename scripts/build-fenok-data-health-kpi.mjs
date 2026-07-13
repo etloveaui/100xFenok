@@ -11,6 +11,7 @@ import {
   isoDateOf,
   isFutureSource,
   isRealCalendarDate,
+  yahooBusinessDayAge,
 } from "./lib/market-calendar.mjs";
 import {
   CADENCE,
@@ -20,6 +21,7 @@ import {
   REQUIRED_RIM_INDICES,
   REQUIRED_SURFACE_IDS,
   PLATFORM_BLOCKING_CHECK_KEYS,
+  YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
 } from "./lib/kpi-contract-constants.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -691,6 +693,120 @@ export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCor
   });
 }
 
+export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
+  const counts = state?.counts || {};
+  const currentAttempt = state?.current_attempt || {};
+  const pendingDetails = (Array.isArray(state?.pending_details) ? state.pending_details : [])
+    .slice(0, 20)
+    .map((item) => ({
+      symbol: item?.symbol ?? null,
+      discovered_from: Array.isArray(item?.discovered_from) ? item.discovered_from.slice(0, 8) : [],
+      missing: Array.isArray(item?.missing) ? item.missing.slice(0, 8) : [],
+      first_trade_date: item?.first_trade_date ?? null,
+      initial_attempt_ref: item?.initial_run_id ?? null,
+      expected_resolution: item?.expected_resolution ?? null,
+      reason: item?.reason ?? "newly_discovered_no_history",
+    }));
+  const lkgDetails = (Array.isArray(state?.lkg_details) ? state.lkg_details : [])
+    .slice(0, 20)
+    .map((item) => ({
+      symbol: item?.symbol ?? null,
+      payload_sha256: item?.payload_sha256 ?? null,
+      source_as_of: item?.source_as_of ?? null,
+      failure_attempt_ref: item?.failure_run_id ?? null,
+      failure_observed_at: item?.failure_observed_at ?? null,
+    }));
+  const oldestSourceAsOf = state?.oldest_source_as_of;
+  const oldestSourceDate = dateOnly(oldestSourceAsOf);
+  const oldestSourceValid = typeof oldestSourceAsOf === "string"
+    && (/^\d{4}-\d{2}-\d{2}$/.test(oldestSourceAsOf)
+      || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(oldestSourceAsOf))
+    && isRealCalendarDate(oldestSourceDate)
+    && Number.isFinite(new Date(oldestSourceAsOf).getTime());
+  const oldestSourceFuture = oldestSourceValid
+    && Number.isFinite(new Date(state?.generated_at).getTime())
+    && new Date(oldestSourceAsOf).getTime() > new Date(state.generated_at).getTime();
+  const oldestSourceAge = oldestSourceValid
+    ? yahooBusinessDayAge(oldestSourceDate, nowIso, state?.oldest_source_ticker)
+    : null;
+  const oldestSourceFresh = oldestSourceAge != null && oldestSourceAge <= YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS;
+  const publicAttempt = {
+    attempt_ref: currentAttempt.run_id ?? null,
+    attempt_number: number(currentAttempt.run_attempt, 1),
+    event_name: currentAttempt.event_name ?? null,
+    schedule: currentAttempt.schedule ?? null,
+    natural: currentAttempt.natural === true,
+    attempted: number(currentAttempt.attempted),
+    successes: number(currentAttempt.successes),
+    failed: number(currentAttempt.failed),
+    skipped: number(currentAttempt.skipped),
+    fetch_attempts: number(currentAttempt.fetch_attempts),
+  };
+  const exclusiveCount = number(counts.fresh)
+    + number(counts.lkg)
+    + number(counts.pending_history)
+    + number(counts.unavailable);
+  const pendingDetail = pendingDetails.length > 0
+    ? pendingDetails.map((item) => (
+      `${item.symbol || "unknown"} is ${item.reason === "recent_listing" ? "a recent listing" : "newly discovered"} from ${(item.discovered_from || []).join(", ") || "an active-universe source"}; `
+      + `${(item.missing || ["history"]).join(", ")} is missing and will self-resolve on the next natural Yahoo run.`
+    )).join(" ")
+    : `${number(counts.pending_history)} pending-history symbol(s)`;
+  const lkgDetail = lkgDetails.length > 0
+    ? lkgDetails.map((item) => (
+      `${item.symbol || "unknown"} holds LKG after failing run ${item.failure_attempt_ref || "unknown"}; `
+      + `source date ${dateOnly(item.source_as_of) || "unstamped"}; payload hash ${item.payload_sha256 || "missing"}.`
+    )).join(" ")
+    : `${number(counts.lkg)} LKG symbol(s)`;
+  return lane("yahoo_batch_quote_history", "Yahoo batch quote/history", [
+    check("state_artifact_present", "Yahoo bounded state", Boolean(state), state?.generated_at || "missing"),
+    check(
+      "active_universe_accounted",
+      "active-universe state coverage",
+      number(counts.active) > 0 && number(counts.untracked) === 0 && exclusiveCount === number(counts.active),
+      `${exclusiveCount} classified / ${number(counts.active)} active; ${number(counts.untracked)} untracked`,
+    ),
+    check(
+      "current_attempt_evidence",
+      "current attempt evidence",
+      typeof currentAttempt.run_id === "string"
+        && ["attempted", "successes", "failed", "skipped", "fetch_attempts"].every((key) => Number.isFinite(Number(currentAttempt[key]))),
+      `run ${currentAttempt.run_id || "missing"}: attempted=${number(currentAttempt.attempted)}, success=${number(currentAttempt.successes)}, failed=${number(currentAttempt.failed)}, skipped=${number(currentAttempt.skipped)}, fetch_attempts=${number(currentAttempt.fetch_attempts)}`,
+    ),
+    check("oldest_source_stamp_valid", "oldest Yahoo source timestamp", oldestSourceValid, oldestSourceAsOf || "missing"),
+    check("oldest_source_not_future", "Yahoo source timestamp chronology", oldestSourceValid && !oldestSourceFuture, oldestSourceFuture ? `${oldestSourceAsOf} follows ${state?.generated_at || "missing build time"}` : oldestSourceAsOf || "missing"),
+    check("oldest_source_fresh", "oldest Yahoo source age", oldestSourceFresh, `${oldestSourceAge ?? "unknown"} / ${YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS} business days`),
+    check("no_current_failures", "current Yahoo attempt failures", number(currentAttempt.failed) === 0, `run ${currentAttempt.run_id || "missing"}: ${number(currentAttempt.failed)} failed`),
+    check("no_lkg_primary", "LKG primary", number(counts.lkg) === 0, lkgDetail),
+    check("no_pending_history", "pending Yahoo history", number(counts.pending_history) === 0, pendingDetail),
+    check("no_unavailable", "Yahoo unavailable", number(counts.unavailable) === 0, `${number(counts.unavailable)} unavailable`),
+    check("retry_set_empty", "Yahoo retry set", number(counts.retry) === 0, `${number(counts.retry)} active-universe retry candidate(s)`),
+  ], {
+    counts: {
+      active: number(counts.active),
+      untracked: number(counts.untracked),
+      fresh: number(counts.fresh),
+      lkg: number(counts.lkg),
+      pending_history: number(counts.pending_history),
+      unavailable: number(counts.unavailable),
+      retry: number(counts.retry),
+      failed: number(counts.failed),
+      oldest_source_date: oldestSourceValid ? oldestSourceDate : null,
+      oldest_source_symbol: state?.oldest_source_ticker ?? null,
+      oldest_source_age_business_days: oldestSourceAge,
+      max_source_age_business_days: YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
+    },
+    details: {
+      latest_attempt: publicAttempt,
+      state_generated_at: state?.generated_at ?? null,
+      lkg: lkgDetails,
+      pending_history: pendingDetails,
+      recovery_policy: "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success.",
+    },
+    asOf: oldestSourceValid ? oldestSourceAsOf : null,
+  });
+}
+
 export function buildRimLane(rimInputs) {
   const indexRows = Object.entries(rimInputs?.indices || {}).map(([id, item]) => {
     const blockers = Array.isArray(item?.blockers) ? item.blockers : [];
@@ -1004,11 +1120,13 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json");
   const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json");
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
+  const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
 
   const lanes = [
     buildStockS0Lane(coverageIndex),
     buildStockS1Lane(coverageIndex),
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket),
+    buildYahooBatchLane(yahooBatchState, nowIso),
     buildRimLane(rimInputs),
     buildProductSurfaceLane(productCoverage),
     buildFinraOccLane(finraOccLedger),
@@ -1072,6 +1190,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       { id: "s0_finra_occ_mapping_ledger", generated_at: finraOccLedger?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "etf_daily1y_readiness_admin", generated_at: etfDaily1y?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "etf_core_daily_basket_admin", generated_at: etfCoreBasket?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "yahoo_batch_quote_history_state", generated_at: yahooBatchState?.generated_at ?? null, public_mirror: false, public_safe: false },
     ],
     totals,
     lanes,

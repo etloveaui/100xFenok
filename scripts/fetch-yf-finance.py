@@ -21,11 +21,13 @@ Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 """
 
 import argparse
+import atexit
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import math
 from numbers import Number
+import os
 import re
 import signal
 import sys
@@ -47,6 +49,7 @@ from data_supply_stock_detail import (
     record_stock_detail_success,
     validate_stock_detail_candidate,
 )
+from yahoo_batch_state import YahooBatchStateStore
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -57,6 +60,7 @@ SOX_GIW_CONSTITUENTS = ROOT / "data" / "indices" / "nasdaq-giw-sox-constituents.
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
+YAHOO_BATCH_STATE_ROOT = ROOT / "data" / "admin" / "yahoo-batch-quote-history"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
 
@@ -127,7 +131,7 @@ def ticker_timeout(seconds, ticker):
 INFO_KEYS = [
     # identity
     "symbol", "quoteType", "shortName", "longName", "currency", "exchange", "country",
-    "sector", "industry", "fullTimeEmployees",
+    "sector", "industry", "fullTimeEmployees", "firstTradeDateEpochUtc", "firstTradeDate",
     # fund / ETF
     "fundFamily", "category", "legalType", "totalAssets", "netAssets",
     "navPrice", "yield", "ytdReturn", "beta3Year", "netExpenseRatio",
@@ -236,8 +240,156 @@ def stable_json(payload, **kwargs):
     return json.dumps(clean_value(payload), **kwargs)
 
 
+def _atomic_write_bytes(path, payload_bytes):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.tmp")
+    try:
+        tmp.write_bytes(payload_bytes)
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
 def _observed_now():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _parse_utc(value):
+    if not value:
+        return None
+    if isinstance(value, Number):
+        seconds = float(value)
+        if seconds > 10_000_000_000:
+            seconds /= 1000
+        try:
+            return datetime.fromtimestamp(seconds, tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _iso_utc(value):
+    parsed = _parse_utc(value)
+    return parsed.strftime("%Y-%m-%dT%H:%M:%SZ") if parsed else None
+
+
+def _provider_source_fields(data):
+    data = data if isinstance(data, dict) else {}
+    info = data.get("info") if isinstance(data.get("info"), dict) else {}
+    quote_as_of = _iso_utc(info.get("regularMarketTime"))
+    history = data.get("history_1y") if isinstance(data.get("history_1y"), list) else []
+    history_dates = sorted({
+        str(row.get("date"))[:10]
+        for row in history
+        if isinstance(row, dict) and _parse_utc(str(row.get("date") or "")[:10])
+    })
+    history_as_of = history_dates[-1] if history_dates else None
+    if history_as_of and (not quote_as_of or history_as_of <= quote_as_of[:10]):
+        source_as_of = history_as_of
+    else:
+        source_as_of = quote_as_of
+    first_trade = info.get("firstTradeDateEpochUtc") or info.get("firstTradeDate")
+    parsed_first_trade = _parse_utc(first_trade)
+    return {
+        "quote_as_of": quote_as_of,
+        "history_as_of": history_as_of,
+        "source_as_of": source_as_of,
+        "first_trade_date": parsed_first_trade.strftime("%Y-%m-%d") if parsed_first_trade else None,
+    }
+
+
+def decorate_finance_payload(ticker, profile, fetched_at, data):
+    source = _provider_source_fields(data)
+    history_rows = data.get("history_1y") if isinstance(data, dict) else None
+    if isinstance(history_rows, list) and history_rows and not source["history_as_of"]:
+        raise ValueError(f"history_as_of is unavailable for {ticker} despite non-empty history")
+    if source["history_as_of"] and not source["quote_as_of"]:
+        raise ValueError(f"quote_as_of is unavailable for {ticker} despite available history")
+    if not source["quote_as_of"] and not source["history_as_of"]:
+        raise ValueError(f"provider source timestamp is unavailable for {ticker}")
+    fetched = _parse_utc(fetched_at)
+    if not fetched:
+        raise ValueError(f"invalid fetched_at for {ticker}: {fetched_at}")
+    quote = _parse_utc(source["quote_as_of"])
+    if quote and quote > fetched:
+        raise ValueError(f"quote_as_of follows fetched_at for {ticker}: {source['quote_as_of']} > {fetched_at}")
+    history = _parse_utc(source["history_as_of"])
+    latest_possible_market_date = (fetched + timedelta(hours=14)).date()
+    if history and history.date() > latest_possible_market_date:
+        raise ValueError(f"history_as_of follows fetched_at for {ticker}: {source['history_as_of']} > {fetched_at}")
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "ticker": ticker,
+        "fetched_at": fetched_at,
+        "profile": profile,
+        **source,
+        "data": data,
+    }
+
+
+def _payload_source_fields(payload):
+    payload = payload if isinstance(payload, dict) else {}
+    derived = _provider_source_fields(payload.get("data"))
+    return {
+        key: payload.get(key) or derived.get(key)
+        for key in ("quote_as_of", "history_as_of", "source_as_of")
+    }
+
+
+def validate_source_progression(existing_payload, candidate_payload):
+    existing = _payload_source_fields(existing_payload)
+    candidate = _payload_source_fields(candidate_payload)
+    existing_history = history_row_count(existing_payload)
+    candidate_history = history_row_count(candidate_payload)
+    if existing_history > 0 and candidate_history == 0:
+        raise ValueError(
+            f"source history disappeared for {candidate_payload.get('ticker')}: "
+            f"{existing_history} rows would be replaced by zero"
+        )
+    if existing_history > 0 and candidate_history > 0:
+        if candidate_history < min(existing_history, HISTORY_ENTRIES):
+            raise ValueError(
+                f"history coverage collapsed for {candidate_payload.get('ticker')}: "
+                f"{existing_history} rows would be replaced by {candidate_history}"
+            )
+        existing_dates = {
+            str(row.get("date"))[:10]
+            for row in (existing_payload.get("data") or {}).get("history_1y") or []
+            if isinstance(row, dict) and _parse_utc(str(row.get("date") or "")[:10])
+        }
+        candidate_dates = {
+            str(row.get("date"))[:10]
+            for row in (candidate_payload.get("data") or {}).get("history_1y") or []
+            if isinstance(row, dict) and _parse_utc(str(row.get("date") or "")[:10])
+        }
+        candidate_latest = max(candidate_dates) if candidate_dates else None
+        if candidate_latest:
+            window_floor = (datetime.fromisoformat(candidate_latest) - timedelta(days=366)).date().isoformat()
+            missing_overlap = sorted(
+                value for value in existing_dates
+                if window_floor <= value <= candidate_latest and value not in candidate_dates
+            )
+            if missing_overlap:
+                raise ValueError(
+                    f"history coverage collapsed for {candidate_payload.get('ticker')}: "
+                    f"{len(missing_overlap)} previously observed in-window date(s) disappeared"
+                )
+    for key in ("quote_as_of", "history_as_of"):
+        before = _parse_utc(existing.get(key))
+        after = _parse_utc(candidate.get(key))
+        if before and after and after < before:
+            raise ValueError(
+                f"source timestamp regression for {candidate_payload.get('ticker')}: "
+                f"{key} {candidate.get(key)} < {existing.get(key)}"
+            )
+    return candidate_payload
 
 
 def write_finance_payload(ticker, payload):
@@ -245,8 +397,7 @@ def write_finance_payload(ticker, payload):
     out_path = OUT_DIR / f"{ticker}.json"
     payload_bytes = stable_json(payload, separators=(",", ":")).encode("utf-8")
     if not is_enrolled_stock_detail(ticker):
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_bytes(payload_bytes)
+        _atomic_write_bytes(out_path, payload_bytes)
         return None
     observed_at = _observed_now()
     truth_root = DATA_SUPPLY_PROVIDER_TRUTH_ROOT
@@ -272,8 +423,7 @@ def write_finance_payload(ticker, payload):
             origin="manual",
         )
         raise
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_bytes(payload_bytes)
+    _atomic_write_bytes(out_path, payload_bytes)
     verified = validate_stock_detail_candidate(
         provider="yahoo_finance",
         entity=ticker,
@@ -621,8 +771,10 @@ def fetch_with_retry(
     retries=2,
     backoffs=(5, 20),
     timeout_seconds=90,
+    include_evidence=False,
 ):
     last_err = None
+    failures = []
     for attempt in range(retries + 1):
         try:
             with ticker_timeout(timeout_seconds, ticker):
@@ -634,15 +786,30 @@ def fetch_with_retry(
                 )
             # treat fully-empty payload as failure (likely rate-limited)
             if any(v is not None for v in data.values()):
-                return data, latency_ms, None
+                result = (data, latency_ms, None)
+                if include_evidence:
+                    return (*result, {
+                        "attempts_used": attempt + 1,
+                        "failures": failures,
+                        "latency_ms": latency_ms,
+                    })
+                return result
             last_err = "empty payload"
         except FetchTimeout as e:
             last_err = str(e)
         except Exception as e:
             last_err = str(e)
+        failures.append({"attempt": attempt + 1, "error": last_err})
         if attempt < retries:
             time.sleep(backoffs[min(attempt, len(backoffs) - 1)])
-    return None, 0, last_err
+    result = (None, 0, last_err)
+    if include_evidence:
+        return (*result, {
+            "attempts_used": retries + 1,
+            "failures": failures,
+            "latency_ms": 0,
+        })
+    return result
 
 
 def merge_existing_payload_data(existing_payload, fetched_data):
@@ -660,6 +827,28 @@ def merge_existing_payload_data(existing_payload, fetched_data):
         else:
             merged[key] = value
     return merged
+
+
+def preserve_history_coverage(existing_payload, fetched_data):
+    data = dict(fetched_data or {})
+    existing_data = existing_payload.get("data") if isinstance(existing_payload, dict) else None
+    existing_history = existing_data.get("history_1y") if isinstance(existing_data, dict) else None
+    candidate_history = data.get("history_1y")
+    if not isinstance(existing_history, list) or not isinstance(candidate_history, list):
+        return data
+    by_date = {}
+    undated = []
+    for row in [*existing_history, *candidate_history]:
+        if not isinstance(row, dict):
+            continue
+        date = str(row.get("date") or "")[:10]
+        if _parse_utc(date):
+            by_date[date] = row
+        else:
+            undated.append(row)
+    merged = [by_date[key] for key in sorted(by_date)]
+    data["history_1y"] = [*undated, *merged][-HISTORY_ENTRIES:] or None
+    return data
 
 
 def bind_enrolled_quote_group_to_fresh_fetch(merged_data, fetched_data):
@@ -835,19 +1024,80 @@ def load_sox_giw_symbols():
     return symbols
 
 
-def load_universe(stocks_only=False, stockanalysis_etfs=False):
-    tickers = {p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}
-    tickers |= load_market_facts_stocks()
-    tickers |= load_sox_giw_symbols()
+def load_universe_sources(stocks_only=False, stockanalysis_etfs=False):
+    sources = {}
+
+    def add(symbols, source):
+        for symbol in symbols:
+            if SYMBOL_RE.match(symbol):
+                sources.setdefault(symbol, set()).add(source)
+
+    add({p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}, "global_scouter_stock")
+    add(load_market_facts_stocks(), "market_facts")
+    add(load_sox_giw_symbols(), "nasdaq_giw_sox")
     if not stocks_only:
-        tickers |= load_scouter_etfs()
-        tickers |= load_dashboard_etfs()
-        tickers |= load_portfolio_symbols()
-        tickers |= MAJOR_ETFS
-        tickers |= LEVERAGED_AND_FOCUS_ETFS
+        add(load_scouter_etfs(), "global_scouter_etf")
+        add(load_dashboard_etfs(), "dashboard_configuration")
+        add(load_portfolio_symbols(), "portfolio_configuration")
+        add(MAJOR_ETFS, "major_etf_configuration")
+        add(LEVERAGED_AND_FOCUS_ETFS, "focus_etf_configuration")
         if stockanalysis_etfs:
-            tickers |= load_stockanalysis_etfs()
-    return sort_universe(tickers, stockanalysis_etfs=stockanalysis_etfs)
+            add(load_stockanalysis_etfs(), "stockanalysis_etf")
+    return {ticker: sorted(values) for ticker, values in sources.items()}
+
+
+def load_universe(stocks_only=False, stockanalysis_etfs=False):
+    sources = load_universe_sources(
+        stocks_only=stocks_only,
+        stockanalysis_etfs=stockanalysis_etfs,
+    )
+    return sort_universe(sources, stockanalysis_etfs=stockanalysis_etfs)
+
+
+def select_ticker_plan(tickers, retry_tickers, *, shard="", natural=False, all_shards=False):
+    retry = sorted(set(tickers) & set(retry_tickers)) if natural else []
+    regular = [ticker for ticker in tickers if ticker not in retry]
+    shard_index = None
+    if shard:
+        shard_index, shard_count = (int(value) for value in shard.split("/"))
+        regular = regular[shard_index::shard_count]
+    claim_retry = natural and (not all_shards or shard_index in {None, 0})
+    return [*(retry if claim_retry else []), *regular]
+
+
+def validate_explicit_tickers(values):
+    tickers = [str(value).strip().upper() for value in values if str(value).strip()]
+    invalid = [ticker for ticker in tickers if not SYMBOL_RE.fullmatch(ticker)]
+    if invalid:
+        raise ValueError(f"invalid explicit ticker(s): {', '.join(invalid)}")
+    return tickers
+
+
+def validate_retry_count(value):
+    retries = int(value)
+    if retries < 0 or retries > 5:
+        raise ValueError("retries must be between 0 and 5")
+    return retries
+
+
+def should_skip_cached_payload(ticker, payload, max_age_hours, retry_tickers, controlled_failures):
+    return (
+        ticker not in set(retry_tickers)
+        and ticker not in set(controlled_failures)
+        and is_fresh_payload(payload, max_age_hours)
+    )
+
+
+def validate_controlled_failure_scope(injected, selected, *, event_name, record_batch_state):
+    injected = set(injected)
+    if not injected:
+        return
+    if event_name != "workflow_dispatch":
+        raise ValueError("controlled failures require workflow_dispatch")
+    if not record_batch_state:
+        raise ValueError("controlled failures require Yahoo batch state recording")
+    if not injected.issubset(set(selected)):
+        raise ValueError("controlled failures must be a subset of explicit --tickers")
 
 
 def usable_existing_payload(path):
@@ -960,29 +1210,126 @@ def main():
     parser.add_argument("--merge-existing", action="store_true", help="merge fetched non-null fields into existing payload data instead of replacing heavy fields")
     parser.add_argument("--plan-only", action="store_true", help="print the resolved ticker plan and exit before any Yahoo calls or file writes")
     parser.add_argument("--plan-sample-size", type=int, default=25, help="number of resolved tickers to include in --plan-only output")
+    parser.add_argument("--record-batch-state", action="store_true", help="persist bounded Yahoo lane attempt/LKG state")
+    parser.add_argument("--natural-run", action="store_true", help="mark a scheduled acquisition eligible for deterministic retry priority")
+    parser.add_argument("--all-shards-run", action="store_true", help="claim retries only in shard zero of a sequential all-shard run")
+    parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID", "local"))
+    parser.add_argument("--run-attempt", type=int, default=int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")))
+    parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
+    parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
+    parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
     args = parser.parse_args()
 
+    try:
+        retries = validate_retry_count(args.retries)
+        explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
+    except ValueError as exc:
+        parser.error(str(exc))
+    controlled_failures = {
+        value.strip().upper()
+        for value in args.controlled_failure_tickers.split(",")
+        if value.strip()
+    }
+    validate_controlled_failure_scope(
+        controlled_failures,
+        explicit_tickers,
+        event_name=args.event_name,
+        record_batch_state=args.record_batch_state,
+    )
+
+    selection_sources = load_universe_sources(
+        stocks_only=args.stocks_only,
+        stockanalysis_etfs=args.stockanalysis_etfs,
+    )
+    universe_sources = (
+        load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
+        if args.record_batch_state
+        else selection_sources
+    )
+    active_universe = set(universe_sources)
     if args.tickers:
-        tickers = [s.strip() for s in args.tickers.split(",") if s.strip()]
+        tickers = explicit_tickers
+        for ticker in tickers:
+            active_universe.add(ticker)
+            universe_sources.setdefault(ticker, ["workflow_dispatch"])
     else:
-        tickers = load_universe(stocks_only=args.stocks_only, stockanalysis_etfs=args.stockanalysis_etfs)
+        tickers = sort_universe(selection_sources, stockanalysis_etfs=args.stockanalysis_etfs)
 
     candidate_count = len(tickers)
+    state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
+    retry_tickers = state_store.retry_tickers(active_universe) if state_store and args.natural_run else set()
+    regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
     if args.history_gaps_only:
-        tickers = filter_history_gaps(tickers, args.history_min_rows)
-    if args.shard:
-        i, n = (int(x) for x in args.shard.split("/"))
-        tickers = tickers[i::n]
+        regular_tickers = filter_history_gaps(regular_tickers, args.history_min_rows)
+    planned_tickers = [*sorted(set(tickers) & retry_tickers), *regular_tickers]
+    tickers = select_ticker_plan(
+        planned_tickers,
+        retry_tickers,
+        shard=args.shard,
+        natural=args.natural_run,
+        all_shards=args.all_shards_run,
+    )
     if args.limit:
         tickers = tickers[: args.limit]
+
+    run_context = {
+        "run_id": str(args.run_id),
+        "run_attempt": args.run_attempt,
+        "event_name": args.event_name,
+        "schedule": args.event_schedule,
+        "natural": args.natural_run,
+        "shard": args.shard,
+        "observed_at": _observed_now(),
+    }
 
     if args.plan_only:
         print(stable_json(plan_summary(args, tickers, candidate_count), indent=2))
         return
 
+    finalize_state = None
+    if state_store:
+        finalized = {"done": False}
+        inflight = {"ticker": None}
+
+        def finalize_state(abnormal=True):
+            if finalized["done"]:
+                return
+            batch_failure = None
+            if abnormal:
+                ticker = inflight["ticker"]
+                if ticker:
+                    try:
+                        state_store.record_failure(
+                            ticker,
+                            "batch terminated before the in-flight ticker completed",
+                            run_context,
+                            universe_sources.get(ticker, []),
+                            {"attempts_used": 1, "failures": [{"attempt": 1, "error": "process termination"}]},
+                        )
+                    except Exception as exc:
+                        batch_failure = f"batch terminated and in-flight failure evidence could not be written: {exc}"
+                else:
+                    batch_failure = "batch terminated before normal completion"
+            state_store.rebuild_index(active_universe, run_context, batch_failure=batch_failure)
+            finalized["done"] = True
+
+        atexit.register(finalize_state)
+        if hasattr(signal, "SIGTERM"):
+            signal.signal(signal.SIGTERM, lambda _signum, _frame: (finalize_state(True), sys.exit(143)))
+
+    if state_store:
+        state_store.bootstrap_existing(
+            active_universe,
+            universe_sources,
+            run_context,
+            exclude_tickers=set(tickers),
+        )
+
     if not tickers:
         if args.history_gaps_only:
             write_empty_summary(args.profile, args, candidate_count, "no_history_gaps")
+            if finalize_state:
+                finalize_state(False)
             print(f"[summary] no history gaps; candidates={candidate_count}")
             return
         print("[error] empty universe", file=sys.stderr)
@@ -993,47 +1340,116 @@ def main():
     total_start = time.perf_counter()
 
     for idx, ticker in enumerate(tickers, 1):
+        if state_store:
+            inflight["ticker"] = ticker
         out_path = OUT_DIR / f"{ticker}.json"
         existing = usable_existing_payload(out_path)
-        if existing and is_fresh_payload(existing, args.max_age_hours):
+        if existing and should_skip_cached_payload(
+            ticker,
+            existing,
+            args.max_age_hours,
+            retry_tickers,
+            controlled_failures,
+        ):
             print(f"[{idx}/{len(tickers)}] {ticker} SKIP fresh local payload", flush=True)
             results.append({"ticker": ticker, "latency_ms": 0, "error": None, "skipped": True})
+            if state_store:
+                state_payload = {**existing, **_provider_source_fields(existing.get("data"))}
+                state_store.record_skip(ticker, state_payload, run_context, universe_sources.get(ticker, []))
+                inflight["ticker"] = None
             continue
 
-        data, latency_ms, error = fetch_with_retry(
-            ticker,
-            profile=args.profile,
-            include_options=args.include_options,
-            include_shares_full=args.include_shares_full,
-            retries=max(0, args.retries),
-            timeout_seconds=args.ticker_timeout,
-        )
+        if ticker in controlled_failures:
+            fetch_result = (
+                None,
+                0,
+                f"controlled failure injection for {ticker}",
+                {
+                    "attempts_used": 1,
+                    "failures": [{"attempt": 1, "error": "owner-approved controlled failure injection"}],
+                    "latency_ms": 0,
+                },
+            )
+        else:
+            fetch_result = fetch_with_retry(
+                ticker,
+                profile=args.profile,
+                include_options=args.include_options,
+                include_shares_full=args.include_shares_full,
+                retries=retries,
+                timeout_seconds=args.ticker_timeout,
+                include_evidence=True,
+            )
+        if len(fetch_result) == 4:
+            data, latency_ms, error, evidence = fetch_result
+        else:
+            data, latency_ms, error = fetch_result
+            evidence = {
+                "attempts_used": 1,
+                "failures": [] if error is None else [{"attempt": 1, "error": error}],
+                "latency_ms": latency_ms,
+            }
         if error is None:
             fresh_data = data
             if args.merge_existing and existing:
                 data = merge_existing_payload_data(existing, fresh_data)
                 if is_enrolled_stock_detail(ticker):
                     data = bind_enrolled_quote_group_to_fresh_fetch(data, fresh_data)
-            payload = {
-                "schema_version": SCHEMA_VERSION,
-                "ticker": ticker,
-                "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "profile": args.profile,
-                "data": data,
-            }
+            if existing:
+                data = preserve_history_coverage(existing, data)
             try:
-                write_finance_payload(ticker, payload)
+                payload = decorate_finance_payload(
+                    ticker=ticker,
+                    profile=args.profile,
+                    fetched_at=_observed_now(),
+                    data=data,
+                )
+                if existing:
+                    validate_source_progression(existing, payload)
+                if state_store and not state_store.recovery_candidate_advances(ticker, payload):
+                    raise ValueError(f"source did not advance beyond the retained LKG for {ticker}")
+            except ValueError as exc:
+                error = f"{type(exc).__name__}: {exc}"
+            try:
+                if error is None:
+                    write_finance_payload(ticker, payload)
             except StockDetailValidationError as exc:
                 error = f"{type(exc).__name__}: {exc}"
             if error is None:
+                if state_store:
+                    state_store.record_success(
+                        ticker,
+                        payload,
+                        run_context,
+                        universe_sources.get(ticker, []),
+                        evidence,
+                    )
                 size_kb = round(out_path.stat().st_size / 1024, 1)
                 print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
             else:
+                if state_store:
+                    state_store.record_failure(
+                        ticker,
+                        error,
+                        run_context,
+                        universe_sources.get(ticker, []),
+                        evidence,
+                    )
                 print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
         else:
             record_finance_failure(ticker, error)
+            if state_store:
+                state_store.record_failure(
+                    ticker,
+                    error,
+                    run_context,
+                    universe_sources.get(ticker, []),
+                    evidence,
+                )
             print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
         results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False})
+        if state_store:
+            inflight["ticker"] = None
         time.sleep(args.sleep)
 
     total_s = round(time.perf_counter() - total_start, 1)
@@ -1060,6 +1476,8 @@ def main():
         "errors": errors,
     }
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
+    if finalize_state:
+        finalize_state(False)
     print(f"\n[summary] ok={len(ok)} failed={len(errors)} total={total_s}s")
     if errors:
         sys.exit(2 if len(errors) > len(tickers) * 0.1 else 0)

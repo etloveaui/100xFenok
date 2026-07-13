@@ -27,6 +27,7 @@ import {
   slaStatusForAge,
   classifyProductSurface,
   buildEtfLane,
+  buildYahooBatchLane,
   buildRimLane,
   enumerateDueSlots,
   deriveMissedSlots,
@@ -158,12 +159,65 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "failed readiness remains visible and is not painted green");
 }
 
-// The eight lanes the checker's validateCoreShape (check-...:36 REQUIRED_LANES) demands.
+// Yahoo acquisition readiness is lane-local: LKG/new-listing lag stays visible
+// and self-healing without becoming a platform-integrity blocker.
+{
+  const readyIndex = {
+    generated_at: "2026-07-13T02:00:00Z",
+    counts: { active: 2, untracked: 0, fresh: 2, lkg: 0, pending_history: 0, unavailable: 0, retry: 0, failed: 0 },
+    oldest_source_as_of: "2026-07-10",
+    oldest_source_ticker: "AAPL",
+    current_attempt: { run_id: "100", attempted: 2, successes: 2, failed: 0, skipped: 0, fetch_attempts: 2, errors: [] },
+    pending_details: [],
+    lkg_details: [],
+  };
+  const readyLane = buildYahooBatchLane(readyIndex);
+  assert.equal(readyLane.status, "ready");
+  assert.equal(readyLane.counts.oldest_source_date, "2026-07-10");
+  assert.equal(readyLane.as_of, "2026-07-10");
+  const agedLane = buildYahooBatchLane(readyIndex, "2026-07-30T02:00:00Z");
+  assert.equal(agedLane.status, "degraded", "unchanged Yahoo state must age against the KPI build clock");
+
+  const degradedIndex = structuredClone(readyIndex);
+  degradedIndex.counts = { active: 2, untracked: 0, fresh: 0, lkg: 1, pending_history: 1, unavailable: 0, retry: 2, failed: 1 };
+  degradedIndex.current_attempt = { run_id: "101", attempted: 1, successes: 0, failed: 1, skipped: 0, fetch_attempts: 2, errors: [{ symbol: "AAPL" }] };
+  degradedIndex.lkg_details = [{ symbol: "AAPL", payload_sha256: "abc", source_as_of: "2026-07-10T00:00:00Z", failure_run_id: "101", raw_error: "must-not-publish" }];
+  degradedIndex.pending_details = [{ symbol: "NEW", discovered_from: ["market_facts"], missing: ["history"], expected_resolution: "next_natural_yahoo_run", private_path: "/tmp/private" }];
+  const degradedLane = buildYahooBatchLane(degradedIndex);
+  assert.equal(degradedLane.status, "degraded");
+  assert.equal(degradedLane.deployment_blocking, false);
+  assert.match(degradedLane.status_message, /Other lanes may publish/);
+  assert.match(degradedLane.checks.find((item) => item.id === "no_pending_history")?.detail, /NEW.*market_facts.*history.*next natural Yahoo run/i);
+  assert.match(degradedLane.checks.find((item) => item.id === "no_lkg_primary")?.detail, /AAPL.*101.*2026-07-10/i);
+  assert.equal(degradedLane.details.lkg[0].raw_error, undefined);
+  assert.equal(degradedLane.details.pending_history[0].private_path, undefined);
+
+  const malformedIndex = structuredClone(readyIndex);
+  malformedIndex.oldest_source_as_of = "2026-07-99junk";
+  const malformedLane = buildYahooBatchLane(malformedIndex);
+  assert.equal(malformedLane.status, "degraded");
+  assert.equal(malformedLane.checks.find((item) => item.id === "oldest_source_stamp_valid")?.status, "blocked");
+
+  const futureIndex = structuredClone(readyIndex);
+  futureIndex.oldest_source_as_of = "2026-07-14T00:00:00Z";
+  const futureLane = buildYahooBatchLane(futureIndex);
+  assert.equal(futureLane.status, "degraded");
+  assert.equal(futureLane.checks.find((item) => item.id === "oldest_source_not_future")?.status, "blocked");
+
+  const staleIndex = structuredClone(readyIndex);
+  staleIndex.oldest_source_as_of = "2026-06-01";
+  const staleLane = buildYahooBatchLane(staleIndex);
+  assert.equal(staleLane.status, "degraded");
+  assert.equal(staleLane.checks.find((item) => item.id === "oldest_source_fresh")?.status, "blocked");
+}
+
+// The nine lanes the checker's validateCoreShape REQUIRED_LANES demands.
 // Kept in lockstep with that set; a divergence hard-fails validateCoreShape immediately.
 const REQUIRED_LANE_IDS = [
   "stock_s0_active_daily_gate",
   "stock_s1_candidate_gate",
   "etf_public_and_daily_gate",
+  "yahoo_batch_quote_history",
   "rim_inputs",
   "product_surface_freshness",
   "finra_occ_plain_us_and_mapping_policy",
@@ -178,6 +232,28 @@ const REQUIRED_LANE_IDS = [
 // lanes into the "ready" fixture — the OpenNext-only fixture-4b deploy failure. By
 // constructing every gate field here, seedReadyV2 is fully decoupled from live data state.
 function readyCoreV2(now) {
+  const lanes = REQUIRED_LANE_IDS.map((id) => ({
+    id,
+    label: id,
+    status: "ready",
+    status_label: "정상",
+    required: true,
+    checks: [],
+    ...(id === "yahoo_batch_quote_history" ? {
+      as_of: "2026-07-09T00:00:00Z",
+      deployment_blocking: false,
+      counts: {
+        active: 1, untracked: 0, fresh: 1, lkg: 0, pending_history: 0,
+        unavailable: 0, retry: 0, failed: 0, oldest_source_date: "2026-07-09",
+        oldest_source_symbol: "AAPL", oldest_source_age_business_days: 1,
+        max_source_age_business_days: 6,
+      },
+      details: {
+        latest_attempt: { attempt_ref: "fixture", attempt_number: 1, attempted: 1, successes: 1, failed: 0, skipped: 0, fetch_attempts: 1 },
+        state_generated_at: now,
+      },
+    } : {}),
+  }));
   return {
     schema_version: "fenok-data-health-kpi/v2",
     generated_at: now,
@@ -196,10 +272,10 @@ function readyCoreV2(now) {
       status_message: "Platform integrity gates are ready; degraded lanes may publish independently.",
       blocker_count: 0, blockers: [],
     },
-    lanes: REQUIRED_LANE_IDS.map((id) => ({ id, label: id, status: "ready", status_label: "정상", required: true, checks: [] })),
+    lanes,
     totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length, degraded: 0, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0, platform_blocking_not_ready: 0 },
     non_ready_checks: [],
-    source_artifacts: [],
+    source_artifacts: [{ id: "yahoo_batch_quote_history_state", generated_at: now, public_mirror: false, public_safe: false }],
   };
 }
 
@@ -492,7 +568,27 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("checker passes end-to-end on a ready v2 doc in both warn-only and strict modes");
 }
 
-// 4c. HERMETICITY — seedReadyV2 must NOT inherit a live/regenerated doc's state. Simulate
+// 4c. Yahoo lane count/attempt evidence is numeric and arithmetically closed.
+{
+  const tmp = mkTmp("checker-yahoo-tamper");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "yahoo-tamper" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const yahoo = root.lanes.find((lane) => lane.id === "yahoo_batch_quote_history");
+  yahoo.counts.active = "1";
+  yahoo.counts.oldest_source_date = "2026-02-31";
+  yahoo.as_of = "2026-02-31";
+  yahoo.details.latest_attempt.attempted = 2;
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1, "checker rejects Yahoo numeric coercion and attempt arithmetic tamper");
+  assert.match(result.stderr, /oldest source timestamp\/date is malformed/);
+  ok("Yahoo lane checker rejects coercive counts and unreconciled current-attempt evidence");
+}
+
+// 4d. HERMETICITY — seedReadyV2 must NOT inherit a live/regenerated doc's state. Simulate
 // the cf:build failure condition: a deliberately-BLOCKED KPI doc already sits at the seed's
 // data/admin target (as build:fenok-data-health-kpi emits when a real lane is blocked, e.g.
 // etf_public_and_daily_gate on a fetchable ticker). seedReadyV2 must overwrite it with a
@@ -1621,7 +1717,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   root.status = "degraded";
   root.status_label = "저하";
   root.status_message = "1 required lane(s) are not ready; healthy lanes may still publish.";
-  root.totals = { lanes: 8, ready: 7, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
+  root.totals = { lanes: 9, ready: 8, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
   const tmp = mkTmp("lane-degraded");
   writeJson(path.join(tmp, "data", KPI_REL), root);
   writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
@@ -1642,7 +1738,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   };
   blockedRoot.status = "blocked";
   blockedRoot.status_label = "차단";
-  blockedRoot.totals = { lanes: 8, ready: 6, degraded: 1, warning: 0, blocked: 1, unavailable: 0, required_not_ready: 2, platform_blocking_not_ready: 1 };
+  blockedRoot.totals = { lanes: 9, ready: 7, degraded: 1, warning: 0, blocked: 1, unavailable: 0, required_not_ready: 2, platform_blocking_not_ready: 1 };
   blockedRoot.deployment_integrity = {
     status: "blocked", status_label: "차단",
     status_message: "1 platform integrity blocker(s) must halt publication.", blocker_count: 1,

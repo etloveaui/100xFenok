@@ -124,6 +124,20 @@ export function businessDayAge(sourceValue, nowValue, market) {
   return count;
 }
 
+/** Yahoo universe market calendar selection; unknown foreign suffixes fail conservative. */
+export function yahooBusinessDayAge(sourceValue, nowValue, ticker) {
+  const symbol = String(ticker ?? "").toUpperCase();
+  if (/\.(KS|KQ)$/.test(symbol)) return businessDayAge(sourceValue, nowValue, "krx_market");
+  const [head, suffix] = symbol.split(".");
+  const plainUs = !symbol.includes(".") || (/^[A-Z]+$/.test(head) && /^[A-Z]$/.test(suffix || ""));
+  if (plainUs) return businessDayAge(sourceValue, nowValue, "us_market");
+  const ages = [
+    businessDayAge(sourceValue, nowValue, "us_market"),
+    businessDayAge(sourceValue, nowValue, "krx_market"),
+  ].filter((value) => Number.isFinite(value));
+  return ages.length > 0 ? Math.max(...ages) : null;
+}
+
 /**
  * ISO date that is `n` market business days before fromValue (walkback).
  * n = 0 walks back to the nearest business day <= fromValue.

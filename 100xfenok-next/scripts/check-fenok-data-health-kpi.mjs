@@ -6,7 +6,7 @@ import {
   classifyRuntimeSlots,
   validateCronDeferrals,
 } from "../../scripts/lib/kpi-runtime-slots.mjs";
-import { isFutureSource, calendar_version } from "../../scripts/lib/market-calendar.mjs";
+import { isFutureSource, isRealCalendarDate, yahooBusinessDayAge, calendar_version } from "../../scripts/lib/market-calendar.mjs";
 // Canonical definitions come from the CONSTANTS module, NOT the artifact and NOT
 // the builder — the checker validates the artifact against these.
 import {
@@ -18,6 +18,7 @@ import {
   TOLERANCE_MINUTES,
   PENDING_MAX_AGE_DAYS,
   PLATFORM_BLOCKING_CHECK_KEYS,
+  YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
 } from "../../scripts/lib/kpi-contract-constants.mjs";
 import {
   enumerateDueSlots,
@@ -42,6 +43,7 @@ const REQUIRED_LANES = new Set([
   "stock_s0_active_daily_gate",
   "stock_s1_candidate_gate",
   "etf_public_and_daily_gate",
+  "yahoo_batch_quote_history",
   "rim_inputs",
   "product_surface_freshness",
   "finra_occ_plain_us_and_mapping_policy",
@@ -186,6 +188,90 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
   const artifacts = Array.isArray(payload?.source_artifacts) ? payload.source_artifacts : [];
   const unsafe = artifacts.filter((a) => a?.public_mirror === true && a?.public_safe !== true);
   push(errors, unsafe.length === 0, `public source artifacts must be public_safe: ${unsafe.map((i) => i.id).join(", ")}`);
+  if (isV2) {
+    const yahoo = lanesById.get("yahoo_batch_quote_history");
+    const yahooCounts = yahoo?.counts || {};
+    const countKeys = ["active", "untracked", "fresh", "lkg", "pending_history", "unavailable", "retry", "failed"];
+    for (const key of countKeys) {
+      push(errors, typeof yahooCounts[key] === "number" && Number.isInteger(yahooCounts[key]) && yahooCounts[key] >= 0,
+        `yahoo_batch_quote_history.counts.${key} must be a non-negative integer`);
+    }
+    const active = Number(yahooCounts.active);
+    const classified = Number(yahooCounts.untracked) + Number(yahooCounts.fresh) + Number(yahooCounts.lkg)
+      + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable);
+    push(errors, classified === active,
+      `yahoo_batch_quote_history classified count mismatch: ${classified} vs active ${active}`);
+    push(errors, Number(yahooCounts.retry) <= Number(yahooCounts.lkg) + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable),
+      "yahoo_batch_quote_history retry count exceeds non-fresh states");
+    push(errors, Number(yahooCounts.failed) <= Number(yahooCounts.lkg) + Number(yahooCounts.unavailable),
+      "yahoo_batch_quote_history failed count exceeds LKG/unavailable states");
+    const oldestDate = yahooCounts.oldest_source_date;
+    const oldestStamp = yahoo?.as_of;
+    const oldestValid = typeof oldestStamp === "string"
+      && (/^\d{4}-\d{2}-\d{2}$/.test(oldestStamp)
+        || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(oldestStamp))
+      && isRealCalendarDate(oldestStamp.slice(0, 10))
+      && Number.isFinite(new Date(oldestStamp).getTime())
+      && oldestDate === oldestStamp.slice(0, 10);
+    push(errors, oldestStamp === null || oldestValid,
+      "yahoo_batch_quote_history oldest source timestamp/date is malformed or inconsistent");
+    const stateGeneratedAt = yahoo?.details?.state_generated_at;
+    const stateTimestampRequired = active > 0 || oldestStamp !== null;
+    const stateTimestampValid = typeof stateGeneratedAt === "string" && Number.isFinite(new Date(stateGeneratedAt).getTime());
+    push(errors, !stateTimestampRequired || stateTimestampValid,
+      "yahoo_batch_quote_history state_generated_at is required");
+    push(errors, !oldestValid || (stateTimestampValid && new Date(oldestStamp).getTime() <= new Date(stateGeneratedAt).getTime()),
+      "yahoo_batch_quote_history oldest source timestamp follows state_generated_at");
+    const sourceAge = oldestValid
+      ? yahooBusinessDayAge(oldestDate, payload.generated_at, yahooCounts.oldest_source_symbol)
+      : null;
+    push(errors, yahooCounts.oldest_source_age_business_days === sourceAge,
+      `yahoo_batch_quote_history oldest source age mismatch: ${yahooCounts.oldest_source_age_business_days} vs ${sourceAge}`);
+    push(errors, yahooCounts.max_source_age_business_days === YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
+      "yahoo_batch_quote_history max source age differs from canonical");
+    const latestAttempt = yahoo?.details?.latest_attempt;
+    push(errors, latestAttempt && typeof latestAttempt === "object",
+      "yahoo_batch_quote_history.details.latest_attempt is required");
+    for (const key of ["attempt_number", "attempted", "successes", "failed", "skipped", "fetch_attempts"]) {
+      push(errors, typeof latestAttempt?.[key] === "number" && Number.isInteger(latestAttempt[key]) && latestAttempt[key] >= 0,
+        `yahoo_batch_quote_history.details.latest_attempt.${key} must be a non-negative integer`);
+    }
+    push(errors, Number(latestAttempt?.attempted) === Number(latestAttempt?.successes) + Number(latestAttempt?.failed) + Number(latestAttempt?.skipped),
+      "yahoo_batch_quote_history latest attempt totals do not reconcile");
+    push(errors, Number(latestAttempt?.fetch_attempts) >= Number(latestAttempt?.attempted) - Number(latestAttempt?.skipped),
+      "yahoo_batch_quote_history fetch_attempts is below non-skipped attempts");
+    const yahooReady = active > 0
+      && Number(yahooCounts.untracked) === 0
+      && Number(yahooCounts.fresh) === active
+      && Number(yahooCounts.lkg) === 0
+      && Number(yahooCounts.pending_history) === 0
+      && Number(yahooCounts.unavailable) === 0
+      && Number(yahooCounts.retry) === 0
+      && Number(latestAttempt?.failed) === 0
+      && oldestValid
+      && sourceAge != null
+      && sourceAge <= YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS;
+    push(errors, yahoo?.status === (yahooReady ? "ready" : "degraded"),
+      `yahoo_batch_quote_history status mismatch: ${yahoo?.status} vs ${yahooReady ? "ready" : "degraded"}`);
+    push(errors, yahoo?.deployment_blocking === false,
+      "yahoo_batch_quote_history must remain lane-local and non-deployment-blocking");
+    const detailRules = [
+      ["lkg", new Set(["symbol", "payload_sha256", "source_as_of", "failure_attempt_ref", "failure_observed_at"])],
+      ["pending_history", new Set(["symbol", "discovered_from", "missing", "first_trade_date", "initial_attempt_ref", "expected_resolution", "reason"])],
+    ];
+    for (const [key, allowlist] of detailRules) {
+      const rows = yahoo?.details?.[key] ?? [];
+      push(errors, Array.isArray(rows) && rows.length <= 20,
+        `yahoo_batch_quote_history.details.${key} must be an array of at most 20 rows`);
+      for (const row of Array.isArray(rows) ? rows : []) {
+        const extraKeys = Object.keys(row || {}).filter((field) => !allowlist.has(field));
+        push(errors, extraKeys.length === 0,
+          `yahoo_batch_quote_history.details.${key} contains non-public fields: ${extraKeys.join(", ")}`);
+      }
+    }
+    push(errors, artifacts.some((item) => item?.id === "yahoo_batch_quote_history_state"),
+      "yahoo_batch_quote_history_state source artifact is required");
+  }
 }
 
 function scanForbiddenTokens(publicKpiPath, errors) {

@@ -115,6 +115,10 @@ export const PUBLIC_RUNTIME_DENY_KEYS = Object.freeze([
 // Clock-skew tolerance band (minutes) between projector and checker clocks (§4).
 export const TOLERANCE_MINUTES = 10;
 
+// Yahoo's mixed daily-stock / weekly-ETF batch must stay within one weekly
+// acquisition window. Business-day age avoids weekend/holiday false reds.
+export const YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS = 6;
+
 // Max age of a labelled product_surface_coverage pending state (rev5.3). Pending
 // carries a sticky pending_since; within this window it is warn-only (even under
 // strict), beyond it the exemption expires and becomes a hard error.

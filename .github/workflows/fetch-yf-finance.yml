@@ -32,6 +32,10 @@ on:
         description: 'Comma-separated ticker override (e.g. TQQQ,SOXL,NVDL)'
         required: false
         default: ''
+      controlled_failure_tickers:
+        description: 'Owner-approved failure proof; must be a subset of tickers and is rejected on schedules'
+        required: false
+        default: ''
       sleep:
         description: 'Seconds between tickers'
         required: false
@@ -110,12 +114,14 @@ jobs:
         run: pip install yfinance
 
       - name: Run batch fetch
+        id: fetch_batch
         env:
           INPUT_LIMIT: ${{ github.event.inputs.limit || '' }}
           INPUT_SHARD: ${{ github.event.inputs.shard || '' }}
           INPUT_DAILY_ALL_SHARDS: ${{ github.event.inputs.daily_all_shards || 'false' }}
           INPUT_DAILY_STOCK_SHARDS: ${{ github.event.inputs.daily_stock_shards || '5' }}
           INPUT_TICKERS: ${{ github.event.inputs.tickers || '' }}
+          INPUT_CONTROLLED_FAILURE_TICKERS: ${{ github.event.inputs.controlled_failure_tickers || '' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep || '0.8' }}
           INPUT_TICKER_TIMEOUT: ${{ github.event.inputs.ticker_timeout || '90' }}
           INPUT_RETRIES: ${{ github.event.inputs.retries || '2' }}
@@ -172,10 +178,12 @@ jobs:
             INPUT_PLAN_ONLY="false"
           fi
           echo "YF_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
-          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
+          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --run-id ${GITHUB_RUN_ID} --run-attempt ${GITHUB_RUN_ATTEMPT}"
+          if [ "$EVENT_NAME" = "schedule" ]; then ARGS="$ARGS --natural-run"; fi
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
           if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
           if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
+          if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi
           if [ "$INPUT_STOCKS_ONLY" = "true" ]; then ARGS="$ARGS --stocks-only"; fi
           if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
@@ -188,7 +196,7 @@ jobs:
             echo "Running all daily stock shards: ${DAILY_STOCK_SHARDS}"
             for shard_index in $(seq 0 $((DAILY_STOCK_SHARDS - 1))); do
               echo "::group::YF daily stock shard ${shard_index}/${DAILY_STOCK_SHARDS}"
-              python3 scripts/fetch-yf-finance.py $ARGS --shard "${shard_index}/${DAILY_STOCK_SHARDS}" --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
+              python3 scripts/fetch-yf-finance.py $ARGS --all-shards-run --shard "${shard_index}/${DAILY_STOCK_SHARDS}" --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
               echo "::endgroup::"
             done
           else
@@ -197,14 +205,16 @@ jobs:
           fi
 
       - name: Persist fetched Yahoo candidates
-        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        id: persist_yahoo_state
+        if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- data/yf/finance
+          git add -- data/yf/finance data/admin/yahoo-batch-quote-history
           git restore --staged -- data/yf/finance/_summary.json
           if git diff --staged --quiet; then
             echo "No fetched Yahoo candidate changes to persist"
+            echo "persisted=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "data: persist yf finance candidates"
@@ -216,6 +226,7 @@ jobs:
               continue
             fi
             if git push; then
+              echo "persisted=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "candidate push race on attempt ${attempt}; retrying after rebase"
@@ -223,6 +234,12 @@ jobs:
           done
           echo "candidate push failed after retrying concurrent main updates"
           exit 1
+
+      - name: Publish failed Yahoo attempt evidence
+        if: ${{ always() && env.YF_PLAN_ONLY != 'true' && steps.fetch_batch.outcome == 'failure' && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-manifest.yml --ref main
 
       - name: Rebuild local coverage summary
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
@@ -286,6 +303,7 @@ jobs:
           npm --prefix 100xfenok-next run qa:copy
 
       - name: Commit and push
+        id: publish_yahoo_results
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
@@ -296,6 +314,11 @@ jobs:
             100xfenok-next/public/data/computed/rim-index/inputs.json \
             data/manifest.json \
             100xfenok-next/public/data/manifest.json
+          AUTO_MANIFEST_EXPECTED=false
+          if git diff --staged --name-only | grep -Eq '^data/admin/(fenok-edge-coverage-index|fenok-edge-etf-daily1y-fetchable-plan|fenok-edge-etf-daily1y-readiness|fenok-s0-finra-occ-mapping-ledger|fenok-s1-stock-public-promotion-dry-run)\.json$'; then
+            AUTO_MANIFEST_EXPECTED=true
+          fi
+          echo "auto_manifest_expected=${AUTO_MANIFEST_EXPECTED}" >> "$GITHUB_OUTPUT"
           git diff --staged --quiet || git commit -m "chore: update yf finance data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
@@ -314,7 +337,7 @@ jobs:
           exit 1
 
       - name: Dispatch manifest and RIM rebuild
-        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        if: ${{ env.YF_PLAN_ONLY != 'true' && steps.publish_yahoo_results.outputs.auto_manifest_expected != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run update-manifest.yml --ref main
