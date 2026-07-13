@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "FLEX",
   "asset_type": "stock",
-  "generated_at": "2026-07-12T12:15:00Z",
+  "generated_at": "2026-07-13T10:55:55Z",
   "identity": {
     "name": "Flex Ltd.",
     "exchange": "NMS",
@@ -33,9 +33,16 @@
           "as_of": null,
           "fetched_at": "2026-06-27T23:54:38Z",
           "confidence": "observed"
+        },
+        {
+          "value": 133.09,
+          "source": "slickcharts",
+          "as_of": "2026-07-13T09:27:18+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "previous_close": {
       "value": 161.28,
@@ -123,9 +130,16 @@
           "as_of": null,
           "fetched_at": "2026-06-27T23:54:38Z",
           "confidence": "observed"
+        },
+        {
+          "value": 49760000000.0,
+          "source": "slickcharts",
+          "as_of": "2026-07-13T09:27:18+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "trailing_pe": {
       "value": 62.961372,
@@ -144,9 +158,16 @@
           "as_of": null,
           "fetched_at": "2026-06-27T23:54:38Z",
           "confidence": "observed"
+        },
+        {
+          "value": 58.24,
+          "source": "slickcharts",
+          "as_of": "2026-07-13T09:27:18+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "forward_pe": {
       "value": 21.117485,
@@ -167,6 +188,38 @@
           "as_of": null,
           "fetched_at": "2026-06-27T23:54:38Z",
           "confidence": "observed"
+        },
+        {
+          "value": 20.02,
+          "source": "slickcharts",
+          "as_of": "2026-07-13T09:27:18+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "dividend_yield": {
+      "value": 0.0,
+      "source": "slickcharts",
+      "as_of": "2026-07-13T09:27:18+00:00",
+      "fetched_at": null,
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "slickcharts",
+          "as_of": "2026-07-13T09:27:18+00:00",
+          "fetched_at": null,
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -309,14 +362,14 @@
     "stockanalysis": false,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
-    "slickcharts": false
+    "slickcharts": true
   },
   "source_files": {
     "yf": "yf/finance/FLEX.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
-    "slickcharts": null
+    "slickcharts": "slickcharts/stocks/FLEX.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
