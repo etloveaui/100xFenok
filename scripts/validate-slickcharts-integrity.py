@@ -15,7 +15,6 @@ from __future__ import annotations
 import argparse
 import filecmp
 import json
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -179,22 +178,21 @@ def assert_public_mirror(data_dir: Path, public_dir: Path, symbols: list[str]) -
 
 
 def assert_no_obsolete_paths() -> None:
-    result = subprocess.run(
-        [
-            "rg",
-            "-n",
-            "source/100xFenok/data/slickcharts",
-            "scripts/scrapers",
-        ],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode == 0:
-        raise RuntimeError("Obsolete scraper paths remain:\n" + result.stdout)
-    if result.returncode not in (0, 1):
-        raise RuntimeError("Failed to scan scraper paths: " + result.stderr)
+    needle = "source/100xFenok/data/slickcharts"
+    matches: list[str] = []
+    for path in sorted((REPO_ROOT / "scripts" / "scrapers").rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except UnicodeDecodeError:
+            continue
+        for line_number, line in enumerate(lines, start=1):
+            if needle in line:
+                relative = path.relative_to(REPO_ROOT)
+                matches.append(f"{relative}:{line_number}:{line}")
+    if matches:
+        raise RuntimeError("Obsolete scraper paths remain:\n" + "\n".join(matches))
 
 
 def parse_args() -> argparse.Namespace:
