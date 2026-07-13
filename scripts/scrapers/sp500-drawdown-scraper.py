@@ -3,7 +3,7 @@
 S&P 500 Drawdown Scraper for SlickCharts
 Extracts historical drawdown data from JavaScript state object.
 
-Data structure: window.__sc_init_state__ contains:
+Data structure: SlickCharts page data contains:
 - currentDrawdown: Current drawdown percentage
 - currentPrice: Current S&P 500 price
 - allTimeHigh: All-time high price
@@ -36,12 +36,13 @@ SOURCE_URL = "https://www.slickcharts.com/sp500/drawdown"
 def parse_drawdown_data(state: dict) -> dict:
     """Parse drawdown data from JavaScript state object."""
     # Extract nested components
+    summary = state.get("drawdownComponent", {})
     metrics = state.get("drawdownMetricsComponent", {})
     chart = state.get("drawdownChartComponent", {})
 
     data = {
         "current": {
-            "drawdown": metrics.get("drawdown", ""),
+            "drawdown": metrics.get("drawdown") or summary.get("drawdown", ""),
             "price": metrics.get("currentPrice", ""),
             "allTimeHigh": metrics.get("allTimeHigh", ""),
             "lowSinceATH": metrics.get("lowSinceAllTimeHigh", ""),

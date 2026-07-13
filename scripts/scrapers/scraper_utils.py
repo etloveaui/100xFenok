@@ -326,6 +326,68 @@ def extract_table_rows(
 # JavaScript State Extraction
 # ==============================================================================
 
+def _balanced_object(source: str, start: int) -> str:
+    """Return one balanced JavaScript object starting at ``start``."""
+    if start < 0 or start >= len(source) or source[start] != "{":
+        raise ValueError("JavaScript object start was not found")
+
+    depth = 0
+    quote: str | None = None
+    escaped = False
+    for index in range(start, len(source)):
+        char = source[index]
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in ('"', "'"):
+            quote = char
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:index + 1]
+
+    raise ValueError("JavaScript object is not balanced")
+
+
+def _parse_svelte_data_object(html: str) -> Dict[str, Any]:
+    """Parse the SvelteKit page-data object now emitted by SlickCharts."""
+    marker = re.search(r'data\s*:\s*\[null,\s*\{type\s*:\s*"data",\s*data\s*:', html)
+    if marker is None:
+        raise ValueError("Could not find SlickCharts SvelteKit page data")
+
+    object_start = html.find("{", marker.end())
+    javascript = _balanced_object(html, object_start)
+    # SlickCharts emits a JSON-compatible object literal except for unquoted
+    # property names and JavaScript's leading-decimal numeric shorthand.
+    parts = re.split(r'("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\')', javascript)
+    for index in range(0, len(parts), 2):
+        parts[index] = re.sub(
+            r'([,{])\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*:',
+            r'\1"\2":',
+            parts[index],
+        )
+        parts[index] = re.sub(
+            r'(?<![A-Za-z0-9_.])(-?)\.(\d+)',
+            r'\g<1>0.\2',
+            parts[index],
+        )
+    normalized = "".join(parts)
+    try:
+        parsed = json.loads(normalized)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Failed to parse SlickCharts SvelteKit page data: {exc}") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError("SlickCharts SvelteKit page data is not an object")
+    return parsed
+
+
 def extract_js_state(html: str, *, var_name: str = "__sc_init_state__") -> Dict[str, Any]:
     """
     Extract JavaScript state object from HTML.
@@ -348,6 +410,8 @@ def extract_js_state(html: str, *, var_name: str = "__sc_init_state__") -> Dict[
     match = re.search(pattern, html, re.DOTALL)
 
     if not match:
+        if var_name == "__sc_init_state__":
+            return _parse_svelte_data_object(html)
         raise ValueError(f"Could not find {var_name} in page")
 
     json_str = match.group(1)

@@ -34,11 +34,13 @@ DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "currency.json"
 
 def clean_label(value: str) -> str:
     """Remove mojibake/non-breaking-space artifacts from SlickCharts labels."""
-    if any(marker in value for marker in ("Â", "Ã", "å", "ä", "ç")):
+    for _ in range(2):
+        if not any(marker in value for marker in ("Â", "Ã", "å", "ä", "ç")):
+            break
         try:
             value = value.encode("latin-1").decode("utf-8")
         except UnicodeError:
-            pass
+            break
     return (
         value.replace("\u00a0", " ")
         .replace("Â", " ")
@@ -91,7 +93,7 @@ def parse_currency(html: str) -> Dict[str, object]:
             match = re.match(r'^(.*?)\s*\((.*?)\)$', name_cell_text)
             if match:
                 name = clean_label(match.group(1))
-                symbol = match.group(2).strip()
+                symbol = clean_label(match.group(2))
             else:
                 # Fallback if parsing fails
                 name = clean_label(name_cell_text)
@@ -143,6 +145,18 @@ def build_payload(data: Dict[str, object]) -> Dict[str, object]:
     }
 
 
+def normalize_history_labels(history: List[Dict[str, object]]) -> List[Dict[str, object]]:
+    """Repair retained labels as well as today's fetched currency rows."""
+    for entry in history:
+        for currency in entry.get("currencies", []) or []:
+            if not isinstance(currency, dict):
+                continue
+            for key in ("name", "symbol"):
+                if isinstance(currency.get(key), str):
+                    currency[key] = clean_label(currency[key])
+    return history
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Scrape Cryptocurrency Market Data from SlickCharts.")
     parser.add_argument(
@@ -185,7 +199,7 @@ def main() -> None:
     currencies = parsed_data["currencies"]
 
     if args.cumulative:
-        existing_history = load_existing_history(args.output)
+        existing_history = normalize_history_labels(load_existing_history(args.output))
         payload = build_cumulative_payload(
             currencies,
             existing_history,
