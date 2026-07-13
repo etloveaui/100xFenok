@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-07-13T08:42:05.085Z",
+  "generated_at": "2026-07-13T08:49:22.980Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -135,10 +135,10 @@
           },
           "qa": {
             "formula": "index-weighted YF payoutRatio cross-check",
-            "value": 0.264741,
-            "total_weight": 99.97,
-            "covered_weight": 98.41,
-            "covered_weight_ratio": 0.984395,
+            "value": 0.26408,
+            "total_weight": 100.04,
+            "covered_weight": 98.54,
+            "covered_weight_ratio": 0.985006,
             "missing_sample": [
               "ABBV",
               "HONA",
@@ -148,8 +148,8 @@
               "VTR",
               "IRM",
               "EL",
-              "FISV",
-              "ARES"
+              "ARES",
+              "FISV"
             ]
           },
           "notes": [
@@ -157,7 +157,7 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.18874,
+          "value": 0.189113,
           "formula": "weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
@@ -165,9 +165,9 @@
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "total_weight": 99.97,
-            "covered_weight": 94.73,
-            "covered_weight_ratio": 0.947584,
+            "total_weight": 100.04,
+            "covered_weight": 94.85,
+            "covered_weight_ratio": 0.948121,
             "covered_rows": 396,
             "min_covered_weight_ratio": 0.75,
             "missing_sample": [
@@ -178,9 +178,9 @@
               "VRT",
               "HWM",
               "MRSH",
-              "HONA",
               "TDG",
-              "CTAS"
+              "CTAS",
+              "HONA"
             ]
           },
           "notes": [
@@ -343,7 +343,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 1.0793,
+                "value": 1.0772,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -508,7 +508,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.8797,
+                "value": 0.878,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -673,7 +673,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.7492,
+                "value": 0.7477,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -701,7 +701,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-13T08:41:37.735Z",
+            "stock_action_generated_at": "2026-07-13T08:49:01.839Z",
             "index_key": "sp500",
             "index_diagnostics": {
               "index_key": "sp500",
@@ -1376,7 +1376,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-13T08:41:37.735Z",
+            "stock_action_generated_at": "2026-07-13T08:49:01.839Z",
             "index_key": "nasdaq100",
             "index_diagnostics": {
               "index_key": "nasdaq100",
@@ -2178,7 +2178,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-13T08:41:37.735Z",
+            "stock_action_generated_at": "2026-07-13T08:49:01.839Z",
             "index_key": "kospi_krx_mktcap",
             "index_diagnostics": {
               "index_key": "kospi_krx_mktcap",
@@ -2838,7 +2838,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-13T08:41:37.735Z",
+            "stock_action_generated_at": "2026-07-13T08:49:01.839Z",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "index_diagnostics": {
               "index_key": "sox_nasdaq_giw_methodology_mktcap",
