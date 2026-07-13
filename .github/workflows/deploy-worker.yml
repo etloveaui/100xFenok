@@ -34,6 +34,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -105,18 +107,160 @@ jobs:
 
       - name: Deploy to Cloudflare Workers
         working-directory: 100xfenok-next
-        run: npx wrangler deploy
+        run: |
+          set -euo pipefail
+
+          base_url="https://100xfenok.etloveaui.workers.dev"
+          expected_build_id_path=".open-next/assets/BUILD_ID"
+          expected_kpi_path=".open-next/assets/data/admin/fenok-data-health-kpi.json"
+          if [ ! -s "$expected_build_id_path" ] || [ ! -f "$expected_kpi_path" ]; then
+            echo "::error::Cannot establish deploy identity from the built artifact."
+            exit 1
+          fi
+          expected_build_id="$(tr -d '\r\n' < "$expected_build_id_path")"
+          expected_kpi_sha256="$(sha256sum "$expected_kpi_path" | awk '{print $1}')"
+          if [ -z "$expected_build_id" ]; then
+            echo "::error::Built artifact has an empty BUILD_ID."
+            exit 1
+          fi
+
+          predeploy_build_id="unavailable"
+          predeploy_kpi_sha256="unavailable"
+          predeploy_kpi_path="$RUNNER_TEMP/predeploy-fenok-data-health-kpi.json"
+          cache_bust="predeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}"
+          if predeploy_build_id="$(curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+            -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+            "$base_url/BUILD_ID?cb=$cache_bust" | tr -d '\r\n')" \
+            && curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
+              -o "$predeploy_kpi_path"; then
+            predeploy_kpi_sha256="$(sha256sum "$predeploy_kpi_path" | awk '{print $1}')"
+          else
+            echo "::warning::Pre-deploy bundle identity was unavailable; post-deploy identity verification remains mandatory."
+          fi
+
+          if [ "$predeploy_build_id" = "$expected_build_id" ]; then
+            echo "::error::The new build reused the currently live BUILD_ID; deployment identity would be ambiguous."
+            exit 1
+          fi
+
+          deploy_log="$RUNNER_TEMP/wrangler-deploy.log"
+          wrangler_output="$RUNNER_TEMP/wrangler-output.jsonl"
+          rm -f "$wrangler_output"
+          WRANGLER_OUTPUT_FILE_PATH="$wrangler_output" npx wrangler deploy 2>&1 | tee "$deploy_log"
+          if [ ! -s "$wrangler_output" ]; then
+            echo "::error::Wrangler deploy produced no structured output."
+            exit 1
+          fi
+          deploy_version_id="$(node -e '
+            const fs = require("fs");
+            const records = fs.readFileSync(process.argv[1], "utf8")
+              .split(/\r?\n/)
+              .filter(Boolean)
+              .map((line) => JSON.parse(line));
+            const deploy = records.reverse().find((record) => record.type === "deploy");
+            process.stdout.write(deploy?.version_id ?? "");
+          ' "$wrangler_output")"
+          if [ -z "$deploy_version_id" ]; then
+            echo "::error::Wrangler deploy succeeded without a parseable Version ID."
+            exit 1
+          fi
+
+          {
+            echo "EXPECTED_BUILD_ID=$expected_build_id"
+            echo "EXPECTED_KPI_SHA256=$expected_kpi_sha256"
+            echo "PREDEPLOY_BUILD_ID=$predeploy_build_id"
+            echo "PREDEPLOY_KPI_SHA256=$predeploy_kpi_sha256"
+            echo "DEPLOY_VERSION_ID=$deploy_version_id"
+          } >> "$GITHUB_ENV"
+          echo "::notice::Deployed artifact identity: wrangler_version_id=$deploy_version_id build_id=$expected_build_id kpi_sha256=$expected_kpi_sha256"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Smoke data health KPI
         run: |
-          curl -fsS "https://100xfenok.etloveaui.workers.dev/data/admin/fenok-data-health-kpi.json?cb=${GITHUB_SHA}" \
-            | node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; const topStatusOk = p.status === "ready" || p.status === "degraded"; const integrity = p.deployment_integrity || {}; if (!okSchema || !topStatusOk || (p.schema_version === "fenok-data-health-kpi/v2" && integrity.status !== "ready")) { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status,deployment_integrity:integrity.status,integrity_blockers:integrity.blocker_count})); process.exit(1); } if (p.schema_version === "fenok-data-health-kpi/v2") { const r = p.runtime || {}; const cadenceOk = r.verdict === "ready" || r.verdict === "degraded"; if (!r.built_at || !cadenceOk || r.fresh !== true || r.hard_age_ok !== true) { console.error("KPI v2 producer freshness (strict, Phase B): " + JSON.stringify({built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count})); process.exit(1); } if (p.status === "degraded") console.warn("::warning:: KPI v2 degraded lanes: " + p.status_message); if (r.verdict === "degraded") console.warn("::warning:: KPI v2 recovered cadence miss: " + r.status_message); console.log(JSON.stringify({ok:true, schema:p.schema_version, status:p.status, status_message:p.status_message, deployment_integrity:integrity.status, degraded_lanes:(p.lanes||[]).filter(l=>l.status==="degraded").map(l=>({id:l.id,message:l.status_message})), built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, runtime_status_message:r.status_message, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count}, null, 2)); } else { console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2)); }'
+          set -euo pipefail
+
+          base_url="https://100xfenok.etloveaui.workers.dev"
+          timeout_seconds="${SMOKE_PROPAGATION_TIMEOUT_SECONDS:-180}"
+          interval_seconds="${SMOKE_PROPAGATION_INTERVAL_SECONDS:-5}"
+          live_build_id_path="$RUNNER_TEMP/live-BUILD_ID"
+          live_kpi_path="$RUNNER_TEMP/live-fenok-data-health-kpi.json"
+
+          bundle_identity_matches() {
+            [ "$1" = "$EXPECTED_BUILD_ID" ] && [ "$2" = "$EXPECTED_KPI_SHA256" ]
+          }
+
+          if bundle_identity_matches "$PREDEPLOY_BUILD_ID" "$PREDEPLOY_KPI_SHA256"; then
+            echo "::error::Stale-bundle rejection guard accepted the pre-deploy artifact."
+            exit 1
+          fi
+          echo "::notice::STALE BUNDLE REJECTED: build_id=$PREDEPLOY_BUILD_ID kpi_sha256=$PREDEPLOY_KPI_SHA256"
+
+          deadline=$((SECONDS + timeout_seconds))
+          attempt=0
+          matched=false
+          observed_build_id="unavailable"
+          observed_kpi_sha256="unavailable"
+          while [ "$SECONDS" -le "$deadline" ]; do
+            attempt=$((attempt + 1))
+            cache_bust="postdeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}"
+            rm -f "$live_build_id_path" "$live_kpi_path"
+            if curl -fsS --connect-timeout 5 --max-time 15 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              "$base_url/BUILD_ID?cb=$cache_bust" -o "$live_build_id_path" \
+              && curl -fsS --connect-timeout 5 --max-time 15 \
+                -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+                "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
+                -o "$live_kpi_path"; then
+              observed_build_id="$(tr -d '\r\n' < "$live_build_id_path")"
+              observed_kpi_sha256="$(sha256sum "$live_kpi_path" | awk '{print $1}')"
+              if bundle_identity_matches "$observed_build_id" "$observed_kpi_sha256"; then
+                matched=true
+                break
+              fi
+            else
+              observed_build_id="unavailable"
+              observed_kpi_sha256="unavailable"
+            fi
+
+            echo "::warning::Propagation attempt $attempt rejected stale or unavailable bundle: observed_build_id=$observed_build_id observed_kpi_sha256=$observed_kpi_sha256 expected_build_id=$EXPECTED_BUILD_ID expected_kpi_sha256=$EXPECTED_KPI_SHA256"
+            if [ $((SECONDS + interval_seconds)) -gt "$deadline" ]; then
+              break
+            fi
+            sleep "$interval_seconds"
+          done
+
+          if [ "$matched" != "true" ]; then
+            echo "::error::Timed out after ${timeout_seconds}s waiting for this deploy's bundle: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 observed_kpi_sha256=$observed_kpi_sha256"
+            exit 1
+          fi
+
+          echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 live_kpi_sha256=$observed_kpi_sha256 attempts=$attempt"
+          node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; const topStatusOk = p.status === "ready" || p.status === "degraded"; const integrity = p.deployment_integrity || {}; if (!okSchema || !topStatusOk || (p.schema_version === "fenok-data-health-kpi/v2" && integrity.status !== "ready")) { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status,deployment_integrity:integrity.status,integrity_blockers:integrity.blocker_count})); process.exit(1); } if (p.schema_version === "fenok-data-health-kpi/v2") { const r = p.runtime || {}; const cadenceOk = r.verdict === "ready" || r.verdict === "degraded"; if (!r.built_at || !cadenceOk || r.fresh !== true || r.hard_age_ok !== true) { console.error("KPI v2 producer freshness (strict, Phase B): " + JSON.stringify({built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count})); process.exit(1); } if (p.status === "degraded") console.warn("::warning:: KPI v2 degraded lanes: " + p.status_message); if (r.verdict === "degraded") console.warn("::warning:: KPI v2 recovered cadence miss: " + r.status_message); console.log(JSON.stringify({ok:true, schema:p.schema_version, status:p.status, status_message:p.status_message, deployment_integrity:integrity.status, degraded_lanes:(p.lanes||[]).filter(l=>l.status==="degraded").map(l=>({id:l.id,message:l.status_message})), built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, runtime_status_message:r.status_message, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count}, null, 2)); } else { console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2)); }' < "$live_kpi_path"
 
       - name: Smoke StockAnalysis routes
         working-directory: 100xfenok-next
-        run: npm run qa:stockanalysis
+        run: |
+          set -euo pipefail
+          observed_build_id="unavailable"
+          for attempt in 1 2 3; do
+            if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              "$QA_BASE_URL/BUILD_ID?cb=stockanalysis-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
+              | tr -d '\r\n')" && [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ]; then
+              break
+            fi
+            echo "::warning::StockAnalysis smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
+            [ "$attempt" -eq 3 ] || sleep 5
+          done
+          if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
+            echo "::error::StockAnalysis smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
+            exit 1
+          fi
+          echo "::notice::StockAnalysis smoke bundle match: wrangler_version_id=$DEPLOY_VERSION_ID build_id=$observed_build_id"
+          npm run qa:stockanalysis
         env:
           QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
           QA_STOCKANALYSIS_RETRIES: 3
@@ -124,19 +268,51 @@ jobs:
 
       - name: Smoke route iframe public contract
         working-directory: 100xfenok-next
-        run: npm run qa:route-iframe-contract
+        run: |
+          set -euo pipefail
+          observed_build_id="unavailable"
+          for attempt in 1 2 3; do
+            if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              "$QA_BASE_URL/BUILD_ID?cb=iframe-public-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
+              | tr -d '\r\n')" && [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ]; then
+              break
+            fi
+            echo "::warning::Public iframe smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
+            [ "$attempt" -eq 3 ] || sleep 5
+          done
+          if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
+            echo "::error::Public iframe smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
+            exit 1
+          fi
+          echo "::notice::Public iframe smoke bundle match: wrangler_version_id=$DEPLOY_VERSION_ID build_id=$observed_build_id"
+          npm run qa:route-iframe-contract
         env:
           QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
           QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
           QA_ROUTE_IFRAME_SCOPE: public
 
       - name: Smoke route iframe admin contract
+        if: ${{ env.QA_ADMIN_SMOKE_AVAILABLE == 'true' }}
         working-directory: 100xfenok-next
         run: |
-          if [ -z "${QA_ADMIN_PASSWORD:-}" ] && [ -z "${QA_ADMIN_SESSION_COOKIE:-}" ]; then
-            echo "::notice::Skipping admin route iframe smoke: set QA_ADMIN_PASSWORD or QA_ADMIN_SESSION_COOKIE to enable gated admin iframe verification."
-            exit 0
+          set -euo pipefail
+          observed_build_id="unavailable"
+          for attempt in 1 2 3; do
+            if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              "$QA_BASE_URL/BUILD_ID?cb=iframe-admin-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
+              | tr -d '\r\n')" && [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ]; then
+              break
+            fi
+            echo "::warning::Admin iframe smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
+            [ "$attempt" -eq 3 ] || sleep 5
+          done
+          if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
+            echo "::error::Admin iframe smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
+            exit 1
           fi
+          echo "::notice::Admin iframe smoke bundle match: wrangler_version_id=$DEPLOY_VERSION_ID build_id=$observed_build_id"
           npm run qa:route-iframe-contract
         env:
           QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
