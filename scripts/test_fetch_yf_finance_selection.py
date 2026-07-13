@@ -557,6 +557,69 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(terminated["current_attempt"]["failed"], 1)
         self.assertEqual(terminated["latest_failure"]["scope"], "batch")
 
+    def test_bootstrap_reclassifies_source_stale_payload_as_exact_lkg_before_selection(self) -> None:
+        state_root = self.root / "admin" / "yahoo-batch-quote-history"
+        store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
+        payload = self.fetcher.decorate_finance_payload(
+            ticker="GOOGL", profile="daily", fetched_at="2026-07-11T21:15:00Z",
+            data={
+                "info": {"symbol": "GOOGL", "quoteType": "EQUITY", "regularMarketTime": 1783713600},
+                "history_1y": [{"date": "2026-06-26", "Close": 180}],
+            },
+        )
+        canonical = self.fetcher.OUT_DIR / "GOOGL.json"
+        write_json(canonical, payload)
+        canonical_bytes = canonical.read_bytes()
+        canonical_hash = hashlib.sha256(canonical_bytes).hexdigest()
+
+        # Reproduce the existing lie first: history existence alone produced fresh_primary.
+        store.record_skip("GOOGL", payload, self._run("seed-lie"), ["global_scouter_stock"])
+        before = json.loads((state_root / "tickers" / "GOOGL.json").read_text())
+        self.assertEqual(before["resolution_state"], "fresh_primary")
+
+        changed = store.bootstrap_existing(
+            {"GOOGL"},
+            {"GOOGL": ["global_scouter_stock"]},
+            self._run("classification"),
+            exclude_tickers={"GOOGL"},
+            source_age_business_days={"GOOGL": 7},
+            max_source_business_days=6,
+        )
+        self.assertEqual(changed, 1, "selected/excluded existing state must still be reconciled")
+        state = json.loads((state_root / "tickers" / "GOOGL.json").read_text())
+        lkg = state_root / "lkg" / "GOOGL.json"
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertTrue(state["retry"])
+        self.assertEqual(state["stale"]["reason"], "source_age_exceeds_lane_bound")
+        self.assertEqual(state["stale"]["source_as_of"], "2026-06-26")
+        self.assertEqual(state["stale"]["age_business_days"], 7)
+        self.assertEqual(state["stale"]["max_business_days"], 6)
+        self.assertNotIn("latest_failure", state, "source staleness is not a fabricated fetch failure")
+        self.assertEqual(state["lkg"]["payload_sha256"], canonical_hash)
+        self.assertEqual(lkg.read_bytes(), canonical_bytes)
+        self.assertEqual(store.retry_tickers({"GOOGL"}), {"GOOGL"})
+        self.assertFalse(store.recovery_candidate_advances("GOOGL", payload))
+
+        index = store.rebuild_index({"GOOGL"}, self._run("classification"))
+        self.assertEqual(index["counts"]["stale"], 1)
+        self.assertEqual(index["counts"]["failed"], 0)
+        self.assertEqual(index["stale_groups"][0]["symbols"], ["GOOGL"])
+
+    def test_yahoo_source_business_day_age_uses_canonical_market_calendars(self) -> None:
+        ages = self.fetcher.yahoo_source_business_day_ages(
+            {"AAPL": "2026-07-02", "005930.KS": "2026-07-02"},
+            "2026-07-13T04:15:19Z",
+        )
+        self.assertEqual(ages["AAPL"], 6, "US July 3 market holiday is excluded")
+        self.assertEqual(ages["005930.KS"], 7, "KRX was open on US July 3 holiday")
+
+        source = FETCH_PATH.read_text(encoding="utf-8")
+        self.assertLess(
+            source.index("state_store.bootstrap_existing("),
+            source.index("retry_tickers = state_store.retry_tickers"),
+            "stale classification must enter the retry set before natural-run selection",
+        )
+
     def _run(self, run_id: str, attempt: int = 1) -> dict:
         return {
             "run_id": run_id,
@@ -868,6 +931,17 @@ assert callable(namespace["load_universe"])
         self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_workflow)
         self.assertIn("node scripts/build-rim-index.mjs", manifest_workflow)
         self.assertNotIn("python3 scripts/build-quarter-closes.py", manifest_workflow)
+
+    def test_ticker_names_containing_key_are_not_dropped_as_secret_files(self) -> None:
+        for ticker in ("KEYG", "KEYX"):
+            for state_dir in ("tickers", "lkg"):
+                candidate = ROOT / "data" / "admin" / "yahoo-batch-quote-history" / state_dir / f"{ticker}.json"
+                ignored = subprocess.run(
+                    ["git", "check-ignore", "--quiet", "--no-index", str(candidate)],
+                    cwd=ROOT,
+                    check=False,
+                )
+                self.assertNotEqual(ignored.returncode, 0, f"{candidate} must remain persistable")
 
 
 if __name__ == "__main__":

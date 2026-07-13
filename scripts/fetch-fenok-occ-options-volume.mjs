@@ -710,6 +710,8 @@ function summarizeTickerAvailability({ ticker, ymd, sideAttempts }) {
 }
 
 function buildCoverage(rows, attempts = []) {
+  const unresolved = attempts.filter((attempt) => attempt?.status !== "stopped_fail_threshold");
+  const hardFailures = unresolved.filter((attempt) => ["failed", "transient_failed"].includes(attempt?.status));
   return {
     row_count: rows.length,
     with_options_activity_score: rows.filter((row) => row.options_activity_proxy.score_0_100 != null).length,
@@ -719,7 +721,108 @@ function buildCoverage(rows, attempts = []) {
       acc[row.confidence] = (acc[row.confidence] ?? 0) + 1;
       return acc;
     }, {}),
-    failed_attempts: attempts.length,
+    failed_attempts: hardFailures.length,
+    unresolved_attempts: unresolved.length,
+    stopped_fail_threshold: attempts.some((attempt) => attempt?.status === "stopped_fail_threshold"),
+  };
+}
+
+function summarizeDateAttempt({ ymd, rows = [], attempts = [], ticker_availability = [] }) {
+  const statusCounts = ticker_availability.reduce((acc, row) => {
+    const status = String(row?.status || "unknown");
+    acc[status] = (acc[status] ?? 0) + 1;
+    return acc;
+  }, {});
+  const hardFailureCount = attempts.filter((attempt) => ["failed", "transient_failed"].includes(attempt?.status)).length;
+  const usableRows = rows.filter((row) => Number(row?.options_activity_proxy?.total_volume) > 0).length;
+  return {
+    source_date: isoFromYmd(ymd),
+    accepted_rows: rows.length,
+    usable_rows: usableRows,
+    status_counts: statusCounts,
+    hard_failure_count: hardFailureCount,
+    stopped_fail_threshold: attempts.some((attempt) => attempt?.status === "stopped_fail_threshold"),
+  };
+}
+
+function buildOccBatchAttempt({
+  attemptRef,
+  attemptNumber,
+  batchIndex,
+  selectedTickers,
+  targetYmd,
+  servedYmd,
+  dateAttempts,
+  observedAt = isoNow(),
+}) {
+  const targetSourceDate = targetYmd ? isoFromYmd(targetYmd) : null;
+  const servedSourceDate = servedYmd ? isoFromYmd(servedYmd) : null;
+  let status = "no_selected_scope";
+  if (selectedTickers > 0 && !servedSourceDate) status = "unavailable";
+  else if (selectedTickers > 0 && servedSourceDate !== targetSourceDate) status = "degraded_walkback";
+  else if (selectedTickers > 0) status = "ready_current";
+  const targetAttempt = (dateAttempts || []).find((row) => row?.source_date === targetSourceDate) || dateAttempts?.[0] || {};
+  const targetReason = `${Number(targetAttempt.usable_rows) || 0} usable rows`
+    + (Number(targetAttempt.hard_failure_count) > 0 ? `; ${targetAttempt.hard_failure_count} hard failures` : "")
+    + (targetAttempt.stopped_fail_threshold === true ? "; threshold stop recorded" : "");
+  const message = status === "ready_current"
+    ? `OCC target ${targetSourceDate} is current and served without fallback.`
+    : status === "degraded_walkback"
+      ? `OCC target ${targetSourceDate} was unavailable (${targetReason}); serving fallback dated ${servedSourceDate}.`
+      : status === "unavailable"
+        ? `OCC target ${targetSourceDate} is unavailable (${targetReason}); no fallback in the allowed window was usable.`
+        : "OCC batch selected no tickers; it does not overwrite non-empty current-run evidence.";
+  return {
+    attempt_ref: String(attemptRef || "local"),
+    attempt_number: Number(attemptNumber) || 1,
+    observed_at: observedAt,
+    batch_index: Number(batchIndex) || 0,
+    selected_tickers: Number(selectedTickers) || 0,
+    target_source_date: targetSourceDate,
+    served_source_date: servedSourceDate,
+    status,
+    fallback_active: status === "degraded_walkback",
+    message,
+    date_attempts: Array.isArray(dateAttempts) ? dateAttempts : [],
+  };
+}
+
+function mergeOccCurrentAttempt(previous, batchAttempt) {
+  const sameRun = previous?.attempt_ref === batchAttempt.attempt_ref
+    && Number(previous?.attempt_number) === Number(batchAttempt.attempt_number);
+  const priorBatches = sameRun && Array.isArray(previous?.batches) ? previous.batches : [];
+  const { attempt_ref, attempt_number, observed_at, ...batch } = batchAttempt;
+  const byIndex = new Map(priorBatches.map((row) => [Number(row.batch_index), row]));
+  byIndex.set(Number(batch.batch_index), batch);
+  const batches = [...byIndex.values()].sort((a, b) => Number(a.batch_index) - Number(b.batch_index)).slice(-100);
+  const nonEmpty = batches.filter((row) => Number(row.selected_tickers) > 0);
+  const statusRank = { no_selected_scope: 0, ready_current: 1, degraded_walkback: 2, unavailable: 3 };
+  const worst = nonEmpty.reduce((current, row) => (
+    (statusRank[row.status] ?? 3) > (statusRank[current?.status] ?? -1) ? row : current
+  ), null);
+  const status = worst?.status || "no_selected_scope";
+  const servedDates = [...new Set(nonEmpty.map((row) => row.served_source_date).filter(Boolean))].sort();
+  const selectedTickers = nonEmpty.reduce((sum, row) => sum + Number(row.selected_tickers || 0), 0);
+  const fallbackActive = nonEmpty.some((row) => row.status === "degraded_walkback");
+  const message = status === "ready_current"
+    ? `OCC target ${worst.target_source_date} is current across ${nonEmpty.length} non-empty batch(es); no fallback is active.`
+    : status === "degraded_walkback"
+      ? `${worst.message} Current run remains degraded across ${nonEmpty.length} non-empty batch(es).`
+      : status === "unavailable"
+        ? `${worst.message} Current run has an unavailable non-empty batch.`
+        : "OCC current run has no selected ticker scope; prior-run data is unchanged.";
+  return {
+    attempt_ref,
+    attempt_number,
+    observed_at,
+    target_source_date: worst?.target_source_date || batch.target_source_date || null,
+    served_source_date: status === "unavailable" ? null : servedDates[0] || null,
+    status,
+    fallback_active: fallbackActive,
+    selected_tickers: selectedTickers,
+    message,
+    batch_retention_limit: 100,
+    batches,
   };
 }
 
@@ -798,6 +901,7 @@ function mergeAvailabilitySnapshot(previous, snapshot) {
   ));
   return {
     ...snapshot,
+    current_attempt: snapshot.current_attempt ?? previous?.current_attempt ?? null,
     previous_generated_at: previous?.generated_at ?? null,
     upsert_policy: {
       key: ["ticker", "source_date", "attempted_forms"],
@@ -926,7 +1030,7 @@ async function build(args) {
       sleepMs: args.sleepMs,
       failThreshold: args.failThreshold,
     });
-    dateAttempts.push({ ymd, rows: result.rows.length, failed_attempts: result.attempts.length });
+    dateAttempts.push(summarizeDateAttempt(result));
     const availabilitySnapshot = buildAvailabilitySnapshot({
       ymd,
       generatedAt: isoNow(),
@@ -945,11 +1049,34 @@ async function build(args) {
     const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
     if (usableRows.length === 0) {
       if (args.maxWalkbackDays === 0 || ymd === dates.at(-1)) {
+        const batchAttempt = buildOccBatchAttempt({
+          attemptRef: process.env.GITHUB_RUN_ID || "local",
+          attemptNumber: process.env.GITHUB_RUN_ATTEMPT || 1,
+          batchIndex: args.batchIndex,
+          selectedTickers: tickers.length,
+          targetYmd: dates[0],
+          servedYmd: null,
+          dateAttempts,
+        });
+        const currentAttempt = mergeOccCurrentAttempt(availability.current_attempt, batchAttempt);
+        let wrote = false;
+        if (!args.noWrite && tickers.length > 0) {
+          writeJson(AVAILABILITY_FILE, { ...availability, current_attempt: currentAttempt });
+          const previousOutput = readJson(OUTPUT_FILE, null);
+          if (previousOutput) {
+            writeJson(OUTPUT_FILE, {
+              ...previousOutput,
+              current_attempt: mergeOccCurrentAttempt(previousOutput.current_attempt, batchAttempt),
+            });
+          }
+          wrote = true;
+        }
+        if (currentAttempt.status === "unavailable") console.log(`::warning:: ${currentAttempt.message}`);
         return {
           output_file: `data/${OUTPUT_FILE}`,
           history_file: `data/${HISTORY_FILE}`,
           availability_file: `data/${AVAILABILITY_FILE}`,
-          wrote: !args.noWrite,
+          wrote,
           no_usable_rows: true,
           occ_source_date: ymd,
           availability_policy: OCC_AVAILABILITY_POLICY,
@@ -961,6 +1088,7 @@ async function build(args) {
             max_requests: args.maxRequests || null,
           },
           date_attempts: dateAttempts,
+          current_attempt: currentAttempt,
           availability_summary: {
             rows: availability.rows.length,
             latest_status_counts: availability.rows.reduce((acc, row) => {
@@ -980,11 +1108,30 @@ async function build(args) {
       maxWalkbackDays: args.maxWalkbackDays,
       sleepMs: args.sleepMs,
     });
-    const outputSnapshot = mergeOutputSnapshot(readJson(OUTPUT_FILE, null), snapshot);
+    const batchAttempt = buildOccBatchAttempt({
+      attemptRef: process.env.GITHUB_RUN_ID || "local",
+      attemptNumber: process.env.GITHUB_RUN_ATTEMPT || 1,
+      batchIndex: args.batchIndex,
+      selectedTickers: tickers.length,
+      targetYmd: dates[0],
+      servedYmd: ymd,
+      dateAttempts,
+    });
+    const previousOutput = readJson(OUTPUT_FILE, null);
+    snapshot.current_attempt = mergeOccCurrentAttempt(previousOutput?.current_attempt, batchAttempt);
+    const outputSnapshot = mergeOutputSnapshot(previousOutput, snapshot);
+    const availabilityWithAttempt = {
+      ...availability,
+      current_attempt: mergeOccCurrentAttempt(availability.current_attempt, batchAttempt),
+    };
     const history = mergeHistory(outputSnapshot);
     if (!args.noWrite) {
       writeJson(OUTPUT_FILE, outputSnapshot);
       writeJson(HISTORY_FILE, history);
+      writeJson(AVAILABILITY_FILE, availabilityWithAttempt);
+    }
+    if (outputSnapshot.current_attempt.status === "degraded_walkback") {
+      console.log(`::warning:: ${outputSnapshot.current_attempt.message}`);
     }
     return {
       output_file: `data/${OUTPUT_FILE}`,
@@ -1002,6 +1149,7 @@ async function build(args) {
         max_requests: args.maxRequests || null,
       },
       date_attempts: dateAttempts,
+      current_attempt: outputSnapshot.current_attempt,
       reference_rows: outputSnapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
     };
   }
@@ -1024,6 +1172,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 export {
   applyTickerBatch,
   build,
+  buildOccBatchAttempt,
   buildCoverage,
   buildAvailabilitySnapshot,
   buildRowsForTest,
@@ -1035,12 +1184,14 @@ export {
   loadS0OccMissingUniverse,
   loadS0OccPartialMissingUniverse,
   mergeAvailabilitySnapshot,
+  mergeOccCurrentAttempt,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   parseArgs,
   scoreOptionsVolume,
   summarizeTickerAvailability,
+  summarizeDateAttempt,
 };
 
 function buildRowsForTest({ ticker, ymd, callCsv, putCsv, callStatus = "loaded", putStatus = "loaded" }) {

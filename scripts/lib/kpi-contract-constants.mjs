@@ -71,6 +71,51 @@ export const PLATFORM_BLOCKING_CHECK_KEYS = Object.freeze([
   "public_mirror_safety/rim_public_private_paths_redacted",
   "public_mirror_safety/coverage_public_private_paths_absent",
   "public_mirror_safety/forbidden_tokens_absent",
+  "slickcharts_delivery_freshness/json_integrity",
+  "slickcharts_delivery_freshness/universe_identity",
+]);
+
+export const SLICKCHARTS_DELIVERY_GROUPS = Object.freeze([
+  Object.freeze({
+    id: "slickcharts_daily_delivery",
+    workflow: "slickcharts-daily",
+    max_hours: 30,
+    files: Object.freeze(["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]),
+  }),
+  Object.freeze({
+    id: "slickcharts_weekly_delivery",
+    workflow: "slickcharts-weekly",
+    max_hours: 174,
+    files: Object.freeze(["sp500.json", "magnificent7.json", "etf.json", "berkshire.json"]),
+  }),
+  Object.freeze({
+    id: "slickcharts_symbols_delivery",
+    workflow: "slickcharts-symbols",
+    max_hours: 174,
+    files: Object.freeze(["symbols.json"]),
+  }),
+  Object.freeze({
+    id: "slickcharts_monthly_delivery",
+    workflow: "slickcharts-monthly",
+    max_hours: 750,
+    files: Object.freeze([
+      "sp500-returns.json", "sp500-returns-details.json", "nasdaq100-returns.json", "dowjones-returns.json",
+      "sp500-drawdown.json", "btc-returns.json", "eth-returns.json",
+      "sp500-performance.json", "nasdaq100-performance.json", "dowjones-performance.json",
+      "sp500-yield.json", "nasdaq100-yield.json", "dowjones-yield.json",
+      "sp500-analysis.json", "nasdaq100-analysis.json", "dowjones-analysis.json",
+      "sp500-marketcap.json", "nasdaq100-ratio.json", "nasdaq100.json", "dowjones.json", "inflation.json",
+    ]),
+  }),
+  Object.freeze({
+    id: "slickcharts_history_delivery",
+    workflow: "slickcharts-history",
+    max_hours: 750,
+    files: Object.freeze([
+      "stocks-returns.json", "stocks-dividends.json", "stocks-dividends-recent.json", "stocks-dividends-historical.json",
+    ]),
+    include_current_universe: true,
+  }),
 ]);
 
 // Source workflows allowed to dispatch authoritative rebuilds + their own crons.
@@ -89,6 +134,14 @@ export const SOURCE_SLA_DEF = Object.freeze([
   Object.freeze({ source_id: "fenok_edge_coverage_index", freshness_basis: ".source_as_of", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
   Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 10, required: true }),
   Object.freeze({ source_id: "etf_daily1y_readiness_admin", freshness_basis: ".generated_at", unit: "hours", calendar: "wall_clock", max_staleness: 50, required: false }),
+  ...SLICKCHARTS_DELIVERY_GROUPS.map((group) => Object.freeze({
+    source_id: group.id,
+    freshness_basis: ".updated (fetch/write delivery time, OLDEST; not provider publication time)",
+    unit: "hours",
+    calendar: "wall_clock",
+    max_staleness: group.max_hours,
+    required: true,
+  })),
 ]);
 
 // The definitional keys of an SLA row (checker deep-equals these against SOURCE_SLA_DEF).

@@ -43,6 +43,9 @@ google-api-key*.json
 
 # Data-supply materialization and runtime locks
 !data/yf/etf-details/*.json
+# Uppercase Yahoo ticker symbols such as KEYG/KEYX are data identities, not key files.
+!data/admin/yahoo-batch-quote-history/tickers/*.json
+!data/admin/yahoo-batch-quote-history/lkg/*.json
 data/admin/data-supply-state/**/*.lock
 
 # Environment Variables

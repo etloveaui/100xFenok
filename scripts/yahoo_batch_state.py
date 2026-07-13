@@ -204,21 +204,107 @@ class YahooBatchStateStore:
         sources: dict[str, list[str]],
         run: dict,
         exclude_tickers: set[str] | None = None,
+        source_age_business_days: dict[str, int | None] | None = None,
+        max_source_business_days: int | None = None,
     ) -> int:
         active = set(active_universe)
         excluded = set(exclude_tickers or set())
-        created = 0
+        source_ages = source_age_business_days or {}
+        changed = 0
         for canonical in sorted(self.finance_dir.glob("*.json")):
             ticker = canonical.stem
-            if ticker == "_summary" or ticker not in active or ticker in excluded or self._state_path(ticker).exists():
+            if ticker == "_summary" or ticker not in active:
                 continue
             payload = _read_json(canonical)
             if not _valid_canonical_payload(payload, ticker):
                 continue
             enriched = {**payload, **_payload_source_fields(payload)}
-            self.record_skip(ticker, enriched, run, sources.get(ticker, []))
-            created += 1
-        return created
+            state_path = self._state_path(ticker)
+            existing = _read_json(state_path)
+            age = source_ages.get(ticker)
+            source_stale = (
+                isinstance(age, int)
+                and isinstance(max_source_business_days, int)
+                and age > max_source_business_days
+            )
+            if existing:
+                if existing.get("resolution_state") == "fresh_primary" and source_stale:
+                    self._record_source_stale_lkg(
+                        ticker,
+                        enriched,
+                        run,
+                        sources.get(ticker, []),
+                        age_business_days=age,
+                        max_business_days=max_source_business_days,
+                    )
+                    changed += 1
+                continue
+            if ticker in excluded:
+                continue
+            if source_stale:
+                self._record_source_stale_lkg(
+                    ticker,
+                    enriched,
+                    run,
+                    sources.get(ticker, []),
+                    age_business_days=age,
+                    max_business_days=max_source_business_days,
+                )
+            else:
+                self.record_skip(ticker, enriched, run, sources.get(ticker, []))
+            changed += 1
+        return changed
+
+    def _record_source_stale_lkg(
+        self,
+        ticker: str,
+        payload: dict,
+        run: dict,
+        discovered_from: list[str],
+        *,
+        age_business_days: int,
+        max_business_days: int,
+    ) -> dict:
+        canonical = self.finance_dir / f"{ticker}.json"
+        payload_bytes = canonical.read_bytes()
+        lkg_path = self._lkg_path(ticker)
+        _write_bytes(lkg_path, payload_bytes)
+        source = _payload_source_fields(payload)
+        observed_at = str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        lkg = {
+            "path": f"data/admin/yahoo-batch-quote-history/lkg/{ticker}.json",
+            "payload_sha256": _sha256(payload_bytes),
+            "fetched_at": payload.get("fetched_at"),
+            **source,
+        }
+        state = self._load_state(ticker)
+        state.update({
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": ticker,
+            "resolution_state": "lkg_primary",
+            "retry": True,
+            "current": dict(lkg),
+            "lkg": lkg,
+            "stale": {
+                "reason": "source_age_exceeds_lane_bound",
+                "source_as_of": source.get("source_as_of"),
+                "age_business_days": age_business_days,
+                "max_business_days": max_business_days,
+                "classified_at": observed_at,
+                "classified_run_id": str(run.get("run_id") or "local"),
+                "expected_resolution": "next_natural_yahoo_run",
+                "message": (
+                    f"{ticker} holds LKG because Yahoo source date {source.get('source_as_of') or 'unstamped'} "
+                    f"is {age_business_days} business days old, beyond the {max_business_days}-day bound; "
+                    "it will retry on the next natural Yahoo run."
+                ),
+            },
+            "discovered_from": sorted(set(discovered_from)),
+            "updated_at": observed_at,
+        })
+        state.pop("pending", None)
+        _write_json(self._state_path(ticker), state)
+        return state
 
     def recovery_candidate_advances(self, ticker: str, payload: dict) -> bool:
         state = self._load_state(ticker)
@@ -446,6 +532,7 @@ class YahooBatchStateStore:
             "unavailable": 0,
             "retry": 0,
             "failed": 0,
+            "stale": 0,
         }
         retry_symbols = []
         pending_symbols = []
@@ -455,6 +542,7 @@ class YahooBatchStateStore:
         failures = []
         source_rows = []
         current_attempts = []
+        stale_groups = {}
         run_id = str(run.get("run_id") or "local")
 
         for ticker in sorted(active):
@@ -470,12 +558,26 @@ class YahooBatchStateStore:
                 lkg_symbols.append(ticker)
                 lkg = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
                 failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else {}
+                stale = state.get("stale") if isinstance(state.get("stale"), dict) else {}
+                if stale.get("reason") == "source_age_exceeds_lane_bound":
+                    counts["stale"] += 1
+                    group_key = (
+                        str(stale.get("source_as_of") or lkg.get("source_as_of") or ""),
+                        int(stale.get("age_business_days") or 0),
+                        int(stale.get("max_business_days") or 0),
+                        str(stale.get("expected_resolution") or "next_natural_yahoo_run"),
+                    )
+                    stale_groups.setdefault(group_key, []).append(ticker)
                 lkg_details.append({
                     "symbol": ticker,
                     "payload_sha256": lkg.get("payload_sha256"),
                     "source_as_of": lkg.get("source_as_of"),
                     "failure_run_id": failure.get("run_id"),
                     "failure_observed_at": failure.get("observed_at"),
+                    "state_reason": stale.get("reason"),
+                    "source_age_business_days": stale.get("age_business_days"),
+                    "max_source_age_business_days": stale.get("max_business_days"),
+                    "expected_resolution": stale.get("expected_resolution"),
                 })
             elif resolution == "pending_history":
                 counts["pending_history"] += 1
@@ -540,6 +642,16 @@ class YahooBatchStateStore:
             "lkg_symbols": lkg_symbols[:20],
             "pending_details": pending_details[:20],
             "lkg_details": lkg_details[:20],
+            "stale_groups": [
+                {
+                    "source_as_of": key[0] or None,
+                    "source_age_business_days": key[1],
+                    "max_source_age_business_days": key[2],
+                    "expected_resolution": key[3],
+                    "symbols": sorted(symbols),
+                }
+                for key, symbols in sorted(stale_groups.items())
+            ],
             "latest_failure": latest_failure,
             "current_attempt": {
                 "run_id": run_id,
@@ -561,7 +673,7 @@ class YahooBatchStateStore:
             "message": (
                 f"Yahoo quote/history: fresh={counts['fresh']}, lkg={counts['lkg']}, "
                 f"pending_history={counts['pending_history']}, unavailable={counts['unavailable']}, "
-                f"retry={counts['retry']}, failed={counts['failed']}. "
+                f"retry={counts['retry']}, failed={counts['failed']}, source_stale={counts['stale']}. "
                 "Pending history is a normal new-listing state and self-resolves on a natural Yahoo run."
             ),
         }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-06-30T00:06:06Z",
     "history_as_of": "2026-06-29",
-    "path": "data/yf/finance/PJUL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PJUL.json",
     "payload_sha256": "6c886c2997901040f9639edf3a8781b307e451bc81997b3d903663e22a4d3a75",
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-06-30T00:06:06Z",
+    "history_as_of": "2026-06-29",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PJUL.json",
+    "payload_sha256": "6c886c2997901040f9639edf3a8781b307e451bc81997b3d903663e22a4d3a75",
+    "quote_as_of": null,
+    "source_as_of": "2026-06-29"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-07-13T04:33:56Z",
+    "classified_run_id": "29224221077",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PJUL holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-29"
+  },
   "ticker": "PJUL",
   "updated_at": "2026-07-13T04:33:56Z"
 }

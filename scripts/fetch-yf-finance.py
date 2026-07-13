@@ -30,6 +30,7 @@ from numbers import Number
 import os
 import re
 import signal
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -1193,6 +1194,57 @@ def plan_summary(args, tickers, candidate_count):
     }
 
 
+def yahoo_source_freshness(source_by_ticker, now_iso):
+    """Evaluate Yahoo source ages and the canonical bound through the JS contract SSOT."""
+    script = """
+import { yahooBusinessDayAge } from './scripts/lib/market-calendar.mjs';
+import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from './scripts/lib/kpi-contract-constants.mjs';
+let raw = '';
+for await (const chunk of process.stdin) raw += chunk;
+const input = JSON.parse(raw);
+const ages = Object.fromEntries(Object.entries(input.sources).map(([ticker, source]) => [
+  ticker,
+  yahooBusinessDayAge(source, input.now, ticker),
+]));
+process.stdout.write(JSON.stringify({ ages, max_source_business_days: YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS }));
+"""
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=ROOT,
+        input=json.dumps({"sources": source_by_ticker, "now": now_iso}),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Yahoo source-age classification failed: {result.stderr.strip()[:500]}")
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Yahoo source-age classifier returned invalid JSON") from exc
+    ages = payload.get("ages") if isinstance(payload.get("ages"), dict) else None
+    bound = payload.get("max_source_business_days")
+    if ages is None or not isinstance(bound, int):
+        raise RuntimeError("Yahoo source-age classifier returned an invalid contract shape")
+    return {"ages": ages, "max_source_business_days": bound}
+
+
+def yahoo_source_business_day_ages(source_by_ticker, now_iso):
+    return yahoo_source_freshness(source_by_ticker, now_iso)["ages"]
+
+
+def existing_yahoo_source_dates(active_universe):
+    source_by_ticker = {}
+    for ticker in sorted(set(active_universe)):
+        payload = usable_existing_payload(OUT_DIR / f"{ticker}.json")
+        if not payload:
+            continue
+        source = payload.get("source_as_of") or _provider_source_fields(payload.get("data"))["source_as_of"]
+        if source:
+            source_by_ticker[ticker] = source
+    return source_by_ticker
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
@@ -1259,6 +1311,25 @@ def main():
 
     candidate_count = len(tickers)
     state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
+    run_context = {
+        "run_id": str(args.run_id),
+        "run_attempt": args.run_attempt,
+        "event_name": args.event_name,
+        "schedule": args.event_schedule,
+        "natural": args.natural_run,
+        "shard": args.shard,
+        "observed_at": _observed_now(),
+    }
+    if state_store and not args.plan_only:
+        freshness = yahoo_source_freshness(existing_yahoo_source_dates(active_universe), run_context["observed_at"])
+        state_store.bootstrap_existing(
+            active_universe,
+            universe_sources,
+            run_context,
+            exclude_tickers=set(tickers),
+            source_age_business_days=freshness["ages"],
+            max_source_business_days=freshness["max_source_business_days"],
+        )
     retry_tickers = state_store.retry_tickers(active_universe) if state_store and args.natural_run else set()
     regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
     if args.history_gaps_only:
@@ -1273,16 +1344,6 @@ def main():
     )
     if args.limit:
         tickers = tickers[: args.limit]
-
-    run_context = {
-        "run_id": str(args.run_id),
-        "run_attempt": args.run_attempt,
-        "event_name": args.event_name,
-        "schedule": args.event_schedule,
-        "natural": args.natural_run,
-        "shard": args.shard,
-        "observed_at": _observed_now(),
-    }
 
     if args.plan_only:
         print(stable_json(plan_summary(args, tickers, candidate_count), indent=2))
@@ -1318,14 +1379,6 @@ def main():
         atexit.register(finalize_state)
         if hasattr(signal, "SIGTERM"):
             signal.signal(signal.SIGTERM, lambda _signum, _frame: (finalize_state(True), sys.exit(143)))
-
-    if state_store:
-        state_store.bootstrap_existing(
-            active_universe,
-            universe_sources,
-            run_context,
-            exclude_tickers=set(tickers),
-        )
 
     if not tickers:
         if args.history_gaps_only:

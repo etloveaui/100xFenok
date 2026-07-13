@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-06-29T23:05:18Z",
     "history_as_of": "2026-06-26",
-    "path": "data/yf/finance/ABXB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ABXB.json",
     "payload_sha256": "8d2225a6f9fd3d4e799e834831d0a1947b563b803e0f2ecc9cc6d9d0b1d077d4",
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-06-29T23:05:18Z",
+    "history_as_of": "2026-06-26",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ABXB.json",
+    "payload_sha256": "8d2225a6f9fd3d4e799e834831d0a1947b563b803e0f2ecc9cc6d9d0b1d077d4",
+    "quote_as_of": null,
+    "source_as_of": "2026-06-26"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 10,
+    "classified_at": "2026-07-13T04:33:56Z",
+    "classified_run_id": "29224221077",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ABXB holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-26"
+  },
   "ticker": "ABXB",
   "updated_at": "2026-07-13T04:33:56Z"
 }

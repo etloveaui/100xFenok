@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-06-30T00:01:40Z",
     "history_as_of": "2026-06-29",
-    "path": "data/yf/finance/KBUF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KBUF.json",
     "payload_sha256": "7ce401de0e8c86a0c09507bbf88e9646ad6129354a0d068b0aebf07bfc14129e",
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-06-30T00:01:40Z",
+    "history_as_of": "2026-06-29",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KBUF.json",
+    "payload_sha256": "7ce401de0e8c86a0c09507bbf88e9646ad6129354a0d068b0aebf07bfc14129e",
+    "quote_as_of": null,
+    "source_as_of": "2026-06-29"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-07-13T04:33:56Z",
+    "classified_run_id": "29224221077",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "KBUF holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-29"
+  },
   "ticker": "KBUF",
   "updated_at": "2026-07-13T04:33:56Z"
 }

@@ -28,11 +28,13 @@ import {
   classifyProductSurface,
   buildEtfLane,
   buildYahooBatchLane,
+  buildSlickChartsDeliveryLane,
+  buildFinraOccLane,
   buildRimLane,
   enumerateDueSlots,
   deriveMissedSlots,
 } from "./build-fenok-data-health-kpi.mjs";
-import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, TRACKED_CRONS, CADENCE } from "./lib/kpi-contract-constants.mjs";
+import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, SLICKCHARTS_DELIVERY_GROUPS, TRACKED_CRONS, CADENCE } from "./lib/kpi-contract-constants.mjs";
 import { ETF_CORE_DAILY_BASKET_CONFIG } from "./build-fenok-etf-core-daily-basket.mjs";
 import {
   checkV2Runtime,
@@ -84,6 +86,88 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const degradedLane = buildRimLane(staleRim);
   assert.equal(degradedLane.status, "degraded", "RIM readiness lag degrades its lane; RIM integrity remains a separate global gate");
   assert.equal(degradedLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "blocked");
+}
+
+{
+  const ledger = {
+    generated_at: "2026-07-13T00:00:00Z",
+    source_audit: { acceptance_ok: true, source_dates: { finra_source_date: "2026-07-11", occ_source_date: "2026-07-11" } },
+    counts: {
+      plain_us_finra_source_ready: 1, plain_us_finra_denominator: 1,
+      plain_us_occ_source_ready: 1, plain_us_occ_denominator: 1,
+    },
+    service_boundary: { active_s0_daily_source_gate_blocker: false, reason: "lane local" },
+    raw_policy: { admin_local_only: true },
+  };
+  const walkback = buildFinraOccLane(ledger, { current_attempt: {
+    attempt_ref: "28982598913", attempt_number: 1, observed_at: "2026-07-08T00:00:00Z",
+    target_source_date: "2026-07-08", served_source_date: "2026-07-07",
+    status: "degraded_walkback", fallback_active: true, selected_tickers: 50,
+    message: "OCC target 2026-07-08 was unavailable; serving fallback dated 2026-07-07.",
+  } });
+  assert.equal(walkback.status, "degraded");
+  assert.equal(walkback.deployment_blocking, false);
+  assert.match(walkback.status_message, /target 2026-07-08.*fallback dated 2026-07-07.*Other lanes may publish/i);
+  assert.equal(walkback.details.occ_current_attempt.status, "degraded_walkback");
+
+  const current = buildFinraOccLane(ledger, { current_attempt: {
+    attempt_ref: "ready", attempt_number: 1, status: "ready_current", fallback_active: false,
+    target_source_date: "2026-07-11", served_source_date: "2026-07-11", selected_tickers: 50,
+    message: "OCC target 2026-07-11 is current and served without fallback.",
+  } });
+  assert.equal(current.status, "ready");
+}
+
+// SlickCharts reports Fenok delivery time honestly; missing/stale is lane-local,
+// while malformed/non-finite JSON and universe identity corruption stay global.
+{
+  const now = "2026-07-13T12:00:00.000Z";
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "slick-kpi-"));
+  const dataRoot = path.join(tmp, "data");
+  const base = path.join(dataRoot, "slickcharts");
+  const fresh = "2026-07-13T11:00:00+00:00";
+  for (const group of SLICKCHARTS_DELIVERY_GROUPS) {
+    for (const filename of group.files) writeJson(path.join(base, filename), { updated: fresh });
+  }
+  writeJson(path.join(base, "universe.json"), {
+    updated: fresh,
+    uniqueCount: 2,
+    stocks: [{ symbol: "AAPL", indices: ["sp500"] }, { symbol: "GOOGL", indices: ["nasdaq100"] }],
+  });
+  writeJson(path.join(base, "stocks", "AAPL.json"), { symbol: "AAPL", updated: fresh });
+  writeJson(path.join(base, "stocks", "GOOGL.json"), { symbol: "GOOGL", updated: fresh });
+
+  const ready = buildSlickChartsDeliveryLane(now, { dataRoot });
+  assert.equal(ready.status, "ready");
+  assert.deepEqual(ready.counts, { required: 37, fixed: 35, current_universe: 2, current: 37, missing: 0, stale: 0, invalid: 0 });
+  assert.match(ready.details.timestamp_semantics, /fetch\/write delivery time, not provider publication time/i);
+
+  fs.unlinkSync(path.join(base, "stocks", "GOOGL.json"));
+  writeJson(path.join(base, "sp500.json"), { updated: "2026-06-01T00:00:00Z" });
+  const degraded = buildSlickChartsDeliveryLane(now, { dataRoot });
+  assert.equal(degraded.status, "degraded");
+  assert.equal(degraded.deployment_blocking, false);
+  assert.equal(degraded.counts.missing, 1);
+  assert.equal(degraded.counts.stale, 1);
+  assert.match(degraded.status_message, /slickcharts-history.*stocks\/GOOGL\.json.*missing|slickcharts-weekly.*sp500\.json.*exceeds/i);
+
+  fs.writeFileSync(path.join(base, "gainers.json"), "{", "utf8");
+  fs.writeFileSync(path.join(base, "losers.json"), `{"updated":"${fresh}","value":1e400}\n`, "utf8");
+  const corrupt = buildSlickChartsDeliveryLane(now, { dataRoot });
+  assert.equal(corrupt.status, "blocked");
+  assert.equal(corrupt.deployment_blocking, true);
+  assert.equal(corrupt.checks.find((item) => item.id === "json_integrity")?.status, "blocked");
+
+  writeJson(path.join(base, "gainers.json"), { updated: fresh });
+  writeJson(path.join(base, "losers.json"), { updated: fresh });
+  writeJson(path.join(base, "universe.json"), {
+    updated: fresh,
+    uniqueCount: 1,
+    stocks: [{ symbol: "AAPL" }, { symbol: "AAPL" }],
+  });
+  const identity = buildSlickChartsDeliveryLane(now, { dataRoot });
+  assert.equal(identity.status, "blocked");
+  assert.match(identity.checks.find((item) => item.id === "universe_identity")?.detail, /duplicate symbols.*AAPL/i);
 }
 
 // The full 4,515-row daily-1Y lane is a diagnostic backlog. Product availability
@@ -179,9 +263,16 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(agedLane.status, "degraded", "unchanged Yahoo state must age against the KPI build clock");
 
   const degradedIndex = structuredClone(readyIndex);
-  degradedIndex.counts = { active: 2, untracked: 0, fresh: 0, lkg: 1, pending_history: 1, unavailable: 0, retry: 2, failed: 1 };
+  degradedIndex.counts = { active: 3, untracked: 0, fresh: 0, lkg: 2, pending_history: 1, unavailable: 0, retry: 3, failed: 1, stale: 1 };
   degradedIndex.current_attempt = { run_id: "101", attempted: 1, successes: 0, failed: 1, skipped: 0, fetch_attempts: 2, errors: [{ symbol: "AAPL" }] };
   degradedIndex.lkg_details = [{ symbol: "AAPL", payload_sha256: "abc", source_as_of: "2026-07-10T00:00:00Z", failure_run_id: "101", raw_error: "must-not-publish" }];
+  degradedIndex.stale_groups = [{
+    source_as_of: "2026-06-26",
+    source_age_business_days: 10,
+    max_source_age_business_days: 6,
+    expected_resolution: "next_natural_yahoo_run",
+    symbols: ["FLEX", "GOOGL"],
+  }];
   degradedIndex.pending_details = [{ symbol: "NEW", discovered_from: ["market_facts"], missing: ["history"], expected_resolution: "next_natural_yahoo_run", private_path: "/tmp/private" }];
   const degradedLane = buildYahooBatchLane(degradedIndex);
   assert.equal(degradedLane.status, "degraded");
@@ -189,7 +280,9 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.match(degradedLane.status_message, /Other lanes may publish/);
   assert.match(degradedLane.checks.find((item) => item.id === "no_pending_history")?.detail, /NEW.*market_facts.*history.*next natural Yahoo run/i);
   assert.match(degradedLane.checks.find((item) => item.id === "no_lkg_primary")?.detail, /AAPL.*101.*2026-07-10/i);
+  assert.match(degradedLane.checks.find((item) => item.id === "no_lkg_primary")?.detail, /FLEX, GOOGL.*2026-06-26.*10 business days.*6-day bound.*next natural Yahoo run/i);
   assert.equal(degradedLane.details.lkg[0].raw_error, undefined);
+  assert.deepEqual(degradedLane.details.stale_groups[0].symbols, ["FLEX", "GOOGL"]);
   assert.equal(degradedLane.details.pending_history[0].private_path, undefined);
 
   const malformedIndex = structuredClone(readyIndex);
@@ -211,13 +304,14 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(staleLane.checks.find((item) => item.id === "oldest_source_fresh")?.status, "blocked");
 }
 
-// The nine lanes the checker's validateCoreShape REQUIRED_LANES demands.
+// The ten lanes the checker's validateCoreShape REQUIRED_LANES demands.
 // Kept in lockstep with that set; a divergence hard-fails validateCoreShape immediately.
 const REQUIRED_LANE_IDS = [
   "stock_s0_active_daily_gate",
   "stock_s1_candidate_gate",
   "etf_public_and_daily_gate",
   "yahoo_batch_quote_history",
+  "slickcharts_delivery_freshness",
   "rim_inputs",
   "product_surface_freshness",
   "finra_occ_plain_us_and_mapping_policy",
@@ -245,13 +339,39 @@ function readyCoreV2(now) {
       counts: {
         active: 1, untracked: 0, fresh: 1, lkg: 0, pending_history: 0,
         unavailable: 0, retry: 0, failed: 0, oldest_source_date: "2026-07-09",
+        stale: 0,
         oldest_source_symbol: "AAPL", oldest_source_age_business_days: 1,
         max_source_age_business_days: 6,
       },
       details: {
         latest_attempt: { attempt_ref: "fixture", attempt_number: 1, attempted: 1, successes: 1, failed: 0, skipped: 0, fetch_attempts: 1 },
         state_generated_at: now,
+        stale_groups: [],
       },
+    } : id === "slickcharts_delivery_freshness" ? {
+      deployment_blocking: false,
+      counts: { required: 35, fixed: 35, current_universe: 0, current: 35, missing: 0, stale: 0, invalid: 0 },
+      details: {
+        workflow_sla: SLICKCHARTS_DELIVERY_GROUPS.map((group) => ({
+          source_id: group.id,
+          workflow_id: group.workflow,
+          max_hours: group.max_hours,
+          required: group.files.length,
+          current: group.files.length,
+          missing: 0,
+          stale: 0,
+          invalid: 0,
+          oldest_delivery_at: now,
+        })),
+        offenders: [],
+        timestamp_semantics: "updated is Fenok fetch/write delivery time, not provider publication time.",
+        scope_issues: [],
+      },
+      checks: [
+        { id: "json_integrity", label: "JSON", status: "ready", required: true, platform_blocking: true },
+        { id: "universe_identity", label: "identity", status: "ready", required: true, platform_blocking: true },
+        { id: "delivery_ready", label: "delivery", status: "ready", required: true, platform_blocking: false },
+      ],
     } : {}),
   }));
   return {
@@ -289,7 +409,7 @@ function seedReadyV2(tmp, { now, runtime, sla }) {
   return { root, public: pub };
 }
 
-// Emit ALL six canonical SOURCE_SLA sources fresh/ready by copying the DEFINITIONAL
+// Emit all canonical SOURCE_SLA sources fresh/ready by copying the DEFINITIONAL
 // fields verbatim from SOURCE_SLA_DEF (so the checker's deep-equality passes) and
 // attaching fresh observations; overrides mutate one.
 const READY_DATES = {
@@ -324,7 +444,7 @@ function productSurfaceEntry(now, { stampById = {}, defaultStamp = "2026-07-09",
 function readySla(now, overrides = {}) {
   const list = SOURCE_SLA_DEF.map((def) => (def.source_id === "product_surface_coverage"
     ? productSurfaceEntry(now, overrides.productSurface)
-    : slaEntry(def, READY_DATES[def.source_id], now)));
+    : slaEntry(def, def.source_id.startsWith("slickcharts_") ? now : READY_DATES[def.source_id], now)));
   if (overrides.staleFinra) {
     const e = list.find((x) => x.source_id === "s0_finra_occ_mapping_ledger");
     e.source_date = "2026-06-01";
@@ -1717,7 +1837,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   root.status = "degraded";
   root.status_label = "저하";
   root.status_message = "1 required lane(s) are not ready; healthy lanes may still publish.";
-  root.totals = { lanes: 9, ready: 8, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
+  root.totals = { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length - 1, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
   const tmp = mkTmp("lane-degraded");
   writeJson(path.join(tmp, "data", KPI_REL), root);
   writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
@@ -1738,7 +1858,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   };
   blockedRoot.status = "blocked";
   blockedRoot.status_label = "차단";
-  blockedRoot.totals = { lanes: 9, ready: 7, degraded: 1, warning: 0, blocked: 1, unavailable: 0, required_not_ready: 2, platform_blocking_not_ready: 1 };
+  blockedRoot.totals = { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length - 2, degraded: 1, warning: 0, blocked: 1, unavailable: 0, required_not_ready: 2, platform_blocking_not_ready: 1 };
   blockedRoot.deployment_integrity = {
     status: "blocked", status_label: "차단",
     status_message: "1 platform integrity blocker(s) must halt publication.", blocker_count: 1,

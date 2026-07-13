@@ -5,6 +5,8 @@ import {
   applyTickerBatch,
   build,
   buildAvailabilitySnapshot,
+  buildCoverage,
+  buildOccBatchAttempt,
   buildRowsForTest,
   candidateDates,
   estimateMaxLiveRequests,
@@ -12,11 +14,13 @@ import {
   loadS0OccMissingUniverse,
   loadS0OccPartialMissingUniverse,
   mergeAvailabilitySnapshot,
+  mergeOccCurrentAttempt,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   parseArgs,
   scoreOptionsVolume,
+  summarizeDateAttempt,
   summarizeTickerAvailability,
 } from "./fetch-fenok-occ-options-volume.mjs";
 
@@ -280,6 +284,70 @@ const mergedAvailability = mergeAvailabilitySnapshot(
 );
 assert.equal(mergedAvailability.rows.length, 1);
 assert.equal(mergedAvailability.side_attempts.length, 2);
+
+const dateFailureAttempts = [
+  { ticker: "A", status: "failed" },
+  { ticker: "B", status: "transient_failed" },
+  { ticker: "C", status: "no_record" },
+  { ticker: "D", status: "stopped_fail_threshold", fail_threshold: 2 },
+];
+const dateFailureSummary = summarizeDateAttempt({
+  ymd: "20260708",
+  rows: [],
+  attempts: dateFailureAttempts,
+  ticker_availability: [
+    { status: "failed" }, { status: "transient_failed" }, { status: "no_record" },
+  ],
+});
+assert.equal(dateFailureSummary.hard_failure_count, 2);
+assert.equal(dateFailureSummary.stopped_fail_threshold, true);
+assert.equal(buildCoverage([], dateFailureAttempts).failed_attempts, 2);
+assert.equal(buildCoverage([], dateFailureAttempts).unresolved_attempts, 3);
+
+const walkbackBatch = buildOccBatchAttempt({
+  attemptRef: "28982598913",
+  attemptNumber: 1,
+  batchIndex: 0,
+  selectedTickers: 50,
+  targetYmd: "20260708",
+  servedYmd: "20260707",
+  dateAttempts: [
+    { source_date: "2026-07-08", accepted_rows: 0, usable_rows: 0, status_counts: { failed: 25 }, hard_failure_count: 25, stopped_fail_threshold: true },
+    { source_date: "2026-07-07", accepted_rows: 50, usable_rows: 50, status_counts: { options_activity_available: 50 }, hard_failure_count: 0, stopped_fail_threshold: false },
+  ],
+});
+assert.equal(walkbackBatch.status, "degraded_walkback");
+assert.equal(walkbackBatch.target_source_date, "2026-07-08");
+assert.equal(walkbackBatch.served_source_date, "2026-07-07");
+assert.match(walkbackBatch.message, /target 2026-07-08 was unavailable.*serving fallback dated 2026-07-07/i);
+
+const readyBatch = buildOccBatchAttempt({
+  attemptRef: "28982598913", attemptNumber: 1, batchIndex: 1, selectedTickers: 50,
+  targetYmd: "20260708", servedYmd: "20260708",
+  dateAttempts: [{ source_date: "2026-07-08", accepted_rows: 50, usable_rows: 50, status_counts: { options_activity_available: 50 }, hard_failure_count: 0, stopped_fail_threshold: false }],
+});
+let mergedAttempt = mergeOccCurrentAttempt(null, walkbackBatch);
+mergedAttempt = mergeOccCurrentAttempt(mergedAttempt, readyBatch);
+assert.equal(mergedAttempt.status, "degraded_walkback", "one walked-back batch keeps the whole current run degraded");
+assert.equal(mergedAttempt.batches.length, 2);
+
+const emptyTail = buildOccBatchAttempt({
+  attemptRef: "28982598913", attemptNumber: 1, batchIndex: 4, selectedTickers: 0,
+  targetYmd: "20260708", servedYmd: null, dateAttempts: [],
+});
+mergedAttempt = mergeOccCurrentAttempt(mergedAttempt, emptyTail);
+assert.equal(mergedAttempt.status, "degraded_walkback", "empty tail batch cannot overwrite non-empty run evidence");
+assert.equal(mergedAttempt.batches.length, 3);
+
+const unavailableBatch = buildOccBatchAttempt({
+  attemptRef: "new-run", attemptNumber: 1, batchIndex: 0, selectedTickers: 10,
+  targetYmd: "20260709", servedYmd: null,
+  dateAttempts: [{ source_date: "2026-07-09", accepted_rows: 0, usable_rows: 0, status_counts: { failed: 10 }, hard_failure_count: 10, stopped_fail_threshold: true }],
+});
+const resetAttempt = mergeOccCurrentAttempt(mergedAttempt, unavailableBatch);
+assert.equal(resetAttempt.status, "unavailable");
+assert.equal(resetAttempt.served_source_date, null);
+assert.equal(resetAttempt.batches.length, 1, "new run resets the bounded current-attempt batch list");
 
 const noFetchNoWrite = await build(parseArgs([
   "--tickers",

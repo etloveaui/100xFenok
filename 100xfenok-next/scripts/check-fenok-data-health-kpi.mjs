@@ -18,6 +18,7 @@ import {
   TOLERANCE_MINUTES,
   PENDING_MAX_AGE_DAYS,
   PLATFORM_BLOCKING_CHECK_KEYS,
+  SLICKCHARTS_DELIVERY_GROUPS,
   YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
 } from "../../scripts/lib/kpi-contract-constants.mjs";
 import {
@@ -44,6 +45,7 @@ const REQUIRED_LANES = new Set([
   "stock_s1_candidate_gate",
   "etf_public_and_daily_gate",
   "yahoo_batch_quote_history",
+  "slickcharts_delivery_freshness",
   "rim_inputs",
   "product_surface_freshness",
   "finra_occ_plain_us_and_mapping_policy",
@@ -191,7 +193,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
   if (isV2) {
     const yahoo = lanesById.get("yahoo_batch_quote_history");
     const yahooCounts = yahoo?.counts || {};
-    const countKeys = ["active", "untracked", "fresh", "lkg", "pending_history", "unavailable", "retry", "failed"];
+    const countKeys = ["active", "untracked", "fresh", "lkg", "pending_history", "unavailable", "retry", "failed", "stale"];
     for (const key of countKeys) {
       push(errors, typeof yahooCounts[key] === "number" && Number.isInteger(yahooCounts[key]) && yahooCounts[key] >= 0,
         `yahoo_batch_quote_history.counts.${key} must be a non-negative integer`);
@@ -205,6 +207,8 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
       "yahoo_batch_quote_history retry count exceeds non-fresh states");
     push(errors, Number(yahooCounts.failed) <= Number(yahooCounts.lkg) + Number(yahooCounts.unavailable),
       "yahoo_batch_quote_history failed count exceeds LKG/unavailable states");
+    push(errors, Number(yahooCounts.stale) <= Number(yahooCounts.lkg),
+      "yahoo_batch_quote_history stale count exceeds LKG states");
     const oldestDate = yahooCounts.oldest_source_date;
     const oldestStamp = yahoo?.as_of;
     const oldestValid = typeof oldestStamp === "string"
@@ -269,8 +273,81 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
           `yahoo_batch_quote_history.details.${key} contains non-public fields: ${extraKeys.join(", ")}`);
       }
     }
+    const staleGroups = yahoo?.details?.stale_groups ?? [];
+    push(errors, Array.isArray(staleGroups) && staleGroups.length <= active,
+      "yahoo_batch_quote_history.details.stale_groups must be bounded by the active universe");
+    const staleSymbols = [];
+    for (const row of Array.isArray(staleGroups) ? staleGroups : []) {
+      const allowlist = new Set(["source_as_of", "source_age_business_days", "max_source_age_business_days", "expected_resolution", "symbols"]);
+      const extraKeys = Object.keys(row || {}).filter((field) => !allowlist.has(field));
+      push(errors, extraKeys.length === 0,
+        `yahoo_batch_quote_history.details.stale_groups contains non-public fields: ${extraKeys.join(", ")}`);
+      push(errors, Array.isArray(row?.symbols) && row.symbols.every((symbol) => typeof symbol === "string" && symbol.length > 0),
+        "yahoo_batch_quote_history stale group symbols must be non-empty strings");
+      staleSymbols.push(...(Array.isArray(row?.symbols) ? row.symbols : []));
+      const sourceDate = typeof row?.source_as_of === "string" ? row.source_as_of.slice(0, 10) : null;
+      const expectedAge = sourceDate && row?.symbols?.[0]
+        ? yahooBusinessDayAge(sourceDate, payload.generated_at, row.symbols[0])
+        : null;
+      push(errors, isRealCalendarDate(sourceDate), "yahoo_batch_quote_history stale group source_as_of is invalid");
+      push(errors, row?.source_age_business_days === expectedAge,
+        `yahoo_batch_quote_history stale group source age mismatch: ${row?.source_age_business_days} vs ${expectedAge}`);
+      push(errors, row?.max_source_age_business_days === YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
+        "yahoo_batch_quote_history stale group max age differs from canonical");
+      push(errors, row?.expected_resolution === "next_natural_yahoo_run",
+        "yahoo_batch_quote_history stale group recovery path is invalid");
+    }
+    push(errors, new Set(staleSymbols).size === staleSymbols.length,
+      "yahoo_batch_quote_history stale group symbols must be unique");
+    push(errors, staleSymbols.length === Number(yahooCounts.stale),
+      `yahoo_batch_quote_history stale detail count mismatch: ${staleSymbols.length} vs ${yahooCounts.stale}`);
     push(errors, artifacts.some((item) => item?.id === "yahoo_batch_quote_history_state"),
       "yahoo_batch_quote_history_state source artifact is required");
+
+    const slick = lanesById.get("slickcharts_delivery_freshness");
+    const slickCounts = slick?.counts || {};
+    for (const key of ["required", "fixed", "current_universe", "current", "missing", "stale", "invalid"]) {
+      push(errors, typeof slickCounts[key] === "number" && Number.isInteger(slickCounts[key]) && slickCounts[key] >= 0,
+        `slickcharts_delivery_freshness.counts.${key} must be a non-negative integer`);
+    }
+    const fixedCount = SLICKCHARTS_DELIVERY_GROUPS.reduce((sum, group) => sum + group.files.length, 0);
+    push(errors, Number(slickCounts.fixed) === fixedCount,
+      `slickcharts_delivery_freshness fixed count mismatch: ${slickCounts.fixed} vs ${fixedCount}`);
+    push(errors, Number(slickCounts.required) === Number(slickCounts.fixed) + Number(slickCounts.current_universe),
+      "slickcharts_delivery_freshness required count does not equal fixed + current universe");
+    push(errors, Number(slickCounts.required) === Number(slickCounts.current) + Number(slickCounts.missing) + Number(slickCounts.stale) + Number(slickCounts.invalid),
+      "slickcharts_delivery_freshness classified counts do not reconcile");
+    const workflowSla = slick?.details?.workflow_sla;
+    push(errors, Array.isArray(workflowSla) && workflowSla.length === SLICKCHARTS_DELIVERY_GROUPS.length,
+      "slickcharts_delivery_freshness must expose all five workflow SLA groups");
+    const bySourceId = new Map((Array.isArray(workflowSla) ? workflowSla : []).map((row) => [row?.source_id, row]));
+    for (const group of SLICKCHARTS_DELIVERY_GROUPS) {
+      const row = bySourceId.get(group.id);
+      const expectedRequired = group.files.length + (group.include_current_universe ? Number(slickCounts.current_universe) : 0);
+      push(errors, row?.workflow_id === group.workflow, `${group.id}: workflow id differs from canonical`);
+      push(errors, row?.max_hours === group.max_hours, `${group.id}: max hours differs from canonical`);
+      push(errors, row?.required === expectedRequired, `${group.id}: required artifact count mismatch`);
+      push(errors, Number(row?.required) === Number(row?.current) + Number(row?.missing) + Number(row?.stale) + Number(row?.invalid),
+        `${group.id}: classified artifact counts do not reconcile`);
+    }
+    const slickChecks = new Map((slick?.checks || []).map((row) => [row?.id, row]));
+    const slickIntegrityBlocked = ["json_integrity", "universe_identity"].some((id) => slickChecks.get(id)?.status !== "ready");
+    const slickDeliveryReady = Number(slickCounts.missing) === 0 && Number(slickCounts.stale) === 0 && Number(slickCounts.invalid) === 0
+      && slickChecks.get("delivery_ready")?.status === "ready";
+    const expectedSlickStatus = slickIntegrityBlocked ? "blocked" : slickDeliveryReady ? "ready" : "degraded";
+    push(errors, slick?.status === expectedSlickStatus,
+      `slickcharts_delivery_freshness status mismatch: ${slick?.status} vs ${expectedSlickStatus}`);
+    push(errors, slick?.deployment_blocking === slickIntegrityBlocked,
+      "slickcharts_delivery_freshness deployment blocking must follow corruption checks only");
+    const offenders = slick?.details?.offenders;
+    push(errors, Array.isArray(offenders) && offenders.length <= 20,
+      "slickcharts_delivery_freshness offenders must be an array of at most 20 rows");
+    const offenderAllowlist = new Set(["workflow_id", "artifact", "symbol", "reason", "delivery_at", "age_hours", "max_hours", "status"]);
+    for (const row of Array.isArray(offenders) ? offenders : []) {
+      const extraKeys = Object.keys(row || {}).filter((field) => !offenderAllowlist.has(field));
+      push(errors, extraKeys.length === 0,
+        `slickcharts_delivery_freshness offender contains non-public fields: ${extraKeys.join(", ")}`);
+    }
   }
 }
 

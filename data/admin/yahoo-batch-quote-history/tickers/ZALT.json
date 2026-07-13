@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-06-30T00:22:59Z",
     "history_as_of": "2026-06-29",
-    "path": "data/yf/finance/ZALT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZALT.json",
     "payload_sha256": "55810c5e782d6ec95ab0aefe4c6ceaa0770b17b0f0c6f734430cf2ff5bf00aa8",
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-06-30T00:22:59Z",
+    "history_as_of": "2026-06-29",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZALT.json",
+    "payload_sha256": "55810c5e782d6ec95ab0aefe4c6ceaa0770b17b0f0c6f734430cf2ff5bf00aa8",
+    "quote_as_of": null,
+    "source_as_of": "2026-06-29"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-07-13T04:33:56Z",
+    "classified_run_id": "29224221077",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ZALT holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-29"
+  },
   "ticker": "ZALT",
   "updated_at": "2026-07-13T04:33:56Z"
 }

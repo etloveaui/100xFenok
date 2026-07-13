@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-09T02:48:17Z",
     "history_as_of": "2026-06-29",
-    "path": "data/yf/finance/230360.KQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/230360.KQ.json",
     "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
     "quote_as_of": "2026-06-10T06:30:30Z",
     "source_as_of": "2026-06-10T06:30:30Z"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-07-09T02:48:17Z",
+    "history_as_of": "2026-06-29",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/230360.KQ.json",
+    "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
+    "quote_as_of": "2026-06-10T06:30:30Z",
+    "source_as_of": "2026-06-10T06:30:30Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 23,
+    "classified_at": "2026-07-13T04:33:56Z",
+    "classified_run_id": "29224221077",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "230360.KQ holds LKG because Yahoo source date 2026-06-10T06:30:30Z is 23 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-10T06:30:30Z"
+  },
   "ticker": "230360.KQ",
   "updated_at": "2026-07-13T04:33:56Z"
 }

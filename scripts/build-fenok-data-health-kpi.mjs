@@ -21,6 +21,7 @@ import {
   REQUIRED_RIM_INDICES,
   REQUIRED_SURFACE_IDS,
   PLATFORM_BLOCKING_CHECK_KEYS,
+  SLICKCHARTS_DELIVERY_GROUPS,
   YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
 } from "./lib/kpi-contract-constants.mjs";
 
@@ -708,6 +709,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       reason: item?.reason ?? "newly_discovered_no_history",
     }));
   const lkgDetails = (Array.isArray(state?.lkg_details) ? state.lkg_details : [])
+    .filter((item) => typeof item?.failure_run_id === "string" && item.failure_run_id.length > 0)
     .slice(0, 20)
     .map((item) => ({
       symbol: item?.symbol ?? null,
@@ -716,6 +718,22 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       failure_attempt_ref: item?.failure_run_id ?? null,
       failure_observed_at: item?.failure_observed_at ?? null,
     }));
+  const staleGroups = (Array.isArray(state?.stale_groups) ? state.stale_groups : [])
+    .map((item) => {
+      const sourceAsOf = item?.source_as_of ?? null;
+      return {
+        source_as_of: sourceAsOf,
+        source_age_business_days: sourceAsOf
+          ? yahooBusinessDayAge(dateOnly(sourceAsOf), nowIso, (item?.symbols || [])[0])
+          : null,
+        max_source_age_business_days: YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
+        expected_resolution: item?.expected_resolution ?? "next_natural_yahoo_run",
+        symbols: Array.isArray(item?.symbols)
+          ? [...new Set(item.symbols.filter((value) => typeof value === "string"))].sort()
+          : [],
+      };
+    })
+    .filter((item) => item.symbols.length > 0);
   const oldestSourceAsOf = state?.oldest_source_as_of;
   const oldestSourceDate = dateOnly(oldestSourceAsOf);
   const oldestSourceValid = typeof oldestSourceAsOf === "string"
@@ -758,6 +776,14 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       + `source date ${dateOnly(item.source_as_of) || "unstamped"}; payload hash ${item.payload_sha256 || "missing"}.`
     )).join(" ")
     : `${number(counts.lkg)} LKG symbol(s)`;
+  const staleDetail = staleGroups.length > 0
+    ? staleGroups.map((item) => (
+      `${item.symbols.join(", ")} hold LKG because Yahoo source date ${dateOnly(item.source_as_of) || "unstamped"} `
+      + `is ${item.source_age_business_days ?? "unknown"} business days old, beyond the ${item.max_source_age_business_days}-day bound; `
+      + "queued for the next natural Yahoo run."
+    )).join(" ")
+    : "";
+  const lkgStatusDetail = [lkgDetail, staleDetail].filter(Boolean).join(" ");
   return lane("yahoo_batch_quote_history", "Yahoo batch quote/history", [
     check("state_artifact_present", "Yahoo bounded state", Boolean(state), state?.generated_at || "missing"),
     check(
@@ -777,7 +803,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     check("oldest_source_not_future", "Yahoo source timestamp chronology", oldestSourceValid && !oldestSourceFuture, oldestSourceFuture ? `${oldestSourceAsOf} follows ${state?.generated_at || "missing build time"}` : oldestSourceAsOf || "missing"),
     check("oldest_source_fresh", "oldest Yahoo source age", oldestSourceFresh, `${oldestSourceAge ?? "unknown"} / ${YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS} business days`),
     check("no_current_failures", "current Yahoo attempt failures", number(currentAttempt.failed) === 0, `run ${currentAttempt.run_id || "missing"}: ${number(currentAttempt.failed)} failed`),
-    check("no_lkg_primary", "LKG primary", number(counts.lkg) === 0, lkgDetail),
+    check("no_lkg_primary", "LKG primary", number(counts.lkg) === 0, lkgStatusDetail),
     check("no_pending_history", "pending Yahoo history", number(counts.pending_history) === 0, pendingDetail),
     check("no_unavailable", "Yahoo unavailable", number(counts.unavailable) === 0, `${number(counts.unavailable)} unavailable`),
     check("retry_set_empty", "Yahoo retry set", number(counts.retry) === 0, `${number(counts.retry)} active-universe retry candidate(s)`),
@@ -791,6 +817,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       unavailable: number(counts.unavailable),
       retry: number(counts.retry),
       failed: number(counts.failed),
+      stale: number(counts.stale),
       oldest_source_date: oldestSourceValid ? oldestSourceDate : null,
       oldest_source_symbol: state?.oldest_source_ticker ?? null,
       oldest_source_age_business_days: oldestSourceAge,
@@ -800,10 +827,227 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       latest_attempt: publicAttempt,
       state_generated_at: state?.generated_at ?? null,
       lkg: lkgDetails,
+      stale_groups: staleGroups,
       pending_history: pendingDetails,
       recovery_policy: "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success.",
     },
     asOf: oldestSourceValid ? oldestSourceAsOf : null,
+  });
+}
+
+const STRICT_ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function findNonFinite(value, pointer = "$") {
+  if (typeof value === "number" && !Number.isFinite(value)) return pointer;
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      const found = findNonFinite(value[index], `${pointer}[${index}]`);
+      if (found) return found;
+    }
+  } else if (value && typeof value === "object") {
+    for (const [key, child] of Object.entries(value)) {
+      const found = findNonFinite(child, `${pointer}.${key}`);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function readSlickChartsArtifact(filePath) {
+  let text;
+  try {
+    text = fs.readFileSync(filePath, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") return { kind: "missing", reason: "file is missing" };
+    return { kind: "corrupt", reason: `file cannot be read: ${error?.message || "unknown error"}` };
+  }
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (error) {
+    return { kind: "corrupt", reason: `malformed JSON: ${error.message}` };
+  }
+  const nonFiniteAt = findNonFinite(payload);
+  if (nonFiniteAt) return { kind: "corrupt", reason: `non-finite number at ${nonFiniteAt}` };
+  return { kind: "parsed", payload };
+}
+
+function strictDeliveryTimestamp(value, nowIso) {
+  if (typeof value !== "string" || !STRICT_ISO_TIMESTAMP_RE.test(value)) {
+    return { valid: false, reason: "updated is missing or not an ISO timestamp with timezone" };
+  }
+  const ms = new Date(value).getTime();
+  if (!Number.isFinite(ms)) return { valid: false, reason: "updated is not a real timestamp" };
+  const normalized = new Date(ms).toISOString();
+  if (isFutureSource(normalized, nowIso, "hours")) {
+    return { valid: false, reason: `updated ${normalized} is in the future` };
+  }
+  return { valid: true, normalized, age_hours: hoursAge(normalized, nowIso) };
+}
+
+export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {}) {
+  const base = path.join(dataRoot, "slickcharts");
+  const universeResult = readSlickChartsArtifact(path.join(base, "universe.json"));
+  const identityIssues = [];
+  const scopeIssues = [];
+  let symbols = [];
+  if (universeResult.kind === "parsed") {
+    const rows = universeResult.payload?.stocks;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      identityIssues.push("universe.json stocks is missing or empty");
+    } else {
+      const rawSymbols = rows.map((row) => String(row?.symbol || "").trim().toUpperCase());
+      if (rawSymbols.some((symbol) => !symbol)) identityIssues.push("universe.json contains a blank symbol");
+      const duplicates = [...new Set(rawSymbols.filter((symbol, index) => symbol && rawSymbols.indexOf(symbol) !== index))].sort();
+      if (duplicates.length > 0) identityIssues.push(`universe.json contains duplicate symbols: ${duplicates.slice(0, 20).join(", ")}`);
+      symbols = [...new Set(rawSymbols.filter(Boolean))].sort();
+      if (Number(universeResult.payload?.uniqueCount) !== symbols.length) {
+        identityIssues.push(`universe.json uniqueCount ${universeResult.payload?.uniqueCount ?? "missing"} does not match ${symbols.length}`);
+      }
+    }
+  } else if (universeResult.kind === "missing") {
+    scopeIssues.push("universe.json is missing; current stock-file scope cannot be enumerated");
+  } else {
+    scopeIssues.push(`universe.json is invalid: ${universeResult.reason}`);
+  }
+
+  const artifacts = [];
+  for (const group of SLICKCHARTS_DELIVERY_GROUPS) {
+    for (const filename of group.files) {
+      artifacts.push({ group, artifact: filename, symbol: null, filePath: path.join(base, filename) });
+    }
+    if (group.include_current_universe) {
+      for (const symbol of symbols) {
+        artifacts.push({ group, artifact: `stocks/${symbol}.json`, symbol, filePath: path.join(base, "stocks", `${symbol}.json`) });
+      }
+    }
+  }
+
+  const offenders = [];
+  const rows = [];
+  let corruptionCount = universeResult.kind === "corrupt" ? 1 : 0;
+  for (const item of artifacts) {
+    const read = readSlickChartsArtifact(item.filePath);
+    if (read.kind === "missing") {
+      rows.push({ ...item, status: "missing", delivery_at: null, age_hours: null, reason: read.reason });
+      continue;
+    }
+    if (read.kind === "corrupt") {
+      corruptionCount += 1;
+      rows.push({ ...item, status: "invalid", delivery_at: null, age_hours: null, reason: read.reason, integrity: "corrupt" });
+      continue;
+    }
+    if (item.symbol && String(read.payload?.symbol || "").trim().toUpperCase() !== item.symbol) {
+      identityIssues.push(`${item.artifact} identity ${read.payload?.symbol ?? "missing"} does not match ${item.symbol}`);
+      rows.push({ ...item, status: "invalid", delivery_at: null, age_hours: null, reason: "payload symbol does not match universe identity", integrity: "identity" });
+      continue;
+    }
+    const stamp = strictDeliveryTimestamp(read.payload?.updated, nowIso);
+    if (!stamp.valid) {
+      rows.push({ ...item, status: "invalid", delivery_at: null, age_hours: null, reason: stamp.reason, integrity: "delivery" });
+      continue;
+    }
+    rows.push({
+      ...item,
+      status: stamp.age_hours > item.group.max_hours ? "stale" : "current",
+      delivery_at: stamp.normalized,
+      age_hours: stamp.age_hours,
+      reason: stamp.age_hours > item.group.max_hours
+        ? `${stamp.age_hours}h old exceeds ${item.group.max_hours}h delivery SLA`
+        : null,
+    });
+  }
+
+  for (const row of rows.filter((item) => item.status !== "current")) {
+    offenders.push({
+      workflow_id: row.group.workflow,
+      artifact: row.artifact,
+      symbol: row.symbol,
+      reason: row.reason,
+      delivery_at: row.delivery_at,
+      age_hours: row.age_hours,
+      max_hours: row.group.max_hours,
+      status: row.status,
+    });
+  }
+  for (const issue of scopeIssues) offenders.unshift({
+    workflow_id: "slickcharts-history",
+    artifact: "universe.json",
+    symbol: null,
+    reason: issue,
+    delivery_at: null,
+    age_hours: null,
+    max_hours: 750,
+    status: "missing",
+  });
+  for (const issue of identityIssues) offenders.unshift({
+    workflow_id: "slickcharts-history",
+    artifact: "universe.json",
+    symbol: null,
+    reason: issue,
+    delivery_at: null,
+    age_hours: null,
+    max_hours: 750,
+    status: "invalid",
+  });
+
+  const workflowSla = SLICKCHARTS_DELIVERY_GROUPS.map((group) => {
+    const groupRows = rows.filter((row) => row.group.id === group.id);
+    const validDeliveries = groupRows.filter((row) => row.delivery_at).map((row) => row.delivery_at).sort();
+    const complete = groupRows.length > 0 && groupRows.every((row) => ["current", "stale"].includes(row.status));
+    return {
+      source_id: group.id,
+      workflow_id: group.workflow,
+      max_hours: group.max_hours,
+      required: groupRows.length,
+      current: groupRows.filter((row) => row.status === "current").length,
+      missing: groupRows.filter((row) => row.status === "missing").length,
+      stale: groupRows.filter((row) => row.status === "stale").length,
+      invalid: groupRows.filter((row) => row.status === "invalid").length,
+      oldest_delivery_at: complete ? validDeliveries[0] ?? null : null,
+    };
+  });
+  const counts = {
+    required: rows.length,
+    fixed: SLICKCHARTS_DELIVERY_GROUPS.reduce((sum, group) => sum + group.files.length, 0),
+    current_universe: symbols.length,
+    current: rows.filter((row) => row.status === "current").length,
+    missing: rows.filter((row) => row.status === "missing").length,
+    stale: rows.filter((row) => row.status === "stale").length,
+    invalid: rows.filter((row) => row.status === "invalid").length,
+  };
+  const validDeliveries = rows.filter((row) => row.delivery_at).map((row) => row.delivery_at).sort();
+  return {
+    counts,
+    corruption_count: corruptionCount,
+    identity_issues: identityIssues,
+    scope_issues: scopeIssues,
+    offenders: offenders.slice(0, 20),
+    workflow_sla: workflowSla,
+    oldest_delivery_at: validDeliveries[0] ?? null,
+    timestamp_semantics: "updated is Fenok fetch/write delivery time, not provider publication time.",
+  };
+}
+
+export function buildSlickChartsDeliveryLane(nowIso, { dataRoot = DATA_ROOT, assessment = null } = {}) {
+  const result = assessment || assessSlickChartsDelivery(nowIso, { dataRoot });
+  const counts = result.counts;
+  const first = result.offenders[0];
+  const summary = `${counts.current} current, ${counts.missing} missing, ${counts.stale} stale, ${counts.invalid} invalid`
+    + (first ? `; ${first.workflow_id}/${first.artifact}: ${first.reason}` : "");
+  return lane("slickcharts_delivery_freshness", "SlickCharts delivery freshness", [
+    check("json_integrity", "SlickCharts JSON integrity", result.corruption_count === 0, result.corruption_count === 0 ? "all required JSON is parseable and finite" : `${result.corruption_count} malformed or non-finite artifact(s)`),
+    check("universe_identity", "SlickCharts universe identity", result.identity_issues.length === 0, result.identity_issues[0] || "universe identities are consistent"),
+    check("delivery_ready", "SlickCharts delivery readiness", counts.missing === 0 && counts.stale === 0 && counts.invalid === 0 && result.scope_issues.length === 0, summary),
+  ], {
+    counts,
+    details: {
+      workflow_sla: result.workflow_sla,
+      offenders: result.offenders,
+      timestamp_semantics: result.timestamp_semantics,
+      scope_issues: result.scope_issues,
+    },
+    asOf: result.oldest_delivery_at,
   });
 }
 
@@ -874,13 +1118,27 @@ function buildProductSurfaceLane(productCoverage) {
   });
 }
 
-function buildFinraOccLane(ledger) {
+export function buildFinraOccLane(ledger, occAvailability = null) {
   const counts = ledger?.counts || {};
   const publicLedgerExists = exists("data/admin/fenok-s0-finra-occ-mapping-ledger.json", PUBLIC_DATA_ROOT);
+  const occAttempt = occAvailability?.current_attempt;
+  const occAttemptReady = ["ready_current", "no_selected_scope"].includes(occAttempt?.status);
+  const publicOccAttempt = occAttempt && typeof occAttempt === "object" ? {
+    attempt_ref: occAttempt.attempt_ref ?? null,
+    attempt_number: number(occAttempt.attempt_number, 1),
+    observed_at: occAttempt.observed_at ?? null,
+    target_source_date: occAttempt.target_source_date ?? null,
+    served_source_date: occAttempt.served_source_date ?? null,
+    status: occAttempt.status ?? "unavailable",
+    fallback_active: occAttempt.fallback_active === true,
+    selected_symbol_count: number(occAttempt.selected_tickers),
+    message: occAttempt.message ?? "OCC current-attempt verdict is missing.",
+  } : null;
   return lane("finra_occ_plain_us_and_mapping_policy", "FINRA/OCC source gate", [
     check("ledger_acceptance", "ledger acceptance", ledger?.source_audit?.acceptance_ok === true, ledger?.generated_at || "missing", { platform_blocking: true }),
     check("finra_plain_us_ready", "plain US FINRA", number(counts.plain_us_finra_source_ready) === number(counts.plain_us_finra_denominator), `${number(counts.plain_us_finra_source_ready)} / ${number(counts.plain_us_finra_denominator)}`),
     check("occ_plain_us_ready", "plain US OCC", number(counts.plain_us_occ_source_ready) === number(counts.plain_us_occ_denominator), `${number(counts.plain_us_occ_source_ready)} / ${number(counts.plain_us_occ_denominator)}`),
+    check("occ_current_delivery_ready", "OCC current delivery", occAttemptReady, publicOccAttempt?.message || "OCC current-attempt evidence is missing; prior data may still be served."),
     check("non_plain_not_service_blocker", "non-plain policy", ledger?.service_boundary?.active_s0_daily_source_gate_blocker === false, ledger?.service_boundary?.reason || "missing"),
     check("ledger_private_only", "ledger public mirror", !publicLedgerExists && ledger?.raw_policy?.admin_local_only === true, publicLedgerExists ? "public mirror exists" : "admin-local only", { platform_blocking: true }),
   ], {
@@ -896,6 +1154,7 @@ function buildFinraOccLane(ledger) {
     details: {
       source_dates: ledger?.source_audit?.source_dates ?? null,
       action_policy: ledger?.action_policy ?? [],
+      occ_current_attempt: publicOccAttempt,
     },
     asOf: ledger?.generated_at ?? null,
   });
@@ -1043,7 +1302,7 @@ function buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending }
   return { ...base, source_date: cls.source_date, age, status: slaStatusForAge(age, def.max_staleness), pending: { pending_since: null, ever_stamped: true } };
 }
 
-function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, productCoverage, etfDaily1y, priorProductSurfacePending }) {
+function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, productCoverage, etfDaily1y, priorProductSurfacePending, slickchartsDelivery }) {
   const sourceDates = {
     s0_finra_occ_mapping_ledger: oldestRequiredIsoDate([
       finraOccLedger?.source_audit?.source_dates?.finra_source_date,
@@ -1059,6 +1318,7 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
     // product_surface_coverage handled by buildProductSurfaceEntry (shape-strict).
     // hours unit keeps the raw timestamp (not date-truncated).
     etf_daily1y_readiness_admin: etfDaily1y?.generated_at ?? null,
+    ...Object.fromEntries((slickchartsDelivery?.workflow_sla || []).map((row) => [row.source_id, row.oldest_delivery_at])),
   };
 
   return SOURCE_SLA_DEF.map((def) => {
@@ -1121,15 +1381,18 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json");
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
   const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
+  const occAvailability = readJson("computed/fenok_occ_options_availability.json");
+  const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 
   const lanes = [
     buildStockS0Lane(coverageIndex),
     buildStockS1Lane(coverageIndex),
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket),
     buildYahooBatchLane(yahooBatchState, nowIso),
+    buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
     buildRimLane(rimInputs),
     buildProductSurfaceLane(productCoverage),
-    buildFinraOccLane(finraOccLedger),
+    buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
   ];
@@ -1154,6 +1417,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     productCoverage,
     etfDaily1y,
     priorProductSurfacePending,
+    slickchartsDelivery,
   });
   const runtime = buildRuntime({
     nowIso,
@@ -1191,6 +1455,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       { id: "etf_daily1y_readiness_admin", generated_at: etfDaily1y?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "etf_core_daily_basket_admin", generated_at: etfCoreBasket?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "yahoo_batch_quote_history_state", generated_at: yahooBatchState?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "occ_options_availability", generated_at: occAvailability?.generated_at ?? null, public_mirror: true, public_safe: true },
     ],
     totals,
     lanes,

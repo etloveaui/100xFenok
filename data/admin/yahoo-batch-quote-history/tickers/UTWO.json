@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-06-18T16:18:27Z",
     "history_as_of": "2026-06-18",
-    "path": "data/yf/finance/UTWO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UTWO.json",
     "payload_sha256": "f346f5ffc4f22b76bfb8c6c248582e14a7012976afd07934e131307a481fccf0",
     "quote_as_of": null,
     "source_as_of": "2026-06-18"
@@ -39,9 +39,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-06-18T16:18:27Z",
+    "history_as_of": "2026-06-18",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UTWO.json",
+    "payload_sha256": "f346f5ffc4f22b76bfb8c6c248582e14a7012976afd07934e131307a481fccf0",
+    "quote_as_of": null,
+    "source_as_of": "2026-06-18"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 15,
+    "classified_at": "2026-07-13T04:33:56Z",
+    "classified_run_id": "29224221077",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "UTWO holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-18"
+  },
   "ticker": "UTWO",
   "updated_at": "2026-07-13T04:33:56Z"
 }
