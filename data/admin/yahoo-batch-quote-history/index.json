@@ -1,0 +1,73 @@
+{
+  "counts": {
+    "active": 6661,
+    "failed": 1,
+    "fresh": 2071,
+    "lkg": 1,
+    "pending_history": 0,
+    "retry": 1,
+    "unavailable": 0,
+    "untracked": 4589
+  },
+  "current_attempt": {
+    "attempted": 2072,
+    "errors": [
+      {
+        "error": "controlled failure injection for AAPL",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "owner-approved controlled failure injection"
+          }
+        ],
+        "ticker": "AAPL"
+      }
+    ],
+    "event_name": "workflow_dispatch",
+    "failed": 1,
+    "fetch_attempts": 1,
+    "natural": false,
+    "run_attempt": 1,
+    "run_id": "29224221077",
+    "schedule": "",
+    "skipped": 2071,
+    "successes": 0
+  },
+  "generated_at": "2026-07-13T04:33:56Z",
+  "lane_id": "yahoo_batch_quote_history",
+  "latest_failure": {
+    "attempts_used": 1,
+    "error": "controlled failure injection for AAPL",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "owner-approved controlled failure injection"
+      }
+    ],
+    "observed_at": "2026-07-13T04:33:56Z",
+    "run_attempt": 1,
+    "run_id": "29224221077",
+    "ticker": "AAPL"
+  },
+  "lkg_details": [
+    {
+      "failure_observed_at": "2026-07-13T04:33:56Z",
+      "failure_run_id": "29224221077",
+      "payload_sha256": "3ba7732c2315948367e6ec4e552d669936f3cbc819db4265d75081abe6cc90e2",
+      "source_as_of": "2026-07-08",
+      "symbol": "AAPL"
+    }
+  ],
+  "lkg_symbols": [
+    "AAPL"
+  ],
+  "message": "Yahoo quote/history: fresh=2071, lkg=1, pending_history=0, unavailable=0, retry=1, failed=1. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "oldest_source_as_of": "2026-05-06",
+  "oldest_source_ticker": "CTRA",
+  "pending_details": [],
+  "pending_symbols": [],
+  "retry_symbols": [
+    "AAPL"
+  ],
+  "schema_version": "yahoo-batch-quote-history-index/v1"
+}
