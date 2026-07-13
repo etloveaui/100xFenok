@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-13T04:05:21.652Z",
+  "generated_at": "2026-07-13T04:36:10.218Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "1 required lane(s) are not ready; healthy lanes may still publish.",
@@ -32,11 +32,11 @@
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-13T04:05:21.652Z",
-      "run_id": "29223009299",
+      "built_at": "2026-07-13T04:36:10.218Z",
+      "run_id": "29224276089",
       "workflow": "Update Manifest",
-      "event_name": "push",
-      "sha": "a651181695676acdbc2a100889c8375d33cabafc"
+      "event_name": "workflow_dispatch",
+      "sha": "55c4cd0f981954d05c9d32619a086769c2c96c0c"
     },
     "cadence": {
       "crons_utc": [
@@ -230,7 +230,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 15.82,
+      "age": 16.34,
       "status": "ready"
     }
   ],
@@ -243,13 +243,13 @@
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-13T04:05:20.841Z",
+      "generated_at": "2026-07-13T04:36:09.407Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-13T04:05:21.444Z",
+      "generated_at": "2026-07-13T04:36:10.015Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -273,7 +273,7 @@
     },
     {
       "id": "yahoo_batch_quote_history_state",
-      "generated_at": null,
+      "generated_at": "2026-07-13T04:33:56Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -589,39 +589,47 @@
       "label": "Yahoo batch quote/history",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "Yahoo batch quote/history is not ready: Yahoo bounded state: missing; active-universe state coverage: 0 classified / 0 active; 0 untracked; current attempt evidence: run missing: attempted=0, success=0, failed=0, skipped=0, fetch_attempts=0; oldest Yahoo source timestamp: missing; Yahoo source timestamp chronology: missing; oldest Yahoo source age: unknown / 6 business days. Other lanes may publish.",
+      "status_message": "Yahoo batch quote/history is not ready: active-universe state coverage: 2072 classified / 6661 active; 4589 untracked; oldest Yahoo source age: 45 / 6 business days; current Yahoo attempt failures: run 29224221077: 1 failed; LKG primary: AAPL holds LKG after failing run 29224221077; source date 2026-07-08; payload hash 3ba7732c2315948367e6ec4e552d669936f3cbc819db4265d75081abe6cc90e2.; Yahoo retry set: 1 active-universe retry candidate(s). Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": null,
+      "as_of": "2026-05-06",
       "counts": {
-        "active": 0,
-        "untracked": 0,
-        "fresh": 0,
-        "lkg": 0,
+        "active": 6661,
+        "untracked": 4589,
+        "fresh": 2071,
+        "lkg": 1,
         "pending_history": 0,
         "unavailable": 0,
-        "retry": 0,
-        "failed": 0,
-        "oldest_source_date": null,
-        "oldest_source_symbol": null,
-        "oldest_source_age_business_days": null,
+        "retry": 1,
+        "failed": 1,
+        "oldest_source_date": "2026-05-06",
+        "oldest_source_symbol": "CTRA",
+        "oldest_source_age_business_days": 45,
         "max_source_age_business_days": 6
       },
       "details": {
         "latest_attempt": {
-          "attempt_ref": null,
+          "attempt_ref": "29224221077",
           "attempt_number": 1,
-          "event_name": null,
-          "schedule": null,
+          "event_name": "workflow_dispatch",
+          "schedule": "",
           "natural": false,
-          "attempted": 0,
+          "attempted": 2072,
           "successes": 0,
-          "failed": 0,
-          "skipped": 0,
-          "fetch_attempts": 0
+          "failed": 1,
+          "skipped": 2071,
+          "fetch_attempts": 1
         },
-        "state_generated_at": null,
-        "lkg": [],
+        "state_generated_at": "2026-07-13T04:33:56Z",
+        "lkg": [
+          {
+            "symbol": "AAPL",
+            "payload_sha256": "3ba7732c2315948367e6ec4e552d669936f3cbc819db4265d75081abe6cc90e2",
+            "source_as_of": "2026-07-08",
+            "failure_attempt_ref": "29224221077",
+            "failure_observed_at": "2026-07-13T04:33:56Z"
+          }
+        ],
         "pending_history": [],
         "recovery_policy": "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success."
       },
@@ -629,9 +637,9 @@
         {
           "id": "state_artifact_present",
           "label": "Yahoo bounded state",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "missing",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "2026-07-13T04:33:56Z",
           "platform_blocking": false
         },
         {
@@ -639,31 +647,31 @@
           "label": "active-universe state coverage",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "0 classified / 0 active; 0 untracked",
+          "detail": "2072 classified / 6661 active; 4589 untracked",
           "platform_blocking": false
         },
         {
           "id": "current_attempt_evidence",
           "label": "current attempt evidence",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "run missing: attempted=0, success=0, failed=0, skipped=0, fetch_attempts=0",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "run 29224221077: attempted=2072, success=0, failed=1, skipped=2071, fetch_attempts=1",
           "platform_blocking": false
         },
         {
           "id": "oldest_source_stamp_valid",
           "label": "oldest Yahoo source timestamp",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "missing",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "2026-05-06",
           "platform_blocking": false
         },
         {
           "id": "oldest_source_not_future",
           "label": "Yahoo source timestamp chronology",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "missing",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "2026-05-06",
           "platform_blocking": false
         },
         {
@@ -671,23 +679,23 @@
           "label": "oldest Yahoo source age",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "unknown / 6 business days",
+          "detail": "45 / 6 business days",
           "platform_blocking": false
         },
         {
           "id": "no_current_failures",
           "label": "current Yahoo attempt failures",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "run missing: 0 failed",
+          "status": "blocked",
+          "status_label": "차단",
+          "detail": "run 29224221077: 1 failed",
           "platform_blocking": false
         },
         {
           "id": "no_lkg_primary",
           "label": "LKG primary",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "0 LKG symbol(s)",
+          "status": "blocked",
+          "status_label": "차단",
+          "detail": "AAPL holds LKG after failing run 29224221077; source date 2026-07-08; payload hash 3ba7732c2315948367e6ec4e552d669936f3cbc819db4265d75081abe6cc90e2.",
           "platform_blocking": false
         },
         {
@@ -709,9 +717,9 @@
         {
           "id": "retry_set_empty",
           "label": "Yahoo retry set",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "0 active-universe retry candidate(s)",
+          "status": "blocked",
+          "status_label": "차단",
+          "detail": "1 active-universe retry candidate(s)",
           "platform_blocking": false
         }
       ]
@@ -724,7 +732,7 @@
       "status_message": "RIM inputs is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-13T04:05:20.841Z",
+      "as_of": "2026-07-13T04:36:09.407Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -842,7 +850,7 @@
       "status_message": "Product surface freshness is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-13T04:05:21.444Z",
+      "as_of": "2026-07-13T04:36:10.015Z",
       "counts": {
         "surfaces": 7,
         "ready": 4,
@@ -859,7 +867,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-13T04:05:21.444Z",
+          "detail": "2026-07-13T04:36:10.015Z",
           "platform_blocking": false
         },
         {
@@ -983,7 +991,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-13T04:05:21.679Z",
+      "as_of": "2026-07-13T04:36:10.246Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -1159,42 +1167,10 @@
     },
     {
       "lane_id": "yahoo_batch_quote_history",
-      "check_id": "state_artifact_present",
-      "status": "blocked",
-      "label": "Yahoo bounded state",
-      "detail": "missing",
-      "required": true
-    },
-    {
-      "lane_id": "yahoo_batch_quote_history",
       "check_id": "active_universe_accounted",
       "status": "blocked",
       "label": "active-universe state coverage",
-      "detail": "0 classified / 0 active; 0 untracked",
-      "required": true
-    },
-    {
-      "lane_id": "yahoo_batch_quote_history",
-      "check_id": "current_attempt_evidence",
-      "status": "blocked",
-      "label": "current attempt evidence",
-      "detail": "run missing: attempted=0, success=0, failed=0, skipped=0, fetch_attempts=0",
-      "required": true
-    },
-    {
-      "lane_id": "yahoo_batch_quote_history",
-      "check_id": "oldest_source_stamp_valid",
-      "status": "blocked",
-      "label": "oldest Yahoo source timestamp",
-      "detail": "missing",
-      "required": true
-    },
-    {
-      "lane_id": "yahoo_batch_quote_history",
-      "check_id": "oldest_source_not_future",
-      "status": "blocked",
-      "label": "Yahoo source timestamp chronology",
-      "detail": "missing",
+      "detail": "2072 classified / 6661 active; 4589 untracked",
       "required": true
     },
     {
@@ -1202,7 +1178,31 @@
       "check_id": "oldest_source_fresh",
       "status": "blocked",
       "label": "oldest Yahoo source age",
-      "detail": "unknown / 6 business days",
+      "detail": "45 / 6 business days",
+      "required": true
+    },
+    {
+      "lane_id": "yahoo_batch_quote_history",
+      "check_id": "no_current_failures",
+      "status": "blocked",
+      "label": "current Yahoo attempt failures",
+      "detail": "run 29224221077: 1 failed",
+      "required": true
+    },
+    {
+      "lane_id": "yahoo_batch_quote_history",
+      "check_id": "no_lkg_primary",
+      "status": "blocked",
+      "label": "LKG primary",
+      "detail": "AAPL holds LKG after failing run 29224221077; source date 2026-07-08; payload hash 3ba7732c2315948367e6ec4e552d669936f3cbc819db4265d75081abe6cc90e2.",
+      "required": true
+    },
+    {
+      "lane_id": "yahoo_batch_quote_history",
+      "check_id": "retry_set_empty",
+      "status": "blocked",
+      "label": "Yahoo retry set",
+      "detail": "1 active-universe retry candidate(s)",
       "required": true
     },
     {
