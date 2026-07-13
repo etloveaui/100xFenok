@@ -120,7 +120,7 @@ jobs:
 
       - name: Start from latest main
         run: |
-          git fetch origin main:refs/remotes/origin/main
+          git fetch origin +main:refs/remotes/origin/main
           git checkout -B main origin/main
 
       - name: Set up Python
