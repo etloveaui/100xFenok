@@ -15,12 +15,12 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-07-09",
+      "updated": "2026-07-13",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 31,981 records, 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
@@ -42,7 +42,7 @@
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-07-11",
+      "updated": "2026-07-13",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 3,
@@ -92,7 +92,7 @@
       "source": "Feno Yardeni: official FRED WAAA/WBAA + Bloomberg-sourced 100x benchmark S&P 500 price/EPS",
       "file_count": 1,
       "schema": false,
-      "description": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03."
+      "description": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03; benchmark input 2026-07-10 with one date pending matching FRED yield data."
     },
     "computed": {
       "version": "1.0.0",
@@ -159,6 +159,20 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-07-13",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from owner-supplied 2026-07-10 Bloomberg workbook: 31,981 records (+38), 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points; DEC-275 floor preserved (source starts 2010-08-27); source_summaries 2,404 non-null + 66 null; ISO-week dup drops=0.",
+      "breaking": false
+    },
+    {
+      "date": "2026-07-13",
+      "folder": "yardney",
+      "version": "1.2.0",
+      "change": "Rebuilt Feno Yardeni from the refreshed Bloomberg benchmark and fetched FRED WAAA/WBAA: preserved 1,026 seed records, retained 862 FRED-aligned computed records through 2026-07-03, revised latest fair value to 6,422.50 and premium to +16.52%; the 2026-07-10 benchmark row remains pending a matching FRED yield observation.",
+      "breaking": false
+    },
     {
       "date": "2026-07-12",
       "folder": "global-scouter",
@@ -733,8 +747,8 @@
       "path": "/data/benchmarks/",
       "schemaVersion": "3.8.0",
       "fileCount": 7,
-      "lastUpdated": "2026-07-09",
-      "notes": "Market indices P/E, P/B, ROE - 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "lastUpdated": "2026-07-13",
+      "notes": "Market indices P/E, P/B, ROE - 31,981 records, 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     {
       "name": "damodaran",
@@ -773,8 +787,8 @@
       "path": "/data/yardney/",
       "schemaVersion": "1.2.0",
       "fileCount": 1,
-      "lastUpdated": "2026-07-11",
-      "notes": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03."
+      "lastUpdated": "2026-07-13",
+      "notes": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03; benchmark input 2026-07-10 with one date pending matching FRED yield data."
     },
     {
       "name": "catalog",
