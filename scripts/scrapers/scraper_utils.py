@@ -584,7 +584,10 @@ def load_existing_history(file_path: Path) -> List[Dict[str, Any]]:
         return []
 
     try:
-        data = json.loads(file_path.read_text(encoding="utf-8"))
+        data = json.loads(
+            file_path.read_text(encoding="utf-8"),
+            parse_constant=lambda _token: None,
+        )
         return data.get("history", [])
     except (json.JSONDecodeError, KeyError):
         return []

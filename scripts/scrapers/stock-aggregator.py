@@ -85,7 +85,10 @@ def load_json_file(path: Path) -> Dict[str, Any]:
     if not path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            parse_constant=lambda _token: None,
+        )
     except Exception as e:
         print(f"Warning: Failed to load {path}: {e}", file=sys.stderr)
         return {}
