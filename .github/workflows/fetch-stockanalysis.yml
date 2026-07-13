@@ -99,7 +99,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -113,6 +113,11 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -239,7 +244,7 @@ jobs:
           set -o pipefail
           PRIMARY_FETCH_LOG="$RUNNER_TEMP/stockanalysis-primary-fetch.log"
           PRIMARY_FETCHED_TICKERS="$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt"
-          python3 scripts/fetch-stockanalysis.py $ARGS | tee "$PRIMARY_FETCH_LOG"
+          python3 scripts/fetch-stockanalysis.py $ARGS --no-public-mirror | tee "$PRIMARY_FETCH_LOG"
           awk '/^\[etf [0-9]+\/[0-9]+\]/ && $4 != "FAIL" { print $3 }' "$PRIMARY_FETCH_LOG" \
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
@@ -254,138 +259,7 @@ jobs:
           ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
           if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
           if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
-          python3 scripts/fetch-stockanalysis.py $ARGS
-
-      - name: Mirror docs to public
-        run: |
-          mkdir -p 100xfenok-next/public/data/stockanalysis
-          cp data/stockanalysis/README.md 100xfenok-next/public/data/stockanalysis/README.md
-          cp data/stockanalysis/schema.json 100xfenok-next/public/data/stockanalysis/schema.json
-
-      - name: Build normalized market facts
-        run: python3 scripts/build-market-facts.py
-
-      - name: Rebuild RIM index inputs
-        run: |
-          node scripts/build-rim-index.mjs
-          node scripts/build-rim-index.mjs --check
-
-      - name: Build market source parity
-        run: python3 scripts/build-market-source-parity.py
-
-      - name: Refresh history-gap plan before report
-        env:
-          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
-          INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
-        run: |
-          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
-          MAX_AGE_HOURS="${EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS:-${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}}"
-          ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
-          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
-          if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
-          python3 scripts/fetch-stockanalysis.py $ARGS
-
-      - name: Build ETF history-gap report
-        env:
-          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
-        run: |
-          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
-          ARGS="--write-report"
-          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
-          npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
-
-      - name: Materialize Fenok Edge ETF Core Daily Basket candidate
-        run: |
-          node scripts/build-fenok-etf-signals.mjs
-          node scripts/build-fenok-etf-action-index.mjs
-          node scripts/build-fenok-etf-core-daily-basket.mjs --check
-          npm --prefix 100xfenok-next run build:history-gap-daily1y
-
-      - name: Fetch discovered Core Daily Basket delta once
-        id: core-basket-delta
-        run: |
-          echo "delta_count=0" >> "$GITHUB_OUTPUT"
-          if [ "${EFFECTIVE_CORE_BASKET_DELTA_PASS:-false}" != "true" ]; then
-            echo "[core-basket-delta] disabled for this run profile"
-            exit 0
-          fi
-
-          PLAN_PATH="$RUNNER_TEMP/stockanalysis-core-basket-delta.json"
-          DELTA_PATH="$RUNNER_TEMP/stockanalysis-core-basket-delta.txt"
-          node scripts/plan-stockanalysis-core-basket-delta.mjs \
-            --basket data/admin/fenok-etf-core-daily-basket.json \
-            --fetched "$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt" \
-            --output "$DELTA_PATH" \
-            --limit 40 \
-            --json > "$PLAN_PATH"
-
-          DELTA_COUNT="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(String(payload.delta_count));' "$PLAN_PATH")"
-          echo "delta_count=$DELTA_COUNT" >> "$GITHUB_OUTPUT"
-          if [ "$DELTA_COUNT" = "0" ]; then
-            echo "[core-basket-delta] no newly selected tickers"
-            exit 0
-          fi
-
-          DELTA_ETFS="$(paste -sd, "$DELTA_PATH")"
-          DELTA_ARGS=(--etfs "$DELTA_ETFS" --sleep "${EFFECTIVE_STOCKANALYSIS_SLEEP:-0.25}" --classify-etf-catalogs)
-          if [ "${EFFECTIVE_YF_ETF_FALLBACK:-true}" = "true" ]; then
-            DELTA_ARGS+=(--yf-etf-fallback)
-          else
-            DELTA_ARGS+=(--fail-on-error)
-          fi
-          python3 scripts/fetch-stockanalysis.py "${DELTA_ARGS[@]}"
-
-      - name: Rebuild StockAnalysis consumers after Core Basket delta
-        if: ${{ steps.core-basket-delta.outputs.delta_count != '0' }}
-        env:
-          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
-          INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
-        run: |
-          python3 scripts/build-market-facts.py
-          node scripts/build-rim-index.mjs
-          node scripts/build-rim-index.mjs --check
-          python3 scripts/build-market-source-parity.py
-
-          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
-          MAX_AGE_HOURS="${EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS:-${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}}"
-          PLAN_ARGS=(--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0)
-          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then PLAN_ARGS+=(--required-history-periods "$REQUIRED_HISTORY_PERIODS"); fi
-          if [ -n "$MAX_AGE_HOURS" ]; then PLAN_ARGS+=(--incremental-etf-max-age-hours "$MAX_AGE_HOURS"); fi
-          python3 scripts/fetch-stockanalysis.py "${PLAN_ARGS[@]}"
-
-          REPORT_ARGS=(--write-report)
-          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then REPORT_ARGS+=(--required-history-periods "$REQUIRED_HISTORY_PERIODS"); fi
-          npm --prefix 100xfenok-next run qa:history-gap -- "${REPORT_ARGS[@]}"
-
-          node scripts/build-fenok-etf-signals.mjs
-          node scripts/build-fenok-etf-action-index.mjs
-          node scripts/build-fenok-etf-core-daily-basket.mjs --check
-          npm --prefix 100xfenok-next run build:history-gap-daily1y
-
-      - name: Build Fenok Edge ETF derived readiness
-        run: |
-          node scripts/build-fenok-edge-coverage-index.mjs
-          node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
-          node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-          npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
-          mkdir -p 100xfenok-next/public/data/computed 100xfenok-next/public/data/admin
-          cp data/computed/fenok_etf_core_daily_basket_summary.json 100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json
-          rm -f 100xfenok-next/public/data/admin/fenok-etf-core-daily-basket.json
-          npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket
-
-      - name: Build market data audit
-        run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
-
-      - name: Update manifest
-        run: python3 scripts/update-manifest.py
-
-      - name: Build product surface coverage
-        run: |
-          npm --prefix 100xfenok-next run build:data-entity-graph
-          npm --prefix 100xfenok-next run build:product-surface-coverage
-
-      - name: Update static route manifest
-        run: npm --prefix 100xfenok-next run build:static-route-manifest
+          python3 scripts/fetch-stockanalysis.py $ARGS --no-public-mirror
 
       - name: Validate StockAnalysis contracts
         run: |
@@ -402,40 +276,19 @@ jobs:
           TMPDIR="$ALT_TMPDIR" node scripts/test-write-fenok-etf-daily1y-readiness.mjs
           TMPDIR="$ALT_TMPDIR" node scripts/test-build-fenok-etf-core-daily-basket.mjs
 
-      - name: Validate StockAnalysis UI QA
-        env:
-          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
-        run: |
-          npm --prefix 100xfenok-next run qa:etf-universe
-          npm --prefix 100xfenok-next run qa:surface-consumers
-          npm --prefix 100xfenok-next run qa:market-audit
-          npm --prefix 100xfenok-next run qa:data-graph
-          npm --prefix 100xfenok-next run qa:data-freshness
-          REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
-          ARGS=""
-          if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
-          npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
-          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
-          npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated
-          npm --prefix 100xfenok-next run qa:copy
-
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A data 100xfenok-next/public/data 100xfenok-next/src/generated/static-route-manifest.ts
+          git add -- \
+            data/stockanalysis \
+            data/yf/etf-details \
+            data/admin/data-supply-state/v1
           git restore --staged --worktree -- \
-            data/computed/rim-index/inputs.json \
-            100xfenok-next/public/data/computed/rim-index/inputs.json \
-            data/manifest.json \
-            100xfenok-next/public/data/manifest.json \
-            data/admin/product-surface-coverage.json \
-            100xfenok-next/public/data/admin/product-surface-coverage.json \
-            data/admin/fenok-edge-coverage-index.json \
-            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
-            data/admin/fenok-s0-finra-occ-mapping-ledger.json \
-            data/admin/fenok-edge-etf-daily1y-readiness.json \
-            data/admin/fenok-edge-etf-daily1y-fetchable-plan.json
+            data/stockanalysis/backfill/history_gap_report_latest.json \
+            data/yf/finance/_summary.json
+          git ls-files --modified --others --exclude-standard -z -- data/yf/finance \
+            | git add --pathspec-from-file=- --pathspec-file-nul
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
@@ -453,7 +306,7 @@ jobs:
           echo "git push failed after retrying concurrent main updates"
           exit 1
 
-      - name: Dispatch manifest and RIM rebuild
+      - name: Dispatch shared projection rebuild
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run update-manifest.yml --ref main

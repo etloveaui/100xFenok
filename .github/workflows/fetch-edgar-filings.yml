@@ -40,10 +40,9 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -53,6 +52,11 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -80,14 +84,6 @@ jobs:
           if [ "$INPUT_PLAN_ONLY" = "true" ]; then ARGS+=(--plan-only); fi
           node scripts/build-edgar-filing-timeline.mjs "${ARGS[@]}"
 
-      - name: Update manifest
-        if: ${{ env.EDGAR_PLAN_ONLY != 'true' }}
-        run: python3 scripts/update-manifest.py
-
-      - name: Update static route manifest
-        if: ${{ env.EDGAR_PLAN_ONLY != 'true' }}
-        run: npm --prefix 100xfenok-next run build:static-route-manifest
-
       - name: Validate EDGAR summary contracts
         if: ${{ env.EDGAR_PLAN_ONLY != 'true' }}
         run: npm --prefix 100xfenok-next run qa:edgar-summaries
@@ -99,7 +95,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/edgar data/edgar-korean-summaries data/manifest.json 100xfenok-next/public/data/edgar-korean-summaries 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
+          git add -- \
+            data/edgar \
+            data/edgar-korean-summaries \
+            100xfenok-next/public/data/edgar-korean-summaries
           if git diff --staged --quiet; then
             echo "No EDGAR filing timeline changes to publish"
             exit 0
@@ -113,7 +112,6 @@ jobs:
               continue
             fi
             if git push; then
-              gh workflow run deploy-worker.yml --ref main
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"

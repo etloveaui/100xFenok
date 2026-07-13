@@ -267,7 +267,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', workflow)
         self.assertNotIn("STOCKANALYSIS_WEEKLY_MAX_UNIVERSE_PAGES", workflow)
 
-    def test_discovery_growth_uses_one_bounded_core_basket_delta_pass(self) -> None:
+    def test_discovery_growth_delta_planner_stays_bounded_and_outside_source_writer(self) -> None:
         fixture = json.loads((FIXTURE_DIR / "core_basket_discovery_growth.fixture.json").read_text(encoding="utf-8"))
         planner = ROOT / "scripts" / "plan-stockanalysis-core-basket-delta.mjs"
         with tempfile.TemporaryDirectory() as tmp:
@@ -355,41 +355,69 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.assertIn("delta 41 exceeds limit 40", overflow.stderr)
 
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
-        delta_step = workflow.split("- name: Fetch discovered Core Daily Basket delta once", 1)[1]
-        delta_step = delta_step.split("- name: Rebuild StockAnalysis consumers after Core Basket delta", 1)[0]
-        self.assertIn("--limit 40", delta_step)
-        self.assertEqual(delta_step.count('python3 scripts/fetch-stockanalysis.py "${DELTA_ARGS[@]}"'), 1)
-        self.assertIn("DELTA_ARGS+=(--fail-on-error)", delta_step)
-        self.assertNotRegex(delta_step, r"(?m)^\s*(?:for|while)\s")
+        self.assertNotIn("Fetch discovered Core Daily Basket delta once", workflow)
+        self.assertNotIn("plan-stockanalysis-core-basket-delta.mjs", workflow)
 
         primary_step = workflow.split("- name: Run StockAnalysis fetch", 1)[1]
         primary_step = primary_step.split("- name: Refresh history-gap plan after live backfill", 1)[0]
         self.assertIn('ARGS="$ARGS --fail-on-error"', primary_step)
 
-    def test_krx_workflow_refreshes_daily1y_report_before_coverage_builder(self) -> None:
+        manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
+        self.assertIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", manifest)
+
+    def test_central_writer_refreshes_daily1y_report_before_coverage_builder(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fenok-edge-krx-daily.yml").read_text(encoding="utf-8")
-        rebuild = workflow.split("- name: Rebuild Fenok Edge public-safe derivatives", 1)[1]
-        rebuild = rebuild.split("- name: Commit and push KRX derived artifacts", 1)[0]
         report_command = "npm --prefix 100xfenok-next run build:history-gap-daily1y"
         coverage_command = "node scripts/build-fenok-edge-coverage-index.mjs"
-        self.assertEqual(rebuild.count(report_command), 1, "KRX lane reuses the canonical report target exactly once")
-        self.assertLess(rebuild.index(report_command), rebuild.index(coverage_command))
+        self.assertNotIn(report_command, workflow)
+        self.assertNotIn(coverage_command, workflow)
 
-    def test_stockanalysis_workflow_refreshes_daily1y_report_after_signal_materialization(self) -> None:
+        manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
+        initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
+        self.assertEqual(initial_build.count(report_command), 1)
+        self.assertEqual(initial_build.count(coverage_command), 1)
+        self.assertLess(initial_build.index(report_command), initial_build.index(coverage_command))
+
+    def test_central_writer_builds_history_and_signals_before_etf_basket(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
         report_command = "npm --prefix 100xfenok-next run build:history-gap-daily1y"
         signal_command = "node scripts/build-fenok-etf-signals.mjs"
+        basket_command = "node scripts/build-fenok-etf-core-daily-basket.mjs --check"
+        self.assertNotIn(report_command, workflow)
+        self.assertNotIn(signal_command, workflow)
 
-        primary = workflow.split("- name: Materialize Fenok Edge ETF Core Daily Basket candidate", 1)[1]
-        primary = primary.split("- name: Fetch discovered Core Daily Basket delta once", 1)[0]
-        self.assertEqual(primary.count(report_command), 1)
-        self.assertLess(primary.index(signal_command), primary.index(report_command))
+        manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
+        initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
+        self.assertEqual(initial_build.count(report_command), 1)
+        self.assertEqual(initial_build.count(signal_command), 1)
+        self.assertEqual(initial_build.count(basket_command), 1)
+        self.assertLess(initial_build.index(report_command), initial_build.index(basket_command))
+        self.assertLess(initial_build.index(signal_command), initial_build.index(basket_command))
 
-        delta = workflow.split("- name: Rebuild StockAnalysis consumers after Core Basket delta", 1)[1]
-        delta = delta.split("- name: Build Fenok Edge ETF derived readiness", 1)[0]
-        self.assertEqual(delta.count(report_command), 1)
-        self.assertLess(delta.index(signal_command), delta.index(report_command))
-        self.assertEqual(workflow.count(report_command), 2)
+        projection_command = "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/"
+        override_command = "(cd 100xfenok-next && node sync-static-overrides.mjs)"
+        kpi_command = "npm --prefix 100xfenok-next run build:fenok-data-health-kpi"
+        retry_build = manifest.split("          for attempt in 1 2 3; do", 1)[1]
+        self.assertLess(initial_build.index(projection_command), initial_build.index(kpi_command))
+        self.assertLess(retry_build.index(projection_command), retry_build.index(kpi_command))
+        self.assertLess(initial_build.index(projection_command), initial_build.index(override_command))
+        self.assertLess(initial_build.index(override_command), initial_build.index(kpi_command))
+        self.assertLess(retry_build.index(projection_command), retry_build.index(override_command))
+        self.assertLess(retry_build.index(override_command), retry_build.index(kpi_command))
+        self.assertEqual(manifest.count(override_command), 2)
+        self.assertNotIn("sync-public-data.mjs --write", manifest)
+        self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 2)
+        self.assertEqual(manifest.count("100xfenok-next/public/data/stockanalysis/ \\"), 3)
+
+        def path_lines(block: str) -> list[str]:
+            return [line.strip().removesuffix("\\").strip() for line in block.splitlines() if line.strip()]
+
+        initial_paths = path_lines(manifest.split("git diff --quiet \\", 1)[1].split("&& echo", 1)[0])
+        retry_region = manifest.split("          for attempt in 1 2 3; do", 1)[1]
+        retry_paths = path_lines(retry_region.split("if git diff --quiet \\", 1)[1].split("; then", 1)[0])
+        staged_paths = path_lines(retry_region.split("git add -- \\", 1)[1].split("git commit -m", 1)[0])
+        self.assertEqual(initial_paths, retry_paths)
+        self.assertEqual(retry_paths, staged_paths)
 
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")

@@ -12,10 +12,9 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -28,84 +27,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Start from latest main
+        run: |
+          git fetch origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install yfinance
-        run: pip install yfinance
-
       - name: Fetch Nasdaq GIW SOX constituents
-        run: node scripts/fetch-nasdaq-giw-sox-constituents.mjs
-
-      - name: Resolve SOX ticker list
-        id: sox
-        run: |
-          symbols="$(node -e 'const p=require("./data/indices/nasdaq-giw-sox-constituents.json"); console.log((p.symbols||p.rows.map(r=>r.symbol)).join(","));')"
-          test -n "$symbols"
-          echo "symbols=$symbols" >> "$GITHUB_OUTPUT"
-          echo "SOX symbols: $symbols"
-
-      - name: Refresh targeted SOX Yahoo payloads
-        run: >
-          python3 scripts/fetch-yf-finance.py
-          --tickers "${{ steps.sox.outputs.symbols }}"
-          --profile daily
-          --merge-existing
-          --max-age-hours 0
-          --sleep 0.35
-          --ticker-timeout 45
-          --retries 1
-
-      - name: Rebuild SOX-dependent computed data
-        run: |
-          python3 scripts/rebuild-yf-finance-summary.py
-          python3 scripts/build-quarter-closes.py
-          python3 scripts/build-market-facts.py --tickers "${{ steps.sox.outputs.symbols }}"
-          node scripts/build-phase2-closeout-indexes.mjs
-          node scripts/build-fenok-signals.mjs
-          node scripts/build-rim-index.mjs
-          node scripts/generate-product-surface-coverage.mjs
-          python3 scripts/update-manifest.py
-
-      - name: Validate SOX RIM and edge readiness
-        run: |
-          node scripts/test-build-rim-index.mjs
-          node scripts/build-rim-index.mjs --check
-          npm --prefix 100xfenok-next run qa:rim-index
-          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
+        # This lane owns constituent membership only. Yahoo quote/history stays
+        # in the Yahoo lane; a new member is pending until its next natural run.
+        run: node scripts/fetch-nasdaq-giw-sox-constituents.mjs --no-public-mirror
 
       - name: Commit and push SOX daily data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add \
-            data/indices/nasdaq-giw-sox-constituents.json \
-            data/yf/finance \
-            data/yf/quarter_closes.json \
-            data/computed/market_facts \
-            data/computed/stock_action_index.json \
-            data/computed/stock_action_summary.json \
-            data/computed/fenok_signals.json \
-            data/computed/fenok_signals_summary.json \
-            data/computed/rim-index/inputs.json \
-            data/admin/product-surface-coverage.json \
-            data/manifest.json \
-            100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json \
-            100xfenok-next/public/data/yf \
-            100xfenok-next/public/data/computed/market_facts \
-            100xfenok-next/public/data/computed/stock_action_index.json \
-            100xfenok-next/public/data/computed/stock_action_summary.json \
-            100xfenok-next/public/data/computed/fenok_signals_summary.json \
-            100xfenok-next/public/data/computed/rim-index/inputs.json \
-            100xfenok-next/public/data/admin/product-surface-coverage.json \
-            100xfenok-next/public/data/manifest.json
+          git add -- data/indices/nasdaq-giw-sox-constituents.json
           git diff --staged --quiet || git commit -m "data: refresh SOX GIW RIM inputs"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
@@ -122,8 +63,3 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
-
-      - name: Dispatch Worker deploy
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy-worker.yml --ref main

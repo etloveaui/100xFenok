@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import types
@@ -799,26 +800,47 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             sys.argv, sys.stdout = original_argv, original_stdout
         self.assertFalse((self.root / "state").exists())
 
+    def test_local_universe_loader_import_does_not_require_yfinance(self) -> None:
+        code = """
+import builtins
+import runpy
+import sys
+
+real_import = builtins.__import__
+def guarded_import(name, *args, **kwargs):
+    if name == "yfinance":
+        raise ImportError("yfinance must stay collection-only")
+    return real_import(name, *args, **kwargs)
+
+builtins.__import__ = guarded_import
+namespace = runpy.run_path(sys.argv[1])
+assert callable(namespace["load_universe"])
+"""
+        subprocess.run([sys.executable, "-c", code, str(FETCH_PATH)], check=True)
+
     def test_workflow_persists_candidates_before_public_promotion(self) -> None:
         workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
-        candidate_start = workflow.index("      - name: Persist fetched Yahoo candidates")
-        coverage_start = workflow.index("      - name: Rebuild local coverage summary")
-        public_start = workflow.index("      - name: Mirror to public")
-        validation_start = workflow.index("      - name: Validate YF and market audit contracts")
-        promotion_start = workflow.index("      - name: Commit and push")
-        candidate_step = workflow[candidate_start:coverage_start]
+        quarter_start = workflow.index("      - name: Refresh owned Yahoo quarter-close source")
+        candidate_start = workflow.index("      - name: Persist fetched Yahoo source data")
+        failure_dispatch_start = workflow.index("      - name: Publish failed Yahoo attempt evidence")
+        shared_dispatch_start = workflow.index("      - name: Dispatch shared projection rebuild")
+        candidate_step = workflow[candidate_start:failure_dispatch_start]
+        failure_dispatch = workflow[failure_dispatch_start:shared_dispatch_start]
+        shared_dispatch = workflow[shared_dispatch_start:]
 
-        self.assertLess(candidate_start, coverage_start)
-        self.assertLess(coverage_start, public_start)
-        self.assertLess(public_start, validation_start)
-        self.assertLess(validation_start, promotion_start)
-        self.assertIn("git add -- data/yf/finance", candidate_step)
+        self.assertLess(quarter_start, candidate_start)
+        self.assertLess(candidate_start, failure_dispatch_start)
+        self.assertLess(failure_dispatch_start, shared_dispatch_start)
+        self.assertIn("git add -- \\", candidate_step)
+        self.assertIn("data/yf/finance", candidate_step)
         self.assertIn("data/admin/yahoo-batch-quote-history", candidate_step)
-        self.assertIn("git restore --staged -- data/yf/finance/_summary.json", candidate_step)
+        self.assertIn("data/yf/quarter_closes.json", candidate_step)
+        self.assertIn("100xfenok-next/public/data/yf/quarter_closes.json", candidate_step)
+        self.assertIn("git restore --staged --worktree -- data/yf/finance/_summary.json", candidate_step)
         self.assertIn("always()", candidate_step)
-        self.assertNotIn("100xfenok-next/public", candidate_step)
+        self.assertNotIn("100xfenok-next/public/data/yf/finance", candidate_step)
 
-        run_step = workflow[workflow.index("      - name: Run batch fetch"):candidate_start]
+        run_step = workflow[workflow.index("      - name: Run batch fetch"):quarter_start]
         self.assertIn("id: fetch_batch", run_step)
         self.assertIn("--record-batch-state", run_step)
         self.assertIn("--run-id", run_step)
@@ -826,19 +848,26 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIn("--all-shards-run", run_step)
         self.assertIn("controlled_failure_tickers", workflow)
         self.assertIn("--controlled-failure-tickers", run_step)
-        self.assertIn("steps.fetch_batch.outcome == 'failure'", candidate_step)
-        self.assertIn("steps.persist_yahoo_state.outcome == 'success'", candidate_step)
-        self.assertIn("steps.persist_yahoo_state.outputs.persisted == 'true'", candidate_step)
+        self.assertIn("steps.fetch_batch.outcome == 'failure'", failure_dispatch)
+        self.assertIn("steps.quarter_closes.outcome == 'failure'", failure_dispatch)
+        self.assertIn("steps.persist_yahoo_state.outcome == 'success'", failure_dispatch)
+        self.assertIn("steps.persist_yahoo_state.outputs.persisted == 'true'", failure_dispatch)
         self.assertIn('persisted=true', candidate_step)
-        self.assertIn("gh workflow run update-manifest.yml --ref main", candidate_step)
+        self.assertIn("gh workflow run update-manifest.yml --ref main", failure_dispatch)
+        self.assertIn("gh workflow run update-manifest.yml --ref main", shared_dispatch)
+        self.assertNotIn("build-market-facts.py", workflow)
+        self.assertNotIn("build-rim-index.mjs", workflow)
+        self.assertNotIn("data/manifest.json", workflow)
+        self.assertNotIn("100xfenok-next/public", run_step)
+        self.assertIn("python3 scripts/build-quarter-closes.py", workflow[quarter_start:candidate_start])
 
         manifest_workflow = MANIFEST_WORKFLOW_PATH.read_text(encoding="utf-8")
         self.assertIn("      - '!data/yf/**'", manifest_workflow)
         self.assertIn("      - '!data/admin/yahoo-batch-quote-history/**'", manifest_workflow)
-        self.assertIn("id: publish_yahoo_results", workflow)
-        self.assertIn("AUTO_MANIFEST_EXPECTED=true", workflow)
-        final_dispatch = workflow[workflow.index("      - name: Dispatch manifest and RIM rebuild"):]
-        self.assertIn("steps.publish_yahoo_results.outputs.auto_manifest_expected != 'true'", final_dispatch)
+        self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_workflow)
+        self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_workflow)
+        self.assertIn("node scripts/build-rim-index.mjs", manifest_workflow)
+        self.assertNotIn("python3 scripts/build-quarter-closes.py", manifest_workflow)
 
 
 if __name__ == "__main__":

@@ -1,15 +1,16 @@
-# Update Manifest — Automatic manifest.json sync
+# Update Manifest — single writer for shared derived/public projections
 #
-# Triggered whenever data/ or the manifest updater script changes on main.
-# Updates file_count, updated, last_updated, generatedAt, categories, and manifest_version.
+# Source workflows commit only their owned acquisition artifacts. This workflow
+# rebuilds shared market/ETF/edge/RIM/KPI projections from committed source data,
+# then publishes one conflict-free generated-data commit.
 #
 # Infinite loop prevention:
 #   This workflow ignores data/manifest.json, data/computed/**, and the generated
 #   admin usage/product coverage/KPI manifests, so its own generated-data commit can
 #   still trigger deploy without retriggering itself.
 #
-# What is updated:  file_count, updated, last_updated, generatedAt, categories, manifest_version
-# What is NOT touched: version, update_frequency, source, description, recent_changes
+# Manifest fields updated: file_count, updated, last_updated, generatedAt, categories, manifest_version
+# Manifest fields preserved: version, update_frequency, source, description, recent_changes
 
 name: Update Manifest
 
@@ -30,6 +31,10 @@ on:
       - '!data/admin/fenok-s0-finra-occ-mapping-ledger.json'
       - '!data/admin/fenok-edge-etf-daily1y-readiness.json'
       - '!data/admin/fenok-edge-etf-daily1y-fetchable-plan.json'
+      - '!data/admin/fenok-etf-core-daily-basket.json'
+      - '!data/admin/fenok-edge-korea-krx-daily-index.json'
+      - '!data/admin/data-supply-state/**'
+      - '!data/stockanalysis/**'
       - '!data/slickcharts/discovery-summary.json'
       - '!data/slickcharts/membership-changes.json'
       - '!data/slickcharts/universe.json'
@@ -128,16 +133,27 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Rebuild SlickCharts projections from committed source
-        if: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
+      - name: Rebuild and verify SlickCharts projections from committed source
+        env:
+          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
         run: |
-          python scripts/scrapers/membership-tracker.py --quiet
-          node scripts/build-slickcharts-discovery.mjs
+          if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
+            python scripts/scrapers/membership-tracker.py --quiet
+            node scripts/build-slickcharts-discovery.mjs
+          fi
           mkdir -p 100xfenok-next/public/data/slickcharts
-          rsync -a --delete data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+          rsync -a --checksum --delete data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+          python3 scripts/validate-slickcharts-integrity.py
+          diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
 
-      - name: Build stock promotion candidate state
-        run: node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
+      - name: Build shared market and stock promotion state
+        run: |
+          python3 scripts/rebuild-yf-finance-summary.py
+          python3 scripts/build-market-facts.py --no-public-mirror
+          python3 scripts/build-market-source-parity.py
+          npm --prefix 100xfenok-next run build:history-gap-daily1y
+          python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
+          node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
 
       - name: Export computed signals
         run: node scripts/export-computed-signals.mjs
@@ -148,14 +164,19 @@ jobs:
       - name: Build Fenok stock signals
         run: node scripts/build-fenok-signals.mjs
 
-      - name: Build Fenok edge coverage
+      - name: Build RIM and ETF projections
+        run: |
+          node scripts/build-rim-index.mjs
+          node scripts/build-fenok-etf-signals.mjs
+          node scripts/build-fenok-etf-action-index.mjs
+          node scripts/build-fenok-etf-core-daily-basket.mjs --check
+
+      - name: Build Fenok edge projections
         run: |
           node scripts/build-fenok-edge-coverage-index.mjs
           node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
           node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-
-      - name: Build RIM index inputs
-        run: node scripts/build-rim-index.mjs
+          npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
 
       - name: Run update-manifest.py
         # Exit code 1 = warnings only (orphan files / missing folders)
@@ -174,15 +195,36 @@ jobs:
           exit "$status"
 
       - name: Rebuild RIM index inputs after manifest refresh
-        run: node scripts/build-rim-index.mjs
+        run: |
+          node scripts/build-rim-index.mjs
+          npm --prefix 100xfenok-next run build:data-entity-graph
 
       - name: Build product surface coverage
         run: node scripts/generate-product-surface-coverage.mjs
 
+      - name: Project centrally owned public mirrors
+        run: |
+          mkdir -p \
+            100xfenok-next/public/data/yf/finance \
+            100xfenok-next/public/data/stockanalysis \
+            100xfenok-next/public/data/indices \
+            100xfenok-next/public/data/admin \
+            100xfenok-next/public/data/computed/market_facts \
+            100xfenok-next/public/data/computed
+          rsync -a --checksum --delete data/yf/finance/ 100xfenok-next/public/data/yf/finance/
+          rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/
+          cp data/indices/nasdaq-giw-sox-constituents.json 100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json
+          cp data/admin/fenok-edge-korea-krx-daily-index.json 100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json
+          cp data/computed/fenok_occ_options_availability.json 100xfenok-next/public/data/computed/fenok_occ_options_availability.json
+          cp data/computed/market_facts/index.json 100xfenok-next/public/data/computed/market_facts/index.json
+          (cd 100xfenok-next && node sync-static-overrides.mjs)
+
       - name: Build data health KPI
         run: |
           npm --prefix 100xfenok-next run build:fenok-data-health-kpi
+          node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
           npm --prefix 100xfenok-next run qa:fenok-data-health-kpi
+          npm --prefix 100xfenok-next run build:static-route-manifest
 
       - name: Check if manifest changed
         id: check
@@ -193,8 +235,20 @@ jobs:
               data/computed/stock_action_summary.json \
               data/computed/fenok_signals.json \
               data/computed/fenok_signals_summary.json \
+              data/computed/fenok_etf_signals.json \
+              data/computed/fenok_etf_signals_summary.json \
+              data/computed/etf_action_index.json \
+              data/computed/fenok_etf_core_daily_basket_summary.json \
+              data/computed/market_facts/ \
+              data/computed/market_source_parity.json \
+              data/computed/market_data_audit.json \
+              data/computed/entity_graph.json \
+              data/computed/entity_graph_stock_index.json \
+              data/computed/entity_graph_stock_services.json \
               data/computed/market_structure_index.json \
               data/computed/rim-index/inputs.json \
+              data/yf/finance/_summary.json \
+              data/stockanalysis/backfill/history_gap_report_latest.json \
               data/slickcharts/discovery-summary.json \
               data/slickcharts/membership-changes.json \
               data/slickcharts/universe.json \
@@ -203,6 +257,7 @@ jobs:
               data/admin/fenok-s0-finra-occ-mapping-ledger.json \
               data/admin/fenok-edge-etf-daily1y-readiness.json \
               data/admin/fenok-edge-etf-daily1y-fetchable-plan.json \
+              data/admin/fenok-etf-core-daily-basket.json \
               data/admin/data-usage-manifest.json \
               data/admin/product-surface-coverage.json \
               data/admin/fenok-data-health-kpi.json \
@@ -211,14 +266,28 @@ jobs:
               100xfenok-next/public/data/computed/stock_action_index.json \
               100xfenok-next/public/data/computed/stock_action_summary.json \
               100xfenok-next/public/data/computed/fenok_signals_summary.json \
+              100xfenok-next/public/data/computed/fenok_etf_signals_summary.json \
+              100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json \
+              100xfenok-next/public/data/computed/fenok_occ_options_availability.json \
+              100xfenok-next/public/data/computed/market_facts/index.json \
+              100xfenok-next/public/data/computed/market_source_parity.json \
+              100xfenok-next/public/data/computed/market_data_audit.json \
+              100xfenok-next/public/data/computed/entity_graph.json \
+              100xfenok-next/public/data/computed/entity_graph_stock_index.json \
+              100xfenok-next/public/data/computed/entity_graph_stock_services.json \
               100xfenok-next/public/data/computed/market_structure_index.json \
               100xfenok-next/public/data/computed/rim-index/inputs.json \
+              100xfenok-next/public/data/yf/finance/ \
+              100xfenok-next/public/data/stockanalysis/ \
+              100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json \
               100xfenok-next/public/data/slickcharts/ \
+              100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json \
               100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
               100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/admin/product-surface-coverage.json \
               100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
               100xfenok-next/public/data/manifest.json \
+              100xfenok-next/src/generated/static-route-manifest.ts \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
 
@@ -238,18 +307,29 @@ jobs:
             if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
               python scripts/scrapers/membership-tracker.py --quiet
               node scripts/build-slickcharts-discovery.mjs
-              mkdir -p 100xfenok-next/public/data/slickcharts
-              rsync -a --delete data/slickcharts/ 100xfenok-next/public/data/slickcharts/
             fi
+            mkdir -p 100xfenok-next/public/data/slickcharts
+            rsync -a --checksum --delete data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+            python3 scripts/validate-slickcharts-integrity.py
+            diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
 
+            python3 scripts/rebuild-yf-finance-summary.py
+            python3 scripts/build-market-facts.py --no-public-mirror
+            python3 scripts/build-market-source-parity.py
+            npm --prefix 100xfenok-next run build:history-gap-daily1y
+            python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
             node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
             node scripts/export-computed-signals.mjs
             node scripts/build-phase2-closeout-indexes.mjs
             node scripts/build-fenok-signals.mjs
+            node scripts/build-rim-index.mjs
+            node scripts/build-fenok-etf-signals.mjs
+            node scripts/build-fenok-etf-action-index.mjs
+            node scripts/build-fenok-etf-core-daily-basket.mjs --check
             node scripts/build-fenok-edge-coverage-index.mjs
             node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
             node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-            node scripts/build-rim-index.mjs
+            npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
 
             status=0
             BEFORE_SHA="${BEFORE_SHA}" python3 scripts/update-manifest.py || status=$?
@@ -258,9 +338,26 @@ jobs:
               exit "$status"
             fi
             node scripts/build-rim-index.mjs
+            npm --prefix 100xfenok-next run build:data-entity-graph
             node scripts/generate-product-surface-coverage.mjs
+            mkdir -p \
+              100xfenok-next/public/data/yf/finance \
+              100xfenok-next/public/data/stockanalysis \
+              100xfenok-next/public/data/indices \
+              100xfenok-next/public/data/admin \
+              100xfenok-next/public/data/computed/market_facts \
+              100xfenok-next/public/data/computed
+            rsync -a --checksum --delete data/yf/finance/ 100xfenok-next/public/data/yf/finance/
+            rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/
+            cp data/indices/nasdaq-giw-sox-constituents.json 100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json
+            cp data/admin/fenok-edge-korea-krx-daily-index.json 100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json
+            cp data/computed/fenok_occ_options_availability.json 100xfenok-next/public/data/computed/fenok_occ_options_availability.json
+            cp data/computed/market_facts/index.json 100xfenok-next/public/data/computed/market_facts/index.json
+            (cd 100xfenok-next && node sync-static-overrides.mjs)
             npm --prefix 100xfenok-next run build:fenok-data-health-kpi
+            node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
             npm --prefix 100xfenok-next run qa:fenok-data-health-kpi
+            npm --prefix 100xfenok-next run build:static-route-manifest
 
             if git diff --quiet \
                 data/computed/signals.json \
@@ -268,8 +365,20 @@ jobs:
                 data/computed/stock_action_summary.json \
                 data/computed/fenok_signals.json \
                 data/computed/fenok_signals_summary.json \
+                data/computed/fenok_etf_signals.json \
+                data/computed/fenok_etf_signals_summary.json \
+                data/computed/etf_action_index.json \
+                data/computed/fenok_etf_core_daily_basket_summary.json \
+                data/computed/market_facts/ \
+                data/computed/market_source_parity.json \
+                data/computed/market_data_audit.json \
+                data/computed/entity_graph.json \
+                data/computed/entity_graph_stock_index.json \
+                data/computed/entity_graph_stock_services.json \
                 data/computed/market_structure_index.json \
                 data/computed/rim-index/inputs.json \
+                data/yf/finance/_summary.json \
+                data/stockanalysis/backfill/history_gap_report_latest.json \
                 data/slickcharts/discovery-summary.json \
                 data/slickcharts/membership-changes.json \
                 data/slickcharts/universe.json \
@@ -278,6 +387,7 @@ jobs:
                 data/admin/fenok-s0-finra-occ-mapping-ledger.json \
                 data/admin/fenok-edge-etf-daily1y-readiness.json \
                 data/admin/fenok-edge-etf-daily1y-fetchable-plan.json \
+                data/admin/fenok-etf-core-daily-basket.json \
                 data/admin/data-usage-manifest.json \
                 data/admin/product-surface-coverage.json \
                 data/admin/fenok-data-health-kpi.json \
@@ -286,26 +396,52 @@ jobs:
                 100xfenok-next/public/data/computed/stock_action_index.json \
                 100xfenok-next/public/data/computed/stock_action_summary.json \
                 100xfenok-next/public/data/computed/fenok_signals_summary.json \
+                100xfenok-next/public/data/computed/fenok_etf_signals_summary.json \
+                100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json \
+                100xfenok-next/public/data/computed/fenok_occ_options_availability.json \
+                100xfenok-next/public/data/computed/market_facts/index.json \
+                100xfenok-next/public/data/computed/market_source_parity.json \
+                100xfenok-next/public/data/computed/market_data_audit.json \
+                100xfenok-next/public/data/computed/entity_graph.json \
+                100xfenok-next/public/data/computed/entity_graph_stock_index.json \
+                100xfenok-next/public/data/computed/entity_graph_stock_services.json \
                 100xfenok-next/public/data/computed/market_structure_index.json \
                 100xfenok-next/public/data/computed/rim-index/inputs.json \
+                100xfenok-next/public/data/yf/finance/ \
+                100xfenok-next/public/data/stockanalysis/ \
+                100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json \
                 100xfenok-next/public/data/slickcharts/ \
+                100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json \
                 100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
                 100xfenok-next/public/data/admin/data-usage-manifest.json \
                 100xfenok-next/public/data/admin/product-surface-coverage.json \
                 100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
-                100xfenok-next/public/data/manifest.json; then
+                100xfenok-next/public/data/manifest.json \
+                100xfenok-next/src/generated/static-route-manifest.ts; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
               exit 0
             fi
 
-            git add \
+            git add -- \
               data/computed/signals.json \
               data/computed/stock_action_index.json \
               data/computed/stock_action_summary.json \
               data/computed/fenok_signals.json \
               data/computed/fenok_signals_summary.json \
+              data/computed/fenok_etf_signals.json \
+              data/computed/fenok_etf_signals_summary.json \
+              data/computed/etf_action_index.json \
+              data/computed/fenok_etf_core_daily_basket_summary.json \
+              data/computed/market_facts/ \
+              data/computed/market_source_parity.json \
+              data/computed/market_data_audit.json \
+              data/computed/entity_graph.json \
+              data/computed/entity_graph_stock_index.json \
+              data/computed/entity_graph_stock_services.json \
               data/computed/market_structure_index.json \
               data/computed/rim-index/inputs.json \
+              data/yf/finance/_summary.json \
+              data/stockanalysis/backfill/history_gap_report_latest.json \
               data/slickcharts/discovery-summary.json \
               data/slickcharts/membership-changes.json \
               data/slickcharts/universe.json \
@@ -314,6 +450,7 @@ jobs:
               data/admin/fenok-s0-finra-occ-mapping-ledger.json \
               data/admin/fenok-edge-etf-daily1y-readiness.json \
               data/admin/fenok-edge-etf-daily1y-fetchable-plan.json \
+              data/admin/fenok-etf-core-daily-basket.json \
               data/admin/data-usage-manifest.json \
               data/admin/product-surface-coverage.json \
               data/admin/fenok-data-health-kpi.json \
@@ -322,14 +459,28 @@ jobs:
               100xfenok-next/public/data/computed/stock_action_index.json \
               100xfenok-next/public/data/computed/stock_action_summary.json \
               100xfenok-next/public/data/computed/fenok_signals_summary.json \
+              100xfenok-next/public/data/computed/fenok_etf_signals_summary.json \
+              100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json \
+              100xfenok-next/public/data/computed/fenok_occ_options_availability.json \
+              100xfenok-next/public/data/computed/market_facts/index.json \
+              100xfenok-next/public/data/computed/market_source_parity.json \
+              100xfenok-next/public/data/computed/market_data_audit.json \
+              100xfenok-next/public/data/computed/entity_graph.json \
+              100xfenok-next/public/data/computed/entity_graph_stock_index.json \
+              100xfenok-next/public/data/computed/entity_graph_stock_services.json \
               100xfenok-next/public/data/computed/market_structure_index.json \
               100xfenok-next/public/data/computed/rim-index/inputs.json \
+              100xfenok-next/public/data/yf/finance/ \
+              100xfenok-next/public/data/stockanalysis/ \
+              100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json \
               100xfenok-next/public/data/slickcharts/ \
+              100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json \
               100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
               100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/admin/product-surface-coverage.json \
               100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
-              100xfenok-next/public/data/manifest.json
+              100xfenok-next/public/data/manifest.json \
+              100xfenok-next/src/generated/static-route-manifest.ts
             git commit -m "chore: update computed signals and manifest"
 
             if git push origin HEAD:main; then

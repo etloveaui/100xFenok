@@ -34,8 +34,6 @@ import sys
 import time
 from pathlib import Path
 
-import yfinance as yf
-
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT_DIR = ROOT / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
@@ -691,6 +689,10 @@ def yahoo_symbol(ticker):
 
 
 def fetch_ticker(ticker, profile="full", include_options=False, include_shares_full=False):
+    # Keep local-only universe/summary consumers importable without the network
+    # client. Collection workflows install yfinance before invoking this path.
+    import yfinance as yf
+
     start = time.perf_counter()
     t = yf.Ticker(yahoo_symbol(ticker))
     data = {}
