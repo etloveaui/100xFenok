@@ -444,6 +444,7 @@ function compactFenokEdgePublicMirror() {
       scored_public_etf: index.etf_universe?.scored_public_etf ?? null,
       public_done_claim_allowed: index.etf_universe?.public_done_claim_allowed === true,
       evidence_based_readiness: index.etf_universe?.evidence_based_readiness ?? null,
+      core_daily_basket: index.etf_universe?.core_daily_basket ?? null,
       caveat: index.etf_universe?.caveat ?? null,
     },
     source_availability: {

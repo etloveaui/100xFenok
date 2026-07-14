@@ -216,8 +216,10 @@ const invalidSoxFreshness = soxInputFreshness(
 assert.equal(invalidSoxFreshness.business_age_days, null);
 assert.equal(invalidSoxFreshness.status, "refresh_recommended");
 
+const currentSoxFixtureAsOf = readJson(path.join(dataRoot, "indices/nasdaq-giw-sox-constituents.json")).as_of;
+assert.match(currentSoxFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "SOX fixture source date");
 const payload = buildRimIndexInputs({
-  generatedAt: "2026-07-12T01:41:29.000Z",
+  generatedAt: `${currentSoxFixtureAsOf}T23:59:59.000Z`,
 });
 const validation = validateRimIndexInputs(payload);
 
