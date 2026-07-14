@@ -1,0 +1,81 @@
+{
+  "schema_version": "stockanalysis-etf-detail-reconcile/v1",
+  "source": "stockanalysis",
+  "generated_at": "2026-07-14T14:52:12Z",
+  "operation": "reconcile_missing_etf_details",
+  "method": "probe every selected missing ticker against StockAnalysis overview and holdings; write an honest stockanalysis_partial detail when the overview exists, including a named holdings-surface omission and null source_as_of with an explicit reason when provider dates are unavailable; classify only overview HTTP 400/404 as provider_absent; keep all other responses unresolved and fail the run",
+  "counts": {
+    "initial_missing": 771,
+    "selected": 5,
+    "fetchable_fetched": 5,
+    "provider_absent": 0,
+    "unresolved": 0,
+    "remaining_missing": 766
+  },
+  "selected_tickers": [
+    "AAAU",
+    "AAOX",
+    "AAPB",
+    "AAPE",
+    "AAPR"
+  ],
+  "provider_absent_tickers": [],
+  "unresolved_tickers": [],
+  "results": [
+    {
+      "ticker": "AAAU",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AAAU.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AAOX",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AAOX.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AAPB",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AAPB.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AAPE",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AAPE.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "AAPR",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/AAPR.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    }
+  ]
+}
