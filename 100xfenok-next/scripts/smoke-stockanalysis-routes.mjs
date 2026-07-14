@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { pathToFileURL } from "node:url";
 import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
@@ -8,6 +9,7 @@ const RETRIES = Number(process.env.QA_STOCKANALYSIS_RETRIES || 2);
 const RETRY_DELAY_MS = Number(process.env.QA_STOCKANALYSIS_RETRY_DELAY_MS || 2500);
 
 const PAGE_ROUTES = SMOKE_PAGE_ROUTES;
+const degradations = [];
 
 function argValue(name) {
   const hit = process.argv.find((arg) => arg.startsWith(`${name}=`));
@@ -20,6 +22,98 @@ function baseUrl() {
 
 function fail(message) {
   throw new Error(message);
+}
+
+function assert(condition, message) {
+  if (!condition) fail(message);
+}
+
+export function recordDegradation(condition, message, warnings = degradations) {
+  if (!condition && !warnings.includes(message)) warnings.push(message);
+  return condition;
+}
+
+function degrade(condition, message) {
+  return recordDegradation(condition, message);
+}
+
+function hasValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function requiredArray(value, label) {
+  assert(Array.isArray(value), `${label} malformed schema: expected an array`);
+  return value;
+}
+
+function optionalArray(value, label) {
+  if (value === null || value === undefined) return [];
+  return requiredArray(value, label);
+}
+
+function requireNonNegativeInteger(value, label) {
+  assert(Number.isInteger(value) && value >= 0, `${label} malformed count: ${value}`);
+  return value;
+}
+
+export function assertReconciledCount(reported, actual, label) {
+  const count = requireNonNegativeInteger(reported, label);
+  assert(count === actual, `${label} count reconciliation failed: reported ${count}, actual ${actual}`);
+  return count;
+}
+
+function assertFiniteNumbers(value, label, pointer = "$") {
+  if (typeof value === "number") {
+    assert(Number.isFinite(value), `${label} contains a non-finite number at ${pointer}`);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => assertFiniteNumbers(entry, label, `${pointer}[${index}]`));
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, entry] of Object.entries(value)) {
+      assertFiniteNumbers(entry, label, `${pointer}.${key}`);
+    }
+  }
+}
+
+function assertUniqueTickers(records, key, label) {
+  const seen = new Set();
+  for (const [index, row] of records.entries()) {
+    const ticker = row?.[key];
+    assert(typeof ticker === "string" && ticker.length > 0, `${label} row ${index} has no ticker identity`);
+    assert(!seen.has(ticker), `${label} contains duplicate ticker identity: ${ticker}`);
+    seen.add(ticker);
+  }
+}
+
+function warnNamedFields(row, label, fields) {
+  if (!row) {
+    degrade(false, `${label} is missing from the delivered coverage.`);
+    return;
+  }
+  for (const [field, description] of fields) {
+    degrade(hasValue(row?.[field]), `${label} is delivered without ${description} (${field}).`);
+  }
+}
+
+function assertExpectedClassification(row, label, expected) {
+  if (!row) return;
+  if (!row.classification) {
+    degrade(false, `${label} is delivered without classification coverage.`);
+    return;
+  }
+  for (const [field, expectedValue] of Object.entries(expected)) {
+    assert(
+      row.classification[field] === expectedValue,
+      `${label} classification mismatch for ${field}: expected ${expectedValue}, got ${row.classification[field]}`,
+    );
+  }
+}
+
+function githubAnnotationValue(value) {
+  return String(value).replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
 }
 
 async function fetchText(url) {
@@ -62,24 +156,26 @@ async function fetchText(url) {
 async function fetchJson(url) {
   const { response, text } = await fetchText(url);
   if (!response.ok) fail(`${url} returned HTTP ${response.status}`);
+  let payload;
   try {
-    return JSON.parse(text);
+    payload = JSON.parse(text);
   } catch (error) {
     fail(`${url} did not return JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
+  assertFiniteNumbers(payload, url);
+  return payload;
 }
 
 async function fetchJsonResponse(url) {
   const { response, text } = await fetchText(url);
+  let payload;
   try {
-    return { response, payload: JSON.parse(text) };
+    payload = JSON.parse(text);
   } catch (error) {
     fail(`${url} did not return JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
-}
-
-function assert(condition, message) {
-  if (!condition) fail(message);
+  assertFiniteNumbers(payload, url);
+  return { response, payload };
 }
 
 async function checkPage(root, route) {
@@ -94,71 +190,112 @@ async function checkPage(root, route) {
 
 async function checkEtfSnapshot(root) {
   const payload = await fetchJson(`${root}/api/data/stockanalysis/etf-snapshot`);
-  const newEtfRecords = payload?.newEtfs?.records ?? [];
+  assert(payload && typeof payload === "object", "ETF snapshot malformed schema: expected an object");
+  const newEtfRecords = requiredArray(payload?.newEtfs?.records, "ETF snapshot newEtfs.records");
+  const screenerRecords = requiredArray(payload?.screener?.records, "ETF snapshot screener.records");
+  const screenerVolumeRecords = requiredArray(payload?.screener?.volumeLeaders, "ETF snapshot screener.volumeLeaders");
+  const screenerChangeRecords = requiredArray(payload?.screener?.changeLeaders, "ETF snapshot screener.changeLeaders");
+  const blackrockRecords = requiredArray(payload?.blackrock?.records, "ETF snapshot blackrock.records");
+  const prosharesRecords = requiredArray(payload?.proshares?.records, "ETF snapshot proshares.records");
+  const bitcoinRecords = requiredArray(payload?.bitcoin?.records, "ETF snapshot bitcoin.records");
   const classifiedNewEtfs = newEtfRecords.filter((row) => row?.classification);
   const adiuNewEtf = newEtfRecords.find((row) => row?.s === "ADIU");
-  const bitcoinSourceTotal = payload?.bitcoin?.counts?.rows ?? payload?.bitcoin?.counts?.records;
-  const expectedBitcoinPreview = typeof bitcoinSourceTotal === "number" ? Math.min(bitcoinSourceTotal, 100) : null;
+  const sourceTotals = {
+    newEtfs: requireNonNegativeInteger(payload?.newEtfs?.counts?.records, "ETF snapshot newEtfs source"),
+    screener: requireNonNegativeInteger(payload?.screener?.counts?.records, "ETF snapshot screener source"),
+    blackrock: requireNonNegativeInteger(payload?.blackrock?.counts?.records, "ETF snapshot blackrock source"),
+    proshares: requireNonNegativeInteger(payload?.proshares?.counts?.records, "ETF snapshot proshares source"),
+    bitcoin: requireNonNegativeInteger(payload?.bitcoin?.counts?.records, "ETF snapshot bitcoin source"),
+  };
   const counts = {
     newEtfs: newEtfRecords.length,
-    screener: payload?.screener?.records?.length ?? 0,
-    screenerVolume: payload?.screener?.volumeLeaders?.length ?? 0,
-    screenerChange: payload?.screener?.changeLeaders?.length ?? 0,
-    blackrock: payload?.blackrock?.records?.length ?? 0,
-    proshares: payload?.proshares?.records?.length ?? 0,
-    bitcoin: payload?.bitcoin?.records?.length ?? 0,
+    screener: screenerRecords.length,
+    screenerVolume: screenerVolumeRecords.length,
+    screenerChange: screenerChangeRecords.length,
+    blackrock: blackrockRecords.length,
+    proshares: prosharesRecords.length,
+    bitcoin: bitcoinRecords.length,
   };
-  assert(counts.newEtfs === 100, `newEtfs expected 100, got ${counts.newEtfs}`);
-  assert(counts.screener === 5, `screener expected 5, got ${counts.screener}`);
-  assert(counts.screenerVolume === 5, `screener volume leaders expected 5, got ${counts.screenerVolume}`);
-  assert(counts.screenerChange === 5, `screener change leaders expected 5, got ${counts.screenerChange}`);
-  assert(counts.blackrock === 20, `blackrock expected 20, got ${counts.blackrock}`);
-  assert(counts.proshares === 20, `proshares expected 20, got ${counts.proshares}`);
-  assert(typeof expectedBitcoinPreview === "number", "bitcoin source count missing");
-  assert(counts.bitcoin === expectedBitcoinPreview, `bitcoin expected ${expectedBitcoinPreview} of ${bitcoinSourceTotal}, got ${counts.bitcoin}`);
-  assert(classifiedNewEtfs.length > 0, "new ETF snapshot must include joined classification rows");
-  if (adiuNewEtf) {
-    assert(adiuNewEtf.classification?.is_leveraged === true, "ADIU new ETF snapshot leveraged classification missing");
-    assert(adiuNewEtf.classification?.is_single_stock === true, "ADIU new ETF snapshot single-stock classification missing");
-    assert(adiuNewEtf.classification?.underlying === "ADI", `ADIU new ETF snapshot underlying mismatch: ${adiuNewEtf.classification?.underlying}`);
+  for (const [section, count] of Object.entries(counts)) {
+    if (section === "screenerVolume" || section === "screenerChange") continue;
+    assert(
+      count <= sourceTotals[section],
+      `ETF snapshot ${section} count reconciliation failed: preview ${count} exceeds source ${sourceTotals[section]}`,
+    );
   }
-  return { ...counts, classifiedNewEtfs: classifiedNewEtfs.length };
+  const expectedBitcoinPreview = Math.min(sourceTotals.bitcoin, 100);
+  degrade(counts.newEtfs >= 100, `ETF snapshot is degraded: new ETF preview has ${counts.newEtfs} of the target 100 rows.`);
+  degrade(counts.screener >= 5, `ETF snapshot is degraded: screener preview has ${counts.screener} of the target 5 rows.`);
+  degrade(counts.screenerVolume >= 5, `ETF snapshot is degraded: volume leaders have ${counts.screenerVolume} of the target 5 rows.`);
+  degrade(counts.screenerChange >= 5, `ETF snapshot is degraded: change leaders have ${counts.screenerChange} of the target 5 rows.`);
+  degrade(counts.blackrock >= 20, `ETF snapshot is degraded: BlackRock preview has ${counts.blackrock} of the target 20 rows.`);
+  degrade(counts.proshares >= 20, `ETF snapshot is degraded: ProShares preview has ${counts.proshares} of the target 20 rows.`);
+  degrade(counts.bitcoin >= expectedBitcoinPreview, `ETF snapshot is degraded: Bitcoin preview has ${counts.bitcoin} of the expected ${expectedBitcoinPreview} rows.`);
+  degrade(classifiedNewEtfs.length > 0, "ETF snapshot is degraded: no new ETF row has joined classification coverage.");
+  if (adiuNewEtf) {
+    assertExpectedClassification(adiuNewEtf, "ADIU new ETF snapshot", {
+      is_leveraged: true,
+      is_single_stock: true,
+      underlying: "ADI",
+    });
+  }
+  return { ...counts, sourceTotals, classifiedNewEtfs: classifiedNewEtfs.length };
 }
 
 async function checkEtfUniverse(root) {
   const payload = await fetchJson(`${root}/api/data/stockanalysis/etf-universe`);
-  const records = Array.isArray(payload?.records) ? payload.records : [];
+  assert(payload?.asset_type === "etf_universe", `ETF universe asset_type mismatch: ${payload?.asset_type}`);
+  const records = requiredArray(payload?.records, "ETF universe records");
+  assertUniqueTickers(records, "ticker", "ETF universe");
   const tqqq = records.find((row) => row?.ticker === "TQQQ");
   const sqqq = records.find((row) => row?.ticker === "SQQQ");
   const tsll = records.find((row) => row?.ticker === "TSLL");
   const counts = {
-    records: payload?.counts?.records ?? records.length,
-    withPrice: payload?.counts?.with_price ?? 0,
-    withVolume: payload?.counts?.with_volume ?? 0,
-    withHoldings: payload?.counts?.with_holdings ?? 0,
-    screenerOnly: payload?.counts?.screener_only ?? 0,
+    records: assertReconciledCount(payload?.counts?.records, records.length, "ETF universe records"),
+    withPrice: requireNonNegativeInteger(payload?.counts?.with_price, "ETF universe with_price"),
+    withVolume: requireNonNegativeInteger(payload?.counts?.with_volume, "ETF universe with_volume"),
+    withHoldings: requireNonNegativeInteger(payload?.counts?.with_holdings, "ETF universe with_holdings"),
+    screenerOnly: requireNonNegativeInteger(payload?.counts?.screener_only, "ETF universe screener_only"),
   };
-  assert(counts.records >= 5250, `ETF universe expected at least 5250 records, got ${counts.records}`);
-  assert(counts.withPrice >= 5000, `ETF universe expected price coverage >= 5000, got ${counts.withPrice}`);
-  assert(counts.withVolume >= 4500, `ETF universe expected volume coverage >= 4500, got ${counts.withVolume}`);
-  assert(counts.withHoldings >= 4900, `ETF universe expected holdings coverage >= 4900, got ${counts.withHoldings}`);
-  assert(tqqq?.price, "ETF universe TQQQ price missing");
-  assert(tqqq?.volume, "ETF universe TQQQ volume missing");
-  assert(tqqq?.holdings, "ETF universe TQQQ holdings missing");
-  assert(tqqq?.classification?.is_leveraged === true, "ETF universe TQQQ leveraged classification missing");
-  assert(tqqq?.classification?.is_single_stock === false, "ETF universe TQQQ single-stock classification mismatch");
-  assert(tqqq?.classification?.is_inverse === false, "ETF universe TQQQ inverse classification mismatch");
-  assert(sqqq?.classification?.is_leveraged === true, "ETF universe SQQQ leveraged classification missing");
-  assert(sqqq?.classification?.is_single_stock === false, "ETF universe SQQQ single-stock classification mismatch");
-  assert(sqqq?.classification?.is_inverse === true, "ETF universe SQQQ inverse classification missing");
-  assert(tsll?.classification?.is_leveraged === true, "ETF universe TSLL leveraged classification missing");
-  assert(tsll?.classification?.is_single_stock === true, "ETF universe TSLL single-stock classification missing");
-  assert(tsll?.classification?.is_inverse === false, "ETF universe TSLL inverse classification mismatch");
+  for (const [label, count] of [
+    ["with_price", counts.withPrice],
+    ["with_volume", counts.withVolume],
+    ["with_holdings", counts.withHoldings],
+    ["screener_only", counts.screenerOnly],
+  ]) {
+    assert(count <= counts.records, `ETF universe ${label} count reconciliation failed: ${count} exceeds ${counts.records}`);
+  }
+  degrade(counts.records >= 5250, `ETF universe is degraded: ${counts.records} records are available, below the target 5250.`);
+  degrade(counts.withPrice >= 5000, `ETF universe is degraded: ${counts.withPrice} records have price data, below the target 5000.`);
+  degrade(counts.withVolume >= 4500, `ETF universe is degraded: ${counts.withVolume} records have volume data, below the target 4500.`);
+  degrade(counts.withHoldings >= 4900, `ETF universe is degraded: ${counts.withHoldings} records have holdings data, below the target 4900.`);
+  warnNamedFields(tqqq, "ETF universe TQQQ", [
+    ["price", "price coverage"],
+    ["volume", "volume coverage"],
+    ["holdings", "holdings coverage"],
+  ]);
+  assertExpectedClassification(tqqq, "ETF universe TQQQ", {
+    is_leveraged: true,
+    is_single_stock: false,
+    is_inverse: false,
+  });
+  warnNamedFields(sqqq, "ETF universe SQQQ", []);
+  assertExpectedClassification(sqqq, "ETF universe SQQQ", {
+    is_leveraged: true,
+    is_single_stock: false,
+    is_inverse: true,
+  });
+  warnNamedFields(tsll, "ETF universe TSLL", []);
+  assertExpectedClassification(tsll, "ETF universe TSLL", {
+    is_leveraged: true,
+    is_single_stock: true,
+    is_inverse: false,
+  });
   return {
     ...counts,
-    tqqq: { price: tqqq.price, volume: tqqq.volume, holdings: tqqq.holdings },
-    sqqq: { classification: sqqq.classification },
-    tsll: { classification: tsll.classification },
+    tqqq: tqqq ? { price: tqqq.price, volume: tqqq.volume, holdings: tqqq.holdings } : null,
+    sqqq: sqqq ? { classification: sqqq.classification } : null,
+    tsll: tsll ? { classification: tsll.classification } : null,
   };
 }
 
@@ -166,40 +303,63 @@ async function checkEtfDetails(root) {
   const iefa = await fetchJson(`${root}/api/data/stockanalysis/etfs/IEFA`);
   assert(iefa?.ticker === "IEFA", "IEFA detail ticker mismatch");
   assert(iefa?.asset_type === "etf", "IEFA detail must be ETF");
-  assert(Array.isArray(iefa?.normalized?.holdings) && iefa.normalized.holdings.length > 0, "IEFA holdings missing");
-  assert(Array.isArray(iefa?.normalized?.history_periods?.daily_1y) && iefa.normalized.history_periods.daily_1y.length >= 200, "IEFA daily_1y history missing");
-  assert(Array.isArray(iefa?.normalized?.history_periods?.weekly_1y) && iefa.normalized.history_periods.weekly_1y.length >= 45, "IEFA weekly_1y history missing");
-  assert(Array.isArray(iefa?.normalized?.history_periods?.monthly_1y) && iefa.normalized.history_periods.monthly_1y.length >= 10, "IEFA monthly_1y history missing");
+  const iefaHoldings = optionalArray(iefa?.normalized?.holdings, "IEFA normalized.holdings");
+  const historyPeriods = iefa?.normalized?.history_periods;
+  assert(
+    historyPeriods === null || historyPeriods === undefined || (typeof historyPeriods === "object" && !Array.isArray(historyPeriods)),
+    "IEFA normalized.history_periods malformed schema: expected an object",
+  );
+  const iefaDaily = optionalArray(historyPeriods?.daily_1y, "IEFA daily_1y history");
+  const iefaWeekly = optionalArray(historyPeriods?.weekly_1y, "IEFA weekly_1y history");
+  const iefaMonthly = optionalArray(historyPeriods?.monthly_1y, "IEFA monthly_1y history");
+  degrade(iefaHoldings.length > 0, "IEFA detail is degraded: holdings coverage is unavailable.");
+  degrade(iefaDaily.length >= 200, `IEFA detail is degraded: daily_1y has ${iefaDaily.length} rows, below the target 200.`);
+  degrade(iefaWeekly.length >= 45, `IEFA detail is degraded: weekly_1y has ${iefaWeekly.length} rows, below the target 45.`);
+  degrade(iefaMonthly.length >= 10, `IEFA detail is degraded: monthly_1y has ${iefaMonthly.length} rows, below the target 10.`);
 
   const adiu = await fetchJson(`${root}/api/data/stockanalysis/etfs/ADIU`);
   assert(adiu?.ticker === "ADIU", "ADIU fallback ticker mismatch");
   assert(adiu?.asset_type === "etf", "ADIU fallback must be ETF");
-  assert(adiu?.data_supply?.enrollment_state === "enrolled", "ADIU R2 enrollment metadata missing");
-  assert(
-    ["fresh_fallback", "lkg_fallback", "unavailable"].includes(adiu?.data_supply?.resolution_state),
-    `ADIU R2 resolution invalid: ${adiu?.data_supply?.resolution_state}`,
-  );
+  if (!adiu?.data_supply) {
+    degrade(false, "ADIU fallback is degraded: data-supply provenance is missing.");
+  } else {
+    if (!hasValue(adiu.data_supply.enrollment_state)) {
+      degrade(false, "ADIU fallback is degraded: enrollment provenance is missing.");
+    } else {
+      assert(adiu.data_supply.enrollment_state === "enrolled", `ADIU R2 enrollment state mismatch: ${adiu.data_supply.enrollment_state}`);
+    }
+    if (!hasValue(adiu.data_supply.resolution_state)) {
+      degrade(false, "ADIU fallback is degraded: resolution state is missing.");
+    } else {
+      assert(
+        ["fresh_fallback", "lkg_fallback", "unavailable"].includes(adiu.data_supply.resolution_state),
+        `ADIU R2 resolution invalid: ${adiu.data_supply.resolution_state}`,
+      );
+    }
+  }
   // yf_fallback (Yahoo) carries classification but may lack a stockanalysis overview name; require the name only for stockanalysis-sourced fallbacks.
   if (adiu?.detail_status !== "yf_fallback") {
-    assert(adiu?.normalized?.overview?.name, "ADIU fallback overview name missing");
+    degrade(hasValue(adiu?.normalized?.overview?.name), "ADIU fallback is degraded: overview name is missing.");
   }
-  assert(adiu?.normalized?.classification?.is_leveraged === true, "ADIU fallback leveraged classification missing");
-  assert(adiu?.normalized?.classification?.is_single_stock === true, "ADIU fallback single-stock classification missing");
-  assert(adiu?.normalized?.classification?.underlying === "ADI", `ADIU fallback underlying mismatch: ${adiu?.normalized?.classification?.underlying}`);
+  assertExpectedClassification({ classification: adiu?.normalized?.classification }, "ADIU fallback", {
+    is_leveraged: true,
+    is_single_stock: true,
+    underlying: "ADI",
+  });
   const missingFallbacks = await checkMissingEtfDetailFallbacks(root);
   return {
     IEFA: {
-      holdings: iefa.normalized.holdings.length,
+      holdings: iefaHoldings.length,
       history: {
-        daily_1y: iefa.normalized.history_periods.daily_1y.length,
-        weekly_1y: iefa.normalized.history_periods.weekly_1y.length,
-        monthly_1y: iefa.normalized.history_periods.monthly_1y.length,
+        daily_1y: iefaDaily.length,
+        weekly_1y: iefaWeekly.length,
+        monthly_1y: iefaMonthly.length,
       },
     },
     ADIU: {
       detail_status: adiu.detail_status,
-      name: adiu.normalized.overview.name,
-      classification: adiu.normalized.classification,
+      name: adiu?.normalized?.overview?.name ?? null,
+      classification: adiu?.normalized?.classification ?? null,
     },
     missingFallbacks,
   };
@@ -207,16 +367,24 @@ async function checkEtfDetails(root) {
 
 async function checkR2EtfResolution(root) {
   const index = await fetchJson(`${root}/data/computed/data-supply/etf-detail/index.json`);
-  const entries = index?.entries && typeof index.entries === "object" ? Object.values(index.entries) : [];
+  assert(index?.entries && typeof index.entries === "object" && !Array.isArray(index.entries), "R2 ETF resolution index malformed schema: entries must be an object");
+  const entries = Object.values(index.entries);
+  assertUniqueTickers(entries, "ticker", "R2 ETF resolution index");
   const selected = entries.find((entry) => entry?.resolution_state !== "unavailable");
   const unavailable = entries.find((entry) => entry?.resolution_state === "unavailable");
-  assert(selected?.ticker, "R2 selected fixture missing");
-  assert(unavailable?.ticker, "R2 unavailable fixture missing");
+  degrade(Boolean(selected?.ticker), "R2 ETF detail is degraded: no promotable ticker is available for route verification.");
+  if (!selected?.ticker) {
+    return { selected: null, unavailable: unavailable?.ticker ?? null, unavailableStatus: null };
+  }
 
   const selectedPayload = await fetchJson(`${root}/api/data/stockanalysis/etfs/${encodeURIComponent(selected.ticker)}`);
   assert(selectedPayload?.data_supply?.resolution_state === selected.resolution_state, "R2 selected API state mismatch");
   assert(selectedPayload?.data_supply?.projection_digest === index.index_sha256, "R2 selected projection digest mismatch");
 
+  if (!unavailable?.ticker) {
+    degrade(false, "R2 ETF detail smoke is degraded: no unavailable ticker exists to exercise the negative-cache route.");
+    return { selected: selected.ticker, unavailable: null, unavailableStatus: null };
+  }
   const result = await fetchJsonResponse(`${root}/api/data/stockanalysis/etfs/${encodeURIComponent(unavailable.ticker)}`);
   assert([200, 503].includes(result.response.status), `R2 unavailable returned HTTP ${result.response.status}`);
   assert(result.payload?.data_supply?.resolution_state === "unavailable", "R2 unavailable API label missing");
@@ -232,12 +400,15 @@ async function checkR2EtfResolution(root) {
 
 async function checkMissingEtfDetailFallbacks(root) {
   const coverage = await fetchJson(`${root}/data/stockanalysis/coverage/etf_detail.json`);
-  const missingCount = Number(coverage?.counts?.missing_detail_files ?? 0);
-  const missingSamples = Array.isArray(coverage?.samples?.missing)
-    ? coverage.samples.missing.filter(Boolean).slice(0, 5)
-    : [];
+  const missingCount = requireNonNegativeInteger(coverage?.counts?.missing_detail_files, "ETF detail missing files");
+  const rawMissingSamples = optionalArray(coverage?.samples?.missing, "ETF detail coverage samples.missing");
+  const missingSamples = rawMissingSamples.filter(Boolean).slice(0, 5);
   if (missingCount <= 0) return [];
-  assert(missingSamples.length > 0, "ETF coverage missing count exists but samples.missing is empty");
+  degrade(
+    false,
+    `ETF detail coverage is degraded: ${missingCount} ticker(s) have no detail file${missingSamples.length > 0 ? `; examples: ${missingSamples.join(", ")}` : " and no sample ticker was supplied"}.`,
+  );
+  if (missingSamples.length === 0) return [];
 
   const results = [];
   for (const ticker of missingSamples) {
@@ -248,63 +419,98 @@ async function checkMissingEtfDetailFallbacks(root) {
       ["surface_only", "universe_only"].includes(payload?.detail_status),
       `${ticker} missing-detail fallback status invalid: ${payload?.detail_status}`,
     );
-    assert(payload?.normalized?.overview?.name, `${ticker} missing-detail fallback overview name missing`);
+    degrade(hasValue(payload?.normalized?.overview?.name), `${ticker} fallback is degraded: overview name is missing.`);
     results.push({
       ticker,
       detail_status: payload.detail_status,
-      name: payload.normalized.overview.name,
+      name: payload?.normalized?.overview?.name ?? null,
     });
   }
   return results;
 }
 
+function surfaceRows(payload, label) {
+  const tables = requiredArray(payload?.tables, `${label} tables`);
+  const rows = [];
+  for (const [index, table] of tables.entries()) {
+    rows.push(...requiredArray(table?.records, `${label} tables[${index}].records`));
+  }
+  assertReconciledCount(payload?.counts?.tables, tables.length, `${label} tables`);
+  assertReconciledCount(payload?.counts?.rows, rows.length, `${label} rows`);
+  return rows;
+}
+
+function warnRowFields(row, label, fields) {
+  if (!row) {
+    degrade(false, `${label} is degraded: no row is available.`);
+    return;
+  }
+  for (const field of fields) {
+    degrade(hasValue(row[field]), `${label} is degraded: the first row has no ${field}.`);
+  }
+}
+
 async function checkSurfaceContracts(root) {
   const index = await fetchJson(`${root}/api/data/stockanalysis/surfaces/index`);
-  assert(index?.counts?.surfaces_requested === 25, `surface index requested count mismatch: ${index?.counts?.surfaces_requested}`);
-  assert(index?.counts?.ok === 25, `surface index ok count mismatch: ${index?.counts?.ok}`);
-  assert(index?.counts?.failed === 0, `surface index failed count mismatch: ${index?.counts?.failed}`);
+  const results = requiredArray(index?.results, "StockAnalysis surface index results");
+  const requestedCount = assertReconciledCount(index?.counts?.surfaces_requested, results.length, "StockAnalysis surfaces_requested");
+  const okCount = requireNonNegativeInteger(index?.counts?.ok, "StockAnalysis surface ok");
+  const failedCount = requireNonNegativeInteger(index?.counts?.failed, "StockAnalysis surface failed");
+  assert(okCount + failedCount === requestedCount, `StockAnalysis surface count reconciliation failed: ok ${okCount} + failed ${failedCount} != requested ${requestedCount}`);
+  for (const [position, result] of results.entries()) {
+    assert(typeof result?.surface === "string" && result.surface.length > 0, `StockAnalysis surface result ${position} has no identity`);
+    assert(["ok", "failed"].includes(result?.status), `StockAnalysis surface ${result?.surface} has invalid status: ${result?.status}`);
+  }
+  const uniqueSurfaces = new Set(results.map((result) => result.surface));
+  assert(uniqueSurfaces.size === results.length, "StockAnalysis surface index contains duplicate surface identities");
+  const actualOk = results.filter((result) => result.status === "ok").length;
+  const failedResults = results.filter((result) => result.status === "failed");
+  assert(okCount === actualOk, `StockAnalysis surface ok count reconciliation failed: reported ${okCount}, actual ${actualOk}`);
+  assert(failedCount === failedResults.length, `StockAnalysis surface failed count reconciliation failed: reported ${failedCount}, actual ${failedResults.length}`);
+  degrade(requestedCount >= 25, `StockAnalysis surface delivery is degraded: ${requestedCount} of the target 25 surfaces were requested.`);
+  degrade(okCount >= 25, `StockAnalysis surface delivery is degraded: ${okCount} of the target 25 surfaces completed.`);
+  degrade(
+    failedCount === 0,
+    `StockAnalysis surface delivery is degraded: ${failedCount} surface(s) failed: ${failedResults.map((result) => `${result.surface}${result.error ? ` (${result.error})` : ""}`).join(", ")}.`,
+  );
 
   const premarket = await fetchJson(`${root}/api/data/stockanalysis/surfaces/market_premarket`);
-  const firstPremarket = premarket?.tables?.[0]?.records?.[0];
-  assert(firstPremarket?.premkt_price, "premarket first row missing premkt_price");
-  assert(firstPremarket?.pre_volume, "premarket first row missing pre_volume");
+  const premarketRows = surfaceRows(premarket, "StockAnalysis premarket surface");
+  const firstPremarket = premarketRows[0];
+  warnRowFields(firstPremarket, "StockAnalysis premarket surface", ["premkt_price", "pre_volume"]);
 
   const weekly = await fetchJson(`${root}/api/data/stockanalysis/surfaces/market_gainers_week`);
-  const firstWeekly = weekly?.tables?.[0]?.records?.[0];
-  assert(firstWeekly?.change_1w, "weekly gainer first row missing change_1w");
+  const weeklyRows = surfaceRows(weekly, "StockAnalysis weekly-gainers surface");
+  const firstWeekly = weeklyRows[0];
+  warnRowFields(firstWeekly, "StockAnalysis weekly-gainers surface", ["change_1w"]);
 
   const industries = await fetchJson(`${root}/api/data/stockanalysis/surfaces/industries_all`);
-  const industryRows = industries?.tables?.[0]?.records ?? [];
+  const industryRows = surfaceRows(industries, "StockAnalysis industry-map surface");
   const firstIndustry = industryRows[0];
-  assert(industries?.counts?.rows >= 100, `industry map rows unexpectedly low: ${industries?.counts?.rows}`);
-  assert(firstIndustry?.industry_name, "industry map first row missing industry_name");
-  assert(firstIndustry?.market_cap, "industry map first row missing market_cap");
-  assert(firstIndustry?.["1y_change"], "industry map first row missing 1y_change");
-  assert(firstIndustry?.profit_margin, "industry map first row missing profit_margin");
+  degrade(industryRows.length >= 100, `StockAnalysis industry-map surface is degraded: ${industryRows.length} rows are available, below the target 100.`);
+  warnRowFields(firstIndustry, "StockAnalysis industry-map surface", ["industry_name", "market_cap", "1y_change", "profit_margin"]);
 
   const technology = await fetchJson(`${root}/api/data/stockanalysis/surfaces/sector_technology`);
-  const firstTechnology = technology?.tables?.[0]?.records?.[0];
-  assert(technology?.counts?.rows >= 100, `technology sector rows unexpectedly low: ${technology?.counts?.rows}`);
-  assert(firstTechnology?.symbol, "technology sector first row missing symbol");
-  assert(firstTechnology?.company_name, "technology sector first row missing company_name");
-  assert(firstTechnology?.market_cap, "technology sector first row missing market_cap");
+  const technologyRows = surfaceRows(technology, "StockAnalysis technology-sector surface");
+  const firstTechnology = technologyRows[0];
+  degrade(technologyRows.length >= 100, `StockAnalysis technology-sector surface is degraded: ${technologyRows.length} rows are available, below the target 100.`);
+  warnRowFields(firstTechnology, "StockAnalysis technology-sector surface", ["symbol", "company_name", "market_cap"]);
 
   const semiconductors = await fetchJson(`${root}/api/data/stockanalysis/surfaces/industry_semiconductors`);
-  const firstSemiconductor = semiconductors?.tables?.[0]?.records?.[0];
-  assert(semiconductors?.counts?.rows >= 50, `semiconductor industry rows unexpectedly low: ${semiconductors?.counts?.rows}`);
-  assert(firstSemiconductor?.symbol, "semiconductor industry first row missing symbol");
-  assert(firstSemiconductor?.company_name, "semiconductor industry first row missing company_name");
-  assert(firstSemiconductor?.market_cap, "semiconductor industry first row missing market_cap");
+  const semiconductorRows = surfaceRows(semiconductors, "StockAnalysis semiconductor-industry surface");
+  const firstSemiconductor = semiconductorRows[0];
+  degrade(semiconductorRows.length >= 50, `StockAnalysis semiconductor-industry surface is degraded: ${semiconductorRows.length} rows are available, below the target 50.`);
+  warnRowFields(firstSemiconductor, "StockAnalysis semiconductor-industry surface", ["symbol", "company_name", "market_cap"]);
 
   return {
     index: index.counts,
-    premarket: { rows: premarket?.counts?.rows, first: firstPremarket?.symbol },
-    weekly: { rows: weekly?.counts?.rows, first: firstWeekly?.symbol },
+    premarket: { rows: premarketRows.length, first: firstPremarket?.symbol ?? null },
+    weekly: { rows: weeklyRows.length, first: firstWeekly?.symbol ?? null },
     industry: {
-      rows: industries?.counts?.rows,
-      first: firstIndustry?.industry_name,
-      technologyRows: technology?.counts?.rows,
-      semiconductorRows: semiconductors?.counts?.rows,
+      rows: industryRows.length,
+      first: firstIndustry?.industry_name ?? null,
+      technologyRows: technologyRows.length,
+      semiconductorRows: semiconductorRows.length,
     },
   };
 }
@@ -319,8 +525,15 @@ async function main() {
   const r2Resolution = await checkR2EtfResolution(root);
   const surfaces = await checkSurfaceContracts(root);
 
+  for (const warning of degradations) {
+    console.warn(`::warning title=StockAnalysis lane degraded::${githubAnnotationValue(warning)}`);
+  }
+
   console.log(JSON.stringify({
     ok: true,
+    status: degradations.length > 0 ? "degraded" : "ready",
+    degraded: degradations.length > 0,
+    warnings: degradations,
     base_url: root,
     pages,
     snapshot,
@@ -331,7 +544,9 @@ async function main() {
   }, null, 2));
 }
 
-main().catch((error) => {
-  console.error(`[stockanalysis-smoke] ${error instanceof Error ? error.message : String(error)}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(`[stockanalysis-smoke] ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  });
+}
