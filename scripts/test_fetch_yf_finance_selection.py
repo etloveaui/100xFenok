@@ -57,6 +57,221 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
+    def _daily_payload(self, ticker: str) -> dict:
+        return self.fetcher.decorate_finance_payload(
+            ticker=ticker,
+            profile="daily",
+            fetched_at="2026-07-14T01:00:00Z",
+            data={
+                "info": {
+                    "symbol": ticker,
+                    "quoteType": "EQUITY",
+                    "regularMarketTime": 1783990800,
+                },
+                "history_1y": [{"date": "2026-07-14", "Close": 10}],
+            },
+        )
+
+    def _run_low_rate_failure(self, *, error: str, retain_lkg: bool) -> tuple[int, dict, dict, str]:
+        failed_ticker = "FAIL"
+        tickers = [failed_ticker, *[f"OK{index:02d}" for index in range(10)]]
+        self.fetcher.load_universe_sources = lambda **_kwargs: {
+            ticker: ["test_fixture"] for ticker in tickers
+        }
+        if retain_lkg:
+            write_json(self.fetcher.OUT_DIR / f"{failed_ticker}.json", self._daily_payload(failed_ticker))
+
+        def fake_fetch(ticker, **_kwargs):
+            if ticker == failed_ticker:
+                return (
+                    None,
+                    0,
+                    error,
+                    {
+                        "attempts_used": 1,
+                        "failures": [{"attempt": 1, "error": error}],
+                        "latency_ms": 0,
+                    },
+                )
+            return (
+                self._daily_payload(ticker)["data"],
+                1,
+                None,
+                {"attempts_used": 1, "failures": [], "latency_ms": 1},
+            )
+
+        self.fetcher.fetch_with_retry = fake_fetch
+        stdout = io.StringIO()
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py",
+                "--tickers",
+                ",".join(tickers),
+                "--record-batch-state",
+                "--run-id",
+                "semantic-exit-proof",
+                "--run-attempt",
+                "1",
+                "--event-name",
+                "workflow_dispatch",
+                "--sleep",
+                "0",
+                "--retries",
+                "0",
+            ]
+            sys.stdout = stdout
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        state = json.loads(
+            (self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{failed_ticker}.json").read_text()
+        )
+        index = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text())
+        return raised.exception.code, state, index, stdout.getvalue()
+
+    def test_low_rate_failure_with_lkg_retry_and_kpi_name_exits_zero(self) -> None:
+        code, state, index, output = self._run_low_rate_failure(
+            error="isolated provider coverage gap",
+            retain_lkg=True,
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertTrue(state["retry"])
+        self.assertIn("FAIL", index["retry_symbols"])
+        self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
+        self.assertIn("FAIL", {row["symbol"] for row in index["lkg_details"]})
+        self.assertIn("[degraded]", output)
+
+    def test_low_rate_data_loss_without_lkg_exits_nonzero(self) -> None:
+        code, state, index, output = self._run_low_rate_failure(
+            error="isolated provider coverage gap",
+            retain_lkg=False,
+        )
+
+        self.assertEqual(code, 2)
+        self.assertEqual(state["resolution_state"], "unavailable")
+        self.assertTrue(state["retry"])
+        self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
+        self.assertIn("[corrupt]", output)
+
+    def test_low_rate_systemic_break_exits_nonzero_even_with_lkg(self) -> None:
+        code, state, _index, output = self._run_low_rate_failure(
+            error="HTTP 429 Too Many Requests",
+            retain_lkg=True,
+        )
+
+        self.assertEqual(code, 2)
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertTrue(state["retry"])
+        self.assertIn("systemic", output)
+
+    def test_korean_provider_gap_with_stale_lkg_remains_degraded_not_corrupt(self) -> None:
+        ticker = "012510.KS"
+        payload = self._daily_payload(ticker)
+        write_json(self.fetcher.OUT_DIR / f"{ticker}.json", payload)
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT,
+            self.fetcher.OUT_DIR,
+        )
+        run = {
+            "run_id": "korean-provider-gap",
+            "run_attempt": 1,
+            "event_name": "schedule",
+            "schedule": "20 23 * * 1-5",
+            "natural": True,
+            "shard": "0/5",
+            "observed_at": "2026-07-14T01:00:00Z",
+        }
+        store.bootstrap_existing(
+            {ticker},
+            {ticker: ["market_facts"]},
+            run,
+            source_age_business_days={ticker: 20},
+            max_source_business_days=6,
+        )
+        store.record_failure(
+            ticker,
+            "empty payload",
+            run,
+            ["market_facts"],
+            {
+                "attempts_used": 2,
+                "failures": [
+                    {"attempt": 1, "error": "empty payload"},
+                    {"attempt": 2, "error": "empty payload"},
+                ],
+                "latency_ms": 0,
+            },
+        )
+        index = store.rebuild_index({ticker}, run)
+        assessment = self.fetcher.yahoo_failure_exit_assessment(
+            [{"ticker": ticker, "error": "empty payload", "failures": []}],
+            store,
+            index,
+        )
+
+        self.assertEqual(assessment["exit_code"], 0)
+        self.assertEqual(index["counts"]["lkg"], 1)
+        self.assertEqual(index["counts"]["retry"], 1)
+        self.assertIn(ticker, index["stale_groups"][0]["symbols"])
+
+    def test_auth_and_decode_markers_are_systemic_without_a_percentage_gate(self) -> None:
+        for error, category in [
+            ("HTTP 401 Unauthorized", "authentication"),
+            ("JSONDecodeError: Expecting value", "decode"),
+        ]:
+            with self.subTest(error=error):
+                reasons = self.fetcher._systemic_failure_reasons(
+                    [{"ticker": "FAIL", "error": error, "failures": []}]
+                )
+                self.assertEqual(len(reasons), 1)
+                self.assertIn(category, reasons[0])
+
+    def test_current_failure_is_prioritized_into_bounded_kpi_lkg_details(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT,
+            self.fetcher.OUT_DIR,
+        )
+        old_run = {
+            "run_id": "old-run",
+            "run_attempt": 1,
+            "event_name": "schedule",
+            "schedule": "20 23 * * 1-5",
+            "natural": True,
+            "shard": "0/5",
+            "observed_at": "2026-07-13T01:00:00Z",
+        }
+        current_run = {**old_run, "run_id": "current-run", "observed_at": "2026-07-14T01:00:00Z"}
+        active = {"ZZZ"}
+        for index in range(25):
+            ticker = f"OLD{index:02d}"
+            active.add(ticker)
+            write_json(self.fetcher.OUT_DIR / f"{ticker}.json", self._daily_payload(ticker))
+            store.record_failure(
+                ticker,
+                "historical isolated failure",
+                old_run,
+                ["test_fixture"],
+                {"attempts_used": 1, "failures": [], "latency_ms": 0},
+            )
+        write_json(self.fetcher.OUT_DIR / "ZZZ.json", self._daily_payload("ZZZ"))
+        store.record_failure(
+            "ZZZ",
+            "current isolated failure",
+            current_run,
+            ["test_fixture"],
+            {"attempts_used": 1, "failures": [], "latency_ms": 0},
+        )
+
+        index = store.rebuild_index(active, current_run)
+
+        self.assertEqual(len(index["lkg_details"]), 20)
+        self.assertEqual(index["lkg_details"][0]["symbol"], "ZZZ")
+
     def test_stockanalysis_etfs_parse_records_tables_and_aum_priority(self) -> None:
         write_json(
             self.fetcher.STOCKANALYSIS_ETF_UNIVERSE,
@@ -827,7 +1042,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         finally:
             sys.argv, sys.stdout = original_argv, original_stdout
 
-        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(raised.exception.code, 0)
         self.assertEqual(hashlib.sha256(truth.read_bytes()).hexdigest(), before)
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / "AAPL.json").read_text())
         index = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text())

@@ -24,6 +24,7 @@ import argparse
 import atexit
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
+import hashlib
 import json
 import math
 from numbers import Number
@@ -1103,6 +1104,124 @@ def validate_controlled_failure_scope(injected, selected, *, event_name, record_
         raise ValueError("controlled failures must be a subset of explicit --tickers")
 
 
+SYSTEMIC_FAILURE_MARKERS = {
+    "authentication": (
+        "http 401", "status 401", "unauthorized", "authentication failed",
+        "http 403", "status 403", "forbidden", "invalid crumb", "cookie",
+    ),
+    "rate_limit": (
+        "http 429", "status 429", "error 429", "429 client error",
+        "too many requests", "rate limit",
+        "rate-limit", "ratelimit", "yfratelimiterror",
+    ),
+    "decode": (
+        "jsondecodeerror", "json decode", "failed to decode", "decode error",
+        "invalid json", "expecting value", "unterminated string", "malformed json",
+    ),
+}
+
+
+def _failure_text(row):
+    values = [str(row.get("error") or "")]
+    for failure in row.get("failures") or []:
+        if isinstance(failure, dict):
+            values.append(str(failure.get("error") or ""))
+    return " ".join(values).lower()
+
+
+def _systemic_failure_reasons(errors):
+    reasons = []
+    for row in errors:
+        text = _failure_text(row)
+        for category, markers in SYSTEMIC_FAILURE_MARKERS.items():
+            if any(marker in text for marker in markers):
+                reasons.append(f"{row.get('ticker') or 'unknown'} indicates systemic {category} failure")
+                break
+    return reasons
+
+
+def _load_failure_state(state_store, ticker):
+    try:
+        payload = json.loads(state_store._state_path(ticker).read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _valid_retained_lkg(state_store, ticker, state):
+    if not isinstance(state, dict) or state.get("resolution_state") != "lkg_primary":
+        return False
+    lkg = state.get("lkg") if isinstance(state.get("lkg"), dict) else None
+    current = state.get("current") if isinstance(state.get("current"), dict) else None
+    expected_path = f"data/admin/yahoo-batch-quote-history/lkg/{ticker}.json"
+    if (
+        not lkg
+        or not current
+        or lkg.get("path") != expected_path
+        or current.get("path") != expected_path
+        or current.get("payload_sha256") != lkg.get("payload_sha256")
+    ):
+        return False
+    lkg_path = state_store._lkg_path(ticker)
+    try:
+        payload_bytes = lkg_path.read_bytes()
+        payload = json.loads(payload_bytes)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return False
+    return (
+        isinstance(payload, dict)
+        and payload.get("ticker") == ticker
+        and isinstance(payload.get("data"), dict)
+        and any(value is not None for value in payload["data"].values())
+        and hashlib.sha256(payload_bytes).hexdigest() == lkg.get("payload_sha256")
+    )
+
+
+def yahoo_failure_exit_assessment(errors, state_store, state_index):
+    if not errors:
+        return {"exit_code": 0, "tickers": [], "reasons": []}
+
+    tickers = sorted({str(row.get("ticker") or "") for row in errors if row.get("ticker")})
+    reasons = _systemic_failure_reasons(errors)
+    if state_store is None or not isinstance(state_index, dict):
+        reasons.append("Yahoo batch state/KPI evidence is unavailable")
+        return {"exit_code": 2, "tickers": tickers, "reasons": reasons}
+
+    current_attempt = state_index.get("current_attempt") if isinstance(state_index.get("current_attempt"), dict) else {}
+    named_attempts = {
+        str(row.get("ticker"))
+        for row in current_attempt.get("errors") or []
+        if isinstance(row, dict) and row.get("ticker")
+    }
+    retry_symbols = {str(value) for value in state_index.get("retry_symbols") or []}
+    kpi_names = {
+        str(row.get("symbol"))
+        for row in state_index.get("lkg_details") or []
+        if isinstance(row, dict) and row.get("symbol")
+    }
+    for group in state_index.get("stale_groups") or []:
+        if isinstance(group, dict):
+            kpi_names.update(str(value) for value in group.get("symbols") or [])
+
+    for ticker in tickers:
+        state = _load_failure_state(state_store, ticker)
+        if not _valid_retained_lkg(state_store, ticker, state):
+            reasons.append(f"{ticker} lost data or has no valid retained LKG")
+        if not isinstance(state, dict) or state.get("retry") is not True or ticker not in retry_symbols:
+            reasons.append(f"{ticker} did not join the retry set")
+        latest_failure = state.get("latest_failure") if isinstance(state, dict) else None
+        if (
+            not isinstance(latest_failure, dict)
+            or str(latest_failure.get("run_id")) != str(current_attempt.get("run_id"))
+            or int(latest_failure.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
+        ):
+            reasons.append(f"{ticker} LKG evidence is not bound to the current attempt")
+        if ticker not in named_attempts or ticker not in kpi_names:
+            reasons.append(f"{ticker} is not named in the Yahoo KPI evidence")
+
+    return {"exit_code": 2 if reasons else 0, "tickers": tickers, "reasons": reasons}
+
+
 def usable_existing_payload(path):
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -1350,13 +1469,14 @@ def main():
         return
 
     finalize_state = None
+    finalized_index = None
     if state_store:
-        finalized = {"done": False}
+        finalized = {"done": False, "index": None}
         inflight = {"ticker": None}
 
         def finalize_state(abnormal=True):
             if finalized["done"]:
-                return
+                return finalized["index"]
             batch_failure = None
             if abnormal:
                 ticker = inflight["ticker"]
@@ -1373,8 +1493,13 @@ def main():
                         batch_failure = f"batch terminated and in-flight failure evidence could not be written: {exc}"
                 else:
                     batch_failure = "batch terminated before normal completion"
-            state_store.rebuild_index(active_universe, run_context, batch_failure=batch_failure)
+            finalized["index"] = state_store.rebuild_index(
+                active_universe,
+                run_context,
+                batch_failure=batch_failure,
+            )
             finalized["done"] = True
+            return finalized["index"]
 
         atexit.register(finalize_state)
         if hasattr(signal, "SIGTERM"):
@@ -1532,10 +1657,18 @@ def main():
     }
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
     if finalize_state:
-        finalize_state(False)
+        finalized_index = finalize_state(False)
     print(f"\n[summary] ok={len(ok)} failed={len(errors)} total={total_s}s")
     if errors:
-        sys.exit(2 if len(errors) > len(tickers) * 0.1 else 0)
+        assessment = yahoo_failure_exit_assessment(errors, state_store, finalized_index)
+        if assessment["exit_code"] == 0:
+            print(
+                "[degraded] Yahoo failures retained valid LKG, joined the retry set, "
+                f"and are named in KPI evidence: {', '.join(assessment['tickers'])}"
+            )
+        else:
+            print(f"[corrupt] Yahoo batch integrity failure: {'; '.join(assessment['reasons'])}")
+        sys.exit(assessment["exit_code"])
 
 
 if __name__ == "__main__":

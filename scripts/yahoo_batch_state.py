@@ -619,6 +619,15 @@ class YahooBatchStateStore:
         succeeded = sum(row.get("outcome") in {"fresh", "pending_history", "unavailable"} for row in current_attempts)
         failed = sum(row.get("outcome") == "failed" for row in current_attempts) + (1 if batch_failure else 0)
         skipped = sum(row.get("outcome") in {"skipped_fresh", "skipped_retry_not_recovered"} for row in current_attempts)
+        current_failure_symbols = {
+            row["ticker"]
+            for row in current_attempts
+            if row.get("outcome") == "failed" and row.get("ticker")
+        }
+        prioritized_lkg_details = sorted(
+            lkg_details,
+            key=lambda row: (row.get("symbol") not in current_failure_symbols, row.get("symbol") or ""),
+        )
         oldest = min(source_rows) if source_rows else (None, None)
         latest_failure = max(failures, key=lambda row: str(row.get("observed_at") or "")) if failures else None
         if batch_failure:
@@ -641,7 +650,7 @@ class YahooBatchStateStore:
             "pending_symbols": pending_symbols[:20],
             "lkg_symbols": lkg_symbols[:20],
             "pending_details": pending_details[:20],
-            "lkg_details": lkg_details[:20],
+            "lkg_details": prioritized_lkg_details[:20],
             "stale_groups": [
                 {
                     "source_as_of": key[0] or None,
