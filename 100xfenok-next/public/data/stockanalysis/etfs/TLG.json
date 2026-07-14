@@ -3,10 +3,10 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "TLG",
-  "fetched_at": "2026-07-09T09:24:48Z",
+  "fetched_at": "2026-07-14T00:01:47Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/TLG/holdings",
-    "overview": "/api/symbol/e/TLG/overview",
+    "holdings": "/etf/tlg/holdings/__data.json",
+    "overview": "/etf/tlg/__data.json",
     "quote": "/api/quotes/e/TLG",
     "history_periods": {
       "daily_1y": "/api/symbol/e/TLG/history?range=1Y&period=Daily",
@@ -17,19 +17,39 @@
       "monthly_5y": "/api/symbol/e/TLG/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "NVDA",
         "name": "NVIDIA Corporation",
-        "weight_pct": 17.27,
+        "weight_pct": 17.0,
         "shares": 113489,
         "raw": {
           "no": 1,
           "n": "NVIDIA Corporation",
           "s": "$NVDA",
-          "as": "17.27%",
+          "as": "17.00%",
           "sh": "113,489"
         }
       },
@@ -37,13 +57,13 @@
         "rank": 2,
         "symbol": "GOOGL",
         "name": "Alphabet Inc.",
-        "weight_pct": 8.94,
+        "weight_pct": 9.09,
         "shares": 35057,
         "raw": {
           "no": 2,
           "n": "Alphabet Inc.",
           "s": "$GOOGL",
-          "as": "8.94%",
+          "as": "9.09%",
           "sh": "35,057"
         }
       },
@@ -51,13 +71,13 @@
         "rank": 3,
         "symbol": "MSFT",
         "name": "Microsoft Corporation",
-        "weight_pct": 6.93,
+        "weight_pct": 7.24,
         "shares": 25858,
         "raw": {
           "no": 3,
           "n": "Microsoft Corporation",
           "s": "$MSFT",
-          "as": "6.93%",
+          "as": "7.24%",
           "sh": "25,858"
         }
       },
@@ -65,13 +85,13 @@
         "rank": 4,
         "symbol": "AVGO",
         "name": "Broadcom Inc.",
-        "weight_pct": 6.72,
+        "weight_pct": 6.69,
         "shares": 23510,
         "raw": {
           "no": 4,
           "n": "Broadcom Inc.",
           "s": "$AVGO",
-          "as": "6.72%",
+          "as": "6.69%",
           "sh": "23,510"
         }
       },
@@ -79,13 +99,13 @@
         "rank": 5,
         "symbol": "AMZN",
         "name": "Amazon.com, Inc.",
-        "weight_pct": 6.31,
+        "weight_pct": 6.51,
         "shares": 37155,
         "raw": {
           "no": 5,
           "n": "Amazon.com, Inc.",
           "s": "$AMZN",
-          "as": "6.31%",
+          "as": "6.51%",
           "sh": "37,155"
         }
       },
@@ -93,56 +113,56 @@
         "rank": 6,
         "symbol": "ANET",
         "name": "Arista Networks, Inc.",
-        "weight_pct": 5.61,
+        "weight_pct": 5.35,
         "shares": 44034,
         "raw": {
           "no": 6,
           "n": "Arista Networks, Inc.",
           "s": "$ANET",
-          "as": "5.61%",
+          "as": "5.35%",
           "sh": "44,034"
         }
       },
       {
         "rank": 7,
-        "symbol": "GEV",
-        "name": "GE Vernova Inc.",
-        "weight_pct": 4.41,
-        "shares": 5368,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 4.37,
+        "shares": 10377,
         "raw": {
           "no": 7,
-          "n": "GE Vernova Inc.",
-          "s": "$GEV",
-          "as": "4.41%",
-          "sh": "5,368"
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "4.37%",
+          "sh": "10,377"
         }
       },
       {
         "rank": 8,
         "symbol": "HWM",
         "name": "Howmet Aerospace Inc.",
-        "weight_pct": 4.3,
+        "weight_pct": 4.34,
         "shares": 21044,
         "raw": {
           "no": 8,
           "n": "Howmet Aerospace Inc.",
           "s": "$HWM",
-          "as": "4.30%",
+          "as": "4.34%",
           "sh": "21,044"
         }
       },
       {
         "rank": 9,
-        "symbol": "META",
-        "name": "Meta Platforms, Inc.",
-        "weight_pct": 4.27,
-        "shares": 10377,
+        "symbol": "GEV",
+        "name": "GE Vernova Inc.",
+        "weight_pct": 4.16,
+        "shares": 5368,
         "raw": {
           "no": 9,
-          "n": "Meta Platforms, Inc.",
-          "s": "$META",
-          "as": "4.27%",
-          "sh": "10,377"
+          "n": "GE Vernova Inc.",
+          "s": "$GEV",
+          "as": "4.16%",
+          "sh": "5,368"
         }
       },
       {
@@ -161,30 +181,30 @@
       },
       {
         "rank": 11,
-        "symbol": "ORCL",
-        "name": "Oracle Corporation",
+        "symbol": "GE",
+        "name": "GE Aerospace",
         "weight_pct": 2.23,
-        "shares": 17433,
+        "shares": 8353,
         "raw": {
           "no": 11,
-          "n": "Oracle Corporation",
-          "s": "$ORCL",
+          "n": "GE Aerospace",
+          "s": "$GE",
           "as": "2.23%",
-          "sh": "17,433"
+          "sh": "8,353"
         }
       },
       {
         "rank": 12,
-        "symbol": "P",
-        "name": "Everpure, Inc.",
-        "weight_pct": 2.21,
-        "shares": 39349,
+        "symbol": "V",
+        "name": "Visa Inc.",
+        "weight_pct": 2.2,
+        "shares": 8931,
         "raw": {
           "no": 12,
-          "n": "Everpure, Inc.",
-          "s": "$P",
-          "as": "2.21%",
-          "sh": "39,349"
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "2.20%",
+          "sh": "8,931"
         }
       },
       {
@@ -203,57 +223,57 @@
       },
       {
         "rank": 14,
-        "symbol": "GE",
-        "name": "GE Aerospace",
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
         "weight_pct": 2.16,
-        "shares": 8353,
+        "shares": 17433,
         "raw": {
           "no": 14,
-          "n": "GE Aerospace",
-          "s": "$GE",
+          "n": "Oracle Corporation",
+          "s": "$ORCL",
           "as": "2.16%",
-          "sh": "8,353"
+          "sh": "17,433"
         }
       },
       {
         "rank": 15,
-        "symbol": "!OTC/SMERY",
-        "name": "Siemens Energy AG",
-        "weight_pct": 2.16,
-        "shares": 15159,
+        "symbol": "P",
+        "name": "Everpure, Inc.",
+        "weight_pct": 2.13,
+        "shares": 39349,
         "raw": {
           "no": 15,
-          "n": "Siemens Energy AG",
-          "s": "!otc/SMERY",
-          "as": "2.16%",
-          "sh": "15,159"
+          "n": "Everpure, Inc.",
+          "s": "$P",
+          "as": "2.13%",
+          "sh": "39,349"
         }
       },
       {
         "rank": 16,
-        "symbol": "V",
-        "name": "Visa Inc.",
-        "weight_pct": 2.13,
-        "shares": 8931,
+        "symbol": "!OTC/SMERY",
+        "name": "Siemens Energy AG",
+        "weight_pct": 2.08,
+        "shares": 75795,
         "raw": {
           "no": 16,
-          "n": "Visa Inc.",
-          "s": "$V",
-          "as": "2.13%",
-          "sh": "8,931"
+          "n": "Siemens Energy AG",
+          "s": "!otc/SMERY",
+          "as": "2.08%",
+          "sh": "75,795"
         }
       },
       {
         "rank": 17,
         "symbol": "NFLX",
         "name": "Netflix, Inc.",
-        "weight_pct": 2.02,
+        "weight_pct": 2.07,
         "shares": 37950,
         "raw": {
           "no": 17,
           "n": "Netflix, Inc.",
           "s": "$NFLX",
-          "as": "2.02%",
+          "as": "2.07%",
           "sh": "37,950"
         }
       },
@@ -261,24 +281,38 @@
         "rank": 18,
         "symbol": "DXCM",
         "name": "DexCom, Inc.",
-        "weight_pct": 1.79,
+        "weight_pct": 1.83,
         "shares": 35535,
         "raw": {
           "no": 18,
           "n": "DexCom, Inc.",
           "s": "$DXCM",
-          "as": "1.79%",
+          "as": "1.83%",
           "sh": "35,535"
         }
       },
       {
         "rank": 19,
+        "symbol": "BKNG",
+        "name": "Booking Holdings Inc.",
+        "weight_pct": 1.69,
+        "shares": 13376,
+        "raw": {
+          "no": 19,
+          "n": "Booking Holdings Inc.",
+          "s": "$BKNG",
+          "as": "1.69%",
+          "sh": "13,376"
+        }
+      },
+      {
+        "rank": 20,
         "symbol": "CDNS",
         "name": "Cadence Design Systems, Inc.",
         "weight_pct": 1.68,
         "shares": 5919,
         "raw": {
-          "no": 19,
+          "no": 20,
           "n": "Cadence Design Systems, Inc.",
           "s": "$CDNS",
           "as": "1.68%",
@@ -286,30 +320,16 @@
         }
       },
       {
-        "rank": 20,
-        "symbol": "BKNG",
-        "name": "Booking Holdings Inc.",
-        "weight_pct": 1.64,
-        "shares": 13376,
-        "raw": {
-          "no": 20,
-          "n": "Booking Holdings Inc.",
-          "s": "$BKNG",
-          "as": "1.64%",
-          "sh": "13,376"
-        }
-      },
-      {
         "rank": 21,
         "symbol": "MA",
         "name": "Mastercard Incorporated",
-        "weight_pct": 1.51,
+        "weight_pct": 1.56,
         "shares": 4270,
         "raw": {
           "no": 21,
           "n": "Mastercard Incorporated",
           "s": "$MA",
-          "as": "1.51%",
+          "as": "1.56%",
           "sh": "4,270"
         }
       },
@@ -317,55 +337,55 @@
         "rank": 22,
         "symbol": "SPOT",
         "name": "Spotify Technology S.A.",
-        "weight_pct": 1.5,
+        "weight_pct": 1.53,
         "shares": 4481,
         "raw": {
           "no": 22,
           "n": "Spotify Technology S.A.",
           "s": "$SPOT",
-          "as": "1.50%",
+          "as": "1.53%",
           "sh": "4,481"
         }
       },
       {
         "rank": 23,
-        "symbol": "COHR",
-        "name": "Coherent Corp.",
-        "weight_pct": 1.35,
-        "shares": 4355,
+        "symbol": "KEYS",
+        "name": "Keysight Technologies, Inc.",
+        "weight_pct": 1.27,
+        "shares": 4814,
         "raw": {
           "no": 23,
-          "n": "Coherent Corp.",
-          "s": "$COHR",
-          "as": "1.35%",
-          "sh": "4,355"
+          "n": "Keysight Technologies, Inc.",
+          "s": "$KEYS",
+          "as": "1.27%",
+          "sh": "4,814"
         }
       },
       {
         "rank": 24,
-        "symbol": "KEYS",
-        "name": "Keysight Technologies, Inc.",
-        "weight_pct": 1.31,
-        "shares": 4814,
+        "symbol": "COHR",
+        "name": "Coherent Corp.",
+        "weight_pct": 1.24,
+        "shares": 4355,
         "raw": {
           "no": 24,
-          "n": "Keysight Technologies, Inc.",
-          "s": "$KEYS",
-          "as": "1.31%",
-          "sh": "4,814"
+          "n": "Coherent Corp.",
+          "s": "$COHR",
+          "as": "1.24%",
+          "sh": "4,355"
         }
       },
       {
         "rank": 25,
         "symbol": "ADSK",
         "name": "Autodesk, Inc.",
-        "weight_pct": 1.1,
+        "weight_pct": 1.13,
         "shares": 8003,
         "raw": {
           "no": 25,
           "n": "Autodesk, Inc.",
           "s": "$ADSK",
-          "as": "1.10%",
+          "as": "1.13%",
           "sh": "8,003"
         }
       }
@@ -374,32 +394,32 @@
     "sectors": [
       {
         "n": "Technology",
-        "w": 52.41
+        "w": 51.84
       },
       {
         "n": "Communication Services",
-        "w": 19.73
+        "w": 20.06
       },
       {
         "n": "Industrials",
-        "w": 13.88
+        "w": 13.67
       },
       {
         "n": "Consumer Discretionary",
-        "w": 8.01
+        "w": 8.26
       },
       {
         "n": "Financials",
-        "w": 3.67
+        "w": 3.79
       },
       {
         "n": "Healthcare",
-        "w": 2.32
+        "w": 2.39
       }
     ],
     "countries": null,
     "holding_count": 33,
-    "holdings_updated": "Jun 22, 2026",
+    "holdings_updated": "Jun 24, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -410,7 +430,7 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": "$135.26M",
+      "aum": "$138.66M",
       "expenseRatio": "0.67%",
       "peRatio": "32.39",
       "sharesOut": "5.15M",
@@ -418,39 +438,44 @@
       "etf_website": "https://www.westernsouthern.com/touchstone/etfs/large-company-growth-etf"
     },
     "performance": {
-      "tr1m": 0.2701
+      "tr1m": 1.681,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
     },
     "quote": {
-      "p": 26.6175,
-      "pd": 26.62,
-      "c": 0.18,
-      "cp": 0.67,
-      "cl": 26.44,
-      "cdr": 1,
-      "o": 26.38,
-      "h": 26.62,
-      "l": 26.24,
-      "v": 1762.397,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "p": 26.505,
+      "pd": 26.51,
+      "c": -0.45,
+      "cp": -1.67,
+      "cl": 26.96,
+      "cdr": -1,
+      "o": 26.91,
+      "h": 26.91,
+      "l": 26.51,
+      "v": 6749.397,
+      "ts": 1783972800000,
+      "u": "Jul 13, 2026, 4:00 PM EDT",
+      "td": "2026-07-13",
       "h52": 28.34,
       "l52": 22.411,
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "pre",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
-      "ecp": 0,
-      "eu": null,
+      "fms": "post",
+      "e": true,
+      "ep": 26.6,
+      "epd": 26.6,
+      "ec": 0.095,
+      "ecp": 0.36,
+      "eu": "Jul 13, 2026, 4:15 PM EDT",
       "es": "After-hours",
-      "ets": 1783541700008.9905,
-      "etd": null,
+      "ets": 1783973700004.5825,
+      "etd": "2026-07-13",
       "epv": null,
       "days": 0,
-      "exp": 1783589094168,
+      "exp": 1783987311437,
       "symbol": "TLG",
       "uid": "TLG"
     },
@@ -458,12 +483,12 @@
       {
         "t": "2026-07-01",
         "o": 26.52,
-        "h": 26.66,
+        "h": 27.06,
         "l": 26.06,
-        "c": 26.618,
-        "a": 26.6175,
-        "v": 17554,
-        "ch": 0.75
+        "c": 26.955,
+        "a": 26.955,
+        "v": 35959,
+        "ch": 2.03
       },
       {
         "t": "2026-06-01",
@@ -498,6 +523,26 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-10",
+          "o": 27.015,
+          "h": 27.06,
+          "l": 26.83,
+          "c": 26.955,
+          "a": 26.955,
+          "v": 16942,
+          "ch": 0.24
+        },
+        {
+          "t": "2026-07-09",
+          "o": 26.87,
+          "h": 26.89,
+          "l": 26.87,
+          "c": 26.89,
+          "a": 26.8898,
+          "v": 1463,
+          "ch": 1.02
+        },
         {
           "t": "2026-07-08",
           "o": 26.38,
@@ -1283,12 +1328,12 @@
         {
           "t": "2026-07-06",
           "o": 26.3,
-          "h": 26.655,
+          "h": 27.06,
           "l": 26.17,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 7010,
-          "ch": 1.49
+          "c": 26.955,
+          "a": 26.955,
+          "v": 25415,
+          "ch": 2.77
         },
         {
           "t": "2026-06-29",
@@ -1445,12 +1490,12 @@
         {
           "t": "2026-07-01",
           "o": 26.52,
-          "h": 26.66,
+          "h": 27.06,
           "l": 26.06,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 17554,
-          "ch": 0.75
+          "c": 26.955,
+          "a": 26.955,
+          "v": 35959,
+          "ch": 2.03
         },
         {
           "t": "2026-06-01",
@@ -1487,12 +1532,12 @@
         {
           "t": "2026-07-06",
           "o": 26.3,
-          "h": 26.655,
+          "h": 27.06,
           "l": 26.17,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 7010,
-          "ch": 1.49
+          "c": 26.955,
+          "a": 26.955,
+          "v": 25415,
+          "ch": 2.77
         },
         {
           "t": "2026-06-29",
@@ -1649,12 +1694,12 @@
         {
           "t": "2026-07-01",
           "o": 26.52,
-          "h": 26.66,
+          "h": 27.06,
           "l": 26.06,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 17554,
-          "ch": 0.75
+          "c": 26.955,
+          "a": 26.955,
+          "v": 35959,
+          "ch": 2.03
         },
         {
           "t": "2026-06-01",
@@ -1691,12 +1736,12 @@
         {
           "t": "2026-07-01",
           "o": 26.52,
-          "h": 26.66,
+          "h": 27.06,
           "l": 26.06,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 17554,
-          "ch": 0.75
+          "c": 26.955,
+          "a": 26.955,
+          "v": 35959,
+          "ch": 2.03
         },
         {
           "t": "2026-06-01",
@@ -1732,1430 +1777,56 @@
     }
   },
   "raw": {
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "NVIDIA Corporation",
-          "s": "$NVDA",
-          "as": "17.27%",
-          "sh": "113,489"
-        },
-        {
-          "no": 2,
-          "n": "Alphabet Inc.",
-          "s": "$GOOGL",
-          "as": "8.94%",
-          "sh": "35,057"
-        },
-        {
-          "no": 3,
-          "n": "Microsoft Corporation",
-          "s": "$MSFT",
-          "as": "6.93%",
-          "sh": "25,858"
-        },
-        {
-          "no": 4,
-          "n": "Broadcom Inc.",
-          "s": "$AVGO",
-          "as": "6.72%",
-          "sh": "23,510"
-        },
-        {
-          "no": 5,
-          "n": "Amazon.com, Inc.",
-          "s": "$AMZN",
-          "as": "6.31%",
-          "sh": "37,155"
-        },
-        {
-          "no": 6,
-          "n": "Arista Networks, Inc.",
-          "s": "$ANET",
-          "as": "5.61%",
-          "sh": "44,034"
-        },
-        {
-          "no": 7,
-          "n": "GE Vernova Inc.",
-          "s": "$GEV",
-          "as": "4.41%",
-          "sh": "5,368"
-        },
-        {
-          "no": 8,
-          "n": "Howmet Aerospace Inc.",
-          "s": "$HWM",
-          "as": "4.30%",
-          "sh": "21,044"
-        },
-        {
-          "no": 9,
-          "n": "Meta Platforms, Inc.",
-          "s": "$META",
-          "as": "4.27%",
-          "sh": "10,377"
-        },
-        {
-          "no": 10,
-          "n": "Reddit, Inc.",
-          "s": "$RDDT",
-          "as": "2.86%",
-          "sh": "23,019"
-        },
-        {
-          "no": 11,
-          "n": "Oracle Corporation",
-          "s": "$ORCL",
-          "as": "2.23%",
-          "sh": "17,433"
-        },
-        {
-          "no": 12,
-          "n": "Everpure, Inc.",
-          "s": "$P",
-          "as": "2.21%",
-          "sh": "39,349"
-        },
-        {
-          "no": 13,
-          "n": "Uber Technologies, Inc.",
-          "s": "$UBER",
-          "as": "2.17%",
-          "sh": "41,676"
-        },
-        {
-          "no": 14,
-          "n": "GE Aerospace",
-          "s": "$GE",
-          "as": "2.16%",
-          "sh": "8,353"
-        },
-        {
-          "no": 15,
-          "n": "Siemens Energy AG",
-          "s": "!otc/SMERY",
-          "as": "2.16%",
-          "sh": "15,159"
-        },
-        {
-          "no": 16,
-          "n": "Visa Inc.",
-          "s": "$V",
-          "as": "2.13%",
-          "sh": "8,931"
-        },
-        {
-          "no": 17,
-          "n": "Netflix, Inc.",
-          "s": "$NFLX",
-          "as": "2.02%",
-          "sh": "37,950"
-        },
-        {
-          "no": 18,
-          "n": "DexCom, Inc.",
-          "s": "$DXCM",
-          "as": "1.79%",
-          "sh": "35,535"
-        },
-        {
-          "no": 19,
-          "n": "Cadence Design Systems, Inc.",
-          "s": "$CDNS",
-          "as": "1.68%",
-          "sh": "5,919"
-        },
-        {
-          "no": 20,
-          "n": "Booking Holdings Inc.",
-          "s": "$BKNG",
-          "as": "1.64%",
-          "sh": "13,376"
-        },
-        {
-          "no": 21,
-          "n": "Mastercard Incorporated",
-          "s": "$MA",
-          "as": "1.51%",
-          "sh": "4,270"
-        },
-        {
-          "no": 22,
-          "n": "Spotify Technology S.A.",
-          "s": "$SPOT",
-          "as": "1.50%",
-          "sh": "4,481"
-        },
-        {
-          "no": 23,
-          "n": "Coherent Corp.",
-          "s": "$COHR",
-          "as": "1.35%",
-          "sh": "4,355"
-        },
-        {
-          "no": 24,
-          "n": "Keysight Technologies, Inc.",
-          "s": "$KEYS",
-          "as": "1.31%",
-          "sh": "4,814"
-        },
-        {
-          "no": 25,
-          "n": "Autodesk, Inc.",
-          "s": "$ADSK",
-          "as": "1.10%",
-          "sh": "8,003"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": [
-        {
-          "n": "Technology",
-          "w": 52.41
-        },
-        {
-          "n": "Communication Services",
-          "w": 19.73
-        },
-        {
-          "n": "Industrials",
-          "w": 13.88
-        },
-        {
-          "n": "Consumer Discretionary",
-          "w": 8.01
-        },
-        {
-          "n": "Financials",
-          "w": 3.67
-        },
-        {
-          "n": "Healthcare",
-          "w": 2.32
-        }
-      ],
-      "countries": null,
-      "infoBox": "TLG is an equity ETF with a total of 33 individual holdings. The top holdings are NVIDIA stock at 17.27%, Alphabet at 8.94%, Microsoft at 6.93%, Broadcom at 6.72%, and Amazon.com at 6.31%.",
-      "infoTable": {
-        "count": 33,
-        "top10": 67.62,
-        "assetClass": "Equity",
-        "aum": 135261220,
-        "peRatio": 32.39046
-      },
-      "date": "Jun 22, 2026",
-      "count": 33
-    },
     "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "TLG",
+        "lastChecked": 1783986126386,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
       "type": "etf",
-      "aum": "$135.26M",
+      "aum": "$138.66M",
+      "nav": null,
       "expenseRatio": "0.67%",
       "peRatio": "32.39",
       "sharesOut": "5.15M",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
       "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
       "holdings": 33,
       "inception": "Aug 28, 2009",
       "chart": {
-        "expiration": 1783517400000,
-        "data": [
-          {
-            "t": 1783416600
-          },
-          {
-            "t": 1783416660
-          },
-          {
-            "t": 1783416720
-          },
-          {
-            "t": 1783416780
-          },
-          {
-            "t": 1783416840
-          },
-          {
-            "t": 1783416900
-          },
-          {
-            "t": 1783416960
-          },
-          {
-            "t": 1783417020
-          },
-          {
-            "t": 1783417080
-          },
-          {
-            "t": 1783417140
-          },
-          {
-            "t": 1783417200
-          },
-          {
-            "t": 1783417260
-          },
-          {
-            "t": 1783417320
-          },
-          {
-            "t": 1783417380
-          },
-          {
-            "t": 1783417440
-          },
-          {
-            "t": 1783417500
-          },
-          {
-            "t": 1783417560
-          },
-          {
-            "t": 1783417620
-          },
-          {
-            "t": 1783417680
-          },
-          {
-            "t": 1783417740
-          },
-          {
-            "t": 1783417800
-          },
-          {
-            "t": 1783417860
-          },
-          {
-            "t": 1783417920
-          },
-          {
-            "t": 1783417980
-          },
-          {
-            "t": 1783418040
-          },
-          {
-            "t": 1783418100
-          },
-          {
-            "t": 1783418160
-          },
-          {
-            "t": 1783418220
-          },
-          {
-            "t": 1783418280
-          },
-          {
-            "t": 1783418340
-          },
-          {
-            "t": 1783418400
-          },
-          {
-            "t": 1783418460
-          },
-          {
-            "t": 1783418520
-          },
-          {
-            "t": 1783418580
-          },
-          {
-            "t": 1783418640
-          },
-          {
-            "t": 1783418700
-          },
-          {
-            "t": 1783418760
-          },
-          {
-            "t": 1783418820
-          },
-          {
-            "t": 1783418880
-          },
-          {
-            "t": 1783418940
-          },
-          {
-            "t": 1783419000
-          },
-          {
-            "t": 1783419060
-          },
-          {
-            "t": 1783419120
-          },
-          {
-            "t": 1783419180
-          },
-          {
-            "t": 1783419240
-          },
-          {
-            "t": 1783419300
-          },
-          {
-            "t": 1783419360
-          },
-          {
-            "t": 1783419420
-          },
-          {
-            "t": 1783419480
-          },
-          {
-            "t": 1783419540
-          },
-          {
-            "t": 1783419600
-          },
-          {
-            "t": 1783419660
-          },
-          {
-            "t": 1783419720
-          },
-          {
-            "t": 1783419780
-          },
-          {
-            "t": 1783419840
-          },
-          {
-            "t": 1783419900
-          },
-          {
-            "t": 1783419960
-          },
-          {
-            "t": 1783420020
-          },
-          {
-            "t": 1783420080
-          },
-          {
-            "t": 1783420140
-          },
-          {
-            "t": 1783420200
-          },
-          {
-            "t": 1783420260
-          },
-          {
-            "c": 26.26,
-            "o": 26.26,
-            "t": 1783420320
-          },
-          {
-            "c": null,
-            "t": 1783420380
-          },
-          {
-            "c": null,
-            "t": 1783420440
-          },
-          {
-            "c": null,
-            "t": 1783420500
-          },
-          {
-            "c": null,
-            "t": 1783420560
-          },
-          {
-            "c": null,
-            "t": 1783420620
-          },
-          {
-            "c": null,
-            "t": 1783420680
-          },
-          {
-            "c": null,
-            "t": 1783420740
-          },
-          {
-            "c": null,
-            "t": 1783420800
-          },
-          {
-            "c": null,
-            "t": 1783420860
-          },
-          {
-            "c": null,
-            "t": 1783420920
-          },
-          {
-            "c": null,
-            "t": 1783420980
-          },
-          {
-            "c": null,
-            "t": 1783421040
-          },
-          {
-            "c": null,
-            "t": 1783421100
-          },
-          {
-            "c": null,
-            "t": 1783421160
-          },
-          {
-            "c": null,
-            "t": 1783421220
-          },
-          {
-            "c": 26.17,
-            "t": 1783421280
-          },
-          {
-            "t": 1783421339
-          },
-          {
-            "t": 1783421399
-          },
-          {
-            "t": 1783421459
-          },
-          {
-            "t": 1783421519
-          },
-          {
-            "t": 1783421579
-          },
-          {
-            "t": 1783421639
-          },
-          {
-            "t": 1783421699
-          },
-          {
-            "t": 1783421759
-          },
-          {
-            "t": 1783421819
-          },
-          {
-            "t": 1783421879
-          },
-          {
-            "t": 1783421939
-          },
-          {
-            "t": 1783421999
-          },
-          {
-            "t": 1783422059
-          },
-          {
-            "t": 1783422119
-          },
-          {
-            "t": 1783422179
-          },
-          {
-            "t": 1783422239
-          },
-          {
-            "t": 1783422299
-          },
-          {
-            "t": 1783422359
-          },
-          {
-            "t": 1783422419
-          },
-          {
-            "t": 1783422479
-          },
-          {
-            "t": 1783422539
-          },
-          {
-            "t": 1783422599
-          },
-          {
-            "t": 1783422659
-          },
-          {
-            "t": 1783422719
-          },
-          {
-            "t": 1783422779
-          },
-          {
-            "t": 1783422839
-          },
-          {
-            "t": 1783422899
-          },
-          {
-            "t": 1783422959
-          },
-          {
-            "t": 1783423019
-          },
-          {
-            "t": 1783423079
-          },
-          {
-            "t": 1783423139
-          },
-          {
-            "t": 1783423199
-          },
-          {
-            "t": 1783423259
-          },
-          {
-            "t": 1783423319
-          },
-          {
-            "t": 1783423379
-          },
-          {
-            "t": 1783423439
-          },
-          {
-            "t": 1783423499
-          },
-          {
-            "t": 1783423559
-          },
-          {
-            "t": 1783423619
-          },
-          {
-            "t": 1783423679
-          },
-          {
-            "t": 1783423739
-          },
-          {
-            "t": 1783423799
-          },
-          {
-            "t": 1783423859
-          },
-          {
-            "t": 1783423919
-          },
-          {
-            "t": 1783423979
-          },
-          {
-            "t": 1783424039
-          },
-          {
-            "t": 1783424099
-          },
-          {
-            "t": 1783424159
-          },
-          {
-            "t": 1783424219
-          },
-          {
-            "t": 1783424279
-          },
-          {
-            "t": 1783424339
-          },
-          {
-            "t": 1783424399
-          },
-          {
-            "t": 1783424459
-          },
-          {
-            "t": 1783424519
-          },
-          {
-            "t": 1783424579
-          },
-          {
-            "t": 1783424639
-          },
-          {
-            "t": 1783424699
-          },
-          {
-            "t": 1783424759
-          },
-          {
-            "t": 1783424819
-          },
-          {
-            "t": 1783424879
-          },
-          {
-            "t": 1783424939
-          },
-          {
-            "t": 1783424999
-          },
-          {
-            "t": 1783425059
-          },
-          {
-            "t": 1783425119
-          },
-          {
-            "t": 1783425179
-          },
-          {
-            "t": 1783425239
-          },
-          {
-            "t": 1783425299
-          },
-          {
-            "t": 1783425359
-          },
-          {
-            "t": 1783425419
-          },
-          {
-            "t": 1783425479
-          },
-          {
-            "t": 1783425539
-          },
-          {
-            "t": 1783425599
-          },
-          {
-            "t": 1783425659
-          },
-          {
-            "t": 1783425719
-          },
-          {
-            "t": 1783425779
-          },
-          {
-            "t": 1783425839
-          },
-          {
-            "t": 1783425899
-          },
-          {
-            "t": 1783425959
-          },
-          {
-            "t": 1783426019
-          },
-          {
-            "t": 1783426079
-          },
-          {
-            "t": 1783426139
-          },
-          {
-            "t": 1783426199
-          },
-          {
-            "t": 1783426259
-          },
-          {
-            "t": 1783426319
-          },
-          {
-            "t": 1783426379
-          },
-          {
-            "t": 1783426439
-          },
-          {
-            "t": 1783426499
-          },
-          {
-            "t": 1783426559
-          },
-          {
-            "t": 1783426619
-          },
-          {
-            "t": 1783426679
-          },
-          {
-            "t": 1783426739
-          },
-          {
-            "t": 1783426799
-          },
-          {
-            "t": 1783426859
-          },
-          {
-            "t": 1783426919
-          },
-          {
-            "t": 1783426979
-          },
-          {
-            "t": 1783427039
-          },
-          {
-            "t": 1783427099
-          },
-          {
-            "t": 1783427159
-          },
-          {
-            "t": 1783427219
-          },
-          {
-            "t": 1783427279
-          },
-          {
-            "t": 1783427339
-          },
-          {
-            "t": 1783427399
-          },
-          {
-            "t": 1783427459
-          },
-          {
-            "t": 1783427519
-          },
-          {
-            "t": 1783427579
-          },
-          {
-            "t": 1783427639
-          },
-          {
-            "t": 1783427699
-          },
-          {
-            "t": 1783427759
-          },
-          {
-            "t": 1783427819
-          },
-          {
-            "t": 1783427879
-          },
-          {
-            "t": 1783427939
-          },
-          {
-            "t": 1783427999
-          },
-          {
-            "t": 1783428059
-          },
-          {
-            "t": 1783428119
-          },
-          {
-            "t": 1783428179
-          },
-          {
-            "t": 1783428239
-          },
-          {
-            "t": 1783428299
-          },
-          {
-            "t": 1783428359
-          },
-          {
-            "t": 1783428419
-          },
-          {
-            "t": 1783428479
-          },
-          {
-            "t": 1783428539
-          },
-          {
-            "t": 1783428599
-          },
-          {
-            "t": 1783428659
-          },
-          {
-            "t": 1783428719
-          },
-          {
-            "t": 1783428779
-          },
-          {
-            "t": 1783428839
-          },
-          {
-            "t": 1783428899
-          },
-          {
-            "t": 1783428959
-          },
-          {
-            "t": 1783429019
-          },
-          {
-            "t": 1783429079
-          },
-          {
-            "t": 1783429139
-          },
-          {
-            "t": 1783429199
-          },
-          {
-            "t": 1783429259
-          },
-          {
-            "t": 1783429319
-          },
-          {
-            "t": 1783429379
-          },
-          {
-            "t": 1783429439
-          },
-          {
-            "t": 1783429499
-          },
-          {
-            "t": 1783429559
-          },
-          {
-            "t": 1783429619
-          },
-          {
-            "t": 1783429679
-          },
-          {
-            "t": 1783429739
-          },
-          {
-            "t": 1783429799
-          },
-          {
-            "t": 1783429859
-          },
-          {
-            "t": 1783429919
-          },
-          {
-            "t": 1783429979
-          },
-          {
-            "t": 1783430039
-          },
-          {
-            "t": 1783430099
-          },
-          {
-            "t": 1783430159
-          },
-          {
-            "t": 1783430219
-          },
-          {
-            "t": 1783430279
-          },
-          {
-            "t": 1783430339
-          },
-          {
-            "t": 1783430399
-          },
-          {
-            "t": 1783430459
-          },
-          {
-            "t": 1783430519
-          },
-          {
-            "t": 1783430579
-          },
-          {
-            "t": 1783430639
-          },
-          {
-            "t": 1783430699
-          },
-          {
-            "t": 1783430759
-          },
-          {
-            "t": 1783430819
-          },
-          {
-            "t": 1783430879
-          },
-          {
-            "t": 1783430939
-          },
-          {
-            "t": 1783430999
-          },
-          {
-            "t": 1783431059
-          },
-          {
-            "t": 1783431119
-          },
-          {
-            "t": 1783431179
-          },
-          {
-            "t": 1783431239
-          },
-          {
-            "t": 1783431299
-          },
-          {
-            "t": 1783431359
-          },
-          {
-            "t": 1783431419
-          },
-          {
-            "t": 1783431479
-          },
-          {
-            "t": 1783431539
-          },
-          {
-            "t": 1783431599
-          },
-          {
-            "t": 1783431659
-          },
-          {
-            "t": 1783431719
-          },
-          {
-            "t": 1783431779
-          },
-          {
-            "t": 1783431839
-          },
-          {
-            "t": 1783431899
-          },
-          {
-            "t": 1783431959
-          },
-          {
-            "t": 1783432019
-          },
-          {
-            "t": 1783432079
-          },
-          {
-            "t": 1783432139
-          },
-          {
-            "t": 1783432199
-          },
-          {
-            "t": 1783432259
-          },
-          {
-            "t": 1783432319
-          },
-          {
-            "t": 1783432379
-          },
-          {
-            "t": 1783432439
-          },
-          {
-            "t": 1783432499
-          },
-          {
-            "t": 1783432559
-          },
-          {
-            "t": 1783432619
-          },
-          {
-            "t": 1783432679
-          },
-          {
-            "t": 1783432739
-          },
-          {
-            "t": 1783432799
-          },
-          {
-            "t": 1783432859
-          },
-          {
-            "t": 1783432919
-          },
-          {
-            "t": 1783432979
-          },
-          {
-            "t": 1783433039
-          },
-          {
-            "t": 1783433099
-          },
-          {
-            "t": 1783433159
-          },
-          {
-            "t": 1783433219
-          },
-          {
-            "t": 1783433279
-          },
-          {
-            "t": 1783433339
-          },
-          {
-            "t": 1783433399
-          },
-          {
-            "t": 1783433459
-          },
-          {
-            "t": 1783433519
-          },
-          {
-            "t": 1783433579
-          },
-          {
-            "t": 1783433639
-          },
-          {
-            "t": 1783433699
-          },
-          {
-            "t": 1783433759
-          },
-          {
-            "t": 1783433819
-          },
-          {
-            "t": 1783433879
-          },
-          {
-            "t": 1783433939
-          },
-          {
-            "t": 1783433999
-          },
-          {
-            "t": 1783434059
-          },
-          {
-            "t": 1783434119
-          },
-          {
-            "t": 1783434179
-          },
-          {
-            "t": 1783434239
-          },
-          {
-            "t": 1783434299
-          },
-          {
-            "t": 1783434359
-          },
-          {
-            "t": 1783434419
-          },
-          {
-            "t": 1783434479
-          },
-          {
-            "t": 1783434539
-          },
-          {
-            "t": 1783434599
-          },
-          {
-            "t": 1783434659
-          },
-          {
-            "t": 1783434719
-          },
-          {
-            "t": 1783434779
-          },
-          {
-            "t": 1783434839
-          },
-          {
-            "t": 1783434899
-          },
-          {
-            "t": 1783434959
-          },
-          {
-            "t": 1783435019
-          },
-          {
-            "t": 1783435079
-          },
-          {
-            "t": 1783435139
-          },
-          {
-            "t": 1783435199
-          },
-          {
-            "t": 1783435259
-          },
-          {
-            "t": 1783435319
-          },
-          {
-            "t": 1783435379
-          },
-          {
-            "t": 1783435439
-          },
-          {
-            "t": 1783435499
-          },
-          {
-            "t": 1783435559
-          },
-          {
-            "t": 1783435619
-          },
-          {
-            "t": 1783435679
-          },
-          {
-            "t": 1783435739
-          },
-          {
-            "t": 1783435799
-          },
-          {
-            "t": 1783435859
-          },
-          {
-            "t": 1783435919
-          },
-          {
-            "t": 1783435979
-          },
-          {
-            "t": 1783436039
-          },
-          {
-            "t": 1783436099
-          },
-          {
-            "t": 1783436159
-          },
-          {
-            "t": 1783436219
-          },
-          {
-            "t": 1783436279
-          },
-          {
-            "t": 1783436339
-          },
-          {
-            "t": 1783436399
-          },
-          {
-            "t": 1783436459
-          },
-          {
-            "t": 1783436519
-          },
-          {
-            "t": 1783436579
-          },
-          {
-            "t": 1783436639
-          },
-          {
-            "t": 1783436699
-          },
-          {
-            "t": 1783436759
-          },
-          {
-            "t": 1783436819
-          },
-          {
-            "t": 1783436879
-          },
-          {
-            "t": 1783436939
-          },
-          {
-            "t": 1783436999
-          },
-          {
-            "t": 1783437059
-          },
-          {
-            "t": 1783437119
-          },
-          {
-            "t": 1783437179
-          },
-          {
-            "t": 1783437239
-          },
-          {
-            "t": 1783437299
-          },
-          {
-            "t": 1783437359
-          },
-          {
-            "t": 1783437419
-          },
-          {
-            "t": 1783437479
-          },
-          {
-            "t": 1783437539
-          },
-          {
-            "t": 1783437599
-          },
-          {
-            "t": 1783437659
-          },
-          {
-            "t": 1783437719
-          },
-          {
-            "t": 1783437779
-          },
-          {
-            "t": 1783437839
-          },
-          {
-            "t": 1783437899
-          },
-          {
-            "t": 1783437959
-          },
-          {
-            "t": 1783438019
-          },
-          {
-            "t": 1783438079
-          },
-          {
-            "t": 1783438139
-          },
-          {
-            "t": 1783438199
-          },
-          {
-            "t": 1783438259
-          },
-          {
-            "t": 1783438319
-          },
-          {
-            "t": 1783438379
-          },
-          {
-            "t": 1783438439
-          },
-          {
-            "t": 1783438499
-          },
-          {
-            "t": 1783438559
-          },
-          {
-            "t": 1783438619
-          },
-          {
-            "t": 1783438679
-          },
-          {
-            "t": 1783438739
-          },
-          {
-            "t": 1783438799
-          },
-          {
-            "t": 1783438859
-          },
-          {
-            "t": 1783438919
-          },
-          {
-            "t": 1783438979
-          },
-          {
-            "t": 1783439039
-          },
-          {
-            "t": 1783439099
-          },
-          {
-            "t": 1783439159
-          },
-          {
-            "t": 1783439219
-          },
-          {
-            "t": 1783439279
-          },
-          {
-            "t": 1783439339
-          },
-          {
-            "t": 1783439399
-          },
-          {
-            "t": 1783439459
-          },
-          {
-            "t": 1783439519
-          },
-          {
-            "t": 1783439579
-          },
-          {
-            "t": 1783439639
-          },
-          {
-            "t": 1783439699
-          },
-          {
-            "t": 1783439759
-          },
-          {
-            "t": 1783439819
-          },
-          {
-            "t": 1783439879
-          },
-          {
-            "t": 1783439939
-          },
-          {
-            "t": 1783439999
-          },
-          {
-            "t": 1783440000
-          }
-        ]
+        "expiration": 1783967603935,
+        "data": []
       },
       "description": "The Touchstone Large Company Growth ETF (TLG) is an exchange-traded fund that mostly invests in large cap equity. The fund is an actively managed, concentrated portfolio of US large-cap growth companies. The fund seeks long-term capital appreciation. TLG was launched on Aug 28, 2009 and is issued by Touchstone.",
       "infoTable": [
@@ -3184,62 +1855,62 @@
       "provider_page": null,
       "holdingsTable": {
         "count": 33,
-        "updated": "Jun 22, 2026",
-        "top10": 67.62,
+        "updated": "Jun 24, 2026",
+        "top10": 67.6,
         "holdings": [
           {
             "n": "NVIDIA Corporation",
             "s": "$NVDA",
-            "as": "17.27%",
+            "as": "17.00%",
             "sh": "113,489"
           },
           {
             "n": "Alphabet Inc.",
             "s": "$GOOGL",
-            "as": "8.94%",
+            "as": "9.09%",
             "sh": "35,057"
           },
           {
             "n": "Microsoft Corporation",
             "s": "$MSFT",
-            "as": "6.93%",
+            "as": "7.24%",
             "sh": "25,858"
           },
           {
             "n": "Broadcom Inc.",
             "s": "$AVGO",
-            "as": "6.72%",
+            "as": "6.69%",
             "sh": "23,510"
           },
           {
             "n": "Amazon.com, Inc.",
             "s": "$AMZN",
-            "as": "6.31%",
+            "as": "6.51%",
             "sh": "37,155"
           },
           {
             "n": "Arista Networks, Inc.",
             "s": "$ANET",
-            "as": "5.61%",
+            "as": "5.35%",
             "sh": "44,034"
-          },
-          {
-            "n": "GE Vernova Inc.",
-            "s": "$GEV",
-            "as": "4.41%",
-            "sh": "5,368"
-          },
-          {
-            "n": "Howmet Aerospace Inc.",
-            "s": "$HWM",
-            "as": "4.30%",
-            "sh": "21,044"
           },
           {
             "n": "Meta Platforms, Inc.",
             "s": "$META",
-            "as": "4.27%",
+            "as": "4.37%",
             "sh": "10,377"
+          },
+          {
+            "n": "Howmet Aerospace Inc.",
+            "s": "$HWM",
+            "as": "4.34%",
+            "sh": "21,044"
+          },
+          {
+            "n": "GE Vernova Inc.",
+            "s": "$GEV",
+            "as": "4.16%",
+            "sh": "5,368"
           },
           {
             "n": "Reddit, Inc.",
@@ -3249,54 +1920,333 @@
           }
         ]
       },
-      "dividendTable": [],
+      "dividendTable": null,
       "news": {
-        "exp": "1783390731866",
+        "exp": "1783975329000",
         "data": []
       },
       "config": {
         "no1d": false
       },
       "changes": {
-        "price1w": 26.489,
-        "price1m": 26.546,
+        "price1w": 26.228,
+        "price1m": 26.18,
+        "price3m": 24.885,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
         "priceMAX": 24.508
       },
       "performance": {
-        "tr1m": 0.2701
+        "tr1m": 1.681,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "17.00%",
+          "sh": "113,489"
+        },
+        {
+          "no": 2,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "9.09%",
+          "sh": "35,057"
+        },
+        {
+          "no": 3,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "7.24%",
+          "sh": "25,858"
+        },
+        {
+          "no": 4,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "6.69%",
+          "sh": "23,510"
+        },
+        {
+          "no": 5,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "6.51%",
+          "sh": "37,155"
+        },
+        {
+          "no": 6,
+          "n": "Arista Networks, Inc.",
+          "s": "$ANET",
+          "as": "5.35%",
+          "sh": "44,034"
+        },
+        {
+          "no": 7,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "4.37%",
+          "sh": "10,377"
+        },
+        {
+          "no": 8,
+          "n": "Howmet Aerospace Inc.",
+          "s": "$HWM",
+          "as": "4.34%",
+          "sh": "21,044"
+        },
+        {
+          "no": 9,
+          "n": "GE Vernova Inc.",
+          "s": "$GEV",
+          "as": "4.16%",
+          "sh": "5,368"
+        },
+        {
+          "no": 10,
+          "n": "Reddit, Inc.",
+          "s": "$RDDT",
+          "as": "2.86%",
+          "sh": "23,019"
+        },
+        {
+          "no": 11,
+          "n": "GE Aerospace",
+          "s": "$GE",
+          "as": "2.23%",
+          "sh": "8,353"
+        },
+        {
+          "no": 12,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "2.20%",
+          "sh": "8,931"
+        },
+        {
+          "no": 13,
+          "n": "Uber Technologies, Inc.",
+          "s": "$UBER",
+          "as": "2.17%",
+          "sh": "41,676"
+        },
+        {
+          "no": 14,
+          "n": "Oracle Corporation",
+          "s": "$ORCL",
+          "as": "2.16%",
+          "sh": "17,433"
+        },
+        {
+          "no": 15,
+          "n": "Everpure, Inc.",
+          "s": "$P",
+          "as": "2.13%",
+          "sh": "39,349"
+        },
+        {
+          "no": 16,
+          "n": "Siemens Energy AG",
+          "s": "!otc/SMERY",
+          "as": "2.08%",
+          "sh": "75,795"
+        },
+        {
+          "no": 17,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "2.07%",
+          "sh": "37,950"
+        },
+        {
+          "no": 18,
+          "n": "DexCom, Inc.",
+          "s": "$DXCM",
+          "as": "1.83%",
+          "sh": "35,535"
+        },
+        {
+          "no": 19,
+          "n": "Booking Holdings Inc.",
+          "s": "$BKNG",
+          "as": "1.69%",
+          "sh": "13,376"
+        },
+        {
+          "no": 20,
+          "n": "Cadence Design Systems, Inc.",
+          "s": "$CDNS",
+          "as": "1.68%",
+          "sh": "5,919"
+        },
+        {
+          "no": 21,
+          "n": "Mastercard Incorporated",
+          "s": "$MA",
+          "as": "1.56%",
+          "sh": "4,270"
+        },
+        {
+          "no": 22,
+          "n": "Spotify Technology S.A.",
+          "s": "$SPOT",
+          "as": "1.53%",
+          "sh": "4,481"
+        },
+        {
+          "no": 23,
+          "n": "Keysight Technologies, Inc.",
+          "s": "$KEYS",
+          "as": "1.27%",
+          "sh": "4,814"
+        },
+        {
+          "no": 24,
+          "n": "Coherent Corp.",
+          "s": "$COHR",
+          "as": "1.24%",
+          "sh": "4,355"
+        },
+        {
+          "no": 25,
+          "n": "Autodesk, Inc.",
+          "s": "$ADSK",
+          "as": "1.13%",
+          "sh": "8,003"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 51.84
+        },
+        {
+          "n": "Communication Services",
+          "w": 20.06
+        },
+        {
+          "n": "Industrials",
+          "w": 13.67
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 8.26
+        },
+        {
+          "n": "Financials",
+          "w": 3.79
+        },
+        {
+          "n": "Healthcare",
+          "w": 2.39
+        }
+      ],
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 51.84
+          },
+          {
+            "name": "Communication Services",
+            "y": 20.06
+          },
+          {
+            "name": "Industrials",
+            "y": 13.67
+          },
+          {
+            "name": "Consumer Discretionary",
+            "y": 8.26
+          },
+          {
+            "name": "Financials",
+            "y": 3.79
+          },
+          {
+            "name": "Healthcare",
+            "y": 2.39
+          }
+        ],
+        "assets": [],
+        "countries": []
+      },
+      "infoBox": "TLG is an equity ETF with a total of 33 individual holdings. The top holdings are NVIDIA stock at 17.00%, Alphabet at 9.09%, Microsoft at 7.24%, Broadcom at 6.69%, and Amazon.com at 6.51%.",
+      "infoTable": {
+        "count": 33,
+        "top10": 67.6,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 138660770,
+        "peRatio": 32.39046
+      },
+      "date": "Jun 24, 2026",
+      "count": 33,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jun 24, 2026",
+        "lastChecked": 1783986497110,
+        "topic": "holdings",
+        "ticker": "TLG",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 26.6175,
-      "pd": 26.62,
-      "c": 0.18,
-      "cp": 0.67,
-      "cl": 26.44,
-      "cdr": 1,
-      "o": 26.38,
-      "h": 26.62,
-      "l": 26.24,
-      "v": 1762.397,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "p": 26.505,
+      "pd": 26.51,
+      "c": -0.45,
+      "cp": -1.67,
+      "cl": 26.96,
+      "cdr": -1,
+      "o": 26.91,
+      "h": 26.91,
+      "l": 26.51,
+      "v": 6749.397,
+      "ts": 1783972800000,
+      "u": "Jul 13, 2026, 4:00 PM EDT",
+      "td": "2026-07-13",
       "h52": 28.34,
       "l52": 22.411,
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "pre",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
-      "ecp": 0,
-      "eu": null,
+      "fms": "post",
+      "e": true,
+      "ep": 26.6,
+      "epd": 26.6,
+      "ec": 0.095,
+      "ecp": 0.36,
+      "eu": "Jul 13, 2026, 4:15 PM EDT",
       "es": "After-hours",
-      "ets": 1783541700008.9905,
-      "etd": null,
+      "ets": 1783973700004.5825,
+      "etd": "2026-07-13",
       "epv": null,
       "days": 0,
-      "exp": 1783589094168,
+      "exp": 1783987311437,
       "symbol": "TLG",
       "uid": "TLG"
     },
@@ -3304,12 +2254,12 @@
       {
         "t": "2026-07-01",
         "o": 26.52,
-        "h": 26.66,
+        "h": 27.06,
         "l": 26.06,
-        "c": 26.618,
-        "a": 26.6175,
-        "v": 17554,
-        "ch": 0.75
+        "c": 26.955,
+        "a": 26.955,
+        "v": 35959,
+        "ch": 2.03
       },
       {
         "t": "2026-06-01",
@@ -3344,6 +2294,26 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-10",
+          "o": 27.015,
+          "h": 27.06,
+          "l": 26.83,
+          "c": 26.955,
+          "a": 26.955,
+          "v": 16942,
+          "ch": 0.24
+        },
+        {
+          "t": "2026-07-09",
+          "o": 26.87,
+          "h": 26.89,
+          "l": 26.87,
+          "c": 26.89,
+          "a": 26.8898,
+          "v": 1463,
+          "ch": 1.02
+        },
         {
           "t": "2026-07-08",
           "o": 26.38,
@@ -4129,12 +3099,12 @@
         {
           "t": "2026-07-06",
           "o": 26.3,
-          "h": 26.655,
+          "h": 27.06,
           "l": 26.17,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 7010,
-          "ch": 1.49
+          "c": 26.955,
+          "a": 26.955,
+          "v": 25415,
+          "ch": 2.77
         },
         {
           "t": "2026-06-29",
@@ -4291,12 +3261,12 @@
         {
           "t": "2026-07-01",
           "o": 26.52,
-          "h": 26.66,
+          "h": 27.06,
           "l": 26.06,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 17554,
-          "ch": 0.75
+          "c": 26.955,
+          "a": 26.955,
+          "v": 35959,
+          "ch": 2.03
         },
         {
           "t": "2026-06-01",
@@ -4333,12 +3303,12 @@
         {
           "t": "2026-07-06",
           "o": 26.3,
-          "h": 26.655,
+          "h": 27.06,
           "l": 26.17,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 7010,
-          "ch": 1.49
+          "c": 26.955,
+          "a": 26.955,
+          "v": 25415,
+          "ch": 2.77
         },
         {
           "t": "2026-06-29",
@@ -4495,12 +3465,12 @@
         {
           "t": "2026-07-01",
           "o": 26.52,
-          "h": 26.66,
+          "h": 27.06,
           "l": 26.06,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 17554,
-          "ch": 0.75
+          "c": 26.955,
+          "a": 26.955,
+          "v": 35959,
+          "ch": 2.03
         },
         {
           "t": "2026-06-01",
@@ -4537,12 +3507,12 @@
         {
           "t": "2026-07-01",
           "o": 26.52,
-          "h": 26.66,
+          "h": 27.06,
           "l": 26.06,
-          "c": 26.618,
-          "a": 26.6175,
-          "v": 17554,
-          "ch": 0.75
+          "c": 26.955,
+          "a": 26.955,
+          "v": 35959,
+          "ch": 2.03
         },
         {
           "t": "2026-06-01",

@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-07-13T23:49:52.605Z",
+  "generated_at": "2026-07-14T00:10:03.606Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -9,7 +9,7 @@
     "private_artifact_paths_included": false
   },
   "active_scoring_universe": {
-    "generated_at": "2026-07-13T23:49:29.079Z",
+    "generated_at": "2026-07-14T00:09:44.384Z",
     "current_only": true,
     "total": 1173,
     "by_market": [
@@ -50,14 +50,14 @@
     }
   },
   "expanded_stock_candidate_universe": {
-    "generated_at": "2026-07-13T23:48:33Z",
+    "generated_at": "2026-07-14T00:08:58Z",
     "collected_asset_total": 6634,
     "collected_stock_candidates": 1395,
     "scored_public_stock": 1173,
     "stock_promotion_audit_gap": 222,
-    "stage": "PUBLIC_GATED_WITH_BLOCKED_LEDGER",
-    "public_done_claim_allowed": true,
-    "caveat": "S1 stock candidates are closed by current public S0 rows plus an explicit blocked/excluded promotion ledger; blocked rows are not scored or fabricated."
+    "stage": "NORMALIZED",
+    "public_done_claim_allowed": false,
+    "caveat": "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated."
   },
   "etf_universe": {
     "collected_etf_candidates": 5239,
@@ -66,10 +66,10 @@
     "scored_public_etf": 4515,
     "public_done_claim_allowed": false,
     "evidence_based_readiness": {
-      "classification_as_of": "2026-07-13T23:49:09.397Z",
+      "classification_as_of": "2026-07-14T00:09:28.023Z",
       "public_ready": true,
-      "daily_ready": false,
-      "gated_ready": false,
+      "daily_ready": true,
+      "gated_ready": true,
       "gate_ok": true,
       "public_surface_proof": {
         "ready": true,
@@ -90,32 +90,32 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-07-13T23:49:31.180Z",
+          "generated_at": "2026-07-14T00:09:46.010Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-07-13T23:49:25.884Z",
+          "generated_at": "2026-07-14T00:09:41.773Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_no_fetchable_required_history_gap",
-          "ok": false,
-          "fetchable_required_history": 2,
-          "missing_required_history": 10,
+          "ok": true,
+          "fetchable_required_history": 0,
+          "missing_required_history": 8,
           "inception_limited_required_history": 6,
           "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
         },
         {
           "id": "etf_no_fetchable_daily_1y_gap",
-          "ok": false,
-          "classification_as_of": "2026-07-13T23:49:09.397Z",
-          "fetchable_daily_1y_gap": 30,
-          "inception_limited_daily_1y_gap": 721,
-          "terminal_limited_daily_1y_gap": 58,
+          "ok": true,
+          "classification_as_of": "2026-07-14T00:09:28.023Z",
+          "fetchable_daily_1y_gap": 0,
+          "inception_limited_daily_1y_gap": 736,
+          "terminal_limited_daily_1y_gap": 73,
           "history_gap_report_match": true,
           "claim_scope": "full_scored_etf_universe_diagnostic",
           "service_gate": false,
@@ -126,22 +126,22 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-07-13T23:49:31.180Z",
+          "generated_at": "2026-07-14T00:09:46.010Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-07-13T23:49:25.884Z",
+          "generated_at": "2026-07-14T00:09:41.773Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_no_fetchable_required_history_gap",
-          "ok": false,
-          "fetchable_required_history": 2,
-          "missing_required_history": 10,
+          "ok": true,
+          "fetchable_required_history": 0,
+          "missing_required_history": 8,
           "inception_limited_required_history": 6,
           "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
         }
@@ -149,34 +149,29 @@
       "diagnostic_backlog_checks": [
         {
           "id": "etf_no_fetchable_daily_1y_gap",
-          "ok": false,
-          "classification_as_of": "2026-07-13T23:49:09.397Z",
-          "fetchable_daily_1y_gap": 30,
-          "inception_limited_daily_1y_gap": 721,
-          "terminal_limited_daily_1y_gap": 58,
+          "ok": true,
+          "classification_as_of": "2026-07-14T00:09:28.023Z",
+          "fetchable_daily_1y_gap": 0,
+          "inception_limited_daily_1y_gap": 736,
+          "terminal_limited_daily_1y_gap": 73,
           "history_gap_report_match": true,
           "claim_scope": "full_scored_etf_universe_diagnostic",
           "service_gate": false,
           "caveat": "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; only immediately fetchable gaps keep the full-universe diagnostic lane daily=false."
         }
       ],
-      "blockers": [
-        "etf_no_fetchable_required_history_gap",
-        "gated_ready"
-      ],
-      "diagnostic_backlog": [
-        "etf_no_fetchable_daily_1y_gap"
-      ],
+      "blockers": [],
+      "diagnostic_backlog": [],
       "counts": {
         "scored_public_etf": 4515,
         "eligible_etf_count": 4515,
         "public_summary_rows": 4515,
         "internal_summary_rows": 4515,
-        "fetchable_required_history": 2,
+        "fetchable_required_history": 0,
         "inception_limited_required_history": 6,
-        "fetchable_daily_1y_gap": 30,
-        "inception_limited_daily_1y_gap": 721,
-        "terminal_limited_daily_1y_gap": 58,
+        "fetchable_daily_1y_gap": 0,
+        "inception_limited_daily_1y_gap": 736,
+        "terminal_limited_daily_1y_gap": 73,
         "history_gap_report_match": true
       }
     },
@@ -186,8 +181,8 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-07-13T23:49:43.724Z",
-        "generated_age_hours": 0.01,
+        "generated_at": "2026-07-14T00:09:56.050Z",
+        "generated_age_hours": 0,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
         "daily_ready": true,
@@ -268,13 +263,13 @@
       {
         "id": "us_class_yf_daily_source",
         "label": "US_CLASS/non-plain YF daily source coverage",
-        "covered_count": 59,
+        "covered_count": 0,
         "denominator": 59,
         "denominator_label": "active_scoring_universe.us_class_or_non_plain",
-        "coverage_pct": 100,
-        "active_scoring_coverage_pct": 5.03,
-        "source_date": "2026-07-09",
-        "availability_status": "ready",
+        "coverage_pct": 0,
+        "active_scoring_coverage_pct": 0,
+        "source_date": null,
+        "availability_status": "partial",
         "claim_scope": "yf_daily_source_available",
         "not_public_scoring": true,
         "caveat": "YF daily stock shards provide counted source freshness for US_CLASS/non-plain active rows. FINRA/OCC flow/options proxy mapping remains separate and is not required for daily source readiness."
@@ -282,13 +277,13 @@
       {
         "id": "asia_ex_taiwan_yf_daily_source",
         "label": "HKEX/SSE/SZSE YF daily source coverage",
-        "covered_count": 91,
+        "covered_count": 0,
         "denominator": 91,
         "denominator_label": "active_scoring_universe.asia_ex_taiwan",
-        "coverage_pct": 100,
-        "active_scoring_coverage_pct": 7.76,
-        "source_date": "2026-07-09",
-        "availability_status": "ready",
+        "coverage_pct": 0,
+        "active_scoring_coverage_pct": 0,
+        "source_date": null,
+        "availability_status": "partial",
         "claim_scope": "yf_daily_source_available",
         "not_public_scoring": true,
         "caveat": "YF daily stock shards provide counted source freshness for HKEX/SSE/SZSE active rows. This proves daily source availability, not exchange-official flow/options proxies."
@@ -354,14 +349,14 @@
       "formula": "KRX latest fully populated issuer daily proof + latest US bounded reference-ticker run"
     },
     "remaining_asia_ex_taiwan": {
-      "count": 0,
+      "count": 91,
       "denominator": 1173,
       "denominator_label": "active_scoring_universe.total",
-      "pct": 0,
+      "pct": 7.76,
       "claim_scope": "yf_daily_source_gap",
       "not_public_scoring": true,
       "excluded_from_s0_daily_gated_scope": false,
-      "blocks_daily_ready": false,
+      "blocks_daily_ready": true,
       "daily_gated_scope_denominator": 1173,
       "daily_gated_scope_label": "active_scoring_universe.us + active_scoring_universe.korea + active_scoring_universe.asia_ex_taiwan",
       "excluded_markets": [
@@ -381,10 +376,10 @@
       "caveat": "HKEX/SSE/SZSE active rows are included in the current S0 daily/gated source scope through YF daily stock shards; any nonzero count here blocks the all-active-stock daily claim."
     },
     "latest_available_all_active_daily_sources": {
-      "covered_count": 1173,
+      "covered_count": 1023,
       "denominator": 1173,
       "denominator_label": "active_scoring_universe.total",
-      "coverage_pct": 100,
+      "coverage_pct": 87.21,
       "claim_scope": "source_availability_composite",
       "not_public_scoring": true,
       "formula": "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows"
@@ -407,22 +402,22 @@
         "label": "Current active stock scoring chain",
         "denominator": 1173,
         "stage": "PUBLIC",
-        "readiness_status": "ready",
-        "public_done_claim_allowed": true,
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": true,
-          "gated": true
+          "daily": false,
+          "gated": false
         },
-        "caveat": "The current active stock chain is public-scored and has all-active-stock daily/gated source proof under the current S0 scope; FINRA/OCC mapping remains separate proxy expansion work for non-plain rows.",
+        "caveat": "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
         "blocking_evidence": {
           "evidence_origin": "derived_counts_only",
-          "daily_ready": true,
-          "gated_ready": true,
+          "daily_ready": false,
+          "gated_ready": false,
           "checks": [
             {
               "id": "krx_full_daily_source_ready",
@@ -443,7 +438,7 @@
               "denominator": 686,
               "missing_count": 0,
               "source_date": "2026-07-10",
-              "age_days": 3,
+              "age_days": 4,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=US. Source readiness means the FINRA daily file was checked for the ticker; absent FINRA rows stay null/low-evidence, not fabricated metrics.",
               "excluded_us_class_count": 59,
@@ -491,7 +486,7 @@
               "denominator": 686,
               "missing_count": 0,
               "source_date": "2026-07-10",
-              "age_days": 3,
+              "age_days": 4,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
               "derived_gap_breakdown": {
@@ -542,13 +537,13 @@
             },
             {
               "id": "us_class_yf_daily_source_ready",
-              "status": "ready",
-              "covered_count": 59,
+              "status": "blocked",
+              "covered_count": 0,
               "denominator": 59,
-              "missing_count": 0,
-              "source_date": "2026-07-09",
-              "latest_source_date": "2026-07-09",
-              "age_days": 4,
+              "missing_count": 59,
+              "source_date": null,
+              "latest_source_date": null,
+              "age_days": null,
               "max_age_days": 4,
               "markets": [
                 {
@@ -560,18 +555,109 @@
               "source_file_pattern": "data/yf/finance/{TICKER}.json",
               "daily_gated_scope_denominator": 1173,
               "daily_gated_scope_policy": "US_CLASS/non-plain active rows are included in S0 daily/gated via YF daily source freshness; FINRA/OCC proxy mapping remains a separate signal-expansion problem.",
-              "sample_blockers": [],
+              "sample_blockers": [
+                {
+                  "ticker": "2454.TW",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:48:19Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "2914.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:44:11Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "3382.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:52Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4063.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:55Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4452.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:40:04Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4502.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:44:18Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4519.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:48:29Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4568.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:56Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4612.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:37:01Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4661.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:44:18Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                }
+              ],
               "next_action": "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed US_CLASS/non-plain tickers before claiming all active S0 stocks as daily/gated."
             },
             {
               "id": "asia_ex_taiwan_yf_daily_source_ready",
-              "status": "ready",
-              "covered_count": 91,
+              "status": "blocked",
+              "covered_count": 0,
               "denominator": 91,
-              "missing_count": 0,
-              "source_date": "2026-07-09",
-              "latest_source_date": "2026-07-09",
-              "age_days": 4,
+              "missing_count": 91,
+              "source_date": null,
+              "latest_source_date": null,
+              "age_days": null,
               "max_age_days": 4,
               "markets": [
                 {
@@ -591,11 +677,339 @@
               "source_file_pattern": "data/yf/finance/{TICKER}.json",
               "daily_gated_scope_denominator": 1173,
               "daily_gated_scope_policy": "Current S0 daily/gated source scope is all active stock rows: KRX/KOSDAQ via KRX, plain US via FINRA/OCC source proof, HKEX/SSE/SZSE via scheduled YF daily stock shards.",
-              "sample_blockers": [],
+              "sample_blockers": [
+                {
+                  "ticker": "0003.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:32:57Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "002027.SZ",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:47:35Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "002352.SZ",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:24Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0066.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:30Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0386.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:39:28Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0388.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:42Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0669.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:39:34Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0857.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:27Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0883.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:28Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0941.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:53Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                }
+              ],
               "next_action": "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated."
             }
           ],
-          "blockers": [],
+          "blockers": [
+            {
+              "id": "us_class_yf_daily_source_ready",
+              "status": "blocked",
+              "covered_count": 0,
+              "denominator": 59,
+              "missing_count": 59,
+              "source_date": null,
+              "latest_source_date": null,
+              "age_days": null,
+              "max_age_days": 4,
+              "markets": [
+                {
+                  "market": "US_CLASS",
+                  "count": 59
+                }
+              ],
+              "claim_scope": "yf_daily_source_available",
+              "source_file_pattern": "data/yf/finance/{TICKER}.json",
+              "daily_gated_scope_denominator": 1173,
+              "daily_gated_scope_policy": "US_CLASS/non-plain active rows are included in S0 daily/gated via YF daily source freshness; FINRA/OCC proxy mapping remains a separate signal-expansion problem.",
+              "sample_blockers": [
+                {
+                  "ticker": "2454.TW",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:48:19Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "2914.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:44:11Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "3382.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:52Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4063.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:55Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4452.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:40:04Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4502.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:44:18Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4519.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:48:29Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4568.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:56Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4612.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:37:01Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "4661.T",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:44:18Z",
+                  "history_1y_rows": 244,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                }
+              ],
+              "next_action": "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed US_CLASS/non-plain tickers before claiming all active S0 stocks as daily/gated."
+            },
+            {
+              "id": "asia_ex_taiwan_yf_daily_source_ready",
+              "status": "blocked",
+              "covered_count": 0,
+              "denominator": 91,
+              "missing_count": 91,
+              "source_date": null,
+              "latest_source_date": null,
+              "age_days": null,
+              "max_age_days": 4,
+              "markets": [
+                {
+                  "market": "HKEX",
+                  "count": 34
+                },
+                {
+                  "market": "SSE",
+                  "count": 38
+                },
+                {
+                  "market": "SZSE",
+                  "count": 19
+                }
+              ],
+              "claim_scope": "yf_daily_source_available",
+              "source_file_pattern": "data/yf/finance/{TICKER}.json",
+              "daily_gated_scope_denominator": 1173,
+              "daily_gated_scope_policy": "Current S0 daily/gated source scope is all active stock rows: KRX/KOSDAQ via KRX, plain US via FINRA/OCC source proof, HKEX/SSE/SZSE via scheduled YF daily stock shards.",
+              "sample_blockers": [
+                {
+                  "ticker": "0003.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:32:57Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "002027.SZ",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:47:35Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "002352.SZ",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:24Z",
+                  "history_1y_rows": 243,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0066.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:30Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0386.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:39:28Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0388.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:42Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0669.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:39:34Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0857.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:27Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0883.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:33:28Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                },
+                {
+                  "ticker": "0941.HK",
+                  "source_date": "2026-07-09",
+                  "fetched_at": "2026-07-09T02:43:53Z",
+                  "history_1y_rows": 246,
+                  "source_fresh": false,
+                  "ready": false,
+                  "ready_basis": "yf_history_1y"
+                }
+              ],
+              "next_action": "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated."
+            }
+          ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
         }
       },
@@ -603,32 +1017,35 @@
         "id": "expanded_stock_candidates",
         "label": "Expanded stock candidate promotion",
         "denominator": 1395,
-        "stage": "PUBLIC_GATED_WITH_BLOCKED_LEDGER",
-        "readiness_status": "ready",
-        "public_done_claim_allowed": true,
+        "stage": "NORMALIZED",
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": true,
-          "gated": true
+          "daily": false,
+          "gated": false
         },
-        "caveat": "Every S1 stock candidate is either current public S0 daily/gated or explicitly blocked by the promotion ledger; blocked rows stay non-public and non-scored.",
+        "caveat": "222 stock candidates need promotion audit before they can increase scored/public stock coverage.",
         "promotion_gate_readiness": {
           "evidence_origin": "admin_promotion_artifact_and_current_public_counts",
           "artifact_present": true,
-          "artifact_generated_at": "2026-07-13T23:49:27.229Z",
+          "artifact_generated_at": "2026-07-14T00:09:42.893Z",
           "source_gate": "s1_stock_promotion_candidates.joined_gate",
           "public_mutation_enabled_in_artifact": false,
           "joined_ready": true,
           "scored_ready": true,
           "public_ready": true,
-          "daily_ready": true,
-          "gated_ready": true,
-          "public_done_claim_allowed": true,
-          "blockers": [],
+          "daily_ready": false,
+          "gated_ready": false,
+          "public_done_claim_allowed": false,
+          "blockers": [
+            "active_s0_daily_ready",
+            "active_s0_gated_ready"
+          ],
           "counts": {
             "denominator": 1395,
             "current_public_stock": 1173,
@@ -667,11 +1084,11 @@
             },
             {
               "id": "inherits_active_s0_daily_ready",
-              "ok": true
+              "ok": false
             },
             {
               "id": "inherits_active_s0_gated_ready",
-              "ok": true
+              "ok": false
             }
           ],
           "caveat": "S1 completion means every normalized stock candidate is either promoted into the current public S0 daily/gated chain or explicitly excluded by the blocked promotion ledger; blocked rows are not fabricated public scores."
@@ -682,23 +1099,23 @@
         "label": "ETF scoring lane",
         "denominator": 4515,
         "stage": "PUBLIC",
-        "readiness_status": "not_ready",
-        "public_done_claim_allowed": false,
+        "readiness_status": "ready",
+        "public_done_claim_allowed": true,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": false,
-          "gated": false
+          "daily": true,
+          "gated": true
         },
         "caveat": "ETF scores are public-surfaced by the named ETF gate. Full-universe DAILY/GATED remains a diagnostic/backlog track; ETF service DAILY/GATED is evaluated by the Core Daily Basket sublane.",
         "evidence_based_readiness": {
-          "classification_as_of": "2026-07-13T23:49:09.397Z",
+          "classification_as_of": "2026-07-14T00:09:28.023Z",
           "public_ready": true,
-          "daily_ready": false,
-          "gated_ready": false,
+          "daily_ready": true,
+          "gated_ready": true,
           "gate_ok": true,
           "public_surface_proof": {
             "ready": true,
@@ -719,32 +1136,32 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-07-13T23:49:31.180Z",
+              "generated_at": "2026-07-14T00:09:46.010Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-07-13T23:49:25.884Z",
+              "generated_at": "2026-07-14T00:09:41.773Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_no_fetchable_required_history_gap",
-              "ok": false,
-              "fetchable_required_history": 2,
-              "missing_required_history": 10,
+              "ok": true,
+              "fetchable_required_history": 0,
+              "missing_required_history": 8,
               "inception_limited_required_history": 6,
               "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
             },
             {
               "id": "etf_no_fetchable_daily_1y_gap",
-              "ok": false,
-              "classification_as_of": "2026-07-13T23:49:09.397Z",
-              "fetchable_daily_1y_gap": 30,
-              "inception_limited_daily_1y_gap": 721,
-              "terminal_limited_daily_1y_gap": 58,
+              "ok": true,
+              "classification_as_of": "2026-07-14T00:09:28.023Z",
+              "fetchable_daily_1y_gap": 0,
+              "inception_limited_daily_1y_gap": 736,
+              "terminal_limited_daily_1y_gap": 73,
               "history_gap_report_match": true,
               "claim_scope": "full_scored_etf_universe_diagnostic",
               "service_gate": false,
@@ -755,22 +1172,22 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-07-13T23:49:31.180Z",
+              "generated_at": "2026-07-14T00:09:46.010Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-07-13T23:49:25.884Z",
+              "generated_at": "2026-07-14T00:09:41.773Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_no_fetchable_required_history_gap",
-              "ok": false,
-              "fetchable_required_history": 2,
-              "missing_required_history": 10,
+              "ok": true,
+              "fetchable_required_history": 0,
+              "missing_required_history": 8,
               "inception_limited_required_history": 6,
               "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
             }
@@ -778,34 +1195,29 @@
           "diagnostic_backlog_checks": [
             {
               "id": "etf_no_fetchable_daily_1y_gap",
-              "ok": false,
-              "classification_as_of": "2026-07-13T23:49:09.397Z",
-              "fetchable_daily_1y_gap": 30,
-              "inception_limited_daily_1y_gap": 721,
-              "terminal_limited_daily_1y_gap": 58,
+              "ok": true,
+              "classification_as_of": "2026-07-14T00:09:28.023Z",
+              "fetchable_daily_1y_gap": 0,
+              "inception_limited_daily_1y_gap": 736,
+              "terminal_limited_daily_1y_gap": 73,
               "history_gap_report_match": true,
               "claim_scope": "full_scored_etf_universe_diagnostic",
               "service_gate": false,
               "caveat": "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; only immediately fetchable gaps keep the full-universe diagnostic lane daily=false."
             }
           ],
-          "blockers": [
-            "etf_no_fetchable_required_history_gap",
-            "gated_ready"
-          ],
-          "diagnostic_backlog": [
-            "etf_no_fetchable_daily_1y_gap"
-          ],
+          "blockers": [],
+          "diagnostic_backlog": [],
           "counts": {
             "scored_public_etf": 4515,
             "eligible_etf_count": 4515,
             "public_summary_rows": 4515,
             "internal_summary_rows": 4515,
-            "fetchable_required_history": 2,
+            "fetchable_required_history": 0,
             "inception_limited_required_history": 6,
-            "fetchable_daily_1y_gap": 30,
-            "inception_limited_daily_1y_gap": 721,
-            "terminal_limited_daily_1y_gap": 58,
+            "fetchable_daily_1y_gap": 0,
+            "inception_limited_daily_1y_gap": 736,
+            "terminal_limited_daily_1y_gap": 73,
             "history_gap_report_match": true
           }
         }
@@ -830,8 +1242,8 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-07-13T23:49:43.724Z",
-          "generated_age_hours": 0.01,
+          "generated_at": "2026-07-14T00:09:56.050Z",
+          "generated_age_hours": 0,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
           "daily_ready": true,
@@ -886,7 +1298,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-07-13T23:49:52.605Z"
+        "generated_at": "2026-07-14T00:10:03.606Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -898,32 +1310,32 @@
       {
         "id": "us_flow_source_date",
         "source_date": "2026-07-10",
-        "age_days": 3,
+        "age_days": 4,
         "status": "ready"
       },
       {
         "id": "us_occ_source_date",
         "source_date": "2026-07-10",
-        "age_days": 3,
+        "age_days": 4,
         "status": "ready"
       },
       {
         "id": "us_class_yf_source_date",
-        "source_date": "2026-07-09",
-        "latest_source_date": "2026-07-09",
-        "age_days": 4,
-        "status": "ready",
-        "covered_count": 59,
+        "source_date": null,
+        "latest_source_date": null,
+        "age_days": null,
+        "status": "stale",
+        "covered_count": 0,
         "denominator": 59,
         "caveat": "Oldest fresh YF fetched_at date across US_CLASS/non-plain active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim."
       },
       {
         "id": "asia_ex_taiwan_yf_source_date",
-        "source_date": "2026-07-09",
-        "latest_source_date": "2026-07-09",
-        "age_days": 4,
-        "status": "ready",
-        "covered_count": 91,
+        "source_date": null,
+        "latest_source_date": null,
+        "age_days": null,
+        "status": "stale",
+        "covered_count": 0,
         "denominator": 91,
         "caveat": "Oldest fresh YF fetched_at date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim."
       },
@@ -948,38 +1360,38 @@
       },
       {
         "id": "etf_signal_summary_freshness",
-        "generated_at": "2026-07-13T23:49:31.180Z",
+        "generated_at": "2026-07-14T00:09:46.010Z",
         "age_hours": 0.01,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-07-13T23:49:25.884Z",
+        "generated_at": "2026-07-14T00:09:41.773Z",
         "age_hours": 0.01,
         "max_age_hours": 48,
-        "fetchable_required_history": 2,
+        "fetchable_required_history": 0,
         "inception_limited_required_history": 6,
-        "status": "blocked_fetchable_gap",
+        "status": "ready",
         "caveat": "Fetchable required-history gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block daily readiness by themselves."
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-07-13T23:49:25.884Z",
-        "classification_as_of": "2026-07-13T23:49:09.397Z",
-        "fetchable_daily_1y_gap": 30,
-        "inception_limited_daily_1y_gap": 721,
-        "terminal_limited_daily_1y_gap": 58,
+        "generated_at": "2026-07-14T00:09:41.773Z",
+        "classification_as_of": "2026-07-14T00:09:28.023Z",
+        "fetchable_daily_1y_gap": 0,
+        "inception_limited_daily_1y_gap": 736,
+        "terminal_limited_daily_1y_gap": 73,
         "history_gap_report_match": true,
-        "status": "blocked_fetchable_daily_gap",
+        "status": "ready",
         "claim_scope": "full_scored_etf_universe_diagnostic",
         "service_gate": false,
         "caveat": "Full scored-ETF daily 1Y continuity is a diagnostic/backfill track, not the ETF Core Daily Basket service gate."
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-07-13T23:49:43.724Z",
-        "age_hours": 0.01,
+        "generated_at": "2026-07-14T00:09:56.050Z",
+        "age_hours": 0,
         "selected_count": 98,
         "fresh_selected_count": 98,
         "stale_selected_count": 0,

@@ -1,13 +1,13 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-13T23:50:02.831Z",
-  "classification_as_of": "2026-07-13T23:49:09.397Z",
+  "generated_at": "2026-07-14T00:10:12.506Z",
+  "classification_as_of": "2026-07-14T00:09:28.023Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
-  "readiness_status": "not_ready",
-  "public_done_claim_allowed": false,
+  "readiness_status": "ready",
+  "public_done_claim_allowed": true,
   "raw_policy": {
     "raw_public": false,
     "raw_rows_included": false,
@@ -27,43 +27,27 @@
     "denominator": 4515,
     "daily_1y_complete": 3706,
     "daily_1y_missing": 809,
-    "daily_1y_fetchable": 30,
-    "inception_limited_daily_1y_gap": 721,
-    "terminal_limited_daily_1y_gap": 58,
+    "daily_1y_fetchable": 0,
+    "inception_limited_daily_1y_gap": 736,
+    "terminal_limited_daily_1y_gap": 73,
     "fetchable_breakdown": {
-      "counts": {
-        "stockanalysis_short_rows": 30
-      },
-      "samples": {
-        "stockanalysis_short_rows": [
-          "AMUN",
-          "ASCI",
-          "CMAY",
-          "CRUX",
-          "DDFY",
-          "DDTY",
-          "DHLX",
-          "DRVR",
-          "DUSG",
-          "FREI"
-        ]
-      }
+      "counts": {},
+      "samples": {}
     },
     "terminal_limited_breakdown": {
       "data_supply_unavailable": 9,
-      "provider_history_start_limited": 2,
-      "provider_rejected_non_etf": 47
+      "provider_history_start_limited": 10,
+      "provider_rejected_non_etf": 47,
+      "stockanalysis_recent_short_rows": 6,
+      "successful_short_history_cooldown": 1
     },
-    "etf_no_fetchable_daily_1y_gap": 30,
+    "etf_no_fetchable_daily_1y_gap": 0,
     "count_equation": "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap + terminal_limited_daily_1y_gap == denominator",
     "count_equation_ok": true,
-    "no_fetchable_daily_1y_gap": false,
-    "daily_ready": false,
-    "gated_ready": false,
-    "blockers": [
-      "etf_no_fetchable_daily_1y_gap",
-      "gated_ready"
-    ],
+    "no_fetchable_daily_1y_gap": true,
+    "daily_ready": true,
+    "gated_ready": true,
+    "blockers": [],
     "claim_scope": "full_scored_etf_universe_diagnostic",
     "service_gate": false,
     "caveat": "Only immediately fetchable daily 1Y gaps block the full scored-ETF diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves."
@@ -73,101 +57,20 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 30,
-    "coverage_index_inception_limited_daily_1y_gap": 721,
-    "coverage_index_terminal_limited_daily_1y_gap": 58,
+    "coverage_index_fetchable_daily_1y_gap": 0,
+    "coverage_index_inception_limited_daily_1y_gap": 736,
+    "coverage_index_terminal_limited_daily_1y_gap": 73,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4515,
-    "history_gap_report_fetchable_daily_1y_gap": 30,
-    "history_gap_report_inception_limited_daily_1y_gap": 721,
-    "history_gap_report_terminal_limited_daily_1y_gap": 58
+    "history_gap_report_fetchable_daily_1y_gap": 0,
+    "history_gap_report_inception_limited_daily_1y_gap": 736,
+    "history_gap_report_terminal_limited_daily_1y_gap": 73
   },
   "samples": {
-    "fetchable": [
-      {
-        "ticker": "AMUN",
-        "actual_rows": 178,
-        "missing_file": false,
-        "inception_date": "2025-10-21",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "ASCI",
-        "actual_rows": 178,
-        "missing_file": false,
-        "inception_date": "2025-10-21",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "CMAY",
-        "actual_rows": 44,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "CRUX",
-        "actual_rows": 78,
-        "missing_file": false,
-        "inception_date": "2026-03-17",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DDFY",
-        "actual_rows": 45,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DDTY",
-        "actual_rows": 45,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DHLX",
-        "actual_rows": 193,
-        "missing_file": false,
-        "inception_date": "2025-09-30",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DRVR",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DUSG",
-        "actual_rows": 42,
-        "missing_file": false,
-        "inception_date": "2026-05-07",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "FREI",
-        "actual_rows": 12,
-        "missing_file": false,
-        "inception_date": "2026-06-22",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      }
-    ],
+    "fetchable": [],
     "inception_limited": [
       {
         "ticker": "AAAC",
@@ -284,6 +187,22 @@
         "effective_start_source": null
       },
       {
+        "ticker": "AMUN",
+        "actual_rows": 180,
+        "missing_file": false,
+        "inception_date": "2025-10-21",
+        "classification_reason": "provider_history_start_limited",
+        "effective_start_source": null
+      },
+      {
+        "ticker": "ASCI",
+        "actual_rows": 181,
+        "missing_file": false,
+        "inception_date": "2025-10-21",
+        "classification_reason": "provider_history_start_limited",
+        "effective_start_source": null
+      },
+      {
         "ticker": "BAVA",
         "actual_rows": 0,
         "missing_file": true,
@@ -309,22 +228,6 @@
       },
       {
         "ticker": "BHYP",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
-      {
-        "ticker": "CLNK",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
-      {
-        "ticker": "CLOO",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null,
@@ -377,26 +280,20 @@
   },
   "exact_fetchable_plan": {
     "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "fetchable_count": 30,
-    "ticker_count": 30,
+    "fetchable_count": 0,
+    "ticker_count": 0,
     "can_drive_bounded_ticker_batches": true,
-    "batch_count": 1,
+    "batch_count": 0,
     "default_batch_size": 120,
     "yf_local_crosscheck_gap_count": 4140,
     "yf_local_crosscheck_matches": false,
     "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
   "recommended_dispatch": {
-    "status": "scheduled_backfill_active",
+    "status": "not_recommended",
     "workflow": "fetch-stockanalysis.yml",
-    "schedule": "50 22 * * 1-5",
-    "schedule_kst": "Tue-Sat 07:50",
-    "inputs": {
-      "history_gaps_only": "true",
-      "required_history_periods": "daily_1y",
-      "incremental_etf_limit": "120"
-    },
-    "note": "The weekday scheduled lane drains scored ETF daily 1Y continuity gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate."
+    "inputs": null,
+    "note": "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires."
   },
   "errors": []
 }
