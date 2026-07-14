@@ -150,6 +150,7 @@ function validateFiniteNumbers(value, context, errors) {
 }
 
 const marketFactsTickerEvidenceCache = new Map();
+const marketFactsSourceAsOfMigrationPendingTickers = new Set();
 
 function marketFactsTickerSource(ticker, errors) {
   if (marketFactsTickerEvidenceCache.has(ticker)) return marketFactsTickerEvidenceCache.get(ticker);
@@ -167,6 +168,15 @@ function marketFactsTickerSource(ticker, errors) {
   }
   const payload = state.payload;
   assert(payload.ticker === ticker, `${ticker}: market_facts producer ticker identity mismatch`, errors);
+  const hasSourceAsOf = Object.prototype.hasOwnProperty.call(payload, "source_as_of");
+  const hasSourceAsOfScope = Object.prototype.hasOwnProperty.call(payload, "source_as_of_scope");
+  const hasSourceAsOfReason = Object.prototype.hasOwnProperty.call(payload, "source_as_of_reason");
+  if (!hasSourceAsOf && !hasSourceAsOfScope && !hasSourceAsOfReason) {
+    marketFactsSourceAsOfMigrationPendingTickers.add(ticker);
+    const evidence = { exists: true, sourceAsOf: null, sourceAsOfMigrationPending: true };
+    marketFactsTickerEvidenceCache.set(ticker, evidence);
+    return evidence;
+  }
   const sourceAsOf = payload.source_as_of;
   const selectedPriceSource = sourceDay(payload?.facts?.price?.as_of);
   assert(payload.source_as_of_scope === "selected_price_fact", `${ticker}: market_facts source_as_of scope must name the selected price fact`, errors);
@@ -231,6 +241,17 @@ function buildProducerEvidence(errors, warnings) {
     const guru = normalizedSourceStamp(guruQuarter);
     warn(summary?.kind === guru?.kind && summary?.key === guru?.key, "sec_13f producer evidence is behind across source artifacts", warnings);
   }
+  const marketFactsSourceDiagnosticKeys = [
+    "core_price_source_complete",
+    "core_price_missing_count",
+    "core_price_missing_tickers",
+  ];
+  const marketFactsSourceDiagnostics = plainObject(marketFactsIndex?.source_stamp_diagnostics)
+    ? marketFactsIndex.source_stamp_diagnostics
+    : {};
+  const marketFactsSourceDiagnosticPresence = marketFactsSourceDiagnosticKeys.map((key) => (
+    Object.prototype.hasOwnProperty.call(marketFactsSourceDiagnostics, key)
+  ));
 
   return new Map([
     ["stocks_analyzer", {
@@ -250,6 +271,14 @@ function buildProducerEvidence(errors, warnings) {
       sourceComplete: marketFactsIndex?.source_stamp_diagnostics?.core_price_source_complete === true,
       missingCount: marketFactsIndex?.source_stamp_diagnostics?.core_price_missing_count ?? null,
       missingTickers: marketFactsIndex?.source_stamp_diagnostics?.core_price_missing_tickers ?? null,
+      tickerCount: Array.isArray(marketFactsIndex?.rows) ? marketFactsIndex.rows.length : null,
+      tickers: Array.isArray(marketFactsIndex?.rows)
+        ? marketFactsIndex.rows.map((row) => row?.ticker).filter(nonEmptyString)
+        : [],
+      sourceDiagnosticsMigrationPending: Boolean(marketFactsIndex)
+        && marketFactsSourceDiagnosticPresence.every((present) => !present),
+      sourceDiagnosticsMigrationPartial: marketFactsSourceDiagnosticPresence.some(Boolean)
+        && !marketFactsSourceDiagnosticPresence.every(Boolean),
     }],
     ["edgar_summaries", { expected: null, intentionalNull: true, requiredReason: NO_AGGREGATE_SOURCE_DATE }],
     ["sec_13f", {
@@ -350,6 +379,9 @@ const graph = graphPair?.root ?? null;
 const stockIndex = stockIndexPair?.root ?? null;
 const stockServices = stockServicesPair?.root ?? null;
 const producerEvidence = buildProducerEvidence(errors, warnings);
+for (const ticker of producerEvidence.get("market_facts")?.tickers ?? []) {
+  marketFactsTickerSource(ticker, errors);
+}
 const expectedPolicyJson = JSON.stringify(expectedEntityKeyPolicy());
 const allowedConfidenceLabels = new Set(["high", "medium", "low", "unknown"]);
 const allowedResolutionMethods = new Set(["direct", "symbol_variant", "alias", "regex"]);
@@ -492,23 +524,32 @@ if (graph) {
     errors,
   );
   const marketFactsEvidence = producerEvidence.get("market_facts");
-  assert(
-    graph.diagnostics?.market_facts_core_price_source_complete === marketFactsEvidence?.sourceComplete,
-    "market_facts source completeness must match producer diagnostics",
-    errors,
-  );
-  assert(
-    graph.diagnostics?.market_facts_core_price_missing_count === marketFactsEvidence?.missingCount,
-    "market_facts missing-source count must match producer diagnostics",
-    errors,
-  );
-  assert(
-    isDeepStrictEqual(graph.diagnostics?.market_facts_core_price_missing_tickers, marketFactsEvidence?.missingTickers),
-    "market_facts missing-source ticker list must match producer diagnostics",
-    errors,
-  );
-  if (marketFactsEvidence?.missingCount > 0) {
-    warnings.push(`market_facts source dates are partial for ${marketFactsEvidence.missingCount} core ticker(s): ${(marketFactsEvidence.missingTickers || []).join(", ")}`);
+  if (marketFactsEvidence?.sourceDiagnosticsMigrationPending) {
+    warnings.push("market_facts source-stamp diagnostics pending producer regeneration");
+  } else {
+    assert(
+      marketFactsEvidence?.sourceDiagnosticsMigrationPartial !== true,
+      "market_facts source-stamp diagnostics migration is partial",
+      errors,
+    );
+    assert(
+      graph.diagnostics?.market_facts_core_price_source_complete === marketFactsEvidence?.sourceComplete,
+      "market_facts source completeness must match producer diagnostics",
+      errors,
+    );
+    assert(
+      graph.diagnostics?.market_facts_core_price_missing_count === marketFactsEvidence?.missingCount,
+      "market_facts missing-source count must match producer diagnostics",
+      errors,
+    );
+    assert(
+      isDeepStrictEqual(graph.diagnostics?.market_facts_core_price_missing_tickers, marketFactsEvidence?.missingTickers),
+      "market_facts missing-source ticker list must match producer diagnostics",
+      errors,
+    );
+    if (marketFactsEvidence?.missingCount > 0) {
+      warnings.push(`market_facts source dates are partial for ${marketFactsEvidence.missingCount} core ticker(s): ${(marketFactsEvidence.missingTickers || []).join(", ")}`);
+    }
   }
 
   for (const stock of nodeGroups.stocks) {
@@ -622,6 +663,15 @@ if (stockIndex) {
   }
 }
 
+const marketFactsSourceAsOfMigrationPendingCount = marketFactsSourceAsOfMigrationPendingTickers.size;
+const marketFactsSourceAsOfMigrationTotalCount = producerEvidence.get("market_facts")?.tickerCount
+  ?? marketFactsTickerEvidenceCache.size;
+if (marketFactsSourceAsOfMigrationPendingCount > 0) {
+  warnings.push(
+    `${marketFactsSourceAsOfMigrationPendingCount} of ${marketFactsSourceAsOfMigrationTotalCount} market_facts tickers pending source_as_of_scope migration; will resolve as the producer regenerates them`,
+  );
+}
+
 if (errors.length) {
   console.error("data graph check failed");
   for (const error of errors) console.error(`- ${error}`);
@@ -638,4 +688,11 @@ console.log(JSON.stringify({
   totals: graph?.totals ?? stockIndex?.totals ?? stockServices?.totals ?? null,
   source_as_of: graph?.source_as_of ?? stockIndex?.source_as_of ?? stockServices?.source_as_of ?? null,
   source_as_of_reason: graph?.source_as_of_reason ?? stockIndex?.source_as_of_reason ?? stockServices?.source_as_of_reason ?? null,
+  migration: {
+    market_facts_source_as_of_scope: {
+      status: marketFactsSourceAsOfMigrationPendingCount > 0 ? "degraded" : "ready",
+      pending_count: marketFactsSourceAsOfMigrationPendingCount,
+      total_count: marketFactsSourceAsOfMigrationTotalCount,
+    },
+  },
 }, null, 2));
