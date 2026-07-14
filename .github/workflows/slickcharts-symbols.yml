@@ -50,14 +50,15 @@ jobs:
   scrape-batch:
     if: ${{ github.event.inputs.batch != 'single' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
-    env:
-      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-symbols-${{ matrix.batch }}.jsonl
     strategy:
       fail-fast: false
       matrix:
         batch: [A-D, E-L, M-R, S-Z]
 
     steps:
+      - name: Configure batch attempt telemetry path
+        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-symbols-${{ matrix.batch }}.jsonl" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -191,10 +192,11 @@ jobs:
   scrape-single:
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
-    env:
-      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-symbols-single.jsonl
 
     steps:
+      - name: Configure single-symbol attempt telemetry path
+        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-symbols-single.jsonl" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 

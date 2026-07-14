@@ -102,14 +102,15 @@ jobs:
     if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
     needs: membership
     runs-on: ubuntu-latest
-    env:
-      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-history-returns-${{ matrix.batch }}.jsonl
     strategy:
       fail-fast: false
       matrix:
         batch: [A-D, E-L, M-R, S-Z]
 
     steps:
+      - name: Configure returns attempt telemetry path
+        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-history-returns-${{ matrix.batch }}.jsonl" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -156,14 +157,15 @@ jobs:
     if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
     needs: membership
     runs-on: ubuntu-latest
-    env:
-      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-history-dividends-${{ matrix.batch }}.jsonl
     strategy:
       fail-fast: false
       matrix:
         batch: [A-D, E-L, M-R, S-Z]
 
     steps:
+      - name: Configure dividends attempt telemetry path
+        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-history-dividends-${{ matrix.batch }}.jsonl" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -349,10 +351,11 @@ jobs:
   scrape-single:
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
-    env:
-      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-history-single.jsonl
 
     steps:
+      - name: Configure single-symbol attempt telemetry path
+        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-history-single.jsonl" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 

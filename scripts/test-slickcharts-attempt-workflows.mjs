@@ -15,6 +15,12 @@ for (const member of members) {
   assert.match(workflow, /scripts\/publish-slickcharts-attempt\.sh/);
   assert.match(workflow, /- name: (?:Commit and push changes|Commit .* attempt)\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.match(workflow, /SLICKCHARTS_ATTEMPT_EVENTS_PATH/);
+  assert.doesNotMatch(
+    workflow,
+    /runs-on:[^\n]+\n\s+env:\n\s+SLICKCHARTS_ATTEMPT_EVENTS_PATH: \$\{\{ runner\.temp \}\}/,
+    `${member} must not use runner context in job-level env`,
+  );
+  assert.match(workflow, /SLICKCHARTS_ATTEMPT_EVENTS_PATH=\$RUNNER_TEMP\/.+ >> "\$GITHUB_ENV"/);
   assert.doesNotMatch(workflow, /git pull --rebase --autostash/, `${member} must use shard-aware publishing`);
 }
 

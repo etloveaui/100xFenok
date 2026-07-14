@@ -40,10 +40,11 @@ concurrency:
 jobs:
   scrape-daily:
     runs-on: ubuntu-latest
-    env:
-      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-daily-attempt-events.jsonl
 
     steps:
+      - name: Configure attempt telemetry path
+        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-daily-attempt-events.jsonl" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
