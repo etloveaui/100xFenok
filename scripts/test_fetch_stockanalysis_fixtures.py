@@ -142,9 +142,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "sectors": [],
             }
 
-        def fake_fetch_json(path: str, _timeout: int) -> dict:
-            self.assertEqual(path, "/api/quotes/e/AAAU")
-            return {"status": 200, "data": {"p": 20.0, "td": "2026-07-14"}}
+        def fake_fetch_json(_path: str, _timeout: int) -> dict:
+            self.fail("initial reconcile must not fetch quote or history endpoints")
 
         def fake_fetch_history(_ticker: str, _timeout: int):
             nonlocal history_called
@@ -155,7 +154,13 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.fetcher.fetch_json = fake_fetch_json
         self.fetcher.fetch_etf_history_periods = fake_fetch_history
         try:
-            payload = self.fetcher.fetch_etf("AAAU", 1, include_history=False)
+            payload = self.fetcher.fetch_etf(
+                "AAAU",
+                1,
+                include_history=False,
+                include_quote=False,
+                allow_partial_holdings=True,
+            )
         finally:
             self.fetcher.fetch_svelte_detail = original_fetch_svelte
             self.fetcher.fetch_json = original_fetch_json
@@ -164,11 +169,53 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertFalse(history_called)
         self.assertEqual(payload["detail_status"], "stockanalysis_partial")
         self.assertIn("history_deferred_initial_reconcile", payload["partial_reason_codes"])
+        self.assertIn("quote_deferred_initial_reconcile", payload["partial_reason_codes"])
         self.assertIn("holdings_count_unavailable", payload["partial_reason_codes"])
         self.assertIn("holdings_date_unavailable", payload["partial_reason_codes"])
         self.assertIn("holdings_countries_unavailable", payload["partial_reason_codes"])
         self.assertEqual(payload["normalized"]["holding_count"], 1)
-        self.assertEqual(payload["source_as_of"], "2026-07-14T00:00:00Z")
+        self.assertIsNone(payload["source_as_of"])
+        self.assertEqual(
+            payload["source_as_of_reason"],
+            "provider detail response carries no market or holdings observation date",
+        )
+
+    def test_reconcile_accepts_valid_overview_when_holdings_surface_omits_holdings(self) -> None:
+        original_fetch_svelte = self.fetcher.fetch_svelte_detail
+
+        def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
+            if surface == "overview":
+                return f"/etf/{ticker.lower()}/__data.json", {
+                    "holdings": 12,
+                    "holdingsTable": {"count": 12},
+                    "inception": "Jan 1, 2026",
+                }
+            raise ValueError(
+                "svelte_contract_drift:holdings:missing_required:holdings"
+            )
+
+        self.fetcher.fetch_svelte_detail = fake_fetch_svelte
+        try:
+            with self.assertRaisesRegex(ValueError, "missing_required:holdings"):
+                self.fetcher.fetch_etf("AAOX", 1, include_history=False)
+            payload = self.fetcher.fetch_etf(
+                "AAOX",
+                1,
+                include_history=False,
+                include_quote=False,
+                allow_partial_holdings=True,
+            )
+        finally:
+            self.fetcher.fetch_svelte_detail = original_fetch_svelte
+
+        self.assertEqual(payload["detail_status"], "stockanalysis_partial")
+        self.assertEqual(payload["normalized"]["holdings"], [])
+        self.assertIn("holdings_unavailable", payload["partial_reason_codes"])
+        self.assertIn(
+            "holdings_surface_omits_holdings",
+            payload["partial_reason_codes"],
+        )
+        self.assertIsNone(payload["source_as_of"])
 
     def test_etf_history_expected_400_is_recorded_as_unavailable_not_schema_drift(self) -> None:
         original_fetch_json = self.fetcher.fetch_json
@@ -2417,6 +2464,75 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(provider_object_bytes, primary_bytes)
         self.assertEqual(pending["observation_event_id"], observations[0]["event_id"])
 
+    def test_undated_stockanalysis_partial_is_written_as_degraded_not_valid_state(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        original_fetch_etf = self.fetcher.fetch_etf
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                self.fetcher.PUBLIC_DIR = temp_root / "public" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = (
+                    temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                )
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
+                    "schema_version": self.fetcher.SCHEMA_VERSION,
+                    "source": "stockanalysis",
+                    "asset_type": "etf",
+                    "ticker": ticker,
+                    "detail_status": "stockanalysis_partial",
+                    "partial_reason_codes": ["holdings_surface_omits_holdings"],
+                    "source_as_of": None,
+                    "source_as_of_reason": (
+                        "provider detail response carries no market or holdings observation date"
+                    ),
+                    "fetched_at": "2026-07-14T00:00:00Z",
+                    "normalized": {"overview": {"aum": 1}},
+                }
+                result = self.fetcher.run_one(
+                    "etf",
+                    "AAOX",
+                    1,
+                    False,
+                    include_etf_history=False,
+                )
+                observations_path = next(
+                    (
+                        self.fetcher.DATA_SUPPLY_STATE_ROOT
+                        / "history"
+                        / "observations"
+                    ).glob("*.jsonl")
+                )
+                observations = [
+                    json.loads(line)
+                    for line in observations_path.read_text(encoding="utf-8").splitlines()
+                ]
+                payload = json.loads(
+                    (self.fetcher.OUT_DIR / "etfs" / "AAOX.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+            self.fetcher.fetch_etf = original_fetch_etf
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(
+            result["provider_availability_reason"],
+            "provider_partial_detail_contract_valid",
+        )
+        self.assertIsNone(payload["source_as_of"])
+        self.assertEqual(observations[0]["validation_status"], "invalid")
+        self.assertEqual(
+            observations[0]["reason_code"],
+            "partial_source_date_unavailable",
+        )
+        self.assertIsNone(observations[0]["source_as_of"])
+
     def test_stockanalysis_self_asserted_source_date_without_provider_evidence_is_invalid(self) -> None:
         payload = {
             "schema_version": self.fetcher.SCHEMA_VERSION,
@@ -2433,6 +2549,28 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         payload["raw"] = {"quote": {"td": "2026-07-09", "ts": 1783555200}}
         with self.assertRaisesRegex(ValueError, "disagrees with provider evidence"):
             self.fetcher.validate_stockanalysis_etf_payload("VYMI", payload)
+
+    def test_stockanalysis_partial_accepts_null_with_reason_but_rejects_fabricated_date(self) -> None:
+        payload = {
+            "schema_version": self.fetcher.SCHEMA_VERSION,
+            "source": "stockanalysis",
+            "asset_type": "etf",
+            "ticker": "AAOX",
+            "detail_status": "stockanalysis_partial",
+            "partial_reason_codes": ["holdings_surface_omits_holdings"],
+            "source_as_of": None,
+            "source_as_of_reason": (
+                "provider detail response carries no market or holdings observation date"
+            ),
+            "fetched_at": "2026-07-14T00:00:00Z",
+            "normalized": {"overview": {"aum": 1}},
+        }
+
+        self.fetcher.validate_stockanalysis_etf_payload("AAOX", payload)
+
+        payload["source_as_of"] = "2026-07-14T00:00:00Z"
+        with self.assertRaisesRegex(ValueError, "provider source date is unavailable"):
+            self.fetcher.validate_stockanalysis_etf_payload("AAOX", payload)
 
     def test_stockanalysis_path_rejects_cross_provider_payload(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

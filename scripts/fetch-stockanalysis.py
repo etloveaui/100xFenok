@@ -602,6 +602,12 @@ def stockanalysis_detail_source_timestamp(payload: dict | None) -> str | None:
     return (
         quote_source_timestamp(raw.get("quote"))
         or quote_source_timestamp(normalized.get("quote"))
+        or stockanalysis_date_source_timestamp(
+            (raw.get("holdings") or {}).get("date")
+            if isinstance(raw.get("holdings"), dict)
+            else None
+        )
+        or stockanalysis_date_source_timestamp(normalized.get("holdings_updated"))
         or latest_history_source_timestamp(payload)
     )
 
@@ -1854,15 +1860,46 @@ def load_etf_universe_symbols() -> list[str]:
     return symbols
 
 
-def fetch_etf(ticker: str, timeout: int, *, include_history: bool = True) -> dict:
+def fetch_etf(
+    ticker: str,
+    timeout: int,
+    *,
+    include_history: bool = True,
+    include_quote: bool = True,
+    allow_partial_holdings: bool = False,
+) -> dict:
     overview_path, overview_data = fetch_svelte_detail(ticker, "overview", timeout)
     holdings_unavailable = overview_declares_holdings_unavailable(overview_data)
-    holdings_path, holdings_data = fetch_svelte_detail(
-        ticker,
-        "holdings",
-        timeout,
-        allow_unavailable=holdings_unavailable,
-    )
+    holdings_unavailability_reason = None
+    try:
+        holdings_path, holdings_data = fetch_svelte_detail(
+            ticker,
+            "holdings",
+            timeout,
+            allow_unavailable=holdings_unavailable,
+        )
+    except (urllib.error.HTTPError, ValueError) as exc:
+        missing_holdings_contract = (
+            isinstance(exc, ValueError)
+            and str(exc) == "svelte_contract_drift:holdings:missing_required:holdings"
+        )
+        missing_holdings_endpoint = (
+            isinstance(exc, urllib.error.HTTPError) and exc.code in (400, 404)
+        )
+        if not allow_partial_holdings or not (
+            missing_holdings_contract or missing_holdings_endpoint
+        ):
+            raise
+        holdings_path = ETF_DETAIL_SURFACE_CONTRACTS["holdings"]["path"].format(
+            ticker=ticker.lower()
+        )
+        holdings_data = {}
+        holdings_unavailable = True
+        holdings_unavailability_reason = (
+            "holdings_surface_omits_holdings"
+            if missing_holdings_contract
+            else f"holdings_surface_http_{exc.code}"
+        )
     if include_history:
         history_paths, history_periods, history_errors = fetch_etf_history_periods(ticker, timeout)
     else:
@@ -1870,13 +1907,17 @@ def fetch_etf(ticker: str, timeout: int, *, include_history: bool = True) -> dic
     paths = {
         "holdings": holdings_path,
         "overview": overview_path,
-        "quote": f"/api/quotes/e/{ticker}",
+        "quote": f"/api/quotes/e/{ticker}" if include_quote else None,
         "history_periods": history_paths,
     }
     raw = {
         "overview": overview_data,
         "holdings": holdings_data,
-        "quote": pick_data(fetch_json(paths["quote"], timeout)),
+        "quote": (
+            pick_data(fetch_json(paths["quote"], timeout))
+            if include_quote
+            else None
+        ),
     }
     raw["history"] = history_periods.get("monthly_1y")
     raw["history_periods"] = history_periods
@@ -1890,12 +1931,19 @@ def fetch_etf(ticker: str, timeout: int, *, include_history: bool = True) -> dic
         holdings=normalized_holdings,
     )
     fetched_at = now_iso()
+    provider_source_as_of = (
+        quote_source_timestamp(raw.get("quote"))
+        or stockanalysis_date_source_timestamp(holdings_data.get("date"))
+        or latest_history_source_timestamp(
+            {"normalized": {"history_periods": history_periods}}
+        )
+    )
     payload = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "asset_type": "etf",
         "ticker": ticker,
-        "source_as_of": quote_source_timestamp(raw.get("quote")) or latest_history_source_timestamp({"normalized": {"history_periods": history_periods}}),
+        "source_as_of": provider_source_as_of,
         "fetched_at": fetched_at,
         "endpoints": paths,
         "endpoint_contracts": {
@@ -1944,17 +1992,23 @@ def fetch_etf(ticker: str, timeout: int, *, include_history: bool = True) -> dic
     }
     partial_reason_codes = [
         *(["holdings_unavailable"] if holdings_unavailable else []),
+        *([holdings_unavailability_reason] if holdings_unavailability_reason else []),
         *(
             f"holdings_{key}_unavailable"
             for key in ("count", "date", "countries")
             if holdings_data.get(key) is None
         ),
         *(["history_deferred_initial_reconcile"] if not include_history else []),
+        *(["quote_deferred_initial_reconcile"] if not include_quote else []),
         *(f"history_{key}_{row['reason_code']}" for key, row in sorted(history_errors.items())),
     ]
     if partial_reason_codes:
         payload["detail_status"] = "stockanalysis_partial"
         payload["partial_reason_codes"] = partial_reason_codes
+    if provider_source_as_of is None:
+        payload["source_as_of_reason"] = (
+            "provider detail response carries no market or holdings observation date"
+        )
     return payload
 
 
@@ -2039,7 +2093,14 @@ def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
         raise ValueError("StockAnalysis ETF detail identity mismatch")
     provider_source = stockanalysis_detail_source_timestamp(payload)
     if provider_source is None:
-        raise ValueError("StockAnalysis ETF detail provider source date is unavailable")
+        if (
+            payload.get("detail_status") != "stockanalysis_partial"
+            or payload.get("source_as_of") is not None
+            or not isinstance(payload.get("source_as_of_reason"), str)
+            or not payload["source_as_of_reason"].strip()
+        ):
+            raise ValueError("StockAnalysis ETF detail provider source date is unavailable")
+        return
     validate_aware_timestamp(provider_source, "StockAnalysis ETF detail provider source stamp")
     claimed = validate_aware_timestamp(
         payload.get("source_as_of"),
@@ -2641,6 +2702,11 @@ def parse_stockanalysis_date(value: object) -> datetime | None:
         return datetime(int(match.group(3)), month, int(match.group(2)), tzinfo=timezone.utc)
     except ValueError:
         return None
+
+
+def stockanalysis_date_source_timestamp(value: object) -> str | None:
+    parsed = parse_stockanalysis_date(value)
+    return utc_iso(parsed) if parsed is not None else None
 
 
 def etf_declared_inception(payload: dict | None) -> tuple[datetime | None, str | None]:
@@ -3747,9 +3813,11 @@ def build_missing_detail_reconcile_summary(
         "generated_at": now_iso(),
         "operation": "reconcile_missing_etf_details",
         "method": (
-            "probe every selected missing ticker against StockAnalysis overview, holdings, and quote; "
-            "write an honest stockanalysis_partial detail when provider data is available; classify only "
-            "HTTP 400/404 as provider_absent; keep all other responses unresolved and fail the run"
+            "probe every selected missing ticker against StockAnalysis overview and holdings; "
+            "write an honest stockanalysis_partial detail when the overview exists, including a named "
+            "holdings-surface omission and null source_as_of with an explicit reason when provider dates "
+            "are unavailable; classify only overview HTTP 400/404 as provider_absent; keep all other "
+            "responses unresolved and fail the run"
         ),
         "counts": {
             "initial_missing": len(initial_missing),
@@ -4096,13 +4164,27 @@ def run_one(
                 payload = (
                     fetch_etf(ticker, timeout)
                     if include_etf_history
-                    else fetch_etf(ticker, timeout, include_history=False)
+                    else fetch_etf(
+                        ticker,
+                        timeout,
+                        include_history=False,
+                        include_quote=False,
+                        allow_partial_holdings=True,
+                    )
                 )
                 provider = "stockanalysis"
                 stockanalysis_error = None
                 provider_availability_status = "available"
-                provider_availability_reason = "provider_detail_contract_valid"
-                provider_response = "HTTP 200 contract valid"
+                provider_availability_reason = (
+                    "provider_partial_detail_contract_valid"
+                    if payload.get("detail_status") == "stockanalysis_partial"
+                    else "provider_detail_contract_valid"
+                )
+                provider_response = (
+                    "HTTP 200 partial contract valid"
+                    if payload.get("detail_status") == "stockanalysis_partial"
+                    else "HTTP 200 contract valid"
+                )
             except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
                 stockanalysis_error = f"{type(exc).__name__}: {exc}"
                 provider_gap = is_expected_missing_error(stockanalysis_error)
@@ -4264,7 +4346,17 @@ def run_one(
                 provider_path = OUT_DIR / rel_path
                 source_as_of = payload.get("source_as_of")
                 observed_at = payload.get("fetched_at") or now_iso()
-                validate_aware_timestamp(source_as_of, "StockAnalysis ETF detail source stamp")
+                validation_status = "valid" if source_as_of is not None else "invalid"
+                reason_code = (
+                    "contract_valid"
+                    if validation_status == "valid"
+                    else "partial_source_date_unavailable"
+                )
+                if source_as_of is not None:
+                    validate_aware_timestamp(
+                        source_as_of,
+                        "StockAnalysis ETF detail source stamp",
+                    )
                 record_etf_detail_observation(
                     provider="stockanalysis",
                     endpoint_family="stockanalysis_etf_detail",
@@ -4274,8 +4366,8 @@ def run_one(
                     provider_schema=payload.get("schema_version") or SCHEMA_VERSION,
                     source_as_of=source_as_of,
                     observed_at=observed_at,
-                    validation_status="valid",
-                    reason_code="contract_valid",
+                    validation_status=validation_status,
+                    reason_code=reason_code,
                 )
             elif stock_candidate is not None:
                 provider_path = OUT_DIR / rel_path
