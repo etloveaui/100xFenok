@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-07-14T03:59:32.105Z",
+  "generated_at": "2026-07-14T04:13:39.651Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -36,7 +36,16 @@
           "source": "benchmarks/us.json",
           "source_field": "sections.sp500.data[-1].px_last",
           "source_tier": "observed_source",
-          "as_of": "2026-07-10"
+          "as_of": "2026-07-10",
+          "freshness": {
+            "generated_at_date": "2026-07-14",
+            "calendar_age_days": 4,
+            "freshness_unit": "calendar_days",
+            "freshness_calendar": "us_market",
+            "max_input_freshness_days": 10,
+            "future_date_anomaly": false,
+            "status": "fresh_enough_for_input_slice"
+          }
         },
         "forward_eps": {
           "value": 371.8762,
@@ -79,7 +88,7 @@
           "source": "damodaran/erp.json",
           "source_field": "us_erp",
           "source_tier": "observed_source",
-          "as_of": "April 1, 2026",
+          "as_of": "2026-04-01",
           "label": "Damodaran US ERP"
         }
       },
@@ -129,7 +138,9 @@
           "source_tier": "derived_formula",
           "coverage": {
             "primary_formula": "index_yield_over_benchmark_earnings_yield",
-            "index_yield_as_of": "2026-07-13T08:50:59+00:00",
+            "index_yield_as_of": null,
+            "index_yield_as_of_reason": "provider publishes no source date for the index yield observation",
+            "index_yield_collected_at": "2026-07-13T08:50:59+00:00",
             "benchmark_as_of": "2026-07-10",
             "benchmark_earnings_yield": 0.04909004
           },
@@ -701,7 +712,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-14T00:38:33.131Z",
+            "stock_action_generated_at": "2026-07-14T04:12:53.433Z",
             "index_key": "sp500",
             "index_diagnostics": {
               "index_key": "sp500",
@@ -748,7 +759,16 @@
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq100.data[-1].px_last",
           "source_tier": "observed_source",
-          "as_of": "2026-07-10"
+          "as_of": "2026-07-10",
+          "freshness": {
+            "generated_at_date": "2026-07-14",
+            "calendar_age_days": 4,
+            "freshness_unit": "calendar_days",
+            "freshness_calendar": "us_market",
+            "max_input_freshness_days": 10,
+            "future_date_anomaly": false,
+            "status": "fresh_enough_for_input_slice"
+          }
         },
         "forward_eps": {
           "value": 1279.3823,
@@ -791,7 +811,7 @@
           "source": "damodaran/erp.json",
           "source_field": "us_erp",
           "source_tier": "observed_source",
-          "as_of": "April 1, 2026",
+          "as_of": "2026-04-01",
           "label": "Damodaran US ERP"
         }
       },
@@ -841,7 +861,9 @@
           "source_tier": "derived_formula",
           "coverage": {
             "primary_formula": "index_yield_over_benchmark_earnings_yield",
-            "index_yield_as_of": "2026-07-13T08:51:01+00:00",
+            "index_yield_as_of": null,
+            "index_yield_as_of_reason": "provider publishes no source date for the index yield observation",
+            "index_yield_collected_at": "2026-07-13T08:51:01+00:00",
             "benchmark_as_of": "2026-07-10",
             "benchmark_earnings_yield": 0.04289615
           },
@@ -1396,7 +1418,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-14T00:38:33.131Z",
+            "stock_action_generated_at": "2026-07-14T04:12:53.433Z",
             "index_key": "nasdaq100",
             "index_diagnostics": {
               "index_key": "nasdaq100",
@@ -1443,7 +1465,16 @@
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq_composite.data[-1].px_last",
           "source_tier": "observed_source",
-          "as_of": "2026-07-10"
+          "as_of": "2026-07-10",
+          "freshness": {
+            "generated_at_date": "2026-07-14",
+            "calendar_age_days": 4,
+            "freshness_unit": "calendar_days",
+            "freshness_calendar": "us_market",
+            "max_input_freshness_days": 10,
+            "future_date_anomaly": false,
+            "status": "fresh_enough_for_input_slice"
+          }
         },
         "forward_eps": {
           "value": 1048.656,
@@ -1499,15 +1530,15 @@
       "blockers": [
         {
           "code": "missing_named_constituent_weight_path",
-          "severity": "public_card_blocker"
+          "severity": "lane_degraded"
         },
         {
           "code": "missing_named_index_yield_path",
-          "severity": "public_card_blocker"
+          "severity": "lane_degraded"
         },
         {
           "code": "payout_and_growth_not_public_card_ready",
-          "severity": "public_card_blocker"
+          "severity": "lane_degraded"
         }
       ]
     },
@@ -1522,7 +1553,16 @@
           "source": "benchmarks/emerging.json",
           "source_field": "sections.kospi.data[-1].px_last",
           "source_tier": "observed_source",
-          "as_of": "2026-07-10"
+          "as_of": "2026-07-10",
+          "freshness": {
+            "generated_at_date": "2026-07-14",
+            "calendar_age_days": 4,
+            "freshness_unit": "calendar_days",
+            "freshness_calendar": "us_market",
+            "max_input_freshness_days": 10,
+            "future_date_anomaly": false,
+            "status": "fresh_enough_for_input_slice"
+          }
         },
         "forward_eps": {
           "value": 1152.3144,
@@ -1565,7 +1605,7 @@
           "source": "damodaran/erp.json",
           "source_field": "countries.Korea.equity_risk_premium",
           "source_tier": "observed_source",
-          "as_of": "April 1, 2026",
+          "as_of": "2026-04-01",
           "label": "Damodaran Korea ERP"
         }
       },
@@ -1594,7 +1634,7 @@
       "blockers": [
         {
           "code": "missing_kospi_constituent_weight_path",
-          "severity": "public_blocker"
+          "severity": "lane_degraded"
         }
       ]
     },
@@ -1609,7 +1649,16 @@
           "source": "benchmarks/micro_sectors.json",
           "source_field": "sections.philadelphia_semi.data[-1].px_last",
           "source_tier": "observed_source",
-          "as_of": "2026-07-10"
+          "as_of": "2026-07-10",
+          "freshness": {
+            "generated_at_date": "2026-07-14",
+            "calendar_age_days": 4,
+            "freshness_unit": "calendar_days",
+            "freshness_calendar": "us_market",
+            "max_input_freshness_days": 10,
+            "future_date_anomaly": false,
+            "status": "fresh_enough_for_input_slice"
+          }
         },
         "forward_eps": {
           "value": 535.4203,
@@ -1652,7 +1701,7 @@
           "source": "damodaran/erp.json",
           "source_field": "us_erp",
           "source_tier": "observed_source",
-          "as_of": "April 1, 2026",
+          "as_of": "2026-04-01",
           "label": "Damodaran US ERP"
         }
       },
@@ -2187,7 +2236,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-10",
-            "stock_action_generated_at": "2026-07-14T00:38:33.131Z",
+            "stock_action_generated_at": "2026-07-14T04:12:53.433Z",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "index_diagnostics": {
               "index_key": "sox_nasdaq_giw_methodology_mktcap",

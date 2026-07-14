@@ -6,16 +6,17 @@
   "folders": {
     "admin": {
       "version": "1.0.0",
-      "updated": "2026-07-14",
+      "updated": null,
       "update_frequency": "hourly",
       "source": "GitHub repository tree",
       "file_count": 3952,
       "schema": false,
-      "description": "Hourly folder listing cache for notification-control-panel-web.html"
+      "description": "Hourly folder listing cache for notification-control-panel-web.html",
+      "updated_reason": "internal listing cache has a build time but no upstream source date"
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-07-13",
+      "updated": "2026-07-10",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
@@ -24,7 +25,7 @@
     },
     "damodaran": {
       "version": "2.3.0",
-      "updated": "2026-07-13",
+      "updated": "2026-01-01",
       "update_frequency": "yearly + ERP interim",
       "source": "NYU Stern (Aswath Damodaran)",
       "file_count": 7,
@@ -33,7 +34,7 @@
     },
     "global-scouter": {
       "version": "2.3.0",
-      "updated": "2026-07-13",
+      "updated": "2026-07-10",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
       "file_count": 1083,
@@ -42,7 +43,7 @@
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-07-14",
+      "updated": "2026-07-10",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 3,
@@ -51,7 +52,7 @@
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2026-07-14",
+      "updated": "2025-10-01",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
       "file_count": 9,
@@ -60,7 +61,7 @@
     },
     "sec-13f": {
       "version": "3.4.0",
-      "updated": "2026-07-13",
+      "updated": "2026-05-01",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
       "file_count": 78,
@@ -69,7 +70,7 @@
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-07-13",
+      "updated": "2026-07-07",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -78,16 +79,17 @@
     },
     "slickcharts": {
       "version": "2.1.0",
-      "updated": "2026-07-14",
+      "updated": null,
       "update_frequency": "daily/weekly/monthly",
       "source": "SlickCharts.com (32 scrapers)",
       "file_count": 575,
       "schema": true,
-      "description": "Index holdings, returns, individual stocks"
+      "description": "Index holdings, returns, individual stocks",
+      "updated_reason": "provider payload publishes no source date; updated is collection time"
     },
     "yardney": {
       "version": "1.2.0",
-      "updated": "2026-07-13",
+      "updated": "2026-07-03",
       "update_frequency": "weekly",
       "source": "Feno Yardeni: official FRED WAAA/WBAA + Bloomberg-sourced 100x benchmark S&P 500 price/EPS",
       "file_count": 1,
@@ -96,7 +98,7 @@
     },
     "computed": {
       "version": "1.0.0",
-      "updated": "2026-07-14",
+      "updated": "2026-01-09",
       "update_frequency": "after source data refresh",
       "source": "Macro Monitor computed signal export",
       "file_count": 7168,
@@ -105,34 +107,37 @@
     },
     "calendar": {
       "version": "1.0.0",
-      "updated": "2026-07-13",
+      "updated": null,
       "update_frequency": "daily / on calendar edit",
       "source": "BujaBot USD Google Calendar",
       "file_count": 2,
       "schema": true,
-      "description": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar."
+      "description": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar.",
+      "updated_reason": "calendar export has a collection time but no upstream snapshot date"
     },
     "yf": {
       "version": "1.0.0",
-      "updated": "2026-07-14",
+      "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "Yahoo Finance via yfinance",
       "file_count": 2801,
       "schema": false,
-      "description": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
+      "description": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces.",
+      "updated_reason": "source date unavailable for required Yahoo finance histories: finance/DAY.json"
     },
     "stockanalysis": {
       "version": "1.2.0",
-      "updated": "2026-07-14",
+      "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
       "file_count": 4873,
       "schema": true,
-      "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
+      "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces.",
+      "updated_reason": "provider publishes no aggregate source date"
     },
     "edgar-korean-summaries": {
       "version": "1.0.0",
-      "updated": "2026-07-13",
+      "updated": "2026-04-22",
       "update_frequency": "weekly / on-demand",
       "source": "SEC EDGAR + feno-edgar Korean summary artifacts",
       "file_count": 1842,
@@ -141,21 +146,23 @@
     },
     "edgar": {
       "version": "1.0.0",
-      "updated": "2026-07-06",
+      "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "SEC company_tickers.json",
       "file_count": 1,
       "schema": true,
-      "description": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder."
+      "description": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder.",
+      "updated_reason": "SEC company ticker feed publishes no aggregate source date"
     },
     "catalog": {
       "version": "1.0.0",
-      "updated": "2026-06-24",
+      "updated": null,
       "update_frequency": "on-demand",
       "source": "100xFenok Data Spine static catalog",
       "file_count": 1,
       "schema": false,
-      "description": "Macro chart service catalog mapping public macro series ids to local JSON source paths, analysis lenses, and connected product surfaces."
+      "description": "Macro chart service catalog mapping public macro series ids to local JSON source paths, analysis lenses, and connected product surfaces.",
+      "updated_reason": "curated catalog has an edit time but no upstream source date"
     }
   },
   "recent_changes": [
@@ -684,14 +691,15 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-07-14T03:59:28Z",
+  "generatedAt": "2026-07-14T04:13:35Z",
   "categories": [
     {
       "name": "computed",
       "path": "/data/computed/",
       "schemaVersion": "1.0.0",
       "fileCount": 7168,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": "2026-01-09",
+      "lastUpdatedReason": null,
       "notes": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
     },
     {
@@ -699,7 +707,8 @@
       "path": "/data/calendar/",
       "schemaVersion": "1.0.0",
       "fileCount": 2,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": null,
+      "lastUpdatedReason": "calendar export has a collection time but no upstream snapshot date",
       "notes": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar."
     },
     {
@@ -707,7 +716,8 @@
       "path": "/data/sentiment/",
       "schemaVersion": "1.0.0",
       "fileCount": 13,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-07-07",
+      "lastUpdatedReason": null,
       "notes": "Market sentiment indicators"
     },
     {
@@ -715,7 +725,8 @@
       "path": "/data/slickcharts/",
       "schemaVersion": "2.1.0",
       "fileCount": 575,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": null,
+      "lastUpdatedReason": "provider payload publishes no source date; updated is collection time",
       "notes": "Index holdings, returns, individual stocks"
     },
     {
@@ -723,7 +734,8 @@
       "path": "/data/stockanalysis/",
       "schemaVersion": "1.2.0",
       "fileCount": 4873,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": null,
+      "lastUpdatedReason": "provider publishes no aggregate source date",
       "notes": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
     },
     {
@@ -731,7 +743,8 @@
       "path": "/data/yf/",
       "schemaVersion": "1.0.0",
       "fileCount": 2801,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": null,
+      "lastUpdatedReason": "source date unavailable for required Yahoo finance histories: finance/DAY.json",
       "notes": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
     },
     {
@@ -739,7 +752,8 @@
       "path": "/data/sec-13f/",
       "schemaVersion": "3.4.0",
       "fileCount": 78,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-05-01",
+      "lastUpdatedReason": null,
       "notes": "Institutional holdings from 60 tracked investors across 30 quarters; 57 current 2026-Q1 cohort investors, 14 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
     },
     {
@@ -747,7 +761,8 @@
       "path": "/data/benchmarks/",
       "schemaVersion": "3.8.0",
       "fileCount": 7,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-07-10",
+      "lastUpdatedReason": null,
       "notes": "Market indices P/E, P/B, ROE - 31,981 records, 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     {
@@ -755,7 +770,8 @@
       "path": "/data/damodaran/",
       "schemaVersion": "2.3.0",
       "fileCount": 7,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-01-01",
+      "lastUpdatedReason": null,
       "notes": "Industry valuation data, extended US metrics, non-US regional metrics, ERP, credit ratings"
     },
     {
@@ -763,7 +779,8 @@
       "path": "/data/indices/",
       "schemaVersion": "2.0.0",
       "fileCount": 3,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": "2026-07-10",
+      "lastUpdatedReason": null,
       "notes": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     {
@@ -771,7 +788,8 @@
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
       "fileCount": 1083,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-07-10",
+      "lastUpdatedReason": null,
       "notes": "Stock screening (1,065), ETFs (22), indicators (1,067), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
     },
     {
@@ -779,7 +797,8 @@
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
       "fileCount": 9,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": "2025-10-01",
+      "lastUpdatedReason": null,
       "notes": "Macro banking, liquidity, and monthly activity survey series: 930 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-06"
     },
     {
@@ -787,7 +806,8 @@
       "path": "/data/yardney/",
       "schemaVersion": "1.2.0",
       "fileCount": 1,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-07-03",
+      "lastUpdatedReason": null,
       "notes": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,888 records through 2026-07-03; benchmark input 2026-07-10 with one date pending matching FRED yield data."
     },
     {
@@ -795,7 +815,8 @@
       "path": "/data/catalog/",
       "schemaVersion": "1.0.0",
       "fileCount": 1,
-      "lastUpdated": "2026-06-24",
+      "lastUpdated": null,
+      "lastUpdatedReason": "curated catalog has an edit time but no upstream source date",
       "notes": "Macro chart service catalog mapping public macro series ids to local JSON source paths, analysis lenses, and connected product surfaces."
     },
     {
@@ -803,7 +824,8 @@
       "path": "/data/edgar/",
       "schemaVersion": "1.0.0",
       "fileCount": 1,
-      "lastUpdated": "2026-07-06",
+      "lastUpdated": null,
+      "lastUpdatedReason": "SEC company ticker feed publishes no aggregate source date",
       "notes": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder."
     },
     {
@@ -811,7 +833,8 @@
       "path": "/data/edgar-korean-summaries/",
       "schemaVersion": "1.0.0",
       "fileCount": 1842,
-      "lastUpdated": "2026-07-13",
+      "lastUpdated": "2026-04-22",
+      "lastUpdatedReason": null,
       "notes": "Ticker availability index, ticker-level Korean SEC filing summary manifests, and generated summary artifacts. Current coverage: NVDA 2026 Form 10-K pilot."
     }
   ]
