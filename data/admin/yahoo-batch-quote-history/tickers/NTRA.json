@@ -12,15 +12,41 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 467,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:26:44Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T02:38:26Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-14T00:19:23Z",
+    "history_as_of": "2026-07-13",
     "path": "data/yf/finance/NTRA.json",
-    "payload_sha256": "a90f6fb4dacbdd3f9479b4a9d4a23caca0be1aa6e867841cfbbae64c4417d747",
-    "quote_as_of": "2026-07-08T20:00:01Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "cd346d09d1bf7bba8c268a3d22be75a3141432dc3da11bf40b4d140131816c6b",
+    "quote_as_of": "2026-07-13T20:00:01Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -28,20 +54,20 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:26:44Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NTRA",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:26:44Z"
 }

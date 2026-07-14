@@ -12,15 +12,41 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 412,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:26:44Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T02:42:21Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-14T00:18:58Z",
+    "history_as_of": "2026-07-13",
     "path": "data/yf/finance/IQV.json",
-    "payload_sha256": "66b686ed9f6056cd2830fda100779d80c3bd2c84428b40446b41ab4f5f497b0f",
-    "quote_as_of": "2026-07-08T20:00:03Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "f2e126c6f90cb4b1d7156cf721ff00e3624d0efbac95dc41d52722f78f649fbb",
+    "quote_as_of": "2026-07-13T20:00:03Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -28,20 +54,20 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:26:44Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "IQV",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:26:44Z"
 }

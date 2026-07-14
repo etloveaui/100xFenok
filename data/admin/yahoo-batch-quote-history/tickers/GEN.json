@@ -12,15 +12,41 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 523,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:29:46Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-27T23:55:38Z",
-    "history_as_of": "2026-06-26",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GEN.json",
-    "payload_sha256": "30fd8aa87b269409d2f0172245a993eb7174c9e39df7d539c5ddd4c4a2dec548",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "fetched_at": "2026-07-14T00:12:58Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/yf/finance/GEN.json",
+    "payload_sha256": "02667e2e7e791596c0a763fdbef7e39621d3e3c6026351bb629725256ddd2c6e",
+    "quote_as_of": "2026-07-13T20:00:01Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -28,16 +54,16 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:29:46Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-27T23:55:38Z",
@@ -47,8 +73,8 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -61,5 +87,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "GEN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:29:46Z"
 }

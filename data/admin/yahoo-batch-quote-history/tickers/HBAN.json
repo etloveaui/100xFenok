@@ -12,35 +12,61 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 507,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:23:07Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T02:45:19Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-14T00:18:50Z",
+    "history_as_of": "2026-07-13",
     "path": "data/yf/finance/HBAN.json",
-    "payload_sha256": "c909de9080aca3b3fd480ad1d9f72e4abc43fdca40e3025aaf37c73f7f253ceb",
-    "quote_as_of": "2026-07-08T20:00:01Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "d2bba9f7506403b962c193fb6bb1e6d16b00fe32ced764a09a0ff8357287873f",
+    "quote_as_of": "2026-07-13T20:00:01Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:23:07Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "HBAN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:23:07Z"
 }

@@ -12,15 +12,41 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 496,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:20:07Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-18T20:21:48Z",
-    "history_as_of": "2026-06-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GRN.json",
-    "payload_sha256": "79a4af42de0b4438d4bafa5e9f934b6a11150372c2fcb0c88e16451f0ba28671",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "fetched_at": "2026-07-14T00:13:06Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/yf/finance/GRN.json",
+    "payload_sha256": "d7bab7a1d477993dc0399db710b18906532d0ba5c29da5a2fb23ed60fc102b4b",
+    "quote_as_of": "2026-07-13T15:36:29Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "market_facts",
@@ -28,16 +54,16 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:20:07Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "1/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T20:21:48Z",
@@ -47,8 +73,8 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-17"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 16,
@@ -61,5 +87,5 @@
     "source_as_of": "2026-06-17"
   },
   "ticker": "GRN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:20:07Z"
 }

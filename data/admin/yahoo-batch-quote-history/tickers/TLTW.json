@@ -12,15 +12,41 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 427,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:26:44Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-18T16:06:45Z",
-    "history_as_of": "2026-06-18",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TLTW.json",
-    "payload_sha256": "979657742ac5f6a4d7f61669b4917d510111fccca12f62760e3a8deb917d61f8",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "fetched_at": "2026-07-14T00:14:35Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/yf/finance/TLTW.json",
+    "payload_sha256": "e188c757f34dd07cd379e17663aacb5c551f0a62469856e2ab144ba182428a1b",
+    "quote_as_of": "2026-07-13T20:00:00Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "market_facts",
@@ -28,16 +54,16 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:26:44Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T16:06:45Z",
@@ -47,8 +73,8 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 15,
@@ -61,5 +87,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "TLTW",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:26:44Z"
 }

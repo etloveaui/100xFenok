@@ -12,6 +12,29 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -26,17 +49,44 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
-    "failures": [],
+    "attempts_used": 2,
+    "error": "empty payload",
+    "event_name": "schedule",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "natural": true,
+    "observed_at": "2026-07-14T00:11:54Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 2,
+    "error": "empty payload",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
+    "observed_at": "2026-07-14T00:11:54Z",
+    "run_attempt": 1,
+    "run_id": "29295146902"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:49:09Z",
@@ -60,5 +110,5 @@
     "source_as_of": "2026-05-06"
   },
   "ticker": "CTRA",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:11:54Z"
 }

@@ -12,15 +12,41 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 433,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-14T00:23:07Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-18T16:06:17Z",
-    "history_as_of": "2026-06-18",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TEMT.json",
-    "payload_sha256": "e4378fca42fb2c05b22678d368cbc0948a1e2c3331c481d1b8387d4ceee1fe76",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "fetched_at": "2026-07-14T00:14:33Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/yf/finance/TEMT.json",
+    "payload_sha256": "35a3f94e9daf49aae7656279923143dbc0083ff22e2c8433bad820eef83c59b9",
+    "quote_as_of": "2026-07-13T19:59:05Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "market_facts",
@@ -28,16 +54,16 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-14T00:23:07Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T16:06:17Z",
@@ -47,8 +73,8 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 15,
@@ -61,5 +87,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "TEMT",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:23:07Z"
 }

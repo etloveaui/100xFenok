@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 582,
+      "natural": true,
+      "observed_at": "2026-07-14T00:11:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29295146902",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T14:40:02Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FRT.json",
-    "payload_sha256": "7e3509b15b88ffc90dcdc5cea7913fe88eb824ead0102e35e12669f4d617f3ac",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-14T00:12:54Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/yf/finance/FRT.json",
+    "payload_sha256": "31fa0262fe5d10bd60f295446c2483867696c6db8873c2b23cedf6cebd53ac0c",
+    "quote_as_of": "2026-07-13T20:00:03Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 582,
+    "natural": true,
+    "observed_at": "2026-07-14T00:11:54Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29295146902",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-06-29T14:40:02Z",
@@ -46,8 +59,8 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +73,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "FRT",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-14T00:11:54Z"
 }
