@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s0-finra-occ-mapping-ledger/v0.1",
-  "generated_at": "2026-07-14T03:31:55.687Z",
+  "generated_at": "2026-07-14T03:59:18.528Z",
   "generated_by": "scripts/audit-fenok-s0-source-gaps.mjs --write-ledger",
   "purpose": "Durable no-fetch control-plane ledger for S0 FINRA/OCC rows that are source-ready by daily market data but need explicit universe mapping, symbol normalization, or null-evidence semantics before flow/options proxy metrics can be required.",
   "raw_policy": {
@@ -12,7 +12,7 @@
   },
   "source_audit": {
     "schema_version": "fenok-s0-source-gap-audit/v0.2",
-    "generated_at": "2026-07-14T03:31:55.687Z",
+    "generated_at": "2026-07-14T03:59:18.528Z",
     "input_files": {
       "active_signals": "data/computed/fenok_signals.json",
       "finra_flow_proxy": "data/computed/fenok_flow_proxies.json",
@@ -21,10 +21,10 @@
       "flow_backfill_index": "data/admin/fenok-flow-backfill-index.json"
     },
     "source_dates": {
-      "signals_generated_at": "2026-07-14T03:31:34.014Z",
-      "finra_source_date": "20260710",
-      "occ_source_date": "20260710",
-      "coverage_index_generated_at": "2026-07-14T03:31:49.083Z",
+      "signals_generated_at": "2026-07-14T03:58:45.056Z",
+      "finra_source_date": "20260713",
+      "occ_source_date": "20260713",
+      "coverage_index_generated_at": "2026-07-14T03:59:08.308Z",
       "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
     },
     "acceptance_ok": true
@@ -37,13 +37,13 @@
   "counts": {
     "active_us_total": 748,
     "plain_us_finra_denominator": 689,
-    "plain_us_finra_source_ready": 686,
+    "plain_us_finra_source_ready": 689,
     "finra_excluded_us_class_or_non_plain_daily_ready": 59,
     "finra_mapping_required_missing_row": 50,
-    "finra_source_ready_no_reported_row": 4,
+    "finra_source_ready_no_reported_row": 3,
     "finra_low_confidence_placeholder_policy_rows": 9,
     "plain_us_occ_denominator": 689,
-    "plain_us_occ_source_ready": 686,
+    "plain_us_occ_source_ready": 689,
     "plain_us_occ_no_listed_options_source_ready": 5,
     "occ_non_plain_mapping_required": 57,
     "occ_class_share_normalization_required": 2,
@@ -1862,22 +1862,6 @@
           "currency": "USD",
           "country": null,
           "sector": "Communication Services"
-        }
-      },
-      {
-        "ticker": "SPCX",
-        "company": "Space Exploration Technologies Class A",
-        "market": "US",
-        "market_scope": "us",
-        "category": "plain_us_finra_metric_gap",
-        "local_evidence": {
-          "yf_finance_file": "data/yf/finance/SPCX.json",
-          "market_facts_file": "data/computed/market_facts/tickers/SPCX.json",
-          "market_facts_asset_type": "stock",
-          "exchange": "NMS",
-          "currency": "USD",
-          "country": null,
-          "sector": "Industrials"
         }
       }
     ],
