@@ -1,0 +1,366 @@
+{
+  "schema_version": "data-supply-detection-calendars/v1",
+  "calendars": [
+    {
+      "id": "utc",
+      "timezone": "UTC",
+      "weekend_days": [
+        0,
+        6
+      ],
+      "holidays": []
+    },
+    {
+      "id": "us_federal_business",
+      "timezone": "America/New_York",
+      "weekend_days": [
+        0,
+        6
+      ],
+      "holidays": [
+        "2026-01-01",
+        "2026-01-19",
+        "2026-02-16",
+        "2026-05-25",
+        "2026-06-19",
+        "2026-07-03",
+        "2026-09-07",
+        "2026-10-12",
+        "2026-11-11",
+        "2026-11-26",
+        "2026-12-25"
+      ]
+    },
+    {
+      "id": "us_trading",
+      "timezone": "America/New_York",
+      "weekend_days": [
+        0,
+        6
+      ],
+      "holidays": [
+        "2026-01-01",
+        "2026-01-19",
+        "2026-02-16",
+        "2026-04-03",
+        "2026-05-25",
+        "2026-06-19",
+        "2026-07-03",
+        "2026-09-07",
+        "2026-11-26",
+        "2026-12-25"
+      ]
+    }
+  ],
+  "schedules": [
+    {
+      "id": "hourly_at_05",
+      "cron": "5 * * * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 2
+      }
+    },
+    {
+      "id": "six_hourly",
+      "cron": "0 */6 * * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 6
+      }
+    },
+    {
+      "id": "daily_0800_utc",
+      "cron": "0 8 * * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 24
+      }
+    },
+    {
+      "id": "daily_0700_utc",
+      "cron": "0 7 * * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 24
+      }
+    },
+    {
+      "id": "weekly_1000_sat_utc",
+      "cron": "0 10 * * 6",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
+      }
+    },
+    {
+      "id": "monthly_first_monday_federal",
+      "cron": "0 6 1-7 * 1",
+      "calendar_id": "us_federal_business",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 7
+      }
+    },
+    {
+      "id": "weekday_2200_us",
+      "cron": "0 22 * * 1-5",
+      "calendar_id": "us_trading",
+      "grace": {
+        "unit": "business_days",
+        "value": 1
+      }
+    },
+    {
+      "id": "daily_0600_utc",
+      "cron": "0 6 * * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 24
+      }
+    },
+    {
+      "id": "weekly_0700_sun_utc",
+      "cron": "0 7 * * 0",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
+      }
+    },
+    {
+      "id": "monthly_0800_utc",
+      "cron": "0 8 1 * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 7
+      }
+    },
+    {
+      "id": "monthly_0900_utc",
+      "cron": "0 9 1 * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 7
+      }
+    },
+    {
+      "id": "weekly_0730_sun_utc",
+      "cron": "30 7 * * 0",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
+      }
+    },
+    {
+      "id": "weekly_0040_mon_federal",
+      "cron": "40 0 * * 1",
+      "calendar_id": "us_federal_business",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
+      }
+    },
+    {
+      "id": "weekday_0030_us",
+      "cron": "30 0 * * 2-6",
+      "calendar_id": "us_trading",
+      "grace": {
+        "unit": "business_days",
+        "value": 1
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "hours_boundary_exact",
+      "kind": "freshness",
+      "calendar_id": "utc",
+      "now": "2026-07-11T00:00:00Z",
+      "source_as_of": "2026-07-09T00:00:00Z",
+      "unit": "hours",
+      "max_staleness": 48,
+      "expected": "ready"
+    },
+    {
+      "id": "hours_boundary_over",
+      "kind": "freshness",
+      "calendar_id": "utc",
+      "now": "2026-07-11T00:00:01Z",
+      "source_as_of": "2026-07-09T00:00:00Z",
+      "unit": "hours",
+      "max_staleness": 48,
+      "expected": "stale"
+    },
+    {
+      "id": "future_source",
+      "kind": "freshness",
+      "calendar_id": "utc",
+      "now": "2026-07-11T00:00:00Z",
+      "source_as_of": "2026-07-11T00:00:01Z",
+      "unit": "hours",
+      "max_staleness": 48,
+      "expected": "future_source"
+    },
+    {
+      "id": "business_days_weekend",
+      "kind": "freshness",
+      "calendar_id": "us_trading",
+      "now": "2026-07-13T20:00:00Z",
+      "source_as_of": "2026-07-09T20:00:00Z",
+      "unit": "business_days",
+      "max_staleness": 2,
+      "expected": "ready"
+    },
+    {
+      "id": "local_calendar_future_date",
+      "kind": "freshness",
+      "calendar_id": "us_trading",
+      "now": "2026-07-11T00:30:00Z",
+      "source_as_of": "2026-07-11",
+      "unit": "calendar_days",
+      "max_staleness": 1,
+      "expected": "future_source"
+    },
+    {
+      "id": "fdic_due_window_exact",
+      "kind": "freshness",
+      "calendar_id": "us_federal_business",
+      "now": "2026-07-29T00:00:00Z",
+      "source_as_of": "2026-03-31T00:00:00Z",
+      "unit": "due_window",
+      "due_policy": {
+        "kind": "source_date_plus_days",
+        "days": 120
+      },
+      "expected": "ready"
+    },
+    {
+      "id": "sec_13f_due_window_over",
+      "kind": "freshness",
+      "calendar_id": "us_federal_business",
+      "now": "2026-05-16T00:00:00Z",
+      "source_as_of": "2026-03-31T00:00:00Z",
+      "unit": "due_window",
+      "due_policy": {
+        "kind": "source_date_plus_days",
+        "days": 45
+      },
+      "expected": "stale"
+    },
+    {
+      "id": "edgar_poll_only",
+      "kind": "freshness",
+      "calendar_id": "us_federal_business",
+      "now": "2026-07-11T00:00:00Z",
+      "source_as_of": "2026-06-30T00:00:00Z",
+      "unit": "due_window",
+      "due_policy": {
+        "kind": "poll_only"
+      },
+      "expected": "ready"
+    },
+    {
+      "id": "ownerless_unobserved",
+      "kind": "freshness",
+      "calendar_id": "utc",
+      "now": "2026-07-11T00:00:00Z",
+      "source_as_of": "2026-07-10T00:00:00Z",
+      "unit": "due_window",
+      "due_policy": {
+        "kind": "unowned",
+        "age_unit": "calendar_days"
+      },
+      "expected": "workflow_unobserved"
+    },
+    {
+      "id": "schedule_hourly_ready",
+      "kind": "schedule",
+      "schedule_id": "hourly_at_05",
+      "now": "2026-07-11T00:10:00Z",
+      "observed_at": "2026-07-10T23:06:00Z",
+      "expected": "ready"
+    },
+    {
+      "id": "schedule_hourly_stale",
+      "kind": "schedule",
+      "schedule_id": "hourly_at_05",
+      "now": "2026-07-11T03:06:00Z",
+      "observed_at": "2026-07-10T23:06:00Z",
+      "expected": "stale"
+    },
+    {
+      "id": "schedule_weekly_grace",
+      "kind": "schedule",
+      "schedule_id": "weekly_0700_sun_utc",
+      "now": "2026-07-07T06:59:00Z",
+      "observed_at": "2026-06-29T00:00:00Z",
+      "expected": "ready"
+    },
+    {
+      "id": "schedule_future_observation",
+      "kind": "schedule",
+      "schedule_id": "daily_0800_utc",
+      "now": "2026-07-11T00:00:00Z",
+      "observed_at": "2026-07-11T00:00:01Z",
+      "expected": "future_source"
+    },
+    {
+      "id": "schedule_daily_grace_exact",
+      "kind": "schedule",
+      "schedule_id": "daily_0800_utc",
+      "now": "2026-07-11T07:59:00Z",
+      "observed_at": "2026-07-09T08:00:00Z",
+      "expected": "ready"
+    },
+    {
+      "id": "schedule_daily_grace_over",
+      "kind": "schedule",
+      "schedule_id": "daily_0800_utc",
+      "now": "2026-07-11T08:00:00Z",
+      "observed_at": "2026-07-09T08:00:00Z",
+      "expected": "stale"
+    },
+    {
+      "id": "schedule_monthly_grace_exact",
+      "kind": "schedule",
+      "schedule_id": "monthly_0800_utc",
+      "now": "2026-07-08T07:59:00Z",
+      "observed_at": "2026-06-02T00:00:00Z",
+      "expected": "ready"
+    },
+    {
+      "id": "schedule_monthly_grace_over",
+      "kind": "schedule",
+      "schedule_id": "monthly_0800_utc",
+      "now": "2026-07-08T08:00:00Z",
+      "observed_at": "2026-06-02T00:00:00Z",
+      "expected": "stale"
+    },
+    {
+      "id": "schedule_business_holiday_exact",
+      "kind": "schedule",
+      "schedule_id": "weekday_2200_us",
+      "now": "2026-07-07T21:59:00Z",
+      "observed_at": "2026-07-02T22:00:00Z",
+      "expected": "ready"
+    },
+    {
+      "id": "schedule_business_holiday_over",
+      "kind": "schedule",
+      "schedule_id": "weekday_2200_us",
+      "now": "2026-07-07T22:00:00Z",
+      "observed_at": "2026-07-02T22:00:00Z",
+      "expected": "stale"
+    }
+  ]
+}

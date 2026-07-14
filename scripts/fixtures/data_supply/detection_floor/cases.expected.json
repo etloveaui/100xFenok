@@ -42,7 +42,7 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "f730149755fb77dc1c55f9b56f9864fcf10faf416f02f8a11b32601488dfc91a",
+  "config_digest": "41ebc569ed4bcf659592e1e2b593430b86353c3c8837fe9039052dba935b2295",
   "logical_lane_count": 14,
   "producer_member_count": 18,
   "slickcharts_member_ids": [
@@ -72,11 +72,11 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "f0cb215044c58ac44928e04e3965cbf4a32bcfa186aeb51aec26de7e89b9bb8f",
+    "report_file_sha256": "652e0d8b1d3ddefcd4c08f8b710f4ef61f2e61dc1d65430307bed32c8cdedcf0",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "f730149755fb77dc1c55f9b56f9864fcf10faf416f02f8a11b32601488dfc91a",
+      "config_digest": "41ebc569ed4bcf659592e1e2b593430b86353c3c8837fe9039052dba935b2295",
       "logical_lane_count": 14,
       "producer_member_count": 18,
       "counts": {
@@ -112,7 +112,9 @@
           },
           "affected_surface_ids": [
             "macro_fred"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "fred_banking",
@@ -135,7 +137,9 @@
           "affected_surface_ids": [
             "banking_liquidity",
             "rim_index_inputs"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "fred_yardeni",
@@ -157,7 +161,9 @@
           },
           "affected_surface_ids": [
             "yardeni_model"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "fdic_tier1",
@@ -179,7 +185,9 @@
           },
           "affected_surface_ids": [
             "banking_tier1"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "treasury_tga",
@@ -196,12 +204,14 @@
             "status": "ready",
             "reason": "ok",
             "source_as_of": "2026-07-10",
-            "age": 1,
-            "unit": "calendar_days"
+            "age": 0,
+            "unit": "business_days"
           },
           "affected_surface_ids": [
             "macro_tga"
-          ]
+          ],
+          "enforcement": "live",
+          "kpi_required": true
         },
         {
           "id": "yahoo_ticker_macro",
@@ -223,7 +233,9 @@
           },
           "affected_surface_ids": [
             "macro_tickers"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "sentiment",
@@ -245,7 +257,9 @@
           },
           "affected_surface_ids": [
             "sentiment_dashboard"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "slickcharts",
@@ -355,7 +369,9 @@
                 "unit": "calendar_days"
               }
             }
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "edgar_filings",
@@ -377,7 +393,9 @@
           },
           "affected_surface_ids": [
             "edgar_timeline"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "sec_13f",
@@ -399,7 +417,9 @@
           },
           "affected_surface_ids": [
             "sec_13f_analytics"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "finra_short_volume",
@@ -421,7 +441,9 @@
           },
           "affected_surface_ids": [
             "fenok_flow_proxies"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "occ_options_volume",
@@ -443,7 +465,9 @@
           },
           "affected_surface_ids": [
             "fenok_occ_options"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "apewisdom_attention",
@@ -465,7 +489,9 @@
           },
           "affected_surface_ids": [
             "fenok_social_attention"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "gdelt_news_tone",
@@ -487,7 +513,9 @@
           },
           "affected_surface_ids": [
             "fenok_news_tone"
-          ]
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         }
       ],
       "monitoring_mode_counts": {

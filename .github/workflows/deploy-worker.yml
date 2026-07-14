@@ -57,6 +57,33 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:edgar-summaries
 
+      - name: Build data supply detection floor
+        run: |
+          set -euo pipefail
+
+          repo_root="$(pwd -P)"
+          shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
+          output_root="$RUNNER_TEMP/data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          report_path="$output_root/data-supply-detection-floor.json"
+          installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
+
+          mkdir -p "$shard_root"
+          test ! -e "$output_root"
+          install -d -m 0700 "$output_root"
+          now="$(node -e 'process.stdout.write(new Date().toISOString())')"
+
+          node scripts/build-data-supply-detection-floor.mjs \
+            --artifact-root "$repo_root" \
+            --attempt-shard-root "$shard_root" \
+            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
+            --now "$now" \
+            --output-root "$output_root"
+          node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
+
+          install -m 0644 "$report_path" "$installed_path"
+          cmp -s "$report_path" "$installed_path"
+          node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
+
       - name: Reconcile derived data
         working-directory: 100xfenok-next
         run: npm run reconcile:derived

@@ -15,9 +15,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export const REPO_ROOT = path.resolve(__dirname, "..");
 export const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "data_supply", "detection_floor");
+export const CALENDAR_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
 export const REPORT_BASENAME = "data-supply-detection-floor.json";
 export const REPORT_SCHEMA = "data-supply-detection-floor/v1";
 export const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
+export const ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v1";
 
 const HEX_16 = /^[0-9a-f]{16}$/;
 const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
@@ -821,6 +823,24 @@ export function validateCalendars(calendars) {
   }
 }
 
+export function validateConfigCalendarBindings(config, calendars) {
+  validateDetectionConfig(config);
+  validateCalendars(calendars);
+  const calendarIds = new Set(calendars.calendars.map((row) => row.id));
+  for (const lane of config.lanes) {
+    if (!calendarIds.has(lane.freshness.calendar)) fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    for (const member of lane.producer_members) {
+      if (member.cadence_declaration === null) continue;
+      if (!calendarIds.has(member.cadence_calendar)) fail("calendar_error", `${lane.id}:${member.id} cadence calendar is missing`);
+      for (const cron of member.schedule) {
+        const matches = calendars.schedules.filter((schedule) => schedule.cron === cron && schedule.calendar_id === member.cadence_calendar);
+        if (matches.length !== 1) fail("calendar_error", `${lane.id}:${member.id} cron ${cron} must have exactly one cadence grace contract`);
+      }
+    }
+  }
+  return true;
+}
+
 export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION_CONFIG) {
   exactKeys(document, ["schema_version", "attempts"], "attempt evidence");
   if (document.schema_version !== ATTEMPT_SCHEMA || !Array.isArray(document.attempts)) fail("schema_error", "attempt evidence schema is invalid");
@@ -885,6 +905,52 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
   return true;
 }
 
+export function validateAttemptShard(document, expectedLaneId, config = DATA_SUPPLY_DETECTION_CONFIG) {
+  exactKeys(document, ["schema_version", "lane_id", "attempts"], "attempt shard");
+  if (document.schema_version !== ATTEMPT_SHARD_SCHEMA || document.lane_id !== expectedLaneId || !IDENTIFIER.test(expectedLaneId)) {
+    fail("schema_error", "attempt shard schema/filename identity is invalid");
+  }
+  const lane = config.lanes.find((candidate) => candidate.id === expectedLaneId);
+  if (!lane) fail("schema_error", `unknown attempt shard lane ${expectedLaneId}`);
+  if (!Array.isArray(document.attempts) || document.attempts.some((row) => row?.lane_id !== expectedLaneId)) {
+    fail("schema_error", `${expectedLaneId} shard contains cross-lane evidence`);
+  }
+  validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: document.attempts }, config);
+  const expectedMembers = lane.monitoring_mode === "composite"
+    ? lane.producer_members.map((member) => member.id)
+    : [null];
+  const actualMembers = document.attempts.map((row) => row.member_id);
+  if (canonicalJson(actualMembers) !== canonicalJson(expectedMembers)) {
+    fail("schema_error", `${expectedLaneId} shard must contain every member exactly once in config order`);
+  }
+  return true;
+}
+
+export function loadAttemptShards({ shardRoot, config = DATA_SUPPLY_DETECTION_CONFIG }) {
+  validateDetectionConfig(config);
+  const root = canonicalExistingDirectory(shardRoot);
+  if (!pathInfoMatches(root)) fail("unsafe_path", "attempt shard root identity changed");
+  const laneIds = new Set(config.lanes.map((lane) => lane.id));
+  const byLane = new Map();
+  for (const entry of fs.readdirSync(root.real, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, "en"))) {
+    const match = /^([a-z][a-z0-9_]{0,63})\.json$/.exec(entry.name);
+    if (!match || !entry.isFile() || entry.isSymbolicLink()) fail("unsafe_path", `unexpected attempt shard entry ${entry.name}`);
+    const laneId = match[1];
+    if (!laneIds.has(laneId) || byLane.has(laneId)) fail("schema_error", `unknown or duplicate attempt shard ${laneId}`);
+    const filePath = path.join(root.real, entry.name);
+    const document = readJsonStrict(filePath, [root]);
+    validateAttemptShard(document, laneId, config);
+    byLane.set(laneId, document.attempts);
+  }
+  if (!pathInfoMatches(root)) fail("unsafe_path", "attempt shard root identity changed during merge");
+  const merged = {
+    schema_version: ATTEMPT_SCHEMA,
+    attempts: config.lanes.flatMap((lane) => byLane.get(lane.id) ?? []),
+  };
+  validateAttemptEvidence(merged, config);
+  return merged;
+}
+
 export function classifyAttempt(row) {
   if (!row || row.execution === "unobserved") return reasonResult("workflow_unobserved", { observed_at: null });
   if (row.execution === "threw") return reasonResult(row.exception_kind === "transport" ? "transport_error" : "unexpected_error", { observed_at: row.observed_at });
@@ -904,11 +970,11 @@ function attemptMap(document) {
 function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
   const attemptKey = `${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`;
   const row = attemptsByKey.get(attemptKey) ?? null;
-  const hasScheduledOwner = lane.monitoring_mode === "composite" ? member.workflow !== null : lane.owner_workflow !== null;
-  const endpoint = hasScheduledOwner
+  const hasDeclaredCadence = member.cadence_declaration !== null;
+  const endpoint = hasDeclaredCadence
     ? worstResult([
       classifyAttempt(row),
-      evaluateAttemptCadence(row?.observed_at ?? null, member.schedule, lane.freshness.calendar, now, calendars),
+      evaluateAttemptCadence(row?.observed_at ?? null, member.schedule, member.cadence_calendar, now, calendars),
     ])
     : reasonResult("workflow_unobserved", { observed_at: null });
   const artifacts = member.artifact_contracts.flatMap((contract) => evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule));
@@ -956,7 +1022,7 @@ export function buildDetectionReport({
 }) {
   validateDetectionConfig(config);
   validateAttemptEvidence(attempts, config);
-  validateCalendars(calendars);
+  validateConfigCalendarBindings(config, calendars);
   strictUtc(now, "now");
   const artifactRootInfo = canonicalExistingDirectory(artifactRoot, { fsModule });
   const byAttempt = attemptMap(attempts);
@@ -984,6 +1050,8 @@ export function buildDetectionReport({
     const laneRow = {
       id: lane.id,
       label: lane.label,
+      enforcement: lane.enforcement,
+      kpi_required: lane.kpi_required,
       monitoring_mode: lane.monitoring_mode,
       status: laneWorst.status,
       reason: laneWorst.reason,
@@ -1093,9 +1161,10 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     const laneConfig = config.lanes[index];
     const composite = laneConfig.monitoring_mode === "composite";
     exactKeys(row, composite
-      ? ["id", "label", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", "members"]
-      : ["id", "label", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids"], `report.lanes[${index}]`);
+      ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", "members"]
+      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids"], `report.lanes[${index}]`);
     if (row.id !== laneConfig.id || row.label !== laneConfig.label || row.monitoring_mode !== laneConfig.monitoring_mode
+      || row.enforcement !== laneConfig.enforcement || row.kpi_required !== laneConfig.kpi_required
       || canonicalJson(row.affected_surface_ids) !== canonicalJson(laneConfig.affected_surface_ids)) {
       fail("schema_error", `report.lanes[${index}] does not match config identity`);
     }
@@ -1293,7 +1362,8 @@ export function detectAndProject({
 }
 
 function parseArgs(argv) {
-  const allowed = new Set(["--artifact-root", "--attempt-evidence", "--calendar-fixture", "--now", "--output-root"]);
+  if (argv.length === 2 && argv[0] === "--verify-report") return { mode: "verify", reportPath: argv[1] };
+  const allowed = new Set(["--artifact-root", "--attempt-evidence", "--attempt-shard-root", "--calendar-fixture", "--calendars", "--now", "--output-root"]);
   const values = {};
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
@@ -1301,8 +1371,13 @@ function parseArgs(argv) {
     if (!allowed.has(flag) || value == null || values[flag] != null) fail("cli_error", `invalid CLI flag ${flag ?? "<missing>"}`);
     values[flag] = value;
   }
-  if (argv.length !== allowed.size * 2 || [...allowed].some((flag) => values[flag] == null)) fail("cli_error", "all five CLI flags are required exactly once");
-  return values;
+  const required = ["--artifact-root", "--now", "--output-root"];
+  const attemptInputs = ["--attempt-evidence", "--attempt-shard-root"].filter((flag) => values[flag] != null);
+  const calendarInputs = ["--calendar-fixture", "--calendars"].filter((flag) => values[flag] != null);
+  if (argv.length % 2 !== 0 || required.some((flag) => values[flag] == null) || attemptInputs.length !== 1 || calendarInputs.length !== 1) {
+    fail("cli_error", "build requires artifact/now/output and exactly one attempt source plus one calendar source");
+  }
+  return { mode: "build", values };
 }
 
 function readJsonStrict(filePath, allowedRoots) {
@@ -1328,12 +1403,58 @@ function readJsonStrict(filePath, allowedRoots) {
   }
 }
 
+export function verifyDetectionReportFile({ reportPath, config = DATA_SUPPLY_DETECTION_CONFIG }) {
+  if (typeof reportPath !== "string" || path.basename(reportPath) !== REPORT_BASENAME) {
+    fail("unsafe_path", `verified report must be named ${REPORT_BASENAME}`);
+  }
+  const parent = canonicalExistingDirectory(path.dirname(reportPath));
+  const info = canonicalExistingFile(reportPath, [parent]);
+  let fd = null;
+  try {
+    fd = fs.openSync(info.real, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    const opened = fs.fstatSync(fd);
+    if (!opened.isFile() || opened.nlink !== 1 || opened.dev !== info.dev || opened.ino !== info.ino || opened.size > 4 * 1024 * 1024) {
+      fail("unsafe_path", "report changed or exceeds the read bound");
+    }
+    const bytes = fs.readFileSync(fd);
+    const report = JSON.parse(bytes.toString("utf8"));
+    validateDetectionReport(report, config);
+    const canonicalBytes = Buffer.from(`${canonicalJson(report)}\n`, "utf8");
+    if (!bytes.equals(canonicalBytes)) fail("schema_error", "report bytes are not canonical JSON plus newline");
+    return {
+      schema_version: report.schema_version,
+      report_file_sha256: sha256(bytes),
+      logical_lane_count: report.logical_lane_count,
+      producer_member_count: report.producer_member_count,
+    };
+  } catch (error) {
+    if (error instanceof DetectionFloorError) throw error;
+    fail("decode_error", `${REPORT_BASENAME} verification failed: ${error.message}`);
+  } finally {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch {}
+    }
+  }
+}
+
 function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const parsed = parseArgs(process.argv.slice(2));
+  if (parsed.mode === "verify") {
+    process.stdout.write(`${canonicalJson(verifyDetectionReportFile({ reportPath: parsed.reportPath }))}\n`);
+    return;
+  }
+  const args = parsed.values;
   const artifactRoot = canonicalExistingDirectory(args["--artifact-root"]);
   const fixtureRoot = canonicalExistingDirectory(FIXTURE_ROOT);
-  const attempts = readJsonStrict(args["--attempt-evidence"], [fixtureRoot, artifactRoot]);
-  const calendars = readJsonStrict(args["--calendar-fixture"], [fixtureRoot, artifactRoot]);
+  const attempts = args["--attempt-shard-root"]
+    ? loadAttemptShards({ shardRoot: args["--attempt-shard-root"] })
+    : readJsonStrict(args["--attempt-evidence"], [fixtureRoot, artifactRoot]);
+  const calendars = args["--calendars"]
+    ? readJsonStrict(args["--calendars"], [canonicalExistingDirectory(path.dirname(CALENDAR_PATH))])
+    : readJsonStrict(args["--calendar-fixture"], [fixtureRoot, artifactRoot]);
+  if (args["--calendars"] && fs.realpathSync.native(args["--calendars"]) !== fs.realpathSync.native(CALENDAR_PATH)) {
+    fail("unsafe_path", "--calendars must use the canonical detection calendar SSOT");
+  }
   const result = detectAndProject({
     artifactRoot: artifactRoot.real,
     attempts,

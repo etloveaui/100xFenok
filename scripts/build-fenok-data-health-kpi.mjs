@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { validateDetectionReport } from "./build-data-supply-detection-floor.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
 import { assertValidCronDeferrals } from "./lib/kpi-runtime-slots.mjs";
 import {
@@ -482,6 +483,22 @@ function readJson(relPath, root = DATA_ROOT) {
   }
 }
 
+function readOptionalJsonStrict(relPath, root = DATA_ROOT) {
+  const filePath = path.join(root, relPath);
+  let text;
+  try {
+    text = fs.readFileSync(filePath, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw new Error(`${relPath} read failed: ${error.message}`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${relPath} is malformed JSON: ${error.message}`);
+  }
+}
+
 function readText(relPath, root = ROOT) {
   try {
     return fs.readFileSync(path.join(root, relPath), "utf8");
@@ -583,6 +600,96 @@ function lane(id, label, checks, { required = true, counts = {}, details = {}, a
     details,
     checks: classifiedChecks,
   };
+}
+
+const DETECTION_STATUS_SEVERITY = Object.freeze({ ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 });
+const DETECTION_REASON_STATUS = Object.freeze({
+  ok: "ready",
+  workflow_unobserved: "unobserved",
+  stale: "stale",
+  schema_drift: "drift",
+  decode_error: "drift",
+  missing_artifact: "unavailable",
+  transport_error: "unavailable",
+  http_error: "unavailable",
+  auth_error: "unavailable",
+  rate_limited: "unavailable",
+  empty_payload: "unavailable",
+  future_source: "unavailable",
+  unexpected_error: "unavailable",
+});
+
+function isDetectionSourceStamp(value) {
+  if (typeof value !== "string") return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return isRealCalendarDate(value);
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)
+    && isRealCalendarDate(value.slice(0, 10))
+    && Number.isFinite(new Date(value).getTime());
+}
+
+function assertDetectionStatusReason(row, context, { allowUnavailableSchemaDrift = false } = {}) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) throw new Error(`detection floor ${context} is malformed`);
+  const compatible = DETECTION_REASON_STATUS[row.reason] === row.status
+    || (allowUnavailableSchemaDrift && row.status === "unavailable" && row.reason === "schema_drift");
+  if (!compatible) {
+    throw new Error(`detection floor ${context} status/reason is contradictory`);
+  }
+}
+
+export function mapDetectionFloorTgaRow(row) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) {
+    throw new Error("detection floor treasury_tga row is malformed");
+  }
+  if (row.label !== "US Treasury TGA" || row.enforcement !== "live" || row.kpi_required !== true) {
+    throw new Error("detection floor treasury_tga identity/enforcement contract is malformed");
+  }
+  assertDetectionStatusReason(row, "treasury_tga", { allowUnavailableSchemaDrift: true });
+  assertDetectionStatusReason(row.artifact, "treasury_tga.artifact", { allowUnavailableSchemaDrift: true });
+  if (DETECTION_STATUS_SEVERITY[row.artifact.status] > DETECTION_STATUS_SEVERITY[row.status]) {
+    throw new Error("detection floor treasury_tga status is better than its artifact status");
+  }
+  const sourceAsOf = row.artifact.source_as_of;
+  if (sourceAsOf !== null && !isDetectionSourceStamp(sourceAsOf)) {
+    throw new Error("detection floor treasury_tga artifact.source_as_of is malformed");
+  }
+  if ((row.artifact.status === "ready" || row.artifact.status === "stale") && sourceAsOf === null) {
+    throw new Error("detection floor treasury_tga artifact status contradicts null source_as_of");
+  }
+
+  const result = lane("treasury_tga", row.label, [
+    check(
+      "detection_floor_status",
+      "Detection floor status",
+      row.status === "ready",
+      `${row.reason}; source_as_of ${sourceAsOf ?? "null"}`,
+    ),
+  ], { asOf: sourceAsOf });
+  return {
+    ...result,
+    reason: row.reason,
+    artifact: { source_as_of: sourceAsOf },
+  };
+}
+
+export function buildDetectionFloorTgaLane(report) {
+  if (report === null || report === undefined) {
+    return mapDetectionFloorTgaRow({
+      id: "treasury_tga",
+      label: "US Treasury TGA",
+      enforcement: "live",
+      kpi_required: true,
+      status: "unobserved",
+      reason: "workflow_unobserved",
+      artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
+    });
+  }
+  validateDetectionReport(report);
+  if (report?.schema_version !== "data-supply-detection-floor/v1" || !Array.isArray(report?.lanes)) {
+    throw new Error("detection floor report schema is malformed");
+  }
+  const matches = report.lanes.filter((item) => item?.id === "treasury_tga");
+  if (matches.length !== 1) throw new Error(`detection floor treasury_tga cardinality is ${matches.length}`);
+  return mapDetectionFloorTgaRow(matches[0]);
 }
 
 function trackById(coverageIndex, id) {
@@ -1382,6 +1489,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
   const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
+  const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 
   const lanes = [
@@ -1395,6 +1503,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
+    buildDetectionFloorTgaLane(detectionFloor),
   ];
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])
@@ -1456,6 +1565,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       { id: "etf_core_daily_basket_admin", generated_at: etfCoreBasket?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "yahoo_batch_quote_history_state", generated_at: yahooBatchState?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "occ_options_availability", generated_at: occAvailability?.generated_at ?? null, public_mirror: true, public_safe: true },
+      { id: "data_supply_detection_floor", generated_at: detectionFloor?.generated_at ?? null, public_mirror: false, public_safe: false },
     ],
     totals,
     lanes,

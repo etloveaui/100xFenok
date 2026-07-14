@@ -72,6 +72,8 @@ const VISIBILITIES = new Set(["public_safe_aggregate", "admin_only"]);
 const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading"]);
 const SOURCE_FORMATS = new Set(["date", "rfc3339", "yyyymmdd", "unix_seconds"]);
 const SOURCE_SELECTOR_KINDS = new Set(["pointer", "max_array_field", "max_object_series_field", "max_object_field", "max_quarter", "not_applicable"]);
+const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "owner_contract", "payload_field"]);
+const OWNER_CONTRACT_RE = /^[a-z][a-z0-9._:/-]{2,127}$/;
 
 function artifact(id, path, { schemaVersion = null, sourceSelector, assertions, selection = path.includes("*") ? "all" : "single" }) {
   return {
@@ -136,11 +138,20 @@ function nonEmptySeriesAssertion(id, pointer) {
   return { id, kind: "non_empty_series", pointer };
 }
 
-function member(id, workflow, schedule, artifactContracts) {
+function member(
+  id,
+  workflow,
+  schedule,
+  artifactContracts,
+  cadenceCalendar = workflow === null ? null : "utc",
+  cadenceDeclaration = workflow === null ? null : { kind: "github_workflow", evidence: workflow },
+) {
   return {
     id,
     workflow,
     schedule,
+    cadence_calendar: cadenceCalendar,
+    cadence_declaration: cadenceDeclaration,
     artifact_contracts: artifactContracts,
   };
 }
@@ -175,6 +186,7 @@ function lane({
   freshnessPolicy,
   affectedSurfaceIds,
   visibility = "public_safe_aggregate",
+  enforcement = "shadow",
 }) {
   const sourceBasis = [...new Set(members.flatMap((memberValue) => memberValue.artifact_contracts
     .map((contract) => contract.source_selector.pointer)
@@ -190,7 +202,8 @@ function lane({
     freshness: { ...freshnessPolicy, source_basis: sourceBasis },
     affected_surface_ids: affectedSurfaceIds,
     visibility,
-    kpi_required: false,
+    enforcement,
+    kpi_required: enforcement === "live",
   };
 }
 
@@ -291,7 +304,7 @@ const config = {
           sourceSelector: maxArrayFieldSource("/data", "date", "date"),
           assertions: [exactAssertion("source_fdic", "/source", "FDIC"), typeAssertion("data_array", "/data", "array"), minRowsAssertion("data_non_empty", "/data")],
         }),
-      ])],
+      ], "us_federal_business")],
       endpointContract: endpoint("fdic_bankfind", "bank_data_array", "/data", "array"),
       freshnessPolicy: freshness({
         fold: "latest",
@@ -317,8 +330,9 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_federal_business", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_tga"],
+      enforcement: "live",
     }),
     lane({
       id: "yahoo_ticker_macro",
@@ -348,7 +362,7 @@ const config = {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("vix_non_empty", "")],
         }),
-      ])],
+      ], "us_trading")],
       endpointContract: endpoint("sentiment_sources", "series_array", "/series", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["sentiment_dashboard"],
@@ -420,7 +434,7 @@ const config = {
             minRowsAssertion("filings_non_empty", "/filings"),
           ],
         }),
-      ])],
+      ], "us_federal_business")],
       endpointContract: endpoint("sec_edgar", "recent_filings_array", "/filings/recent", "array"),
       freshnessPolicy: freshness({
         fold: "latest",
@@ -469,7 +483,7 @@ const config = {
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
           assertions: [exactAssertion("formula_version", "/formula_version", "fenok-flow-proxies-v0.1-finra-daily"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
-      ])],
+      ], "us_trading")],
       endpointContract: endpoint("finra_regsho", "csv_rows", "/rows", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_flow_proxies"],
@@ -485,7 +499,7 @@ const config = {
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
           assertions: [exactAssertion("formula_version", "/formula_version", "fenok-occ-options-volume-v0.1"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
-      ])],
+      ], "us_trading")],
       endpointContract: endpoint("occ_market_data", "csv_rows", "/rows", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_occ_options"],
@@ -666,9 +680,31 @@ function validateArtifactContract(contract, context) {
 }
 
 function validateMember(memberValue, context) {
-  exactKeys(memberValue, ["id", "workflow", "schedule", "artifact_contracts"], context);
+  exactKeys(memberValue, ["id", "workflow", "schedule", "cadence_calendar", "cadence_declaration", "artifact_contracts"], context);
   requireIdentifier(memberValue.id, `${context}.id`);
   if (memberValue.workflow !== null && !WORKFLOW_RE.test(memberValue.workflow)) fail(`${context}.workflow is invalid`);
+  if (memberValue.cadence_declaration !== null) {
+    exactKeys(memberValue.cadence_declaration, ["kind", "evidence"], `${context}.cadence_declaration`);
+    const { kind, evidence } = memberValue.cadence_declaration;
+    if (!CADENCE_DECLARATION_KINDS.has(kind)) fail(`${context}.cadence_declaration.kind is invalid`);
+    requireString(evidence, `${context}.cadence_declaration.evidence`);
+    if (kind === "github_workflow" && (!WORKFLOW_RE.test(evidence) || evidence !== memberValue.workflow)) {
+      fail(`${context}.cadence_declaration does not match its GitHub workflow`);
+    }
+    if (kind === "owner_contract" && !OWNER_CONTRACT_RE.test(evidence)) {
+      fail(`${context}.cadence_declaration owner contract is invalid`);
+    }
+    if (kind === "payload_field" && (evidence === "" || !POINTER_RE.test(evidence))) {
+      fail(`${context}.cadence_declaration payload pointer is invalid`);
+    }
+    if (kind !== "github_workflow" && memberValue.workflow !== null) {
+      fail(`${context}.external cadence declaration contradicts GitHub workflow ownership`);
+    }
+  }
+  if (memberValue.cadence_calendar !== null) {
+    requireIdentifier(memberValue.cadence_calendar, `${context}.cadence_calendar`);
+    if (!CALENDAR_IDS.has(memberValue.cadence_calendar)) fail(`${context}.cadence_calendar is unknown`);
+  }
   if (!Array.isArray(memberValue.schedule)) fail(`${context}.schedule must be an array`);
   const schedules = new Set();
   memberValue.schedule.forEach((schedule, index) => {
@@ -676,8 +712,12 @@ function validateMember(memberValue, context) {
     if (schedules.has(schedule)) fail(`${context}.schedule contains duplicates`);
     schedules.add(schedule);
   });
-  if (memberValue.workflow === null && memberValue.schedule.length !== 0) fail(`${context} fabricates ownerless cadence`);
-  if (memberValue.workflow !== null && memberValue.schedule.length === 0) fail(`${context} omits scheduled cadence`);
+  const hasDeclaredCadence = memberValue.cadence_declaration !== null;
+  if (hasDeclaredCadence !== (memberValue.schedule.length > 0)) fail(`${context}.schedule contradicts cadence declaration`);
+  if (hasDeclaredCadence !== (memberValue.cadence_calendar !== null)) fail(`${context}.cadence_calendar contradicts cadence declaration`);
+  if ((memberValue.workflow !== null) !== (memberValue.cadence_declaration?.kind === "github_workflow")) {
+    fail(`${context}.workflow contradicts cadence declaration provenance`);
+  }
   if (!Array.isArray(memberValue.artifact_contracts) || memberValue.artifact_contracts.length === 0) {
     fail(`${context}.artifact_contracts must be non-empty`);
   }
@@ -755,6 +795,7 @@ function validateLane(laneValue, index) {
     "freshness",
     "affected_surface_ids",
     "visibility",
+    "enforcement",
     "kpi_required",
   ], context);
   requireIdentifier(laneValue.id, `${context}.id`);
@@ -778,12 +819,14 @@ function validateLane(laneValue, index) {
   validateFreshness(laneValue.freshness, `${context}.freshness`);
   requireUniqueStrings(laneValue.affected_surface_ids, `${context}.affected_surface_ids`, { identifiers: true });
   if (!VISIBILITIES.has(laneValue.visibility)) fail(`${context}.visibility is invalid`);
-  if (laneValue.kpi_required !== false) fail(`${context}.kpi_required must be false`);
+  const expectedEnforcement = laneValue.id === "treasury_tga" ? "live" : "shadow";
+  if (laneValue.enforcement !== expectedEnforcement) fail(`${context}.enforcement must be ${expectedEnforcement}`);
+  if (laneValue.kpi_required !== (expectedEnforcement === "live")) fail(`${context}.kpi_required contradicts lane enforcement`);
 
   const ownerless = OWNERLESS_LANE_IDS.includes(laneValue.id);
   if (ownerless) {
     if (laneValue.owner_workflow !== null || !artifactOnly) fail(`${context} must remain ownerless artifact-only`);
-    if (laneValue.producer_members.some((memberValue) => memberValue.workflow !== null || memberValue.schedule.length !== 0)) {
+    if (laneValue.producer_members.some((memberValue) => memberValue.workflow !== null || memberValue.cadence_declaration !== null || memberValue.schedule.length !== 0)) {
       fail(`${context} fabricates an owner or cadence`);
     }
   } else if (laneValue.id === "slickcharts") {
@@ -791,11 +834,13 @@ function validateLane(laneValue, index) {
     const actualIds = laneValue.producer_members.map((memberValue) => memberValue.id);
     if (canonicalJson(actualIds) !== canonicalJson(SLICKCHARTS_MEMBER_IDS)) fail(`${context} has the wrong five members`);
   } else {
-    if (laneValue.monitoring_mode !== "post_fetch_artifact" || laneValue.owner_workflow === null) {
-      fail(`${context} must have a scheduled post-fetch owner`);
-    }
+    if (laneValue.monitoring_mode !== "post_fetch_artifact") fail(`${context} must have a post-fetch producer`);
     if (laneValue.producer_members.length !== 1 || laneValue.producer_members[0].id !== laneValue.id) {
       fail(`${context} must have exactly one canonical member`);
+    }
+    const onlyMember = laneValue.producer_members[0];
+    if (onlyMember.cadence_declaration === null || laneValue.owner_workflow !== onlyMember.workflow) {
+      fail(`${context} must have one evidence-backed cadence declaration`);
     }
   }
 }

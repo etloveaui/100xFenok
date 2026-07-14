@@ -51,6 +51,7 @@ const REQUIRED_LANES = new Set([
   "finra_occ_plain_us_and_mapping_policy",
   "automation_contract",
   "public_mirror_safety",
+  "treasury_tga",
 ]);
 const FORBIDDEN_PUBLIC_TOKENS = [
   "_private/",
@@ -99,6 +100,42 @@ function readJson(filePath) {
 
 function push(list, condition, message) {
   if (!condition) list.push(message);
+}
+
+const DETECTION_KPI_REASONS = new Set([
+  "ok", "missing_artifact", "workflow_unobserved", "transport_error", "http_error",
+  "auth_error", "rate_limited", "decode_error", "schema_drift", "empty_payload",
+  "future_source", "stale", "unexpected_error",
+]);
+
+function isDetectionSourceStamp(value) {
+  if (typeof value !== "string") return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return isRealCalendarDate(value);
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)
+    && isRealCalendarDate(value.slice(0, 10))
+    && Number.isFinite(new Date(value).getTime());
+}
+
+export function checkDetectionFloorTgaLane(lane, errors) {
+  const sourceAsOf = lane?.artifact?.source_as_of;
+  const expectedStatus = lane?.reason === "ok" ? "ready" : "degraded";
+  const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
+  push(errors, lane?.id === "treasury_tga", "treasury_tga: lane identity is invalid");
+  push(errors, lane?.label === "US Treasury TGA", "treasury_tga: label is invalid");
+  push(errors, lane?.required === true, "treasury_tga: lane must be required");
+  push(errors, DETECTION_KPI_REASONS.has(lane?.reason), `treasury_tga: reason is invalid (${lane?.reason})`);
+  push(errors, lane?.status === expectedStatus,
+    `treasury_tga: status ${lane?.status} contradicts reason ${lane?.reason}`);
+  push(errors, lane?.deployment_blocking === false, "treasury_tga: must remain lane-local and non-deployment-blocking");
+  push(errors, sourceAsOf === null || isDetectionSourceStamp(sourceAsOf),
+    "treasury_tga: artifact.source_as_of is malformed");
+  push(errors, !["ok", "stale"].includes(lane?.reason) || sourceAsOf !== null,
+    "treasury_tga: ready/stale reason contradicts null source_as_of");
+  push(errors, lane?.as_of === sourceAsOf, "treasury_tga: as_of must preserve artifact.source_as_of");
+  push(errors, statusCheck?.status === (expectedStatus === "ready" ? "ready" : "blocked"),
+    "treasury_tga: detection_floor_status check does not match lane status");
+  push(errors, statusCheck?.platform_blocking === false,
+    "treasury_tga: detection_floor_status must not be platform blocking");
 }
 
 function ageHoursBetween(fromIso, nowIso) {
@@ -165,6 +202,20 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
   }
 
   if (isV2) {
+    const laneRows = Array.isArray(payload?.lanes) ? payload.lanes : [];
+    const statusCounts = laneRows.reduce((acc, row) => {
+      if (Object.hasOwn(acc, row?.status)) acc[row.status] += 1;
+      return acc;
+    }, { ready: 0, degraded: 0, warning: 0, blocked: 0, unavailable: 0 });
+    push(errors, laneRows.length === REQUIRED_LANES.size,
+      `totals.lanes requires exactly ${REQUIRED_LANES.size} lanes, got ${laneRows.length}`);
+    push(errors, Number(payload?.totals?.lanes) === laneRows.length,
+      `totals.lanes mismatch: ${payload?.totals?.lanes} vs derived ${laneRows.length}`);
+    for (const [status, count] of Object.entries(statusCounts)) {
+      push(errors, Number(payload?.totals?.[status]) === count,
+        `totals.${status} mismatch: ${payload?.totals?.[status]} vs derived ${count}`);
+    }
+    checkDetectionFloorTgaLane(lanesById.get("treasury_tga"), errors);
     push(errors, Number(payload?.totals?.required_not_ready) === derivedRequiredNotReady,
       `totals.required_not_ready mismatch: ${payload?.totals?.required_not_ready} vs derived ${derivedRequiredNotReady}`);
     push(errors, Number(payload?.totals?.platform_blocking_not_ready) === derivedIntegrityBlockers.length,

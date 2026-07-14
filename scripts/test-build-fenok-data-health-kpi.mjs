@@ -30,6 +30,8 @@ import {
   buildYahooBatchLane,
   buildSlickChartsDeliveryLane,
   buildFinraOccLane,
+  buildDetectionFloorTgaLane,
+  mapDetectionFloorTgaRow,
   buildRimLane,
   enumerateDueSlots,
   deriveMissedSlots,
@@ -40,12 +42,14 @@ import {
   checkV2Runtime,
   checkSourceSla,
   checkPublicProjection,
+  checkDetectionFloorTgaLane,
 } from "../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs";
 import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
 const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
+const DETECTION_EXPECTED = path.join(__dirname, "fixtures", "data_supply", "detection_floor", "cases.expected.json");
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
 assert.equal(PRODUCT_SURFACE_SLA?.unit, "business_days");
@@ -304,7 +308,79 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(staleLane.checks.find((item) => item.id === "oldest_source_fresh")?.status, "blocked");
 }
 
-// The ten lanes the checker's validateCoreShape REQUIRED_LANES demands.
+// Detection-floor adapter: one live lane enters the KPI without becoming a
+// platform-integrity blocker. Missing evidence is honest unobserved state;
+// malformed or contradictory evidence is corruption and fails closed.
+{
+  const report = (overrides = {}) => {
+    const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
+    const index = value.lanes.findIndex((item) => item.id === "treasury_tga");
+    value.lanes[index] = { ...value.lanes[index], ...overrides };
+    return value;
+  };
+  const row = (overrides = {}) => ({
+    id: "treasury_tga", label: "US Treasury TGA", enforcement: "live", kpi_required: true,
+    status: "ready", reason: "ok",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-10" },
+    ...overrides,
+  });
+
+  const ready = buildDetectionFloorTgaLane(report());
+  assert.equal(ready.id, "treasury_tga");
+  assert.equal(ready.status, "ready");
+  assert.equal(ready.reason, "ok");
+  assert.equal(ready.artifact.source_as_of, "2026-07-10");
+  assert.equal(ready.deployment_blocking, false);
+
+  const stale = mapDetectionFloorTgaRow(row({
+    status: "stale",
+    reason: "stale",
+    artifact: { status: "stale", reason: "stale", source_as_of: "2026-07-09" },
+  }));
+  assert.equal(stale.status, "degraded");
+  assert.equal(stale.reason, "stale");
+  assert.equal(stale.artifact.source_as_of, "2026-07-09");
+  assert.equal(stale.deployment_blocking, false);
+
+  const unreadableArtifact = mapDetectionFloorTgaRow(row({
+    status: "unavailable",
+    reason: "schema_drift",
+    artifact: { status: "unavailable", reason: "schema_drift", source_as_of: null },
+  }));
+  assert.equal(unreadableArtifact.status, "degraded");
+  assert.equal(unreadableArtifact.reason, "schema_drift");
+  assert.equal(unreadableArtifact.artifact.source_as_of, null);
+
+  const missing = buildDetectionFloorTgaLane(null);
+  assert.equal(missing.status, "degraded");
+  assert.equal(missing.reason, "workflow_unobserved");
+  assert.equal(missing.artifact.source_as_of, null);
+  assert.match(missing.status_message, /workflow_unobserved/i);
+
+  for (const malformed of [
+    {},
+    report({ enforcement: "shadow" }),
+    report({ kpi_required: false }),
+    report({ status: "ready", reason: "stale" }),
+    report({ artifact: { status: "ready", reason: "ok", source_as_of: null } }),
+    report({ artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-99" } }),
+  ]) {
+    assert.throws(() => buildDetectionFloorTgaLane(malformed), /schema_error|detection floor|treasury_tga/i);
+  }
+  const badCounts = report();
+  badCounts.counts.ready += 1;
+  assert.throws(() => buildDetectionFloorTgaLane(badCounts), /aggregate counts|detection floor/i);
+
+  const checkerErrors = [];
+  checkDetectionFloorTgaLane(stale, checkerErrors);
+  assert.deepEqual(checkerErrors, []);
+  const tampered = structuredClone(stale);
+  tampered.status = "ready";
+  checkDetectionFloorTgaLane(tampered, checkerErrors);
+  assert.ok(checkerErrors.some((entry) => /status/i.test(entry)), "checker independently rejects KPI status laundering");
+}
+
+// The eleven lanes the checker's validateCoreShape REQUIRED_LANES demands.
 // Kept in lockstep with that set; a divergence hard-fails validateCoreShape immediately.
 const REQUIRED_LANE_IDS = [
   "stock_s0_active_daily_gate",
@@ -317,6 +393,7 @@ const REQUIRED_LANE_IDS = [
   "finra_occ_plain_us_and_mapping_policy",
   "automation_contract",
   "public_mirror_safety",
+  "treasury_tga",
 ];
 
 // HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
@@ -333,6 +410,17 @@ function readyCoreV2(now) {
     status_label: "정상",
     required: true,
     checks: [],
+    ...(id === "treasury_tga" ? {
+      label: "US Treasury TGA",
+      reason: "ok",
+      artifact: { source_as_of: "2026-07-10" },
+      as_of: "2026-07-10",
+      deployment_blocking: false,
+      checks: [{
+        id: "detection_floor_status", label: "Detection floor status", status: "ready",
+        status_label: "정상", detail: "ok; source_as_of 2026-07-10", platform_blocking: false,
+      }],
+    } : {}),
     ...(id === "yahoo_batch_quote_history" ? {
       as_of: "2026-07-09T00:00:00Z",
       deployment_blocking: false,
@@ -599,6 +687,34 @@ function v2Doc(runtime, extra = {}) {
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 console.log("# KPI v2 runtime self-proof fixtures");
+
+// 0. Real CLI integration: the installed detection-floor report is consumed
+// from data/admin; malformed JSON fails closed before a KPI can be published.
+{
+  const now = "2026-07-14T12:00:00.000Z";
+  const tmp = mkTmp("detection-floor-tga-installed");
+  const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  const { root } = runBuilder(tmp, {}, now);
+  const tga = root.lanes.find((item) => item.id === "treasury_tga");
+  assert.equal(root.totals.lanes, 11);
+  assert.equal(tga.status, "ready");
+  assert.equal(tga.reason, "ok");
+  assert.equal(tga.artifact.source_as_of, "2026-07-10");
+  assert.equal(tga.deployment_blocking, false);
+  assert.equal(root.deployment_integrity.blockers.some((item) => item.lane_id === "treasury_tga"), false);
+  assert.deepEqual(root.source_artifacts.find((item) => item.id === "data_supply_detection_floor"), {
+    id: "data_supply_detection_floor",
+    generated_at: installedReport.generated_at,
+    public_mirror: false,
+    public_safe: false,
+  });
+
+  const malformed = mkTmp("detection-floor-tga-malformed-json");
+  fs.writeFileSync(path.join(malformed, "data", "admin", "data-supply-detection-floor.json"), "{", "utf8");
+  runBuilder(malformed, {}, now, { expectExit: 1 });
+  ok("installed detection-floor TGA maps into KPI; malformed report fails closed");
+}
 
 // 1. push build -> non-authoritative, producer null
 {
