@@ -1,19 +1,19 @@
 {
   "schema_version": "fenok-edge-korea-krx-bridge/v1",
-  "generated_at": "2026-07-13T13:01:49.365Z",
+  "generated_at": "2026-07-14T14:11:00.001Z",
   "market": "Korea",
   "source": "KRX_OPEN_API",
   "raw_public": false,
   "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.",
-  "bridge_scope": "stats_only_private_path_refs_no_raw_rows",
-  "as_of": "2026-07-12",
+  "bridge_scope": "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows",
+  "as_of": "2026-07-13",
   "freshness": {
-    "as_of": "2026-07-12",
-    "source_date_min": "2026-07-10",
-    "source_date_max": "2026-07-10",
+    "as_of": "2026-07-13",
+    "source_date_min": "2026-07-13",
+    "source_date_max": "2026-07-13",
     "date_count": 1,
-    "fetched_at": "2026-07-13T13:01:09.247Z",
-    "completed_at": "2026-07-13T13:01:49.363Z"
+    "fetched_at": "2026-07-14T14:10:25.819Z",
+    "completed_at": "2026-07-14T14:10:59.995Z"
   },
   "feno_data_read": {
     "category": "admin",
@@ -31,7 +31,7 @@
     }
   },
   "latest_run": {
-    "run_id": "krx_daily_20260712",
+    "run_id": "krx_daily_20260713",
     "backfill_type": "krx-daily-scheduled-accumulation",
     "full_252_status": "not_run_heavy",
     "planned_full_trading_day_count": 252,
@@ -42,7 +42,7 @@
       "success_files": 31,
       "empty_files": 0,
       "failed_files": 0,
-      "total_rows": 46601,
+      "total_rows": 47430,
       "failed_reasons": {}
     },
     "endpoint_class_counts": {
@@ -59,7 +59,7 @@
           "success_files": 9,
           "empty_files": 0,
           "failed_files": 0,
-          "total_rows": 5875,
+          "total_rows": 5877,
           "failed_reasons": {}
         },
         "endpoint_class_counts": {
@@ -76,7 +76,7 @@
           "success_files": 10,
           "empty_files": 0,
           "failed_files": 0,
-          "total_rows": 37921,
+          "total_rows": 38748,
           "failed_reasons": {}
         },
         "endpoint_class_counts": {
@@ -137,17 +137,5709 @@
   },
   "derived_rim_inputs": {
     "schema_version": "krx_derived_rim_inputs.v1",
-    "generated_at": "2026-07-13T13:01:49.363Z",
-    "as_of": "2026-07-12",
+    "generated_at": "2026-07-14T14:10:59.995Z",
+    "as_of": "2026-07-13",
     "raw_public": false,
     "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.",
-    "status": "partial_or_unavailable",
-    "missing": [
-      "kospi_weights",
-      "korea_10y"
-    ],
-    "kospi_weights": null,
-    "korea_10y": null,
+    "status": "ready",
+    "missing": [],
+    "kospi_weights": {
+      "source": "admin_private_path_redacted",
+      "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
+      "as_of": "2026-07-13",
+      "raw_public": false,
+      "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.",
+      "row_count": 945,
+      "total_market_cap": 5572485079774514,
+      "denominator": {
+        "method": "issuer_level_market_cap_sum",
+        "label": "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
+        "unit": "KRW",
+        "value": 5572485079774514
+      },
+      "rows": [
+        {
+          "code": "095570",
+          "name": "AJ네트웍스",
+          "weight": 0.000034634999,
+          "weight_pct": 0.0034634999
+        },
+        {
+          "code": "006840",
+          "name": "AK홀딩스",
+          "weight": 0.000013455612,
+          "weight_pct": 0.0013455612
+        },
+        {
+          "code": "027410",
+          "name": "BGF",
+          "weight": 0.000068191418,
+          "weight_pct": 0.0068191418
+        },
+        {
+          "code": "282330",
+          "name": "BGF리테일",
+          "weight": 0.000396391045,
+          "weight_pct": 0.0396391045
+        },
+        {
+          "code": "138930",
+          "name": "BNK금융지주",
+          "weight": 0.00101131521,
+          "weight_pct": 0.101131521
+        },
+        {
+          "code": "001460",
+          "name": "BYC",
+          "weight": 0.000036877324,
+          "weight_pct": 0.0036877324
+        },
+        {
+          "code": "001465",
+          "name": "BYC우",
+          "weight": 0.000008947826,
+          "weight_pct": 0.0008947826
+        },
+        {
+          "code": "001040",
+          "name": "CJ",
+          "weight": 0.000746639938,
+          "weight_pct": 0.0746639938
+        },
+        {
+          "code": "079160",
+          "name": "CJ CGV",
+          "weight": 0.000130594331,
+          "weight_pct": 0.0130594331
+        },
+        {
+          "code": "00104K",
+          "name": "CJ4우(전환)",
+          "weight": 0.00010588114,
+          "weight_pct": 0.010588114
+        },
+        {
+          "code": "000120",
+          "name": "CJ대한통운",
+          "weight": 0.000301299778,
+          "weight_pct": 0.0301299778
+        },
+        {
+          "code": "011150",
+          "name": "CJ씨푸드",
+          "weight": 0.000012889333,
+          "weight_pct": 0.0012889333
+        },
+        {
+          "code": "011155",
+          "name": "CJ씨푸드1우",
+          "weight": 2.58413e-7,
+          "weight_pct": 0.0000258413
+        },
+        {
+          "code": "001045",
+          "name": "CJ우",
+          "weight": 0.000026850994,
+          "weight_pct": 0.0026850994
+        },
+        {
+          "code": "097950",
+          "name": "CJ제일제당",
+          "weight": 0.000518421898,
+          "weight_pct": 0.0518421898
+        },
+        {
+          "code": "097955",
+          "name": "CJ제일제당 우",
+          "weight": 0.000028918941,
+          "weight_pct": 0.0028918941
+        },
+        {
+          "code": "000480",
+          "name": "CR홀딩스",
+          "weight": 0.000041105546,
+          "weight_pct": 0.0041105546
+        },
+        {
+          "code": "000590",
+          "name": "CS홀딩스",
+          "weight": 0.000014647303,
+          "weight_pct": 0.0014647303
+        },
+        {
+          "code": "012030",
+          "name": "DB",
+          "weight": 0.00005599311,
+          "weight_pct": 0.005599311
+        },
+        {
+          "code": "005830",
+          "name": "DB손해보험",
+          "weight": 0.001870100211,
+          "weight_pct": 0.1870100211
+        },
+        {
+          "code": "016610",
+          "name": "DB증권",
+          "weight": 0.000070382357,
+          "weight_pct": 0.0070382357
+        },
+        {
+          "code": "000990",
+          "name": "DB하이텍",
+          "weight": 0.000864238813,
+          "weight_pct": 0.0864238813
+        },
+        {
+          "code": "000300",
+          "name": "DH오토넥스",
+          "weight": 0.000031231242,
+          "weight_pct": 0.0031231242
+        },
+        {
+          "code": "001530",
+          "name": "DI동일",
+          "weight": 0.000088104358,
+          "weight_pct": 0.0088104358
+        },
+        {
+          "code": "015590",
+          "name": "DKME",
+          "weight": 0.000018637254,
+          "weight_pct": 0.0018637254
+        },
+        {
+          "code": "000210",
+          "name": "DL",
+          "weight": 0.000171295302,
+          "weight_pct": 0.0171295302
+        },
+        {
+          "code": "000215",
+          "name": "DL우",
+          "weight": 0.000006202862,
+          "weight_pct": 0.0006202862
+        },
+        {
+          "code": "375500",
+          "name": "DL이앤씨",
+          "weight": 0.000418704659,
+          "weight_pct": 0.0418704659
+        },
+        {
+          "code": "37550L",
+          "name": "DL이앤씨2우(전환)",
+          "weight": 0.000014818754,
+          "weight_pct": 0.0014818754
+        },
+        {
+          "code": "37550K",
+          "name": "DL이앤씨우",
+          "weight": 0.000008421422,
+          "weight_pct": 0.0008421422
+        },
+        {
+          "code": "007340",
+          "name": "DN오토모티브",
+          "weight": 0.000397948447,
+          "weight_pct": 0.0397948447
+        },
+        {
+          "code": "004840",
+          "name": "DRB동일",
+          "weight": 0.000015079001,
+          "weight_pct": 0.0015079001
+        },
+        {
+          "code": "155660",
+          "name": "DSR",
+          "weight": 0.000012891914,
+          "weight_pct": 0.0012891914
+        },
+        {
+          "code": "069730",
+          "name": "DSR제강",
+          "weight": 0.000014264372,
+          "weight_pct": 0.0014264372
+        },
+        {
+          "code": "017860",
+          "name": "DS단석",
+          "weight": 0.000037542076,
+          "weight_pct": 0.0037542076
+        },
+        {
+          "code": "092780",
+          "name": "DYP",
+          "weight": 0.000008117323,
+          "weight_pct": 0.0008117323
+        },
+        {
+          "code": "017940",
+          "name": "E1",
+          "weight": 0.000104392922,
+          "weight_pct": 0.0104392922
+        },
+        {
+          "code": "365550",
+          "name": "ESR켄달스퀘어리츠",
+          "weight": 0.000142420664,
+          "weight_pct": 0.0142420664
+        },
+        {
+          "code": "383220",
+          "name": "F&F",
+          "weight": 0.000549258589,
+          "weight_pct": 0.0549258589
+        },
+        {
+          "code": "007700",
+          "name": "F&F홀딩스",
+          "weight": 0.00010437545,
+          "weight_pct": 0.010437545
+        },
+        {
+          "code": "114090",
+          "name": "GKL",
+          "weight": 0.000114332007,
+          "weight_pct": 0.0114332007
+        },
+        {
+          "code": "078930",
+          "name": "GS",
+          "weight": 0.00132529594,
+          "weight_pct": 0.132529594
+        },
+        {
+          "code": "006360",
+          "name": "GS건설",
+          "weight": 0.000452289211,
+          "weight_pct": 0.0452289211
+        },
+        {
+          "code": "001250",
+          "name": "GS글로벌",
+          "weight": 0.000038878728,
+          "weight_pct": 0.0038878728
+        },
+        {
+          "code": "007070",
+          "name": "GS리테일",
+          "weight": 0.000399096132,
+          "weight_pct": 0.0399096132
+        },
+        {
+          "code": "078935",
+          "name": "GS우",
+          "weight": 0.000017373644,
+          "weight_pct": 0.0017373644
+        },
+        {
+          "code": "499790",
+          "name": "GS피앤엘",
+          "weight": 0.000154447879,
+          "weight_pct": 0.0154447879
+        },
+        {
+          "code": "012630",
+          "name": "HDC",
+          "weight": 0.000216024926,
+          "weight_pct": 0.0216024926
+        },
+        {
+          "code": "039570",
+          "name": "HDC랩스",
+          "weight": 0.000035867934,
+          "weight_pct": 0.0035867934
+        },
+        {
+          "code": "089470",
+          "name": "HDC현대EP",
+          "weight": 0.000021180855,
+          "weight_pct": 0.0021180855
+        },
+        {
+          "code": "267270",
+          "name": "HD건설기계",
+          "weight": 0.001092166391,
+          "weight_pct": 0.1092166391
+        },
+        {
+          "code": "009540",
+          "name": "HD한국조선해양",
+          "weight": 0.004337206609,
+          "weight_pct": 0.4337206609
+        },
+        {
+          "code": "267250",
+          "name": "HD현대",
+          "weight": 0.002806760468,
+          "weight_pct": 0.2806760468
+        },
+        {
+          "code": "443060",
+          "name": "HD현대마린솔루션",
+          "weight": 0.001557609887,
+          "weight_pct": 0.1557609887
+        },
+        {
+          "code": "071970",
+          "name": "HD현대마린엔진",
+          "weight": 0.00036280422,
+          "weight_pct": 0.036280422
+        },
+        {
+          "code": "322000",
+          "name": "HD현대에너지솔루션",
+          "weight": 0.000241185033,
+          "weight_pct": 0.0241185033
+        },
+        {
+          "code": "267260",
+          "name": "HD현대일렉트릭",
+          "weight": 0.005097392272,
+          "weight_pct": 0.5097392272
+        },
+        {
+          "code": "329180",
+          "name": "HD현대중공업",
+          "weight": 0.009182365938,
+          "weight_pct": 0.9182365938
+        },
+        {
+          "code": "097230",
+          "name": "HJ중공업",
+          "weight": 0.000259098505,
+          "weight_pct": 0.0259098505
+        },
+        {
+          "code": "014790",
+          "name": "HL D&I",
+          "weight": 0.000016543013,
+          "weight_pct": 0.0016543013
+        },
+        {
+          "code": "003580",
+          "name": "HLB글로벌",
+          "weight": 0.000009909981,
+          "weight_pct": 0.0009909981
+        },
+        {
+          "code": "204320",
+          "name": "HL만도",
+          "weight": 0.000401106307,
+          "weight_pct": 0.0401106307
+        },
+        {
+          "code": "060980",
+          "name": "HL홀딩스",
+          "weight": 0.000061096038,
+          "weight_pct": 0.0061096038
+        },
+        {
+          "code": "011200",
+          "name": "HMM",
+          "weight": 0.003309170334,
+          "weight_pct": 0.3309170334
+        },
+        {
+          "code": "035000",
+          "name": "HS애드",
+          "weight": 0.000017654672,
+          "weight_pct": 0.0017654672
+        },
+        {
+          "code": "002460",
+          "name": "HS화성",
+          "weight": 0.000019325579,
+          "weight_pct": 0.0019325579
+        },
+        {
+          "code": "487570",
+          "name": "HS효성",
+          "weight": 0.000029185671,
+          "weight_pct": 0.0029185671
+        },
+        {
+          "code": "298050",
+          "name": "HS효성첨단소재",
+          "weight": 0.000116571413,
+          "weight_pct": 0.0116571413
+        },
+        {
+          "code": "015360",
+          "name": "INVENI",
+          "weight": 0.000068950386,
+          "weight_pct": 0.0068950386
+        },
+        {
+          "code": "294870",
+          "name": "IPARK현대산업개발",
+          "weight": 0.00021147173,
+          "weight_pct": 0.021147173
+        },
+        {
+          "code": "175330",
+          "name": "JB금융지주",
+          "weight": 0.000945915561,
+          "weight_pct": 0.0945915561
+        },
+        {
+          "code": "234080",
+          "name": "JW생명과학",
+          "weight": 0.000031569738,
+          "weight_pct": 0.0031569738
+        },
+        {
+          "code": "001060",
+          "name": "JW중외제약",
+          "weight": 0.000100289604,
+          "weight_pct": 0.0100289604
+        },
+        {
+          "code": "001067",
+          "name": "JW중외제약2우B",
+          "weight": 0.000001582573,
+          "weight_pct": 0.0001582573
+        },
+        {
+          "code": "001065",
+          "name": "JW중외제약우",
+          "weight": 0.000001257966,
+          "weight_pct": 0.0001257966
+        },
+        {
+          "code": "096760",
+          "name": "JW홀딩스",
+          "weight": 0.000050278381,
+          "weight_pct": 0.0050278381
+        },
+        {
+          "code": "008970",
+          "name": "KBI동양철관",
+          "weight": 0.000020241351,
+          "weight_pct": 0.0020241351
+        },
+        {
+          "code": "105560",
+          "name": "KB금융",
+          "weight": 0.011851598546,
+          "weight_pct": 1.1851598546
+        },
+        {
+          "code": "415640",
+          "name": "KB발해인프라",
+          "weight": 0.000232666733,
+          "weight_pct": 0.0232666733
+        },
+        {
+          "code": "432320",
+          "name": "KB스타리츠",
+          "weight": 0.000038039507,
+          "weight_pct": 0.0038039507
+        },
+        {
+          "code": "002380",
+          "name": "KCC",
+          "weight": 0.000669237658,
+          "weight_pct": 0.0669237658
+        },
+        {
+          "code": "344820",
+          "name": "KCC글라스",
+          "weight": 0.000065057262,
+          "weight_pct": 0.0065057262
+        },
+        {
+          "code": "009070",
+          "name": "KCTC",
+          "weight": 0.000021292116,
+          "weight_pct": 0.0021292116
+        },
+        {
+          "code": "009440",
+          "name": "KC그린홀딩스",
+          "weight": 0.000003152775,
+          "weight_pct": 0.0003152775
+        },
+        {
+          "code": "119650",
+          "name": "KC코트렐",
+          "weight": 0.000018085811,
+          "weight_pct": 0.0018085811
+        },
+        {
+          "code": "092220",
+          "name": "KEC",
+          "weight": 0.000020895995,
+          "weight_pct": 0.0020895995
+        },
+        {
+          "code": "003620",
+          "name": "KG모빌리티",
+          "weight": 0.000101323915,
+          "weight_pct": 0.0101323915
+        },
+        {
+          "code": "016380",
+          "name": "KG스틸",
+          "weight": 0.000090990842,
+          "weight_pct": 0.0090990842
+        },
+        {
+          "code": "001390",
+          "name": "KG케미칼",
+          "weight": 0.000049587886,
+          "weight_pct": 0.0049587886
+        },
+        {
+          "code": "001940",
+          "name": "KISCO홀딩스",
+          "weight": 0.000064999099,
+          "weight_pct": 0.0064999099
+        },
+        {
+          "code": "025000",
+          "name": "KPX케미칼",
+          "weight": 0.000039524388,
+          "weight_pct": 0.0039524388
+        },
+        {
+          "code": "092230",
+          "name": "KPX홀딩스",
+          "weight": 0.000065198839,
+          "weight_pct": 0.0065198839
+        },
+        {
+          "code": "000040",
+          "name": "KR모터스",
+          "weight": 0.00000413858,
+          "weight_pct": 0.000413858
+        },
+        {
+          "code": "044450",
+          "name": "KSS해운",
+          "weight": 0.000039729777,
+          "weight_pct": 0.0039729777
+        },
+        {
+          "code": "030200",
+          "name": "KT",
+          "weight": 0.00238341469,
+          "weight_pct": 0.238341469
+        },
+        {
+          "code": "033780",
+          "name": "KT&G",
+          "weight": 0.003247054451,
+          "weight_pct": 0.3247054451
+        },
+        {
+          "code": "058850",
+          "name": "KTcs",
+          "weight": 0.000016457802,
+          "weight_pct": 0.0016457802
+        },
+        {
+          "code": "058860",
+          "name": "KTis",
+          "weight": 0.000015738228,
+          "weight_pct": 0.0015738228
+        },
+        {
+          "code": "093050",
+          "name": "LF",
+          "weight": 0.000115438622,
+          "weight_pct": 0.0115438622
+        },
+        {
+          "code": "003550",
+          "name": "LG",
+          "weight": 0.002694195818,
+          "weight_pct": 0.2694195818
+        },
+        {
+          "code": "034220",
+          "name": "LG디스플레이",
+          "weight": 0.000929567316,
+          "weight_pct": 0.0929567316
+        },
+        {
+          "code": "051900",
+          "name": "LG생활건강",
+          "weight": 0.000667820086,
+          "weight_pct": 0.0667820086
+        },
+        {
+          "code": "051905",
+          "name": "LG생활건강우",
+          "weight": 0.000035699509,
+          "weight_pct": 0.0035699509
+        },
+        {
+          "code": "064400",
+          "name": "LG씨엔에스",
+          "weight": 0.001185758519,
+          "weight_pct": 0.1185758519
+        },
+        {
+          "code": "373220",
+          "name": "LG에너지솔루션",
+          "weight": 0.013794384175,
+          "weight_pct": 1.3794384175
+        },
+        {
+          "code": "003555",
+          "name": "LG우",
+          "weight": 0.000035123994,
+          "weight_pct": 0.0035123994
+        },
+        {
+          "code": "032640",
+          "name": "LG유플러스",
+          "weight": 0.001106675901,
+          "weight_pct": 0.1106675901
+        },
+        {
+          "code": "011070",
+          "name": "LG이노텍",
+          "weight": 0.00280735749,
+          "weight_pct": 0.280735749
+        },
+        {
+          "code": "066570",
+          "name": "LG전자",
+          "weight": 0.005425117946,
+          "weight_pct": 0.5425117946
+        },
+        {
+          "code": "066575",
+          "name": "LG전자우",
+          "weight": 0.00020565199,
+          "weight_pct": 0.020565199
+        },
+        {
+          "code": "037560",
+          "name": "LG헬로비전",
+          "weight": 0.00002161152,
+          "weight_pct": 0.002161152
+        },
+        {
+          "code": "051910",
+          "name": "LG화학",
+          "weight": 0.003300018769,
+          "weight_pct": 0.3300018769
+        },
+        {
+          "code": "051915",
+          "name": "LG화학우",
+          "weight": 0.000170264775,
+          "weight_pct": 0.0170264775
+        },
+        {
+          "code": "079550",
+          "name": "LIG디펜스앤에어로스페이스",
+          "weight": 0.00286227774,
+          "weight_pct": 0.286227774
+        },
+        {
+          "code": "006260",
+          "name": "LS",
+          "weight": 0.001699277766,
+          "weight_pct": 0.1699277766
+        },
+        {
+          "code": "010120",
+          "name": "LS ELECTRIC",
+          "weight": 0.004966365922,
+          "weight_pct": 0.4966365922
+        },
+        {
+          "code": "000680",
+          "name": "LS네트웍스",
+          "weight": 0.000039878887,
+          "weight_pct": 0.0039878887
+        },
+        {
+          "code": "229640",
+          "name": "LS에코에너지",
+          "weight": 0.000235492073,
+          "weight_pct": 0.0235492073
+        },
+        {
+          "code": "108320",
+          "name": "LX세미콘",
+          "weight": 0.000110326099,
+          "weight_pct": 0.0110326099
+        },
+        {
+          "code": "001120",
+          "name": "LX인터내셔널",
+          "weight": 0.000258748472,
+          "weight_pct": 0.0258748472
+        },
+        {
+          "code": "108670",
+          "name": "LX하우시스",
+          "weight": 0.000051174997,
+          "weight_pct": 0.0051174997
+        },
+        {
+          "code": "108675",
+          "name": "LX하우시스우",
+          "weight": 0.000002975193,
+          "weight_pct": 0.0002975193
+        },
+        {
+          "code": "383800",
+          "name": "LX홀딩스",
+          "weight": 0.000104308733,
+          "weight_pct": 0.0104308733
+        },
+        {
+          "code": "38380K",
+          "name": "LX홀딩스1우",
+          "weight": 0.000001911647,
+          "weight_pct": 0.0001911647
+        },
+        {
+          "code": "023150",
+          "name": "MH에탄올",
+          "weight": 0.000006024654,
+          "weight_pct": 0.0006024654
+        },
+        {
+          "code": "035420",
+          "name": "NAVER",
+          "weight": 0.005294858052,
+          "weight_pct": 0.5294858052
+        },
+        {
+          "code": "036570",
+          "name": "NC",
+          "weight": 0.000929807297,
+          "weight_pct": 0.0929807297
+        },
+        {
+          "code": "181710",
+          "name": "NHN",
+          "weight": 0.000224820264,
+          "weight_pct": 0.0224820264
+        },
+        {
+          "code": "400760",
+          "name": "NH올원리츠",
+          "weight": 0.000028635257,
+          "weight_pct": 0.0028635257
+        },
+        {
+          "code": "005940",
+          "name": "NH투자증권",
+          "weight": 0.001991952771,
+          "weight_pct": 0.1991952771
+        },
+        {
+          "code": "005945",
+          "name": "NH투자증권우",
+          "weight": 0.000083306784,
+          "weight_pct": 0.0083306784
+        },
+        {
+          "code": "338100",
+          "name": "NH프라임리츠",
+          "weight": 0.000012657692,
+          "weight_pct": 0.0012657692
+        },
+        {
+          "code": "034310",
+          "name": "NICE",
+          "weight": 0.000077175395,
+          "weight_pct": 0.0077175395
+        },
+        {
+          "code": "030190",
+          "name": "NICE평가정보",
+          "weight": 0.000144305876,
+          "weight_pct": 0.0144305876
+        },
+        {
+          "code": "008260",
+          "name": "NI스틸",
+          "weight": 0.0000156281,
+          "weight_pct": 0.00156281
+        },
+        {
+          "code": "004250",
+          "name": "NPC",
+          "weight": 0.000019735611,
+          "weight_pct": 0.0019735611
+        },
+        {
+          "code": "004255",
+          "name": "NPC우",
+          "weight": 0.000001883655,
+          "weight_pct": 0.0001883655
+        },
+        {
+          "code": "456040",
+          "name": "OCI",
+          "weight": 0.000147963571,
+          "weight_pct": 0.0147963571
+        },
+        {
+          "code": "010060",
+          "name": "OCI홀딩스",
+          "weight": 0.000685163332,
+          "weight_pct": 0.0685163332
+        },
+        {
+          "code": "178920",
+          "name": "PI첨단소재",
+          "weight": 0.000095648304,
+          "weight_pct": 0.0095648304
+        },
+        {
+          "code": "001340",
+          "name": "PKC",
+          "weight": 0.000042826292,
+          "weight_pct": 0.0042826292
+        },
+        {
+          "code": "005490",
+          "name": "POSCO홀딩스",
+          "weight": 0.004379803618,
+          "weight_pct": 0.4379803618
+        },
+        {
+          "code": "010950",
+          "name": "S-Oil",
+          "weight": 0.002818365462,
+          "weight_pct": 0.2818365462
+        },
+        {
+          "code": "010955",
+          "name": "S-Oil우",
+          "weight": 0.000048717954,
+          "weight_pct": 0.0048717954
+        },
+        {
+          "code": "034120",
+          "name": "SBS",
+          "weight": 0.000040348426,
+          "weight_pct": 0.0040348426
+        },
+        {
+          "code": "003080",
+          "name": "SB성보",
+          "weight": 0.000008065504,
+          "weight_pct": 0.0008065504
+        },
+        {
+          "code": "005090",
+          "name": "SGC에너지",
+          "weight": 0.000096191767,
+          "weight_pct": 0.0096191767
+        },
+        {
+          "code": "001380",
+          "name": "SG글로벌",
+          "weight": 0.000005470753,
+          "weight_pct": 0.0005470753
+        },
+        {
+          "code": "004060",
+          "name": "SG세계물산",
+          "weight": 0.000008809006,
+          "weight_pct": 0.0008809006
+        },
+        {
+          "code": "001770",
+          "name": "SHD",
+          "weight": 0.000001406188,
+          "weight_pct": 0.0001406188
+        },
+        {
+          "code": "002360",
+          "name": "SH에너지화학",
+          "weight": 0.000003625692,
+          "weight_pct": 0.0003625692
+        },
+        {
+          "code": "009160",
+          "name": "SIMPAC",
+          "weight": 0.000058889751,
+          "weight_pct": 0.0058889751
+        },
+        {
+          "code": "033530",
+          "name": "SJG세종",
+          "weight": 0.000030055206,
+          "weight_pct": 0.0030055206
+        },
+        {
+          "code": "123700",
+          "name": "SJM",
+          "weight": 0.000009185142,
+          "weight_pct": 0.0009185142
+        },
+        {
+          "code": "025530",
+          "name": "SJM홀딩스",
+          "weight": 0.000009272644,
+          "weight_pct": 0.0009272644
+        },
+        {
+          "code": "034730",
+          "name": "SK",
+          "weight": 0.007585318802,
+          "weight_pct": 0.7585318802
+        },
+        {
+          "code": "011790",
+          "name": "SKC",
+          "weight": 0.000783250231,
+          "weight_pct": 0.0783250231
+        },
+        {
+          "code": "018670",
+          "name": "SK가스",
+          "weight": 0.00036464253,
+          "weight_pct": 0.036464253
+        },
+        {
+          "code": "001740",
+          "name": "SK네트웍스",
+          "weight": 0.000293377223,
+          "weight_pct": 0.0293377223
+        },
+        {
+          "code": "006120",
+          "name": "SK디스커버리",
+          "weight": 0.000151403947,
+          "weight_pct": 0.0151403947
+        },
+        {
+          "code": "006125",
+          "name": "SK디스커버리우",
+          "weight": 0.000008266647,
+          "weight_pct": 0.0008266647
+        },
+        {
+          "code": "210980",
+          "name": "SK디앤디",
+          "weight": 0.000036917474,
+          "weight_pct": 0.0036917474
+        },
+        {
+          "code": "395400",
+          "name": "SK리츠",
+          "weight": 0.000306825421,
+          "weight_pct": 0.0306825421
+        },
+        {
+          "code": "302440",
+          "name": "SK바이오사이언스",
+          "weight": 0.000511077703,
+          "weight_pct": 0.0511077703
+        },
+        {
+          "code": "326030",
+          "name": "SK바이오팜",
+          "weight": 0.001114447259,
+          "weight_pct": 0.1114447259
+        },
+        {
+          "code": "402340",
+          "name": "SK스퀘어",
+          "weight": 0.027492884046,
+          "weight_pct": 2.7492884046
+        },
+        {
+          "code": "361610",
+          "name": "SK아이이테크놀로지",
+          "weight": 0.000212228736,
+          "weight_pct": 0.0212228736
+        },
+        {
+          "code": "100090",
+          "name": "SK오션플랜트",
+          "weight": 0.000150127301,
+          "weight_pct": 0.0150127301
+        },
+        {
+          "code": "03473K",
+          "name": "SK우",
+          "weight": 0.000034592998,
+          "weight_pct": 0.0034592998
+        },
+        {
+          "code": "096770",
+          "name": "SK이노베이션",
+          "weight": 0.003343143494,
+          "weight_pct": 0.3343143494
+        },
+        {
+          "code": "096775",
+          "name": "SK이노베이션우",
+          "weight": 0.000013419635,
+          "weight_pct": 0.0013419635
+        },
+        {
+          "code": "475150",
+          "name": "SK이터닉스",
+          "weight": 0.000293750368,
+          "weight_pct": 0.0293750368
+        },
+        {
+          "code": "001510",
+          "name": "SK증권",
+          "weight": 0.000094427587,
+          "weight_pct": 0.0094427587
+        },
+        {
+          "code": "001515",
+          "name": "SK증권우",
+          "weight": 0.000001407736,
+          "weight_pct": 0.0001407736
+        },
+        {
+          "code": "285130",
+          "name": "SK케미칼",
+          "weight": 0.000123707074,
+          "weight_pct": 0.0123707074
+        },
+        {
+          "code": "28513K",
+          "name": "SK케미칼우",
+          "weight": 0.00000782018,
+          "weight_pct": 0.000782018
+        },
+        {
+          "code": "017670",
+          "name": "SK텔레콤",
+          "weight": 0.003303285209,
+          "weight_pct": 0.3303285209
+        },
+        {
+          "code": "000660",
+          "name": "SK하이닉스",
+          "weight": 0.235969382529,
+          "weight_pct": 23.5969382529
+        },
+        {
+          "code": "003570",
+          "name": "SNT다이내믹스",
+          "weight": 0.000217806494,
+          "weight_pct": 0.0217806494
+        },
+        {
+          "code": "064960",
+          "name": "SNT모티브",
+          "weight": 0.000124307394,
+          "weight_pct": 0.0124307394
+        },
+        {
+          "code": "100840",
+          "name": "SNT에너지",
+          "weight": 0.000098904323,
+          "weight_pct": 0.0098904323
+        },
+        {
+          "code": "036530",
+          "name": "SNT홀딩스",
+          "weight": 0.000144241136,
+          "weight_pct": 0.0144241136
+        },
+        {
+          "code": "000390",
+          "name": "SP삼화",
+          "weight": 0.000028851132,
+          "weight_pct": 0.0028851132
+        },
+        {
+          "code": "011810",
+          "name": "STX",
+          "weight": 0.000019648914,
+          "weight_pct": 0.0019648914
+        },
+        {
+          "code": "465770",
+          "name": "STX그린로지스",
+          "weight": 0.000003268635,
+          "weight_pct": 0.0003268635
+        },
+        {
+          "code": "077970",
+          "name": "STX엔진",
+          "weight": 0.000183719757,
+          "weight_pct": 0.0183719757
+        },
+        {
+          "code": "002820",
+          "name": "SUN&L",
+          "weight": 0.000005056784,
+          "weight_pct": 0.0005056784
+        },
+        {
+          "code": "002170",
+          "name": "SYTS",
+          "weight": 0.000029771278,
+          "weight_pct": 0.0029771278
+        },
+        {
+          "code": "084870",
+          "name": "TBH글로벌",
+          "weight": 0.000007177389,
+          "weight_pct": 0.0007177389
+        },
+        {
+          "code": "002710",
+          "name": "TCC스틸",
+          "weight": 0.000042760546,
+          "weight_pct": 0.0042760546
+        },
+        {
+          "code": "069260",
+          "name": "TKG휴켐스",
+          "weight": 0.000113851482,
+          "weight_pct": 0.0113851482
+        },
+        {
+          "code": "007980",
+          "name": "TP",
+          "weight": 0.000014517388,
+          "weight_pct": 0.0014517388
+        },
+        {
+          "code": "002900",
+          "name": "TYM",
+          "weight": 0.00004658209,
+          "weight_pct": 0.004658209
+        },
+        {
+          "code": "024070",
+          "name": "WISCOM",
+          "weight": 0.000004854416,
+          "weight_pct": 0.0004854416
+        },
+        {
+          "code": "037270",
+          "name": "YG PLUS",
+          "weight": 0.000038272228,
+          "weight_pct": 0.0038272228
+        },
+        {
+          "code": "139130",
+          "name": "iM금융지주",
+          "weight": 0.000525183982,
+          "weight_pct": 0.0525183982
+        },
+        {
+          "code": "000500",
+          "name": "가온전선",
+          "weight": 0.000734756738,
+          "weight_pct": 0.0734756738
+        },
+        {
+          "code": "000860",
+          "name": "강남제비스코",
+          "weight": 0.000032660473,
+          "weight_pct": 0.0032660473
+        },
+        {
+          "code": "035250",
+          "name": "강원랜드",
+          "weight": 0.000563598914,
+          "weight_pct": 0.0563598914
+        },
+        {
+          "code": "011420",
+          "name": "갤럭시아에스엠",
+          "weight": 0.000007346591,
+          "weight_pct": 0.0007346591
+        },
+        {
+          "code": "002100",
+          "name": "경농",
+          "weight": 0.000031810759,
+          "weight_pct": 0.0031810759
+        },
+        {
+          "code": "009450",
+          "name": "경동나비엔",
+          "weight": 0.000165751674,
+          "weight_pct": 0.0165751674
+        },
+        {
+          "code": "267290",
+          "name": "경동도시가스",
+          "weight": 0.000020344363,
+          "weight_pct": 0.0020344363
+        },
+        {
+          "code": "012320",
+          "name": "경동인베스트",
+          "weight": 0.000018376989,
+          "weight_pct": 0.0018376989
+        },
+        {
+          "code": "000050",
+          "name": "경방",
+          "weight": 0.000040194411,
+          "weight_pct": 0.0040194411
+        },
+        {
+          "code": "214390",
+          "name": "경보제약",
+          "weight": 0.000021665315,
+          "weight_pct": 0.0021665315
+        },
+        {
+          "code": "012610",
+          "name": "경인양행",
+          "weight": 0.000021993813,
+          "weight_pct": 0.0021993813
+        },
+        {
+          "code": "009140",
+          "name": "경인전자",
+          "weight": 0.000006398777,
+          "weight_pct": 0.0006398777
+        },
+        {
+          "code": "013580",
+          "name": "계룡건설",
+          "weight": 0.000031316355,
+          "weight_pct": 0.0031316355
+        },
+        {
+          "code": "012200",
+          "name": "계양전기",
+          "weight": 0.000021665961,
+          "weight_pct": 0.0021665961
+        },
+        {
+          "code": "012205",
+          "name": "계양전기우",
+          "weight": 0.00000148325,
+          "weight_pct": 0.000148325
+        },
+        {
+          "code": "002140",
+          "name": "고려산업",
+          "weight": 0.000007778347,
+          "weight_pct": 0.0007778347
+        },
+        {
+          "code": "010130",
+          "name": "고려아연",
+          "weight": 0.003839363034,
+          "weight_pct": 0.3839363034
+        },
+        {
+          "code": "002240",
+          "name": "고려제강",
+          "weight": 0.000082950424,
+          "weight_pct": 0.0082950424
+        },
+        {
+          "code": "009290",
+          "name": "광동제약",
+          "weight": 0.000053620394,
+          "weight_pct": 0.0053620394
+        },
+        {
+          "code": "017040",
+          "name": "광명전기",
+          "weight": 0.000007248231,
+          "weight_pct": 0.0007248231
+        },
+        {
+          "code": "017900",
+          "name": "광전자",
+          "weight": 0.000063013036,
+          "weight_pct": 0.0063013036
+        },
+        {
+          "code": "037710",
+          "name": "광주신세계",
+          "weight": 0.000060018374,
+          "weight_pct": 0.0060018374
+        },
+        {
+          "code": "030610",
+          "name": "교보증권",
+          "weight": 0.000196329718,
+          "weight_pct": 0.0196329718
+        },
+        {
+          "code": "339770",
+          "name": "교촌에프앤비",
+          "weight": 0.000032861823,
+          "weight_pct": 0.0032861823
+        },
+        {
+          "code": "007690",
+          "name": "국도화학",
+          "weight": 0.000058996934,
+          "weight_pct": 0.0058996934
+        },
+        {
+          "code": "002720",
+          "name": "국제약품",
+          "weight": 0.000013043377,
+          "weight_pct": 0.0013043377
+        },
+        {
+          "code": "083420",
+          "name": "그린케미칼",
+          "weight": 0.00001869184,
+          "weight_pct": 0.001869184
+        },
+        {
+          "code": "014530",
+          "name": "극동유화",
+          "weight": 0.00001977347,
+          "weight_pct": 0.001977347
+        },
+        {
+          "code": "014280",
+          "name": "금강공업",
+          "weight": 0.000019763487,
+          "weight_pct": 0.0019763487
+        },
+        {
+          "code": "014285",
+          "name": "금강공업우",
+          "weight": 5.68441e-7,
+          "weight_pct": 0.0000568441
+        },
+        {
+          "code": "008870",
+          "name": "금비",
+          "weight": 0.000006801274,
+          "weight_pct": 0.0006801274
+        },
+        {
+          "code": "001570",
+          "name": "금양",
+          "weight": 0.000113643237,
+          "weight_pct": 0.0113643237
+        },
+        {
+          "code": "002990",
+          "name": "금호건설",
+          "weight": 0.000093409283,
+          "weight_pct": 0.0093409283
+        },
+        {
+          "code": "002995",
+          "name": "금호건설우",
+          "weight": 0.000001565574,
+          "weight_pct": 0.0001565574
+        },
+        {
+          "code": "011780",
+          "name": "금호석유화학",
+          "weight": 0.000530009486,
+          "weight_pct": 0.0530009486
+        },
+        {
+          "code": "011785",
+          "name": "금호석유화학우",
+          "weight": 0.000027345734,
+          "weight_pct": 0.0027345734
+        },
+        {
+          "code": "214330",
+          "name": "금호에이치티",
+          "weight": 0.00001302311,
+          "weight_pct": 0.001302311
+        },
+        {
+          "code": "001210",
+          "name": "금호전기",
+          "weight": 0.000011271144,
+          "weight_pct": 0.0011271144
+        },
+        {
+          "code": "073240",
+          "name": "금호타이어",
+          "weight": 0.000369096305,
+          "weight_pct": 0.0369096305
+        },
+        {
+          "code": "092440",
+          "name": "기신정기",
+          "weight": 0.000010055621,
+          "weight_pct": 0.0010055621
+        },
+        {
+          "code": "000270",
+          "name": "기아",
+          "weight": 0.01005373086,
+          "weight_pct": 1.005373086
+        },
+        {
+          "code": "024110",
+          "name": "기업은행",
+          "weight": 0.003026577351,
+          "weight_pct": 0.3026577351
+        },
+        {
+          "code": "013700",
+          "name": "까뮤이앤씨",
+          "weight": 0.000012899137,
+          "weight_pct": 0.0012899137
+        },
+        {
+          "code": "004540",
+          "name": "깨끗한나라",
+          "weight": 0.000009549949,
+          "weight_pct": 0.0009549949
+        },
+        {
+          "code": "004545",
+          "name": "깨끗한나라우",
+          "weight": 3.73882e-7,
+          "weight_pct": 0.0000373882
+        },
+        {
+          "code": "001260",
+          "name": "남광토건",
+          "weight": 0.000015845084,
+          "weight_pct": 0.0015845084
+        },
+        {
+          "code": "008350",
+          "name": "남선알미늄",
+          "weight": 0.000024854596,
+          "weight_pct": 0.0024854596
+        },
+        {
+          "code": "008355",
+          "name": "남선알미우",
+          "weight": 3.6853e-7,
+          "weight_pct": 0.000036853
+        },
+        {
+          "code": "004270",
+          "name": "남성",
+          "weight": 0.000004990761,
+          "weight_pct": 0.0004990761
+        },
+        {
+          "code": "003920",
+          "name": "남양유업",
+          "weight": 0.000046029733,
+          "weight_pct": 0.0046029733
+        },
+        {
+          "code": "003925",
+          "name": "남양유업우",
+          "weight": 0.000011485002,
+          "weight_pct": 0.0011485002
+        },
+        {
+          "code": "025860",
+          "name": "남해화학",
+          "weight": 0.000051261393,
+          "weight_pct": 0.0051261393
+        },
+        {
+          "code": "005720",
+          "name": "넥센",
+          "weight": 0.000055632175,
+          "weight_pct": 0.0055632175
+        },
+        {
+          "code": "005725",
+          "name": "넥센우",
+          "weight": 0.000002713784,
+          "weight_pct": 0.0002713784
+        },
+        {
+          "code": "002350",
+          "name": "넥센타이어",
+          "weight": 0.000122687657,
+          "weight_pct": 0.0122687657
+        },
+        {
+          "code": "002355",
+          "name": "넥센타이어1우B",
+          "weight": 0.000004694943,
+          "weight_pct": 0.0004694943
+        },
+        {
+          "code": "092790",
+          "name": "넥스틸",
+          "weight": 0.00004904114,
+          "weight_pct": 0.004904114
+        },
+        {
+          "code": "251270",
+          "name": "넷마블",
+          "weight": 0.000560935353,
+          "weight_pct": 0.0560935353
+        },
+        {
+          "code": "090350",
+          "name": "노루페인트",
+          "weight": 0.000026630847,
+          "weight_pct": 0.0026630847
+        },
+        {
+          "code": "090355",
+          "name": "노루페인트우",
+          "weight": 8.39405e-7,
+          "weight_pct": 0.0000839405
+        },
+        {
+          "code": "000320",
+          "name": "노루홀딩스",
+          "weight": 0.000039903374,
+          "weight_pct": 0.0039903374
+        },
+        {
+          "code": "000325",
+          "name": "노루홀딩스우",
+          "weight": 0.000001070832,
+          "weight_pct": 0.0001070832
+        },
+        {
+          "code": "006280",
+          "name": "녹십자",
+          "weight": 0.00025271092,
+          "weight_pct": 0.025271092
+        },
+        {
+          "code": "005250",
+          "name": "녹십자홀딩스",
+          "weight": 0.000082621338,
+          "weight_pct": 0.0082621338
+        },
+        {
+          "code": "005257",
+          "name": "녹십자홀딩스2우",
+          "weight": 0.000002580865,
+          "weight_pct": 0.0002580865
+        },
+        {
+          "code": "004370",
+          "name": "농심",
+          "weight": 0.000388591539,
+          "weight_pct": 0.0388591539
+        },
+        {
+          "code": "072710",
+          "name": "농심홀딩스",
+          "weight": 0.000074238129,
+          "weight_pct": 0.0074238129
+        },
+        {
+          "code": "058730",
+          "name": "다스코",
+          "weight": 0.000017057609,
+          "weight_pct": 0.0017057609
+        },
+        {
+          "code": "030210",
+          "name": "다올투자증권",
+          "weight": 0.000036945732,
+          "weight_pct": 0.0036945732
+        },
+        {
+          "code": "023590",
+          "name": "다우기술",
+          "weight": 0.000276930786,
+          "weight_pct": 0.0276930786
+        },
+        {
+          "code": "145210",
+          "name": "다이나믹디자인",
+          "weight": 0.000001697809,
+          "weight_pct": 0.0001697809
+        },
+        {
+          "code": "483650",
+          "name": "달바글로벌",
+          "weight": 0.000446962286,
+          "weight_pct": 0.0446962286
+        },
+        {
+          "code": "019680",
+          "name": "대교",
+          "weight": 0.000014744187,
+          "weight_pct": 0.0014744187
+        },
+        {
+          "code": "019685",
+          "name": "대교우B",
+          "weight": 0.000002436878,
+          "weight_pct": 0.0002436878
+        },
+        {
+          "code": "006370",
+          "name": "대구백화점",
+          "weight": 0.000010331292,
+          "weight_pct": 0.0010331292
+        },
+        {
+          "code": "008060",
+          "name": "대덕",
+          "weight": 0.000079614578,
+          "weight_pct": 0.0079614578
+        },
+        {
+          "code": "00806K",
+          "name": "대덕1우",
+          "weight": 0.000002351837,
+          "weight_pct": 0.0002351837
+        },
+        {
+          "code": "353200",
+          "name": "대덕전자",
+          "weight": 0.001009181,
+          "weight_pct": 0.1009181
+        },
+        {
+          "code": "35320K",
+          "name": "대덕전자1우",
+          "weight": 0.000008498673,
+          "weight_pct": 0.0008498673
+        },
+        {
+          "code": "000490",
+          "name": "대동",
+          "weight": 0.00003460785,
+          "weight_pct": 0.003460785
+        },
+        {
+          "code": "005750",
+          "name": "대림바스",
+          "weight": 0.000012252535,
+          "weight_pct": 0.0012252535
+        },
+        {
+          "code": "006570",
+          "name": "대림통상",
+          "weight": 0.00000612007,
+          "weight_pct": 0.000612007
+        },
+        {
+          "code": "001680",
+          "name": "대상",
+          "weight": 0.000108809701,
+          "weight_pct": 0.0108809701
+        },
+        {
+          "code": "001685",
+          "name": "대상우",
+          "weight": 0.000003457225,
+          "weight_pct": 0.0003457225
+        },
+        {
+          "code": "084690",
+          "name": "대상홀딩스",
+          "weight": 0.000047503699,
+          "weight_pct": 0.0047503699
+        },
+        {
+          "code": "084695",
+          "name": "대상홀딩스우",
+          "weight": 0.000001842542,
+          "weight_pct": 0.0001842542
+        },
+        {
+          "code": "128820",
+          "name": "대성산업",
+          "weight": 0.00003376942,
+          "weight_pct": 0.003376942
+        },
+        {
+          "code": "117580",
+          "name": "대성에너지",
+          "weight": 0.000034396682,
+          "weight_pct": 0.0034396682
+        },
+        {
+          "code": "016710",
+          "name": "대성홀딩스",
+          "weight": 0.000019518176,
+          "weight_pct": 0.0019518176
+        },
+        {
+          "code": "0030R0",
+          "name": "대신밸류리츠",
+          "weight": 0.000041301681,
+          "weight_pct": 0.0041301681
+        },
+        {
+          "code": "003540",
+          "name": "대신증권",
+          "weight": 0.000224538207,
+          "weight_pct": 0.0224538207
+        },
+        {
+          "code": "003547",
+          "name": "대신증권2우B",
+          "weight": 0.000033444562,
+          "weight_pct": 0.0033444562
+        },
+        {
+          "code": "003545",
+          "name": "대신증권우",
+          "weight": 0.000087382052,
+          "weight_pct": 0.0087382052
+        },
+        {
+          "code": "009190",
+          "name": "대양금속",
+          "weight": 0.000016063223,
+          "weight_pct": 0.0016063223
+        },
+        {
+          "code": "014160",
+          "name": "대영포장",
+          "weight": 0.00001305212,
+          "weight_pct": 0.001305212
+        },
+        {
+          "code": "047040",
+          "name": "대우건설",
+          "weight": 0.001180556106,
+          "weight_pct": 0.1180556106
+        },
+        {
+          "code": "003090",
+          "name": "대웅",
+          "weight": 0.000181338774,
+          "weight_pct": 0.0181338774
+        },
+        {
+          "code": "069620",
+          "name": "대웅제약",
+          "weight": 0.000275500278,
+          "weight_pct": 0.0275500278
+        },
+        {
+          "code": "000430",
+          "name": "대원강업",
+          "weight": 0.000041166553,
+          "weight_pct": 0.0041166553
+        },
+        {
+          "code": "006340",
+          "name": "대원전선",
+          "weight": 0.000152255945,
+          "weight_pct": 0.0152255945
+        },
+        {
+          "code": "006345",
+          "name": "대원전선우",
+          "weight": 0.000005202432,
+          "weight_pct": 0.0005202432
+        },
+        {
+          "code": "003220",
+          "name": "대원제약",
+          "weight": 0.000031352416,
+          "weight_pct": 0.0031352416
+        },
+        {
+          "code": "024890",
+          "name": "대원화성",
+          "weight": 0.000005055764,
+          "weight_pct": 0.0005055764
+        },
+        {
+          "code": "012800",
+          "name": "대창",
+          "weight": 0.000018121838,
+          "weight_pct": 0.0018121838
+        },
+        {
+          "code": "015230",
+          "name": "대창단조",
+          "weight": 0.000028641528,
+          "weight_pct": 0.0028641528
+        },
+        {
+          "code": "001070",
+          "name": "대한방직",
+          "weight": 0.0000056115,
+          "weight_pct": 0.00056115
+        },
+        {
+          "code": "006650",
+          "name": "대한유화",
+          "weight": 0.000123176642,
+          "weight_pct": 0.0123176642
+        },
+        {
+          "code": "001440",
+          "name": "대한전선",
+          "weight": 0.00099535313,
+          "weight_pct": 0.099535313
+        },
+        {
+          "code": "084010",
+          "name": "대한제강",
+          "weight": 0.000046137322,
+          "weight_pct": 0.0046137322
+        },
+        {
+          "code": "001790",
+          "name": "대한제당",
+          "weight": 0.000043952929,
+          "weight_pct": 0.0043952929
+        },
+        {
+          "code": "001795",
+          "name": "대한제당우",
+          "weight": 0.000002460489,
+          "weight_pct": 0.0002460489
+        },
+        {
+          "code": "001130",
+          "name": "대한제분",
+          "weight": 0.000032784116,
+          "weight_pct": 0.0032784116
+        },
+        {
+          "code": "439260",
+          "name": "대한조선",
+          "weight": 0.000317492372,
+          "weight_pct": 0.0317492372
+        },
+        {
+          "code": "003490",
+          "name": "대한항공",
+          "weight": 0.00170812554,
+          "weight_pct": 0.170812554
+        },
+        {
+          "code": "003495",
+          "name": "대한항공우",
+          "weight": 0.00000429568,
+          "weight_pct": 0.000429568
+        },
+        {
+          "code": "005880",
+          "name": "대한해운",
+          "weight": 0.000109407153,
+          "weight_pct": 0.0109407153
+        },
+        {
+          "code": "003830",
+          "name": "대한화섬",
+          "weight": 0.0000255949,
+          "weight_pct": 0.00255949
+        },
+        {
+          "code": "016090",
+          "name": "대현",
+          "weight": 0.000011816594,
+          "weight_pct": 0.0011816594
+        },
+        {
+          "code": "069460",
+          "name": "대호에이엘",
+          "weight": 0.000008312679,
+          "weight_pct": 0.0008312679
+        },
+        {
+          "code": "475560",
+          "name": "더본코리아",
+          "weight": 0.000038849518,
+          "weight_pct": 0.0038849518
+        },
+        {
+          "code": "192080",
+          "name": "더블유게임즈",
+          "weight": 0.000232158342,
+          "weight_pct": 0.0232158342
+        },
+        {
+          "code": "012510",
+          "name": "더존비즈온",
+          "weight": 0.000627164705,
+          "weight_pct": 0.0627164705
+        },
+        {
+          "code": "004830",
+          "name": "덕성",
+          "weight": 0.000009623283,
+          "weight_pct": 0.0009623283
+        },
+        {
+          "code": "004835",
+          "name": "덕성우",
+          "weight": 0.000001126593,
+          "weight_pct": 0.0001126593
+        },
+        {
+          "code": "145720",
+          "name": "덴티움",
+          "weight": 0.000063373581,
+          "weight_pct": 0.0063373581
+        },
+        {
+          "code": "002150",
+          "name": "도화엔지니어링",
+          "weight": 0.000029922987,
+          "weight_pct": 0.0029922987
+        },
+        {
+          "code": "460850",
+          "name": "동국씨엠",
+          "weight": 0.000024680877,
+          "weight_pct": 0.0024680877
+        },
+        {
+          "code": "460860",
+          "name": "동국제강",
+          "weight": 0.000074245306,
+          "weight_pct": 0.0074245306
+        },
+        {
+          "code": "001230",
+          "name": "동국홀딩스",
+          "weight": 0.000047301262,
+          "weight_pct": 0.0047301262
+        },
+        {
+          "code": "023450",
+          "name": "동남합성",
+          "weight": 0.000017492196,
+          "weight_pct": 0.0017492196
+        },
+        {
+          "code": "004140",
+          "name": "동방",
+          "weight": 0.000015736675,
+          "weight_pct": 0.0015736675
+        },
+        {
+          "code": "007590",
+          "name": "동방아그로",
+          "weight": 0.000013782564,
+          "weight_pct": 0.0013782564
+        },
+        {
+          "code": "005960",
+          "name": "동부건설",
+          "weight": 0.000028989671,
+          "weight_pct": 0.0028989671
+        },
+        {
+          "code": "005965",
+          "name": "동부건설우",
+          "weight": 6.78919e-7,
+          "weight_pct": 0.0000678919
+        },
+        {
+          "code": "026960",
+          "name": "동서",
+          "weight": 0.000457127289,
+          "weight_pct": 0.0457127289
+        },
+        {
+          "code": "002210",
+          "name": "동성제약",
+          "weight": 0.000016870531,
+          "weight_pct": 0.0016870531
+        },
+        {
+          "code": "102260",
+          "name": "동성케미컬",
+          "weight": 0.000031506613,
+          "weight_pct": 0.0031506613
+        },
+        {
+          "code": "000640",
+          "name": "동아쏘시오홀딩스",
+          "weight": 0.000100157556,
+          "weight_pct": 0.0100157556
+        },
+        {
+          "code": "170900",
+          "name": "동아에스티",
+          "weight": 0.000062233769,
+          "weight_pct": 0.0062233769
+        },
+        {
+          "code": "028100",
+          "name": "동아지질",
+          "weight": 0.000036354187,
+          "weight_pct": 0.0036354187
+        },
+        {
+          "code": "001520",
+          "name": "동양",
+          "weight": 0.000021145725,
+          "weight_pct": 0.0021145725
+        },
+        {
+          "code": "001527",
+          "name": "동양2우B",
+          "weight": 3.54009e-7,
+          "weight_pct": 0.0000354009
+        },
+        {
+          "code": "084670",
+          "name": "동양고속",
+          "weight": 0.000013562055,
+          "weight_pct": 0.0013562055
+        },
+        {
+          "code": "082640",
+          "name": "동양생명",
+          "weight": 0.000216205716,
+          "weight_pct": 0.0216205716
+        },
+        {
+          "code": "001525",
+          "name": "동양우",
+          "weight": 3.96339e-7,
+          "weight_pct": 0.0000396339
+        },
+        {
+          "code": "018500",
+          "name": "동원금속",
+          "weight": 0.000011603813,
+          "weight_pct": 0.0011603813
+        },
+        {
+          "code": "006040",
+          "name": "동원산업",
+          "weight": 0.000273281711,
+          "weight_pct": 0.0273281711
+        },
+        {
+          "code": "030720",
+          "name": "동원수산",
+          "weight": 0.000004860515,
+          "weight_pct": 0.0004860515
+        },
+        {
+          "code": "014820",
+          "name": "동원시스템즈",
+          "weight": 0.00010389546,
+          "weight_pct": 0.010389546
+        },
+        {
+          "code": "014825",
+          "name": "동원시스템즈우",
+          "weight": 6.33205e-7,
+          "weight_pct": 0.0000633205
+        },
+        {
+          "code": "111380",
+          "name": "동인기연",
+          "weight": 0.000014021034,
+          "weight_pct": 0.0014021034
+        },
+        {
+          "code": "163560",
+          "name": "동일고무벨트",
+          "weight": 0.000013843913,
+          "weight_pct": 0.0013843913
+        },
+        {
+          "code": "004890",
+          "name": "동일산업",
+          "weight": 0.000015667649,
+          "weight_pct": 0.0015667649
+        },
+        {
+          "code": "002690",
+          "name": "동일제강",
+          "weight": 0.000005591949,
+          "weight_pct": 0.0005591949
+        },
+        {
+          "code": "000020",
+          "name": "동화약품",
+          "weight": 0.000025212323,
+          "weight_pct": 0.0025212323
+        },
+        {
+          "code": "000150",
+          "name": "두산",
+          "weight": 0.003597670957,
+          "weight_pct": 0.3597670957
+        },
+        {
+          "code": "000157",
+          "name": "두산2우B",
+          "weight": 0.00006017706,
+          "weight_pct": 0.006017706
+        },
+        {
+          "code": "454910",
+          "name": "두산로보틱스",
+          "weight": 0.000815413686,
+          "weight_pct": 0.0815413686
+        },
+        {
+          "code": "241560",
+          "name": "두산밥캣",
+          "weight": 0.001059623044,
+          "weight_pct": 0.1059623044
+        },
+        {
+          "code": "034020",
+          "name": "두산에너빌리티",
+          "weight": 0.008414392361,
+          "weight_pct": 0.8414392361
+        },
+        {
+          "code": "000155",
+          "name": "두산우",
+          "weight": 0.000304083342,
+          "weight_pct": 0.0304083342
+        },
+        {
+          "code": "336260",
+          "name": "두산퓨얼셀",
+          "weight": 0.000526536883,
+          "weight_pct": 0.0526536883
+        },
+        {
+          "code": "33626K",
+          "name": "두산퓨얼셀1우",
+          "weight": 0.000014557364,
+          "weight_pct": 0.0014557364
+        },
+        {
+          "code": "33626L",
+          "name": "두산퓨얼셀2우B",
+          "weight": 0.000004024616,
+          "weight_pct": 0.0004024616
+        },
+        {
+          "code": "016740",
+          "name": "두올",
+          "weight": 0.000018421405,
+          "weight_pct": 0.0018421405
+        },
+        {
+          "code": "192650",
+          "name": "드림텍",
+          "weight": 0.000051196184,
+          "weight_pct": 0.0051196184
+        },
+        {
+          "code": "024090",
+          "name": "디씨엠",
+          "weight": 0.000022176102,
+          "weight_pct": 0.0022176102
+        },
+        {
+          "code": "003160",
+          "name": "디아이",
+          "weight": 0.000105633302,
+          "weight_pct": 0.0105633302
+        },
+        {
+          "code": "092200",
+          "name": "디아이씨",
+          "weight": 0.000028787039,
+          "weight_pct": 0.0028787039
+        },
+        {
+          "code": "377190",
+          "name": "디앤디플랫폼리츠",
+          "weight": 0.000031330725,
+          "weight_pct": 0.0031330725
+        },
+        {
+          "code": "013570",
+          "name": "디와이",
+          "weight": 0.000018373019,
+          "weight_pct": 0.0018373019
+        },
+        {
+          "code": "024900",
+          "name": "디와이덕양",
+          "weight": 0.000010191741,
+          "weight_pct": 0.0010191741
+        },
+        {
+          "code": "002880",
+          "name": "디와이에이",
+          "weight": 0.000007982447,
+          "weight_pct": 0.0007982447
+        },
+        {
+          "code": "210540",
+          "name": "디와이파워",
+          "weight": 0.000021756533,
+          "weight_pct": 0.0021756533
+        },
+        {
+          "code": "032350",
+          "name": "롯데관광개발",
+          "weight": 0.000207165136,
+          "weight_pct": 0.0207165136
+        },
+        {
+          "code": "089860",
+          "name": "롯데렌탈",
+          "weight": 0.000222841524,
+          "weight_pct": 0.0222841524
+        },
+        {
+          "code": "330590",
+          "name": "롯데리츠",
+          "weight": 0.000180719472,
+          "weight_pct": 0.0180719472
+        },
+        {
+          "code": "000400",
+          "name": "롯데손해보험",
+          "weight": 0.000126696639,
+          "weight_pct": 0.0126696639
+        },
+        {
+          "code": "023530",
+          "name": "롯데쇼핑",
+          "weight": 0.000783304905,
+          "weight_pct": 0.0783304905
+        },
+        {
+          "code": "020150",
+          "name": "롯데에너지머티리얼즈",
+          "weight": 0.000318093435,
+          "weight_pct": 0.0318093435
+        },
+        {
+          "code": "280360",
+          "name": "롯데웰푸드",
+          "weight": 0.00017806294,
+          "weight_pct": 0.017806294
+        },
+        {
+          "code": "286940",
+          "name": "롯데이노베이트",
+          "weight": 0.000045069209,
+          "weight_pct": 0.0045069209
+        },
+        {
+          "code": "004000",
+          "name": "롯데정밀화학",
+          "weight": 0.000212974998,
+          "weight_pct": 0.0212974998
+        },
+        {
+          "code": "004990",
+          "name": "롯데지주",
+          "weight": 0.000412248755,
+          "weight_pct": 0.0412248755
+        },
+        {
+          "code": "00499K",
+          "name": "롯데지주우",
+          "weight": 0.000003267237,
+          "weight_pct": 0.0003267237
+        },
+        {
+          "code": "005300",
+          "name": "롯데칠성",
+          "weight": 0.000169176696,
+          "weight_pct": 0.0169176696
+        },
+        {
+          "code": "005305",
+          "name": "롯데칠성우",
+          "weight": 0.000009600096,
+          "weight_pct": 0.0009600096
+        },
+        {
+          "code": "011170",
+          "name": "롯데케미칼",
+          "weight": 0.000465176731,
+          "weight_pct": 0.0465176731
+        },
+        {
+          "code": "071840",
+          "name": "롯데하이마트",
+          "weight": 0.000025842518,
+          "weight_pct": 0.0025842518
+        },
+        {
+          "code": "027740",
+          "name": "마니커",
+          "weight": 0.000005829714,
+          "weight_pct": 0.0005829714
+        },
+        {
+          "code": "357430",
+          "name": "마스턴프리미어리츠",
+          "weight": 0.0000037663,
+          "weight_pct": 0.00037663
+        },
+        {
+          "code": "001080",
+          "name": "만호제강",
+          "weight": 0.000032097888,
+          "weight_pct": 0.0032097888
+        },
+        {
+          "code": "088980",
+          "name": "맥쿼리인프라",
+          "weight": 0.000865456686,
+          "weight_pct": 0.0865456686
+        },
+        {
+          "code": "094800",
+          "name": "맵스리얼티",
+          "weight": 0.000100123073,
+          "weight_pct": 0.0100123073
+        },
+        {
+          "code": "138040",
+          "name": "메리츠금융지주",
+          "weight": 0.003513626445,
+          "weight_pct": 0.3513626445
+        },
+        {
+          "code": "090370",
+          "name": "메타랩스",
+          "weight": 0.000005267406,
+          "weight_pct": 0.0005267406
+        },
+        {
+          "code": "118000",
+          "name": "메타케어",
+          "weight": 0.000004709996,
+          "weight_pct": 0.0004709996
+        },
+        {
+          "code": "017180",
+          "name": "명문제약",
+          "weight": 0.000007275107,
+          "weight_pct": 0.0007275107
+        },
+        {
+          "code": "009900",
+          "name": "명신산업",
+          "weight": 0.00006657063,
+          "weight_pct": 0.006657063
+        },
+        {
+          "code": "317450",
+          "name": "명인제약",
+          "weight": 0.000111088678,
+          "weight_pct": 0.0111088678
+        },
+        {
+          "code": "012690",
+          "name": "모나리자",
+          "weight": 0.000008833565,
+          "weight_pct": 0.0008833565
+        },
+        {
+          "code": "005360",
+          "name": "모나미",
+          "weight": 0.00000691801,
+          "weight_pct": 0.000691801
+        },
+        {
+          "code": "070960",
+          "name": "모나용평",
+          "weight": 0.000018355066,
+          "weight_pct": 0.0018355066
+        },
+        {
+          "code": "009680",
+          "name": "모토닉",
+          "weight": 0.000038181707,
+          "weight_pct": 0.0038181707
+        },
+        {
+          "code": "009580",
+          "name": "무림P&P",
+          "weight": 0.000017985853,
+          "weight_pct": 0.0017985853
+        },
+        {
+          "code": "009200",
+          "name": "무림페이퍼",
+          "weight": 0.000010655297,
+          "weight_pct": 0.0010655297
+        },
+        {
+          "code": "033920",
+          "name": "무학",
+          "weight": 0.000038613832,
+          "weight_pct": 0.0038613832
+        },
+        {
+          "code": "008420",
+          "name": "문배철강",
+          "weight": 0.000007689985,
+          "weight_pct": 0.0007689985
+        },
+        {
+          "code": "025560",
+          "name": "미래산업",
+          "weight": 0.000038141344,
+          "weight_pct": 0.0038141344
+        },
+        {
+          "code": "007120",
+          "name": "미래아이앤지",
+          "weight": 0.000006119217,
+          "weight_pct": 0.0006119217
+        },
+        {
+          "code": "396690",
+          "name": "미래에셋글로벌리츠",
+          "weight": 0.000011613509,
+          "weight_pct": 0.0011613509
+        },
+        {
+          "code": "357250",
+          "name": "미래에셋맵스리츠",
+          "weight": 0.000008203889,
+          "weight_pct": 0.0008203889
+        },
+        {
+          "code": "085620",
+          "name": "미래에셋생명",
+          "weight": 0.000403903639,
+          "weight_pct": 0.0403903639
+        },
+        {
+          "code": "006800",
+          "name": "미래에셋증권",
+          "weight": 0.004016641566,
+          "weight_pct": 0.4016641566
+        },
+        {
+          "code": "00680K",
+          "name": "미래에셋증권2우B",
+          "weight": 0.000304967169,
+          "weight_pct": 0.0304967169
+        },
+        {
+          "code": "006805",
+          "name": "미래에셋증권우",
+          "weight": 0.000035514684,
+          "weight_pct": 0.0035514684
+        },
+        {
+          "code": "081660",
+          "name": "미스토홀딩스",
+          "weight": 0.000430166531,
+          "weight_pct": 0.0430166531
+        },
+        {
+          "code": "002840",
+          "name": "미원상사",
+          "weight": 0.0001039931,
+          "weight_pct": 0.01039931
+        },
+        {
+          "code": "268280",
+          "name": "미원에스씨",
+          "weight": 0.000094123177,
+          "weight_pct": 0.0094123177
+        },
+        {
+          "code": "107590",
+          "name": "미원홀딩스",
+          "weight": 0.000022856589,
+          "weight_pct": 0.0022856589
+        },
+        {
+          "code": "134380",
+          "name": "미원화학",
+          "weight": 0.000039506024,
+          "weight_pct": 0.0039506024
+        },
+        {
+          "code": "003650",
+          "name": "미창석유",
+          "weight": 0.000043456795,
+          "weight_pct": 0.0043456795
+        },
+        {
+          "code": "377740",
+          "name": "바이오노트",
+          "weight": 0.000083739677,
+          "weight_pct": 0.0083739677
+        },
+        {
+          "code": "003610",
+          "name": "방림",
+          "weight": 0.000029791506,
+          "weight_pct": 0.0029791506
+        },
+        {
+          "code": "035150",
+          "name": "백산",
+          "weight": 0.000035444344,
+          "weight_pct": 0.0035444344
+        },
+        {
+          "code": "002410",
+          "name": "범양건영",
+          "weight": 0.000009542143,
+          "weight_pct": 0.0009542143
+        },
+        {
+          "code": "007210",
+          "name": "벽산",
+          "weight": 0.00001730036,
+          "weight_pct": 0.001730036
+        },
+        {
+          "code": "002760",
+          "name": "보락",
+          "weight": 0.000010287026,
+          "weight_pct": 0.0010287026
+        },
+        {
+          "code": "003850",
+          "name": "보령",
+          "weight": 0.000126083285,
+          "weight_pct": 0.0126083285
+        },
+        {
+          "code": "000890",
+          "name": "보해양조",
+          "weight": 0.000008080266,
+          "weight_pct": 0.0008080266
+        },
+        {
+          "code": "003000",
+          "name": "부광약품",
+          "weight": 0.000069583346,
+          "weight_pct": 0.0069583346
+        },
+        {
+          "code": "001270",
+          "name": "부국증권",
+          "weight": 0.000100116888,
+          "weight_pct": 0.0100116888
+        },
+        {
+          "code": "001275",
+          "name": "부국증권우",
+          "weight": 0.000016312291,
+          "weight_pct": 0.0016312291
+        },
+        {
+          "code": "026940",
+          "name": "부국철강",
+          "weight": 0.000008218954,
+          "weight_pct": 0.0008218954
+        },
+        {
+          "code": "011390",
+          "name": "부산산업",
+          "weight": 0.000007845405,
+          "weight_pct": 0.0007845405
+        },
+        {
+          "code": "005030",
+          "name": "부산주공",
+          "weight": 0.000008091997,
+          "weight_pct": 0.0008091997
+        },
+        {
+          "code": "006740",
+          "name": "블루산업개발",
+          "weight": 0.000004200544,
+          "weight_pct": 0.0004200544
+        },
+        {
+          "code": "002070",
+          "name": "비비안",
+          "weight": 0.000002713928,
+          "weight_pct": 0.0002713928
+        },
+        {
+          "code": "100220",
+          "name": "비상교육",
+          "weight": 0.000011778146,
+          "weight_pct": 0.0011778146
+        },
+        {
+          "code": "090460",
+          "name": "비에이치",
+          "weight": 0.000110042982,
+          "weight_pct": 0.0110042982
+        },
+        {
+          "code": "005180",
+          "name": "빙그레",
+          "weight": 0.000109781549,
+          "weight_pct": 0.0109781549
+        },
+        {
+          "code": "003960",
+          "name": "사조대림",
+          "weight": 0.000047364263,
+          "weight_pct": 0.0047364263
+        },
+        {
+          "code": "008040",
+          "name": "사조동아원",
+          "weight": 0.000020440376,
+          "weight_pct": 0.0020440376
+        },
+        {
+          "code": "007160",
+          "name": "사조산업",
+          "weight": 0.000042979029,
+          "weight_pct": 0.0042979029
+        },
+        {
+          "code": "014710",
+          "name": "사조씨푸드",
+          "weight": 0.000027562102,
+          "weight_pct": 0.0027562102
+        },
+        {
+          "code": "006090",
+          "name": "사조오양",
+          "weight": 0.000013831891,
+          "weight_pct": 0.0013831891
+        },
+        {
+          "code": "062040",
+          "name": "산일전기",
+          "weight": 0.0009329,
+          "weight_pct": 0.09329
+        },
+        {
+          "code": "005610",
+          "name": "삼립",
+          "weight": 0.000058610833,
+          "weight_pct": 0.0058610833
+        },
+        {
+          "code": "001470",
+          "name": "삼부토건",
+          "weight": 0.000014302343,
+          "weight_pct": 0.0014302343
+        },
+        {
+          "code": "028050",
+          "name": "삼성E&A",
+          "weight": 0.001445602794,
+          "weight_pct": 0.1445602794
+        },
+        {
+          "code": "448730",
+          "name": "삼성FN리츠",
+          "weight": 0.000088395122,
+          "weight_pct": 0.0088395122
+        },
+        {
+          "code": "006400",
+          "name": "삼성SDI",
+          "weight": 0.006362983964,
+          "weight_pct": 0.6362983964
+        },
+        {
+          "code": "006405",
+          "name": "삼성SDI우",
+          "weight": 0.000054844571,
+          "weight_pct": 0.0054844571
+        },
+        {
+          "code": "006660",
+          "name": "삼성공조",
+          "weight": 0.00001469959,
+          "weight_pct": 0.001469959
+        },
+        {
+          "code": "028260",
+          "name": "삼성물산",
+          "weight": 0.01050563544,
+          "weight_pct": 1.050563544
+        },
+        {
+          "code": "02826K",
+          "name": "삼성물산우B",
+          "weight": 0.000053857866,
+          "weight_pct": 0.0053857866
+        },
+        {
+          "code": "207940",
+          "name": "삼성바이오로직스",
+          "weight": 0.011629879752,
+          "weight_pct": 1.1629879752
+        },
+        {
+          "code": "032830",
+          "name": "삼성생명",
+          "weight": 0.01170034537,
+          "weight_pct": 1.170034537
+        },
+        {
+          "code": "018260",
+          "name": "삼성에스디에스",
+          "weight": 0.002641058226,
+          "weight_pct": 0.2641058226
+        },
+        {
+          "code": "0126Z0",
+          "name": "삼성에피스홀딩스",
+          "weight": 0.001687899095,
+          "weight_pct": 0.1687899095
+        },
+        {
+          "code": "009150",
+          "name": "삼성전기",
+          "weight": 0.017277780517,
+          "weight_pct": 1.7277780517
+        },
+        {
+          "code": "009155",
+          "name": "삼성전기우",
+          "weight": 0.000245183695,
+          "weight_pct": 0.0245183695
+        },
+        {
+          "code": "005930",
+          "name": "삼성전자",
+          "weight": 0.267004376761,
+          "weight_pct": 26.7004376761
+        },
+        {
+          "code": "005935",
+          "name": "삼성전자우",
+          "weight": 0.025471484226,
+          "weight_pct": 2.5471484226
+        },
+        {
+          "code": "001360",
+          "name": "삼성제약",
+          "weight": 0.000021003818,
+          "weight_pct": 0.0021003818
+        },
+        {
+          "code": "010140",
+          "name": "삼성중공업",
+          "weight": 0.003482108919,
+          "weight_pct": 0.3482108919
+        },
+        {
+          "code": "016360",
+          "name": "삼성증권",
+          "weight": 0.001743538091,
+          "weight_pct": 0.1743538091
+        },
+        {
+          "code": "068290",
+          "name": "삼성출판사",
+          "weight": 0.00001083897,
+          "weight_pct": 0.001083897
+        },
+        {
+          "code": "029780",
+          "name": "삼성카드",
+          "weight": 0.000993821412,
+          "weight_pct": 0.0993821412
+        },
+        {
+          "code": "000810",
+          "name": "삼성화재",
+          "weight": 0.005119750854,
+          "weight_pct": 0.5119750854
+        },
+        {
+          "code": "000815",
+          "name": "삼성화재우",
+          "weight": 0.000213419398,
+          "weight_pct": 0.0213419398
+        },
+        {
+          "code": "006110",
+          "name": "삼아알미늄",
+          "weight": 0.000105572719,
+          "weight_pct": 0.0105572719
+        },
+        {
+          "code": "0120G0",
+          "name": "삼양바이오팜",
+          "weight": 0.000057912539,
+          "weight_pct": 0.0057912539
+        },
+        {
+          "code": "145990",
+          "name": "삼양사",
+          "weight": 0.000085228461,
+          "weight_pct": 0.0085228461
+        },
+        {
+          "code": "145995",
+          "name": "삼양사우",
+          "weight": 0.00000220814,
+          "weight_pct": 0.000220814
+        },
+        {
+          "code": "003230",
+          "name": "삼양식품",
+          "weight": 0.001500523829,
+          "weight_pct": 0.1500523829
+        },
+        {
+          "code": "272550",
+          "name": "삼양패키징",
+          "weight": 0.000023227986,
+          "weight_pct": 0.0023227986
+        },
+        {
+          "code": "000070",
+          "name": "삼양홀딩스",
+          "weight": 0.000078293854,
+          "weight_pct": 0.0078293854
+        },
+        {
+          "code": "003720",
+          "name": "삼영",
+          "weight": 0.000035632217,
+          "weight_pct": 0.0035632217
+        },
+        {
+          "code": "002810",
+          "name": "삼영무역",
+          "weight": 0.000064058692,
+          "weight_pct": 0.0064058692
+        },
+        {
+          "code": "005680",
+          "name": "삼영전자",
+          "weight": 0.00005128771,
+          "weight_pct": 0.005128771
+        },
+        {
+          "code": "023000",
+          "name": "삼원강재",
+          "weight": 0.000015831842,
+          "weight_pct": 0.0015831842
+        },
+        {
+          "code": "004380",
+          "name": "삼익THK",
+          "weight": 0.000028863065,
+          "weight_pct": 0.0028863065
+        },
+        {
+          "code": "002450",
+          "name": "삼익악기",
+          "weight": 0.00001858549,
+          "weight_pct": 0.001858549
+        },
+        {
+          "code": "004440",
+          "name": "삼일씨엔에스",
+          "weight": 0.000012383551,
+          "weight_pct": 0.0012383551
+        },
+        {
+          "code": "000520",
+          "name": "삼일제약",
+          "weight": 0.000023433836,
+          "weight_pct": 0.0023433836
+        },
+        {
+          "code": "009770",
+          "name": "삼정펄프",
+          "weight": 0.000012292398,
+          "weight_pct": 0.0012292398
+        },
+        {
+          "code": "005500",
+          "name": "삼진제약",
+          "weight": 0.000043551557,
+          "weight_pct": 0.0043551557
+        },
+        {
+          "code": "004690",
+          "name": "삼천리",
+          "weight": 0.000072958778,
+          "weight_pct": 0.0072958778
+        },
+        {
+          "code": "010960",
+          "name": "삼호개발",
+          "weight": 0.00001668602,
+          "weight_pct": 0.001668602
+        },
+        {
+          "code": "004450",
+          "name": "삼화왕관",
+          "weight": 0.00000993588,
+          "weight_pct": 0.000993588
+        },
+        {
+          "code": "009470",
+          "name": "삼화전기",
+          "weight": 0.000028722274,
+          "weight_pct": 0.0028722274
+        },
+        {
+          "code": "011230",
+          "name": "삼화전자",
+          "weight": 0.000010782395,
+          "weight_pct": 0.0010782395
+        },
+        {
+          "code": "001820",
+          "name": "삼화콘덴서",
+          "weight": 0.000170872059,
+          "weight_pct": 0.0170872059
+        },
+        {
+          "code": "001290",
+          "name": "상상인증권",
+          "weight": 0.000014114484,
+          "weight_pct": 0.0014114484
+        },
+        {
+          "code": "041650",
+          "name": "상신브레이크",
+          "weight": 0.000008264941,
+          "weight_pct": 0.0008264941
+        },
+        {
+          "code": "075180",
+          "name": "새론오토모티브",
+          "weight": 0.000010078089,
+          "weight_pct": 0.0010078089
+        },
+        {
+          "code": "007540",
+          "name": "샘표",
+          "weight": 0.000022371694,
+          "weight_pct": 0.0022371694
+        },
+        {
+          "code": "248170",
+          "name": "샘표식품",
+          "weight": 0.000017994463,
+          "weight_pct": 0.0017994463
+        },
+        {
+          "code": "007860",
+          "name": "서연",
+          "weight": 0.000031559354,
+          "weight_pct": 0.0031559354
+        },
+        {
+          "code": "200880",
+          "name": "서연이화",
+          "weight": 0.000052141135,
+          "weight_pct": 0.0052141135
+        },
+        {
+          "code": "017390",
+          "name": "서울가스",
+          "weight": 0.000049211437,
+          "weight_pct": 0.0049211437
+        },
+        {
+          "code": "031210",
+          "name": "서울보증보험",
+          "weight": 0.00052875358,
+          "weight_pct": 0.052875358
+        },
+        {
+          "code": "004410",
+          "name": "서울식품",
+          "weight": 0.000007108648,
+          "weight_pct": 0.0007108648
+        },
+        {
+          "code": "004415",
+          "name": "서울식품우",
+          "weight": 2.86222e-7,
+          "weight_pct": 0.0000286222
+        },
+        {
+          "code": "021050",
+          "name": "서원",
+          "weight": 0.000008468348,
+          "weight_pct": 0.0008468348
+        },
+        {
+          "code": "008490",
+          "name": "서흥",
+          "weight": 0.000041729887,
+          "weight_pct": 0.0041729887
+        },
+        {
+          "code": "007610",
+          "name": "선도전기",
+          "weight": 0.000015698562,
+          "weight_pct": 0.0015698562
+        },
+        {
+          "code": "136490",
+          "name": "선진",
+          "weight": 0.000041862457,
+          "weight_pct": 0.0041862457
+        },
+        {
+          "code": "014910",
+          "name": "성문전자",
+          "weight": 0.000009237143,
+          "weight_pct": 0.0009237143
+        },
+        {
+          "code": "014915",
+          "name": "성문전자우",
+          "weight": 4.87754e-7,
+          "weight_pct": 0.0000487754
+        },
+        {
+          "code": "004980",
+          "name": "성신양회",
+          "weight": 0.000038143548,
+          "weight_pct": 0.0038143548
+        },
+        {
+          "code": "004985",
+          "name": "성신양회우",
+          "weight": 0.000001213207,
+          "weight_pct": 0.0001213207
+        },
+        {
+          "code": "000180",
+          "name": "성창기업지주",
+          "weight": 0.000012454559,
+          "weight_pct": 0.0012454559
+        },
+        {
+          "code": "002420",
+          "name": "세기상사",
+          "weight": 0.000005410196,
+          "weight_pct": 0.0005410196
+        },
+        {
+          "code": "004360",
+          "name": "세방",
+          "weight": 0.000043325386,
+          "weight_pct": 0.0043325386
+        },
+        {
+          "code": "004365",
+          "name": "세방우",
+          "weight": 0.000005938566,
+          "weight_pct": 0.0005938566
+        },
+        {
+          "code": "004490",
+          "name": "세방전지",
+          "weight": 0.000134061193,
+          "weight_pct": 0.0134061193
+        },
+        {
+          "code": "001430",
+          "name": "세아베스틸지주",
+          "weight": 0.000194675999,
+          "weight_pct": 0.0194675999
+        },
+        {
+          "code": "306200",
+          "name": "세아제강",
+          "weight": 0.000061536041,
+          "weight_pct": 0.0061536041
+        },
+        {
+          "code": "003030",
+          "name": "세아제강지주",
+          "weight": 0.000077073303,
+          "weight_pct": 0.0077073303
+        },
+        {
+          "code": "058650",
+          "name": "세아홀딩스",
+          "weight": 0.000088993937,
+          "weight_pct": 0.0088993937
+        },
+        {
+          "code": "013000",
+          "name": "세우글로벌",
+          "weight": 0.000006037216,
+          "weight_pct": 0.0006037216
+        },
+        {
+          "code": "021820",
+          "name": "세원정공",
+          "weight": 0.000018465729,
+          "weight_pct": 0.0018465729
+        },
+        {
+          "code": "067830",
+          "name": "세이브존I&C",
+          "weight": 0.000016497416,
+          "weight_pct": 0.0016497416
+        },
+        {
+          "code": "075580",
+          "name": "세진중공업",
+          "weight": 0.000115790588,
+          "weight_pct": 0.0115790588
+        },
+        {
+          "code": "068270",
+          "name": "셀트리온",
+          "weight": 0.007307359883,
+          "weight_pct": 0.7307359883
+        },
+        {
+          "code": "336370",
+          "name": "솔루스첨단소재",
+          "weight": 0.000094883448,
+          "weight_pct": 0.0094883448
+        },
+        {
+          "code": "33637K",
+          "name": "솔루스첨단소재1우",
+          "weight": 0.000005049127,
+          "weight_pct": 0.0005049127
+        },
+        {
+          "code": "33637L",
+          "name": "솔루스첨단소재2우B",
+          "weight": 0.00000148827,
+          "weight_pct": 0.000148827
+        },
+        {
+          "code": "248070",
+          "name": "솔루엠",
+          "weight": 0.000126223188,
+          "weight_pct": 0.0126223188
+        },
+        {
+          "code": "004430",
+          "name": "송원산업",
+          "weight": 0.000052242401,
+          "weight_pct": 0.0052242401
+        },
+        {
+          "code": "017550",
+          "name": "수산세보틱스",
+          "weight": 0.000018476239,
+          "weight_pct": 0.0018476239
+        },
+        {
+          "code": "126720",
+          "name": "수산인더스트리",
+          "weight": 0.000053452472,
+          "weight_pct": 0.0053452472
+        },
+        {
+          "code": "053210",
+          "name": "스카이라이프",
+          "weight": 0.000035434438,
+          "weight_pct": 0.0035434438
+        },
+        {
+          "code": "026890",
+          "name": "스틱인베스트먼트",
+          "weight": 0.000054964636,
+          "weight_pct": 0.0054964636
+        },
+        {
+          "code": "134790",
+          "name": "시디즈",
+          "weight": 0.000006858699,
+          "weight_pct": 0.0006858699
+        },
+        {
+          "code": "462870",
+          "name": "시프트업",
+          "weight": 0.000359452862,
+          "weight_pct": 0.0359452862
+        },
+        {
+          "code": "016590",
+          "name": "신대양제지",
+          "weight": 0.000071520235,
+          "weight_pct": 0.0071520235
+        },
+        {
+          "code": "029530",
+          "name": "신도리코",
+          "weight": 0.000072530356,
+          "weight_pct": 0.0072530356
+        },
+        {
+          "code": "004970",
+          "name": "신라교역",
+          "weight": 0.000026673916,
+          "weight_pct": 0.0026673916
+        },
+        {
+          "code": "011930",
+          "name": "신성이엔지",
+          "weight": 0.000058996495,
+          "weight_pct": 0.0058996495
+        },
+        {
+          "code": "004170",
+          "name": "신세계",
+          "weight": 0.001001725781,
+          "weight_pct": 0.1001725781
+        },
+        {
+          "code": "035510",
+          "name": "신세계 I&C",
+          "weight": 0.000030985119,
+          "weight_pct": 0.0030985119
+        },
+        {
+          "code": "031430",
+          "name": "신세계인터내셔날",
+          "weight": 0.000076219144,
+          "weight_pct": 0.0076219144
+        },
+        {
+          "code": "031440",
+          "name": "신세계푸드",
+          "weight": 0.000029187007,
+          "weight_pct": 0.0029187007
+        },
+        {
+          "code": "006880",
+          "name": "신송홀딩스",
+          "weight": 0.00001006172,
+          "weight_pct": 0.001006172
+        },
+        {
+          "code": "005800",
+          "name": "신영와코루",
+          "weight": 0.000020673003,
+          "weight_pct": 0.0020673003
+        },
+        {
+          "code": "001720",
+          "name": "신영증권",
+          "weight": 0.000446956782,
+          "weight_pct": 0.0446956782
+        },
+        {
+          "code": "009270",
+          "name": "신원",
+          "weight": 0.000021502129,
+          "weight_pct": 0.0021502129
+        },
+        {
+          "code": "002700",
+          "name": "신일전자",
+          "weight": 0.000015021447,
+          "weight_pct": 0.0015021447
+        },
+        {
+          "code": "002870",
+          "name": "신풍",
+          "weight": 0.000006455379,
+          "weight_pct": 0.0006455379
+        },
+        {
+          "code": "019170",
+          "name": "신풍제약",
+          "weight": 0.000074218617,
+          "weight_pct": 0.0074218617
+        },
+        {
+          "code": "019175",
+          "name": "신풍제약우",
+          "weight": 0.000004152204,
+          "weight_pct": 0.0004152204
+        },
+        {
+          "code": "481850",
+          "name": "신한글로벌액티브리츠",
+          "weight": 0.000007802204,
+          "weight_pct": 0.0007802204
+        },
+        {
+          "code": "404990",
+          "name": "신한서부티엔디리츠",
+          "weight": 0.000039843255,
+          "weight_pct": 0.0039843255
+        },
+        {
+          "code": "293940",
+          "name": "신한알파리츠",
+          "weight": 0.000113290109,
+          "weight_pct": 0.0113290109
+        },
+        {
+          "code": "055550",
+          "name": "신한지주",
+          "weight": 0.00925035471,
+          "weight_pct": 0.925035471
+        },
+        {
+          "code": "004080",
+          "name": "신흥",
+          "weight": 0.000023281354,
+          "weight_pct": 0.0023281354
+        },
+        {
+          "code": "004770",
+          "name": "써니전자",
+          "weight": 0.000010348001,
+          "weight_pct": 0.0010348001
+        },
+        {
+          "code": "403550",
+          "name": "쏘카",
+          "weight": 0.000069105687,
+          "weight_pct": 0.0069105687
+        },
+        {
+          "code": "004920",
+          "name": "씨아이테크",
+          "weight": 0.000008755193,
+          "weight_pct": 0.0008755193
+        },
+        {
+          "code": "112610",
+          "name": "씨에스윈드",
+          "weight": 0.000313306552,
+          "weight_pct": 0.0313306552
+        },
+        {
+          "code": "480370",
+          "name": "씨케이솔루션",
+          "weight": 0.000006971354,
+          "weight_pct": 0.0006971354
+        },
+        {
+          "code": "308170",
+          "name": "씨티알모빌리티",
+          "weight": 0.000005361468,
+          "weight_pct": 0.0005361468
+        },
+        {
+          "code": "008700",
+          "name": "아남전자",
+          "weight": 0.000015916336,
+          "weight_pct": 0.0015916336
+        },
+        {
+          "code": "090430",
+          "name": "아모레퍼시픽",
+          "weight": 0.001276399917,
+          "weight_pct": 0.1276399917
+        },
+        {
+          "code": "090435",
+          "name": "아모레퍼시픽우",
+          "weight": 0.000074364457,
+          "weight_pct": 0.0074364457
+        },
+        {
+          "code": "002790",
+          "name": "아모레퍼시픽홀딩스",
+          "weight": 0.00032929587,
+          "weight_pct": 0.032929587
+        },
+        {
+          "code": "00279K",
+          "name": "아모레퍼시픽홀딩스3우C",
+          "weight": 0.000026154347,
+          "weight_pct": 0.0026154347
+        },
+        {
+          "code": "002795",
+          "name": "아모레퍼시픽홀딩스우",
+          "weight": 0.000011989421,
+          "weight_pct": 0.0011989421
+        },
+        {
+          "code": "002030",
+          "name": "아세아",
+          "weight": 0.000065654371,
+          "weight_pct": 0.0065654371
+        },
+        {
+          "code": "183190",
+          "name": "아세아시멘트",
+          "weight": 0.00005875337,
+          "weight_pct": 0.005875337
+        },
+        {
+          "code": "002310",
+          "name": "아세아제지",
+          "weight": 0.00005578519,
+          "weight_pct": 0.005578519
+        },
+        {
+          "code": "012170",
+          "name": "아센디오",
+          "weight": 0.000002856293,
+          "weight_pct": 0.0002856293
+        },
+        {
+          "code": "267850",
+          "name": "아시아나IDT",
+          "weight": 0.000018226159,
+          "weight_pct": 0.0018226159
+        },
+        {
+          "code": "020560",
+          "name": "아시아나항공",
+          "weight": 0.000256172176,
+          "weight_pct": 0.0256172176
+        },
+        {
+          "code": "122900",
+          "name": "아이마켓코리아",
+          "weight": 0.000043792048,
+          "weight_pct": 0.0043792048
+        },
+        {
+          "code": "010780",
+          "name": "아이에스동서",
+          "weight": 0.000105146841,
+          "weight_pct": 0.0105146841
+        },
+        {
+          "code": "031820",
+          "name": "아이티센씨티에스",
+          "weight": 0.000010633441,
+          "weight_pct": 0.0010633441
+        },
+        {
+          "code": "139990",
+          "name": "아주스틸",
+          "weight": 0.000014013884,
+          "weight_pct": 0.0014013884
+        },
+        {
+          "code": "009320",
+          "name": "아진전자부품",
+          "weight": 0.000008546201,
+          "weight_pct": 0.0008546201
+        },
+        {
+          "code": "001780",
+          "name": "알루코",
+          "weight": 0.000028758061,
+          "weight_pct": 0.0028758061
+        },
+        {
+          "code": "018250",
+          "name": "애경산업",
+          "weight": 0.00005369679,
+          "weight_pct": 0.005369679
+        },
+        {
+          "code": "161000",
+          "name": "애경케미칼",
+          "weight": 0.000080841319,
+          "weight_pct": 0.0080841319
+        },
+        {
+          "code": "011090",
+          "name": "에넥스",
+          "weight": 0.000002670371,
+          "weight_pct": 0.0002670371
+        },
+        {
+          "code": "137310",
+          "name": "에스디바이오센서",
+          "weight": 0.00013673017,
+          "weight_pct": 0.013673017
+        },
+        {
+          "code": "005850",
+          "name": "에스엘",
+          "weight": 0.00045177506,
+          "weight_pct": 0.045177506
+        },
+        {
+          "code": "010580",
+          "name": "에스엠벡셀",
+          "weight": 0.000032242633,
+          "weight_pct": 0.0032242633
+        },
+        {
+          "code": "012750",
+          "name": "에스원",
+          "weight": 0.000488927476,
+          "weight_pct": 0.0488927476
+        },
+        {
+          "code": "023960",
+          "name": "에쓰씨엔지니어링",
+          "weight": 0.000006784721,
+          "weight_pct": 0.0006784721
+        },
+        {
+          "code": "298690",
+          "name": "에어부산",
+          "weight": 0.000043444082,
+          "weight_pct": 0.0043444082
+        },
+        {
+          "code": "078520",
+          "name": "에이블씨엔씨",
+          "weight": 0.000046076349,
+          "weight_pct": 0.0046076349
+        },
+        {
+          "code": "015260",
+          "name": "에이엔피",
+          "weight": 0.000003213005,
+          "weight_pct": 0.0003213005
+        },
+        {
+          "code": "007460",
+          "name": "에이프로젠",
+          "weight": 0.00000937872,
+          "weight_pct": 0.000937872
+        },
+        {
+          "code": "003060",
+          "name": "에이프로젠바이오로직스",
+          "weight": 0.000005120965,
+          "weight_pct": 0.0005120965
+        },
+        {
+          "code": "244920",
+          "name": "에이플러스에셋",
+          "weight": 0.000043856405,
+          "weight_pct": 0.0043856405
+        },
+        {
+          "code": "278470",
+          "name": "에이피알",
+          "weight": 0.002552990039,
+          "weight_pct": 0.2552990039
+        },
+        {
+          "code": "450080",
+          "name": "에코프로머티",
+          "weight": 0.000472093731,
+          "weight_pct": 0.0472093731
+        },
+        {
+          "code": "019490",
+          "name": "엑시큐어하이트론",
+          "weight": 0.000007420362,
+          "weight_pct": 0.0007420362
+        },
+        {
+          "code": "085310",
+          "name": "엔케이",
+          "weight": 0.000010290151,
+          "weight_pct": 0.0010290151
+        },
+        {
+          "code": "900140",
+          "name": "엘브이엠씨홀딩스",
+          "weight": 0.000042861519,
+          "weight_pct": 0.0042861519
+        },
+        {
+          "code": "066970",
+          "name": "엘앤에프",
+          "weight": 0.000739546916,
+          "weight_pct": 0.0739546916
+        },
+        {
+          "code": "097520",
+          "name": "엠씨넥스",
+          "weight": 0.000056365709,
+          "weight_pct": 0.0056365709
+        },
+        {
+          "code": "484870",
+          "name": "엠앤씨솔루션",
+          "weight": 0.000041970888,
+          "weight_pct": 0.0041970888
+        },
+        {
+          "code": "014440",
+          "name": "영보화학",
+          "weight": 0.000016132838,
+          "weight_pct": 0.0016132838
+        },
+        {
+          "code": "111770",
+          "name": "영원무역",
+          "weight": 0.00067272503,
+          "weight_pct": 0.067272503
+        },
+        {
+          "code": "009970",
+          "name": "영원무역홀딩스",
+          "weight": 0.00044888089,
+          "weight_pct": 0.044888089
+        },
+        {
+          "code": "003520",
+          "name": "영진약품",
+          "weight": 0.000037710957,
+          "weight_pct": 0.0037710957
+        },
+        {
+          "code": "000670",
+          "name": "영풍",
+          "weight": 0.00011761724,
+          "weight_pct": 0.011761724
+        },
+        {
+          "code": "012280",
+          "name": "영화금속",
+          "weight": 0.000007314271,
+          "weight_pct": 0.0007314271
+        },
+        {
+          "code": "012160",
+          "name": "영흥",
+          "weight": 0.000005213923,
+          "weight_pct": 0.0005213923
+        },
+        {
+          "code": "007310",
+          "name": "오뚜기",
+          "weight": 0.000224755537,
+          "weight_pct": 0.0224755537
+        },
+        {
+          "code": "002630",
+          "name": "오리엔트바이오",
+          "weight": 0.00000904404,
+          "weight_pct": 0.000904404
+        },
+        {
+          "code": "271560",
+          "name": "오리온",
+          "weight": 0.000948409709,
+          "weight_pct": 0.0948409709
+        },
+        {
+          "code": "001800",
+          "name": "오리온홀딩스",
+          "weight": 0.000289314058,
+          "weight_pct": 0.0289314058
+        },
+        {
+          "code": "005320",
+          "name": "온타이드",
+          "weight": 0.000004957174,
+          "weight_pct": 0.0004957174
+        },
+        {
+          "code": "011690",
+          "name": "와이투솔루션",
+          "weight": 0.000019562556,
+          "weight_pct": 0.0019562556
+        },
+        {
+          "code": "316140",
+          "name": "우리금융지주",
+          "weight": 0.004076529188,
+          "weight_pct": 0.4076529188
+        },
+        {
+          "code": "006980",
+          "name": "우성",
+          "weight": 0.000008800077,
+          "weight_pct": 0.0008800077
+        },
+        {
+          "code": "011300",
+          "name": "우성머티리얼스",
+          "weight": 0.000007212296,
+          "weight_pct": 0.0007212296
+        },
+        {
+          "code": "017370",
+          "name": "우신시스템",
+          "weight": 0.00001455926,
+          "weight_pct": 0.001455926
+        },
+        {
+          "code": "105840",
+          "name": "우진",
+          "weight": 0.000051105951,
+          "weight_pct": 0.0051105951
+        },
+        {
+          "code": "010400",
+          "name": "우진아이엔에스",
+          "weight": 0.000005669497,
+          "weight_pct": 0.0005669497
+        },
+        {
+          "code": "049800",
+          "name": "우진플라임",
+          "weight": 0.000006162421,
+          "weight_pct": 0.0006162421
+        },
+        {
+          "code": "016880",
+          "name": "웅진",
+          "weight": 0.000027754027,
+          "weight_pct": 0.0027754027
+        },
+        {
+          "code": "095720",
+          "name": "웅진씽크빅",
+          "weight": 0.000012329139,
+          "weight_pct": 0.0012329139
+        },
+        {
+          "code": "005820",
+          "name": "원림",
+          "weight": 0.000005814529,
+          "weight_pct": 0.0005814529
+        },
+        {
+          "code": "008600",
+          "name": "윌비스",
+          "weight": 0.000003161218,
+          "weight_pct": 0.0003161218
+        },
+        {
+          "code": "033270",
+          "name": "유나이티드제약",
+          "weight": 0.000049652601,
+          "weight_pct": 0.0049652601
+        },
+        {
+          "code": "014830",
+          "name": "유니드",
+          "weight": 0.000075296962,
+          "weight_pct": 0.0075296962
+        },
+        {
+          "code": "446070",
+          "name": "유니드비티플러스",
+          "weight": 0.00000626487,
+          "weight_pct": 0.000626487
+        },
+        {
+          "code": "000910",
+          "name": "유니온",
+          "weight": 0.000008138515,
+          "weight_pct": 0.0008138515
+        },
+        {
+          "code": "047400",
+          "name": "유니온머티리얼",
+          "weight": 0.000007499347,
+          "weight_pct": 0.0007499347
+        },
+        {
+          "code": "011330",
+          "name": "유니켐",
+          "weight": 0.000005818324,
+          "weight_pct": 0.0005818324
+        },
+        {
+          "code": "077500",
+          "name": "유니퀘스트",
+          "weight": 0.000021357897,
+          "weight_pct": 0.0021357897
+        },
+        {
+          "code": "002920",
+          "name": "유성기업",
+          "weight": 0.00000811138,
+          "weight_pct": 0.000811138
+        },
+        {
+          "code": "000700",
+          "name": "유수홀딩스",
+          "weight": 0.000026918123,
+          "weight_pct": 0.0026918123
+        },
+        {
+          "code": "003470",
+          "name": "유안타증권",
+          "weight": 0.000152830566,
+          "weight_pct": 0.0152830566
+        },
+        {
+          "code": "003475",
+          "name": "유안타증권우",
+          "weight": 0.000009632981,
+          "weight_pct": 0.0009632981
+        },
+        {
+          "code": "072130",
+          "name": "유엔젤",
+          "weight": 0.000011915191,
+          "weight_pct": 0.0011915191
+        },
+        {
+          "code": "000220",
+          "name": "유유제약",
+          "weight": 0.000010201613,
+          "weight_pct": 0.0010201613
+        },
+        {
+          "code": "000225",
+          "name": "유유제약1우",
+          "weight": 0.000001517393,
+          "weight_pct": 0.0001517393
+        },
+        {
+          "code": "000227",
+          "name": "유유제약2우B",
+          "weight": 4.96685e-7,
+          "weight_pct": 0.0000496685
+        },
+        {
+          "code": "001200",
+          "name": "유진투자증권",
+          "weight": 0.000074051511,
+          "weight_pct": 0.0074051511
+        },
+        {
+          "code": "000100",
+          "name": "유한양행",
+          "weight": 0.000973354177,
+          "weight_pct": 0.0973354177
+        },
+        {
+          "code": "000105",
+          "name": "유한양행우",
+          "weight": 0.000012355134,
+          "weight_pct": 0.0012355134
+        },
+        {
+          "code": "003460",
+          "name": "유화증권",
+          "weight": 0.000031747332,
+          "weight_pct": 0.0031747332
+        },
+        {
+          "code": "003465",
+          "name": "유화증권우",
+          "weight": 0.000009471323,
+          "weight_pct": 0.0009471323
+        },
+        {
+          "code": "008730",
+          "name": "율촌화학",
+          "weight": 0.00006217262,
+          "weight_pct": 0.006217262
+        },
+        {
+          "code": "008250",
+          "name": "이건산업",
+          "weight": 0.000005444393,
+          "weight_pct": 0.0005444393
+        },
+        {
+          "code": "025820",
+          "name": "이구산업",
+          "weight": 0.000022804835,
+          "weight_pct": 0.0022804835
+        },
+        {
+          "code": "214320",
+          "name": "이노션",
+          "weight": 0.000132221081,
+          "weight_pct": 0.0132221081
+        },
+        {
+          "code": "088260",
+          "name": "이리츠코크렙",
+          "weight": 0.000038363111,
+          "weight_pct": 0.0038363111
+        },
+        {
+          "code": "139480",
+          "name": "이마트",
+          "weight": 0.000407562492,
+          "weight_pct": 0.0407562492
+        },
+        {
+          "code": "457190",
+          "name": "이수스페셜티케미컬",
+          "weight": 0.000330795178,
+          "weight_pct": 0.0330795178
+        },
+        {
+          "code": "007660",
+          "name": "이수페타시스",
+          "weight": 0.001312082151,
+          "weight_pct": 0.1312082151
+        },
+        {
+          "code": "005950",
+          "name": "이수화학",
+          "weight": 0.000065210657,
+          "weight_pct": 0.0065210657
+        },
+        {
+          "code": "015020",
+          "name": "이스타코",
+          "weight": 0.000003568093,
+          "weight_pct": 0.0003568093
+        },
+        {
+          "code": "074610",
+          "name": "이엔플러스",
+          "weight": 0.000008042265,
+          "weight_pct": 0.0008042265
+        },
+        {
+          "code": "102460",
+          "name": "이연제약",
+          "weight": 0.000033087781,
+          "weight_pct": 0.0033087781
+        },
+        {
+          "code": "084680",
+          "name": "이월드",
+          "weight": 0.000017762402,
+          "weight_pct": 0.0017762402
+        },
+        {
+          "code": "350520",
+          "name": "이지스레지던스리츠",
+          "weight": 0.000022262019,
+          "weight_pct": 0.0022262019
+        },
+        {
+          "code": "334890",
+          "name": "이지스밸류플러스리츠",
+          "weight": 0.000042186527,
+          "weight_pct": 0.0042186527
+        },
+        {
+          "code": "000760",
+          "name": "이화산업",
+          "weight": 0.000006411502,
+          "weight_pct": 0.0006411502
+        },
+        {
+          "code": "014990",
+          "name": "인디에프",
+          "weight": 0.000004998111,
+          "weight_pct": 0.0004998111
+        },
+        {
+          "code": "101140",
+          "name": "인바이오젠",
+          "weight": 0.000009877515,
+          "weight_pct": 0.0009877515
+        },
+        {
+          "code": "023800",
+          "name": "인지컨트롤스",
+          "weight": 0.000015036154,
+          "weight_pct": 0.0015036154
+        },
+        {
+          "code": "034590",
+          "name": "인천도시가스",
+          "weight": 0.000020568661,
+          "weight_pct": 0.0020568661
+        },
+        {
+          "code": "129260",
+          "name": "인터지스",
+          "weight": 0.000010404444,
+          "weight_pct": 0.0010404444
+        },
+        {
+          "code": "023810",
+          "name": "인팩",
+          "weight": 0.000008470189,
+          "weight_pct": 0.0008470189
+        },
+        {
+          "code": "249420",
+          "name": "일동제약",
+          "weight": 0.000082381744,
+          "weight_pct": 0.0082381744
+        },
+        {
+          "code": "000230",
+          "name": "일동홀딩스",
+          "weight": 0.000012177251,
+          "weight_pct": 0.0012177251
+        },
+        {
+          "code": "013360",
+          "name": "일성건설",
+          "weight": 0.000014600572,
+          "weight_pct": 0.0014600572
+        },
+        {
+          "code": "003120",
+          "name": "일성아이에스",
+          "weight": 0.000046612776,
+          "weight_pct": 0.0046612776
+        },
+        {
+          "code": "003200",
+          "name": "일신방직",
+          "weight": 0.000042273707,
+          "weight_pct": 0.0042273707
+        },
+        {
+          "code": "007110",
+          "name": "일신석재",
+          "weight": 0.000011870457,
+          "weight_pct": 0.0011870457
+        },
+        {
+          "code": "007570",
+          "name": "일양약품",
+          "weight": 0.000028906852,
+          "weight_pct": 0.0028906852
+        },
+        {
+          "code": "007575",
+          "name": "일양약품우",
+          "weight": 5.73474e-7,
+          "weight_pct": 0.0000573474
+        },
+        {
+          "code": "081000",
+          "name": "일진다이아",
+          "weight": 0.000022480139,
+          "weight_pct": 0.0022480139
+        },
+        {
+          "code": "020760",
+          "name": "일진디스플",
+          "weight": 0.000009149317,
+          "weight_pct": 0.0009149317
+        },
+        {
+          "code": "103590",
+          "name": "일진전기",
+          "weight": 0.0005219949,
+          "weight_pct": 0.05219949
+        },
+        {
+          "code": "271940",
+          "name": "일진하이솔루스",
+          "weight": 0.000064252851,
+          "weight_pct": 0.0064252851
+        },
+        {
+          "code": "015860",
+          "name": "일진홀딩스",
+          "weight": 0.000049414032,
+          "weight_pct": 0.0049414032
+        },
+        {
+          "code": "226320",
+          "name": "잇츠한불",
+          "weight": 0.000039392199,
+          "weight_pct": 0.0039392199
+        },
+        {
+          "code": "317400",
+          "name": "자이에스앤디",
+          "weight": 0.000033058316,
+          "weight_pct": 0.0033058316
+        },
+        {
+          "code": "033240",
+          "name": "자화전자",
+          "weight": 0.000099061831,
+          "weight_pct": 0.0099061831
+        },
+        {
+          "code": "000950",
+          "name": "전방",
+          "weight": 0.000007883736,
+          "weight_pct": 0.0007883736
+        },
+        {
+          "code": "079900",
+          "name": "전진건설로봇",
+          "weight": 0.000087463851,
+          "weight_pct": 0.0087463851
+        },
+        {
+          "code": "348950",
+          "name": "제이알글로벌리츠",
+          "weight": 0.000041866138,
+          "weight_pct": 0.0041866138
+        },
+        {
+          "code": "194370",
+          "name": "제이에스코퍼레이션",
+          "weight": 0.000061548497,
+          "weight_pct": 0.0061548497
+        },
+        {
+          "code": "030000",
+          "name": "제일기획",
+          "weight": 0.000387291011,
+          "weight_pct": 0.0387291011
+        },
+        {
+          "code": "271980",
+          "name": "제일약품",
+          "weight": 0.000026150861,
+          "weight_pct": 0.0026150861
+        },
+        {
+          "code": "001560",
+          "name": "제일연마",
+          "weight": 0.000011960911,
+          "weight_pct": 0.0011960911
+        },
+        {
+          "code": "002620",
+          "name": "제일파마홀딩스",
+          "weight": 0.000018288071,
+          "weight_pct": 0.0018288071
+        },
+        {
+          "code": "006220",
+          "name": "제주은행",
+          "weight": 0.000066813241,
+          "weight_pct": 0.0066813241
+        },
+        {
+          "code": "089590",
+          "name": "제주항공",
+          "weight": 0.000062226499,
+          "weight_pct": 0.0062226499
+        },
+        {
+          "code": "004910",
+          "name": "조광페인트",
+          "weight": 0.000008177321,
+          "weight_pct": 0.0008177321
+        },
+        {
+          "code": "004700",
+          "name": "조광피혁",
+          "weight": 0.000074336906,
+          "weight_pct": 0.0074336906
+        },
+        {
+          "code": "001550",
+          "name": "조비",
+          "weight": 0.000010063047,
+          "weight_pct": 0.0010063047
+        },
+        {
+          "code": "462520",
+          "name": "조선내화",
+          "weight": 0.000032337198,
+          "weight_pct": 0.0032337198
+        },
+        {
+          "code": "120030",
+          "name": "조선선재",
+          "weight": 0.000019364153,
+          "weight_pct": 0.0019364153
+        },
+        {
+          "code": "018470",
+          "name": "조일알미늄",
+          "weight": 0.000020406566,
+          "weight_pct": 0.0020406566
+        },
+        {
+          "code": "002600",
+          "name": "조흥",
+          "weight": 0.000014934091,
+          "weight_pct": 0.0014934091
+        },
+        {
+          "code": "185750",
+          "name": "종근당",
+          "weight": 0.000174377445,
+          "weight_pct": 0.0174377445
+        },
+        {
+          "code": "063160",
+          "name": "종근당바이오",
+          "weight": 0.000013014735,
+          "weight_pct": 0.0013014735
+        },
+        {
+          "code": "001630",
+          "name": "종근당홀딩스",
+          "weight": 0.000035736655,
+          "weight_pct": 0.0035736655
+        },
+        {
+          "code": "109070",
+          "name": "주성코퍼레이션",
+          "weight": 0.00001431969,
+          "weight_pct": 0.001431969
+        },
+        {
+          "code": "044380",
+          "name": "주연테크",
+          "weight": 0.000001700999,
+          "weight_pct": 0.0001700999
+        },
+        {
+          "code": "013890",
+          "name": "지누스",
+          "weight": 0.000034270856,
+          "weight_pct": 0.0034270856
+        },
+        {
+          "code": "013870",
+          "name": "지엠비코리아",
+          "weight": 0.000013279613,
+          "weight_pct": 0.0013279613
+        },
+        {
+          "code": "071320",
+          "name": "지역난방공사",
+          "weight": 0.000138592067,
+          "weight_pct": 0.0138592067
+        },
+        {
+          "code": "088790",
+          "name": "진도",
+          "weight": 0.000005528623,
+          "weight_pct": 0.0005528623
+        },
+        {
+          "code": "003780",
+          "name": "진양산업",
+          "weight": 0.00001123287,
+          "weight_pct": 0.001123287
+        },
+        {
+          "code": "010640",
+          "name": "진양폴리",
+          "weight": 0.000005490261,
+          "weight_pct": 0.0005490261
+        },
+        {
+          "code": "100250",
+          "name": "진양홀딩스",
+          "weight": 0.000034745181,
+          "weight_pct": 0.0034745181
+        },
+        {
+          "code": "051630",
+          "name": "진양화학",
+          "weight": 0.000006619668,
+          "weight_pct": 0.0006619668
+        },
+        {
+          "code": "272450",
+          "name": "진에어",
+          "weight": 0.000048617088,
+          "weight_pct": 0.0048617088
+        },
+        {
+          "code": "011000",
+          "name": "진원생명과학",
+          "weight": 0.000008709126,
+          "weight_pct": 0.0008709126
+        },
+        {
+          "code": "002780",
+          "name": "진흥기업",
+          "weight": 0.000020962606,
+          "weight_pct": 0.0020962606
+        },
+        {
+          "code": "002787",
+          "name": "진흥기업2우B",
+          "weight": 1.74848e-7,
+          "weight_pct": 0.0000174848
+        },
+        {
+          "code": "002785",
+          "name": "진흥기업우B",
+          "weight": 2.44129e-7,
+          "weight_pct": 0.0000244129
+        },
+        {
+          "code": "025620",
+          "name": "차AI헬스케어",
+          "weight": 0.000020155911,
+          "weight_pct": 0.0020155911
+        },
+        {
+          "code": "009310",
+          "name": "참엔지니어링",
+          "weight": 0.000004186549,
+          "weight_pct": 0.0004186549
+        },
+        {
+          "code": "000650",
+          "name": "천일고속",
+          "weight": 0.000040523529,
+          "weight_pct": 0.0040523529
+        },
+        {
+          "code": "033250",
+          "name": "체시스",
+          "weight": 0.000003370848,
+          "weight_pct": 0.0003370848
+        },
+        {
+          "code": "035720",
+          "name": "카카오",
+          "weight": 0.002762428604,
+          "weight_pct": 0.2762428604
+        },
+        {
+          "code": "323410",
+          "name": "카카오뱅크",
+          "weight": 0.001994963831,
+          "weight_pct": 0.1994963831
+        },
+        {
+          "code": "377300",
+          "name": "카카오페이",
+          "weight": 0.000964917338,
+          "weight_pct": 0.0964917338
+        },
+        {
+          "code": "006380",
+          "name": "카프로",
+          "weight": 0.000110998949,
+          "weight_pct": 0.0110998949
+        },
+        {
+          "code": "279570",
+          "name": "케이뱅크",
+          "weight": 0.000411338491,
+          "weight_pct": 0.0411338491
+        },
+        {
+          "code": "001620",
+          "name": "케이비아이동국실업",
+          "weight": 0.000008747686,
+          "weight_pct": 0.0008747686
+        },
+        {
+          "code": "029460",
+          "name": "케이씨",
+          "weight": 0.000057846839,
+          "weight_pct": 0.0057846839
+        },
+        {
+          "code": "281820",
+          "name": "케이씨텍",
+          "weight": 0.000319763887,
+          "weight_pct": 0.0319763887
+        },
+        {
+          "code": "381970",
+          "name": "케이카",
+          "weight": 0.000067810565,
+          "weight_pct": 0.0067810565
+        },
+        {
+          "code": "145270",
+          "name": "케이탑리츠",
+          "weight": 0.000006364997,
+          "weight_pct": 0.0006364997
+        },
+        {
+          "code": "417310",
+          "name": "코람코더원리츠",
+          "weight": 0.000073006566,
+          "weight_pct": 0.0073006566
+        },
+        {
+          "code": "357120",
+          "name": "코람코라이프인프라리츠",
+          "weight": 0.000069693872,
+          "weight_pct": 0.0069693872
+        },
+        {
+          "code": "007815",
+          "name": "코리아써우",
+          "weight": 0.000008597491,
+          "weight_pct": 0.0008597491
+        },
+        {
+          "code": "007810",
+          "name": "코리아써키트",
+          "weight": 0.000300402218,
+          "weight_pct": 0.0300402218
+        },
+        {
+          "code": "00781K",
+          "name": "코리아써키트2우B",
+          "weight": 0.000002220662,
+          "weight_pct": 0.0002220662
+        },
+        {
+          "code": "003690",
+          "name": "코리안리",
+          "weight": 0.000441764119,
+          "weight_pct": 0.0441764119
+        },
+        {
+          "code": "192820",
+          "name": "코스맥스",
+          "weight": 0.000375364757,
+          "weight_pct": 0.0375364757
+        },
+        {
+          "code": "044820",
+          "name": "코스맥스비티아이",
+          "weight": 0.000036106359,
+          "weight_pct": 0.0036106359
+        },
+        {
+          "code": "005070",
+          "name": "코스모신소재",
+          "weight": 0.000229775709,
+          "weight_pct": 0.0229775709
+        },
+        {
+          "code": "005420",
+          "name": "코스모화학",
+          "weight": 0.000067477355,
+          "weight_pct": 0.0067477355
+        },
+        {
+          "code": "071950",
+          "name": "코아스",
+          "weight": 0.000004963569,
+          "weight_pct": 0.0004963569
+        },
+        {
+          "code": "002020",
+          "name": "코오롱",
+          "weight": 0.000093116218,
+          "weight_pct": 0.0093116218
+        },
+        {
+          "code": "003070",
+          "name": "코오롱글로벌",
+          "weight": 0.000042293536,
+          "weight_pct": 0.0042293536
+        },
+        {
+          "code": "003075",
+          "name": "코오롱글로벌우",
+          "weight": 0.000001721412,
+          "weight_pct": 0.0001721412
+        },
+        {
+          "code": "002025",
+          "name": "코오롱우",
+          "weight": 0.000004164881,
+          "weight_pct": 0.0004164881
+        },
+        {
+          "code": "120110",
+          "name": "코오롱인더",
+          "weight": 0.000286966782,
+          "weight_pct": 0.0286966782
+        },
+        {
+          "code": "120115",
+          "name": "코오롱인더우",
+          "weight": 0.000011324787,
+          "weight_pct": 0.0011324787
+        },
+        {
+          "code": "021240",
+          "name": "코웨이",
+          "weight": 0.001164538419,
+          "weight_pct": 0.1164538419
+        },
+        {
+          "code": "036420",
+          "name": "콘텐트리중앙",
+          "weight": 0.000006830403,
+          "weight_pct": 0.0006830403
+        },
+        {
+          "code": "024720",
+          "name": "콜마홀딩스",
+          "weight": 0.000052683134,
+          "weight_pct": 0.0052683134
+        },
+        {
+          "code": "192400",
+          "name": "쿠쿠홀딩스",
+          "weight": 0.000163053613,
+          "weight_pct": 0.0163053613
+        },
+        {
+          "code": "284740",
+          "name": "쿠쿠홈시스",
+          "weight": 0.000084958085,
+          "weight_pct": 0.0084958085
+        },
+        {
+          "code": "264900",
+          "name": "크라운제과",
+          "weight": 0.000018226774,
+          "weight_pct": 0.0018226774
+        },
+        {
+          "code": "26490K",
+          "name": "크라운제과우",
+          "weight": 0.000001024475,
+          "weight_pct": 0.0001024475
+        },
+        {
+          "code": "005740",
+          "name": "크라운해태홀딩스",
+          "weight": 0.000014787438,
+          "weight_pct": 0.0014787438
+        },
+        {
+          "code": "005745",
+          "name": "크라운해태홀딩스우",
+          "weight": 5.73508e-7,
+          "weight_pct": 0.0000573508
+        },
+        {
+          "code": "259960",
+          "name": "크래프톤",
+          "weight": 0.001970539911,
+          "weight_pct": 0.1970539911
+        },
+        {
+          "code": "020120",
+          "name": "키다리스튜디오",
+          "weight": 0.000023146209,
+          "weight_pct": 0.0023146209
+        },
+        {
+          "code": "039490",
+          "name": "키움증권",
+          "weight": 0.001522634894,
+          "weight_pct": 0.1522634894
+        },
+        {
+          "code": "014580",
+          "name": "태경비케이",
+          "weight": 0.000019774747,
+          "weight_pct": 0.0019774747
+        },
+        {
+          "code": "015890",
+          "name": "태경산업",
+          "weight": 0.000023970524,
+          "weight_pct": 0.0023970524
+        },
+        {
+          "code": "006890",
+          "name": "태경케미컬",
+          "weight": 0.000013051986,
+          "weight_pct": 0.0013051986
+        },
+        {
+          "code": "003240",
+          "name": "태광산업",
+          "weight": 0.000170631879,
+          "weight_pct": 0.0170631879
+        },
+        {
+          "code": "011280",
+          "name": "태림포장",
+          "weight": 0.000021295841,
+          "weight_pct": 0.0021295841
+        },
+        {
+          "code": "004100",
+          "name": "태양금속",
+          "weight": 0.000015015922,
+          "weight_pct": 0.0015015922
+        },
+        {
+          "code": "004105",
+          "name": "태양금속우",
+          "weight": 0.000001729211,
+          "weight_pct": 0.0001729211
+        },
+        {
+          "code": "009410",
+          "name": "태영건설",
+          "weight": 0.000085178546,
+          "weight_pct": 0.0085178546
+        },
+        {
+          "code": "009415",
+          "name": "태영건설우",
+          "weight": 8.14146e-7,
+          "weight_pct": 0.0000814146
+        },
+        {
+          "code": "001420",
+          "name": "태원물산",
+          "weight": 0.000003818763,
+          "weight_pct": 0.0003818763
+        },
+        {
+          "code": "055490",
+          "name": "테이팩스",
+          "weight": 0.000010737243,
+          "weight_pct": 0.0010737243
+        },
+        {
+          "code": "078000",
+          "name": "텔코웨어",
+          "weight": 0.000020826501,
+          "weight_pct": 0.0020826501
+        },
+        {
+          "code": "214420",
+          "name": "토니모리",
+          "weight": 0.000024821079,
+          "weight_pct": 0.0024821079
+        },
+        {
+          "code": "091810",
+          "name": "트리니티항공",
+          "weight": 0.000047503661,
+          "weight_pct": 0.0047503661
+        },
+        {
+          "code": "019180",
+          "name": "티에이치엔",
+          "weight": 0.000018638004,
+          "weight_pct": 0.0018638004
+        },
+        {
+          "code": "217590",
+          "name": "티엠씨",
+          "weight": 0.000047129252,
+          "weight_pct": 0.0047129252
+        },
+        {
+          "code": "363280",
+          "name": "티와이홀딩스",
+          "weight": 0.000013855394,
+          "weight_pct": 0.0013855394
+        },
+        {
+          "code": "36328K",
+          "name": "티와이홀딩스우",
+          "weight": 5.26067e-7,
+          "weight_pct": 0.0000526067
+        },
+        {
+          "code": "004870",
+          "name": "티웨이홀딩스",
+          "weight": 0.000005015964,
+          "weight_pct": 0.0005015964
+        },
+        {
+          "code": "034230",
+          "name": "파라다이스",
+          "weight": 0.000208614061,
+          "weight_pct": 0.0208614061
+        },
+        {
+          "code": "005690",
+          "name": "파미셀",
+          "weight": 0.000122754166,
+          "weight_pct": 0.0122754166
+        },
+        {
+          "code": "036580",
+          "name": "팜스코",
+          "weight": 0.000018520556,
+          "weight_pct": 0.0018520556
+        },
+        {
+          "code": "004720",
+          "name": "팜젠사이언스",
+          "weight": 0.000012053903,
+          "weight_pct": 0.0012053903
+        },
+        {
+          "code": "028670",
+          "name": "팬오션",
+          "weight": 0.000502674158,
+          "weight_pct": 0.0502674158
+        },
+        {
+          "code": "010820",
+          "name": "퍼스텍",
+          "weight": 0.00005006303,
+          "weight_pct": 0.005006303
+        },
+        {
+          "code": "016800",
+          "name": "퍼시스",
+          "weight": 0.000056855244,
+          "weight_pct": 0.0056855244
+        },
+        {
+          "code": "001020",
+          "name": "페이퍼코리아",
+          "weight": 0.000012743927,
+          "weight_pct": 0.0012743927
+        },
+        {
+          "code": "090080",
+          "name": "평화산업",
+          "weight": 0.000008325264,
+          "weight_pct": 0.0008325264
+        },
+        {
+          "code": "010770",
+          "name": "평화홀딩스",
+          "weight": 0.000010235885,
+          "weight_pct": 0.0010235885
+        },
+        {
+          "code": "022100",
+          "name": "포스코DX",
+          "weight": 0.0005112855,
+          "weight_pct": 0.05112855
+        },
+        {
+          "code": "058430",
+          "name": "포스코스틸리온",
+          "weight": 0.000049421397,
+          "weight_pct": 0.0049421397
+        },
+        {
+          "code": "047050",
+          "name": "포스코인터내셔널",
+          "weight": 0.001597436861,
+          "weight_pct": 0.1597436861
+        },
+        {
+          "code": "003670",
+          "name": "포스코퓨처엠",
+          "weight": 0.002405425077,
+          "weight_pct": 0.2405425077
+        },
+        {
+          "code": "017810",
+          "name": "풀무원",
+          "weight": 0.000061772888,
+          "weight_pct": 0.0061772888
+        },
+        {
+          "code": "103140",
+          "name": "풍산",
+          "weight": 0.000315824023,
+          "weight_pct": 0.0315824023
+        },
+        {
+          "code": "005810",
+          "name": "풍산홀딩스",
+          "weight": 0.000086154708,
+          "weight_pct": 0.0086154708
+        },
+        {
+          "code": "950210",
+          "name": "프레스티지바이오파마",
+          "weight": 0.000059637977,
+          "weight_pct": 0.0059637977
+        },
+        {
+          "code": "006490",
+          "name": "프리티",
+          "weight": 0.000008226975,
+          "weight_pct": 0.0008226975
+        },
+        {
+          "code": "009810",
+          "name": "플레이그램",
+          "weight": 0.000005451338,
+          "weight_pct": 0.0005451338
+        },
+        {
+          "code": "086790",
+          "name": "하나금융지주",
+          "weight": 0.006528714364,
+          "weight_pct": 0.6528714364
+        },
+        {
+          "code": "293480",
+          "name": "하나제약",
+          "weight": 0.000027109995,
+          "weight_pct": 0.0027109995
+        },
+        {
+          "code": "039130",
+          "name": "하나투어",
+          "weight": 0.000087283117,
+          "weight_pct": 0.0087283117
+        },
+        {
+          "code": "352820",
+          "name": "하이브",
+          "weight": 0.001647519716,
+          "weight_pct": 0.1647519716
+        },
+        {
+          "code": "071090",
+          "name": "하이스틸",
+          "weight": 0.000010507927,
+          "weight_pct": 0.0010507927
+        },
+        {
+          "code": "000080",
+          "name": "하이트진로",
+          "weight": 0.000188282033,
+          "weight_pct": 0.0188282033
+        },
+        {
+          "code": "000087",
+          "name": "하이트진로2우B",
+          "weight": 0.000002490468,
+          "weight_pct": 0.0002490468
+        },
+        {
+          "code": "000140",
+          "name": "하이트진로홀딩스",
+          "weight": 0.000034357348,
+          "weight_pct": 0.0034357348
+        },
+        {
+          "code": "000145",
+          "name": "하이트진로홀딩스우",
+          "weight": 8.17847e-7,
+          "weight_pct": 0.0000817847
+        },
+        {
+          "code": "036460",
+          "name": "한국가스공사",
+          "weight": 0.000541703577,
+          "weight_pct": 0.0541703577
+        },
+        {
+          "code": "005430",
+          "name": "한국공항",
+          "weight": 0.000046309309,
+          "weight_pct": 0.0046309309
+        },
+        {
+          "code": "071050",
+          "name": "한국금융지주",
+          "weight": 0.002370048536,
+          "weight_pct": 0.2370048536
+        },
+        {
+          "code": "071055",
+          "name": "한국금융지주우",
+          "weight": 0.00016452557,
+          "weight_pct": 0.016452557
+        },
+        {
+          "code": "010040",
+          "name": "한국내화",
+          "weight": 0.00001144501,
+          "weight_pct": 0.001144501
+        },
+        {
+          "code": "025540",
+          "name": "한국단자",
+          "weight": 0.00011798596,
+          "weight_pct": 0.011798596
+        },
+        {
+          "code": "010100",
+          "name": "한국무브넥스",
+          "weight": 0.000018633685,
+          "weight_pct": 0.0018633685
+        },
+        {
+          "code": "004090",
+          "name": "한국석유",
+          "weight": 0.000026174218,
+          "weight_pct": 0.0026174218
+        },
+        {
+          "code": "002200",
+          "name": "한국수출포장",
+          "weight": 0.000013796782,
+          "weight_pct": 0.0013796782
+        },
+        {
+          "code": "002960",
+          "name": "한국쉘석유",
+          "weight": 0.000116411258,
+          "weight_pct": 0.0116411258
+        },
+        {
+          "code": "000240",
+          "name": "한국앤컴퍼니",
+          "weight": 0.000419947946,
+          "weight_pct": 0.0419947946
+        },
+        {
+          "code": "123890",
+          "name": "한국자산신탁",
+          "weight": 0.000049191266,
+          "weight_pct": 0.0049191266
+        },
+        {
+          "code": "015760",
+          "name": "한국전력",
+          "weight": 0.003945684793,
+          "weight_pct": 0.3945684793
+        },
+        {
+          "code": "006200",
+          "name": "한국전자홀딩스",
+          "weight": 0.000003981112,
+          "weight_pct": 0.0003981112
+        },
+        {
+          "code": "027970",
+          "name": "한국제지",
+          "weight": 0.000018597114,
+          "weight_pct": 0.0018597114
+        },
+        {
+          "code": "023350",
+          "name": "한국종합기술",
+          "weight": 0.0000081548,
+          "weight_pct": 0.00081548
+        },
+        {
+          "code": "025890",
+          "name": "한국주강",
+          "weight": 0.000004379861,
+          "weight_pct": 0.0004379861
+        },
+        {
+          "code": "000970",
+          "name": "한국주철관",
+          "weight": 0.000027086535,
+          "weight_pct": 0.0027086535
+        },
+        {
+          "code": "104700",
+          "name": "한국철강",
+          "weight": 0.000060177819,
+          "weight_pct": 0.0060177819
+        },
+        {
+          "code": "017960",
+          "name": "한국카본",
+          "weight": 0.000228128301,
+          "weight_pct": 0.0228128301
+        },
+        {
+          "code": "161890",
+          "name": "한국콜마",
+          "weight": 0.000490529428,
+          "weight_pct": 0.0490529428
+        },
+        {
+          "code": "161390",
+          "name": "한국타이어앤테크놀로지",
+          "weight": 0.001549415061,
+          "weight_pct": 0.1549415061
+        },
+        {
+          "code": "034830",
+          "name": "한국토지신탁",
+          "weight": 0.000050430016,
+          "weight_pct": 0.0050430016
+        },
+        {
+          "code": "007280",
+          "name": "한국특강",
+          "weight": 0.0000099627,
+          "weight_pct": 0.00099627
+        },
+        {
+          "code": "047810",
+          "name": "한국항공우주",
+          "weight": 0.00251013285,
+          "weight_pct": 0.251013285
+        },
+        {
+          "code": "123690",
+          "name": "한국화장품",
+          "weight": 0.00001787741,
+          "weight_pct": 0.001787741
+        },
+        {
+          "code": "003350",
+          "name": "한국화장품제조",
+          "weight": 0.000031677321,
+          "weight_pct": 0.0031677321
+        },
+        {
+          "code": "011500",
+          "name": "한농화성",
+          "weight": 0.00003471166,
+          "weight_pct": 0.003471166
+        },
+        {
+          "code": "002390",
+          "name": "한독",
+          "weight": 0.000019265293,
+          "weight_pct": 0.0019265293
+        },
+        {
+          "code": "053690",
+          "name": "한미글로벌",
+          "weight": 0.000031245569,
+          "weight_pct": 0.0031245569
+        },
+        {
+          "code": "042700",
+          "name": "한미반도체",
+          "weight": 0.003514887311,
+          "weight_pct": 0.3514887311
+        },
+        {
+          "code": "008930",
+          "name": "한미사이언스",
+          "weight": 0.000406238917,
+          "weight_pct": 0.0406238917
+        },
+        {
+          "code": "128940",
+          "name": "한미약품",
+          "weight": 0.00087705808,
+          "weight_pct": 0.087705808
+        },
+        {
+          "code": "009240",
+          "name": "한샘",
+          "weight": 0.000146968665,
+          "weight_pct": 0.0146968665
+        },
+        {
+          "code": "020000",
+          "name": "한섬",
+          "weight": 0.000086910276,
+          "weight_pct": 0.0086910276
+        },
+        {
+          "code": "003680",
+          "name": "한성기업",
+          "weight": 0.000010363148,
+          "weight_pct": 0.0010363148
+        },
+        {
+          "code": "105630",
+          "name": "한세실업",
+          "weight": 0.00006496204,
+          "weight_pct": 0.006496204
+        },
+        {
+          "code": "069640",
+          "name": "한세엠케이",
+          "weight": 0.000003662524,
+          "weight_pct": 0.0003662524
+        },
+        {
+          "code": "016450",
+          "name": "한세예스24홀딩스",
+          "weight": 0.000030794161,
+          "weight_pct": 0.0030794161
+        },
+        {
+          "code": "009180",
+          "name": "한솔로지스틱스",
+          "weight": 0.000013566369,
+          "weight_pct": 0.0013566369
+        },
+        {
+          "code": "213500",
+          "name": "한솔제지",
+          "weight": 0.000029385088,
+          "weight_pct": 0.0029385088
+        },
+        {
+          "code": "014680",
+          "name": "한솔케미칼",
+          "weight": 0.000513837848,
+          "weight_pct": 0.0513837848
+        },
+        {
+          "code": "004710",
+          "name": "한솔테크닉스",
+          "weight": 0.00006153684,
+          "weight_pct": 0.006153684
+        },
+        {
+          "code": "004150",
+          "name": "한솔홀딩스",
+          "weight": 0.000021866198,
+          "weight_pct": 0.0021866198
+        },
+        {
+          "code": "025750",
+          "name": "한솔홈데코",
+          "weight": 0.000005233676,
+          "weight_pct": 0.0005233676
+        },
+        {
+          "code": "004960",
+          "name": "한신공영",
+          "weight": 0.000022196704,
+          "weight_pct": 0.0022196704
+        },
+        {
+          "code": "011700",
+          "name": "한신기계",
+          "weight": 0.000013683025,
+          "weight_pct": 0.0013683025
+        },
+        {
+          "code": "001750",
+          "name": "한양증권",
+          "weight": 0.000045340884,
+          "weight_pct": 0.0045340884
+        },
+        {
+          "code": "001755",
+          "name": "한양증권우",
+          "weight": 0.000001695463,
+          "weight_pct": 0.0001695463
+        },
+        {
+          "code": "018880",
+          "name": "한온시스템",
+          "weight": 0.000633531203,
+          "weight_pct": 0.0633531203
+        },
+        {
+          "code": "009420",
+          "name": "한올바이오파마",
+          "weight": 0.000517486037,
+          "weight_pct": 0.0517486037
+        },
+        {
+          "code": "014130",
+          "name": "한익스프레스",
+          "weight": 0.000004565288,
+          "weight_pct": 0.0004565288
+        },
+        {
+          "code": "300720",
+          "name": "한일시멘트",
+          "weight": 0.000188862227,
+          "weight_pct": 0.0188862227
+        },
+        {
+          "code": "002220",
+          "name": "한일철강",
+          "weight": 0.000021295743,
+          "weight_pct": 0.0021295743
+        },
+        {
+          "code": "003300",
+          "name": "한일홀딩스",
+          "weight": 0.000090737916,
+          "weight_pct": 0.0090737916
+        },
+        {
+          "code": "051600",
+          "name": "한전KPS",
+          "weight": 0.000355721006,
+          "weight_pct": 0.0355721006
+        },
+        {
+          "code": "052690",
+          "name": "한전기술",
+          "weight": 0.00066940906,
+          "weight_pct": 0.066940906
+        },
+        {
+          "code": "130660",
+          "name": "한전산업",
+          "weight": 0.000062596848,
+          "weight_pct": 0.0062596848
+        },
+        {
+          "code": "002320",
+          "name": "한진",
+          "weight": 0.000043443887,
+          "weight_pct": 0.0043443887
+        },
+        {
+          "code": "003480",
+          "name": "한진중공업홀딩스",
+          "weight": 0.000023952464,
+          "weight_pct": 0.0023952464
+        },
+        {
+          "code": "180640",
+          "name": "한진칼",
+          "weight": 0.001576660285,
+          "weight_pct": 0.1576660285
+        },
+        {
+          "code": "18064K",
+          "name": "한진칼우",
+          "weight": 0.000002778957,
+          "weight_pct": 0.0002778957
+        },
+        {
+          "code": "005110",
+          "name": "한창",
+          "weight": 0.000004749664,
+          "weight_pct": 0.0004749664
+        },
+        {
+          "code": "009460",
+          "name": "한창제지",
+          "weight": 0.000005460834,
+          "weight_pct": 0.0005460834
+        },
+        {
+          "code": "372910",
+          "name": "한컴라이프케어",
+          "weight": 0.000008219159,
+          "weight_pct": 0.0008219159
+        },
+        {
+          "code": "000880",
+          "name": "한화",
+          "weight": 0.001167859731,
+          "weight_pct": 0.1167859731
+        },
+        {
+          "code": "00088K",
+          "name": "한화3우B",
+          "weight": 0.000114912206,
+          "weight_pct": 0.0114912206
+        },
+        {
+          "code": "452260",
+          "name": "한화갤러리아",
+          "weight": 0.000067907577,
+          "weight_pct": 0.0067907577
+        },
+        {
+          "code": "45226K",
+          "name": "한화갤러리아우",
+          "weight": 0.000002045774,
+          "weight_pct": 0.0002045774
+        },
+        {
+          "code": "451800",
+          "name": "한화리츠",
+          "weight": 0.000150513099,
+          "weight_pct": 0.0150513099
+        },
+        {
+          "code": "489790",
+          "name": "한화비전",
+          "weight": 0.000394123077,
+          "weight_pct": 0.0394123077
+        },
+        {
+          "code": "088350",
+          "name": "한화생명",
+          "weight": 0.000678772235,
+          "weight_pct": 0.0678772235
+        },
+        {
+          "code": "000370",
+          "name": "한화손해보험",
+          "weight": 0.000123809571,
+          "weight_pct": 0.0123809571
+        },
+        {
+          "code": "009830",
+          "name": "한화솔루션",
+          "weight": 0.000987093025,
+          "weight_pct": 0.0987093025
+        },
+        {
+          "code": "009835",
+          "name": "한화솔루션우",
+          "weight": 0.000008258701,
+          "weight_pct": 0.0008258701
+        },
+        {
+          "code": "272210",
+          "name": "한화시스템",
+          "weight": 0.002254494932,
+          "weight_pct": 0.2254494932
+        },
+        {
+          "code": "012450",
+          "name": "한화에어로스페이스",
+          "weight": 0.008661008983,
+          "weight_pct": 0.8661008983
+        },
+        {
+          "code": "082740",
+          "name": "한화엔진",
+          "weight": 0.000691838184,
+          "weight_pct": 0.0691838184
+        },
+        {
+          "code": "042660",
+          "name": "한화오션",
+          "weight": 0.004332963678,
+          "weight_pct": 0.4332963678
+        },
+        {
+          "code": "003530",
+          "name": "한화투자증권",
+          "weight": 0.000174603278,
+          "weight_pct": 0.0174603278
+        },
+        {
+          "code": "003535",
+          "name": "한화투자증권우",
+          "weight": 0.000005151023,
+          "weight_pct": 0.0005151023
+        },
+        {
+          "code": "195870",
+          "name": "해성디에스",
+          "weight": 0.000178466158,
+          "weight_pct": 0.0178466158
+        },
+        {
+          "code": "101530",
+          "name": "해태제과식품",
+          "weight": 0.000029939854,
+          "weight_pct": 0.0029939854
+        },
+        {
+          "code": "143210",
+          "name": "핸즈코퍼레이션",
+          "weight": 0.000006024554,
+          "weight_pct": 0.0006024554
+        },
+        {
+          "code": "000720",
+          "name": "현대건설",
+          "weight": 0.002028288992,
+          "weight_pct": 0.2028288992
+        },
+        {
+          "code": "000725",
+          "name": "현대건설우",
+          "weight": 0.00000910379,
+          "weight_pct": 0.000910379
+        },
+        {
+          "code": "453340",
+          "name": "현대그린푸드",
+          "weight": 0.000106345096,
+          "weight_pct": 0.0106345096
+        },
+        {
+          "code": "086280",
+          "name": "현대글로비스",
+          "weight": 0.002527597615,
+          "weight_pct": 0.2527597615
+        },
+        {
+          "code": "064350",
+          "name": "현대로템",
+          "weight": 0.003329607804,
+          "weight_pct": 0.3329607804
+        },
+        {
+          "code": "079430",
+          "name": "현대리바트",
+          "weight": 0.000020213519,
+          "weight_pct": 0.0020213519
+        },
+        {
+          "code": "012330",
+          "name": "현대모비스",
+          "weight": 0.007937595809,
+          "weight_pct": 0.7937595809
+        },
+        {
+          "code": "069960",
+          "name": "현대백화점",
+          "weight": 0.00061105585,
+          "weight_pct": 0.061105585
+        },
+        {
+          "code": "004560",
+          "name": "현대비앤지스틸",
+          "weight": 0.000029305332,
+          "weight_pct": 0.0029305332
+        },
+        {
+          "code": "004310",
+          "name": "현대약품",
+          "weight": 0.000026846191,
+          "weight_pct": 0.0026846191
+        },
+        {
+          "code": "017800",
+          "name": "현대엘리베이터",
+          "weight": 0.000481947786,
+          "weight_pct": 0.0481947786
+        },
+        {
+          "code": "307950",
+          "name": "현대오토에버",
+          "weight": 0.002155538139,
+          "weight_pct": 0.2155538139
+        },
+        {
+          "code": "011210",
+          "name": "현대위아",
+          "weight": 0.000292326574,
+          "weight_pct": 0.0292326574
+        },
+        {
+          "code": "004020",
+          "name": "현대제철",
+          "weight": 0.000641786741,
+          "weight_pct": 0.0641786741
+        },
+        {
+          "code": "005440",
+          "name": "현대지에프홀딩스",
+          "weight": 0.000382732445,
+          "weight_pct": 0.0382732445
+        },
+        {
+          "code": "005380",
+          "name": "현대차",
+          "weight": 0.016314525172,
+          "weight_pct": 1.6314525172
+        },
+        {
+          "code": "005387",
+          "name": "현대차2우B",
+          "weight": 0.001254877474,
+          "weight_pct": 0.1254877474
+        },
+        {
+          "code": "005389",
+          "name": "현대차3우B",
+          "weight": 0.000080902406,
+          "weight_pct": 0.0080902406
+        },
+        {
+          "code": "005385",
+          "name": "현대차우",
+          "weight": 0.000836884037,
+          "weight_pct": 0.0836884037
+        },
+        {
+          "code": "001500",
+          "name": "현대차증권",
+          "weight": 0.00008910196,
+          "weight_pct": 0.008910196
+        },
+        {
+          "code": "011760",
+          "name": "현대코퍼레이션",
+          "weight": 0.000053651939,
+          "weight_pct": 0.0053651939
+        },
+        {
+          "code": "227840",
+          "name": "현대코퍼레이션홀딩스",
+          "weight": 0.000018879488,
+          "weight_pct": 0.0018879488
+        },
+        {
+          "code": "126560",
+          "name": "현대퓨처넷",
+          "weight": 0.000057809588,
+          "weight_pct": 0.0057809588
+        },
+        {
+          "code": "001450",
+          "name": "현대해상",
+          "weight": 0.000589740482,
+          "weight_pct": 0.0589740482
+        },
+        {
+          "code": "057050",
+          "name": "현대홈쇼핑",
+          "weight": 0.00018799512,
+          "weight_pct": 0.018799512
+        },
+        {
+          "code": "093240",
+          "name": "형지엘리트",
+          "weight": 0.000005265971,
+          "weight_pct": 0.0005265971
+        },
+        {
+          "code": "003010",
+          "name": "혜인",
+          "weight": 0.000009604452,
+          "weight_pct": 0.0009604452
+        },
+        {
+          "code": "111110",
+          "name": "호전실업",
+          "weight": 0.000010802764,
+          "weight_pct": 0.0010802764
+        },
+        {
+          "code": "008770",
+          "name": "호텔신라",
+          "weight": 0.000350399147,
+          "weight_pct": 0.0350399147
+        },
+        {
+          "code": "008775",
+          "name": "호텔신라우",
+          "weight": 0.000004007334,
+          "weight_pct": 0.0004007334
+        },
+        {
+          "code": "378850",
+          "name": "화승알앤에이",
+          "weight": 0.000009305111,
+          "weight_pct": 0.0009305111
+        },
+        {
+          "code": "241590",
+          "name": "화승엔터프라이즈",
+          "weight": 0.000033814832,
+          "weight_pct": 0.0033814832
+        },
+        {
+          "code": "006060",
+          "name": "화승인더",
+          "weight": 0.000024024183,
+          "weight_pct": 0.0024024183
+        },
+        {
+          "code": "013520",
+          "name": "화승코퍼레이션",
+          "weight": 0.000022454637,
+          "weight_pct": 0.0022454637
+        },
+        {
+          "code": "010690",
+          "name": "화신",
+          "weight": 0.000052388588,
+          "weight_pct": 0.0052388588
+        },
+        {
+          "code": "133820",
+          "name": "화인베스틸",
+          "weight": 0.000006833482,
+          "weight_pct": 0.0006833482
+        },
+        {
+          "code": "010660",
+          "name": "화천기계",
+          "weight": 0.000010462119,
+          "weight_pct": 0.0010462119
+        },
+        {
+          "code": "000850",
+          "name": "화천기공",
+          "weight": 0.000013837632,
+          "weight_pct": 0.0013837632
+        },
+        {
+          "code": "016580",
+          "name": "환인제약",
+          "weight": 0.000033211519,
+          "weight_pct": 0.0033211519
+        },
+        {
+          "code": "032560",
+          "name": "황금에스티",
+          "weight": 0.000015924673,
+          "weight_pct": 0.0015924673
+        },
+        {
+          "code": "004800",
+          "name": "효성",
+          "weight": 0.000441305047,
+          "weight_pct": 0.0441305047
+        },
+        {
+          "code": "094280",
+          "name": "효성ITX",
+          "weight": 0.000024620225,
+          "weight_pct": 0.0024620225
+        },
+        {
+          "code": "298040",
+          "name": "효성중공업",
+          "weight": 0.004461069812,
+          "weight_pct": 0.4461069812
+        },
+        {
+          "code": "298020",
+          "name": "효성티앤씨",
+          "weight": 0.000211239597,
+          "weight_pct": 0.0211239597
+        },
+        {
+          "code": "298000",
+          "name": "효성화학",
+          "weight": 0.000046066629,
+          "weight_pct": 0.0046066629
+        },
+        {
+          "code": "093370",
+          "name": "후성",
+          "weight": 0.000237511766,
+          "weight_pct": 0.0237511766
+        },
+        {
+          "code": "005870",
+          "name": "휴니드",
+          "weight": 0.000011259911,
+          "weight_pct": 0.0011259911
+        },
+        {
+          "code": "079980",
+          "name": "휴비스",
+          "weight": 0.000012283209,
+          "weight_pct": 0.0012283209
+        },
+        {
+          "code": "005010",
+          "name": "휴스틸",
+          "weight": 0.000036652167,
+          "weight_pct": 0.0036652167
+        },
+        {
+          "code": "000540",
+          "name": "흥국화재",
+          "weight": 0.000037294843,
+          "weight_pct": 0.0037294843
+        },
+        {
+          "code": "000545",
+          "name": "흥국화재우",
+          "weight": 7.59388e-7,
+          "weight_pct": 0.0000759388
+        },
+        {
+          "code": "003280",
+          "name": "흥아해운",
+          "weight": 0.000075374324,
+          "weight_pct": 0.0075374324
+        }
+      ]
+    },
+    "korea_10y": {
+      "value": 0.04257,
+      "date": "2026-07-13",
+      "raw_value_percent": 4.257,
+      "source": "admin_private_path_redacted",
+      "source_field": "OutBlock_1[ISU_NM=국고04250-3606(26-6),BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100",
+      "label": "KRX KTS 10Y benchmark government bond yield",
+      "raw_public": false,
+      "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication."
+    },
     "notes": [
       "Derived RIM inputs are computed from private KRX raw files so generic CI can rebuild RIM without publishing raw rows.",
       "Rows contain issuer code/name plus derived KOSPI weights only; raw KRX records, prices, shares, and per-row market caps stay private/admin."
@@ -157,7 +5849,7 @@
   "daily_accumulation": {
     "automatic_cron_installed": true,
     "latest_daily_manifest_path": "admin_private_path_redacted",
-    "latest_run_id": "krx_daily_20260712",
+    "latest_run_id": "krx_daily_20260713",
     "raw_storage_policy": "admin_private_path_redacted",
     "bridge_index_path": "data/admin/fenok-edge-korea-krx-daily-index.json",
     "fail_closed_policy": {

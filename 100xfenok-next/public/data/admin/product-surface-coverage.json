@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v1",
   "source_stamp_version": 1,
-  "generated_at": "2026-07-14T11:34:38.466Z",
+  "generated_at": "2026-07-14T14:19:01.988Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -70,7 +70,7 @@
     "sec13fJson": 78,
     "edgarByTicker": 203,
     "slickchartsJson": 575,
-    "dataUsageRootJson": 20646,
+    "dataUsageRootJson": 20647,
     "dataUsagePublicJson": 17802
   },
   "surfaces": [
@@ -189,7 +189,7 @@
       "owner": "Market valuation",
       "status": "stale",
       "status_label": "오래됨",
-      "coverage_score": 54.55,
+      "coverage_score": 63.64,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -202,8 +202,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "20,646개 루트 JSON",
-          "count": 20646
+          "detail": "20,647개 루트 JSON",
+          "count": 20647
         },
         {
           "label": "시장 구조",
@@ -221,19 +221,17 @@
         },
         {
           "label": "KOSPI RIM 입력",
-          "status": "partial",
-          "status_label": "부분 준비",
-          "detail": "blocked_or_input_only",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "945개 구성 · 매칭 91.28%",
           "index_id": "KOSPI",
-          "role": "backlog_blocked",
-          "public_status": "blocked_or_input_only",
-          "blockers": [
-            "missing_kospi_constituent_weight_path"
-          ],
-          "forecast_grid_status": null,
-          "source_tier": null,
+          "role": "secondary_input_only",
+          "public_status": "ready_inputs_and_forecast_grid",
+          "blockers": [],
+          "forecast_grid_status": "input_only_krx_exact_weights_no_fair_value",
+          "source_tier": "exact_index_weight_source",
           "proxy_inputs_present": false,
-          "matched_weight_ratio": null,
+          "matched_weight_ratio": 0.912776,
           "methodology_weight_rows": null,
           "cap_violation_count": null
         },
@@ -305,7 +303,7 @@
           "calendar": "us_market"
         }
       ],
-      "as_of": "2026-07-14T11:33:28Z",
+      "as_of": "2026-07-14T14:17:53Z",
       "source_as_of": "2026-06-25",
       "source_as_of_reason": null
     },
@@ -430,7 +428,7 @@
           "calendar": null
         }
       ],
-      "as_of": "2026-07-14T11:33:28Z",
+      "as_of": "2026-07-14T14:17:53Z",
       "source_as_of": "2026-06-25",
       "source_as_of_reason": null
     },
@@ -553,8 +551,8 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "20,646 / 17,802 JSON",
-          "root": 20646,
+          "detail": "20,647 / 17,802 JSON",
+          "root": 20647,
           "public": 17802
         },
         {
@@ -589,7 +587,7 @@
           "reason": "internal artifact uses generation time; no upstream source date"
         }
       ],
-      "as_of": "2026-07-14T11:34:38.466Z",
+      "as_of": "2026-07-14T14:19:01.988Z",
       "source_as_of": null,
       "source_as_of_reason": "internal artifact uses generation time; no upstream source date"
     }
