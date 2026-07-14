@@ -4,6 +4,18 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  attemptResult,
+  classifyEndpointResponse,
+  defaultAttemptId,
+  returnedTuple,
+  threwTuple,
+  transportError,
+  worstRequestResult,
+  writeAttemptShard,
+  writeJsonAtomic,
+} from "./lib/data-supply-attempt-shard.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
@@ -16,6 +28,7 @@ const DEFAULT_PUBLIC_OUT = path.join(dataRoot, "yardney", "yardney_model.json");
 const DEFAULT_PUBLIC_MIRROR = path.join(publicDataRoot, "yardney", "yardney_model.json");
 const DEFAULT_PRIVATE_OUT = path.join(privateRoot, "yardney_model_full.json");
 const DEFAULT_PRIVATE_FRED_CACHE = path.join(privateRoot, "fred_yardeni_yields.json");
+const DEFAULT_ATTEMPT_SHARD = path.join(dataRoot, "admin", "data-supply-state", "detection-attempts", "fred_yardeni.json");
 
 const FRED_SERIES = [
   { id: "WAAA", label: "Moody's Seasoned Aaa Corporate Bond Yield" },
@@ -57,8 +70,7 @@ function readJson(filePath) {
 }
 
 function writeJson(filePath, payload) {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  writeJsonAtomic(filePath, payload);
 }
 
 function stablePublicPayloadForCheck(payload) {
@@ -323,33 +335,22 @@ export function parseFredObservations(payload, seriesId) {
     .filter((row) => row.date && finite(row.value));
 }
 
-function fetchJson(url) {
+export function requestBytes(url, { timeoutMs = 30_000 } = {}) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      if (res.statusCode && res.statusCode >= 400) {
-        reject(new Error(`${url}: HTTP ${res.statusCode}`));
-        res.resume();
-        return;
-      }
-      let body = "";
-      res.setEncoding("utf8");
-      res.on("data", (chunk) => {
-        body += chunk;
-      });
-      res.on("end", () => {
-        try {
-          resolve(JSON.parse(body));
-        } catch (error) {
-          reject(new Error(`${url}: JSON parse error - ${error.message}`));
-        }
-      });
-    }).on("error", reject);
+    const request = https.get(url, { headers: { "User-Agent": "100xFenok-fred-yardeni/1.0" } }, (response) => {
+      const chunks = [];
+      response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      response.on("end", () => resolve({
+        statusCode: response.statusCode ?? 0,
+        body: Buffer.concat(chunks).toString("utf8"),
+      }));
+    });
+    request.setTimeout(timeoutMs, () => request.destroy(Object.assign(new Error("FRED Yardeni request timed out"), { code: "ETIMEDOUT" })));
+    request.on("error", reject);
   });
 }
 
-async function fetchFredSeries(seriesId) {
-  const apiKey = process.env.FRED_API_KEY;
-  if (!apiKey) throw new Error("FRED_API_KEY secret missing");
+function fredUrl(seriesId, apiKey) {
   const params = new URLSearchParams({
     series_id: seriesId,
     api_key: apiKey,
@@ -357,8 +358,37 @@ async function fetchFredSeries(seriesId) {
     observation_start: "1990-01-01",
     sort_order: "asc",
   });
-  const url = `https://api.stlouisfed.org/fred/series/observations?${params.toString()}`;
-  return parseFredObservations(await fetchJson(url), seriesId);
+  return `https://api.stlouisfed.org/fred/series/observations?${params.toString()}`;
+}
+
+async function evaluateFredSeries({ request, apiKey, seriesId }) {
+  try {
+    const classified = classifyEndpointResponse(await request(fredUrl(seriesId, apiKey), seriesId), {
+      laneId: "fred_yardeni",
+      authRequired: true,
+    });
+    if (classified.status !== "ready") return { ...classified, seriesId };
+    const rows = parseFredObservations(classified.document, seriesId);
+    if (rows.length > 0) return { ...classified, seriesId, rows };
+    return {
+      ...attemptResult("empty_payload", returnedTuple({
+        httpStatus: classified.attempt.http_status,
+        auth: classified.attempt.auth,
+        decode: "ok",
+        payload: "empty",
+      }), classified.document),
+      seriesId,
+    };
+  } catch (error) {
+    const exceptionKind = transportError(error) ? "transport" : "unexpected";
+    return {
+      ...attemptResult(
+        exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+        threwTuple(exceptionKind),
+      ),
+      seriesId,
+    };
+  }
 }
 
 function parseArgs(argv) {
@@ -403,14 +433,83 @@ function parseArgs(argv) {
 
 async function loadFredSeries(args) {
   if (args.fredFile) return readJson(args.fredFile).series ?? readJson(args.fredFile);
-  if (args.fetch) {
-    const series = {};
-    for (const item of FRED_SERIES) {
-      series[item.id] = await fetchFredSeries(item.id);
+  throw new Error("Provide --fred-file <path> for offline builds");
+}
+
+export async function runFenoYardeni({
+  seedPayload,
+  privateSeedPayload = null,
+  benchmarkPayload,
+  publicOutputPath = DEFAULT_PUBLIC_OUT,
+  publicMirrorPath = DEFAULT_PUBLIC_MIRROR,
+  privateOutputPath = DEFAULT_PRIVATE_OUT,
+  privateFredCachePath = DEFAULT_PRIVATE_FRED_CACHE,
+  attemptShardPath = DEFAULT_ATTEMPT_SHARD,
+  apiKey = process.env.FRED_API_KEY,
+  request = requestBytes,
+  observedAt = new Date().toISOString(),
+  attemptId = defaultAttemptId("fred-yardeni", observedAt),
+  generatedBy = "build-feno-yardeni-model.mjs",
+  check = false,
+  noWrite = false,
+} = {}) {
+  let requestResults;
+  if (!apiKey) {
+    requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
+  } else {
+    requestResults = [];
+    for (const series of FRED_SERIES) {
+      requestResults.push(await evaluateFredSeries({ request, apiKey, seriesId: series.id }));
     }
-    return series;
   }
-  throw new Error("Provide --fetch or --fred-file <path>");
+
+  let worst = worstRequestResult(requestResults);
+  let built = null;
+  if (worst.status === "ready") {
+    try {
+      const fredSeries = Object.fromEntries(requestResults.map((row) => [row.seriesId, row.rows]));
+      built = {
+        ...buildFenoYardeniPayload({
+          seedPayload,
+          privateSeedPayload,
+          benchmarkPayload,
+          fredSeries,
+          generatedAt: observedAt,
+          generatedBy,
+        }),
+        fredSeries,
+      };
+    } catch {
+      worst = attemptResult("unexpected_error", threwTuple("unexpected"));
+    }
+  }
+
+  const attempt = writeAttemptShard({
+    laneId: "fred_yardeni",
+    attemptShardPath,
+    observedAt,
+    attemptId,
+    result: worst,
+  });
+  if (worst.status !== "ready") return { ok: false, reason: worst.reason, updated: false, attempt };
+
+  if (check) {
+    const current = fs.existsSync(publicOutputPath) ? JSON.parse(fs.readFileSync(publicOutputPath, "utf8")) : null;
+    if (JSON.stringify(stablePublicPayloadForCheck(current)) !== JSON.stringify(stablePublicPayloadForCheck(built.publicPayload))) {
+      throw new Error(`${path.relative(repoRoot, publicOutputPath)} is not up to date`);
+    }
+  }
+  if (!noWrite) {
+    writeJson(publicOutputPath, built.publicPayload);
+    writeJson(publicMirrorPath, built.publicPayload);
+    writeJson(privateOutputPath, built.privatePayload);
+    writeJson(privateFredCachePath, {
+      fetched_at: observedAt,
+      source: "FRED series/observations API",
+      series: built.fredSeries,
+    });
+  }
+  return { ok: true, reason: "ok", updated: !noWrite, attempt, report: built.report };
 }
 
 async function main() {
@@ -418,6 +517,23 @@ async function main() {
   const seedPayload = readJson(args.seed);
   const privateSeedPayload = fs.existsSync(args.privateSeed) ? readJson(args.privateSeed) : null;
   const benchmarkPayload = readJson(args.benchmarks);
+  if (args.fetch) {
+    const result = await runFenoYardeni({
+      seedPayload,
+      privateSeedPayload,
+      benchmarkPayload,
+      publicOutputPath: args.output,
+      publicMirrorPath: args.mirror,
+      privateOutputPath: args.privateOutput,
+      privateFredCachePath: args.privateFredCache,
+      check: args.check,
+      noWrite: args.noWrite,
+    });
+    if (!result.ok) throw new Error(`FRED Yardeni fetch failed: ${result.reason}; last-known-good artifacts retained`);
+    console.log(JSON.stringify(result.report, null, 2));
+    return;
+  }
+
   const fredSeries = await loadFredSeries(args);
   const generatedAt = new Date().toISOString();
   const { publicPayload, privatePayload, report } = buildFenoYardeniPayload({
@@ -428,27 +544,17 @@ async function main() {
     generatedAt,
     generatedBy: "build-feno-yardeni-model.mjs",
   });
-
   if (args.check) {
     const current = fs.existsSync(args.output) ? JSON.parse(fs.readFileSync(args.output, "utf8")) : null;
     if (JSON.stringify(stablePublicPayloadForCheck(current)) !== JSON.stringify(stablePublicPayloadForCheck(publicPayload))) {
       throw new Error(`${path.relative(repoRoot, args.output)} is not up to date`);
     }
   }
-
   if (!args.noWrite) {
     writeJson(args.output, publicPayload);
     writeJson(args.mirror, publicPayload);
     writeJson(args.privateOutput, privatePayload);
-    if (args.fetch) {
-      writeJson(args.privateFredCache, {
-        fetched_at: generatedAt,
-        source: "FRED series/observations API",
-        series: fredSeries,
-      });
-    }
   }
-
   console.log(JSON.stringify(report, null, 2));
 }
 

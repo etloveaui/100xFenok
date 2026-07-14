@@ -40,21 +40,32 @@ jobs:
         run: node scripts/test-build-feno-yardeni-model.mjs
 
       - name: Build Feno Yardeni model from FRED
+        id: fetch_yardeni
         run: node scripts/build-feno-yardeni-model.mjs --fetch
 
       - name: Validate public payload
+        if: ${{ steps.fetch_yardeni.outcome == 'success' }}
         run: node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
 
       - name: Commit and push Feno Yardeni data
+        if: ${{ always() }}
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_yardeni.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add \
-            data/yardney/yardney_model.json \
-            100xfenok-next/public/data/yardney/yardney_model.json
+          SHARD="data/admin/data-supply-state/detection-attempts/fred_yardeni.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- \
+              data/yardney/yardney_model.json \
+              100xfenok-next/public/data/yardney/yardney_model.json
+          fi
           if git diff --staged --quiet; then
             echo "No Feno Yardeni changes to publish"
             exit 0

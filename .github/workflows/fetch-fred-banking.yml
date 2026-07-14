@@ -1,12 +1,7 @@
-# Banking Health FRED 데이터 수집
-# 일간/주간/분기 데이터를 순차 수집 후 1번 커밋
-# 결과: data/fred-banking-*.json (3개)
-
 name: Fetch FRED Banking Data
 
 on:
   schedule:
-    # 매일 07:00 UTC (한국 16:00) - 일간 데이터
     - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
@@ -26,6 +21,7 @@ env:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: fenok-data-writer-refs/heads/main
@@ -48,386 +44,49 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Create data directory
-        run: mkdir -p data data/macro
+      - name: Test FRED banking producer contracts
+        run: node scripts/test-fetch-fred-banking.mjs
 
-      # ===== Daily =====
-      - name: Fetch Daily FRED Data
-        id: daily
-        continue-on-error: true
-        if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'daily'
-        run: |
-          echo "Fetching daily FRED series..."
+      - name: Fetch FRED banking data and persist one attempt
+        id: fetch_banking
+        env:
+          DATA_TYPE: ${{ github.event.inputs.data_type || 'all' }}
+        run: node scripts/fetch-fred-banking.mjs --type "$DATA_TYPE"
 
-          node << 'EOF'
-          const https = require('https');
-          const fs = require('fs');
-
-          const API_KEY = process.env.FRED_API_KEY;
-          if (!API_KEY) throw new Error('FRED_API_KEY secret missing');
-
-          const DAILY_SERIES = [
-            { id: 'DGS10', name: '10Y Treasury Yield' },
-            { id: 'BAMLH0A0HYM2', name: 'HY Spread' },
-            { id: 'IRLTLT01KRM156N', name: 'Korea 10Y Government Bond Yield' }
-          ];
-
-          const MAX_RETRIES = 2;
-          const BACKOFFS_MS = [1000, 2000, 4000];
-          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-          async function fetchSeries(seriesId, days = 9999) {
-            const end = new Date().toISOString().split('T')[0];
-            const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-            const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
-
-            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-              try {
-                if (attempt > 0) {
-                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
-                  console.error(`[retry] ${seriesId} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
-                  await sleep(delay);
-                }
-                const result = await new Promise((resolve, reject) => {
-                  https.get(url, (res) => {
-                    let data = '';
-                    res.on('data', chunk => data += chunk);
-                    res.on('end', () => {
-                      try {
-                        if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}`);
-                        const json = JSON.parse(data);
-                        if (!Array.isArray(json.observations)) throw new Error('observations array missing');
-                        const observations = json.observations;
-                        const points = observations
-                          .filter(o => String(o.value ?? '').trim() !== '' && String(o.value).trim() !== '.')
-                          .map(o => ({ date: o.date, value: Number(o.value) }))
-                          .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
-                        if (points.length === 0) throw new Error('no usable observations');
-                        console.log(`${seriesId}: ${points.length} points`);
-                        resolve({ id: seriesId, data: points });
-                      } catch (e) {
-                        reject(new Error(`${seriesId}: Parse error - ${e.message}`));
-                      }
-                    });
-                  }).on('error', reject);
-                });
-                return result;
-              } catch (e) {
-                if (attempt < MAX_RETRIES) continue;
-                console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${e.message}`);
-                return { id: seriesId, data: null, error: e.message };
-              }
-            }
-            return { id: seriesId, data: null, error: 'retry loop exhausted' };
-          }
-
-          async function main() {
-            console.log('Fetching daily series...');
-            const results = {};
-            const failures = [];
-            const targetPath = 'data/macro/fred-banking-daily.json';
-            const previous = fs.existsSync(targetPath) ? JSON.parse(fs.readFileSync(targetPath, 'utf8')) : {};
-            const previousSeries = previous.series && typeof previous.series === 'object' ? previous.series : {};
-
-            for (const series of DAILY_SERIES) {
-              const result = await fetchSeries(series.id);
-              if (Array.isArray(result.data) && result.data.length > 0) {
-                results[series.id] = result.data;
-              } else {
-                const lkg = Array.isArray(previousSeries[series.id]) ? previousSeries[series.id] : [];
-                results[series.id] = lkg;
-                failures.push({ series_id: series.id, error: result.error ?? 'fetch failed', lkg_points: lkg.length });
-              }
-              await new Promise(r => setTimeout(r, 500));
-            }
-
-            const fetchedAt = new Date().toISOString();
-            const latestBySeries = Object.values(results).map(points => points.at(-1)?.date ?? null);
-            const sourceAsOf = latestBySeries.length > 0 && latestBySeries.every(Boolean)
-              ? [...latestBySeries].sort().at(0)
-              : null;
-            const output = {
-              updated: sourceAsOf,
-              source_as_of: sourceAsOf,
-              source_as_of_reason: sourceAsOf ? null : 'one or more required FRED series have no usable observation date',
-              fetched_at: fetchedAt,
-              status: failures.length > 0 ? 'degraded' : 'ready',
-              failed_series: failures,
-              type: 'daily',
-              series: results
-            };
-
-            fs.mkdirSync('data/macro', { recursive: true });
-            const payload = JSON.stringify(output, null, 2);
-            fs.writeFileSync('data/macro/fred-banking-daily.json', payload);
-            fs.writeFileSync('100xfenok-next/public/data/macro/fred-banking-daily.json', payload);
-            console.log('Saved fred-banking-daily.json to source and public mirror');
-            if (failures.length > 0) throw new Error(`FRED daily partial failure: ${failures.map(row => row.series_id).join(', ')}`);
-          }
-
-          main().catch(error => { console.error(error); process.exitCode = 1; });
-          EOF
-
-      # ===== Weekly =====
-      - name: Fetch Weekly FRED Data
-        id: weekly
-        continue-on-error: true
-        if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'weekly'
-        run: |
-          echo "Fetching weekly FRED series..."
-
-          node << 'EOF'
-          const https = require('https');
-          const fs = require('fs');
-
-          const API_KEY = process.env.FRED_API_KEY;
-          if (!API_KEY) throw new Error('FRED_API_KEY secret missing');
-
-          const WEEKLY_SERIES = [
-            { id: 'TOTLL', name: 'Total Loans' },
-            { id: 'DPSACBW027SBOG', name: 'Deposits' }
-          ];
-
-          function fetchSeries(seriesId, days = 11000) {
-            return new Promise((resolve) => {
-              const end = new Date().toISOString().split('T')[0];
-              const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
-
-              https.get(url, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                  try {
-                    if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}`);
-                    const json = JSON.parse(data);
-                    if (!Array.isArray(json.observations)) throw new Error('observations array missing');
-                    const observations = json.observations;
-                    const result = observations
-                      .filter(o => String(o.value ?? '').trim() !== '' && String(o.value).trim() !== '.')
-                      .map(o => ({ date: o.date, value: Number(o.value) }))
-                      .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
-                    if (result.length === 0) throw new Error('no usable observations');
-                    console.log(`${seriesId}: ${result.length} points`);
-                    resolve({ id: seriesId, data: result });
-                  } catch (e) {
-                    console.error(`${seriesId}: Error - ${e.message}`);
-                    resolve({ id: seriesId, data: null, error: e.message });
-                  }
-                });
-              }).on('error', (e) => {
-                console.error(`${seriesId}: Network error - ${e.message}`);
-                resolve({ id: seriesId, data: null, error: e.message });
-              });
-            });
-          }
-
-          async function main() {
-            console.log('Fetching weekly series...');
-            const results = {};
-            const failures = [];
-            const targetPath = 'data/macro/fred-banking-weekly.json';
-            const previous = fs.existsSync(targetPath) ? JSON.parse(fs.readFileSync(targetPath, 'utf8')) : {};
-            const previousSeries = previous.series && typeof previous.series === 'object' ? previous.series : {};
-
-            for (const series of WEEKLY_SERIES) {
-              const result = await fetchSeries(series.id);
-              if (Array.isArray(result.data) && result.data.length > 0) {
-                results[series.id] = result.data;
-              } else {
-                const lkg = Array.isArray(previousSeries[series.id]) ? previousSeries[series.id] : [];
-                results[series.id] = lkg;
-                failures.push({ series_id: series.id, error: result.error ?? 'fetch failed', lkg_points: lkg.length });
-              }
-              await new Promise(r => setTimeout(r, 500));
-            }
-
-            const fetchedAt = new Date().toISOString();
-            const latestBySeries = Object.values(results).map(points => points.at(-1)?.date ?? null);
-            const sourceAsOf = latestBySeries.length > 0 && latestBySeries.every(Boolean)
-              ? [...latestBySeries].sort().at(0)
-              : null;
-            const output = {
-              updated: sourceAsOf,
-              source_as_of: sourceAsOf,
-              source_as_of_reason: sourceAsOf ? null : 'one or more required FRED series have no usable observation date',
-              fetched_at: fetchedAt,
-              status: failures.length > 0 ? 'degraded' : 'ready',
-              failed_series: failures,
-              type: 'weekly',
-              series: results
-            };
-
-            fs.mkdirSync('data/macro', { recursive: true });
-            const payload = JSON.stringify(output, null, 2);
-            fs.writeFileSync('data/macro/fred-banking-weekly.json', payload);
-            fs.writeFileSync('100xfenok-next/public/data/macro/fred-banking-weekly.json', payload);
-            console.log('Saved fred-banking-weekly.json to source and public mirror');
-            if (failures.length > 0) throw new Error(`FRED weekly partial failure: ${failures.map(row => row.series_id).join(', ')}`);
-          }
-
-          main().catch(error => { console.error(error); process.exitCode = 1; });
-          EOF
-
-      # ===== Quarterly =====
-      - name: Fetch Quarterly FRED Data
-        id: quarterly
-        continue-on-error: true
-        if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'quarterly'
-        run: |
-          echo "Fetching quarterly FRED series..."
-
-          node << 'EOF'
-          const https = require('https');
-          const fs = require('fs');
-
-          const API_KEY = process.env.FRED_API_KEY;
-          if (!API_KEY) throw new Error('FRED_API_KEY secret missing');
-
-          const QUARTERLY_SERIES = [
-            // 연체율
-            { id: 'DRALACBN', name: 'Total Delinquency Rate' },
-            { id: 'DRCCLACBS', name: 'Credit Card Delinquency' },
-            { id: 'DRCLACBS', name: 'Consumer Delinquency' },
-            { id: 'DRBLACBS', name: 'Business Delinquency' },
-            { id: 'DRCRELEXFACBS', name: 'CRE Delinquency' },
-            // Tier1
-            { id: 'BOGZ1FL010000016Q', name: 'FED Tier1' },
-            // NCO (상각율)
-            { id: 'CORALACBN', name: 'Total NCO' },
-            { id: 'CORCCACBS', name: 'Credit Card NCO' },
-            { id: 'CORCACBS', name: 'Consumer NCO' },
-            { id: 'CORBLACBS', name: 'Business NCO' },
-            { id: 'CORCREXFACBS', name: 'CRE NCO' }
-          ];
-
-          const MAX_RETRIES = 2;
-          const BACKOFFS_MS = [1000, 2000, 4000];
-          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-          async function fetchSeries(seriesId, days = 9999) {
-            const end = new Date().toISOString().split('T')[0];
-            const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-            const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
-
-            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-              try {
-                if (attempt > 0) {
-                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
-                  console.error(`[retry] ${seriesId} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
-                  await sleep(delay);
-                }
-                const result = await new Promise((resolve, reject) => {
-                  https.get(url, (res) => {
-                    let data = '';
-                    res.on('data', chunk => data += chunk);
-                    res.on('end', () => {
-                      try {
-                        if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}`);
-                        const json = JSON.parse(data);
-                        if (!Array.isArray(json.observations)) throw new Error('observations array missing');
-                        const observations = json.observations;
-                        const points = observations
-                          .filter(o => String(o.value ?? '').trim() !== '' && String(o.value).trim() !== '.')
-                          .map(o => ({ date: o.date, value: Number(o.value) }))
-                          .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
-                        if (points.length === 0) throw new Error('no usable observations');
-                        console.log(`${seriesId}: ${points.length} points`);
-                        resolve({ id: seriesId, data: points });
-                      } catch (e) {
-                        reject(new Error(`${seriesId}: Parse error - ${e.message}`));
-                      }
-                    });
-                  }).on('error', reject);
-                });
-                return result;
-              } catch (e) {
-                if (attempt < MAX_RETRIES) continue;
-                console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${e.message}`);
-                return { id: seriesId, data: null, error: e.message };
-              }
-            }
-            return { id: seriesId, data: null, error: 'retry loop exhausted' };
-          }
-
-          async function main() {
-            console.log('Fetching quarterly series...');
-            const results = {};
-            const failures = [];
-            const targetPath = 'data/macro/fred-banking-quarterly.json';
-            const previous = fs.existsSync(targetPath) ? JSON.parse(fs.readFileSync(targetPath, 'utf8')) : {};
-            const previousSeries = previous.series && typeof previous.series === 'object' ? previous.series : {};
-
-            for (const series of QUARTERLY_SERIES) {
-              const result = await fetchSeries(series.id);
-              if (Array.isArray(result.data) && result.data.length > 0) {
-                results[series.id] = result.data;
-              } else {
-                const lkg = Array.isArray(previousSeries[series.id]) ? previousSeries[series.id] : [];
-                results[series.id] = lkg;
-                failures.push({ series_id: series.id, error: result.error ?? 'fetch failed', lkg_points: lkg.length });
-              }
-              await new Promise(r => setTimeout(r, 500));
-            }
-
-            const fetchedAt = new Date().toISOString();
-            const latestBySeries = Object.values(results).map(points => points.at(-1)?.date ?? null);
-            const sourceAsOf = latestBySeries.length > 0 && latestBySeries.every(Boolean)
-              ? [...latestBySeries].sort().at(0)
-              : null;
-            const output = {
-              updated: sourceAsOf,
-              source_as_of: sourceAsOf,
-              source_as_of_reason: sourceAsOf ? null : 'one or more required FRED series have no usable observation date',
-              fetched_at: fetchedAt,
-              status: failures.length > 0 ? 'degraded' : 'ready',
-              failed_series: failures,
-              type: 'quarterly',
-              series: results
-            };
-
-            fs.mkdirSync('data/macro', { recursive: true });
-            const payload = JSON.stringify(output, null, 2);
-            fs.writeFileSync('data/macro/fred-banking-quarterly.json', payload);
-            fs.writeFileSync('100xfenok-next/public/data/macro/fred-banking-quarterly.json', payload);
-            console.log('Saved fred-banking-quarterly.json to source and public mirror');
-            if (failures.length > 0) throw new Error(`FRED quarterly partial failure: ${failures.map(row => row.series_id).join(', ')}`);
-          }
-
-          main().catch(error => { console.error(error); process.exitCode = 1; });
-          EOF
-
-      # ===== 단일 커밋 & Push =====
       - name: Commit and push owned FRED banking data
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_banking.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            data/macro/fred-banking-*.json \
-            100xfenok-next/public/data/macro/fred-banking-*.json
-          git diff --staged --quiet || git commit -m "chore: update FRED banking data"
-          pushed=0
+          SHARD="data/admin/data-supply-state/detection-attempts/fred_banking.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- \
+              data/macro/fred-banking-*.json \
+              100xfenok-next/public/data/macro/fred-banking-*.json
+          fi
+          if git diff --staged --quiet; then
+            echo "No FRED banking changes to publish"
+            exit 0
+          fi
+          git commit -m "chore: update FRED banking data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
               git rebase --abort >/dev/null 2>&1 || true
               sleep 3
               continue
             fi
             if git push; then
-              pushed=1
-              break
+              gh workflow run update-manifest.yml --ref main
+              exit 0
             fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
             sleep 3
           done
-          if [[ "${pushed}" -ne 1 ]]; then
-            echo "git push failed after retrying concurrent main updates"
-            exit 1
-          fi
-          for outcome in "${{ steps.daily.outcome }}" "${{ steps.weekly.outcome }}" "${{ steps.quarterly.outcome }}"; do
-            if [[ "${outcome}" == "failure" ]]; then
-              echo "One or more FRED fetch slices degraded; LKG payload was committed and the natural run remains red"
-              exit 1
-            fi
-          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1
