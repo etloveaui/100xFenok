@@ -7,6 +7,28 @@ const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
 const RETRIES = Number(process.env.QA_STOCKANALYSIS_RETRIES || 2);
 const RETRY_DELAY_MS = Number(process.env.QA_STOCKANALYSIS_RETRY_DELAY_MS || 2500);
+const PRODUCT_SURFACE_COVERAGE_PATH = "/data/admin/product-surface-coverage.json";
+const PRODUCER_SOURCE_PATHS = {
+  marketFacts: "/data/computed/market_facts/index.json",
+  rimInputs: "/data/computed/rim-index/inputs.json",
+  yardeni: "/data/yardney/yardney_model.json",
+  stocksAnalyzer: "/data/global-scouter/core/stocks_analyzer.json",
+};
+const ALLOWED_SURFACE_STATUSES = new Set(["ready", "partial", "pending", "stale", "unavailable", "error"]);
+const REQUIRED_SURFACE_IDS = new Set([
+  "stock_detail",
+  "market_valuation",
+  "market_events",
+  "sectors",
+  "etf_center",
+  "screener",
+  "admin_data_lab",
+]);
+const REQUIRED_NULL_SOURCE_REASONS = new Map([
+  ["market_events", "provider publishes no aggregate source date"],
+  ["etf_center", "provider publishes no aggregate source date"],
+  ["admin_data_lab", "internal artifact uses generation time; no upstream source date"],
+]);
 
 const PAGE_ROUTES = SMOKE_PAGE_ROUTES;
 const degradations = [];
@@ -39,6 +61,39 @@ function degrade(condition, message) {
 
 function hasValue(value) {
   return value !== null && value !== undefined && value !== "";
+}
+
+function nonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function sourceDay(value) {
+  if (!nonEmptyString(value)) return null;
+  const day = value.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const parsedDay = new Date(`${day}T00:00:00.000Z`);
+  if (!Number.isFinite(parsedDay.getTime()) || parsedDay.toISOString().slice(0, 10) !== day) return null;
+  if (value.length !== 10 && !Number.isFinite(new Date(value).getTime())) return null;
+  return day;
+}
+
+function checkedSourceDay(value, label) {
+  const day = sourceDay(value);
+  assert(day !== null, `${label} must be a real source date`);
+  assert(day <= new Date().toISOString().slice(0, 10), `${label} cannot be in the future: ${day}`);
+  return day;
+}
+
+function producerSourceDay(value, label) {
+  if (!hasValue(value)) {
+    degrade(false, `${label} is degraded: producer source evidence is missing.`);
+    return null;
+  }
+  return checkedSourceDay(value, label);
+}
+
+function oldestCompleteSourceDay(values) {
+  return values.length > 0 && values.every(Boolean) ? [...values].sort()[0] : null;
 }
 
 function requiredArray(value, label) {
@@ -176,6 +231,208 @@ async function fetchJsonResponse(url) {
   }
   assertFiniteNumbers(payload, url);
   return { response, payload };
+}
+
+export async function checkBundleIdentity(root) {
+  const expected = argValue("--expected-build-id")
+    || process.env.QA_EXPECTED_BUILD_ID
+    || process.env.EXPECTED_BUILD_ID
+    || null;
+  if (!expected) {
+    return { verified: false, expected: null, observed: null };
+  }
+
+  const cacheBust = `stockanalysis-${Date.now()}-${process.pid}`;
+  const { response, text } = await fetchText(`${root}/BUILD_ID?cb=${cacheBust}`);
+  assert(response.ok, `BUILD_ID returned HTTP ${response.status}`);
+  const observed = text.trim();
+  assert(nonEmptyString(observed), "BUILD_ID is empty");
+  assert(
+    observed === expected,
+    `stale bundle rejected: expected BUILD_ID ${expected}, observed ${observed}`,
+  );
+  return { verified: true, expected, observed };
+}
+
+function buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer }) {
+  const marketFactsDay = producerSourceDay(
+    marketFacts?.core_surface_source_as_of,
+    "market_facts.core_surface_source_as_of",
+  );
+  const rimKospiDay = producerSourceDay(
+    rimInputs?.indices?.KOSPI?.observed?.price?.as_of,
+    "rim_inputs.KOSPI.observed.price.as_of",
+  );
+  const rimSoxDay = producerSourceDay(
+    rimInputs?.indices?.SOX?.observed?.price?.as_of,
+    "rim_inputs.SOX.observed.price.as_of",
+  );
+  assert(
+    yardeni?.data === undefined || Array.isArray(yardeni.data),
+    "yardeni.data malformed schema: expected an array",
+  );
+  const yardeniLatest = Array.isArray(yardeni?.data) ? yardeni.data.at(-1) : null;
+  const yardeniDay = producerSourceDay(
+    yardeniLatest?.date ?? yardeni?.meta?.last_update?.last_public_date,
+    "yardeni latest public date",
+  );
+  const screenerDay = producerSourceDay(
+    stocksAnalyzer?.source_date,
+    "stocks_analyzer.source_date",
+  );
+  const rimDay = oldestCompleteSourceDay([rimKospiDay, rimSoxDay]);
+
+  return new Map([
+    ["stock_detail", marketFactsDay],
+    ["market_valuation", oldestCompleteSourceDay([rimDay, yardeniDay, marketFactsDay])],
+    ["market_events", null],
+    ["sectors", marketFactsDay],
+    ["etf_center", null],
+    ["screener", screenerDay],
+    ["admin_data_lab", null],
+  ]);
+}
+
+function checkSurfaceSourceContract(surface, producerEvidence) {
+  const id = surface?.id || "(unknown)";
+  const checks = requiredArray(surface?.checks, `Product surface ${id} checks`);
+  const freshnessChecks = checks.filter((check) => Object.prototype.hasOwnProperty.call(check || {}, "max_age_days"));
+  assert(freshnessChecks.length > 0, `Product surface ${id} has no freshness check`);
+
+  for (const check of checks) {
+    assert(
+      ALLOWED_SURFACE_STATUSES.has(check?.status),
+      `Product surface ${id}/${check?.label || "(check)"} has invalid status: ${check?.status}`,
+    );
+    assert(
+      check?.status !== "error",
+      `Product surface ${id}/${check?.label || "(check)"} reports integrity error`,
+    );
+  }
+
+  const requiredSourceDays = [];
+  for (const check of freshnessChecks) {
+    const label = check?.label || "(freshness check)";
+    assert(
+      Number.isFinite(check?.max_age_days) && check.max_age_days >= 0,
+      `Product surface ${id}/${label} max_age_days must be non-negative`,
+    );
+    if (check?.as_of === null) {
+      assert(check?.age_days === null, `Product surface ${id}/${label} missing date requires age_days null`);
+      assert(nonEmptyString(check?.reason), `Product surface ${id}/${label} missing date requires a reason`);
+      assert(
+        check?.status === "pending" || check?.status === "unavailable",
+        `Product surface ${id}/${label} missing date must be pending or unavailable`,
+      );
+    } else {
+      const day = checkedSourceDay(check?.as_of, `Product surface ${id}/${label} as_of`);
+      assert(
+        Number.isFinite(check?.age_days) && check.age_days >= 0,
+        `Product surface ${id}/${label} dated source requires non-negative age_days`,
+      );
+      if (check?.warn_only !== true) requiredSourceDays.push(day);
+    }
+  }
+
+  assert(
+    Object.prototype.hasOwnProperty.call(surface || {}, "source_as_of"),
+    `Product surface ${id} source_as_of key is required`,
+  );
+  const requiredNullReason = REQUIRED_NULL_SOURCE_REASONS.get(id);
+  const expectedProducerDay = producerEvidence.get(id) ?? null;
+  const actualSourceDay = sourceDay(surface?.source_as_of);
+
+  if (surface?.source_as_of === null) {
+    assert(nonEmptyString(surface?.source_as_of_reason), `Product surface ${id} null source_as_of needs a reason`);
+    if (requiredNullReason) {
+      assert(
+        surface.source_as_of_reason === requiredNullReason,
+        `Product surface ${id} source_as_of_reason must match the explicit source contract`,
+      );
+    }
+    if (expectedProducerDay) {
+      degrade(false, `Product surface ${id} is degraded: source_as_of is behind producer evidence ${expectedProducerDay}.`);
+    }
+  } else {
+    const actualDay = checkedSourceDay(surface.source_as_of, `Product surface ${id} source_as_of`);
+    assert(
+      surface?.source_as_of_reason === null || surface?.source_as_of_reason === undefined,
+      `Product surface ${id} dated source_as_of must not carry a missing-date reason`,
+    );
+    assert(!requiredNullReason, `Product surface ${id} fabricated a source date unsupported by its producer contract`);
+    assert(expectedProducerDay, `Product surface ${id} source_as_of has no producer evidence`);
+    assert(
+      actualDay <= expectedProducerDay,
+      `Product surface ${id} fabricated source_as_of ${actualDay} newer than producer evidence ${expectedProducerDay}`,
+    );
+    if (actualDay < expectedProducerDay) {
+      degrade(false, `Product surface ${id} is degraded: source_as_of ${actualDay} trails producer evidence ${expectedProducerDay}.`);
+    }
+  }
+
+  if (actualSourceDay && requiredSourceDays.length > 0) {
+    const expectedFloor = [...requiredSourceDays].sort()[0];
+    assert(
+      actualSourceDay === expectedFloor,
+      `Product surface ${id} source_as_of must equal its oldest required source check ${expectedFloor}`,
+    );
+  }
+}
+
+export async function checkProductSurfaceFreshness(root) {
+  const cacheBust = encodeURIComponent(
+    argValue("--expected-build-id")
+      || process.env.QA_EXPECTED_BUILD_ID
+      || process.env.EXPECTED_BUILD_ID
+      || `stockanalysis-${Date.now()}-${process.pid}`,
+  );
+  const readPublicJson = (pathname) => fetchJson(`${root}${pathname}?cb=${cacheBust}`);
+  const [coverage, marketFacts, rimInputs, yardeni, stocksAnalyzer] = await Promise.all([
+    readPublicJson(PRODUCT_SURFACE_COVERAGE_PATH),
+    readPublicJson(PRODUCER_SOURCE_PATHS.marketFacts),
+    readPublicJson(PRODUCER_SOURCE_PATHS.rimInputs),
+    readPublicJson(PRODUCER_SOURCE_PATHS.yardeni),
+    readPublicJson(PRODUCER_SOURCE_PATHS.stocksAnalyzer),
+  ]);
+  assert(coverage?.schema_version === "product-surface-coverage/v1", "Product surface coverage schema_version mismatch");
+  assert(coverage?.source_stamp_version === 1, "Product surface coverage source_stamp_version must be 1");
+  const surfaces = requiredArray(coverage?.surfaces, "Product surface coverage surfaces");
+  const producerEvidence = buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer });
+  const seenIds = new Set();
+  const actualTotals = Object.fromEntries([...ALLOWED_SURFACE_STATUSES].map((status) => [status, 0]));
+
+  for (const surface of surfaces) {
+    const id = surface?.id;
+    assert(nonEmptyString(id), "Product surface coverage contains a surface without an id");
+    assert(!seenIds.has(id), `Product surface coverage contains duplicate id ${id}`);
+    seenIds.add(id);
+    assert(ALLOWED_SURFACE_STATUSES.has(surface?.status), `Product surface ${id} has invalid status: ${surface?.status}`);
+    assert(surface.status !== "error", `Product surface ${id} reports integrity error`);
+    actualTotals[surface.status] += 1;
+    if (surface.status !== "ready") {
+      degrade(false, `Product surface ${id} is degraded: ${surface.status}.`);
+    }
+    checkSurfaceSourceContract(surface, producerEvidence);
+  }
+
+  for (const id of REQUIRED_SURFACE_IDS) {
+    degrade(seenIds.has(id), `Product surface coverage is degraded: required lane ${id} is missing.`);
+  }
+  assertReconciledCount(coverage?.totals?.surfaces, surfaces.length, "Product surface totals.surfaces");
+  for (const status of ALLOWED_SURFACE_STATUSES) {
+    assertReconciledCount(
+      coverage?.totals?.[status],
+      actualTotals[status],
+      `Product surface totals.${status}`,
+    );
+  }
+  assert(actualTotals.error === 0, "Product surface coverage contains a deployment-blocking integrity error");
+
+  return {
+    status: surfaces.some((surface) => surface.status !== "ready") ? "degraded" : "ready",
+    generated_at: coverage?.generated_at ?? null,
+    totals: coverage?.totals ?? null,
+  };
 }
 
 async function checkPage(root, route) {
@@ -517,6 +774,8 @@ async function checkSurfaceContracts(root) {
 
 async function main() {
   const root = baseUrl();
+  const bundle = await checkBundleIdentity(root);
+  const freshness = await checkProductSurfaceFreshness(root);
   const pages = [];
   for (const route of PAGE_ROUTES) pages.push(await checkPage(root, route));
   const snapshot = await checkEtfSnapshot(root);
@@ -535,6 +794,8 @@ async function main() {
     degraded: degradations.length > 0,
     warnings: degradations,
     base_url: root,
+    bundle,
+    freshness,
     pages,
     snapshot,
     universe,
