@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-14T00:04:24Z",
+  "generated_at": "2026-07-14T14:52:12Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -23,41 +23,50 @@
       "etf_screener": 5480,
       "new_etfs": 100
     },
-    "detail_files": 4731,
-    "covered_detail_files": 4709,
-    "missing_detail_files": 771,
+    "detail_files": 4736,
+    "covered_detail_files": 4714,
+    "missing_detail_files": 766,
     "extra_detail_files": 22,
-    "stockanalysis_detail_files": 4731,
+    "stockanalysis_detail_files": 4736,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 85.93,
-    "primary_stockanalysis_pct": 85.93,
+    "coverage_pct": 86.02,
+    "primary_stockanalysis_pct": 86.02,
     "missing_by_source": {
-      "etf_universe": 733,
-      "etf_screener": 771,
-      "new_etfs": 69
+      "etf_universe": 728,
+      "etf_screener": 766,
+      "new_etfs": 68
     },
     "missing_status_breakdown": {
       "retry_cooldown": 61,
       "retry_pending": 3,
-      "untracked": 707
+      "untracked": 702
     },
     "missing_failure_breakdown": {
       "external_quote_type_mismatch": 64,
-      "untracked": 707
+      "untracked": 702
+    },
+    "missing_availability_breakdown": {
+      "unprobed": 702,
+      "unresolved": 64
     },
     "pending_tracked": 92,
     "pending_cooldown": 80,
-    "pending_tracked_missing": 64
+    "pending_tracked_missing": 64,
+    "provider_coverage_gaps": 0
   },
   "missing_reason_summary": {
     "external_quote_type_mismatch": 64,
-    "untracked": 707
+    "untracked": 702
   },
   "missing_status_summary": {
     "retry_cooldown": 61,
     "retry_pending": 3,
-    "untracked": 707
+    "untracked": 702
+  },
+  "missing_availability_summary": {
+    "unprobed": 702,
+    "unresolved": 64
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
@@ -75,18 +84,18 @@
       "CLOO"
     ],
     "untracked": [
-      "AAAU",
-      "AAOX",
-      "AAPB",
-      "AAPE",
-      "AAPR",
       "AAPW",
       "AAPX",
       "ABXB",
       "ACGR",
       "ACHX",
       "ACLC",
-      "ACVU"
+      "ACVU",
+      "ADIU",
+      "AETH",
+      "AIOO",
+      "AJAN",
+      "AJUL"
     ]
   },
   "missing_status_samples": {
@@ -110,26 +119,51 @@
       "THYP"
     ],
     "untracked": [
-      "AAAU",
-      "AAOX",
-      "AAPB",
-      "AAPE",
-      "AAPR",
       "AAPW",
       "AAPX",
       "ABXB",
       "ACGR",
       "ACHX",
       "ACLC",
-      "ACVU"
+      "ACVU",
+      "ADIU",
+      "AETH",
+      "AIOO",
+      "AJAN",
+      "AJUL"
+    ]
+  },
+  "missing_availability_samples": {
+    "unprobed": [
+      "AAPW",
+      "AAPX",
+      "ABXB",
+      "ACGR",
+      "ACHX",
+      "ACLC",
+      "ACVU",
+      "ADIU",
+      "AETH",
+      "AIOO",
+      "AJAN",
+      "AJUL"
+    ],
+    "unresolved": [
+      "ACII",
+      "ACYQ",
+      "AFGR",
+      "AIQD",
+      "AIQU",
+      "AMHI",
+      "ASMZ",
+      "BAVA",
+      "BHYP",
+      "BSOL",
+      "CLNK",
+      "CLOO"
     ]
   },
   "missing_tickers": [
-    "AAAU",
-    "AAOX",
-    "AAPB",
-    "AAPE",
-    "AAPR",
     "AAPW",
     "AAPX",
     "ABXB",
@@ -897,6 +931,7 @@
     "ZSEP",
     "ZVOL"
   ],
+  "provider_absent_tickers": [],
   "yahoo_fallback_tickers": [],
   "invalid_detail_tickers": [],
   "extra_detail_tickers": [
@@ -925,11 +960,6 @@
   ],
   "samples": {
     "missing": [
-      "AAAU",
-      "AAOX",
-      "AAPB",
-      "AAPE",
-      "AAPR",
       "AAPW",
       "AAPX",
       "ABXB",
@@ -974,7 +1004,12 @@
       "ARMW",
       "ARMY",
       "ASMZ",
-      "ASTY"
+      "ASTY",
+      "ASUP",
+      "ATMP",
+      "AUGU",
+      "AVGC",
+      "AVGW"
     ],
     "missing_retry_cooldown": [
       "ACII",
@@ -996,18 +1031,18 @@
       "THYP"
     ],
     "missing_untracked": [
-      "AAAU",
-      "AAOX",
-      "AAPB",
-      "AAPE",
-      "AAPR",
       "AAPW",
       "AAPX",
       "ABXB",
       "ACGR",
       "ACHX",
       "ACLC",
-      "ACVU"
+      "ACVU",
+      "ADIU",
+      "AETH",
+      "AIOO",
+      "AJAN",
+      "AJUL"
     ],
     "missing_external_quote_type_mismatch": [
       "ACII",
