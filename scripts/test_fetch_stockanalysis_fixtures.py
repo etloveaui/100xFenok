@@ -217,6 +217,36 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         )
         self.assertIsNone(payload["source_as_of"])
 
+    def test_reconcile_uses_provider_overview_holdings_updated_as_source_date(self) -> None:
+        original_fetch_svelte = self.fetcher.fetch_svelte_detail
+
+        def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
+            if surface == "overview":
+                return f"/etf/{ticker.lower()}/__data.json", {
+                    "holdings": 12,
+                    "holdingsTable": {"count": 12, "updated": "Jul 10, 2026"},
+                    "inception": "Jan 1, 2026",
+                }
+            raise ValueError(
+                "svelte_contract_drift:holdings:missing_required:holdings"
+            )
+
+        self.fetcher.fetch_svelte_detail = fake_fetch_svelte
+        try:
+            payload = self.fetcher.fetch_etf(
+                "AAOX",
+                1,
+                include_history=False,
+                include_quote=False,
+                allow_partial_holdings=True,
+            )
+        finally:
+            self.fetcher.fetch_svelte_detail = original_fetch_svelte
+
+        self.assertEqual(payload["source_as_of"], "2026-07-10T00:00:00Z")
+        self.assertNotIn("source_as_of_reason", payload)
+        self.fetcher.validate_stockanalysis_etf_payload("AAOX", payload)
+
     def test_etf_history_expected_400_is_recorded_as_unavailable_not_schema_drift(self) -> None:
         original_fetch_json = self.fetcher.fetch_json
         try:

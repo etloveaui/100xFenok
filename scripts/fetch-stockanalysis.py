@@ -1934,6 +1934,9 @@ def fetch_etf(
     provider_source_as_of = (
         quote_source_timestamp(raw.get("quote"))
         or stockanalysis_date_source_timestamp(holdings_data.get("date"))
+        or stockanalysis_date_source_timestamp(
+            (overview_data.get("holdingsTable") or {}).get("updated")
+        )
         or latest_history_source_timestamp(
             {"normalized": {"history_periods": history_periods}}
         )
