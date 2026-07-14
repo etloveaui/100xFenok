@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { todayKST } from "@/lib/data-state";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
 import {
@@ -124,6 +125,11 @@ function loadCoverage(): Promise<EtfCoveragePayload | null> {
 
 function fmtDate(value: string | null | undefined): string {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "-";
+}
+
+function collectionDateLabel(value: string | null | undefined): string {
+  const date = fmtDate(value);
+  return date === "-" ? "수집 시각 미제공" : `수집 ${date}`;
 }
 
 function fmtPrice(value: number | null | undefined): string {
@@ -366,9 +372,7 @@ export default function NewEtfsList({
       }));
   }, [state]);
 
-  const maxDate = useMemo(() => Math.max(...rows.map((row) => dateValue(row.inceptionDate)), 0), [rows]);
-  const fetchedAtDate = dateValue(state.snapshot?.newEtfs?.fetched_at);
-  const dateFilterAnchor = Math.max(fetchedAtDate, maxDate);
+  const dateFilterAnchor = dateValue(todayKST());
   const issuers = useMemo(() => {
     const counts = new Map<string, number>();
     for (const row of rows) counts.set(row.issuer, (counts.get(row.issuer) ?? 0) + 1);
@@ -423,7 +427,7 @@ export default function NewEtfsList({
     <section className="panel" data-etf-new-radar="true">
       <div className="panel-h">
         <h2>신규 ETF 레이더</h2>
-        <span className="desc">관찰 목록 · {fmtDate(state.snapshot?.newEtfs?.fetched_at)} · {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개</span>
+        <span className="desc">관찰 목록 · {collectionDateLabel(state.snapshot?.newEtfs?.fetched_at)} · {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개</span>
       </div>
 
       {!loaded ? (

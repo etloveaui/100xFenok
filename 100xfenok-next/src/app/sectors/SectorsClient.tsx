@@ -78,6 +78,7 @@ function failedSourceLabel(source: string): string | null {
   if (source === "us_sectors") return "가치";
   if (source === "portfolio_views" || source === "by_sector") return "기관 보유";
   if (source === "ticker") return "실시간 가격";
+  if (source === "source_clock") return "통합 기준일";
   return null;
 }
 
@@ -328,7 +329,7 @@ export default function SectorsClient() {
     : benchmarksReady && leaders[0] && laggards[0]
       ? (
           <>
-            {dateLabel ?? "최신"} 기준 {activeWindowLabel}에는{" "}
+            {dateLabel ?? DATA_STATE_LABELS.unavailable} 기준 {activeWindowLabel}에는{" "}
             <b className="up">{leaders[0].name} {pct(leaders[0].momentum[sortWindow], 1)}</b>가 시장을 주도하고,{" "}
             <b className="down">{laggards[0].name} {pct(laggards[0].momentum[sortWindow], 1)}</b>가 가장 약합니다. S&amp;P 500 대비{" "}
             <b>{beatCount ?? 0}/{rows.length}개</b> 섹터가 상회 중입니다.
@@ -337,7 +338,13 @@ export default function SectorsClient() {
       : "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
 
   const trustChips: CpVerdictHeroTrustChip[] = [
-    { id: "asof", label: "기준일", value: dateLabel ?? DATA_STATE_LABELS.pending, freshness: true, tone: dataReady ? "neutral" : "warning" },
+    {
+      id: "asof",
+      label: "필수 입력 최저 기준일",
+      value: dateLabel ?? DATA_STATE_LABELS.unavailable,
+      freshness: true,
+      tone: dataReady && updatedAt !== null ? "neutral" : "warning",
+    },
     { id: "count", label: "섹터", value: `${rows.length}개` },
     ...(missingLabels.length > 0
       ? [{ id: "missing", label: DATA_STATE_LABELS.unavailable, value: missingLabels.join(" · "), tone: "warning" as const }]
@@ -401,7 +408,7 @@ export default function SectorsClient() {
   ];
 
   const dayCoverageText = `${etfRows.length}/${rows.length}개 섹터 ETF 상세 확인`;
-  const valuationSourceLine = `가치 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? DATA_STATE_LABELS.pending}`;
+  const valuationSourceLine = `가치 원천 기준 ${sourceMeta.valuationLatestDate ?? DATA_STATE_LABELS.unavailable}`;
 
   return (
     <div className="canvas-plus cpw5-sectors-page" data-canvas-plus data-canvas-plus-sectors>

@@ -58,11 +58,13 @@ export function formatFreshnessLabels(
   options: { realtimeLabel?: string; realtimeCompactLabel?: string } = {},
 ): ResponsiveFreshnessLabels {
   if (cadence === "realtime") {
-    const label = options.realtimeLabel ?? "실시간";
+    const source = value ? dateParts(value) : null;
+    const label = options.realtimeLabel ?? (source ? `시세 기준 · ${source.iso}` : "시세 기준");
+    const compactLabel = options.realtimeCompactLabel ?? (source ? `시세 · ${source.md}` : label);
     return {
       label,
-      compactLabel: options.realtimeCompactLabel ?? label,
-      microLabel: options.realtimeCompactLabel ?? label,
+      compactLabel,
+      microLabel: source?.md ?? compactLabel,
     };
   }
 

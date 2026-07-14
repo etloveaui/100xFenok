@@ -4,6 +4,7 @@ import type {
   PutCallPoint,
   CryptoFearGreedPoint,
   BenchmarksSummaryPayload,
+  BenchmarksSourcePayload,
   FredSeriesPayload,
   TickerQuotePayload,
   SectorTickerMap,
@@ -41,7 +42,37 @@ function pickLatestPointDate<T extends { date?: string }>(series: T[] | null | u
   if (!Array.isArray(series) || series.length === 0) {
     return null;
   }
-  return pickTimestamp(series[series.length - 1]?.date);
+  return series
+    .map((point) => pickTimestamp(point.date))
+    .filter((value): value is string => value !== null)
+    .sort()
+    .at(-1) ?? null;
+}
+
+function completeOldestSourceDate(values: Array<string | null>): string | null {
+  if (values.length === 0 || values.some((value) => value === null)) return null;
+  return (values as string[]).sort().at(0) ?? null;
+}
+
+function pickBenchmarkSourceDate(payload: BenchmarksSourcePayload | null): string | null {
+  if (!payload) return null;
+  const sections = Object.values(payload.sections ?? {});
+  return completeOldestSourceDate(sections.map((section) => pickLatestPointDate(section?.data)));
+}
+
+function epochSourceTimeIso(value: unknown): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null;
+  const milliseconds = value > 10_000_000_000 ? value : value * 1000;
+  const date = new Date(milliseconds);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function pickTickerSourceDate(ticker: TickerQuotePayload | null | undefined): string | null {
+  const stateAsOf = pickTimestamp(ticker?.state?.asOf);
+  if (stateAsOf) return stateAsOf;
+
+  const raw = ticker as unknown as { regularMarketTime?: unknown } | null | undefined;
+  return epochSourceTimeIso(raw?.regularMarketTime);
 }
 
 function hasFiniteNumber(value: unknown): value is number {
@@ -88,22 +119,13 @@ function hasRequiredFredSeries(payload: FredSeriesPayload | null, keys: string[]
 }
 
 function pickFredUpdatedAt(payload: FredSeriesPayload | null, keys: string[]): string | null {
-  const payloadUpdated = pickTimestamp(payload?.updated);
-  if (payloadUpdated) {
-    return payloadUpdated;
-  }
-
-  return keys
-    .map((key) => pickLatestPointDate(payload?.series?.[key]))
-    .filter((value): value is string => value !== null)
-    .sort()
-    .at(-1) ?? null;
+  const sourceDates = keys.map((key) => pickLatestPointDate(payload?.series?.[key]));
+  return completeOldestSourceDate(sourceDates);
 }
 
 function hasTickerData(ticker: TickerQuotePayload | null | undefined): boolean {
   return hasFiniteNumber(ticker?.price)
-    || hasFiniteNumber(ticker?.changePercent)
-    || pickTimestamp(ticker?.fetchedAt) !== null;
+    || hasFiniteNumber(ticker?.changePercent);
 }
 
 function setFreshnessEntry(
@@ -126,6 +148,7 @@ export function buildDashboardSnapshot(payload: {
   putCall: PutCallPoint[] | null;
   crypto: CryptoFearGreedPoint[] | null;
   summaries: BenchmarksSummaryPayload | null;
+  benchmarkSource: BenchmarksSourcePayload | null;
   weeklyBanking: FredSeriesPayload | null;
   quarterlyBanking: FredSeriesPayload | null;
   dailyBanking: FredSeriesPayload | null;
@@ -163,12 +186,13 @@ export function buildDashboardSnapshot(payload: {
     pickLatestPointDate(payload.crypto),
     !hasCryptoSeries(payload.crypto),
   );
+  const benchmarkSourceDate = pickBenchmarkSourceDate(payload.benchmarkSource);
   setFreshnessEntry(
     freshness,
     'benchmarks',
-    'daily',
-    pickTimestamp(payload.summaries?.metadata?.generated) ?? pickTimestamp(payload.summaries?.metadata?.version),
-    !hasBenchmarkMomentum(payload.summaries),
+    'weekly',
+    benchmarkSourceDate,
+    !hasBenchmarkMomentum(payload.summaries) || benchmarkSourceDate === null,
   );
   setFreshnessEntry(
     freshness,
@@ -200,12 +224,13 @@ export function buildDashboardSnapshot(payload: {
     tickerEntries.set(symbol, ticker);
   });
   tickerEntries.forEach((ticker, symbol) => {
+    const sourceDate = pickTickerSourceDate(ticker);
     setFreshnessEntry(
       freshness,
       `ticker:${symbol}`,
       'realtime',
-      pickTimestamp(ticker?.fetchedAt),
-      !hasTickerData(ticker),
+      sourceDate,
+      !hasTickerData(ticker) || sourceDate === null || ticker?.state?.status !== 'ready',
     );
   });
 

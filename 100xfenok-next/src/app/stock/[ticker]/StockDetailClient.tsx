@@ -181,6 +181,8 @@ interface StockanalysisEtfPayload {
   ticker?: string;
   asset_type?: string;
   fetched_at?: string;
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   detail_status?: string;
   data_supply?: EtfDataSupply;
   normalized?: {
@@ -1008,7 +1010,7 @@ function FinancialSnapshotRail({
           <p className="cp-stock-rail-eyebrow">Financials</p>
           <h2>TTM 재무 스냅샷</h2>
         </div>
-        <span>{fmtKstMinute(data?.fetched_at) ?? "—"}</span>
+        <span>{data?.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}</span>
       </header>
       <div className="cp-stock-financial-list">
         {metrics.map((metric) => (
@@ -1485,7 +1487,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
 
   if ((!f13Entries || f13Entries.length === 0) && !tradesChip?.bought && !tradesChip?.sold) return null;
   const { quarter, generatedAt } = tradeQuarter(tradesChip?.metadata);
-  const reportBasisLabel = [quarter ?? "최근 분기", generatedAt].filter(Boolean).join(" · ");
+  const reportBasisLabel = [quarter ?? "최근 분기", generatedAt ? `생성 ${generatedAt}` : null].filter(Boolean).join(" · ");
   const holderCount = f13Entries
     ? new Set(f13Entries.map((entry) => entry.investor).filter((investor) => typeof investor === "string" && investor.trim() !== "")).size
     : 0;
@@ -2366,7 +2368,7 @@ function OwnershipHeroCp({
 
   const quarter = typeof tradesChip?.metadata?.quarter === "string" && tradesChip.metadata.quarter.trim() ? tradesChip.metadata.quarter.trim() : null;
   const generatedAt = typeof tradesChip?.metadata?.generated_at === "string" && tradesChip.metadata.generated_at.trim() ? tradesChip.metadata.generated_at.slice(0, 10) : null;
-  const reportBasisLabel = [quarter ?? "최근 분기", generatedAt].filter(Boolean).join(" · ");
+  const reportBasisLabel = [quarter ?? "최근 분기", generatedAt ? `생성 ${generatedAt}` : null].filter(Boolean).join(" · ");
 
   const mh = yfData?.major_holders ?? {};
   const institutionsPct = isFiniteNumber(mh.institutionsPercentHeld) ? mh.institutionsPercentHeld * 100 : null;
@@ -3382,6 +3384,7 @@ export default function StockDetailClient({
   const marketCapLabel = yfMarketCap !== null ? "시가총액" : "시가총액(USD)";
   const returnText = isFiniteNumber(row?.return12m) ? fmtPct(row.return12m) : null;
   const returnUp = (row?.return12m ?? 0) >= 0;
+  const marketFactsSourceAsOf = (marketFacts as { source_as_of?: unknown } | null)?.source_as_of;
   const priceDataState = makeDataState({
     status: marketFactsLoading
       ? "pending"
@@ -3398,7 +3401,7 @@ export default function StockDetailClient({
     detail: displayPrice !== null
       ? "가격은 지연 가능 시세입니다."
       : "표시할 가격 데이터를 찾지 못했습니다.",
-    asOf: typeof marketFacts?.generated_at === "string" ? marketFacts.generated_at : null,
+    asOf: typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : null,
   });
   const stockChartData = stockHistoryToChartData(stockAuxData?.normalized?.history);
   const rangedStockChartData = filterStockChartRange(stockChartData, stockChartRange);
@@ -4139,7 +4142,7 @@ function FinancialCandidatePanel({
           <p className="mt-1 text-xs font-semibold text-slate-500">교차검증용 · 가치평가 입력 아님</p>
         </div>
         <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-          {fmtKstMinute(data.fetched_at) ?? "—"}
+          {data.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}
         </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -4235,13 +4238,12 @@ function EtfDataPanel({
       : detailStatus === "yf_fallback"
         ? "가격 정보 연결됨 · 보유 구성은 확인된 항목부터 반영"
       : null);
-  const holdingsDate = fmtDateish(holdingsUpdated);
-  const quoteDate = fmtDateish(quote.u);
-  const externalSourceAsOf = holdingsDate !== "—"
-    ? holdingsDate
-    : quoteDate !== "—"
-      ? quoteDate
-      : fmtDateish(dataSupply?.source_as_of ?? (dataSupply ? null : data?.fetched_at));
+  const quoteSourceAsOf = typeof quote.u === "string" && quote.u.trim() ? quote.u.trim() : null;
+  const externalSourceAsOf = holdingsUpdated
+    ?? quoteSourceAsOf
+    ?? dataSupply?.source_as_of
+    ?? data?.source_as_of
+    ?? null;
 
   const cards = [
     { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: fmtDateish(quote.u) },
@@ -4286,9 +4288,7 @@ function EtfDataPanel({
             ticker={ticker}
             kind="etf"
             statusLine={detailStatusText}
-            asOf={dataSupply?.resolution_state === "unavailable"
-              ? externalSourceAsOf
-              : dataSupply?.source_as_of ?? externalSourceAsOf}
+            asOf={externalSourceAsOf}
             compact
             className="mb-3"
           />

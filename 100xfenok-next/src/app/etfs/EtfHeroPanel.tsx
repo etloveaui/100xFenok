@@ -114,7 +114,7 @@ export default function EtfHeroPanel() {
     );
   }
 
-  const { compositionBuckets, dominantBucket, leverageInversePct, leverageInverseCount, totalCount, newCount, topMoversCount, topMoversLeverageInverseCount, asOf } = insights;
+  const { compositionBuckets, dominantBucket, leverageInversePct, leverageInverseCount, totalCount, newCount, topMoversCount, topMoversLeverageInverseCount, asOf, asOfReason } = insights;
   const gaugeTone = leverageInversePct >= 15 ? "warning" : "neutral";
   const compositionSummary = compositionBuckets
     .filter((bucket) => bucket.count > 0)
@@ -137,7 +137,12 @@ export default function EtfHeroPanel() {
           </>
         }
         trustChips={[
-          { id: "asof", label: "기준일", value: formatAsOf(asOf) ?? "-", freshness: true },
+          {
+            id: "asof",
+            label: "기준일",
+            value: formatAsOf(asOf) ?? (asOfReason?.includes("publishes no aggregate source date") ? "제공자 미공개" : "미확인"),
+            freshness: true,
+          },
           { id: "total", label: "전체", value: `${totalCount.toLocaleString("ko-KR")}개` },
         ]}
       />

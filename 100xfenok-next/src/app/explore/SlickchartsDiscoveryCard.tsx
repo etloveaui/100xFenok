@@ -46,6 +46,7 @@ interface DiscoveryDoc {
   };
   returns?: {
     asOf?: string | null;
+    through_year?: number | string | null;
     best1y?: DiscoveryRow[];
     worst1y?: DiscoveryRow[];
     best3y?: DiscoveryRow[];
@@ -103,6 +104,20 @@ function datePart(value: string | null | undefined): string | null {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
 }
 
+function yearEndDate(value: number | string | null | undefined): string | null {
+  const year = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  return Number.isInteger(year) && year >= 1900 && year <= 9999 ? `${year}-12-31` : null;
+}
+
+function moverSourceDate(doc: DiscoveryDoc | null): string | null {
+  const populatedSides = [doc?.movers?.gainers, doc?.movers?.losers]
+    .filter((side): side is MoverSide => Boolean(side && side.rows.length > 0));
+  if (populatedSides.length === 0) return null;
+  const dates = populatedSides.map((side) => datePart(side.date));
+  if (dates.some((value) => value === null)) return null;
+  return [...dates].sort()[0] ?? null;
+}
+
 function RowList({
   rows,
   tone,
@@ -157,12 +172,15 @@ export default function SlickchartsDiscoveryCard() {
   const worst1y = doc?.returns?.worst1y ?? [];
   const highYield = doc?.dividends?.highYield ?? [];
   const highTtm = doc?.dividends?.highTtm ?? [];
-  const moverAsOf = doc?.movers?.gainers?.date ?? doc?.movers?.losers?.date ?? datePart(doc?.source_files?.gainers?.updated) ?? datePart(doc?.generated_at);
-  const returnsAsOf = doc?.returns?.asOf ?? datePart(doc?.source_files?.slick_index?.generated_at) ?? datePart(doc?.generated_at);
-  const dividendsAsOf = doc?.dividends?.asOf
-    ?? doc?.source_files?.stocks_analyzer?.source_date
-    ?? datePart(doc?.source_files?.stocks_analyzer?.generated_at)
-    ?? datePart(doc?.generated_at);
+  const moverAsOf = moverSourceDate(doc);
+  // The current producer derives returns.asOf from slick_index.generated_at, so it is not a
+  // source clock. Use only the explicit period end until the producer emits an honest as-of.
+  const returnsAsOf = yearEndDate(doc?.returns?.through_year);
+  // The two dividend lists come from different sources. The aggregate asOf is honest only
+  // when the analyzer-backed high-yield list is the sole populated list.
+  const dividendsAsOf = highYield.length > 0 && highTtm.length === 0
+    ? datePart(doc?.dividends?.asOf)
+    : null;
   const tabAsOf: Record<DiscoveryTab, string | null> = {
     movers: moverAsOf,
     returns: returnsAsOf,

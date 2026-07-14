@@ -279,7 +279,8 @@ function yfDailySourceEvidence(row) {
   const payload = yfFinancePayload(row);
   const historyRows = yfHistoryRows(payload);
   const fetchedAt = payload?.fetched_at ?? null;
-  const sourceDate = toIsoDate(fetchedAt);
+  const sourceDate = unique(historyRows.map((point) => toIsoDate(point?.date))).at(-1)
+    ?? toIsoDate(payload?.source_as_of);
   const info = payload?.data?.info ?? {};
   const fastInfo = payload?.data?.fast_info ?? {};
   const hasSpotQuote = Number.isFinite(Number(info.currentPrice ?? fastInfo.lastPrice));
@@ -573,14 +574,14 @@ const koreaIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.
 const usClassYfEvidenceRows = usClassYfRows.map(yfDailySourceEvidence);
 const usClassYfReadyEvidenceRows = usClassYfEvidenceRows.filter((row) => row.ready);
 const usClassYfBlockingEvidenceRows = usClassYfEvidenceRows.filter((row) => !row.ready);
-const usClassYfSourceDates = unique(usClassYfReadyEvidenceRows.map((row) => row.source_date));
+const usClassYfSourceDates = unique(usClassYfEvidenceRows.map((row) => row.source_date));
 const usClassYfOldestSourceDate = usClassYfSourceDates.at(0) ?? null;
 const usClassYfLatestSourceDate = usClassYfSourceDates.at(-1) ?? null;
 
 const asiaYfEvidenceRows = asiaExTwRows.map(yfDailySourceEvidence);
 const asiaYfReadyEvidenceRows = asiaYfEvidenceRows.filter((row) => row.ready);
 const asiaYfBlockingEvidenceRows = asiaYfEvidenceRows.filter((row) => !row.ready);
-const asiaYfSourceDates = unique(asiaYfReadyEvidenceRows.map((row) => row.source_date));
+const asiaYfSourceDates = unique(asiaYfEvidenceRows.map((row) => row.source_date));
 const asiaYfOldestSourceDate = asiaYfSourceDates.at(0) ?? null;
 const asiaYfLatestSourceDate = asiaYfSourceDates.at(-1) ?? null;
 
@@ -1513,7 +1514,7 @@ const index = {
         status: countedDailySourceFresh(usClassYfOldestSourceDate) && usClassYfReadyEvidenceRows.length === usClassYfRows.length ? "ready" : "stale",
         covered_count: usClassYfReadyEvidenceRows.length,
         denominator: usClassYfRows.length,
-        caveat: "Oldest fresh YF fetched_at date across US_CLASS/non-plain active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
+        caveat: "Oldest YF history_1y observation date across US_CLASS/non-plain active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
       },
       {
         id: "asia_ex_taiwan_yf_source_date",
@@ -1523,7 +1524,7 @@ const index = {
         status: countedDailySourceFresh(asiaYfOldestSourceDate) && asiaYfReadyEvidenceRows.length === asiaExTwRows.length ? "ready" : "stale",
         covered_count: asiaYfReadyEvidenceRows.length,
         denominator: asiaExTwRows.length,
-        caveat: "Oldest fresh YF fetched_at date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
+        caveat: "Oldest YF history_1y observation date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
       },
       {
         id: "etf_public_surface",

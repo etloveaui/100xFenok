@@ -48,7 +48,8 @@ export const benchmarkCatalogSchema = z
 export const dataFolderManifestItemSchema = z
   .object({
     version: z.string(),
-    updated: z.string(),
+    updated: z.string().nullable(),
+    updated_reason: z.string().nullable().optional(),
     update_frequency: z.string().optional(),
     source: z.string().optional(),
     file_count: z.number().optional(),
@@ -70,7 +71,8 @@ export const folderSchemaMetaSchema = z
   .object({
     folder: z.string().optional(),
     version: z.string().optional(),
-    updated: z.string().optional(),
+    updated: z.string().nullable().optional(),
+    updated_reason: z.string().nullable().optional(),
     source: z.string().optional(),
     update_frequency: z.string().optional(),
     files: z.record(z.string(), z.unknown()).optional(),

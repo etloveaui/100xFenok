@@ -204,7 +204,7 @@ export default async function AdminDataLabPage() {
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Fenok Data Health</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">데이터 헬스 KPI</h2>
-            <p className="mt-1 text-xs font-semibold text-slate-500">기준 {dateLabel(dataHealthKpi?.generated_at)}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">KPI 생성 {dateLabel(dataHealthKpi?.generated_at)}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-center text-[11px] font-black sm:grid-cols-5">
             {[
@@ -283,7 +283,7 @@ export default async function AdminDataLabPage() {
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Product Freshness Gate</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">제품 화면 데이터 상태</h2>
-            <p className="mt-1 text-xs font-semibold text-slate-500">기준 {dateLabel(coverage?.generated_at)}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">스냅샷 생성 {dateLabel(coverage?.generated_at)}</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-black sm:grid-cols-6">
             {[

@@ -63,16 +63,13 @@ export function freshnessFromCadence(
   if (meta.isFallback) {
     return {
       tone: meta.cadence === "realtime" ? "stale" : "offline",
-      label: meta.cadence === "realtime" ? "Stale" : "Offline",
+      label: "원천 기준일 미확인",
     };
   }
   if (meta.cadence === "realtime") {
     return {
-      tone: "live",
-      ...formatFreshnessLabels(meta.cadence, meta.updatedAt, {
-        realtimeLabel: "LIVE · 15m",
-        realtimeCompactLabel: "LIVE",
-      }),
+      tone: "dated",
+      ...formatFreshnessLabels(meta.cadence, meta.updatedAt),
     };
   }
   return {

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { addMinutesIso, makeDataState, type DataState } from "@/lib/data-state";
+import { makeDataState, type DataState } from "@/lib/data-state";
 import { withResponseCache } from "@/lib/server/response-cache";
 
 const TREASURY_API_URL =
   "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance";
 const TREASURY_CONTRACT_VERSION = "treasury-tga.v1" as const;
-const TREASURY_STALE_AFTER_MINUTES = 60 * 72;
+const TREASURY_RELEASE_TIME_ZONE = "America/New_York";
+const TREASURY_RELEASE_HOUR_ET = 16;
 const TREASURY_ACCOUNT_TYPES = [
   "Federal Reserve Account",
   "Treasury General Account (TGA)",
@@ -101,16 +102,140 @@ function latestTreasuryRecordDate(data: TreasuryTgaRow[]): string | null {
   }, null);
 }
 
+function utcDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function isoDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
+function observedFixedHoliday(year: number, month: number, day: number): string {
+  const holiday = utcDate(year, month, day);
+  const weekday = holiday.getUTCDay();
+  if (weekday === 6) holiday.setUTCDate(holiday.getUTCDate() - 1);
+  if (weekday === 0) holiday.setUTCDate(holiday.getUTCDate() + 1);
+  return isoDate(holiday);
+}
+
+function nthWeekday(year: number, month: number, weekday: number, nth: number): string {
+  const date = utcDate(year, month, 1);
+  date.setUTCDate(1 + ((7 + weekday - date.getUTCDay()) % 7) + (nth - 1) * 7);
+  return isoDate(date);
+}
+
+function lastWeekday(year: number, month: number, weekday: number): string {
+  const date = utcDate(year, month + 1, 0);
+  date.setUTCDate(date.getUTCDate() - ((7 + date.getUTCDay() - weekday) % 7));
+  return isoDate(date);
+}
+
+function federalHolidays(year: number): Set<string> {
+  return new Set([
+    observedFixedHoliday(year, 1, 1),
+    nthWeekday(year, 1, 1, 3),
+    nthWeekday(year, 2, 1, 3),
+    lastWeekday(year, 5, 1),
+    observedFixedHoliday(year, 6, 19),
+    observedFixedHoliday(year, 7, 4),
+    nthWeekday(year, 9, 1, 1),
+    nthWeekday(year, 10, 1, 2),
+    observedFixedHoliday(year, 11, 11),
+    nthWeekday(year, 11, 4, 4),
+    observedFixedHoliday(year, 12, 25),
+  ]);
+}
+
+function isTreasuryBusinessDay(value: Date): boolean {
+  const weekday = value.getUTCDay();
+  if (weekday === 0 || weekday === 6) return false;
+  const day = isoDate(value);
+  const year = value.getUTCFullYear();
+  return ![year - 1, year, year + 1].some((holidayYear) => federalHolidays(holidayYear).has(day));
+}
+
+function nextTreasuryBusinessDate(asOf: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) return null;
+  const date = new Date(`${asOf}T00:00:00Z`);
+  if (!Number.isFinite(date.getTime()) || isoDate(date) !== asOf) return null;
+  do {
+    date.setUTCDate(date.getUTCDate() + 1);
+  } while (!isTreasuryBusinessDay(date));
+  return isoDate(date);
+}
+
+function zonedDateTimeIso(date: string, hour: number, timeZone: string): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const guess = Date.UTC(year, month - 1, day, hour);
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = Object.fromEntries(
+    formatter.formatToParts(new Date(guess)).map((part) => [part.type, part.value]),
+  );
+  const representedAsUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second),
+  );
+  return new Date(guess - (representedAsUtc - guess)).toISOString();
+}
+
+function treasuryReleaseDueAt(asOf: string | null): string | null {
+  if (!asOf) return null;
+  const nextRecordDate = nextTreasuryBusinessDate(asOf);
+  const dueDate = nextRecordDate ? nextTreasuryBusinessDate(nextRecordDate) : null;
+  return dueDate
+    ? zonedDateTimeIso(dueDate, TREASURY_RELEASE_HOUR_ET, TREASURY_RELEASE_TIME_ZONE)
+    : null;
+}
+
 function treasuryState(params: {
   source: TreasuryTgaSource;
   asOf: string | null;
   staleAfter: string | null;
 }): DataState {
+  if (!params.asOf || !params.staleAfter) {
+    return makeDataState({
+      status: "unavailable",
+      label: "TGA 기준일 없음",
+      detail: "Treasury 기록일을 확인할 수 없어 최신성을 판정하지 않았습니다.",
+      asOf: params.asOf,
+      staleAfter: params.staleAfter,
+      reason: "source_date_unavailable",
+    });
+  }
+
+  if (Date.now() > new Date(params.staleAfter).getTime()) {
+    return makeDataState({
+      status: "stale",
+      label: "TGA 공표 지연",
+      detail: "Treasury의 다음 영업일 16:00 ET 공표 시한을 지났지만 더 최신 기록이 없습니다.",
+      asOf: params.asOf,
+      staleAfter: params.staleAfter,
+      reason: "source_publication_overdue",
+    });
+  }
+
   if (params.source === "treasury-fiscaldata-fallback") {
     return makeDataState({
       status: "ready",
       label: "Treasury 직접 확인",
-      detail: "정적 DataPack 미러가 비어 있거나 응답하지 않아 Treasury FiscalData에서 직접 확인한 값입니다.",
+      detail: "Treasury의 다음 영업일 16:00 ET 공표 일정 안에 있는 최신 기록입니다. 정적 DataPack 대신 FiscalData에서 직접 확인했습니다.",
       asOf: params.asOf,
       staleAfter: params.staleAfter,
       reason: "mirror_unavailable_or_empty",
@@ -120,7 +245,7 @@ function treasuryState(params: {
   return makeDataState({
     status: "ready",
     label: "DataPack 미러",
-    detail: "예약 갱신된 Treasury TGA DataPack 미러에서 응답했습니다.",
+    detail: "Treasury의 다음 영업일 16:00 ET 공표 일정 안에 있는 최신 기록입니다.",
     asOf: params.asOf,
     staleAfter: params.staleAfter,
   });
@@ -132,8 +257,8 @@ function treasuryResponse(
   options: { lastUpdated?: string | null } = {},
 ): Response {
   const asOf = latestTreasuryRecordDate(data);
-  const lastUpdated = options.lastUpdated ?? asOf ?? new Date().toISOString();
-  const staleAfter = addMinutesIso(lastUpdated, TREASURY_STALE_AFTER_MINUTES);
+  const lastUpdated = options.lastUpdated ?? new Date().toISOString();
+  const staleAfter = treasuryReleaseDueAt(asOf);
   return NextResponse.json(
     {
       schemaVersion: TREASURY_CONTRACT_VERSION,

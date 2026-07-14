@@ -1111,6 +1111,12 @@ function buildFenokSignals(stockActionIndex) {
   const occOptionsByTicker = readOccOptionsByTicker();
   const spyHistory = loadPriceHistory("SPY");
   const generatedAt = new Date().toISOString();
+  const stockActionSourceDate = /^\d{4}-\d{2}-\d{2}$/.test(String(stockActionIndex.source_date ?? ""))
+    ? stockActionIndex.source_date
+    : null;
+  const stockActionSourceDateReason = stockActionSourceDate
+    ? null
+    : "computed/stock_action_index.json does not publish a usable source_date";
   const vectors = new Map();
 
   const resultRows = rows.map((row) => {
@@ -1147,7 +1153,8 @@ function buildFenokSignals(stockActionIndex) {
       market_scope: row.marketScope ?? null,
       market: row.market ?? null,
       canonical_sector: row.canonicalSector ?? null,
-      as_of: stockActionIndex.generated_at ?? generatedAt,
+      as_of: stockActionSourceDate,
+      as_of_reason: stockActionSourceDateReason,
       formula_version: FORMULA_VERSION,
       confidence: confidenceFromCoverage(nativeCoverage.coverage_ratio, row.coverageRatio),
       coverage_ratio: nativeCoverage.coverage_ratio,
@@ -1186,6 +1193,8 @@ function buildFenokSignals(stockActionIndex) {
     schema_version: 1,
     generated_at: generatedAt,
     source_file: SOURCE_FILE,
+    source_date: stockActionSourceDate,
+    source_date_reason: stockActionSourceDateReason,
     source_generated_at: stockActionIndex.generated_at ?? null,
     source_score_contract: stockActionIndex.score_contract?.version ?? null,
     formula_version: FORMULA_VERSION,

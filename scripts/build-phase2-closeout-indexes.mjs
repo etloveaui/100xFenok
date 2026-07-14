@@ -62,6 +62,16 @@ const MARKET_STRUCTURE_SOURCES = [
   "slickcharts/dowjones-analysis.json",
 ];
 
+const BENCHMARK_MATRIX_SOURCES = {
+  sp500: ["benchmarks/us.json", "sp500"],
+  nasdaq100: ["benchmarks/us.json", "nasdaq100"],
+  russell2000: ["benchmarks/us.json", "russell2000"],
+  financials: ["benchmarks/us_sectors.json", "financials"],
+  information_technology: ["benchmarks/us_sectors.json", "information_technology"],
+  energy: ["benchmarks/us_sectors.json", "energy"],
+  china: ["benchmarks/msci.json", "china"],
+};
+
 const GENERATED_OUTPUTS = [
   "admin/data-usage-manifest.json",
   "computed/stock_action_index.json",
@@ -153,6 +163,28 @@ function readJson(relPath, fallback = null) {
   } catch {
     return fallback;
   }
+}
+
+function sourceDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
+}
+
+function latestSourceDate(rows) {
+  const dates = (Array.isArray(rows) ? rows : [])
+    .map((row) => sourceDate(row?.date))
+    .filter(Boolean)
+    .sort();
+  return dates.at(-1) ?? null;
+}
+
+function benchmarkSourceDate(id) {
+  const source = BENCHMARK_MATRIX_SOURCES[id];
+  if (!source) return null;
+  const [relPath, section] = source;
+  const payload = readJson(relPath, null);
+  return latestSourceDate(payload?.sections?.[section]?.data);
 }
 
 function ensureDir(absPath) {
@@ -755,6 +787,7 @@ function buildStockActionIndex() {
       presentRatio: eligibleCount > 0 ? round(presentCount / eligibleCount, 4) : null,
     };
   });
+  const universeSourceAsOf = sourceDate(universe?.source_as_of ?? universe?.as_of);
 
   return {
     schema_version: ACTION_SCORE_CONFIG.schema_version,
@@ -804,7 +837,9 @@ function buildStockActionIndex() {
       quarter_closes_generated_at: quarterCloses.meta.generated_at,
       stocks_analyzer_source_date: stocksDoc?.source_date ?? null,
       guru_quarter: guru?.metadata?.quarter ?? null,
-      slickcharts_universe_updated: universe?.updated ?? null,
+      slickcharts_universe_source_as_of: universeSourceAsOf,
+      slickcharts_universe_source_as_of_reason: universeSourceAsOf ? null : "SlickCharts universe rows publish no source date",
+      slickcharts_universe_collected_at: universe?.updated ?? null,
     },
     rows: actionRows,
   };
@@ -924,10 +959,14 @@ function analysisConcentration(relPath, label) {
   const doc = readJson(relPath, {});
   const rows = Array.isArray(doc?.analysis) ? doc.analysis : [];
   const sumTop = (n) => round(rows.slice(0, n).reduce((sum, row) => sum + (finite(row.weight) ? row.weight : 0), 0), 2);
+  const sourceAsOf = sourceDate(doc?.source_as_of ?? doc?.as_of);
   return {
     id: path.basename(relPath, "-analysis.json"),
     label,
-    updated: doc?.updated ?? null,
+    updated: sourceAsOf,
+    sourceAsOf,
+    sourceAsOfReason: sourceAsOf ? null : "SlickCharts analysis rows publish no source date",
+    collectedAt: doc?.updated ?? null,
     count: doc?.count ?? rows.length,
     top3Weight: sumTop(3),
     top10Weight: sumTop(10),
@@ -963,11 +1002,15 @@ function latestSeriesStats(relPath, label, scale = 1) {
   const prev7 = rows[Math.max(0, rows.length - 8)] ?? null;
   const prev30 = rows[Math.max(0, rows.length - 31)] ?? null;
   const value = finite(latest?.val) ? latest.val / scale : null;
+  const sourceAsOf = sourceDate(latest?.date);
   return {
     id: path.basename(relPath, ".json"),
     label,
-    updated: doc?.updated ?? null,
-    date: latest?.date ?? null,
+    updated: sourceAsOf,
+    sourceAsOf,
+    sourceAsOfReason: sourceAsOf ? null : "time series carries no dated observation",
+    collectedAt: doc?.updated ?? null,
+    date: sourceAsOf,
     value,
     delta7d: value !== null && finite(prev7?.val) ? round(value - prev7.val / scale, 4) : null,
     delta30d: value !== null && finite(prev30?.val) ? round(value - prev30.val / scale, 4) : null,
@@ -1073,9 +1116,12 @@ function buildBenchmarkMatrix(summaries) {
     .map(([id, label]) => {
       const m = summaries?.source_summaries?.[id]?.momentum;
       if (!m) return null;
+      const sourceAsOf = benchmarkSourceDate(id);
       return {
         id,
         label,
+        sourceAsOf,
+        sourceAsOfReason: sourceAsOf ? null : "benchmark source rows carry no observation date",
         price: m.px_last ?? null,
         eps: m.best_eps ?? null,
         pe: m.best_pe_ratio ?? null,
@@ -1103,23 +1149,39 @@ function buildMarketStructureIndex() {
       previousCount: num(row.previousCount),
       currentCount: num(row.currentCount),
     }));
+  const membershipDates = changes.map((row) => sourceDate(row.date));
+  const membershipSourceAsOf = changes.length > 0 && membershipDates.every(Boolean)
+    ? [...membershipDates].sort().at(-1)
+    : null;
   const magHoldings = Array.isArray(magnificent7?.holdings) ? magnificent7.holdings : [];
+  const magnificent7SourceAsOf = sourceDate(magnificent7?.source_as_of ?? magnificent7?.as_of);
   const mag7IndexWeight = finite(magnificent7?.indexWeight)
     ? magnificent7.indexWeight
     : finite(magnificent7?.totalMarketCap) && finite(sp500MarketCap?.totalMarketCap) && sp500MarketCap.totalMarketCap > 0
       ? round((magnificent7.totalMarketCap / sp500MarketCap.totalMarketCap) * 100, 1)
       : null;
+  const benchmarkRows = buildBenchmarkMatrix(summaries);
+  const benchmarkDates = benchmarkRows.map((row) => sourceDate(row.sourceAsOf));
+  const benchmarkSourceAsOf = benchmarkRows.length > 0 && benchmarkDates.every(Boolean)
+    ? [...benchmarkDates].sort()[0]
+    : null;
 
   return {
     schema_version: 1,
     generated_at: generatedAt,
     source_files: MARKET_STRUCTURE_SOURCES,
     membershipChanges: {
-      updated: membership?.updated ?? null,
+      updated: membershipSourceAsOf,
+      sourceAsOf: membershipSourceAsOf,
+      sourceAsOfReason: membershipSourceAsOf ? null : "membership rows carry no complete effective-date evidence",
+      collectedAt: membership?.updated ?? null,
       recent: changes,
     },
     magnificent7: {
-      updated: magnificent7?.updated ?? null,
+      updated: magnificent7SourceAsOf,
+      sourceAsOf: magnificent7SourceAsOf,
+      sourceAsOfReason: magnificent7SourceAsOf ? null : "SlickCharts holdings rows publish no source date",
+      collectedAt: magnificent7?.updated ?? null,
       totalMarketCap: num(magnificent7?.totalMarketCap),
       indexWeight: mag7IndexWeight,
       totalWeight: round(magHoldings.reduce((sum, row) => sum + (finite(row.weight) ? row.weight : 0), 0), 2),
@@ -1138,7 +1200,9 @@ function buildMarketStructureIndex() {
     ],
     benchmarkMatrix: {
       generated: summaries?.metadata?.generated ?? null,
-      rows: buildBenchmarkMatrix(summaries),
+      sourceAsOf: benchmarkSourceAsOf,
+      sourceAsOfReason: benchmarkSourceAsOf ? null : "one or more benchmark sections carry no source-row date",
+      rows: benchmarkRows,
     },
     liquidity: [
       latestSeriesStats("macro/tga.json", "Treasury General Account", 1000),

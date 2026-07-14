@@ -162,7 +162,6 @@ function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
 }
 
 function FilingCoverageBanner({
-  coverage,
   filings,
   symbol,
   compact = false,
@@ -173,7 +172,11 @@ function FilingCoverageBanner({
   compact?: boolean;
 }) {
   const readyCount = filings.filter((filing) => Boolean(filing.summaryPath)).length;
-  const updated = coverage?.updated ? formatDate(coverage.updated) : null;
+  const updated = filings
+    .map((filing) => filing.filingDate)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
 
   return (
     <section
@@ -192,7 +195,7 @@ function FilingCoverageBanner({
         <div className="flex flex-wrap gap-2 text-xs font-black">
           <span className="rounded-full border border-blue-200 bg-white px-3 py-1">{compact ? "요약" : `${symbol} 요약`} {readyCount.toLocaleString("ko-KR")}건</span>
           <span className="rounded-full border border-blue-200 bg-white px-3 py-1">원문 {filings.length.toLocaleString("ko-KR")}건</span>
-          {updated ? <span className="rounded-full border border-blue-200 bg-white px-3 py-1">갱신 {updated}</span> : null}
+          {updated ? <span className="rounded-full border border-blue-200 bg-white px-3 py-1">공시 기준 {formatDate(updated)}</span> : null}
         </div>
       </div>
     </section>

@@ -95,6 +95,13 @@ function classificationCounts(records: JsonRecord[]): JsonRecord {
   };
 }
 
+function latestTimestamp(...values: unknown[]): string | null {
+  return values
+    .filter((value): value is string => typeof value === "string" && Number.isFinite(new Date(value).getTime()))
+    .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())
+    .at(-1) ?? null;
+}
+
 export async function GET() {
   return withResponseCache(
     "stockanalysis:etf-universe-merged",
@@ -159,6 +166,13 @@ export async function GET() {
           schema_version: "stockanalysis/v1",
           source: "stockanalysis",
           asset_type: "etf_universe",
+          source_as_of: null,
+          source_as_of_reason: "provider publishes no aggregate source date",
+          fetched_at: latestTimestamp(
+            universe?.fetched_at,
+            universe?.generated_at,
+            screener?.fetched_at,
+          ),
           generated_at:
             (typeof universe?.generated_at === "string" ? universe.generated_at : null) ??
             (typeof screener?.fetched_at === "string" ? screener.fetched_at : null),

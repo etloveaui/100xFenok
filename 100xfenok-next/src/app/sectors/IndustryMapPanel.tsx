@@ -9,6 +9,8 @@ import { formatCurrencyCompact } from "@/lib/format";
 
 interface SurfaceDoc<T = EventRow> {
   fetched_at?: string | null;
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   counts?: Record<string, number | null | undefined> | null;
   records?: T[];
   tables?: Array<{ records?: T[] }>;
@@ -100,9 +102,11 @@ function text(value: unknown, fallback = "-"): string {
   return next && next !== "-" ? next : fallback;
 }
 
-function dateText(value: unknown): string {
-  const raw = text(value);
-  return raw.length >= 10 ? raw.slice(0, 12) : raw;
+function surfaceTimeLabel(doc: SurfaceDoc | null | undefined): string {
+  const sourceDate = typeof doc?.source_as_of === "string" ? doc.source_as_of.trim().slice(0, 10) : "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(sourceDate)) return `기준 ${sourceDate}`;
+  const collectedDate = typeof doc?.fetched_at === "string" ? doc.fetched_at.trim().slice(0, 10) : "";
+  return /^\d{4}-\d{2}-\d{2}$/.test(collectedDate) ? `수집 ${collectedDate}` : "원천 기준일 미제공";
 }
 
 function countRows(doc: SurfaceDoc | null | undefined): number {
@@ -605,7 +609,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
           <section key={surface.id} className="panel">
             <div className="panel-h">
               <h2>{surface.title}</h2>
-              <span className="desc">{dateText(surface.doc?.fetched_at)} · {countRows(surface.doc).toLocaleString("ko-KR")}개</span>
+              <span className="desc">{surfaceTimeLabel(surface.doc)} · {countRows(surface.doc).toLocaleString("ko-KR")}개</span>
             </div>
             <div className="panel-b pb-0 pt-2 text-xs font-bold text-slate-500">
               {surface.description}

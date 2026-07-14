@@ -9,7 +9,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { isRealCalendarDate } from "./lib/market-calendar.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 
@@ -30,10 +31,12 @@ const PUBLIC_DATA_ROOT = DATA_ROOT_ARG
   : path.join(ROOT, "100xfenok-next", "public", "data");
 
 function readJson(relPath) {
+  const fullPath = path.join(DATA_ROOT, relPath);
   try {
-    return JSON.parse(fs.readFileSync(path.join(DATA_ROOT, relPath), "utf8"));
-  } catch {
-    return null;
+    return JSON.parse(fs.readFileSync(fullPath, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw new Error(`Cannot read valid JSON from ${fullPath}: ${error?.message || error}`, { cause: error });
   }
 }
 
@@ -80,6 +83,9 @@ function statusLabel(status) {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const NO_AGGREGATE_SOURCE_DATE = "provider publishes no aggregate source date";
+const SOURCE_FLOOR_UNAVAILABLE = "producer has not emitted a complete source-date floor";
+const INTERNAL_ARTIFACT_CLOCK = "internal artifact uses generation time; no upstream source date";
 
 function firstDate(...values) {
   for (const value of values) {
@@ -112,32 +118,6 @@ function oldestSourceDate(values) {
   return [...cleaned].sort()[0];
 }
 
-// Collection-RUN date (BACKLOG #331): the YYYY-MM-DD part of a fetch-run collection
-// timestamp (an exclusively-fetched artifact's generated_at, or an OLDEST fetched_at
-// stamp), real-calendar validated. Only for artifacts whose generated_at is a fetch-run
-// timestamp (verified writer-exclusive), NEVER a rebuild generated_at.
-function collectionDate(value) {
-  const raw = firstDate(value);
-  if (!raw) return null;
-  let day = null;
-  if (isRealCalendarDate(raw)) {
-    day = raw;
-  } else {
-    const stampMatch = raw.match(/^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/);
-    if (!stampMatch || !isRealCalendarDate(stampMatch[1])) return null;
-    const parsed = new Date(raw);
-    if (!Number.isFinite(parsed.getTime())) return null;
-    day = parsed.toISOString().slice(0, 10);
-  }
-  const today = new Date().toISOString().slice(0, 10);
-  return day && isRealCalendarDate(day) && day <= today ? day : null;
-}
-function oldestCollectionDate(values) {
-  const dates = values.map(collectionDate);
-  if (dates.length === 0 || dates.some((date) => !date)) return null;
-  return [...dates].sort()[0];
-}
-
 function ageDays(value, now = Date.now()) {
   if (!value) return null;
   const time = new Date(value).getTime();
@@ -145,26 +125,26 @@ function ageDays(value, now = Date.now()) {
   return Math.max(0, Math.floor((now - time) / DAY_MS));
 }
 
-function freshness(label, asOf, maxAgeDays, { warnOnly = false } = {}) {
-  const days = ageDays(asOf);
+function freshness(label, asOf, maxAgeDays, { warnOnly = false, calendar = null, missingReason = SOURCE_FLOOR_UNAVAILABLE } = {}) {
+  const days = calendar
+    ? businessDayAge(dateOnly(asOf), new Date().toISOString().slice(0, 10), calendar)
+    : ageDays(asOf);
   if (!asOf || days === null) {
     return check(
       label,
-      warnOnly ? "ready" : "unavailable",
-      warnOnly ? "수집 요약 없음(경고)" : "기준일 없음",
+      warnOnly ? "pending" : "unavailable",
+      warnOnly ? "원천 기준일 없음(경고)" : "기준일 없음",
       warnOnly
-        ? { as_of: asOf ?? null, age_days: null, max_age_days: maxAgeDays, warn_only: true }
-        : { as_of: asOf ?? null, max_age_days: maxAgeDays },
+        ? { as_of: asOf ?? null, age_days: null, max_age_days: maxAgeDays, calendar, warn_only: true, reason: missingReason }
+        : { as_of: asOf ?? null, age_days: null, max_age_days: maxAgeDays, calendar, reason: missingReason },
     );
   }
   const stale = days > maxAgeDays;
   return check(
     label,
-    warnOnly ? "ready" : stale ? "stale" : "ready",
-    stale && warnOnly
-      ? `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전 (경고: ${maxAgeDays}일 초과 노후화)`
-      : `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전`,
-    { as_of: asOf, age_days: days, max_age_days: maxAgeDays, warn_only: warnOnly ? stale : undefined },
+    stale ? "stale" : "ready",
+    `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전${stale && warnOnly ? ` (경고: ${maxAgeDays}일 초과 노후화)` : ""}`,
+    { as_of: asOf, age_days: days, max_age_days: maxAgeDays, calendar, warn_only: warnOnly || undefined },
   );
 }
 
@@ -204,6 +184,13 @@ function surface(id, route, label, owner, checks, summary, meta = {}) {
   };
 }
 
+function sourceStamp(sourceAsOf, missingReason = SOURCE_FLOOR_UNAVAILABLE) {
+  return {
+    source_as_of: sourceAsOf ?? null,
+    source_as_of_reason: sourceAsOf ? null : missingReason,
+  };
+}
+
 function surfaceConsumerMap(consumers) {
   const map = new Map();
   const rows = Array.isArray(consumers?.surfaces) ? consumers.surfaces : [];
@@ -232,45 +219,6 @@ function surfaceRowsForRoute(surfaceIndex, consumers, routePrefix) {
   };
 }
 
-function strictRouteSurfaceNames(consumers, routePrefix) {
-  const rows = Array.isArray(consumers?.surfaces) ? consumers.surfaces : [];
-  const seen = new Set();
-  const names = [];
-  for (const row of rows) {
-    const name = String(row?.surface || "").trim();
-    if (!name || seen.has(name)) return null;
-    seen.add(name);
-    if (!Array.isArray(row?.consumers) || row.consumers.length === 0) return null;
-    const routes = row.consumers.map((consumer) => String(consumer?.route || "").trim());
-    if (routes.some((route) => !route)) return null;
-    if (routes.some((route) => route === routePrefix || route.startsWith(`${routePrefix}/`))) names.push(name);
-  }
-  return names.length > 0 ? names.sort() : null;
-}
-
-function routePayloadSourceAsOf(surfaceIndex, consumers, routePrefix) {
-  const names = strictRouteSurfaceNames(consumers, routePrefix);
-  if (!names) return null;
-  const rows = Array.isArray(surfaceIndex?.results) ? surfaceIndex.results : [];
-  const dates = [];
-  for (const name of names) {
-    const matches = rows.filter((row) => String(row?.surface || "") === name);
-    if (matches.length !== 1 || matches[0]?.status !== "ok" || !matches[0]?.path) return null;
-    const payload = readJson(`stockanalysis/${matches[0].path}`);
-    const date = collectionDate(payload?.fetched_at);
-    if (!date) return null;
-    dates.push(date);
-  }
-  return oldestCollectionDate(dates);
-}
-
-function crossCheckedSurfaceDomain(domain, routePrefix) {
-  const payloadStamp = routePayloadSourceAsOf(surfaceIndex, surfaceConsumers, routePrefix);
-  const indexStamp = collectionDate(surfaceIndex?.source_as_of?.[domain]);
-  const mirrorStamp = collectionDate(stockanalysisIndex?.source_as_of?.surfaces?.[domain]);
-  return payloadStamp && payloadStamp === indexStamp && indexStamp === mirrorStamp ? payloadStamp : null;
-}
-
 const marketFactsIndex = readJson("computed/market_facts/index.json");
 const marketAudit = readJson("computed/market_data_audit.json");
 const sourceParity = readJson("computed/market_source_parity.json");
@@ -284,7 +232,6 @@ const dataUsage = readJson("admin/data-usage-manifest.json");
 const stockFieldManifest = readJson("admin/stock-field-usage-manifest.json");
 const stocksAnalyzer = readJson("global-scouter/core/stocks_analyzer.json");
 const actionSummary = readJson("computed/stock_action_summary.json");
-const yfSummary = readJson("yf/finance/_summary.json");
 const edgarIndex = readJson("edgar-korean-summaries/index.json");
 const rimIndexInputs = readJson("computed/rim-index/inputs.json");
 const yardneyModel = readJson("yardney/yardney_model.json");
@@ -331,10 +278,8 @@ const generatedAt = new Date().toISOString();
 const eventSurfaceAsOf = latestDate(surfaceIndex?.generated_at, surfaceIndex?.fetched_at);
 const etfAsOf = latestDate(etfUniverse?.generated_at, etfUniverse?.fetched_at, etfCoverage?.generated_at);
 const screenerAsOf = latestDate(stocksAnalyzer?.generated_at, stocksAnalyzer?.source_date, actionSummary?.generated_at);
-const yfAsOf = yfSummary?.generated_at ?? null;
 const marketFactsAsOf = latestDate(marketFactsIndex?.generated_at, sourceParity?.generated_at, marketAudit?.generated_at);
 const edgarAsOf = latestDate(edgarIndex?.generated_at, edgarIndex?.generatedAt, edgarIndex?.updated_at, edgarIndex?.updated);
-const rimIndexAsOf = latestDate(rimIndexInputs?.generated_at, rimIndexInputs?.meta?.generated_at);
 const yardneyRows = Array.isArray(yardneyModel?.data) ? yardneyModel.data : [];
 const yardneyLatest = yardneyRows.at(-1) ?? null;
 const yardneyAsOf = latestDate(
@@ -342,6 +287,8 @@ const yardneyAsOf = latestDate(
   yardneyModel?.meta?.last_update?.last_public_date,
   yardneyModel?.meta?.generated_at,
 );
+const yardeniMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
+  .find((lane) => lane.id === "fred_yardeni")?.freshness?.max_staleness ?? 10;
 // Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
 // carry genuine nested source dates get a real stamp; the rest stay null until
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).
@@ -349,29 +296,61 @@ const yardneyAsOf = latestDate(
 //  - screener: stocks_analyzer.source_date.
 //  - stock_detail / market_events / sectors / etf_center: dedicated collection-date
 //    stamps cross-checked against their fetch-owned payloads and index mirror.
-const marketValuationSourceAsOf = oldestSourceDate([
+const rimSourceAsOf = oldestSourceDate([
   rimIndexInputs?.indices?.KOSPI?.observed?.price?.as_of,
   rimIndexInputs?.indices?.SOX?.observed?.price?.as_of,
+]);
+const yardeniSourceAsOf = oldestSourceDate([
   yardneyLatest?.date ?? yardneyModel?.meta?.last_update?.last_public_date,
 ]);
 const screenerSourceAsOf = oldestSourceDate([stocksAnalyzer?.source_date]);
 
-// BACKLOG #331 — the remaining four surfaces. Market facts exposes OLDEST per-fact
-// collection evidence. StockAnalysis route domains require payload aggregate ==
-// surfaces/index stamp == stockanalysis/index mirror; ETF universe follows the same
-// owning-artifact + mirror rule. Any missing/malformed/future/mismatch stays null.
-const marketFactsCoreSourceAsOf = collectionDate(marketFactsIndex?.core_surface_source_as_of);
-const marketFactsFullUniverseFloor = collectionDate(marketFactsIndex?.full_universe_floor_as_of);
+// Market facts exposes the oldest true per-fact source date. StockAnalysis aggregate
+// products intentionally remain null because the provider publishes no aggregate date.
+const marketFactsCoreSourceAsOf = oldestSourceDate([marketFactsIndex?.core_surface_source_as_of]);
+const marketFactsFullUniverseFloor = oldestSourceDate([marketFactsIndex?.full_universe_floor_as_of]);
+const marketFactsSourceDiagnostics = marketFactsIndex?.source_stamp_diagnostics || {};
+const marketFactsCoreMemberCount = number(marketFactsSourceDiagnostics.core_member_count);
+const marketFactsCoreMissingCount = number(marketFactsSourceDiagnostics.core_price_missing_count);
+const marketFactsCoreMissingTickers = Array.isArray(marketFactsSourceDiagnostics.core_price_missing_tickers)
+  ? marketFactsSourceDiagnostics.core_price_missing_tickers.filter((ticker) => typeof ticker === "string" && ticker.trim())
+  : [];
+const marketFactsCoreComplete = marketFactsSourceDiagnostics.core_price_source_complete === true;
 const stockDetailSourceAsOf = marketFactsCoreSourceAsOf;
-const marketEventsSourceAsOf = crossCheckedSurfaceDomain("market_events", "/market/events");
-const sectorSurfaceStamp = crossCheckedSurfaceDomain("sectors", "/sectors");
-const etfSurfaceStamp = crossCheckedSurfaceDomain("etf_center", "/etfs");
-const etfUniverseStamp = collectionDate(etfUniverse?.source_as_of);
-const etfUniverseMirror = collectionDate(stockanalysisIndex?.source_as_of?.etf_universe);
-const sectorsSourceAsOf = oldestCollectionDate([sectorSurfaceStamp, marketFactsCoreSourceAsOf]);
-const etfCenterSourceAsOf = etfUniverseStamp && etfUniverseStamp === etfUniverseMirror
-  ? oldestCollectionDate([etfUniverseStamp, etfSurfaceStamp, marketFactsCoreSourceAsOf])
-  : null;
+const marketValuationSourceAsOf = oldestSourceDate([rimSourceAsOf, yardeniSourceAsOf, marketFactsCoreSourceAsOf]);
+// StockAnalysis publishes quote-level dates, but no aggregate publication date.
+// Legacy aggregate stamps were collection dates promoted into source_as_of.
+const marketEventsSourceAsOf = null;
+const sectorsSourceAsOf = marketFactsCoreSourceAsOf;
+const etfCenterSourceAsOf = null;
+
+function marketFactsCompletenessCheck(label = "가격 원천 완전성") {
+  if (marketFactsCoreComplete) {
+    return check(label, "ready", `${marketFactsCoreMemberCount.toLocaleString("ko-KR")}개 핵심 티커 모두 기준일 확인`, {
+      count: marketFactsCoreMemberCount,
+      missing: 0,
+    });
+  }
+  if (marketFactsCoreMemberCount > 0) {
+    const samples = marketFactsCoreMissingTickers.slice(0, 10);
+    return check(
+      label,
+      "partial",
+      `${marketFactsCoreMissingCount.toLocaleString("ko-KR")}개 기준일 미확인${samples.length ? `: ${samples.join(", ")}` : ""}`,
+      {
+        count: marketFactsCoreMemberCount,
+        missing: marketFactsCoreMissingCount,
+        missing_tickers: marketFactsCoreMissingTickers,
+        reason: "one or more core tickers have no provider source date",
+      },
+    );
+  }
+  return check(label, "unavailable", "핵심 티커 기준일 완전성 진단 없음", {
+    count: 0,
+    missing: null,
+    reason: SOURCE_FLOOR_UNAVAILABLE,
+  });
+}
 
 const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/market/events");
 const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sectors");
@@ -426,12 +405,13 @@ const surfaces = [
       check("기관 공시", counts.sec13fJson > 0 ? "ready" : "unavailable", `${counts.sec13fJson.toLocaleString("ko-KR")}개 13F JSON`, { count: counts.sec13fJson }),
       check("한글 공시", counts.edgarByTicker > 0 ? "partial" : "unavailable", `${counts.edgarByTicker.toLocaleString("ko-KR")}개 by-ticker`, { count: counts.edgarByTicker, reason: "요약 보유 티커만 표시" }),
       check("이벤트 보강", stockSurfaces.surfaceCount > 0 ? "ready" : "pending", `${stockSurfaces.surfaceCount}개 화면 연결`, { count: stockSurfaces.surfaceCount }),
-      freshness("가격 기준일", marketFactsAsOf, 7),
-      freshness("야후 파이낸스 수집일", yfAsOf, 8),
-      freshness("공시 요약 기준일", edgarAsOf, 14),
+      marketFactsCompletenessCheck(),
+      freshness("가격 원천 기준일", stockDetailSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      freshness("공시 원천 기준일", null, 14, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
-    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), source_as_of: stockDetailSourceAsOf },
+    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), ...sourceStamp(stockDetailSourceAsOf) },
   ),
   surface(
     "market_valuation",
@@ -445,13 +425,14 @@ const surfaces = [
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
       rimIndexReadyCheck("KOSPI", "KOSPI"),
       rimIndexReadyCheck("SOX", "SOX"),
-      freshness("RIM 입력 기준일", rimIndexAsOf, 2),
-      freshness("Yardeni 기준일", yardneyAsOf, 7),
-      freshness("야후 파이낸스 수집일", yfAsOf, 8),
-      freshness("시장 데이터 기준일", marketFactsAsOf, 7),
+      freshness("RIM 입력 기준일", rimSourceAsOf, 2, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      freshness("Yardeni 기준일", yardeniSourceAsOf, yardeniMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      marketFactsCompletenessCheck("시장 데이터 원천 완전성"),
+      freshness("시장 데이터 기준일", marketFactsCoreSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
-    { as_of: marketFactsAsOf, source_as_of: marketValuationSourceAsOf },
+    { as_of: marketFactsAsOf, ...sourceStamp(marketValuationSourceAsOf) },
   ),
   surface(
     "market_events",
@@ -464,10 +445,10 @@ const surfaces = [
       check("기업 이벤트", eventSurfaces.names.includes("actions_recent") ? "ready" : "pending", "액션/분할"),
       check("IPO", eventSurfaces.names.some((name) => name.startsWith("ipos_")) ? "ready" : "pending", "IPO 표면"),
       check("급등락", eventSurfaces.names.some((name) => name.startsWith("market_")) ? "ready" : "pending", "무버 표면"),
-      freshness("이벤트 표면 기준일", eventSurfaceAsOf, 7),
+      freshness("이벤트 표면 원천 기준일", marketEventsSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
-    { as_of: eventSurfaceAsOf, source_as_of: marketEventsSourceAsOf },
+    { as_of: eventSurfaceAsOf, ...sourceStamp(marketEventsSourceAsOf, NO_AGGREGATE_SOURCE_DATE) },
   ),
   surface(
     "sectors",
@@ -478,11 +459,12 @@ const surfaces = [
       check("섹터 흐름", exists("benchmarks/summaries.json") ? "ready" : "pending", "섹터 모멘텀"),
       check("산업 세분화", sectorSurfaces.surfaceCount > 0 ? "ready" : "pending", `${sectorSurfaces.surfaceCount}개 항목 · ${sectorSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: sectorSurfaces.surfaceCount, rows: sectorSurfaces.rowCount }),
       check("기관 보유", counts.sec13fJson > 0 ? "ready" : "pending", `${counts.sec13fJson.toLocaleString("ko-KR")}개 13F JSON`, { count: counts.sec13fJson }),
-      freshness("야후 파이낸스 수집일", yfAsOf, 8),
-      freshness("섹터 데이터 기준일", latestDate(eventSurfaceAsOf, marketFactsAsOf), 14),
+      freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      marketFactsCompletenessCheck("섹터 가격 원천 완전성"),
+      freshness("섹터 데이터 기준일", sectorsSourceAsOf, 14, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
-    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), source_as_of: sectorsSourceAsOf },
+    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), ...sourceStamp(sectorsSourceAsOf) },
   ),
   surface(
     "etf_center",
@@ -494,10 +476,10 @@ const surfaces = [
       check("ETF 상세", effectiveEtfDetail.available > 0 ? (effectiveEtfDetail.unavailable > 0 ? "partial" : "ready") : "unavailable", `${effectiveEtfDetail.available.toLocaleString("ko-KR")} / ${effectiveEtfDetail.total.toLocaleString("ko-KR")}개`, { count: effectiveEtfDetail.available, total: effectiveEtfDetail.total, missing: effectiveEtfDetail.unavailable, coverage_pct: effectiveEtfDetail.coveragePct, authority: r2EtfCounts ? "data_supply_r2_plus_strict_unenrolled_primary" : "legacy_coverage" }),
       check("기간 수익률", number(returnCoverage.return_1y?.etf) > 0 ? "ready" : "pending", `1Y ${number(returnCoverage.return_1y?.etf).toLocaleString("ko-KR")}개`, { count: number(returnCoverage.return_1y?.etf) }),
       check("신규·전략 ETF", etfSurfaces.surfaceCount > 0 ? "ready" : "pending", `${etfSurfaces.surfaceCount}개 항목 · ${etfSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: etfSurfaces.surfaceCount, rows: etfSurfaces.rowCount }),
-      freshness("ETF 기준일", etfAsOf, 7),
+      freshness("ETF 집계 원천 기준일", etfCenterSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
-    { as_of: etfAsOf, source_as_of: etfCenterSourceAsOf },
+    { as_of: etfAsOf, ...sourceStamp(etfCenterSourceAsOf, NO_AGGREGATE_SOURCE_DATE) },
   ),
   surface(
     "screener",
@@ -508,10 +490,10 @@ const surfaces = [
       check("기본 종목 테이블", exists("global-scouter/core/stocks_analyzer.json") ? "ready" : "unavailable", "stocks_analyzer"),
       check("필드 사용 감사", stockFieldManifest?.totals ? "ready" : "pending", `${number(stockFieldManifest?.totals?.fieldCount || stockFieldManifest?.totals?.fields).toLocaleString("ko-KR")}개 필드`, { count: number(stockFieldManifest?.totals?.fieldCount || stockFieldManifest?.totals?.fields) }),
       check("상세 패널", counts.globalScouterDetails > 0 ? "ready" : "pending", `${counts.globalScouterDetails.toLocaleString("ko-KR")}개 상세`, { count: counts.globalScouterDetails }),
-      freshness("스크리너 기준일", screenerAsOf, 7),
+      freshness("스크리너 기준일", screenerSourceAsOf, 7, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "스크리너는 종목 발견 화면이며 필드 사용 감사와 함께 미사용 데이터를 줄여간다.",
-    { as_of: screenerAsOf, source_as_of: screenerSourceAsOf },
+    { as_of: screenerAsOf, ...sourceStamp(screenerSourceAsOf) },
   ),
   surface(
     "admin_data_lab",
@@ -523,10 +505,10 @@ const surfaces = [
       check("시장 데이터 감사", marketAudit ? "ready" : "unavailable", "market_data_audit"),
       check("화면 연결 지도", surfaceConsumers ? "ready" : "pending", `${Array.isArray(surfaceConsumers?.surfaces) ? surfaceConsumers.surfaces.length : 0}개 표면`, { count: Array.isArray(surfaceConsumers?.surfaces) ? surfaceConsumers.surfaces.length : 0 }),
       check("제품 화면 준비도", "ready", "product-surface-coverage"),
-      freshness("준비도 기준일", generatedAt, 1),
+      freshness("준비도 원천 기준일", null, 1, { warnOnly: true, missingReason: INTERNAL_ARTIFACT_CLOCK }),
     ],
     "Data Lab은 파일 기준 감사에서 제품 화면 기준 감사까지 이어지는 운영 화면이다.",
-    { as_of: generatedAt, source_as_of: null },
+    { as_of: generatedAt, ...sourceStamp(null, INTERNAL_ARTIFACT_CLOCK) },
   ),
 ];
 
@@ -553,10 +535,13 @@ const payload = {
   source_stamp_diagnostics: {
     market_facts_core_surface_source_as_of: marketFactsCoreSourceAsOf,
     market_facts_full_universe_floor_as_of: marketFactsFullUniverseFloor,
+    market_facts_core_price_source_complete: marketFactsCoreComplete,
+    market_facts_core_price_missing_count: marketFactsCoreMissingCount,
+    market_facts_core_price_missing_tickers: marketFactsCoreMissingTickers,
     full_universe_floor_sla_bound: false,
     stockanalysis_surface_domains: surfaceIndex?.source_as_of ?? null,
     stockanalysis_index_mirror: stockanalysisIndex?.source_as_of ?? null,
-    etf_universe_source_as_of: etfUniverseStamp,
+    etf_universe_source_as_of: etfCenterSourceAsOf,
   },
   source_files: [
     "computed/market_facts/index.json",

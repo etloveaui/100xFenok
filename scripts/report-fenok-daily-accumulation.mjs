@@ -80,10 +80,13 @@ function compactSources(sources) {
     .filter(([, value]) => value != null)
     .map(([key, value]) => {
       if (typeof value === "string") return `${key}=${value}`;
-      const date = value.source_date ?? value.generated_at ?? "unknown";
+      const date = value.source_date ?? "unknown";
       const status = value.status ? ` ${value.status}` : "";
       const age = value.age_days != null ? ` age=${value.age_days}d` : "";
-      return `${key}=${date}${status}${age}`;
+      const reason = !value.source_date && (value.caveat || value.source_date_reason)
+        ? ` reason=${value.caveat || value.source_date_reason}`
+        : "";
+      return `${key}=${date}${status}${age}${reason}`;
     })
     .join("; ");
 }

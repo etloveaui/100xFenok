@@ -109,6 +109,60 @@ function asJsonRecord(value: unknown): JsonRecord | null {
   return value as JsonRecord;
 }
 
+function realIsoDay(value: unknown): string | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
+    ? value
+    : null;
+}
+
+function latestBenchmarkRowDay(rows: unknown): string | null {
+  if (!Array.isArray(rows)) return null;
+  const dates = rows
+    .map((row) => asJsonRecord(row)?.date)
+    .map(realIsoDay)
+    .filter((value): value is string => value !== null)
+    .sort();
+  return dates.at(-1) ?? null;
+}
+
+function benchmarkFileSourceClock(
+  fileName: string,
+  payload: JsonRecord | null,
+): { updated: string | null; reason: string | null } {
+  const sections = asJsonRecord(payload?.sections);
+  if (!sections || Object.keys(sections).length === 0) {
+    return {
+      updated: null,
+      reason: `${fileName} has no dated benchmark sections`,
+    };
+  }
+
+  const sectionDates = Object.entries(sections).map(([sectionName, section]) => ({
+    sectionName,
+    updated: latestBenchmarkRowDay(asJsonRecord(section)?.data),
+  }));
+  const missing = sectionDates.filter((entry) => entry.updated === null);
+  if (missing.length > 0) {
+    return {
+      updated: null,
+      reason: `${fileName} has undated required sections: ${missing
+        .map((entry) => entry.sectionName)
+        .join(", ")}`,
+    };
+  }
+
+  return {
+    updated: sectionDates
+      .map((entry) => entry.updated)
+      .filter((value): value is string => value !== null)
+      .sort()
+      .at(0) ?? null,
+    reason: null,
+  };
+}
+
 async function readOptionalJsonRecord(filePath: string): Promise<JsonRecord | null> {
   try {
     return asJsonRecord(JSON.parse(await readPublicDataFile(filePath)) as unknown);
@@ -495,7 +549,10 @@ async function getBaseMeta(folder: DataFolderKey) {
 
   return {
     version: schemaMeta?.version ?? manifestMeta?.version ?? null,
-    updated: schemaMeta?.updated ?? manifestMeta?.updated ?? null,
+    // Folder schema metadata historically stamped the conversion/build day.
+    // The root manifest now carries the independently-derived source date.
+    updated: manifestMeta?.updated ?? null,
+    updatedReason: manifestMeta?.updated_reason ?? null,
     source: schemaMeta?.source ?? manifestMeta?.source ?? null,
     updateFrequency:
       schemaMeta?.update_frequency ?? manifestMeta?.update_frequency ?? null,
@@ -511,7 +568,7 @@ export async function getBenchmarksManifest() {
 
   const summaryPath = path.join(baseDir, "summaries.json");
   const summary = await readJson<BenchmarkSummary>(summaryPath, benchmarkSummarySchema);
-  const files = Object.entries(catalog.files)
+  const declaredFiles = Object.entries(catalog.files)
     .filter(([fileName]) => fileName.endsWith(".json"))
     .map(([fileName, meta]) => ({
       id: fileName.replace(/\.json$/, ""),
@@ -521,12 +578,46 @@ export async function getBenchmarksManifest() {
       recordsPerIndex: meta.records_per_index ?? null,
       sectorCount: Array.isArray(meta.sectors) ? meta.sectors.length : null,
     }));
+  const sourceFiles = declaredFiles.filter((file) => file.id !== "summaries");
+  const sourceClocks = await Promise.all(
+    sourceFiles.map(async (file) => ({
+      id: file.id,
+      ...benchmarkFileSourceClock(
+        `${file.id}.json`,
+        await readOptionalJsonRecord(path.join(baseDir, `${file.id}.json`)),
+      ),
+    })),
+  );
+  const missingSourceDates = sourceClocks.filter((clock) => clock.updated === null);
+  const sourceUpdated = missingSourceDates.length === 0
+    ? sourceClocks
+        .map((clock) => clock.updated)
+        .filter((value): value is string => value !== null)
+        .sort()
+        .at(0) ?? null
+    : null;
+  const sourceUpdatedReason = missingSourceDates.length > 0
+    ? missingSourceDates.map((clock) => clock.reason || `${clock.id} source date is unknown`).join("; ")
+    : sourceUpdated
+      ? null
+      : "benchmark catalog declares no required source files";
+  const sourceClockById = new Map(sourceClocks.map((clock) => [clock.id, clock]));
+  const files = declaredFiles.map((file) => {
+    const sourceClock = sourceClockById.get(file.id);
+    return {
+      ...file,
+      sourceUpdated: sourceClock?.updated ?? null,
+      sourceUpdatedReason:
+        sourceClock?.reason ?? (file.id === "summaries" ? "derived summary has no independent source clock" : null),
+    };
+  });
 
   return {
     generatedAt: summary.metadata.generated ?? null,
     basePath: "/data/benchmarks/",
     version: catalog.version,
-    updated: catalog.updated,
+    updated: sourceUpdated,
+    updatedReason: sourceUpdatedReason,
     source: catalog.source ?? summary.metadata.source,
     files,
     summary: {
@@ -569,6 +660,7 @@ export async function getSentimentManifest() {
     basePath: "/data/sentiment/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
@@ -590,6 +682,7 @@ export async function getSlickchartsManifest() {
     basePath: "/data/slickcharts/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
@@ -650,6 +743,7 @@ export async function getStockanalysisManifest() {
     basePath: "/data/stockanalysis/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
@@ -787,6 +881,7 @@ export async function getDamodaranManifest() {
     basePath: "/data/damodaran/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
@@ -810,6 +905,7 @@ export async function getMacroManifest() {
     basePath: "/data/macro/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
@@ -835,6 +931,7 @@ export async function getSec13fManifest() {
     basePath: "/data/sec-13f/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
@@ -868,6 +965,7 @@ export async function getMarketQualityManifest() {
     basePath: "/data/computed/",
     version: meta.version,
     updated: meta.updated,
+    updatedReason: meta.updatedReason,
     source: meta.source,
     updateFrequency: meta.updateFrequency,
     files: {

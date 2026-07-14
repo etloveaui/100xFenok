@@ -115,6 +115,70 @@ function toEpochSeconds(value: unknown): number | null {
   return Math.trunc(n);
 }
 
+function epochSecondsIso(value: unknown): string | null {
+  const seconds = toEpochSeconds(value);
+  if (seconds === null) return null;
+  const date = new Date(seconds * 1000);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function zonedWallTimeIso(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  timeZone: string,
+): string {
+  const guess = Date.UTC(year, month - 1, day, hour, minute);
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = Object.fromEntries(
+    formatter.formatToParts(new Date(guess)).map((part) => [part.type, part.value]),
+  );
+  const representedAsUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second),
+  );
+  return new Date(guess - (representedAsUtc - guess)).toISOString();
+}
+
+function nextUsWeekdayOpen(sourceAsOf: string): string {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = Object.fromEntries(
+    formatter.formatToParts(new Date(sourceAsOf)).map((part) => [part.type, part.value]),
+  );
+  const date = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+  do {
+    date.setUTCDate(date.getUTCDate() + 1);
+  } while (date.getUTCDay() === 0 || date.getUTCDay() === 6);
+  return zonedWallTimeIso(
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate(),
+    9,
+    30,
+    "America/New_York",
+  );
+}
+
 export function deriveMarketStateFromTradingPeriods(params: {
   marketStateRaw?: unknown;
   currentTradingPeriod?: YahooMeta["currentTradingPeriod"];
@@ -168,19 +232,43 @@ function pickPrice(
   return regular;
 }
 
-function quoteState(fetchedAt: string, source: QuoteProviderSource): Pick<TickerQuote, "lastUpdated" | "staleAfter" | "state"> {
-  const staleAfter = addMinutesIso(fetchedAt, QUOTE_STALE_AFTER_MINUTES);
+function quoteState(params: {
+  fetchedAt: string;
+  source: QuoteProviderSource;
+  regularMarketTime: unknown;
+  marketState: QuoteMarketState;
+  currentTradingPeriod?: YahooMeta["currentTradingPeriod"];
+}): Pick<TickerQuote, "lastUpdated" | "staleAfter" | "state"> {
+  const sourceAsOf = epochSecondsIso(params.regularMarketTime);
+  const nextRegularStart = epochSecondsIso(params.currentTradingPeriod?.regular?.start);
+  let staleAfter = sourceAsOf
+    ? addMinutesIso(sourceAsOf, QUOTE_STALE_AFTER_MINUTES)
+    : params.fetchedAt;
+
+  if (sourceAsOf && params.marketState !== "REGULAR") {
+    const sessionStart = nextRegularStart && new Date(nextRegularStart) > new Date(sourceAsOf)
+      ? nextRegularStart
+      : nextUsWeekdayOpen(sourceAsOf);
+    staleAfter = addMinutesIso(sessionStart, QUOTE_STALE_AFTER_MINUTES);
+  }
+
+  const isStale = sourceAsOf !== null && Date.now() > new Date(staleAfter).getTime();
+  const status = sourceAsOf === null ? "unavailable" : isStale ? "stale" : "ready";
   return {
-    lastUpdated: fetchedAt,
+    lastUpdated: params.fetchedAt,
     staleAfter,
     state: {
-      status: "partial",
+      status,
       quoteStatus: "delayed",
-      label: "시세 연결됨",
-      detail: source === "yahoo"
-        ? "지연 가능 시세입니다. 기준 시각을 함께 확인하세요."
-        : "보조 시세 경로에서 받은 값입니다. 기준 시각을 함께 확인하세요.",
-      asOf: fetchedAt,
+      label: sourceAsOf === null ? "시세 기준시각 없음" : isStale ? "시세 갱신 지연" : "시세 연결됨",
+      detail: sourceAsOf === null
+        ? "공급자가 실제 시세 기준시각을 제공하지 않아 최신성을 판정하지 않았습니다."
+        : isStale
+          ? "시장 세션 기준 갱신 시한을 지났지만 더 최신 시세가 없습니다."
+          : params.source === "yahoo"
+            ? "지연 가능 시세이며 시장 세션에 맞춰 실제 시세 기준시각을 판정했습니다."
+            : "보조 시세 경로의 실제 시세 기준시각을 시장 세션에 맞춰 판정했습니다.",
+      asOf: sourceAsOf,
       staleAfter,
     },
   };
@@ -250,7 +338,13 @@ async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
     marketState,
     source: "yahoo",
     fetchedAt,
-    ...quoteState(fetchedAt, "yahoo"),
+    ...quoteState({
+      fetchedAt,
+      source: "yahoo",
+      regularMarketTime: meta.regularMarketTime,
+      marketState,
+      currentTradingPeriod: meta.currentTradingPeriod,
+    }),
   };
 }
 
@@ -299,7 +393,13 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
     marketState,
     source: "worker",
     fetchedAt,
-    ...quoteState(fetchedAt, "worker"),
+    ...quoteState({
+      fetchedAt,
+      source: "worker",
+      regularMarketTime: candidate.regularMarketTime,
+      marketState,
+      currentTradingPeriod: candidate.currentTradingPeriod,
+    }),
   };
 }
 

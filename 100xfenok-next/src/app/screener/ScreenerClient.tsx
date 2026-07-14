@@ -59,6 +59,13 @@ const DENSITY_LABEL: Record<ScreenerDensity, string> = {
 
 const DENSITY_BUTTONS: ScreenerDensity[] = ["compact", "standard", "comfortable"];
 
+function completeSourceFloor(values: Array<string | null | undefined>): string | null {
+  if (values.length === 0) return null;
+  const dates = values.map((value) => formatDataDate(value));
+  if (dates.some((value) => value === null)) return null;
+  return (dates as string[]).sort().at(0) ?? null;
+}
+
 const DENSITY_ROW_HEIGHT: Record<ScreenerDensity, number> = {
   compact: 32,
   standard: 40,
@@ -1261,6 +1268,9 @@ export default function ScreenerClient({
     sectors,
     countries,
   } = useScreenerData();
+  const screenerSourceDate = connectionIndexReady
+    ? completeSourceFloor([sourceDate, connectionIndexDate])
+    : sourceDate;
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
   const [actionMap, setActionMap] = useState<Record<string, ActionSummaryRecord> | null>(null);
 
@@ -1661,11 +1671,24 @@ export default function ScreenerClient({
     }
     const missingPrice = stocks.filter((stock) => stock.price === null).length;
     if (missingPrice > 0) {
+      const sourceDateDetail = connectionIndexReady && !screenerSourceDate
+        ? " 연결 인덱스의 필수 원천 기준일도 완전하지 않아 통합 기준일을 표시하지 않습니다."
+        : "";
       return makeDataState({
         status: "partial",
         label: "일부 가격 없음",
-        detail: `${missingPrice.toLocaleString("ko-KR")}개 종목은 가격 없이 표시됩니다. 정렬과 필터는 확인된 값 기준입니다.`,
-        asOf: sourceDate,
+        detail: `${missingPrice.toLocaleString("ko-KR")}개 종목은 가격 없이 표시됩니다. 정렬과 필터는 확인된 값 기준입니다.${sourceDateDetail}`,
+        asOf: screenerSourceDate,
+        reason: sourceDateDetail ? "required connection source date is missing" : null,
+      });
+    }
+    if (connectionIndexReady && !screenerSourceDate) {
+      return makeDataState({
+        status: "partial",
+        label: "연결 기준일 미제공",
+        detail: "연결 인덱스의 필수 원천 기준일이 완전하지 않아 통합 기준일을 표시하지 않습니다.",
+        asOf: null,
+        reason: "required connection source date is missing",
       });
     }
     return makeDataState({
@@ -1674,9 +1697,9 @@ export default function ScreenerClient({
       detail: connectionIndexReady
         ? `${stocks.length.toLocaleString("ko-KR")}개 종목과 연결 인덱스를 표시할 수 있습니다.`
         : `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시할 수 있습니다. 연결 인덱스는 준비 전입니다.`,
-      asOf: connectionIndexDate ?? sourceDate,
+      asOf: screenerSourceDate,
     });
-  }, [connectionIndexDate, connectionIndexReady, dataReady, failed, sourceDate, stocks]);
+  }, [connectionIndexReady, dataReady, failed, screenerSourceDate, sourceDate, stocks]);
 
   const toggleSort = useCallback((key: ScreenerSortKey) => {
     if (key === sortKey) {
@@ -2034,7 +2057,8 @@ export default function ScreenerClient({
   const filterPreviewLabel = activeFilterChips.length > 0
     ? activeFilterChips.slice(0, 5).map((chip) => chip.label).join(" · ")
     : "종목 범위 · 가치 조건 · 성장·수익 · 품질·신호";
-  const sourceDateLabel = sourceDate ?? "확인 중";
+  const sourceDateLabel = screenerSourceDate
+    ?? (connectionIndexReady ? "원천 기준일 미제공" : sourceDate ?? "확인 중");
   const densityClass = DENSITY_TABLE_CLASS[density];
 
   useEffect(() => {

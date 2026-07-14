@@ -64,7 +64,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
   const performance = row.data?.normalized?.performance ?? {};
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
   const holdingCount = row.data?.normalized?.holding_count ?? holdings.length;
-  const holdingsDate = fmtDateish(row.data?.normalized?.holdings_updated ?? row.data?.fetched_at);
+  const holdingsDate = fmtDateish(row.data?.normalized?.holdings_updated);
   const expenseRatio = parsePercentPoints(overview.expenseRatio);
   const dividendYield = parsePercentPoints(overview.dividendYield);
   const aum = rawText(overview.aum);
@@ -76,7 +76,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
         <div className="min-w-0">
           <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-[var(--c-ink)]" />
           <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
-          <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">기준 {holdingsDate}</p>
+          <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
         </div>
         <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {fmtSigned(performance.tr1y)}
@@ -187,13 +187,12 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   const rows = useMemo(() => (loading ? [] : loadState.rows), [loading, loadState.rows]);
   const overlaps = useMemo(() => pairOverlaps(rows), [rows]);
   const asOfDates = useMemo(() => {
-    const dates = rows
-      .map((row) => fmtDateish(row.data?.normalized?.holdings_updated ?? row.data?.fetched_at))
-      .filter((date) => date !== "—");
-    return [...new Set(dates)];
+    return rows.map((row) => fmtDateish(row.data?.normalized?.holdings_updated));
   }, [rows]);
-  const asOfLabel = asOfDates.length === 0 ? "—" : asOfDates.length === 1 ? asOfDates[0] : "기준일 혼합";
-  const hasMixedAsOf = asOfDates.length > 1;
+  const hasUnknownAsOf = asOfDates.length === 0 || asOfDates.some((date) => date === "—");
+  const distinctAsOfDates = [...new Set(asOfDates.filter((date) => date !== "—"))];
+  const asOfLabel = hasUnknownAsOf ? "미확인" : distinctAsOfDates.length === 1 ? distinctAsOfDates[0] ?? "미확인" : "혼합";
+  const hasMixedAsOf = !hasUnknownAsOf && distinctAsOfDates.length > 1;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

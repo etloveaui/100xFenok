@@ -196,7 +196,7 @@ export default function MarketStructureDetailClient({
           {model?.generatedAt ? (
             <span className="data-shell-pill ok">
               <span />
-              {model.generatedAt}
+              생성 {model.generatedAt}
             </span>
           ) : null}
           <TransitionLink

@@ -6,11 +6,10 @@ Automatically keeps manifest.json in sync with the actual data/ folder state.
 
 What this script updates:
   - file_count  : actual JSON file count per folder (schema.json excluded)
-  - updated     : the TRUE latest data-point date for the folder (max `date`/
-                  `as_of`/`generated_at`/`updated` across the folder's real data
-                  files). A reformat or git-touch can NOT stamp today — staleness
-                  always surfaces. Falls back to today only when a folder exposes
-                  no derivable data date.
+  - updated     : the complete source floor: the oldest of each required input's
+                  latest honest source/observation date. Build/collection clocks
+                  are never promoted. Missing source dates become null with
+                  `updated_reason`.
   - last_updated: root-level metadata (manifest rebuild day)
   - generatedAt : UTC snapshot timestamp for the manifest
   - categories  : MCP-facing hybrid registry derived from legacy folders
@@ -108,15 +107,6 @@ NEXT_MANIFEST = REPO_ROOT / "100xfenok-next" / "public" / "data" / "manifest.jso
 
 # JSON files excluded from count (metadata files, not data)
 EXCLUDE_FILES = {"schema.json"}
-
-# Folders whose `updated` must reflect the TRUE latest data point (max date
-# across the real data files), so a reformat/git-touch can never mask staleness.
-# Restricted to genuine time-series folders: their nested `date`/`as_of`/
-# `updated` fields are real observation timestamps. Fundamental/forward folders
-# (global-scouter, benchmarks, indices, yardney, calendar) carry forward-looking
-# fiscal/forecast/event dates that are NOT freshness signals, so they keep the
-# conservative schema-declared behaviour.
-TIME_SERIES_FOLDERS = {"sentiment", "macro", "computed", "slickcharts"}
 
 # Root-level names that are NOT orphan data files
 ROOT_KNOWN = {
@@ -219,21 +209,8 @@ def refresh_default_folder_metadata(
     return reasons
 
 
-# Top-level / nested metadata keys that carry a real data timestamp.
-# Order matters only for tie-resolution within a single object; the folder
-# date is always the MAX across every data file, so staleness can never be
-# masked by a sibling reformat.
-_DATA_DATE_KEYS = (
-    "as_of",
-    "asOf",
-    "date",
-    "generated_at",
-    "generatedAt",
-    "updated",
-    "last_updated",
-    "lastUpdated",
-    "history_end",
-)
+NO_AGGREGATE_SOURCE_DATE = "no aggregate source date is published for this folder"
+SourceClock = tuple[str | None, str | None]
 
 
 def _coerce_date_str(value: object) -> str | None:
@@ -247,111 +224,305 @@ def _coerce_date_str(value: object) -> str | None:
         head = text[:10]
         y, m, d = head[:4], head[5:7], head[8:10]
         if y.isdigit() and m.isdigit() and d.isdigit():
+            try:
+                date.fromisoformat(head)
+            except ValueError:
+                return None
             return head
+    for fmt in ("%B %d, %Y", "%b %d, %Y", "%B %Y", "%b %Y"):
+        try:
+            return datetime.strptime(text, fmt).date().isoformat()
+        except ValueError:
+            continue
     return None
 
 
-def _scan_max_date(node: object, depth: int = 0) -> str | None:
-    """
-    Recursively walk a parsed JSON value and return the lexicographically
-    greatest YYYY-MM-DD found in any data-date field or any `date` entry of a
-    list element. Bounded depth keeps very large series files cheap.
-    """
-    if depth > 6:
-        return None
-
-    best: str | None = None
-
-    if isinstance(node, dict):
-        # 1) Honour explicit metadata keys on this object.
-        for key in _DATA_DATE_KEYS:
-            if key in node:
-                cand = _coerce_date_str(node[key])
-                if cand and (best is None or cand > best):
-                    best = cand
-        # 2) Recurse into nested containers that commonly hold dated series.
-        for key, child in node.items():
-            if isinstance(child, (dict, list)):
-                cand = _scan_max_date(child, depth + 1)
-                if cand and (best is None or cand > best):
-                    best = cand
-    elif isinstance(node, list):
-        # Sample head + tail for huge arrays (series are date-sorted), but also
-        # scan a bounded interior window to stay correct for unsorted data.
-        n = len(node)
-        if n == 0:
-            return None
-        if n <= 400:
-            indices = range(n)
-        else:
-            indices = list(range(0, 50)) + list(range(n - 50, n)) + list(range(0, n, max(1, n // 300)))
-        for i in indices:
-            item = node[i]
-            if isinstance(item, dict):
-                d = _coerce_date_str(item.get("date"))
-                if d and (best is None or d > best):
-                    best = d
-                else:
-                    cand = _scan_max_date(item, depth + 1)
-                    if cand and (best is None or cand > best):
-                        best = cand
-            elif isinstance(item, list):
-                cand = _scan_max_date(item, depth + 1)
-                if cand and (best is None or cand > best):
-                    best = cand
-
-    return best
-
-
-def _file_latest_date(file_path: Path) -> str | None:
-    """Return the greatest data date inside a single JSON file, or None."""
+def _read_json(file_path: Path) -> object | None:
+    """Read JSON without converting a malformed present file into 'unknown'."""
     try:
         with open(file_path, encoding="utf-8") as f:
-            payload = json.load(f)
-    except Exception:
+            return json.load(f)
+    except FileNotFoundError:
         return None
-    return _scan_max_date(payload)
+
+
+def _latest_row_date(rows: object, *keys: str) -> str | None:
+    if not isinstance(rows, list):
+        return None
+    dates = [
+        parsed
+        for row in rows
+        if isinstance(row, dict)
+        for key in keys
+        if (parsed := _coerce_date_str(row.get(key))) is not None
+    ]
+    return max(dates) if dates else None
+
+
+def _complete_floor(named_dates: list[tuple[str, str | None]], label: str) -> SourceClock:
+    """Return the oldest latest-date only when every required source is dated."""
+    if not named_dates:
+        return None, f"{label} declares no required source inputs"
+
+    missing = [name for name, source_date in named_dates if source_date is None]
+    if missing:
+        preview = ", ".join(missing[:4])
+        suffix = f" (+{len(missing) - 4} more)" if len(missing) > 4 else ""
+        return None, f"source date unavailable for required {label}: {preview}{suffix}"
+
+    return min(source_date for _, source_date in named_dates if source_date is not None), None
+
+
+def _schema_file_names(folder: Path) -> list[str]:
+    schema = _read_json(folder / "schema.json")
+    files = schema.get("files") if isinstance(schema, dict) else None
+    return sorted(name for name in files if isinstance(name, str)) if isinstance(files, dict) else []
+
+
+def _benchmark_clock(folder: Path) -> SourceClock:
+    files = [name for name in _schema_file_names(folder) if name != "summaries.json"]
+    file_dates: list[tuple[str, str | None]] = []
+    for file_name in files:
+        payload = _read_json(folder / file_name)
+        sections = payload.get("sections") if isinstance(payload, dict) else None
+        section_items = sections.items() if isinstance(sections, dict) else []
+        section_dates = [
+            (f"{file_name}:{section_name}", _latest_row_date(section.get("data"), "date"))
+            for section_name, section in section_items
+            if isinstance(section, dict)
+        ]
+        file_date, _ = _complete_floor(section_dates, f"benchmark sections in {file_name}")
+        file_dates.append((file_name, file_date))
+    return _complete_floor(file_dates, "benchmark files")
+
+
+def _damodaran_clock(folder: Path) -> SourceClock:
+    named_dates: list[tuple[str, str | None]] = []
+    for file_name in _schema_file_names(folder):
+        payload = _read_json(folder / file_name)
+        metadata = payload.get("metadata") if isinstance(payload, dict) else None
+        source_date = metadata.get("source_date") if isinstance(metadata, dict) else None
+        named_dates.append((file_name, _coerce_date_str(source_date)))
+    return _complete_floor(named_dates, "Damodaran files")
+
+
+def _global_scouter_clock(folder: Path) -> SourceClock:
+    required = (
+        "core/metadata.json",
+        "core/stocks_index.json",
+        "etfs/index.json",
+        "indicators/economic.json",
+        "raw/manifest.json",
+    )
+    named_dates = []
+    for file_name in required:
+        payload = _read_json(folder / file_name)
+        source_date = payload.get("source_date") if isinstance(payload, dict) else None
+        named_dates.append((file_name, _coerce_date_str(source_date)))
+    return _complete_floor(named_dates, "Global Scouter files")
+
+
+def _indices_clock(folder: Path) -> SourceClock:
+    named_dates = [
+        (file_name, _latest_row_date(_read_json(folder / file_name), "date"))
+        for file_name in _schema_file_names(folder)
+    ]
+    return _complete_floor(named_dates, "index series")
+
+
+def _series_floor(payload: object, label: str) -> SourceClock:
+    series = payload.get("series") if isinstance(payload, dict) else None
+    if isinstance(series, list):
+        return _complete_floor([(label, _latest_row_date(series, "date"))], label)
+    if not isinstance(series, dict):
+        return None, f"source date unavailable for required {label}: series"
+    named_dates = [
+        (str(series_id), _latest_row_date(rows, "date"))
+        for series_id, rows in series.items()
+    ]
+    return _complete_floor(named_dates, label)
+
+
+def _activity_surveys_clock(payload: object) -> SourceClock:
+    meta = payload.get("meta") if isinstance(payload, dict) else None
+    coverage = meta.get("coverage") if isinstance(meta, dict) else None
+    named_dates = [
+        (str(name), _coerce_date_str(item.get("latest_date")) if isinstance(item, dict) else None)
+        for name, item in (coverage.items() if isinstance(coverage, dict) else [])
+    ]
+    return _complete_floor(named_dates, "activity survey series")
+
+
+def _yahoo_ticker_clock(payload: object) -> SourceClock:
+    tickers = payload.get("tickers") if isinstance(payload, dict) else None
+    named_dates: list[tuple[str, str | None]] = []
+    for ticker, quote in (tickers.items() if isinstance(tickers, dict) else []):
+        raw = quote.get("regularMarketTime") if isinstance(quote, dict) else None
+        source_date = None
+        if isinstance(raw, (int, float)) and raw > 0:
+            source_date = datetime.fromtimestamp(raw, tz=timezone.utc).date().isoformat()
+        named_dates.append((str(ticker), source_date))
+    return _complete_floor(named_dates, "Yahoo ticker observations")
+
+
+def _macro_clock(folder: Path) -> SourceClock:
+    required: list[tuple[str, SourceClock]] = []
+
+    activity = _read_json(folder / "activity-surveys.json")
+    required.append(("activity-surveys.json", _activity_surveys_clock(activity)))
+
+    fdic = _read_json(folder / "fdic-tier1.json")
+    fdic_rows = fdic.get("data") if isinstance(fdic, dict) else None
+    required.append(("fdic-tier1.json", (_latest_row_date(fdic_rows, "date"), None)))
+
+    for file_name in (
+        "fred-banking-daily.json",
+        "fred-banking-weekly.json",
+        "fred-banking-quarterly.json",
+        "fred-macro.json",
+    ):
+        required.append((file_name, _series_floor(_read_json(folder / file_name), file_name)))
+
+    for file_name in ("stablecoins.json", "tga.json"):
+        required.append((file_name, _series_floor(_read_json(folder / file_name), file_name)))
+
+    required.append(("yahoo-ticker.json", _yahoo_ticker_clock(_read_json(folder / "yahoo-ticker.json"))))
+
+    missing_reasons = [f"{name}: {clock[1]}" for name, clock in required if clock[0] is None]
+    if missing_reasons:
+        return None, "; ".join(missing_reasons)
+    return _complete_floor([(name, clock[0]) for name, clock in required], "macro files")
+
+
+def _sec_13f_clock(folder: Path) -> SourceClock:
+    summary = _read_json(folder / "summary.json")
+    metadata = summary.get("metadata") if isinstance(summary, dict) else None
+    quarters = metadata.get("quarters_covered") if isinstance(metadata, dict) else None
+    current_quarter = quarters[0] if isinstance(quarters, list) and quarters else None
+    named_dates = []
+    for file_path in sorted((folder / "investors").glob("*.json")):
+        payload = _read_json(file_path)
+        investor = payload.get("investor") if isinstance(payload, dict) else None
+        filings = investor.get("filings") if isinstance(investor, dict) else None
+        current_filings = [
+            filing
+            for filing in filings or []
+            if isinstance(filing, dict) and filing.get("quarter") == current_quarter
+        ]
+        if current_filings:
+            named_dates.append((file_path.name, _latest_row_date(current_filings, "filing_date")))
+    consensus = _read_json(folder / "analytics" / "consensus.json")
+    consensus_meta = consensus.get("metadata") if isinstance(consensus, dict) else None
+    expected_count = consensus_meta.get("current_cohort_investors") if isinstance(consensus_meta, dict) else None
+    if isinstance(expected_count, int) and len(named_dates) != expected_count:
+        return None, f"active 13F source count mismatch: expected {expected_count}, found {len(named_dates)}"
+    return _complete_floor(named_dates, "active 13F investor filings")
+
+
+def _sentiment_clock(folder: Path) -> SourceClock:
+    named_dates = [
+        (file_name, _latest_row_date(_read_json(folder / file_name), "date"))
+        for file_name in _schema_file_names(folder)
+    ]
+    return _complete_floor(named_dates, "sentiment series")
+
+
+def _computed_clock(folder: Path) -> SourceClock:
+    signals = _read_json(folder / "signals.json")
+    signal_rows = signals.get("signals") if isinstance(signals, dict) else None
+    signal_dates = [
+        (str(signal_name), _coerce_date_str(row.get("as_of")) if isinstance(row, dict) else None)
+        for signal_name, row in (signal_rows.items() if isinstance(signal_rows, dict) else [])
+    ]
+    signals_floor, signals_reason = _complete_floor(signal_dates, "computed signals")
+
+    market_facts = _read_json(folder / "market_facts" / "index.json")
+    facts_floor = _coerce_date_str(
+        market_facts.get("full_universe_floor_as_of") if isinstance(market_facts, dict) else None
+    )
+    if signals_reason:
+        return None, signals_reason
+    return _complete_floor(
+        [("signals.json", signals_floor), ("market_facts/index.json", facts_floor)],
+        "computed core artifacts",
+    )
+
+
+def _yardney_clock(folder: Path) -> SourceClock:
+    payload = _read_json(folder / "yardney_model.json")
+    meta = payload.get("meta") if isinstance(payload, dict) else None
+    source_date = None
+    if isinstance(meta, dict):
+        last_update = meta.get("last_update")
+        source_date = _coerce_date_str(
+            last_update.get("last_public_date") if isinstance(last_update, dict) else None
+        )
+    return _complete_floor([("yardney_model.json", source_date)], "Yardeni model")
+
+
+def _yf_clock(folder: Path) -> SourceClock:
+    named_dates: list[tuple[str, str | None]] = []
+    for file_path in sorted((folder / "finance").glob("*.json")):
+        payload = _read_json(file_path)
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict) or "history_1y" not in data:
+            continue
+        source_date = _latest_row_date(data.get("history_1y"), "date")
+        named_dates.append((f"finance/{file_path.name}", source_date))
+    for file_path in sorted((folder / "etf-details").glob("*.json")):
+        payload = _read_json(file_path)
+        normalized = payload.get("normalized") if isinstance(payload, dict) else None
+        source_date = _latest_row_date(
+            normalized.get("history") if isinstance(normalized, dict) else None,
+            "date",
+        )
+        named_dates.append((f"etf-details/{file_path.name}", source_date))
+    return _complete_floor(named_dates, "Yahoo finance histories")
+
+
+def _edgar_summaries_clock(folder: Path) -> SourceClock:
+    named_dates: list[tuple[str, str | None]] = []
+    for file_path in sorted((folder / "by-ticker").glob("*.json")):
+        payload = _read_json(file_path)
+        filings = payload.get("filings") if isinstance(payload, dict) else None
+        if not isinstance(filings, list) or not filings:
+            continue
+        named_dates.append((file_path.name, _latest_row_date(filings, "filingDate")))
+    return _complete_floor(named_dates, "EDGAR ticker filing feeds")
+
+
+def latest_data_clock(folder: Path) -> SourceClock:
+    """Return a dataset-specific complete source floor, never a build clock."""
+    extractors = {
+        "benchmarks": _benchmark_clock,
+        "computed": _computed_clock,
+        "damodaran": _damodaran_clock,
+        "edgar-korean-summaries": _edgar_summaries_clock,
+        "global-scouter": _global_scouter_clock,
+        "indices": _indices_clock,
+        "macro": _macro_clock,
+        "sec-13f": _sec_13f_clock,
+        "sentiment": _sentiment_clock,
+        "yardney": _yardney_clock,
+        "yf": _yf_clock,
+    }
+    if folder.name in extractors:
+        return extractors[folder.name](folder)
+
+    reasons = {
+        "admin": "internal listing cache has a build time but no upstream source date",
+        "calendar": "calendar export has a collection time but no upstream snapshot date",
+        "catalog": "curated catalog has an edit time but no upstream source date",
+        "edgar": "SEC company ticker feed publishes no aggregate source date",
+        "slickcharts": "provider payload publishes no source date; updated is collection time",
+        "stockanalysis": "provider publishes no aggregate source date",
+    }
+    return None, reasons.get(folder.name, NO_AGGREGATE_SOURCE_DATE)
 
 
 def latest_data_date(folder: Path) -> str | None:
-    """
-    Return the TRUE latest data-point date for a folder.
-
-    For time-series folders (TIME_SERIES_FOLDERS) this scans every real data
-    JSON file (schema.json excluded) and takes the max date — so a reformat or
-    git-touch can never make a stale folder look fresh, and per-file staleness
-    (e.g. fred-banking-quarterly) is surfaced once it is the latest signal.
-
-    For all other folders it keeps the conservative schema-declared date, since
-    their nested dates are forward-looking (fiscal/forecast/calendar) and are
-    not freshness signals. Falls back to the schema date when no data file
-    exposes a usable date.
-    """
-    if folder.name in TIME_SERIES_FOLDERS:
-        dates: list[str] = []
-        for file_path in folder.rglob("*.json"):
-            if file_path.name in EXCLUDE_FILES:
-                continue
-            d = _file_latest_date(file_path)
-            if d:
-                dates.append(d)
-        if dates:
-            return max(dates)
-
-    # Fallback: folder schema declared date (legacy behaviour).
-    schema_path = folder / "schema.json"
-    try:
-        with open(schema_path, encoding="utf-8") as f:
-            schema = json.load(f)
-    except Exception:
-        return None
-
-    for key in ("updated", "last_updated", "generatedAt"):
-        value = schema.get(key)
-        if isinstance(value, str) and value.strip():
-            return value[:10]
-
-    return None
+    """Compatibility wrapper for callers that only need the source floor."""
+    return latest_data_clock(folder)[0]
 
 
 def infer_manifest_base_sha() -> str:
@@ -449,13 +620,13 @@ def build_categories(folders_meta: dict[str, dict[str, object]]) -> list[dict[st
 
         folder_path = DATA_DIR / name
         fallback_version = str(manifest_meta.get("version", "1.0.0"))
-        # Prefer the manifest entry's (now TRUE) data date; if absent, scan the
-        # folder directly rather than defaulting to today.
-        last_updated = (
-            manifest_meta.get("updated")
-            or latest_data_date(folder_path)
-            or date.today().isoformat()
-        )
+        if "updated" in manifest_meta:
+            last_updated = manifest_meta.get("updated")
+            last_updated_reason = manifest_meta.get("updated_reason")
+        else:
+            last_updated, last_updated_reason = latest_data_clock(folder_path)
+        if not last_updated and not last_updated_reason:
+            last_updated_reason = NO_AGGREGATE_SOURCE_DATE
 
         raw_file_count = manifest_meta.get("file_count")
         file_count = raw_file_count if isinstance(raw_file_count, int) else count_data_files(folder_path)
@@ -466,6 +637,7 @@ def build_categories(folders_meta: dict[str, dict[str, object]]) -> list[dict[st
                 "schemaVersion": read_schema_version(folder_path, fallback_version),
                 "fileCount": file_count,
                 "lastUpdated": last_updated,
+                "lastUpdatedReason": last_updated_reason,
                 "notes": str(manifest_meta.get("description") or ""),
             }
         )
@@ -540,54 +712,41 @@ def update_manifest(dry_run: bool = False) -> int:
 
             old_count = entry.get("file_count", 0)
             old_updated = entry.get("updated")
+            old_updated_reason = entry.get("updated_reason")
             count_diff = old_count != actual_count
             git_touched = folder_name in git_changed
 
-            if folder_name in TIME_SERIES_FOLDERS:
-                # `updated` must reflect the TRUE latest data point, never the
-                # rebuild day — a reformat/git-touch can NOT mask staleness.
-                true_date = latest_data_date(folder_path)
-                new_updated = true_date or old_updated or today
-                date_diff = new_updated != old_updated
+            # A content/build change never supplies a source date. Recompute the
+            # honest date for every folder and fail closed to null + reason.
+            new_updated, new_updated_reason = latest_data_clock(folder_path)
+            date_diff = new_updated != old_updated or new_updated_reason != old_updated_reason
 
-                if count_diff or date_diff:
-                    manifest_changed = True
-                    entry["file_count"] = actual_count
-                    entry["updated"] = new_updated
+            if count_diff or date_diff:
+                manifest_changed = True
+                entry["file_count"] = actual_count
+                entry["updated"] = new_updated
+                if new_updated_reason:
+                    entry["updated_reason"] = new_updated_reason
+                else:
+                    entry.pop("updated_reason", None)
 
-                    reasons = []
-                    if count_diff:
-                        reasons.append(f"count {old_count}→{actual_count}")
-                    if date_diff:
-                        reasons.append(f"data date {old_updated}→{new_updated}")
-                    if reasons:
-                        updated_entries.append(f"{folder_name}: {', '.join(reasons)}")
-                elif git_touched:
-                    # Keep file_count fresh; `updated` already equals the true
-                    # latest data date, so do not bump it to today.
-                    if entry.get("file_count") != actual_count:
-                        entry["file_count"] = actual_count
-                        manifest_changed = True
-            else:
-                # Legacy behaviour for non-time-series folders (fundamental /
-                # forward-dated / calendar): stamp today on a real change only.
-                if count_diff or git_touched:
-                    manifest_changed = True
-                    entry["file_count"] = actual_count
-                    entry["updated"] = today
-
-                    reasons = []
-                    if count_diff:
-                        reasons.append(f"count {old_count}→{actual_count}")
-                    if git_touched and not count_diff:
-                        reasons.append("content updated (git)")
-                    updated_entries.append(f"{folder_name}: {', '.join(reasons)}")
+                reasons = []
+                if count_diff:
+                    reasons.append(f"count {old_count}→{actual_count}")
+                if date_diff:
+                    reasons.append(f"source date {old_updated}→{new_updated}")
+                updated_entries.append(f"{folder_name}: {', '.join(reasons)}")
+            elif git_touched:
+                # The collection/build changed but the source clock did not.
+                print(f"ℹ️  {folder_name}: content changed; source date remains {new_updated or 'unknown'}")
         else:
             # Brand-new folder not yet in manifest
             defaults = DEFAULT_FOLDER_META.get(folder_name, {})
+            initial_source_date, initial_source_reason = latest_data_clock(folder_path)
             new_entry = {
                 "version": defaults.get("version", "1.0.0"),
-                "updated": latest_data_date(folder_path) or today,
+                "updated": initial_source_date,
+                "updated_reason": initial_source_reason,
                 "update_frequency": defaults.get("update_frequency", "on-demand"),
                 "source": defaults.get("source", "TBD"),
                 "file_count": actual_count,

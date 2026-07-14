@@ -35,6 +35,8 @@ export {
 interface EtfUniverseDoc {
   generated_at?: string | null;
   screener_fetched_at?: string | null;
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   counts?: {
     records?: number | null;
     etf_universe?: number | null;
@@ -502,11 +504,23 @@ export default function EtfUniverseCard({
     syncFilterParams({ newOnly: false, digitalOnly: false, typeFilter: nextFilter });
   };
 
+  const sourceAsOf = typeof doc?.source_as_of === "string" && doc.source_as_of.trim()
+    ? doc.source_as_of
+    : null;
+  const sourceAsOfReason = typeof doc?.source_as_of_reason === "string" && doc.source_as_of_reason.trim()
+    ? doc.source_as_of_reason
+    : null;
+  const sourceClockLabel = sourceAsOf
+    ? asOfDate(sourceAsOf)
+    : sourceAsOfReason === "provider publishes no aggregate source date"
+      ? "집계 기준일 미제공"
+      : "기준일 미확인";
+
   return (
     <section className="panel" data-etf-universe="true">
       <div className="panel-h">
         <h2>ETF 목록</h2>
-        <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : digitalOnly ? snapshot?.bitcoin?.fetched_at : doc?.screener_fetched_at ?? doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
+        <span className="desc" title={sourceAsOf ? undefined : sourceAsOfReason ?? undefined}>{sourceClockLabel} · {formatNumber(displayTotal)}개</span>
       </div>
       <div className="panel-b">
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_140px_140px_170px_160px_150px]">

@@ -76,7 +76,8 @@ interface RawSummaries {
 }
 interface RawManifestFolder {
   version?: string;
-  updated?: string;
+  updated?: string | null;
+  updated_reason?: string | null;
   update_frequency?: string;
   source?: string;
   description?: string;
@@ -329,6 +330,7 @@ function sourceFromManifest(id: string, label: string, usage: string, manifest: 
     label,
     source: folder.source ?? "—",
     updated: folder.updated ?? null,
+    updatedReason: folder.updated_reason ?? null,
     cadence: folder.update_frequency ?? null,
     coverage: folder.description ?? `${folder.file_count ?? "?"} files`,
     usage,

@@ -13,12 +13,16 @@ import { ENTITY_KEY_POLICY, makeEntityKey, normalizeEntitySymbol } from "./lib/e
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const DATA_ROOT = path.join(ROOT, "data");
 const PUBLIC_DATA_ROOT = path.join(ROOT, "100xfenok-next", "public", "data");
+const NO_AGGREGATE_SOURCE_DATE = "provider publishes no aggregate source date";
+const SOURCE_FLOOR_UNAVAILABLE = "producer has not emitted a complete source-date floor";
 
 function readJson(relPath, fallback = null) {
+  const fullPath = path.join(DATA_ROOT, relPath);
   try {
-    return JSON.parse(fs.readFileSync(path.join(DATA_ROOT, relPath), "utf8"));
-  } catch {
-    return fallback;
+    return JSON.parse(fs.readFileSync(fullPath, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") return fallback;
+    throw new Error(`Cannot read valid JSON from ${fullPath}: ${error?.message || error}`, { cause: error });
   }
 }
 
@@ -75,6 +79,11 @@ function aliasCandidates(value) {
 
 function fileExists(relPath) {
   return fs.existsSync(path.join(DATA_ROOT, relPath));
+}
+
+function marketFactsSourceForTicker(ticker) {
+  const payload = readJson(`computed/market_facts/tickers/${ticker}.json`, null);
+  return firstDate(payload?.source_as_of);
 }
 
 function addRelation(entity, type, target, evidence = {}) {
@@ -154,13 +163,21 @@ for (const row of actionRows) {
 
 const generatedAt = new Date().toISOString();
 const sourceAsOf = {
-  stocks_analyzer: firstDate(stocksAnalyzer.source_date, stocksAnalyzer.generated_at),
-  stock_action_index: firstDate(stockActionIndex.source_date, stockActionIndex.generated_at),
-  market_facts: firstDate(marketFactsIndex.generated_at),
-  edgar_summaries: firstDate(edgarIndex.updated, edgarIndex.generatedAt, edgarIndex.generated_at),
-  sec_13f: firstDate(sec13fSummary.metadata?.quarters_covered?.[0], guruHoldersIndex.metadata?.quarter, sec13fSummary.metadata?.generated_at),
-  etf_universe: firstDate(etfUniverse.generated_at),
+  stocks_analyzer: firstDate(stocksAnalyzer.source_date),
+  stock_action_index: firstDate(stockActionIndex.source_date),
+  market_facts: firstDate(marketFactsIndex.core_surface_source_as_of),
+  edgar_summaries: null,
+  sec_13f: firstDate(sec13fSummary.metadata?.quarters_covered?.[0], guruHoldersIndex.metadata?.quarter),
+  etf_universe: null,
 };
+const sourceAsOfReason = Object.fromEntries(Object.entries({
+  stocks_analyzer: SOURCE_FLOOR_UNAVAILABLE,
+  stock_action_index: SOURCE_FLOOR_UNAVAILABLE,
+  market_facts: SOURCE_FLOOR_UNAVAILABLE,
+  edgar_summaries: NO_AGGREGATE_SOURCE_DATE,
+  sec_13f: SOURCE_FLOOR_UNAVAILABLE,
+  etf_universe: NO_AGGREGATE_SOURCE_DATE,
+}).map(([source, reason]) => [source, sourceAsOf[source] ? null : reason]));
 
 const sectorNodes = new Map();
 const categoryNodes = new Map();
@@ -209,6 +226,7 @@ const stockEntities = analyzerRows.map((row) => {
   const action = actionByTicker.get(ticker);
   const marketFactsPath = `computed/market_facts/tickers/${ticker}.json`;
   const hasMarketFacts = fileExists(marketFactsPath);
+  const marketFactsSource = hasMarketFacts ? marketFactsSourceForTicker(ticker) : null;
   const hasEdgar = edgarTickers.has(ticker);
   const has13f = sec13fTickers.has(ticker);
   const canonicalSector = action?.canonicalSector || row.canonicalSector || null;
@@ -235,7 +253,7 @@ const stockEntities = analyzerRows.map((row) => {
     as_of: {
       profile: sourceAsOf.stocks_analyzer,
       action_index: sourceAsOf.stock_action_index,
-      market_facts: hasMarketFacts ? sourceAsOf.market_facts : null,
+      market_facts: marketFactsSource,
       filings: hasEdgar ? sourceAsOf.edgar_summaries : null,
       sec_13f: has13f ? sourceAsOf.sec_13f : null,
     },
@@ -318,6 +336,7 @@ const etfEntities = etfRows.map((row) => {
   const ticker = normalizeTicker(row.ticker);
   const marketFactsPath = `computed/market_facts/tickers/${ticker}.json`;
   const hasMarketFacts = fileExists(marketFactsPath);
+  const marketFactsSource = hasMarketFacts ? marketFactsSourceForTicker(ticker) : null;
   const categoryId = touchCategory(row.category || "Other");
   if (categoryId) categoryNodes.get(categoryId).etf_count += 1;
   const rawUnderlying = row.classification?.underlying || null;
@@ -363,7 +382,7 @@ const etfEntities = etfRows.map((row) => {
     },
     as_of: {
       etf_universe: sourceAsOf.etf_universe,
-      market_facts: hasMarketFacts ? sourceAsOf.market_facts : null,
+      market_facts: marketFactsSource,
     },
     source_links: {
       etf_universe: true,
@@ -454,6 +473,7 @@ const payload = {
   schema_version: "data-entity-graph/v1",
   generated_at: generatedAt,
   source_as_of: sourceAsOf,
+  source_as_of_reason: sourceAsOfReason,
   source_files: [
     "global-scouter/core/stocks_analyzer.json",
     "computed/stock_action_index.json",
@@ -485,6 +505,11 @@ const payload = {
     stock_alias_non_us_skip_examples: stockAliasNonUsSkips.slice(0, 10),
     single_stock_etfs_unresolved: singleStockEtfUnresolved.length,
     single_stock_etfs_unresolved_list: singleStockEtfUnresolved.sort((a, b) => a.ticker.localeCompare(b.ticker)),
+    market_facts_core_price_source_complete: marketFactsIndex.source_stamp_diagnostics?.core_price_source_complete === true,
+    market_facts_core_price_missing_count: Number(marketFactsIndex.source_stamp_diagnostics?.core_price_missing_count) || 0,
+    market_facts_core_price_missing_tickers: Array.isArray(marketFactsIndex.source_stamp_diagnostics?.core_price_missing_tickers)
+      ? marketFactsIndex.source_stamp_diagnostics.core_price_missing_tickers
+      : [],
   },
   nodes: {
     stocks: stockEntities,
@@ -533,6 +558,7 @@ const stockIndexPayload = {
   schema_version: "data-entity-graph-stock-index/v1",
   generated_at: generatedAt,
   source_as_of: sourceAsOf,
+  source_as_of_reason: sourceAsOfReason,
   key_policy: ENTITY_KEY_POLICY,
   totals: {
     stocks: stockEntities.length,
@@ -552,7 +578,7 @@ const stockServiceEntries = Object.fromEntries([...etfsByUnderlying.entries()].m
   single_stock_etfs: links,
   as_of: {
     etf_universe: sourceAsOf.etf_universe,
-    market_facts: sourceAsOf.market_facts,
+    market_facts: stockEntityByTicker.get(ticker)?.as_of?.market_facts ?? null,
   },
 }]));
 
@@ -560,6 +586,7 @@ const stockServicesPayload = {
   schema_version: "data-entity-graph-stock-services/v1",
   generated_at: generatedAt,
   source_as_of: sourceAsOf,
+  source_as_of_reason: sourceAsOfReason,
   key_policy: ENTITY_KEY_POLICY,
   totals: {
     stocks: stockEntities.length,

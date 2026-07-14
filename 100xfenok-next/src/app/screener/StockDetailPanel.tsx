@@ -269,6 +269,9 @@ interface MarketFactsData {
   ticker?: string;
   asset_type?: string;
   generated_at?: string;
+  source_as_of?: string | null;
+  source_as_of_scope?: "selected_price_fact" | string;
+  source_as_of_reason?: string | null;
   identity?: {
     name?: string | null;
     exchange?: string | null;
@@ -1256,6 +1259,15 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
   const topHoldings = (data.etf?.top_holdings ?? []).slice(0, compact ? 5 : 10);
   const breakdownLimit = compact ? 4 : 8;
   const availablePrimaryFields = primaryFields.filter(([, field]) => facts[field]);
+  const sourceAsOf = typeof data.source_as_of === "string" && data.source_as_of.trim()
+    ? data.source_as_of
+    : null;
+  const sourceAsOfReason = typeof data.source_as_of_reason === "string" && data.source_as_of_reason.trim()
+    ? data.source_as_of_reason
+    : null;
+  const sourceAsOfReasonLabel = sourceAsOfReason === "selected price fact has no provider source date"
+    ? "선택된 가격 데이터에 공급자 기준일이 없습니다."
+    : "가격 기준일을 확인할 수 없습니다.";
 
   return (
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
@@ -1272,8 +1284,12 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
             <span> · {data.asset_type === "etf" ? "ETF" : "주식"}</span>
           </p>
         </div>
-        <span className="min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]">
-          {data.generated_at?.slice(0, 10) ?? "—"}
+        <span
+          className="min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]"
+          title={sourceAsOf ? undefined : sourceAsOfReason ?? undefined}
+        >
+          {sourceAsOf ? `가격 기준 ${sourceAsOf.slice(0, 10)}` : "가격 기준일 미확인"}
+          {data.generated_at ? ` · 생성 ${data.generated_at.slice(0, 10)}` : ""}
         </span>
       </div>
       {availablePrimaryFields.length > 0 ? (
@@ -1287,8 +1303,8 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
           state={makeDataState({
             status: "unavailable",
             label: "통합 데이터 항목 없음",
-            detail: "데이터 파일은 열렸지만 표시할 핵심 가격·밸류 항목이 없습니다.",
-            asOf: data.generated_at ?? null,
+            detail: `데이터 파일은 열렸지만 표시할 핵심 가격·밸류 항목이 없습니다. ${sourceAsOf ? "" : sourceAsOfReasonLabel}`.trim(),
+            asOf: sourceAsOf,
           })}
         />
       )}

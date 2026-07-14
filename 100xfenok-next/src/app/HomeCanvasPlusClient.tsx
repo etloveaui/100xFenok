@@ -369,7 +369,18 @@ function useInvestorHighlights(): { highlights: InvestorHighlight[]; quarter: st
   };
 }
 
-function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string; loading: boolean } {
+function completeOldestMoverAsOf(rows: RevisionMoverRow[]): string | null {
+  if (rows.length === 0) return null;
+  const dates = rows.map((row) => (
+    typeof row.as_of === "string" && /^\d{4}-\d{2}-\d{2}/.test(row.as_of)
+      ? row.as_of.slice(0, 10)
+      : null
+  ));
+  if (dates.some((value) => value === null)) return null;
+  return [...dates].sort()[0] ?? null;
+}
+
+function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string | null; loading: boolean } {
   const [data, setData] = useState<RevisionMoversData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -390,11 +401,11 @@ function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string; loadin
     };
   }, []);
 
-  const firstDatedRow = [...(data?.up ?? []), ...(data?.down ?? [])].find((row) => row.as_of);
+  const sourceAsOf = completeOldestMoverAsOf([...(data?.up ?? []), ...(data?.down ?? [])]);
 
   return {
     movers: buildStockMoverHighlights(data),
-    asOf: firstDatedRow?.as_of ?? data?.generated_at ?? "추정치",
+    asOf: sourceAsOf,
     loading,
   };
 }
@@ -413,7 +424,7 @@ function CpMarketDashboardBand({
           <p className="cp-lab__eyebrow">오늘 브리프</p>
           <h2>시장 데이터 대시보드</h2>
         </div>
-        <span className="cp-market-band__meta">업데이트 {updatedAt}</span>
+        <span className="cp-market-band__meta">시세 수집 {updatedAt}</span>
       </header>
 
       <div className="cp-market-band__cards">
@@ -637,7 +648,7 @@ function CpHomeSliceTwo() {
             <p className="cp-lab__eyebrow">관찰 구역</p>
             <h2>오늘의 관찰대</h2>
           </div>
-          <span>{stockMovers.loading ? DATA_STATE_LABELS.pending : formatDatePart(stockMovers.asOf)}</span>
+          <span>{stockMovers.loading ? DATA_STATE_LABELS.pending : stockMovers.asOf ? formatDatePart(stockMovers.asOf) : "기준일 미확인"}</span>
         </header>
 
         <div className="cp-watch-zone__indices">
@@ -741,7 +752,7 @@ function CpHomeHero({
           <dd>{failedSourceLabel(failedCount)}</dd>
         </div>
         <div className="cp-hero-search__metric">
-          <dt>업데이트</dt>
+          <dt>시세 수집</dt>
           <dd>{updatedAt}</dd>
         </div>
       </dl>

@@ -33,6 +33,10 @@ export type BenchmarksSummaryPayload = {
   momentum?: Record<string, { '1m'?: number }>;
 };
 
+export type BenchmarksSourcePayload = {
+  sections?: Record<string, { data?: NumberPoint[] } | undefined>;
+};
+
 export type FredSeriesPayload = {
   updated?: string;
   type?: string;

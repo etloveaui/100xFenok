@@ -8,6 +8,7 @@ import {
   isFutureSource,
   isRealCalendarDate,
 } from "./lib/market-calendar.mjs";
+import { SOURCE_SLA_DEF } from "./lib/kpi-contract-constants.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -25,6 +26,19 @@ const SOX_DERIVED_WEIGHT_KEY = "sox_nasdaq_giw_methodology_mktcap";
 const SOX_INPUT_FRESHNESS_MAX_DAYS = 7;
 const ASSUMPTION_VERSION = "rim-assumptions-20260708";
 const REVIEWED_AT = "2026-07-08";
+const RIM_INPUT_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "rim_index_inputs");
+
+if (!RIM_INPUT_SLA) {
+  throw new Error("rim_index_inputs SLA definition is required");
+}
+
+class LaneUnavailableError extends Error {
+  constructor(message, source = null) {
+    super(message);
+    this.name = "LaneUnavailableError";
+    this.source = source;
+  }
+}
 
 const PRIMARY_INDICES = [
   {
@@ -137,7 +151,14 @@ function readOptionalJson(absPath) {
 }
 
 function readDataJson(relPath, root = dataRoot) {
-  return readJson(path.join(root, relPath));
+  try {
+    return readJson(path.join(root, relPath));
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      throw new LaneUnavailableError(`${relPath}: source file is unavailable`, relPath);
+    }
+    throw error;
+  }
 }
 
 function dataRootToRepoRoot(dataRootForReads) {
@@ -160,6 +181,15 @@ function daysBetweenIsoDates(startDate, endDate) {
   return Math.round((end - start) / 86400000);
 }
 
+function normalizeSourceDate(value, label) {
+  if (isRealCalendarDate(value)) return value;
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const parsed = Date.parse(text);
+  if (!Number.isFinite(parsed)) throw new Error(`${label}: invalid source date ${text}`);
+  return new Date(parsed).toISOString().slice(0, 10);
+}
+
 function marketInputFreshness(asOf, generatedAt, { market, maxDays }) {
   const generatedDate = String(generatedAt ?? "").slice(0, 10);
   const validDates = isRealCalendarDate(asOf) && isRealCalendarDate(generatedDate);
@@ -180,6 +210,27 @@ function marketInputFreshness(asOf, generatedAt, { market, maxDays }) {
       && !futureDateAnomaly
       && finite(businessAgeDays)
       && businessAgeDays <= maxDays
+      ? "fresh_enough_for_input_slice"
+      : "refresh_recommended",
+  };
+}
+
+function rimObservedPriceFreshness(asOf, generatedAt) {
+  const generatedDate = String(generatedAt ?? "").slice(0, 10);
+  const validDates = isRealCalendarDate(asOf) && isRealCalendarDate(generatedDate);
+  const ageDays = validDates ? daysBetweenIsoDates(asOf, generatedDate) : null;
+  const futureDateAnomaly = validDates ? asOf > generatedDate : false;
+  return {
+    generated_at_date: isRealCalendarDate(generatedDate) ? generatedDate : null,
+    calendar_age_days: ageDays,
+    freshness_unit: RIM_INPUT_SLA.unit,
+    freshness_calendar: RIM_INPUT_SLA.calendar,
+    max_input_freshness_days: RIM_INPUT_SLA.max_staleness,
+    future_date_anomaly: futureDateAnomaly,
+    status: validDates
+      && !futureDateAnomaly
+      && finite(ageDays)
+      && ageDays <= RIM_INPUT_SLA.max_staleness
       ? "fresh_enough_for_input_slice"
       : "refresh_recommended",
   };
@@ -236,16 +287,36 @@ export function buildPublicRimMirror(payload) {
 }
 
 function latestDatedRow(rows, label) {
-  const usable = (Array.isArray(rows) ? rows : [])
+  if (rows === null || rows === undefined) {
+    throw new LaneUnavailableError(`${label}: source rows are unavailable`, label.split(":")[0]);
+  }
+  if (!Array.isArray(rows)) throw new Error(`${label}: rows must be an array`);
+  if (rows.length === 0) {
+    throw new LaneUnavailableError(`${label}: source rows are empty`, label.split(":")[0]);
+  }
+  const usable = rows
     .filter((row) => typeof row?.date === "string")
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
-  if (usable.length === 0) throw new Error(`${label}: no dated rows`);
+  if (usable.length === 0) throw new Error(`${label}: rows do not carry a date`);
   return usable.at(-1);
 }
 
 function latestBenchmarkRow(payload, section, sourceLabel) {
+  if (payload === null || payload === undefined) {
+    throw new LaneUnavailableError(`${sourceLabel}: source payload is unavailable`, sourceLabel);
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error(`${sourceLabel}: root payload must be an object`);
+  }
+  if (!payload.sections || typeof payload.sections !== "object" || Array.isArray(payload.sections)) {
+    throw new Error(`${sourceLabel}: sections must be an object`);
+  }
+  if (!Object.hasOwn(payload.sections, section)) {
+    throw new LaneUnavailableError(`${sourceLabel}:${section}: benchmark section is unavailable`, sourceLabel);
+  }
   const rows = payload?.sections?.[section]?.data;
   const row = latestDatedRow(rows, `${sourceLabel}:${section}`);
+  if (!isRealCalendarDate(row.date)) throw new Error(`${sourceLabel}:${section}: invalid source date ${row.date}`);
   const pxLast = numberOrNull(row.px_last);
   const bestEps = numberOrNull(row.best_eps);
   const priceToBook = numberOrNull(row.px_to_book_ratio);
@@ -496,11 +567,17 @@ function loadKrxKorea10y(dataRootForReads) {
 }
 
 function loadUsErp(erpPayload) {
+  if (erpPayload === null || erpPayload === undefined) {
+    throw new LaneUnavailableError("damodaran/erp.json: source payload is unavailable", "damodaran/erp.json");
+  }
+  if (!Object.hasOwn(erpPayload, "us_erp") || erpPayload.us_erp === null || erpPayload.us_erp === "") {
+    throw new LaneUnavailableError("damodaran/erp.json: us_erp is unavailable", "damodaran/erp.json");
+  }
   const value = numberOrNull(erpPayload?.us_erp);
-  if (!finite(value) || value <= 0) throw new Error("damodaran/erp.json: us_erp missing or invalid");
+  if (!finite(value) || value <= 0) throw new Error("damodaran/erp.json: us_erp is invalid");
   return {
     value: round(value, 8),
-    source_date: erpPayload?.metadata?.source_date ?? null,
+    source_date: normalizeSourceDate(erpPayload?.metadata?.source_date, "damodaran/erp.json"),
     generated_at: erpPayload?.metadata?.generated_at ?? null,
   };
 }
@@ -554,22 +631,38 @@ function buildPayoutRatio(indexConfig, benchmarkRow, yieldPayload, {
   dataRootForReads = dataRoot,
   yfRoot = path.join(dataRootForReads, "yf", "finance"),
 } = {}) {
+  if (yieldPayload === null || yieldPayload === undefined || !Object.hasOwn(yieldPayload, "yield")) {
+    throw new LaneUnavailableError(`${indexConfig.yieldFile}: yield is unavailable`, indexConfig.yieldFile);
+  }
   const dividendYieldPct = numberOrNull(yieldPayload?.yield);
   if (!finite(dividendYieldPct) || dividendYieldPct < 0) {
-    throw new Error(`${indexConfig.yieldFile}: yield missing or invalid`);
+    throw new Error(`${indexConfig.yieldFile}: yield is invalid`);
   }
   const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
   const payoutRatio = earningsYield > 0 ? (dividendYieldPct / 100) / earningsYield : null;
-  const holdingsPayload = readJson(path.join(dataRootForReads, `slickcharts/${indexConfig.slickchartsIndex}.json`));
-  const holdings = Array.isArray(holdingsPayload?.holdings) ? holdingsPayload.holdings : [];
+  const holdingsSource = `slickcharts/${indexConfig.slickchartsIndex}.json`;
+  const holdingsPayload = readDataJson(holdingsSource, dataRootForReads);
+  if (!Array.isArray(holdingsPayload?.holdings)) {
+    throw new Error(`${holdingsSource}: holdings must be an array`);
+  }
+  if (holdingsPayload.holdings.length === 0) {
+    throw new LaneUnavailableError(`${holdingsSource}: holdings are empty`, holdingsSource);
+  }
+  const holdings = holdingsPayload.holdings;
   const qa = weightedYfPayoutRatio(holdings, yfRoot);
+  const indexYieldAsOf = normalizeSourceDate(
+    yieldPayload?.source_as_of ?? yieldPayload?.as_of ?? yieldPayload?.date ?? yieldPayload?.metadata?.source_date,
+    indexConfig.yieldFile,
+  );
   return derivedValue({
     value: round(payoutRatio, 6),
     formula: "(index_dividend_yield_pct / 100) / (benchmark_best_eps / benchmark_px_last)",
     sources: [indexConfig.yieldFile, indexConfig.benchmarkFile],
     coverage: {
       primary_formula: "index_yield_over_benchmark_earnings_yield",
-      index_yield_as_of: yieldPayload?.updated ?? null,
+      index_yield_as_of: indexYieldAsOf,
+      index_yield_as_of_reason: indexYieldAsOf ? null : "provider publishes no source date for the index yield observation",
+      index_yield_collected_at: yieldPayload?.updated ?? null,
       benchmark_as_of: benchmarkRow.date,
       benchmark_earnings_yield: round(earningsYield, 8),
     },
@@ -902,7 +995,13 @@ function hasForwardEpsFy1Fy3(row) {
 function stockActionRowsForProxyCandidate(stockActionPayload, config, dataRootForReads) {
   const lookup = stockActionLookup(stockActionPayload);
   const payload = readDataJson(config.source, dataRootForReads);
-  const holdings = Array.isArray(payload?.normalized?.holdings) ? payload.normalized.holdings : [];
+  if (!Array.isArray(payload?.normalized?.holdings)) {
+    throw new Error(`${config.source}: normalized.holdings must be an array`);
+  }
+  if (payload.normalized.holdings.length === 0) {
+    throw new LaneUnavailableError(`${config.source}: normalized.holdings is empty`, config.source);
+  }
+  const holdings = payload.normalized.holdings;
   const indexKey = `${String(config.proxyTicker).toLowerCase()}_etf_proxy`;
   const denominatorRows = [];
   const indexRows = [];
@@ -977,8 +1076,20 @@ function proxyCandidateDiagnostic(config, joined) {
 function proxyConstituentCandidateDiagnostics(stockActionPayload, dataRootForReads) {
   const diagnostics = {};
   for (const [indexId, config] of Object.entries(PROXY_CONSTITUENT_CANDIDATES)) {
-    const joined = stockActionRowsForProxyCandidate(stockActionPayload, config, dataRootForReads);
-    diagnostics[indexId] = proxyCandidateDiagnostic(config, joined);
+    try {
+      const joined = stockActionRowsForProxyCandidate(stockActionPayload, config, dataRootForReads);
+      diagnostics[indexId] = proxyCandidateDiagnostic(config, joined);
+    } catch (error) {
+      if (!(error instanceof LaneUnavailableError)) throw error;
+      diagnostics[indexId] = {
+        proxy_ticker: config.proxyTicker,
+        source: config.source,
+        source_tier: "proxy_diagnostic",
+        exact_index_substitute: config.exactIndexSubstitute,
+        diagnostic_status: "source_unavailable",
+        reason: error.message,
+      };
+    }
   }
   return diagnostics;
 }
@@ -1623,8 +1734,15 @@ function buildForwardEpsGrowth(
   minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT,
   dataRootForReads = dataRoot,
 ) {
-  const holdingsPayload = readJson(path.join(dataRootForReads, `slickcharts/${indexConfig.slickchartsIndex}.json`));
-  const holdings = Array.isArray(holdingsPayload?.holdings) ? holdingsPayload.holdings : [];
+  const holdingsSource = `slickcharts/${indexConfig.slickchartsIndex}.json`;
+  const holdingsPayload = readDataJson(holdingsSource, dataRootForReads);
+  if (!Array.isArray(holdingsPayload?.holdings)) {
+    throw new Error(`${holdingsSource}: holdings must be an array`);
+  }
+  if (holdingsPayload.holdings.length === 0) {
+    throw new LaneUnavailableError(`${holdingsSource}: holdings are empty`, holdingsSource);
+  }
+  const holdings = holdingsPayload.holdings;
   const bySymbol = stockActionBySymbol(stockActionPayload);
   let totalWeight = 0;
   let coveredWeight = 0;
@@ -1667,11 +1785,71 @@ function buildForwardEpsGrowth(
   });
 }
 
+function requireAvailableSource(value, source) {
+  if (value === null || value === undefined) {
+    throw new LaneUnavailableError(`${source}: source payload is unavailable`, source);
+  }
+  return value;
+}
+
+function unavailableIndex(indexConfig, error) {
+  const reason = error?.message || `${indexConfig.id}: required source is unavailable`;
+  const source = error?.source ?? null;
+  const unavailable = () => blockedValue({ reason, sourceTier: "blocked_missing_source" });
+  const primary = PRIMARY_INDICES.some((item) => item.id === indexConfig.id);
+  return {
+    id: indexConfig.id,
+    label: indexConfig.label,
+    role: primary ? "primary_public_v1" : indexConfig.role,
+    public_status: primary ? "input_only_primary_with_caveats" : "blocked_or_input_only",
+    observed: {
+      price: unavailable(),
+      forward_eps: unavailable(),
+      forward_pe: unavailable(),
+      price_to_book: unavailable(),
+      risk_free_rate: unavailable(),
+      equity_risk_premium: unavailable(),
+    },
+    derived: {
+      book_value: unavailable(),
+      payout_ratio: unavailable(),
+      explicit_eps_growth_3y: unavailable(),
+      cost_of_equity: unavailable(),
+      forecast_grid_v1: {
+        schema_version: "forecast_grid_v1",
+        public_status: primary
+          ? "input_only_primary_with_caveats_no_fair_value"
+          : "input_only_unavailable_no_fair_value",
+        source_tier: "blocked_missing_source",
+        reason,
+        periods: [],
+      },
+    },
+    assumptions: {},
+    blockers: [{
+      code: "source_unavailable",
+      severity: "lane_degraded",
+      ...(source ? { source } : {}),
+      reason,
+    }],
+  };
+}
+
+function buildIndexWithAvailability(indexConfig, context, builder) {
+  try {
+    return builder(indexConfig, context);
+  } catch (error) {
+    if (error instanceof LaneUnavailableError) return unavailableIndex(indexConfig, error);
+    throw error;
+  }
+}
+
 function buildPrimaryIndex(indexConfig, context) {
   const benchmarkPayload = context.benchmarkPayloads.get(indexConfig.benchmarkFile);
   const benchmarkRow = latestBenchmarkRow(benchmarkPayload, indexConfig.benchmarkSection, indexConfig.benchmarkFile);
-  const dgs10 = context.dgs10;
-  const usErp = context.usErp;
+  const dgs10 = requireAvailableSource(context.dgs10, "macro/fred-banking-daily.json:series.DGS10");
+  const usErp = requireAvailableSource(context.usErp, "damodaran/erp.json:us_erp");
+  requireAvailableSource(context.stockActionPayload, "computed/stock_action_index.json");
   const yieldPayload = readDataJson(indexConfig.yieldFile, context.dataRoot);
   const payoutRatio = buildStockActionPayoutRatio(indexConfig, benchmarkRow, context.stockActionPayload);
   const legacyPayoutRatio = buildPayoutRatio(indexConfig, benchmarkRow, yieldPayload, {
@@ -1683,28 +1861,72 @@ function buildPrimaryIndex(indexConfig, context) {
     context.minCoveredWeight,
     context.dataRoot,
   );
+  const forecastGrid = buildForecastGrid(
+    indexConfig,
+    benchmarkRow,
+    context.stockActionPayload,
+    payoutRatio,
+    dgs10.value + usErp.value,
+    explicitEpsGrowth3y,
+  );
+  const benchmarkFreshness = rimObservedPriceFreshness(benchmarkRow.date, context.generatedAt);
+  const blockers = [];
+  if (benchmarkFreshness.status === "refresh_recommended") {
+    blockers.push({
+      code: "benchmark_source_refresh_recommended",
+      severity: "freshness_blocker",
+      source: indexConfig.benchmarkFile,
+      as_of: benchmarkRow.date,
+    });
+  }
+  for (const [code, ratio] of [
+    ["payout_coverage_below_threshold", payoutRatio.coverage?.covered_weight_ratio],
+    ["forward_eps_coverage_below_threshold", explicitEpsGrowth3y.coverage?.covered_weight_ratio],
+  ]) {
+    if (!finite(ratio) || ratio < context.minCoveredWeight) {
+      blockers.push({ code, severity: "lane_degraded" });
+    }
+  }
+  for (const row of forecastGrid.periods) {
+    for (const [metric, field] of [
+      ["eps_growth", row.eps_growth],
+      ["weighted_roe", row.stock_action_weighted_roe],
+    ]) {
+      const ratio = field?.coverage?.covered_weight_ratio;
+      if (!finite(ratio) || ratio < context.minCoveredWeight) {
+        blockers.push({ code: `${row.period}_${metric}_coverage_below_threshold`, severity: "lane_degraded" });
+      }
+    }
+  }
+  if (blockers.length > 0) {
+    forecastGrid.public_status = "input_only_primary_with_caveats_no_fair_value";
+  }
+  const observed = {
+    ...buildBenchmarkObservedInputs(indexConfig, benchmarkRow),
+    risk_free_rate: observedValue({
+      value: dgs10.value,
+      source: "macro/fred-banking-daily.json",
+      sourceField: "series.DGS10[-1].value / 100",
+      asOf: dgs10.date,
+      label: "US 10Y Treasury",
+    }),
+    equity_risk_premium: observedValue({
+      value: usErp.value,
+      source: "damodaran/erp.json",
+      sourceField: "us_erp",
+      asOf: usErp.source_date,
+      label: "Damodaran US ERP",
+    }),
+  };
+  observed.price.freshness = benchmarkFreshness;
   return {
     id: indexConfig.id,
     label: indexConfig.label,
     role: "primary_public_v1",
-    public_status: "ready_inputs_and_forecast_grid",
-    observed: {
-      ...buildBenchmarkObservedInputs(indexConfig, benchmarkRow),
-      risk_free_rate: observedValue({
-        value: dgs10.value,
-        source: "macro/fred-banking-daily.json",
-        sourceField: "series.DGS10[-1].value / 100",
-        asOf: dgs10.date,
-        label: "US 10Y Treasury",
-      }),
-      equity_risk_premium: observedValue({
-        value: usErp.value,
-        source: "damodaran/erp.json",
-        sourceField: "us_erp",
-        asOf: usErp.source_date,
-        label: "Damodaran US ERP",
-      }),
-    },
+    public_status: blockers.length > 0
+      ? "input_only_primary_with_caveats"
+      : "ready_inputs_and_forecast_grid",
+    observed,
     derived: {
       book_value: buildBookValue(benchmarkRow),
       payout_ratio: payoutRatio,
@@ -1716,14 +1938,7 @@ function buildPrimaryIndex(indexConfig, context) {
         sources: ["observed.risk_free_rate", "observed.equity_risk_premium"],
         notes: ["No house premium adjustment included in public inputs slice."],
       }),
-      forecast_grid_v1: buildForecastGrid(
-        indexConfig,
-        benchmarkRow,
-        context.stockActionPayload,
-        payoutRatio,
-        dgs10.value + usErp.value,
-        explicitEpsGrowth3y,
-      ),
+      forecast_grid_v1: forecastGrid,
     },
     assumptions: {
       terminal_growth: {
@@ -1741,15 +1956,27 @@ function buildPrimaryIndex(indexConfig, context) {
         status: "not_in_inputs_slice",
       },
     },
-    blockers: [],
+    blockers,
   };
 }
 
 function buildSecondaryIndex(indexConfig, context) {
   const benchmarkPayload = context.benchmarkPayloads.get(indexConfig.benchmarkFile);
   const benchmarkRow = latestBenchmarkRow(benchmarkPayload, indexConfig.benchmarkSection, indexConfig.benchmarkFile);
+  requireAvailableSource(context.stockActionPayload, "computed/stock_action_index.json");
   const observed = buildBenchmarkObservedInputs(indexConfig, benchmarkRow);
+  const benchmarkFreshness = rimObservedPriceFreshness(benchmarkRow.date, context.generatedAt);
+  observed.price.freshness = benchmarkFreshness;
+  const baseBlockers = benchmarkFreshness.status === "refresh_recommended"
+    ? [{
+      code: "benchmark_source_refresh_recommended",
+      severity: "freshness_blocker",
+      source: indexConfig.benchmarkFile,
+      as_of: benchmarkRow.date,
+    }]
+    : [];
   if (indexConfig.id === "KOSPI") {
+    requireAvailableSource(context.erpPayload, "damodaran/erp.json");
     const krRiskFree = context.krxKr10y ?? context.kr10y;
     if (krRiskFree) {
       observed.risk_free_rate = observedValue({
@@ -1771,11 +1998,19 @@ function buildSecondaryIndex(indexConfig, context) {
         sourceTier: "blocked_not_wired",
       });
     }
+    const koreaErpRaw = context.erpPayload?.countries?.Korea?.equity_risk_premium;
+    if (koreaErpRaw === null || koreaErpRaw === undefined || koreaErpRaw === "") {
+      throw new LaneUnavailableError("damodaran/erp.json: Korea equity_risk_premium is unavailable", "damodaran/erp.json");
+    }
+    const koreaErp = numberOrNull(koreaErpRaw);
+    if (!finite(koreaErp) || koreaErp <= 0) {
+      throw new Error("damodaran/erp.json: Korea equity_risk_premium is invalid");
+    }
     observed.equity_risk_premium = observedValue({
-      value: round(numberOrNull(context.erpPayload?.countries?.Korea?.equity_risk_premium), 8),
+      value: round(koreaErp, 8),
       source: "damodaran/erp.json",
       sourceField: "countries.Korea.equity_risk_premium",
-      asOf: context.erpPayload?.metadata?.source_date ?? null,
+      asOf: normalizeSourceDate(context.erpPayload?.metadata?.source_date, "damodaran/erp.json"),
       label: "Damodaran Korea ERP",
     });
     if (context.krxKospiWeights) {
@@ -1790,17 +2025,29 @@ function buildSecondaryIndex(indexConfig, context) {
       const costOfEquityValue = krRiskFree && finite(observed.equity_risk_premium.value)
         ? krRiskFree.value + observed.equity_risk_premium.value
         : null;
-      const blockers = [];
+      const blockers = [...baseBlockers];
       if (!krRiskFree) {
         blockers.push({
           code: "country_risk_free_source_missing",
-          severity: "public_blocker",
+          severity: "lane_degraded",
         });
       }
       if (context.krxKospiWeights.freshness?.status === "refresh_recommended") {
         blockers.push({
           code: "krx_kospi_daily_refresh_recommended",
           severity: "freshness_blocker",
+        });
+      }
+      if ((payoutRatio.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
+        blockers.push({
+          code: "kospi_payout_coverage_below_threshold",
+          severity: "lane_degraded",
+        });
+      }
+      if ((explicitEpsGrowth3y.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
+        blockers.push({
+          code: "kospi_forward_eps_coverage_below_threshold",
+          severity: "lane_degraded",
         });
       }
       return {
@@ -1856,18 +2103,20 @@ function buildSecondaryIndex(indexConfig, context) {
     }
   }
   if (indexConfig.id === "SOX") {
+    const dgs10 = requireAvailableSource(context.dgs10, "macro/fred-banking-daily.json:series.DGS10");
+    const usErp = requireAvailableSource(context.usErp, "damodaran/erp.json:us_erp");
     observed.risk_free_rate = observedValue({
-      value: context.dgs10.value,
+      value: dgs10.value,
       source: "macro/fred-banking-daily.json",
       sourceField: "series.DGS10[-1].value / 100",
-      asOf: context.dgs10.date,
+      asOf: dgs10.date,
       label: "US 10Y Treasury",
     });
     observed.equity_risk_premium = observedValue({
-      value: context.usErp.value,
+      value: usErp.value,
       source: "damodaran/erp.json",
       sourceField: "us_erp",
-      asOf: context.usErp.source_date,
+      asOf: usErp.source_date,
       label: "Damodaran US ERP",
     });
     if (context.soxWeights) {
@@ -1879,8 +2128,8 @@ function buildSecondaryIndex(indexConfig, context) {
         context.soxWeights,
         context.minCoveredWeight,
       );
-      const costOfEquityValue = context.dgs10.value + context.usErp.value;
-      const blockers = [];
+      const costOfEquityValue = dgs10.value + usErp.value;
+      const blockers = [...baseBlockers];
       if (context.soxWeights.freshness?.status === "refresh_recommended") {
         blockers.push({
           code: "sox_giw_daily_refresh_recommended",
@@ -1890,13 +2139,13 @@ function buildSecondaryIndex(indexConfig, context) {
       if ((payoutRatio.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
         blockers.push({
           code: "sox_payout_coverage_below_threshold",
-          severity: "public_blocker",
+          severity: "lane_degraded",
         });
       }
       if ((explicitEpsGrowth3y.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
         blockers.push({
           code: "sox_forward_eps_coverage_below_threshold",
-          severity: "public_blocker",
+          severity: "lane_degraded",
         });
       }
       return {
@@ -1962,12 +2211,15 @@ function buildSecondaryIndex(indexConfig, context) {
       ...(proxyInputs ? { proxy_inputs_v1: proxyInputs } : {}),
     },
     assumptions: {},
-    blockers: indexConfig.blockers
+    blockers: [
+      ...baseBlockers,
+      ...indexConfig.blockers
       .filter((code) => !(indexConfig.id === "KOSPI" && context.kr10y && code === "country_risk_free_source_solved_not_wired"))
       .map((code) => ({
-      code,
-      severity: indexConfig.id === "CCMP" ? "public_card_blocker" : "public_blocker",
-    })),
+        code,
+        severity: "lane_degraded",
+      })),
+    ],
   };
 }
 
@@ -2002,7 +2254,30 @@ export function buildRimIndexInputs({
   minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT,
 } = {}) {
   const originalDataRoot = dataRootOverride;
-  const readFrom = (relPath) => readDataJson(relPath, originalDataRoot);
+  const unavailableSources = new Map();
+  const readFrom = (relPath) => {
+    try {
+      return readDataJson(relPath, originalDataRoot);
+    } catch (error) {
+      if (error instanceof LaneUnavailableError) {
+        unavailableSources.set(relPath, error);
+        return null;
+      }
+      throw error;
+    }
+  };
+  const loadAvailable = (source, loader) => {
+    if (unavailableSources.has(source)) return null;
+    try {
+      return loader();
+    } catch (error) {
+      if (error instanceof LaneUnavailableError) {
+        unavailableSources.set(source, error);
+        return null;
+      }
+      throw error;
+    }
+  };
   const benchmarkPayloads = new Map();
   for (const item of [...PRIMARY_INDICES, ...SECONDARY_INDICES]) {
     if (!benchmarkPayloads.has(item.benchmarkFile)) benchmarkPayloads.set(item.benchmarkFile, readFrom(item.benchmarkFile));
@@ -2012,20 +2287,26 @@ export function buildRimIndexInputs({
   const stockActionPayload = readFrom("computed/stock_action_index.json");
   const context = {
     benchmarkPayloads,
-    dgs10: loadDgs10(macroPayload),
+    dgs10: loadAvailable("macro/fred-banking-daily.json", () => loadDgs10(macroPayload)),
     kr10y: loadKr10y(macroPayload),
     krxKr10y: loadKrxKorea10y(originalDataRoot),
     krxKospiWeights: loadKrxKospiMarketCapWeights(originalDataRoot, generatedAt),
-    usErp: loadUsErp(erpPayload),
+    usErp: loadAvailable("damodaran/erp.json", () => loadUsErp(erpPayload)),
     erpPayload,
     stockActionPayload,
     soxWeights: loadSoxMethodologyWeights(originalDataRoot, stockActionPayload, generatedAt),
     minCoveredWeight,
     dataRoot: originalDataRoot,
+    generatedAt,
+    unavailableSources,
   };
   const indices = {};
-  for (const item of PRIMARY_INDICES) indices[item.id] = buildPrimaryIndex(item, context);
-  for (const item of SECONDARY_INDICES) indices[item.id] = buildSecondaryIndex(item, context);
+  for (const item of PRIMARY_INDICES) {
+    indices[item.id] = buildIndexWithAvailability(item, context, buildPrimaryIndex);
+  }
+  for (const item of SECONDARY_INDICES) {
+    indices[item.id] = buildIndexWithAvailability(item, context, buildSecondaryIndex);
+  }
   const payload = {
     schema_version: SCHEMA_VERSION,
     generated_at: generatedAt,
@@ -2053,11 +2334,112 @@ export function buildRimIndexInputs({
         KOSPI: koreaCoverageDiagnostics(context.stockActionPayload, context.krxKospiWeights),
         SOX: soxWeightDiagnostics(context.stockActionPayload, context.soxWeights),
       },
-      proxy_constituent_candidates: proxyConstituentCandidateDiagnostics(context.stockActionPayload, originalDataRoot),
+      proxy_constituent_candidates: context.stockActionPayload
+        ? proxyConstituentCandidateDiagnostics(context.stockActionPayload, originalDataRoot)
+        : {},
     },
   };
   payload.source_tier_counts = collectSourceTierCounts(payload);
   return payload;
+}
+
+function approximatelyEqual(actual, expected, tolerance = 1e-4) {
+  return finite(actual) && finite(expected) && Math.abs(actual - expected) <= tolerance;
+}
+
+function validateUnavailableIndexShape(item, id, errors, warnings) {
+  if (item.public_status === "ready_inputs_and_forecast_grid") {
+    errors.push(`${id}: source-unavailable index must not claim ready`);
+  }
+  if (!Array.isArray(item.blockers) || !item.blockers.some((row) => row?.code === "source_unavailable")) {
+    errors.push(`${id}: source_unavailable blocker is required`);
+  }
+  const validateNullReason = (field, label) => {
+    if (field?.value !== null) errors.push(`${label}: unavailable value must be null`);
+    if (field?.source_tier !== "blocked_missing_source") {
+      errors.push(`${label}: blocked_missing_source tier required`);
+    }
+    if (typeof field?.reason !== "string" || !field.reason.trim()) {
+      errors.push(`${label}: non-empty reason is required`);
+    }
+  };
+  for (const key of ["price", "forward_eps", "forward_pe", "price_to_book", "risk_free_rate", "equity_risk_premium"]) {
+    validateNullReason(item.observed?.[key], `${id}.observed.${key}`);
+  }
+  for (const key of ["book_value", "payout_ratio", "explicit_eps_growth_3y", "cost_of_equity"]) {
+    validateNullReason(item.derived?.[key], `${id}.derived.${key}`);
+  }
+  const grid = item.derived?.forecast_grid_v1;
+  if (grid?.schema_version !== "forecast_grid_v1") errors.push(`${id}.forecast_grid_v1: schema_version required`);
+  if (grid?.source_tier !== "blocked_missing_source") errors.push(`${id}.forecast_grid_v1: blocked_missing_source tier required`);
+  if (typeof grid?.reason !== "string" || !grid.reason.trim()) errors.push(`${id}.forecast_grid_v1: non-empty reason required`);
+  if (!Array.isArray(grid?.periods) || grid.periods.length !== 0) {
+    errors.push(`${id}.forecast_grid_v1: unavailable periods must be an empty array`);
+  }
+  warnings.push(`${id}: source unavailable; lane remains deployable with an explicit null reason`);
+}
+
+function validateObservedSourceDate(field, label, generatedAt, errors) {
+  if (!isRealCalendarDate(field?.as_of)) {
+    errors.push(`${label}: real source as_of date required`);
+    return;
+  }
+  const generatedDate = String(generatedAt ?? "").slice(0, 10);
+  if (!isRealCalendarDate(generatedDate)) {
+    errors.push("generated_at must carry a real calendar date");
+  } else if (field.as_of > generatedDate) {
+    errors.push(`${label}: source as_of must not be after generated_at`);
+  }
+}
+
+function validateCoreFormulaIntegrity(item, id, errors) {
+  const observed = item?.observed ?? {};
+  const derived = item?.derived ?? {};
+  const expectedPayoutFormula = {
+    SPX: "stock_action_index_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+    NDX: "stock_action_index_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+    KOSPI: "krx_kospi_mktcap_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+    SOX: "sox_methodology_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
+  }[id];
+  const expectedGrowthFormula = {
+    SPX: "weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+    NDX: "weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+    KOSPI: "krx_kospi_mktcap_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+    SOX: "sox_methodology_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
+  }[id];
+  for (const [field, formula, label] of [
+    [derived.book_value, "price / price_to_book", "book_value"],
+    [derived.payout_ratio, expectedPayoutFormula, "payout_ratio"],
+    [derived.explicit_eps_growth_3y, expectedGrowthFormula, "explicit_eps_growth_3y"],
+    [derived.cost_of_equity, "risk_free_rate + equity_risk_premium", "cost_of_equity"],
+  ]) {
+    if (formula && field?.formula !== formula) errors.push(`${id}.${label}: canonical formula required`);
+  }
+  for (const [label, yieldCoverage] of [
+    ["payout_ratio", derived.payout_ratio?.coverage],
+    ["legacy_payout_ratio_qa", derived.legacy_payout_ratio_qa?.coverage],
+  ]) {
+    if (!yieldCoverage || !Object.hasOwn(yieldCoverage, "index_yield_as_of")) continue;
+    if (yieldCoverage.index_yield_as_of === null || yieldCoverage.index_yield_as_of === undefined) {
+      if (typeof yieldCoverage.index_yield_as_of_reason !== "string" || !yieldCoverage.index_yield_as_of_reason.trim()) {
+        errors.push(`${id}.${label}: null index_yield_as_of requires an explicit reason`);
+      }
+    } else if (!isRealCalendarDate(yieldCoverage.index_yield_as_of)) {
+      errors.push(`${id}.${label}: index_yield_as_of must be a real source date or null`);
+    }
+  }
+  if (finite(observed.price?.value) && finite(observed.price_to_book?.value)) {
+    const expectedBook = observed.price.value / observed.price_to_book.value;
+    if (!approximatelyEqual(derived.book_value?.value, expectedBook)) {
+      errors.push(`${id}.book_value: value does not reconcile to price / price_to_book`);
+    }
+  }
+  if (finite(observed.risk_free_rate?.value) && finite(observed.equity_risk_premium?.value)) {
+    const expectedCost = observed.risk_free_rate.value + observed.equity_risk_premium.value;
+    if (!approximatelyEqual(derived.cost_of_equity?.value, expectedCost, 1e-7)) {
+      errors.push(`${id}.cost_of_equity: value does not reconcile to observed sources`);
+    }
+  }
 }
 
 export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT } = {}) {
@@ -2074,30 +2456,73 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
       errors.push(`${id}: index payload missing`);
       continue;
     }
-    if (item.blockers?.length) errors.push(`${id}: primary index must not have blockers`);
+    if (item.id !== id) errors.push(`${id}: identity mismatch`);
+    if (item.role !== "primary_public_v1") errors.push(`${id}: primary_public_v1 role required`);
+    if (!Array.isArray(item.blockers)) errors.push(`${id}: blockers must be an array`);
+    const sourceUnavailable = item.blockers?.some((row) => row?.code === "source_unavailable");
+    if (sourceUnavailable) {
+      validateUnavailableIndexShape(item, id, errors, warnings);
+      continue;
+    }
+    const declaredReady = item.public_status === "ready_inputs_and_forecast_grid";
+    const declaredDegraded = item.public_status === "input_only_primary_with_caveats";
+    if (!declaredReady && !declaredDegraded) {
+      errors.push(`${id}: invalid primary public_status ${item.public_status ?? "(missing)"}`);
+    }
+    const availability = (message) => {
+      if (declaredReady) errors.push(`${id}: false-ready: ${message}`);
+      else warnings.push(`${id}: ${message}`);
+    };
+    if (item.blockers?.length) {
+      if (declaredReady) errors.push(`${id}: false-ready: primary index has blockers`);
+      else warnings.push(`${id}: ${item.blockers.length} lane degradation blocker(s)`);
+    }
     for (const key of ["price", "forward_eps", "price_to_book", "risk_free_rate", "equity_risk_premium"]) {
       const field = item.observed?.[key];
-      if (!finite(field?.value) || field.value <= 0) errors.push(`${id}.${key}: positive observed value required`);
+      if (field?.value === null || field?.value === undefined) availability(`${key}: observed value is unavailable`);
+      else if (!finite(field.value) || field.value <= 0) errors.push(`${id}.${key}: positive finite observed value required`);
       if (field?.source_tier !== "observed_source") errors.push(`${id}.${key}: observed_source tier required`);
+      if (typeof field?.source !== "string" || !field.source.trim()) errors.push(`${id}.${key}: source is required`);
+      if (typeof field?.source_field !== "string" || !field.source_field.trim()) errors.push(`${id}.${key}: source_field is required`);
+      validateObservedSourceDate(field, `${id}.${key}`, payload.generated_at, errors);
+    }
+    const expectedFreshness = rimObservedPriceFreshness(item.observed?.price?.as_of, payload.generated_at);
+    const declaredFreshness = item.observed?.price?.freshness;
+    for (const key of ["calendar_age_days", "freshness_unit", "freshness_calendar", "max_input_freshness_days", "future_date_anomaly", "status"]) {
+      if (declaredFreshness?.[key] !== expectedFreshness[key]) {
+        errors.push(`${id}.price.freshness.${key}: does not match canonical SLA computation`);
+      }
+    }
+    if (expectedFreshness.future_date_anomaly) errors.push(`${id}.price: future source date anomaly`);
+    if (expectedFreshness.status === "refresh_recommended") {
+      const named = item.blockers?.some((row) => row?.code === "benchmark_source_refresh_recommended");
+      if (!named) errors.push(`${id}: stale benchmark must be named in blockers`);
+      if (declaredReady) errors.push(`${id}: false-ready: benchmark source exceeds the canonical SLA`);
     }
     if (item.derived?.payout_ratio?.source_tier !== "derived_formula") errors.push(`${id}.payout_ratio: derived_formula tier required`);
     if (item.derived?.explicit_eps_growth_3y?.source_tier !== "derived_formula") errors.push(`${id}.explicit_eps_growth_3y: derived_formula tier required`);
     if (item.derived?.cost_of_equity?.source_tier !== "derived_formula") errors.push(`${id}.cost_of_equity: derived_formula tier required`);
-    if (!finite(item.derived?.cost_of_equity?.value) || item.derived.cost_of_equity.value <= 0) {
-      errors.push(`${id}.cost_of_equity: positive value required`);
+    if (item.derived?.cost_of_equity?.value === null || item.derived?.cost_of_equity?.value === undefined) {
+      availability("cost_of_equity: value is unavailable");
+    } else if (!finite(item.derived.cost_of_equity.value) || item.derived.cost_of_equity.value <= 0) {
+      errors.push(`${id}.cost_of_equity: positive finite value required`);
     }
+    validateCoreFormulaIntegrity(item, id, errors);
     const growthCoverage = item.derived?.explicit_eps_growth_3y?.coverage?.covered_weight_ratio;
     if (!finite(growthCoverage) || growthCoverage < minCoveredWeight) {
-      errors.push(`${id}.explicit_eps_growth_3y: covered_weight_ratio below ${minCoveredWeight}`);
+      availability(`explicit_eps_growth_3y: covered_weight_ratio below ${minCoveredWeight}`);
     }
     const payoutCoverage = item.derived?.payout_ratio?.coverage?.covered_weight_ratio;
     if (!finite(payoutCoverage) || payoutCoverage < minCoveredWeight) {
-      errors.push(`${id}.payout_ratio: covered_weight_ratio below ${minCoveredWeight}`);
+      availability(`payout_ratio: covered_weight_ratio below ${minCoveredWeight}`);
     }
     const grid = item.derived?.forecast_grid_v1;
     if (grid?.schema_version !== "forecast_grid_v1") errors.push(`${id}.forecast_grid_v1: schema_version required`);
-    if (grid?.public_status !== "ready_inputs_only_no_fair_value") {
-      errors.push(`${id}.forecast_grid_v1: public_status must be ready_inputs_only_no_fair_value`);
+    const expectedGridStatus = declaredReady
+      ? "ready_inputs_only_no_fair_value"
+      : "input_only_primary_with_caveats_no_fair_value";
+    if (grid?.public_status !== expectedGridStatus) {
+      errors.push(`${id}.forecast_grid_v1: public_status must be ${expectedGridStatus}`);
     }
     if (!Array.isArray(grid?.periods) || grid.periods.length !== 3) {
       errors.push(`${id}.forecast_grid_v1: exactly 3 periods required`);
@@ -2143,8 +2568,35 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
           if (field?.source_tier !== "derived_formula") {
             errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.${key}: derived_formula tier required`);
           }
-          if (!finite(field?.value)) {
+          if (field?.value === null || field?.value === undefined) {
+            availability(`forecast_grid_v1.${row?.period ?? rowIndex}.${key}: value is unavailable`);
+          } else if (!finite(field.value)) {
             errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.${key}: finite value required`);
+          }
+        }
+        const expectedFormulas = {
+          earnings_proxy: rowIndex === 0
+            ? "benchmark_best_eps_anchor"
+            : "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
+          eps_growth: rowIndex === 0
+            ? "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100"
+            : `weighted_average((forward_eps_fy${rowIndex + 1} / forward_eps_fy${rowIndex}) - 1)`,
+          book_value_beginning: rowIndex === 0
+            ? "benchmark_px_last / benchmark_px_to_book_ratio"
+            : "prior_period_book_value_ending",
+          book_value_ending: "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
+          roe_on_beginning_book: "earnings_proxy / book_value_beginning",
+          stock_action_weighted_roe: `weighted_average(stock_action.profitabilitySnapshot.roe.${row?.period}) / 100`,
+          payout_ratio: "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
+          retention_ratio: "1 - payout_ratio",
+          dividend_yield_implied: "payout_ratio * (earnings_proxy / current_price)",
+          pe_ratio: "current_price / earnings_proxy",
+          peg_ratio: "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
+          residual_income_proxy: "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
+        };
+        for (const [key, formula] of Object.entries(expectedFormulas)) {
+          if (row?.[key]?.formula !== formula) {
+            errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.${key}: canonical formula required`);
           }
         }
         if (row?.peg_ratio?.formula !== "pe_ratio / (derived.explicit_eps_growth_3y * 100)") {
@@ -2163,7 +2615,7 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
         for (const key of ["eps_growth", "stock_action_weighted_roe"]) {
           const coverage = row?.[key]?.coverage?.covered_weight_ratio;
           if (!finite(coverage) || coverage < minCoveredWeight) {
-            errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.${key}: covered_weight_ratio below ${minCoveredWeight}`);
+            availability(`forecast_grid_v1.${row?.period ?? rowIndex}.${key}: covered_weight_ratio below ${minCoveredWeight}`);
           }
         }
       }
@@ -2171,23 +2623,81 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
   }
   for (const id of ["KOSPI", "SOX"]) {
     const item = payload?.indices?.[id];
-    if (!item || item.public_status !== "ready_inputs_and_forecast_grid") continue;
-    if (item.blockers?.length) errors.push(`${id}: ready secondary index must not have blockers`);
-    for (const key of ["risk_free_rate", "equity_risk_premium"]) {
+    if (!item) {
+      errors.push(`${id}: index payload missing`);
+      continue;
+    }
+    if (item.id !== id) errors.push(`${id}: identity mismatch`);
+    if (!Array.isArray(item.blockers)) errors.push(`${id}: blockers must be an array`);
+    const sourceUnavailable = item.blockers?.some((row) => row?.code === "source_unavailable");
+    if (sourceUnavailable) {
+      validateUnavailableIndexShape(item, id, errors, warnings);
+      continue;
+    }
+    const ready = item.public_status === "ready_inputs_and_forecast_grid";
+    const caveatStatus = id === "KOSPI"
+      ? "input_only_krx_exact_weights_with_caveats"
+      : "input_only_sox_methodology_weights_with_caveats";
+    const exactInputs = ready || item.public_status === caveatStatus;
+    if (!exactInputs && item.public_status !== "blocked_or_input_only") {
+      errors.push(`${id}: invalid secondary public_status ${item.public_status ?? "(missing)"}`);
+    }
+    if (ready && item.blockers?.length) errors.push(`${id}: false-ready: secondary index has blockers`);
+    if (!ready && item.blockers?.length) {
+      warnings.push(`${id}: ${item.public_status}; ${item.blockers.length} lane blocker(s)`);
+    }
+    for (const key of ["price", "forward_eps", "price_to_book"]) {
       const field = item.observed?.[key];
       if (!finite(field?.value) || field.value <= 0) errors.push(`${id}.${key}: positive observed value required`);
       if (field?.source_tier !== "observed_source") errors.push(`${id}.${key}: observed_source tier required`);
+      validateObservedSourceDate(field, `${id}.${key}`, payload.generated_at, errors);
+    }
+    const expectedFreshness = rimObservedPriceFreshness(item.observed?.price?.as_of, payload.generated_at);
+    const declaredFreshness = item.observed?.price?.freshness;
+    for (const key of ["calendar_age_days", "freshness_unit", "freshness_calendar", "max_input_freshness_days", "future_date_anomaly", "status"]) {
+      if (declaredFreshness?.[key] !== expectedFreshness[key]) {
+        errors.push(`${id}.price.freshness.${key}: does not match canonical SLA computation`);
+      }
+    }
+    if (expectedFreshness.status === "refresh_recommended") {
+      const named = item.blockers?.some((row) => row?.code === "benchmark_source_refresh_recommended");
+      if (!named) errors.push(`${id}: stale benchmark must be named in blockers`);
+      if (ready) errors.push(`${id}: false-ready: benchmark source exceeds the canonical SLA`);
+    }
+    if (!exactInputs) {
+      if (item.derived?.book_value?.formula !== "price / price_to_book") {
+        errors.push(`${id}.book_value: canonical formula required`);
+      }
+      for (const key of ["payout_ratio", "explicit_eps_growth_3y"]) {
+        const field = item.derived?.[key];
+        if (field?.value !== null || typeof field?.reason !== "string" || !field.reason.trim()) {
+          errors.push(`${id}.${key}: blocked value must be null with a reason`);
+        }
+      }
+      continue;
+    }
+    const availability = (message) => {
+      if (ready) errors.push(`${id}: false-ready: ${message}`);
+      else warnings.push(`${id}: ${message}`);
+    };
+    for (const key of ["risk_free_rate", "equity_risk_premium"]) {
+      const field = item.observed?.[key];
+      if (field?.value === null || field?.value === undefined) availability(`${key}: observed value is unavailable`);
+      else if (!finite(field.value) || field.value <= 0) errors.push(`${id}.${key}: positive observed value required`);
+      if (field?.source_tier !== "observed_source") errors.push(`${id}.${key}: observed_source tier required`);
+      validateObservedSourceDate(field, `${id}.${key}`, payload.generated_at, errors);
     }
     for (const key of ["payout_ratio", "explicit_eps_growth_3y", "cost_of_equity"]) {
       if (item.derived?.[key]?.source_tier !== "derived_formula") errors.push(`${id}.${key}: derived_formula tier required`);
     }
+    validateCoreFormulaIntegrity(item, id, errors);
     const growthCoverage = item.derived?.explicit_eps_growth_3y?.coverage?.covered_weight_ratio;
     if (!finite(growthCoverage) || growthCoverage < minCoveredWeight) {
-      errors.push(`${id}.explicit_eps_growth_3y: covered_weight_ratio below ${minCoveredWeight}`);
+      availability(`explicit_eps_growth_3y: covered_weight_ratio below ${minCoveredWeight}`);
     }
     const payoutCoverage = item.derived?.payout_ratio?.coverage?.covered_weight_ratio;
     if (!finite(payoutCoverage) || payoutCoverage < minCoveredWeight) {
-      errors.push(`${id}.payout_ratio: covered_weight_ratio below ${minCoveredWeight}`);
+      availability(`payout_ratio: covered_weight_ratio below ${minCoveredWeight}`);
     }
     const grid = item.derived?.forecast_grid_v1;
     if (grid?.schema_version !== "forecast_grid_v1") errors.push(`${id}.forecast_grid_v1: schema_version required`);
@@ -2199,6 +2709,23 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     }
     if (!Array.isArray(grid?.periods) || grid.periods.length !== 3) {
       errors.push(`${id}.forecast_grid_v1: exactly 3 periods required`);
+    } else {
+      for (const [rowIndex, row] of grid.periods.entries()) {
+        if (row?.period !== ["fy1", "fy2", "fy3"][rowIndex]) {
+          errors.push(`${id}.forecast_grid_v1.periods[${rowIndex}]: canonical period order required`);
+        }
+        for (const key of ["earnings_proxy", "eps_growth", "book_value_beginning", "book_value_ending", "roe_on_beginning_book", "stock_action_weighted_roe", "payout_ratio", "retention_ratio", "dividend_yield_implied", "pe_ratio", "peg_ratio", "residual_income_proxy"]) {
+          const field = row?.[key];
+          if (field?.source_tier !== "derived_formula") {
+            errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.${key}: derived_formula tier required`);
+          }
+          if (field?.value === null || field?.value === undefined) availability(`forecast_grid_v1.${row?.period ?? rowIndex}.${key}: value is unavailable`);
+          else if (!finite(field.value)) errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.${key}: finite value required`);
+        }
+        if (row?.peg_ratio?.formula !== "pe_ratio / (derived.explicit_eps_growth_3y * 100)") {
+          errors.push(`${id}.forecast_grid_v1.${row?.period ?? rowIndex}.peg_ratio: canonical formula required`);
+        }
+      }
     }
     if (id === "SOX") {
       if (item.derived?.proxy_inputs_v1) errors.push("SOX.proxy_inputs_v1: must not exist on ready SOX methodology output");
@@ -2243,7 +2770,7 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     }
     const proxyCoverage = proxy.coverage?.forward_eps_fy1_fy3_weight_ratio;
     if (!finite(proxyCoverage) || proxyCoverage < minCoveredWeight) {
-      errors.push(`${id}.proxy_inputs_v1: forward_eps_fy1_fy3_weight_ratio below ${minCoveredWeight}`);
+      warnings.push(`${id}.proxy_inputs_v1: forward_eps_fy1_fy3_weight_ratio below ${minCoveredWeight}`);
     }
     for (const key of ["payout_ratio", "explicit_eps_growth_3y", "cost_of_equity"]) {
       if (proxy.key_inputs?.[key]?.source_tier !== "derived_formula") {

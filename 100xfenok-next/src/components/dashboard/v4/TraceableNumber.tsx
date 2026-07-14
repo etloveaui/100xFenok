@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
  * V4 TraceableNumber — wraps any KPI with a freshness dot + hover popover
- * exposing { source, fetched-at, raw-value }.
+ * exposing { source, source-as-of, raw-value }.
  *
  * Drop-in for Next.js under `src/components/dashboard/v4/`.
  * Reads from the existing DashboardSnapshot freshness map; no new API call.
@@ -17,8 +17,8 @@ export type TraceableMeta = {
   tone: TraceableTone;
   /** Display source ("CBOE realtime"). */
   source?: string;
-  /** Formatted local timestamp ("05-12 09:42:31"). */
-  fetchedAt?: string;
+  /** Formatted source observation timestamp ("05-12 09:42:31"). */
+  sourceAsOf?: string;
   /** Pre-rounded display already in `children` — this is the raw API value. */
   rawValue?: number | string | null;
   /** "realtime" | "daily" | "weekly" | "quarterly" — V2 DashboardFreshnessCadence. */
@@ -32,10 +32,10 @@ export type TraceableMeta = {
 export type TraceableMode = "off" | "hover-one" | "hover-all";
 
 const TONE: Record<TraceableTone, { dot: string; label: string }> = {
-  live:    { dot: "var(--c-up)", label: "실시간 · 15분 지연" },
-  dated:   { dot: "var(--c-brand)", label: "캐시 · 정상" },
-  stale:   { dot: "var(--c-warn)", label: "최신 폴백 · 경고" },
-  offline: { dot: "var(--c-ink-4)", label: "소스 실패 · 마지막 정상값" },
+  live:    { dot: "var(--c-up)", label: "시세 원천 기준" },
+  dated:   { dot: "var(--c-brand)", label: "원천 기준일" },
+  stale:   { dot: "var(--c-warn)", label: "원천 기준일 미확인" },
+  offline: { dot: "var(--c-ink-4)", label: "원천 기준일 미확인" },
 };
 
 const CADENCE_KO: Record<NonNullable<TraceableMeta["cadence"]>, string> = {
@@ -185,7 +185,7 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
         </span>
       </div>
       <Row k="출처" v={data.source ?? data.sourceKey ?? "—"} />
-      <Row k="갱신" v={data.fetchedAt ?? "—"} mono />
+      <Row k="원천 기준" v={data.sourceAsOf ?? "—"} mono />
       <Row k="원본값" v={formatRaw(data.rawValue)} mono />
       <Row k="주기" v={data.cadence ? CADENCE_KO[data.cadence] : "—"} />
       {data.note ? (
@@ -256,11 +256,9 @@ export function metaFromFreshness(
     ? freshness.cadence === "realtime"
       ? "stale"
       : "offline"
-    : freshness.cadence === "realtime"
-      ? "live"
-      : "dated";
+    : "dated";
 
-  const fetchedAt = freshness.updatedAt
+  const sourceAsOf = freshness.updatedAt
     ? new Date(freshness.updatedAt)
         .toLocaleString("ko-KR", {
           hour12: false,
@@ -278,7 +276,7 @@ export function metaFromFreshness(
     tone,
     rawValue,
     source: freshness.source ?? opts.sourceKey ?? "—",
-    fetchedAt,
+    sourceAsOf,
     cadence: freshness.cadence,
     sourceKey: opts.sourceKey,
     note: opts.note,

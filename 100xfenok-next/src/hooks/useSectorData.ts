@@ -33,6 +33,8 @@ interface RawEtf {
   expense_ratio?: number;
 }
 interface EtfsPayload {
+  source_date?: string;
+  generated_at?: string;
   etfs?: Record<string, RawEtf | undefined>;
 }
 interface UsSectorPoint {
@@ -42,6 +44,10 @@ interface UsSectorPoint {
   roe?: number;
 }
 interface UsSectorsPayload {
+  metadata?: { generated?: string; version?: string; source?: string };
+  sections?: Record<string, { data?: UsSectorPoint[] } | undefined>;
+}
+interface UsBenchmarksPayload {
   metadata?: { generated?: string; version?: string; source?: string };
   sections?: Record<string, { data?: UsSectorPoint[] } | undefined>;
 }
@@ -85,6 +91,53 @@ async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<
 
 function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function sourceDate(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function latestRowDate(points: UsSectorPoint[] | undefined): string | null {
+  if (!Array.isArray(points) || points.length === 0) return null;
+  return points
+    .map((point) => sourceDate(point.date))
+    .filter((value): value is string => value !== null)
+    .sort()
+    .at(-1) ?? null;
+}
+
+function completeOldestSourceDate(values: Array<string | null>): string | null {
+  if (values.length === 0 || values.some((value) => value === null)) return null;
+  return (values as string[]).sort().at(0) ?? null;
+}
+
+function quoteSourceDate(quote: QuotePayload | null | undefined): string | null {
+  const stateAsOf = sourceDate(quote?.state?.asOf);
+  if (stateAsOf) return stateAsOf;
+
+  const raw = quote as unknown as { regularMarketTime?: unknown } | null | undefined;
+  if (typeof raw?.regularMarketTime !== "number" || !Number.isFinite(raw.regularMarketTime) || raw.regularMarketTime <= 0) {
+    return null;
+  }
+  const milliseconds = raw.regularMarketTime > 10_000_000_000
+    ? raw.regularMarketTime
+    : raw.regularMarketTime * 1000;
+  const date = new Date(milliseconds);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function quarterEndSourceDate(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const match = /^(\d{4})-Q([1-4])$/.exec(value.trim());
+  if (!match) return null;
+  const [, year, quarter] = match;
+  const ends: Record<string, string> = {
+    "1": "03-31",
+    "2": "06-30",
+    "3": "09-30",
+    "4": "12-31",
+  };
+  return `${year}-${ends[quarter]}`;
 }
 
 function buildEtfInfo(raw: RawEtf | undefined): SectorEtfInfo | null {
@@ -220,8 +273,9 @@ export function useSectorData(): SectorDataResult {
     inFlightRef.current = true;
     try {
       const etfSymbols = SECTOR_DEFINITIONS.map((sector) => sector.etf);
-      const [benchmarks, etfs, usSectors, portfolioViews, bySector, tickerSettled] = await Promise.all([
+      const [benchmarks, usBenchmarks, etfs, usSectors, portfolioViews, bySector, tickerSettled] = await Promise.all([
         fetchJson<BenchmarksMomentumPayload>("/data/benchmarks/summaries.json"),
+        fetchJson<UsBenchmarksPayload>("/data/benchmarks/us.json"),
         fetchJson<EtfsPayload>("/data/global-scouter/etfs/index.json"),
         fetchJson<UsSectorsPayload>("/data/benchmarks/us_sectors.json"),
         fetchJson<PortfolioViewsPayload>("/data/sec-13f/analytics/portfolio_views.json"),
@@ -255,7 +309,13 @@ export function useSectorData(): SectorDataResult {
         ? Object.fromEntries(MOMENTUM_KEYS.map((key) => [key, num(benchmarks.momentum?.sp500?.[key])]))
         : null;
       const smartMoneyMap = buildSmartMoneyMap(portfolioViews, bySector);
-      let valuationLatestDate: string | null = null;
+      const valuationLatestDate = completeOldestSourceDate(
+        SECTOR_DEFINITIONS.map((sector) => latestRowDate(usSectors?.sections?.[sector.key]?.data)),
+      );
+      const benchmarkSourceDate = completeOldestSourceDate([
+        latestRowDate(usBenchmarks?.sections?.sp500?.data),
+        valuationLatestDate,
+      ]);
       let tickerFailed = false;
 
       const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
@@ -278,9 +338,6 @@ export function useSectorData(): SectorDataResult {
         const valData = usSectors?.sections?.[sector.key]?.data;
         const valLatest = Array.isArray(valData) && valData.length > 0 ? valData[valData.length - 1] : null;
         const pe = num(valLatest?.best_pe_ratio);
-        if (typeof valLatest?.date === "string" && (!valuationLatestDate || valLatest.date > valuationLatestDate)) {
-          valuationLatestDate = valLatest.date;
-        }
         const etfInfo = buildEtfInfo(etfs?.etfs?.[sector.etf]);
 
         return {
@@ -301,9 +358,21 @@ export function useSectorData(): SectorDataResult {
 
       if (tickerFailed) failed.push("ticker");
       const dataReady = benchmarksReady || etfsReady || valuationReady;
-      const updatedAt = benchmarks?.metadata?.generated ?? null;
+      const tickerSourceFloor = completeOldestSourceDate(
+        SECTOR_DEFINITIONS.map((sector) => quoteSourceDate(tickerMap[sector.etf])),
+      );
+      const smartMoneySourceDate = portfolioViews && bySector
+        ? quarterEndSourceDate(portfolioViews.metadata?.quarter)
+        : null;
+      const updatedAt = completeOldestSourceDate([
+        benchmarkSourceDate,
+        sourceDate(etfs?.source_date),
+        smartMoneySourceDate,
+        tickerSourceFloor,
+      ]);
+      if (updatedAt === null) failed.push("source_clock");
       const sourceMeta = {
-        benchmarksGenerated: updatedAt,
+        benchmarksGenerated: benchmarks?.metadata?.generated ?? null,
         valuationGenerated: usSectors?.metadata?.generated ?? null,
         valuationSource: usSectors?.metadata?.source ?? null,
         valuationVersion: usSectors?.metadata?.version ?? null,

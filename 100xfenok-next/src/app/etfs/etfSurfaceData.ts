@@ -18,6 +18,8 @@ export type { EtfUniverseRecord } from "@/app/explore/etfUniverseUtils";
 interface EtfUniverseDoc {
   generated_at?: string | null;
   screener_fetched_at?: string | null;
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   counts?: {
     records?: number | null;
     etf_universe?: number | null;
@@ -51,18 +53,26 @@ interface EtfBitcoinRow {
 }
 
 interface EtfSnapshotDoc {
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   newEtfs?: {
     fetched_at?: string | null;
+    source_as_of?: string | null;
+    source_as_of_reason?: string | null;
     counts?: { records?: number | null; rows?: number | null } | null;
     records?: EtfNewRow[];
   } | null;
   screener?: {
     fetched_at?: string | null;
+    source_as_of?: string | null;
+    source_as_of_reason?: string | null;
     volumeLeaders?: EtfScreenerLeaderRow[];
     changeLeaders?: EtfScreenerLeaderRow[];
   } | null;
   bitcoin?: {
     fetched_at?: string | null;
+    source_as_of?: string | null;
+    source_as_of_reason?: string | null;
     records?: EtfBitcoinRow[];
   } | null;
 }
@@ -163,6 +173,7 @@ export interface EtfInsights {
   volumeLeadersTop3: EtfScreenerLeaderRow[];
   changeLeadersTop3: EtfScreenerLeaderRow[];
   asOf: string | null;
+  asOfReason: string | null;
 }
 
 const BUCKET_LABELS: Record<EtfCompositionBucketKey, string> = {
@@ -191,8 +202,10 @@ function bucketForRow(row: EtfUniverseRecord, digitalTickers: ReadonlySet<string
 export function computeEtfInsights(
   rows: EtfUniverseRecord[],
   snapshot: EtfSnapshotDoc | null,
-  universeGeneratedAt: string | null | undefined,
+  ignoredGenerationTimestamp: string | null | undefined,
 ): EtfInsights {
+  // Kept only for the existing caller signature; generation time is never a source clock.
+  void ignoredGenerationTimestamp;
   const digitalTickers = new Set(
     (snapshot?.bitcoin?.records ?? [])
       .map((row) => (typeof row.symbol === "string" ? row.symbol.trim().toUpperCase() : ""))
@@ -238,9 +251,43 @@ export function computeEtfInsights(
 
   const newCount = rows.filter((row) => row.is_new === true).length || (snapshot?.newEtfs?.counts?.records ?? 0);
 
-  const asOfCandidates = [universeGeneratedAt, snapshot?.screener?.fetched_at, snapshot?.newEtfs?.fetched_at]
-    .filter((value): value is string => typeof value === "string" && value.length >= 10)
+  const sourceStamps: Array<{ label: string; asOf: string | null; reason: string | null }> = [];
+  if (universeCache) {
+    sourceStamps.push({
+      label: "ETF universe",
+      asOf: typeof universeCache.source_as_of === "string" && universeCache.source_as_of.length >= 10
+        ? universeCache.source_as_of.slice(0, 10)
+        : null,
+      reason: universeCache.source_as_of_reason ?? null,
+    });
+  }
+  const snapshotSources = [
+    ["ETF screener", snapshot?.screener],
+    ["new ETFs", snapshot?.newEtfs],
+    ["digital-asset ETFs", snapshot?.bitcoin],
+  ] as const;
+  for (const [label, surface] of snapshotSources) {
+    if (!surface) continue;
+    const sourceAsOf = surface.source_as_of ?? snapshot?.source_as_of;
+    sourceStamps.push({
+      label,
+      asOf: typeof sourceAsOf === "string" && sourceAsOf.length >= 10 ? sourceAsOf.slice(0, 10) : null,
+      reason: surface.source_as_of_reason ?? snapshot?.source_as_of_reason ?? null,
+    });
+  }
+  const missingSource = sourceStamps.find((source) => source.asOf === null);
+  const sourceDates = sourceStamps
+    .map((source) => source.asOf)
+    .filter((value): value is string => value !== null)
     .sort();
+  const sourceClock = missingSource || sourceStamps.length === 0
+    ? {
+        asOf: null,
+        reason: missingSource
+          ? `${missingSource.label}: ${missingSource.reason ?? "source date unavailable"}`
+          : "source date unavailable",
+      }
+    : { asOf: sourceDates[0] ?? null, reason: null };
 
   return {
     totalCount: rows.length,
@@ -253,7 +300,8 @@ export function computeEtfInsights(
     topMoversLeverageInverseCount,
     volumeLeadersTop3: volumeLeaders.slice(0, 3),
     changeLeadersTop3: changeLeaders.slice(0, 3),
-    asOf: asOfCandidates[0] ?? null,
+    asOf: sourceClock.asOf,
+    asOfReason: sourceClock.reason,
   };
 }
 

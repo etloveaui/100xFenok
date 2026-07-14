@@ -157,13 +157,19 @@ function StructureDetailEntry() {
 interface MarketStructureIndexDoc {
   generated_at?: string;
   concentration?: Array<{ id: string; label: string; top3Weight?: number | null; top10Weight?: number | null }>;
-  benchmarkMatrix?: { generated?: string | null; rows?: BenchmarkMatrixRow[] };
+  benchmarkMatrix?: {
+    generated?: string | null;
+    sourceAsOf?: string | null;
+    sourceAsOfReason?: string | null;
+    rows?: BenchmarkMatrixRow[];
+  };
   creditRatings?: { sourceDate?: string | null; tableCount?: number; tables?: Array<{ id: string; rows?: number; medianSpread?: number | null }> };
 }
 
 interface BenchmarkMatrixRow {
   id: string;
   label: string;
+  sourceAsOf?: string | null;
   price?: Record<string, number | null>;
   eps?: Record<string, number | null>;
   pe?: Record<string, number | null>;
@@ -191,6 +197,11 @@ function loadMarketStructureIndex(): Promise<MarketStructureIndexDoc | null> {
 interface RimIndexEntry {
   public_status?: string;
   blockers?: Array<{ code?: string; severity?: string }>;
+  observed?: {
+    price?: {
+      as_of?: string | null;
+    } | null;
+  } | null;
 }
 
 interface RimInputsDoc {
@@ -269,6 +280,18 @@ function classifyRimReadiness(publicStatus: string | undefined, blockerCount: nu
   return "pending";
 }
 
+function rimPriceSourceClock(indices: RimInputsDoc["indices"]): { asOf: string | null; reason: string | null } {
+  const required = ["KOSPI", "SOX"] as const;
+  const dates = required.map((id) => {
+    const value = indices?.[id]?.observed?.price?.as_of;
+    return typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
+  });
+  if (dates.some((value) => value === null)) {
+    return { asOf: null, reason: "KOSPI·SOX 관측 가격 기준일 미확인" };
+  }
+  return { asOf: [...dates].sort()[0] ?? null, reason: null };
+}
+
 function RimReadinessPanel() {
   const [doc, setDoc] = useState<RimInputsDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -301,9 +324,14 @@ function RimReadinessPanel() {
 
   // Fallback copy comes only from DATA_STATE_LABELS (§H-5): loading vs. unavailable are distinct.
   const fallbackLabel = !loaded ? DATA_STATE_LABELS.pending : rows.length === 0 ? DATA_STATE_LABELS.unavailable : null;
+  const sourceClock = rimPriceSourceClock(doc?.indices);
 
   return (
-    <PanelShell title="잔여이익모델(RIM) 지수 준비 상태" subtitle="지수별 입력 준비 현황" asOf={doc?.generated_at ?? null}>
+    <PanelShell
+      title="잔여이익모델(RIM) 지수 준비 상태"
+      subtitle={sourceClock.reason ?? "지수별 입력 준비 현황"}
+      asOf={sourceClock.asOf}
+    >
       {fallbackLabel ? (
         <EmptyPanel label={fallbackLabel} />
       ) : (
@@ -514,7 +542,13 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
                     <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">이익과 멀티플</p>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{doc.benchmarkMatrix?.generated ?? "—"}</span>
+                    <span
+                      className="text-right text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]"
+                      title={doc.benchmarkMatrix?.sourceAsOf ? undefined : doc.benchmarkMatrix?.sourceAsOfReason ?? undefined}
+                    >
+                      {doc.benchmarkMatrix?.sourceAsOf ? `기준 ${doc.benchmarkMatrix.sourceAsOf}` : "기준일 미확인"}
+                      {doc.benchmarkMatrix?.generated ? ` · 생성 ${doc.benchmarkMatrix.generated.slice(0, 10)}` : ""}
+                    </span>
                   </div>
                   <div className="mt-2 grid min-w-0 gap-1">
                     {benchmarkRows.map((row) => (

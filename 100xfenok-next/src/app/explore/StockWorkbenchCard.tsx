@@ -7,7 +7,7 @@ import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
-import { latestAsOf, makeDataState } from "@/lib/data-state";
+import { dateOnly, makeDataState } from "@/lib/data-state";
 import { normalizeForFilePath } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
@@ -19,6 +19,11 @@ const WORKBENCH_TABS_ID = "explore-stock-workbench-tabs";
 
 type ActionRow = ActionSummaryRecord;
 type ActionDoc = ActionSummaryDocument;
+
+interface SourceMetaDoc {
+  source_as_of?: Record<string, string | null | undefined>;
+  source_as_of_reason?: Record<string, string | null | undefined> | string | null;
+}
 
 interface RevisionRow {
   ticker: string;
@@ -90,6 +95,7 @@ interface WorkbenchData {
   revisions: RevisionDoc | null;
   discovery: DiscoveryDoc | null;
   perBands: PerBandDoc | null;
+  sourceMeta: SourceMetaDoc | null;
 }
 
 let cache: WorkbenchData | null = null;
@@ -109,12 +115,13 @@ function loadWorkbench(): Promise<WorkbenchData> {
     loadJson<RevisionDoc>("/data/global-scouter/core/revision_movers.json"),
     loadJson<DiscoveryDoc>("/data/slickcharts/discovery-summary.json"),
     loadJson<PerBandDoc>("/data/global-scouter/core/per_bands_index.json"),
-  ]).then(([actions, revisions, discovery, perBands]) => {
-    cache = { actions, revisions, discovery, perBands };
+    loadJson<SourceMetaDoc>("/data/computed/entity_graph_stock_services.json"),
+  ]).then(([actions, revisions, discovery, perBands, sourceMeta]) => {
+    cache = { actions, revisions, discovery, perBands, sourceMeta };
     return cache;
   }).catch(() => {
     pending = null;
-    return { actions: null, revisions: null, discovery: null, perBands: null };
+    return { actions: null, revisions: null, discovery: null, perBands: null, sourceMeta: null };
   });
   return pending;
 }
@@ -134,6 +141,13 @@ function datePart(value: string | null | undefined): string {
   if (!text) return "—";
   if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
   return text;
+}
+
+function completeDateFloor(values: Array<string | null | undefined>): string | null {
+  if (values.length === 0) return null;
+  const dates = values.map((value) => dateOnly(value));
+  if (dates.some((value) => value === null)) return null;
+  return (dates as string[]).sort().at(0) ?? null;
 }
 
 function fmtCount(value: number | null | undefined): string {
@@ -289,28 +303,43 @@ export default function StockWorkbenchCard() {
   const moversTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "movers", label: "급등락", count: moverCount };
   const returnsTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "returns", label: "수익/배당", count: returnsCount };
   const tabs: Array<TabItem<WorkbenchTab> & { count: number | null }> = [actionTabItem, revisionTabItem, moversTabItem, returnsTabItem];
-  const workbenchAsOf = latestAsOf([
-    data?.actions?.generated_at,
-    data?.revisions?.generated_at,
-    data?.discovery?.generated_at,
-    data?.perBands?.generated_at,
-    data?.perBands?.source_date,
+  const revisionAsOf = completeDateFloor([
+    ...(data?.revisions?.up ?? []).map((row) => row.as_of),
+    ...(data?.revisions?.down ?? []).map((row) => row.as_of),
+  ]);
+  const workbenchAsOf = completeDateFloor([
+    data?.sourceMeta?.source_as_of?.stock_action_index,
+    revisionAsOf,
     data?.discovery?.movers?.gainers?.date,
+    data?.discovery?.movers?.losers?.date,
     data?.discovery?.returns?.asOf,
     data?.discovery?.dividends?.asOf,
+    data?.perBands?.source_date,
   ]);
-  const loadedSources = [data?.actions, data?.revisions, data?.discovery].filter(Boolean).length;
+  const loadedSources = [data?.actions, data?.revisions, data?.discovery, data?.perBands].filter(Boolean).length;
+  const sourceDateMissing = loaded && loadedSources === 4 && workbenchAsOf === null;
   const workbenchState = makeDataState({
-    status: !loaded ? "pending" : loadedSources === 0 ? "error" : loadedSources < 3 ? "partial" : "ready",
-    label: !loaded ? "종목 후보 확인 중" : loadedSources === 0 ? "종목 후보 오류" : loadedSources < 3 ? "일부 후보만 표시" : "종목 후보 준비됨",
+    status: !loaded ? "pending" : loadedSources === 0 ? "error" : loadedSources < 4 || sourceDateMissing ? "partial" : "ready",
+    label: !loaded
+      ? "종목 후보 확인 중"
+      : loadedSources === 0
+        ? "종목 후보 오류"
+        : loadedSources < 4
+          ? "일부 후보만 표시"
+          : sourceDateMissing
+            ? "원천 기준일 불완전"
+            : "종목 후보 준비됨",
     detail: !loaded
       ? "이벤트·추정치·급등락·수익률 데이터를 읽고 있습니다."
       : loadedSources === 0
         ? "종목 후보 데이터를 불러오지 못했습니다."
-        : loadedSources < 3
+        : loadedSources < 4
           ? "확인된 후보 데이터만 먼저 표시합니다."
-          : "이벤트, 추정치, 급등락, 수익률 데이터를 함께 표시합니다.",
+          : sourceDateMissing
+            ? "필수 입력 중 원천 기준일을 제공하지 않은 항목이 있어 통합 기준일을 표시하지 않습니다."
+            : "이벤트, 추정치, 급등락, 수익률 데이터를 함께 표시합니다.",
     asOf: workbenchAsOf,
+    reason: sourceDateMissing ? "required source date is missing" : null,
   });
 
   return (
@@ -318,7 +347,7 @@ export default function StockWorkbenchCard() {
       <div className="panel-h">
         <h2>종목 후보</h2>
         <span className="desc">
-          {datePart(data?.actions?.generated_at ?? data?.revisions?.generated_at ?? data?.discovery?.generated_at)} · 이벤트/추정치/급등락
+          {workbenchAsOf ? `${datePart(workbenchAsOf)} 기준` : "원천 기준일 미제공"} · 이벤트/추정치/급등락
         </span>
       </div>
       {workbenchState.status !== "ready" ? (

@@ -143,6 +143,7 @@ export default function EtfUnifiedTable() {
   const [rows, setRows] = useState<EtfUniverseRecord[]>([]);
   const [digitalTickers, setDigitalTickers] = useState<Set<string>>(new Set());
   const [asOf, setAsOf] = useState<string | null>(null);
+  const [asOfReason, setAsOfReason] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -170,7 +171,13 @@ export default function EtfUnifiedTable() {
             .filter(Boolean),
         ),
       );
-      setAsOf(universe?.generated_at ?? snapshot?.screener?.fetched_at ?? null);
+      const sourceMetadata = universe as ({ source_as_of?: unknown; source_as_of_reason?: unknown } | null);
+      setAsOf(typeof sourceMetadata?.source_as_of === "string" ? sourceMetadata.source_as_of : null);
+      setAsOfReason(
+        typeof sourceMetadata?.source_as_of_reason === "string"
+          ? sourceMetadata.source_as_of_reason
+          : null,
+      );
       setLoaded(true);
       setFailed(false);
     });
@@ -315,7 +322,7 @@ export default function EtfUnifiedTable() {
   return (
     <CpSectionCard
       title="ETF 목록"
-      meta={`기준일 ${formatAsOf(asOf) ?? "-"} · ${filteredRows.length.toLocaleString("ko-KR")}개`}
+      meta={`기준일 ${formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "-")} · ${filteredRows.length.toLocaleString("ko-KR")}개`}
       footnote="행을 선택하면 ETF 상세 페이지로 이동합니다. 투자 조언 아님."
     >
       <div className="cpw5-etfs-table-toolbar">

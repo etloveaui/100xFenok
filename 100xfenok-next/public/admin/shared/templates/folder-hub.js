@@ -63,6 +63,9 @@ const FolderHub = (function() {
     const folderConfig = manifest?.folders?.[folderName] || {};
 
     const statusClasses = FreshnessChecker.getStatusClasses(freshness?.status || 'unknown');
+    const sourceClockLabel = folderConfig.updated
+      ? `원천 기준 ${folderConfig.updated}`
+      : `원천 기준 미상 · ${folderConfig.updated_reason || '원천 기준일 사유 없음'}`;
 
     return `
       <header class="bg-white border-b shadow-sm">
@@ -81,10 +84,13 @@ const FolderHub = (function() {
             <div class="flex items-center gap-4">
               <div class="text-right">
                 <span class="text-xs px-2 py-1 rounded ${statusClasses.bg} ${statusClasses.text}">
-                  ${freshness?.signal || '⚪'} ${freshness?.label || 'Unknown'}
+                  ${freshness?.signal || '⚪'} ${folderConfig.updated ? (freshness?.label || 'Unknown') : '원천 기준 미상'}
                 </span>
                 <p class="text-xs text-gray-400 mt-1">
                   v${folderConfig.version || '-'} • ${folderConfig.file_count || 0} files
+                </p>
+                <p class="text-xs text-gray-400 mt-1 max-w-sm" title="${sourceClockLabel}">
+                  ${sourceClockLabel}
                 </p>
               </div>
               <a href="${backLink}" class="p-2 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-blue-50">

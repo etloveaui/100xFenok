@@ -169,7 +169,7 @@ export function buildCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[] =
     "",
     "",
     "",
-    row.data?.normalized?.holdings_updated ?? row.data?.fetched_at ?? "",
+    row.data?.normalized?.holdings_updated ?? "",
     row.data?.detail_status ?? "",
   ]);
   const overlapRows = overlaps.flatMap((pair) => pair.common.map((item) => [

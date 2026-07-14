@@ -73,6 +73,7 @@ export interface ValuationDataSource {
   label: string;
   source: string;
   updated: string | null;
+  updatedReason: string | null;
   cadence: string | null;
   coverage: string;
   usage: string;

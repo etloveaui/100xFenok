@@ -19,6 +19,26 @@ function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function normalizedSourceDate(value: string | null | undefined): string | null {
+  const text = typeof value === "string" ? value.trim() : "";
+  const date = /^(\d{4}-\d{2}-\d{2})/.exec(text)?.[1];
+  if (date) return date;
+  const quarter = /^(\d{4})-Q([1-4])$/.exec(text);
+  if (!quarter) return null;
+  const year = Number(quarter[1]);
+  const quarterNumber = Number(quarter[2]);
+  const month = quarterNumber * 3;
+  const day = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function completeSourceFloor(values: Array<string | null | undefined>): string | null {
+  if (values.length === 0) return null;
+  const dates = values.map(normalizedSourceDate);
+  if (dates.some((value) => value === null)) return null;
+  return (dates as string[]).sort().at(0) ?? null;
+}
+
 function convictionCallFromRecord(
   call: string | null | undefined,
   score: number | null | undefined,
@@ -254,13 +274,18 @@ export function useScreenerData(): ScreenerDataResult {
 
       const sectors = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean))).sort();
       const countries = Array.from(new Set(stocks.map((s) => s.country).filter(Boolean))).sort();
+      const connectionIndexDate = completeSourceFloor([
+        connectionIndex?.source_as_of?.stocks_analyzer,
+        connectionIndex?.source_as_of?.stock_action_index,
+        connectionIndex?.source_as_of?.market_facts,
+      ]);
 
       setResult({
         stocks,
         dataReady: true,
         failed: false,
         sourceDate: provider.getSourceDate(),
-        connectionIndexDate: connectionIndex?.generated_at ?? null,
+        connectionIndexDate,
         connectionIndexReady: Boolean(connectionIndex),
         sectors,
         countries,

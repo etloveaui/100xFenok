@@ -81,6 +81,8 @@ interface EtfPayload {
   ticker?: string;
   asset_type?: string;
   fetched_at?: string;
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   detail_status?: string;
   data_supply?: EtfDataSupply;
   normalized?: {
@@ -391,7 +393,7 @@ function factNumber(facts: MarketFactsPayload | null | undefined, key: string): 
 
 function factDate(facts: MarketFactsPayload | null | undefined, key: string): string | null {
   const fact = facts?.facts?.[key];
-  return fact?.as_of ?? fact?.fetched_at ?? null;
+  return fact?.as_of ?? null;
 }
 
 function rawText(value: unknown): string {
@@ -861,7 +863,7 @@ function EtfPeerCollectionsSection({
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
         <span>단일종목·레버리지 연결과 겹침 비교는 상위 25개 표시 항목 기준입니다.</span>
-        <span>업데이트 {fmtDateish(data.generatedAt)}</span>
+        <span>생성 {fmtDateish(data.generatedAt)}</span>
       </div>
     </SectionCard>
   );
@@ -1383,11 +1385,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const updateDate = factDate(marketFacts, "price")
     ?? (quoteDate !== "—" ? quoteDate : null)
     ?? dataSupply?.source_as_of
-    ?? (dataSupply ? null : etfData?.fetched_at)
-    ?? marketFacts?.generated_at
+    ?? etfData?.source_as_of
     ?? null;
-  const holdingsDate = fmtDateish(holdingsUpdated);
-  const externalSourceAsOf = holdingsDate !== "—" ? holdingsDate : fmtDateish(updateDate);
+  const externalSourceAsOf = holdingsUpdated ?? updateDate ?? null;
   const singleStockClassificationDetails = classification?.is_single_stock
     ? [
         classification.underlying ? `분류 기초 ${classification.underlying}` : null,

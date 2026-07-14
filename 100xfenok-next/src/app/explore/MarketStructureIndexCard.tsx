@@ -83,7 +83,7 @@ export default function MarketStructureIndexCard() {
     <section className="panel">
       <div className="panel-h">
         <h2>시장 구조 인덱스</h2>
-        <span className="desc">{doc.membershipChanges?.updated ?? doc.generated_at?.slice(0, 10) ?? "—"}</span>
+        <span className="desc">{change?.date ? `최근 구성변경 ${change.date}` : "최근 구성변경 기준일 미확인"}</span>
       </div>
       <div className="mv-col">
         {change ? (

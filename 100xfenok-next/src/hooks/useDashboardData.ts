@@ -5,6 +5,7 @@ import type {
   PutCallPoint,
   CryptoFearGreedPoint,
   BenchmarksSummaryPayload,
+  BenchmarksSourcePayload,
   FredSeriesPayload,
   TickerQuotePayload,
   SectorTickerMap,
@@ -68,6 +69,7 @@ export function useDashboardData() {
         fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
         fetchJson<CryptoFearGreedPoint[]>('/data/sentiment/crypto-fear-greed.json'),
         fetchJson<BenchmarksSummaryPayload>('/data/benchmarks/summaries.json'),
+        fetchJson<BenchmarksSourcePayload>('/data/benchmarks/us.json'),
         fetchJson<FredSeriesPayload>('/data/macro/fred-banking-weekly.json'),
         fetchJson<FredSeriesPayload>('/data/macro/fred-banking-quarterly.json'),
         fetchJson<FredSeriesPayload>('/data/macro/fred-banking-daily.json'),
@@ -79,7 +81,7 @@ export function useDashboardData() {
         })),
       );
 
-      const [[fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
+      const [[fearGreed, vix, putCall, crypto, summaries, benchmarkSource, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
         dataPromise,
         tickerPromise,
       ]);
@@ -110,6 +112,7 @@ export function useDashboardData() {
         putCall,
         crypto,
         summaries,
+        benchmarkSource,
         weeklyBanking,
         quarterlyBanking,
         dailyBanking,

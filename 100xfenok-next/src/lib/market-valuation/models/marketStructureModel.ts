@@ -41,6 +41,9 @@ interface RawConcentrationItem {
   id?: string;
   label?: string;
   updated?: string | null;
+  sourceAsOf?: string | null;
+  sourceAsOfReason?: string | null;
+  collectedAt?: string | null;
   count?: number | null;
   top3Weight?: number | null;
   top10Weight?: number | null;
@@ -81,6 +84,8 @@ type MarketStructurePeriodMap = Record<string, number | null>;
 export interface MarketStructureBenchmarkRow {
   id: string;
   label: string;
+  sourceAsOf?: string | null;
+  sourceAsOfReason?: string | null;
   price: MarketStructurePeriodMap;
   eps: MarketStructurePeriodMap;
   pe: MarketStructurePeriodMap;
@@ -90,11 +95,15 @@ export interface MarketStructureBenchmarkRow {
 
 interface RawBenchmarkMatrix {
   generated?: string | null;
+  sourceAsOf?: string | null;
+  sourceAsOfReason?: string | null;
   rows?: Array<Partial<MarketStructureBenchmarkRow>>;
 }
 
 export interface MarketStructureBenchmarkMatrix {
   generated: string | null;
+  sourceAsOf: string | null;
+  sourceAsOfReason: string | null;
   rows: MarketStructureBenchmarkRow[];
 }
 
@@ -130,6 +139,9 @@ export interface MarketStructureMag7Holding {
 
 interface RawMagnificent7 {
   updated?: string | null;
+  sourceAsOf?: string | null;
+  sourceAsOfReason?: string | null;
+  collectedAt?: string | null;
   totalMarketCap?: number | null;
   indexWeight?: number | null;
   totalWeight?: number | null;
@@ -138,6 +150,9 @@ interface RawMagnificent7 {
 
 export interface MarketStructureMagnificent7 {
   updated: string | null;
+  sourceAsOf: string | null;
+  sourceAsOfReason: string | null;
+  collectedAt: string | null;
   totalMarketCap: number | null;
   indexWeight: number | null;
   totalWeight: number | null;
@@ -155,11 +170,17 @@ export interface MarketStructureMembershipChange {
 
 interface RawMembershipChanges {
   updated?: string | null;
+  sourceAsOf?: string | null;
+  sourceAsOfReason?: string | null;
+  collectedAt?: string | null;
   recent?: Array<Partial<MarketStructureMembershipChange>>;
 }
 
 export interface MarketStructureMembershipChanges {
   updated: string | null;
+  sourceAsOf: string | null;
+  sourceAsOfReason: string | null;
+  collectedAt: string | null;
   recent: MarketStructureMembershipChange[];
 }
 
@@ -323,11 +344,15 @@ function normalizePeriodMap(value: unknown): MarketStructurePeriodMap {
 function normalizeBenchmarkMatrix(raw: RawBenchmarkMatrix | undefined): MarketStructureBenchmarkMatrix {
   return {
     generated: raw?.generated ?? null,
+    sourceAsOf: raw?.sourceAsOf ?? null,
+    sourceAsOfReason: raw?.sourceAsOfReason ?? null,
     rows: (raw?.rows ?? []).flatMap((row) => {
       if (typeof row.id !== "string" || typeof row.label !== "string") return [];
       return [{
         id: row.id,
         label: row.label,
+        sourceAsOf: row.sourceAsOf ?? null,
+        sourceAsOfReason: row.sourceAsOfReason ?? null,
         price: normalizePeriodMap(row.price),
         eps: normalizePeriodMap(row.eps),
         pe: normalizePeriodMap(row.pe),
@@ -358,7 +383,10 @@ function normalizeCreditRatings(raw: RawCreditRatings | undefined): MarketStruct
 
 function normalizeMagnificent7(raw: RawMagnificent7 | undefined): MarketStructureMagnificent7 {
   return {
-    updated: raw?.updated ?? null,
+    updated: raw?.sourceAsOf ?? null,
+    sourceAsOf: raw?.sourceAsOf ?? null,
+    sourceAsOfReason: raw?.sourceAsOfReason ?? null,
+    collectedAt: raw?.collectedAt ?? null,
     totalMarketCap: finite(raw?.totalMarketCap) ? raw.totalMarketCap : null,
     indexWeight: finite(raw?.indexWeight) ? raw.indexWeight : null,
     totalWeight: finite(raw?.totalWeight) ? raw.totalWeight : null,
@@ -378,7 +406,10 @@ function normalizeMagnificent7(raw: RawMagnificent7 | undefined): MarketStructur
 
 function normalizeMembershipChanges(raw: RawMembershipChanges | undefined): MarketStructureMembershipChanges {
   return {
-    updated: raw?.updated ?? null,
+    updated: raw?.sourceAsOf ?? null,
+    sourceAsOf: raw?.sourceAsOf ?? null,
+    sourceAsOfReason: raw?.sourceAsOfReason ?? null,
+    collectedAt: raw?.collectedAt ?? null,
     recent: (raw?.recent ?? []).map((change) => ({
       date: typeof change.date === "string" ? change.date : null,
       index: typeof change.index === "string" ? change.index : null,
@@ -404,7 +435,7 @@ export function marketStructurePulsesFromModel(
           label: "S&P 500 고점 대비",
           valueLabel: fmtSignedPct(drawdown, 1),
           detail: `ATH ${String(legacy.sp500Drawdown?.current?.allTimeHigh ?? "—")} · 현 ${String(legacy.sp500Drawdown?.current?.price ?? "—")}`,
-          updated: legacy.sp500Drawdown?.updated ?? null,
+          updated: null,
           tone: structureTone(drawdown),
         }
       : null,
@@ -412,20 +443,20 @@ export function marketStructurePulsesFromModel(
       ? {
           id: "sp500_return",
           label: "S&P 500 연간",
-          valueLabel: fmtSignedPct(sp500Return, 1),
+          valueLabel: fmtSignedPct(sp500Return.value, 1),
           detail: "Slickcharts yearly return",
-          updated: legacy.sp500Returns?.updated ?? null,
-          tone: sp500Return >= 0 ? "emerald" : "rose",
+          updated: sp500Return.sourcePeriod,
+          tone: sp500Return.value >= 0 ? "emerald" : "rose",
         }
       : null,
     nasdaqReturn !== null
       ? {
           id: "nasdaq_return",
           label: "NASDAQ 100 연간",
-          valueLabel: fmtSignedPct(nasdaqReturn, 1),
+          valueLabel: fmtSignedPct(nasdaqReturn.value, 1),
           detail: "Slickcharts yearly return",
-          updated: legacy.nasdaqReturns?.updated ?? null,
-          tone: nasdaqReturn >= 0 ? "emerald" : "rose",
+          updated: nasdaqReturn.sourcePeriod,
+          tone: nasdaqReturn.value >= 0 ? "emerald" : "rose",
         }
       : null,
     concentrationFromModel(model, "sp500", "sp500_concentration", "S&P 500 Top3 비중") ?? concentrationFromHoldings(legacy.sp500Holdings, "sp500_concentration", "S&P 500 Top3 비중"),
@@ -597,7 +628,7 @@ function concentrationFromModel(model: MarketStructureModel | null, id: string, 
     label,
     valueLabel: `${top3Weight.toFixed(1)}%`,
     detail: leaders,
-    updated: item.updated ?? model?.generatedAt ?? null,
+    updated: item.sourceAsOf ?? null,
     tone: top3Weight >= 35 ? "amber" : "slate",
   };
 }
@@ -612,7 +643,7 @@ function concentrationFromHoldings(doc: RawSlickHoldings | null, id: string, lab
     label,
     valueLabel: `${topWeight.toFixed(1)}%`,
     detail: top.map((row) => row.symbol ?? row.company ?? "—").join(" · "),
-    updated: doc?.updated ?? null,
+    updated: null,
     tone: topWeight >= 35 ? "amber" : "slate",
   };
 }
@@ -626,13 +657,15 @@ function toExplicitTrend(points: CompactTrendPoint[] | undefined): SeriesPoint[]
   );
 }
 
-function latestReturnByYear(doc: RawSlickReturns | null): number | null {
+function latestReturnByYear(doc: RawSlickReturns | null): { value: number; sourcePeriod: string } | null {
   const rows = (doc?.returns ?? [])
     .filter((row): row is { year: number; "return": number } => finite(row.year) && finite(row["return"]))
     .sort((a, b) => a.year - b.year);
   const currentYear = new Date().getFullYear();
   const row = rows.find((item) => item.year === currentYear) ?? rows[rows.length - 1];
-  return finite(row?.["return"]) ? row["return"] / 100 : null;
+  return finite(row?.["return"]) && finite(row?.year)
+    ? { value: row["return"] / 100, sourcePeriod: String(row.year) }
+    : null;
 }
 
 function parsePercentString(value: unknown): number | null {

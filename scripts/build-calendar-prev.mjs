@@ -127,19 +127,26 @@ function readJson(file, fallback = null) {
   }
 }
 
+function sourceDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
+}
+
 function deriveActivity(key, cfg, activity) {
   const coverage = activity?.meta?.coverage?.[cfg.dataset];
   const value = coverage?.latest_values?.[cfg.metric];
   if (!Number.isFinite(value)) throw new Error(`${cfg.dataset}.${cfg.metric}: no numeric latest value`);
-  const latestDate = coverage.latest_date ?? null;
-  const releaseDate = coverage.latest_release_date ?? null;
-  const asOf = releaseDate && latestDate && releaseDate >= latestDate
-    ? releaseDate
-    : latestDate ?? releaseDate ?? activity?.meta?.generated_at ?? null;
+  const sourceDates = [coverage?.latest_date, coverage?.latest_release_date]
+    .map(sourceDate)
+    .filter(Boolean)
+    .sort();
+  const asOf = sourceDates.at(-1) ?? null;
   return {
     title: cfg.title,
     value: `${value.toFixed(cfg.decimals)}${cfg.unit}`,
     asOf,
+    asOfReason: asOf ? null : "activity source carries no latest_date or latest_release_date",
     series: `activity-surveys:${cfg.dataset}.${cfg.metric}`,
     source: "macro/activity-surveys",
   };
@@ -179,10 +186,15 @@ for (const [key, cfg] of Object.entries(ACTIVITY_MAP)) {
 const spMfg = values.sp_global_manufacturing_pmi;
 const spSvc = values.sp_global_services_pmi;
 if (spMfg && spSvc) {
+  const componentDates = [spMfg.asOf, spSvc.asOf];
+  const asOf = componentDates.every((candidate) => typeof candidate === "string")
+    ? [...componentDates].sort()[0]
+    : null;
   addValue(values, aliases, "sp_global_flash_pmi", {
     title: "S&P Global Flash PMI",
     value: `Mfg ${spMfg.value} / Svc ${spSvc.value}`,
-    asOf: spMfg.asOf ?? spSvc.asOf,
+    asOf,
+    asOfReason: asOf ? null : "one or more PMI components carry no source date",
     series: "activity-surveys:pmi_manufacturing.us_sp_global,pmi_services.us_sp_global",
     source: "macro/activity-surveys",
   }, { title: "S&P Global Flash PMI", aliases: ["S&P Global Flash PMI"] });

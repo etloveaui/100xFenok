@@ -55,9 +55,20 @@ function loadJson(filePath) {
   return JSON.parse(text);
 }
 
+function sourceDate(value) {
+  const text = String(value ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+  const parsed = new Date(`${text}T00:00:00Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === text ? text : null;
+}
+
+function completeSourceFloor(values) {
+  const dates = values.map(sourceDate);
+  return dates.length > 0 && dates.every(Boolean) ? [...dates].sort().at(0) : null;
+}
+
 /* ── 1. stocks_index (base) ── */
 const index = loadJson(PATHS.stocksIndex);
-const sourceDate = index.source_date ?? index.generated_at?.slice(0, 10);
 
 /* ── 2. company_master (momentum + roe + opm) ── */
 const cm = loadJson(PATHS.companyMaster);
@@ -87,6 +98,15 @@ for (const rec of cm.records) {
 /* ── 3. eps_consensus (eps) ── */
 const ec = loadJson(PATHS.epsConsensus);
 const ecMap = new Map();
+const globalScouterSourceDates = {
+  stocks_index: sourceDate(index.source_date),
+  company_master: sourceDate(cm.source_date),
+  eps_consensus: sourceDate(ec.source_date),
+};
+const globalScouterSourceDate = completeSourceFloor(Object.values(globalScouterSourceDates));
+const globalScouterSourceDateReason = globalScouterSourceDate
+  ? null
+  : "one or more required Global Scouter inputs do not publish a source date";
 
 // Section 1 date columns: indices 21-26 (first "W" block)
 const EPS_SECTION_INDICES = [21, 22, 23, 24, 25, 26];
@@ -143,6 +163,12 @@ for (const [symbol] of Object.entries(index.stocks)) {
 
   if (!slick?.current) continue;
 
+  const metricsDates = (Array.isArray(slick.metrics_history) ? slick.metrics_history : [])
+    .map((row) => sourceDate(row?.date))
+    .filter(Boolean)
+    .sort();
+  const slickSourceAsOf = metricsDates.at(-1) ?? null;
+
   const peForward = toFiniteNumber(slick.current.pe_forward);
   const epsForward = toFiniteNumber(slick.current.eps_forward);
   const dividendTtm = toFiniteNumber(slick.current.dividend_ttm);
@@ -176,8 +202,16 @@ for (const [symbol] of Object.entries(index.stocks)) {
     ret1y,
     ret3y,
     ret5y,
+    sourceAsOf: slickSourceAsOf,
   });
 }
+
+const slickSourceDates = [...slickMap.values()].map((row) => row.sourceAsOf);
+const slickSourceDate = completeSourceFloor(slickSourceDates);
+const slickMissingSourceDates = slickSourceDates.filter((date) => !date).length;
+const slickSourceDateReason = slickSourceDate
+  ? null
+  : `aggregate source floor unavailable: ${slickMissingSourceDates}/${slickSourceDates.length} SlickCharts rows have no observation date`;
 
 /* ── 5. Merge ── */
 const merged = [];
@@ -262,7 +296,9 @@ for (let i = 0; i < count; i++) {
 /* ── 7. Output ── */
 const output = {
   generated_at: new Date().toISOString(),
-  source_date: sourceDate,
+  source_date: globalScouterSourceDate,
+  source_date_reason: globalScouterSourceDateReason,
+  source_dates: globalScouterSourceDates,
   count: merged.length,
   data: merged,
 };
@@ -273,7 +309,9 @@ console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.
 /* ── 8. per_bands_index.json ── */
 const perBandsOutput = {
   generated_at: new Date().toISOString(),
-  source_date: sourceDate,
+  source_date: globalScouterSourceDate,
+  source_date_reason: globalScouterSourceDateReason,
+  source_dates: globalScouterSourceDates,
   count: Object.keys(perBands).length,
   data: perBands,
 };
@@ -290,11 +328,17 @@ for (const [symbol, rec] of slickMap) {
     ret1y: rec.ret1y,
     ret3y: rec.ret3y,
     ret5y: rec.ret5y,
+    source_as_of: rec.sourceAsOf,
   };
 }
 const slickOutput = {
   generated_at: new Date().toISOString(),
-  source_date: sourceDate,
+  source_date: slickSourceDate,
+  source_date_reason: slickSourceDateReason,
+  source_date_coverage: {
+    dated_rows: slickSourceDates.length - slickMissingSourceDates,
+    total_rows: slickSourceDates.length,
+  },
   count: Object.keys(slickIndex).length,
   data: slickIndex,
 };

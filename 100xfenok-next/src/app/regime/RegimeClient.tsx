@@ -12,7 +12,7 @@ import {
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { DATA_STATE_LABELS, formatAsOf, freshnessDataState, latestAsOf } from "@/lib/data-state";
+import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
 import type {
   MarketBondPulse,
   MarketIndexValuation,
@@ -122,6 +122,13 @@ function formatRatePercent(value: number | null, digits = 2): string {
   return value === null ? "-" : `${(value * 100).toFixed(digits)}%`;
 }
 
+function completeOldestSourceDate(values: Array<string | null>): string | null {
+  if (values.length === 0 || values.some((value) => typeof value !== "string" || value.trim().length === 0)) {
+    return null;
+  }
+  return (values as string[]).sort().at(0) ?? null;
+}
+
 function signalStatusLabel(item: MarketSignalPulse): string {
   const labels: Record<string, string> = {
     stable: "안정",
@@ -194,7 +201,9 @@ function toStructurePulse(item: MarketStructurePulse): Pulse {
     label: readablePulseLabel(item.label),
     valueLabel: item.valueLabel,
     detail: readableDetail(item.detail),
-    asOf: item.updated,
+    // SlickCharts `updated` is the collection clock. The current structure
+    // payloads carry no observation date, so freshness must remain unknown.
+    asOf: null,
     tone: item.tone,
   };
 }
@@ -347,6 +356,12 @@ function readableCadence(value: string | null): string {
   return labels[value] ?? "갱신 주기 미지정";
 }
 
+function readableSourceDate(source: ValuationDataSource): string {
+  if (source.updated) return `원천 기준 ${formatAsOf(source.updated)}`;
+  if (source.updatedReason) return "원천 기준일 미공개";
+  return "원천 기준일 확인 필요";
+}
+
 function EvidenceList({ items }: { items: Pulse[] }) {
   if (items.length === 0) {
     return <p className="cpw5-regime-evidence-row__detail">표시할 신호가 없습니다.</p>;
@@ -451,9 +466,14 @@ export default function RegimeClient() {
   const headline = buildHeadline(axes);
   const allPulses = axes.flatMap((axis) => axis.pulses);
   const gauge = gaugeReading(allPulses);
-  const latestSource = latestAsOf([sourceDate, ...allPulses.map((pulse) => pulse.asOf)]);
-  const freshness = freshnessDataState({ asOf: latestSource, maxAgeDays: 3 });
-  const visibleSources = dataSources.filter((source) => ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"].includes(source.id));
+  const requiredSourceIds = ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"];
+  const visibleSources = dataSources.filter((source) => requiredSourceIds.includes(source.id));
+  const sourceById = new Map(visibleSources.map((source) => [source.id, source]));
+  const completeSourceFloor = completeOldestSourceDate([
+    sourceDate,
+    ...allPulses.map((pulse) => pulse.asOf),
+    ...requiredSourceIds.map((id) => sourceById.get(id)?.updated ?? null),
+  ]);
 
   const isLoading = !dataReady && !failed;
 
@@ -468,10 +488,10 @@ export default function RegimeClient() {
           </p>
         </div>
         <div className="data-shell-head-actions">
-          {latestSource ? (
-            <span className="data-shell-pill ok">
+          {completeSourceFloor ? (
+            <span className="data-shell-pill">
               <span />
-              기준 {formatAsOf(latestSource)}
+              필수 입력 최저 기준일 {formatAsOf(completeSourceFloor)}
             </span>
           ) : null}
           <MarketSectionNav active="regime" />
@@ -503,10 +523,9 @@ export default function RegimeClient() {
             sub={headline.detail}
             trustChips={[
               {
-                label: freshness.status === "stale" ? "오래된 기준일" : "기준",
-                value: formatAsOf(latestSource) ?? DATA_STATE_LABELS.unavailable,
-                freshness: true,
-                tone: freshness.status === "ready" ? "positive" : freshness.status === "stale" ? "warning" : "neutral",
+                label: "필수 입력 최저 기준일",
+                value: formatAsOf(completeSourceFloor) ?? DATA_STATE_LABELS.unavailable,
+                tone: completeSourceFloor ? "neutral" : "warning",
               },
             ]}
             data-regime-headline
@@ -529,7 +548,7 @@ export default function RegimeClient() {
             </div>
           </CpSectionCard>
 
-          <CpSectionCard variant="edge" eyebrow="AXIS · 4축 포지션" title="축별 신호 위치" meta={latestSource ? `기준 ${formatAsOf(latestSource)}` : undefined}>
+          <CpSectionCard variant="edge" eyebrow="AXIS · 4축 포지션" title="축별 신호 위치" meta={completeSourceFloor ? `기준 ${formatAsOf(completeSourceFloor)}` : undefined}>
             {axes.map((axis) => (
               <CpMeterRow
                 key={axis.id}
@@ -576,7 +595,7 @@ export default function RegimeClient() {
                   <p className="cpw5-regime-source-tile__label">{readableSourceLabel(source)}</p>
                   <p className="cpw5-regime-source-tile__usage">{readableSourceUsage(source)}</p>
                   <p className="cpw5-regime-source-tile__meta">
-                    {source.updated ? `갱신 ${formatAsOf(source.updated)}` : "갱신일 확인 필요"}
+                    {readableSourceDate(source)}
                     {source.cadence ? ` · ${readableCadence(source.cadence)}` : ""}
                   </p>
                 </div>

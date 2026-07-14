@@ -11,6 +11,8 @@ type EventTab = "earnings" | "actions" | "ipo" | "movers";
 interface SurfaceDoc<T = EventRow> {
   surface?: string;
   fetched_at?: string | null;
+  source_as_of?: string | null;
+  source_as_of_reason?: string | null;
   counts?: Record<string, number | null | undefined> | null;
   records?: T[];
   tables?: Array<{ records?: T[] }>;
@@ -163,10 +165,32 @@ function countRows(doc: SurfaceDoc | null | undefined): number {
   return rowsOf(doc).length;
 }
 
-function asOf(data: EventData | null): string {
-  const values = data ? Object.values(data).map((doc) => doc?.fetched_at).filter(Boolean) : [];
-  const first = values[0];
-  return typeof first === "string" ? first.slice(0, 10) : "-";
+function normalizedDate(value: string | null | undefined): string | null {
+  const textValue = typeof value === "string" ? value.trim() : "";
+  return /^(\d{4}-\d{2}-\d{2})/.exec(textValue)?.[1] ?? null;
+}
+
+function completeDateFloor(values: Array<string | null | undefined>): string | null {
+  if (values.length === 0) return null;
+  const dates = values.map(normalizedDate);
+  if (dates.some((value) => value === null)) return null;
+  return (dates as string[]).sort().at(0) ?? null;
+}
+
+function surfaceTimeLabel(doc: SurfaceDoc | null | undefined): string {
+  const sourceDate = normalizedDate(doc?.source_as_of);
+  if (sourceDate) return `기준 ${sourceDate}`;
+  const collectedDate = normalizedDate(doc?.fetched_at);
+  return collectedDate ? `수집 ${collectedDate}` : "원천 기준일 미제공";
+}
+
+function eventTimeLabel(data: EventData | null): string {
+  const docs = data ? Object.values(data) : [];
+  if (docs.length === 0) return "원천 기준일 미제공";
+  const sourceFloor = completeDateFloor(docs.map((doc) => doc?.source_as_of));
+  if (sourceFloor) return `기준 ${sourceFloor}`;
+  const collectionFloor = completeDateFloor(docs.map((doc) => doc?.fetched_at));
+  return collectionFloor ? `수집 ${collectionFloor}` : "원천 기준일 미제공";
 }
 
 function todayIso(): string {
@@ -355,7 +379,7 @@ export default function MarketEventsClient({
           </p>
         </div>
         <div className="data-shell-head-actions">
-          <span className="data-shell-pill ok"><span />{asOf(data)}</span>
+          <span className="data-shell-pill"><span />{eventTimeLabel(data)}</span>
           <MarketSectionNav active="events" />
         </div>
       </section>
@@ -902,7 +926,7 @@ function EarningsPanel({ data }: { data: EventData | null }) {
     <section className="panel">
       <div className="panel-h">
         <h2>다가오는 어닝</h2>
-        <span className="desc">{dateText(data?.earnings?.fetched_at)} · {countRows(data?.earnings).toLocaleString("ko-KR")}개</span>
+        <span className="desc">{surfaceTimeLabel(data?.earnings)} · {countRows(data?.earnings).toLocaleString("ko-KR")}개</span>
       </div>
       <div className="mv-col">
         {rows.length ? rows.map((row) => {
@@ -924,7 +948,7 @@ function ActionsPanel({ data }: { data: EventData | null }) {
       <section className="panel">
         <div className="panel-h">
           <h2>최근 기업 이벤트</h2>
-          <span className="desc">{dateText(data?.actions?.fetched_at)} · {countRows(data?.actions).toLocaleString("ko-KR")}개</span>
+          <span className="desc">{surfaceTimeLabel(data?.actions)} · {countRows(data?.actions).toLocaleString("ko-KR")}개</span>
         </div>
         <div className="mv-col">
           {recent.length ? recent.map((row) => {
@@ -960,7 +984,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
       <section className="panel">
         <div className="panel-h">
           <h2>예정 IPO</h2>
-          <span className="desc">{dateText(data?.ipoCalendar?.fetched_at)} · {countRows(data?.ipoCalendar).toLocaleString("ko-KR")}개</span>
+          <span className="desc">{surfaceTimeLabel(data?.ipoCalendar)} · {countRows(data?.ipoCalendar).toLocaleString("ko-KR")}개</span>
         </div>
         <div className="mv-col">
           {calendar.length ? calendar.map((row) => (
@@ -993,7 +1017,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
       <section className="panel">
         <div className="panel-h">
           <h2>IPO 활동</h2>
-          <span className="desc">{dateText(data?.ipoStats?.fetched_at)} · {countRows(data?.ipoStats).toLocaleString("ko-KR")}개</span>
+          <span className="desc">{surfaceTimeLabel(data?.ipoStats)} · {countRows(data?.ipoStats).toLocaleString("ko-KR")}개</span>
         </div>
         <div className="mv-col">
           {stats.length ? stats.map((row) => {
@@ -1034,7 +1058,7 @@ function MoversPanel({ data }: { data: EventData | null }) {
         <section key={group.title} className="panel">
           <div className="panel-h">
             <h2>{group.title}</h2>
-            <span className="desc">{dateText(group.doc?.fetched_at)} · {countRows(group.doc).toLocaleString("ko-KR")}개</span>
+            <span className="desc">{surfaceTimeLabel(group.doc)} · {countRows(group.doc).toLocaleString("ko-KR")}개</span>
           </div>
           <div className="mv-col">
             {group.rows.length ? group.rows.map((row) => {
