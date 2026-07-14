@@ -59,6 +59,7 @@ DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
+MISSING_DETAIL_RECONCILE_REL_PATH = "backfill/missing_detail_reconcile_latest.json"
 ENDPOINT_CANARY_REL_PATH = "canary/endpoint_latest.json"
 ENDPOINT_CANARY_TICKERS = ("VYMI", "SPY", "GOLI")
 FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH = "admin/fenok-edge-etf-daily1y-fetchable-plan.json"
@@ -967,8 +968,10 @@ ETF_DETAIL_SURFACE_CONTRACTS = {
         "path": "/etf/{ticker}/holdings/__data.json",
         "required_types": {
             "holdings": list,
-            "count": int,
-            "date": str,
+        },
+        "optional_types": {
+            "count": (int, type(None)),
+            "date": (str, type(None)),
             "sectors": (list, type(None)),
             "countries": (list, type(None)),
         },
@@ -986,6 +989,7 @@ def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
         raise ValueError(f"svelte_contract_drift:{surface}:missing_nodes")
 
     required_types = contract["required_types"]
+    optional_types = contract.get("optional_types") or {}
     decoded_candidates = []
     for node in reversed(payload.get("nodes") or []):
         data = node.get("data") if isinstance(node, dict) else None
@@ -1002,6 +1006,19 @@ def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
                     value = decoded[key]
                     expected_types = expected_type if isinstance(expected_type, tuple) else (expected_type,)
                     if not isinstance(value, expected_type) or (
+                        int in expected_types and isinstance(value, bool)
+                    ):
+                        expected_label = "_or_".join(item.__name__ for item in expected_types)
+                        raise ValueError(
+                            f"svelte_contract_drift:{surface}:invalid_type:{key}:"
+                            f"expected_{expected_label}"
+                        )
+                for key, expected_type in optional_types.items():
+                    if key not in decoded:
+                        continue
+                    value = decoded[key]
+                    expected_types = expected_type if isinstance(expected_type, tuple) else (expected_type,)
+                    if not isinstance(value, expected_types) or (
                         int in expected_types and isinstance(value, bool)
                     ):
                         expected_label = "_or_".join(item.__name__ for item in expected_types)
@@ -1837,7 +1854,7 @@ def load_etf_universe_symbols() -> list[str]:
     return symbols
 
 
-def fetch_etf(ticker: str, timeout: int) -> dict:
+def fetch_etf(ticker: str, timeout: int, *, include_history: bool = True) -> dict:
     overview_path, overview_data = fetch_svelte_detail(ticker, "overview", timeout)
     holdings_unavailable = overview_declares_holdings_unavailable(overview_data)
     holdings_path, holdings_data = fetch_svelte_detail(
@@ -1846,7 +1863,10 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         timeout,
         allow_unavailable=holdings_unavailable,
     )
-    history_paths, history_periods, history_errors = fetch_etf_history_periods(ticker, timeout)
+    if include_history:
+        history_paths, history_periods, history_errors = fetch_etf_history_periods(ticker, timeout)
+    else:
+        history_paths, history_periods, history_errors = {}, {}, {}
     paths = {
         "holdings": holdings_path,
         "overview": overview_path,
@@ -1897,7 +1917,13 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
             "asset_allocation": holdings_data.get("asset_allocation"),
             "sectors": holdings_data.get("sectors"),
             "countries": holdings_data.get("countries"),
-            "holding_count": holdings_data.get("count") or overview_data.get("holdings"),
+            "holding_count": (
+                holdings_data.get("count")
+                if holdings_data.get("count") is not None
+                else len(normalized_holdings)
+                if normalized_holdings
+                else overview_data.get("holdings")
+            ),
             "holdings_updated": holdings_data.get("date") or (overview_data.get("holdingsTable") or {}).get("updated"),
             "classification": classification,
             "overview": {
@@ -1916,12 +1942,19 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         },
         "raw": raw,
     }
-    if holdings_unavailable or history_errors:
+    partial_reason_codes = [
+        *(["holdings_unavailable"] if holdings_unavailable else []),
+        *(
+            f"holdings_{key}_unavailable"
+            for key in ("count", "date", "countries")
+            if holdings_data.get(key) is None
+        ),
+        *(["history_deferred_initial_reconcile"] if not include_history else []),
+        *(f"history_{key}_{row['reason_code']}" for key, row in sorted(history_errors.items())),
+    ]
+    if partial_reason_codes:
         payload["detail_status"] = "stockanalysis_partial"
-        payload["partial_reason_codes"] = [
-            *(["holdings_unavailable"] if holdings_unavailable else []),
-            *(f"history_{key}_{row['reason_code']}" for key, row in sorted(history_errors.items())),
-        ]
+        payload["partial_reason_codes"] = partial_reason_codes
     return payload
 
 
@@ -2153,6 +2186,56 @@ def record_etf_detail_failure_observation(
         "observation_origin": "natural",
         "payload_available": False,
         "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
+    }
+    row["event_id"] = deterministic_event_id("observation", row)
+    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
+    return row
+
+
+def provider_response_from_error(error: str | None) -> str | None:
+    text = str(error or "")
+    for code in (400, 404):
+        if f"HTTP Error {code}" in text:
+            return f"HTTP {code}"
+    return None
+
+
+def record_etf_detail_unavailability_observation(
+    *,
+    ticker: str,
+    provider_path: str,
+    failure_detail: str,
+) -> dict:
+    """Record provider absence as named availability evidence, not a fetch failure."""
+    observed_at = now_iso()
+    provider_response = provider_response_from_error(failure_detail)
+    descriptor = {
+        "provider": "stockanalysis",
+        "endpoint_family": "stockanalysis_etf_detail",
+        "domain": "etf_detail",
+        "entity": ticker,
+        "observed_at": observed_at,
+        "reason_code": "provider_coverage_gap",
+        "failure_detail_sha256": hashlib.sha256(failure_detail.encode("utf-8")).hexdigest(),
+    }
+    row = {
+        "schema_version": "data-supply-observation/v1",
+        "provider": "stockanalysis",
+        "endpoint_family": "stockanalysis_etf_detail",
+        "domain": "etf_detail",
+        "entity": ticker,
+        "provider_path": provider_path,
+        "payload_sha256": canonical_sha256(descriptor),
+        "provider_schema": SCHEMA_VERSION,
+        "source_as_of": None,
+        "observed_at": observed_at,
+        "validation_status": "invalid",
+        "reason_code": "provider_coverage_gap",
+        "observation_origin": "natural",
+        "payload_available": False,
+        "failure_detail_sha256": descriptor["failure_detail_sha256"],
+        "availability_status": "provider_absent",
+        "provider_response": provider_response,
     }
     row["event_id"] = deterministic_event_id("observation", row)
     DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
@@ -2695,6 +2778,13 @@ def pending_entry_in_cooldown(
     cooldown_days: float,
     failure_threshold: int,
 ) -> bool:
+    if isinstance(entry, dict) and entry.get("availability_status") == "provider_absent":
+        if cooldown_days <= 0:
+            return False
+        next_probe = parse_iso_timestamp(
+            entry.get("next_probe_after_utc") or entry.get("next_attempt_after_utc")
+        )
+        return next_probe is not None and now_dt < next_probe
     if not isinstance(entry, dict) or cooldown_days <= 0 or failure_threshold <= 0:
         if not isinstance(entry, dict) or cooldown_days <= 0:
             return False
@@ -2728,12 +2818,18 @@ def pending_ledger_counts(payload: dict, now_dt: datetime, cooldown_days: float,
     return {
         "tracked": len(entries),
         "cooldown": cooldown,
+        "provider_coverage_gaps": sum(
+            1 for entry in entries.values()
+            if isinstance(entry, dict) and entry.get("availability_status") == "provider_absent"
+        ),
     }
 
 
 def classify_missing_detail_failure(entry: dict | None) -> str:
     if not isinstance(entry, dict):
         return "untracked"
+    if entry.get("availability_status") == "provider_absent":
+        return "provider_coverage_gap"
     reason = str(entry.get("failure_reason") or "")
     if "quoteType is not ETF/MUTUALFUND" in reason:
         return "external_quote_type_mismatch"
@@ -2752,9 +2848,25 @@ def classify_missing_detail_status(
 ) -> str:
     if not isinstance(entry, dict):
         return "untracked"
+    if entry.get("availability_status") == "provider_absent":
+        return (
+            "provider_gap_cooldown"
+            if pending_entry_in_cooldown(entry, now_dt, cooldown_days, failure_threshold)
+            else "provider_gap_reprobe_due"
+        )
     if pending_entry_in_cooldown(entry, now_dt, cooldown_days, failure_threshold):
         return "retry_cooldown"
     return "retry_pending"
+
+
+def classify_missing_detail_availability(entry: dict | None) -> str:
+    if not isinstance(entry, dict):
+        return "unprobed"
+    if entry.get("availability_status") == "provider_absent":
+        return "provider_absent"
+    if entry.get("availability_status") == "provider_available":
+        return "provider_available"
+    return "unresolved"
 
 
 def increment_count(payload: dict, key: str) -> None:
@@ -2790,7 +2902,36 @@ def update_pending_ledger(
         if not ticker or ticker not in selected:
             continue
         error = result.get("error")
-        primary_error = result.get("stockanalysis_error") if result.get("provider") == "yahoo_finance" else None
+        primary_error = result.get("stockanalysis_error")
+        if result.get("provider_availability_status") == "absent":
+            next_probe = (
+                utc_iso(now_dt + timedelta(days=cooldown_days))
+                if cooldown_days > 0
+                else None
+            )
+            entries[ticker] = {
+                "ticker": ticker,
+                "last_attempt_utc": utc_iso(now_dt),
+                "availability_status": "provider_absent",
+                "availability_reason": (
+                    result.get("provider_availability_reason") or "provider_coverage_gap"
+                ),
+                "provider_response": result.get("provider_response"),
+                "failure_reason": None,
+                "failure_class": "provider_coverage_gap",
+                "consecutive_failures": 0,
+                "next_probe_after_utc": next_probe,
+                "next_attempt_after_utc": next_probe,
+                "last_status": result.get("status"),
+                "last_provider": "stockanalysis",
+                "fallback_provider": (
+                    result.get("provider")
+                    if result.get("provider") not in (None, "stockanalysis")
+                    else None
+                ),
+            }
+            updated.append(ticker)
+            continue
         if error is None and primary_error is None:
             selected_row = selected_by_ticker.get(ticker) or {}
             daily_1y_required = any(
@@ -2928,7 +3069,7 @@ def update_pending_ledger(
         "policy": {
             "cooldown_days": cooldown_days,
             "failure_threshold": failure_threshold,
-            "rule": "record failed primary attempts and evidence-eligible successful-but-short daily_1y observations for fair retry rotation; sparse, stale, tiny, or discontinuous successful series keep the 48-hour fail-closed retry path; error failures use the threshold, eligible successful short histories cool down immediately until next_attempt_after_utc",
+            "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation",
         },
         "counts": {
             **pending_ledger_counts({"entries": entries}, now_dt, cooldown_days, failure_threshold),
@@ -3234,8 +3375,10 @@ def build_etf_detail_coverage() -> dict:
     }
     missing_status_breakdown = {}
     missing_failure_breakdown = {}
+    missing_availability_breakdown = {}
     missing_samples_by_status: dict[str, list[str]] = {}
     missing_samples_by_failure: dict[str, list[str]] = {}
+    missing_samples_by_availability: dict[str, list[str]] = {}
     for ticker in missing:
         pending_entry = pending_entries.get(ticker)
         status_key = classify_missing_detail_status(
@@ -3245,14 +3388,19 @@ def build_etf_detail_coverage() -> dict:
             DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES,
         )
         failure_key = classify_missing_detail_failure(pending_entry)
+        availability_key = classify_missing_detail_availability(pending_entry)
         increment_count(missing_status_breakdown, status_key)
         increment_count(missing_failure_breakdown, failure_key)
+        increment_count(missing_availability_breakdown, availability_key)
         missing_samples_by_status.setdefault(status_key, [])
         missing_samples_by_failure.setdefault(failure_key, [])
+        missing_samples_by_availability.setdefault(availability_key, [])
         if len(missing_samples_by_status[status_key]) < 12:
             missing_samples_by_status[status_key].append(ticker)
         if len(missing_samples_by_failure[failure_key]) < 12:
             missing_samples_by_failure[failure_key].append(ticker)
+        if len(missing_samples_by_availability[availability_key]) < 12:
+            missing_samples_by_availability[availability_key].append(ticker)
     coverage_pct = round((len(covered) / len(candidate_symbols)) * 100, 2) if candidate_symbols else 0.0
     primary_pct = round((len(set(stockanalysis_detail) & candidate_set) / len(candidate_symbols)) * 100, 2) if candidate_symbols else 0.0
 
@@ -3289,12 +3437,15 @@ def build_etf_detail_coverage() -> dict:
             "missing_by_source": missing_by_source,
             "missing_status_breakdown": dict(sorted(missing_status_breakdown.items())),
             "missing_failure_breakdown": dict(sorted(missing_failure_breakdown.items())),
+            "missing_availability_breakdown": dict(sorted(missing_availability_breakdown.items())),
             "pending_tracked": pending_counts.get("tracked", 0),
             "pending_cooldown": pending_counts.get("cooldown", 0),
             "pending_tracked_missing": sum(1 for ticker in missing if ticker in pending_entries),
+            "provider_coverage_gaps": pending_counts.get("provider_coverage_gaps", 0),
         },
         "missing_reason_summary": dict(sorted(missing_failure_breakdown.items())),
         "missing_status_summary": dict(sorted(missing_status_breakdown.items())),
+        "missing_availability_summary": dict(sorted(missing_availability_breakdown.items())),
         "missing_reason_samples": {
             key: value
             for key, value in sorted(missing_samples_by_failure.items())
@@ -3303,7 +3454,16 @@ def build_etf_detail_coverage() -> dict:
             key: value
             for key, value in sorted(missing_samples_by_status.items())
         },
+        "missing_availability_samples": {
+            key: value
+            for key, value in sorted(missing_samples_by_availability.items())
+        },
         "missing_tickers": missing,
+        "provider_absent_tickers": [
+            ticker
+            for ticker in missing
+            if classify_missing_detail_availability(pending_entries.get(ticker)) == "provider_absent"
+        ],
         "yahoo_fallback_tickers": yahoo_fallback,
         "invalid_detail_tickers": invalid_detail,
         "extra_detail_tickers": extra,
@@ -3536,6 +3696,85 @@ def build_incremental_etf_backfill_plan(
         },
         "etfs": planned_etfs,
         "incremental_etf_backfill": incremental_summary,
+    }
+
+
+def build_missing_detail_reconcile_summary(
+    initial_missing: list[str],
+    selected: list[str],
+    results: list[dict],
+    coverage: dict,
+) -> dict:
+    rows = [
+        {
+            key: result.get(key)
+            for key in (
+                "ticker",
+                "status",
+                "provider",
+                "path",
+                "provider_availability_status",
+                "provider_availability_reason",
+                "provider_response",
+                "stockanalysis_error",
+                "error",
+            )
+        }
+        for result in results
+        if result.get("asset_type") == "etf"
+    ]
+    fetchable_fetched = sum(
+        1
+        for row in rows
+        if row.get("provider") == "stockanalysis"
+        and row.get("provider_availability_status") == "available"
+        and row.get("error") is None
+        and row.get("path")
+    )
+    provider_absent = sum(
+        1 for row in rows if row.get("provider_availability_status") == "absent"
+    )
+    unresolved = sum(
+        1
+        for row in rows
+        if row.get("error") is not None
+        or row.get("provider_availability_status") not in {"available", "absent"}
+    )
+    coverage_counts = coverage.get("counts") if isinstance(coverage.get("counts"), dict) else {}
+    return {
+        "schema_version": "stockanalysis-etf-detail-reconcile/v1",
+        "source": "stockanalysis",
+        "generated_at": now_iso(),
+        "operation": "reconcile_missing_etf_details",
+        "method": (
+            "probe every selected missing ticker against StockAnalysis overview, holdings, and quote; "
+            "write an honest stockanalysis_partial detail when provider data is available; classify only "
+            "HTTP 400/404 as provider_absent; keep all other responses unresolved and fail the run"
+        ),
+        "counts": {
+            "initial_missing": len(initial_missing),
+            "selected": len(selected),
+            "fetchable_fetched": fetchable_fetched,
+            "provider_absent": provider_absent,
+            "unresolved": unresolved,
+            "remaining_missing": coverage_counts.get("missing_detail_files", 0),
+        },
+        "selected_tickers": selected,
+        "provider_absent_tickers": sorted(
+            row["ticker"]
+            for row in rows
+            if row.get("ticker") and row.get("provider_availability_status") == "absent"
+        ),
+        "unresolved_tickers": sorted(
+            row["ticker"]
+            for row in rows
+            if row.get("ticker")
+            and (
+                row.get("error") is not None
+                or row.get("provider_availability_status") not in {"available", "absent"}
+            )
+        ),
+        "results": rows,
     }
 
 
@@ -3844,38 +4083,89 @@ def run_one(
     mirror_public: bool,
     include_financials: bool = False,
     yf_fallback: bool = False,
+    include_etf_history: bool = True,
 ) -> dict:
     start = time.perf_counter()
     preserved_primary = False
+    provider_availability_status = None
+    provider_availability_reason = None
+    provider_response = None
     try:
         if kind == "etf":
             try:
-                payload = fetch_etf(ticker, timeout)
+                payload = (
+                    fetch_etf(ticker, timeout)
+                    if include_etf_history
+                    else fetch_etf(ticker, timeout, include_history=False)
+                )
                 provider = "stockanalysis"
                 stockanalysis_error = None
+                provider_availability_status = "available"
+                provider_availability_reason = "provider_detail_contract_valid"
+                provider_response = "HTTP 200 contract valid"
             except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
                 stockanalysis_error = f"{type(exc).__name__}: {exc}"
+                provider_gap = is_expected_missing_error(stockanalysis_error)
                 failure_reason = (
                     "endpoint_missing"
-                    if is_expected_missing_error(stockanalysis_error)
+                    if provider_gap
                     else "schema_invalid"
                     if isinstance(exc, (json.JSONDecodeError, ValueError))
                     else "fetch_failed"
                 )
-                record_etf_detail_failure_observation(
-                    provider="stockanalysis",
-                    endpoint_family="stockanalysis_etf_detail",
-                    ticker=ticker,
-                    provider_path=f"data/stockanalysis/etfs/{ticker}.json",
-                    provider_schema=SCHEMA_VERSION,
-                    reason_code=failure_reason,
-                    failure_detail=stockanalysis_error,
-                )
+                if provider_gap:
+                    provider_availability_status = "absent"
+                    provider_availability_reason = "provider_coverage_gap"
+                    provider_response = provider_response_from_error(stockanalysis_error)
+                    record_etf_detail_unavailability_observation(
+                        ticker=ticker,
+                        provider_path=f"data/stockanalysis/etfs/{ticker}.json",
+                        failure_detail=stockanalysis_error,
+                    )
+                else:
+                    record_etf_detail_failure_observation(
+                        provider="stockanalysis",
+                        endpoint_family="stockanalysis_etf_detail",
+                        ticker=ticker,
+                        provider_path=f"data/stockanalysis/etfs/{ticker}.json",
+                        provider_schema=SCHEMA_VERSION,
+                        reason_code=failure_reason,
+                        failure_detail=stockanalysis_error,
+                    )
                 if not yf_fallback:
+                    if provider_gap:
+                        return {
+                            "ticker": ticker,
+                            "asset_type": kind,
+                            "status": "provider_coverage_gap",
+                            "provider": "stockanalysis",
+                            "path": None,
+                            "latency_ms": round((time.perf_counter() - start) * 1000),
+                            "stockanalysis_error": stockanalysis_error,
+                            "provider_availability_status": provider_availability_status,
+                            "provider_availability_reason": provider_availability_reason,
+                            "provider_response": provider_response,
+                            "error": None,
+                        }
                     raise
                 try:
                     payload = fetch_yahoo_etf_fallback(ticker, mirror_public)
                 except Exception as fallback_exc:
+                    if provider_gap:
+                        return {
+                            "ticker": ticker,
+                            "asset_type": kind,
+                            "status": "provider_coverage_gap",
+                            "provider": "stockanalysis",
+                            "path": None,
+                            "latency_ms": round((time.perf_counter() - start) * 1000),
+                            "stockanalysis_error": stockanalysis_error,
+                            "fallback_error": f"{type(fallback_exc).__name__}: {fallback_exc}",
+                            "provider_availability_status": provider_availability_status,
+                            "provider_availability_reason": provider_availability_reason,
+                            "provider_response": provider_response,
+                            "error": None,
+                        }
                     return {
                         "ticker": ticker,
                         "asset_type": kind,
@@ -4024,6 +4314,9 @@ def run_one(
             "financials_path": financials_rel_path,
             "latency_ms": round((time.perf_counter() - start) * 1000),
             "stockanalysis_error": stockanalysis_error,
+            "provider_availability_status": provider_availability_status,
+            "provider_availability_reason": provider_availability_reason,
+            "provider_response": provider_response,
             "error": None,
         }
     except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
@@ -4071,6 +4364,7 @@ def main() -> None:
     parser.add_argument("--universe-only", action="store_true", help="only refresh etf_universe.json; do not deep-fetch ETF payloads")
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
     parser.add_argument("--incremental-etf-backfill", action="store_true", help="auto deep-fetch new/missing/stale ETF details without a full universe run")
+    parser.add_argument("--reconcile-missing-etf-details", action="store_true", help="classify and close every selected missing ETF detail using provider responses; HTTP 400/404 become named provider gaps")
     parser.add_argument("--incremental-etf-only", action="store_true", help="with --incremental-etf-backfill, skip the default focus ETF refresh and fetch only explicit --etfs plus selected incremental candidates")
     parser.add_argument("--history-gaps-only", action="store_true", help="with --incremental-etf-backfill, select only primary StockAnalysis ETF details missing required history_periods")
     parser.add_argument("--required-history-periods", default="", help="comma-separated history_periods required for --history-gaps-only; default monthly_3y,monthly_5y")
@@ -4109,6 +4403,21 @@ def main() -> None:
         raise SystemExit("--write-plan requires --plan-only")
     if args.plan_only and any((args.discover_etf_universe, args.fetch_surfaces, args.coverage_only, args.classify_etf_catalogs)):
         raise SystemExit("--plan-only uses existing local files; do not combine it with fetch/write modes")
+    if args.reconcile_missing_etf_details and any(
+        (
+            args.discover_etf_universe,
+            args.fetch_surfaces,
+            args.universe_backfill,
+            args.incremental_etf_backfill,
+            args.coverage_only,
+            args.classify_etf_catalogs,
+            args.stocks_only,
+            args.etfs,
+            args.stocks,
+            args.fetch_financials,
+        )
+    ):
+        raise SystemExit("--reconcile-missing-etf-details is an isolated producer mode")
 
     mirror_public = not args.no_public_mirror
     if args.endpoint_canary:
@@ -4136,6 +4445,7 @@ def main() -> None:
             args.fetch_surfaces,
             args.universe_backfill,
             args.incremental_etf_backfill,
+            args.reconcile_missing_etf_details,
             args.coverage_only,
             args.stocks_only,
             args.etfs,
@@ -4181,20 +4491,36 @@ def main() -> None:
         attach_etf_detail_coverage_to_index(coverage, mirror_public)
         return
 
-    explicit_etfs = parse_symbols(args.etfs)
-    etfs = select_base_etfs(
-        explicit_etfs,
-        stocks_only=args.stocks_only,
-        universe_backfill=args.universe_backfill,
-        incremental_etf_backfill=args.incremental_etf_backfill,
-        incremental_etf_only=args.incremental_etf_only,
-        universe_payload=universe_payload,
-    )
+    reconcile_initial_missing = []
+    reconcile_selected = []
+    if args.reconcile_missing_etf_details:
+        coverage_before = build_etf_detail_coverage()
+        reconcile_initial_missing = list(coverage_before.get("missing_tickers") or [])
+        reconcile_selected = reconcile_initial_missing[max(0, args.offset):]
+        if args.incremental_etf_limit > 0:
+            reconcile_selected = reconcile_selected[: args.incremental_etf_limit]
+        etfs = reconcile_selected[:]
+        print(
+            "[missing-detail-reconcile-plan] "
+            f"initial_missing={len(reconcile_initial_missing)} selected={len(reconcile_selected)} "
+            f"offset={max(0, args.offset)}",
+            flush=True,
+        )
+    else:
+        explicit_etfs = parse_symbols(args.etfs)
+        etfs = select_base_etfs(
+            explicit_etfs,
+            stocks_only=args.stocks_only,
+            universe_backfill=args.universe_backfill,
+            incremental_etf_backfill=args.incremental_etf_backfill,
+            incremental_etf_only=args.incremental_etf_only,
+            universe_payload=universe_payload,
+        )
 
-    if args.offset:
-        etfs = etfs[args.offset:]
-    if args.limit_etfs:
-        etfs = etfs[: args.limit_etfs]
+        if args.offset:
+            etfs = etfs[args.offset:]
+        if args.limit_etfs:
+            etfs = etfs[: args.limit_etfs]
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:
         incremental_summary = incremental_etf_backfill_candidates(
@@ -4248,12 +4574,23 @@ def main() -> None:
                 args.timeout,
                 mirror_public,
                 include_financials=(kind == "stock" and args.fetch_financials),
-                yf_fallback=(kind == "etf" and args.yf_etf_fallback),
+                yf_fallback=(
+                    kind == "etf"
+                    and args.yf_etf_fallback
+                    and not args.reconcile_missing_etf_details
+                ),
+                include_etf_history=not args.reconcile_missing_etf_details,
             )
             results.append(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
             if result["error"] is None and result.get("provider") == "yahoo_finance":
                 status = "YF_FALLBACK"
+            if result.get("provider_availability_status") == "absent":
+                status = (
+                    "PROVIDER_GAP "
+                    f"reason={result.get('provider_availability_reason')} "
+                    f"response={result.get('provider_response')}"
+                )
             print(f"[{kind} {idx}/{len(symbols)}] {ticker} {status} {result['latency_ms']}ms", flush=True)
             if args.stop_on_hard_error and is_hard_error(result["error"]):
                 stop_reason = {
@@ -4268,11 +4605,15 @@ def main() -> None:
             break
 
     pending_ledger_summary = None
-    if incremental_summary is not None:
-        ledger_selected_rows = [
-            *(incremental_summary.get("selected") or []),
-            *({"ticker": ticker} for ticker in etfs),
-        ]
+    if incremental_summary is not None or args.reconcile_missing_etf_details:
+        ledger_selected_rows = (
+            [
+                *(incremental_summary.get("selected") or []),
+                *({"ticker": ticker} for ticker in etfs),
+            ]
+            if incremental_summary is not None
+            else [{"ticker": ticker, "reason": "missing"} for ticker in reconcile_selected]
+        )
         pending_ledger_summary = update_pending_ledger(
             results=results,
             selected_rows=ledger_selected_rows,
@@ -4280,17 +4621,36 @@ def main() -> None:
             failure_threshold=args.incremental_etf_cooldown_failures,
             mirror_public=mirror_public,
         )
-        incremental_summary["pending_ledger"] = {
-            "path": PENDING_LEDGER_REL_PATH,
-            "generated_at": pending_ledger_summary.get("generated_at"),
-            "counts": pending_ledger_summary.get("counts"),
-        }
-        incremental_summary["counts"]["ledger_tracked"] = (pending_ledger_summary.get("counts") or {}).get("tracked", 0)
-        incremental_summary["counts"]["ledger_cooldown"] = (pending_ledger_summary.get("counts") or {}).get("cooldown", 0)
-        write_payload("backfill/incremental_latest.json", incremental_summary, mirror_public)
+        if incremental_summary is not None:
+            incremental_summary["pending_ledger"] = {
+                "path": PENDING_LEDGER_REL_PATH,
+                "generated_at": pending_ledger_summary.get("generated_at"),
+                "counts": pending_ledger_summary.get("counts"),
+            }
+            incremental_summary["counts"]["ledger_tracked"] = (pending_ledger_summary.get("counts") or {}).get("tracked", 0)
+            incremental_summary["counts"]["ledger_cooldown"] = (pending_ledger_summary.get("counts") or {}).get("cooldown", 0)
+            write_payload("backfill/incremental_latest.json", incremental_summary, mirror_public)
 
     etf_detail_coverage = write_etf_detail_coverage(mirror_public)
     etf_detail_coverage_counts = etf_detail_coverage.get("counts") or {}
+    missing_detail_reconcile = None
+    if args.reconcile_missing_etf_details:
+        missing_detail_reconcile = build_missing_detail_reconcile_summary(
+            reconcile_initial_missing,
+            reconcile_selected,
+            results,
+            etf_detail_coverage,
+        )
+        write_payload(MISSING_DETAIL_RECONCILE_REL_PATH, missing_detail_reconcile, mirror_public)
+        reconcile_counts = missing_detail_reconcile["counts"]
+        print(
+            "[missing-detail-reconcile] "
+            f"fetchable_fetched={reconcile_counts['fetchable_fetched']} "
+            f"provider_absent={reconcile_counts['provider_absent']} "
+            f"unresolved={reconcile_counts['unresolved']} "
+            f"remaining_missing={reconcile_counts['remaining_missing']}",
+            flush=True,
+        )
     current_surface_stamps = (
         surface_summary.get("source_as_of")
         if isinstance(surface_summary, dict) and isinstance(surface_summary.get("source_as_of"), dict)
@@ -4349,6 +4709,8 @@ def main() -> None:
             "hard_failed": sum(1 for item in results if is_hard_error(item["error"])),
             "etfs_stockanalysis_ok": sum(1 for item in results if item.get("asset_type") == "etf" and item.get("provider") == "stockanalysis" and item["error"] is None),
             "etfs_yahoo_fallback_ok": sum(1 for item in results if item.get("asset_type") == "etf" and item.get("provider") == "yahoo_finance" and item["error"] is None),
+            "etfs_provider_available": sum(1 for item in results if item.get("asset_type") == "etf" and item.get("provider_availability_status") == "available"),
+            "etfs_provider_absent": sum(1 for item in results if item.get("asset_type") == "etf" and item.get("provider_availability_status") == "absent"),
             "etfs_still_pending": sum(1 for item in results if item.get("asset_type") == "etf" and item["error"] is not None and is_expected_missing_error(item["error"])),
             "incremental_etf_backfill_candidates": (incremental_summary or {}).get("counts", {}).get("candidates", 0),
             "incremental_etf_backfill_selected": (incremental_summary or {}).get("counts", {}).get("selected", 0),
@@ -4373,6 +4735,14 @@ def main() -> None:
             if pending_ledger_summary is not None
             else None
         ),
+        "missing_detail_reconcile": (
+            {
+                "path": MISSING_DETAIL_RECONCILE_REL_PATH,
+                "counts": missing_detail_reconcile.get("counts"),
+            }
+            if missing_detail_reconcile is not None
+            else None
+        ),
         "stop_reason": stop_reason,
     }
     if args.universe_backfill:
@@ -4386,6 +4756,11 @@ def main() -> None:
         classification_summary = classify_existing_etf_catalogs(mirror_public)
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
     if stop_reason:
+        raise SystemExit(2)
+    if (
+        missing_detail_reconcile is not None
+        and missing_detail_reconcile["counts"]["unresolved"] > 0
+    ):
         raise SystemExit(2)
     if args.fail_on_error and summary["counts"]["failed"]:
         raise SystemExit(1)

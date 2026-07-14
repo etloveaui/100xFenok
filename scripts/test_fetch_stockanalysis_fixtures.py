@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 import urllib.error
@@ -108,6 +110,65 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.fetcher.fetch_json = original_fetch_json
         self.assertEqual(path, "/etf/new/holdings/__data.json")
         self.assertEqual(decoded, {})
+
+    def test_sparse_holdings_contract_accepts_provider_partial_metadata(self) -> None:
+        sparse = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
+        for key in ("count", "countries", "date"):
+            sparse["nodes"][-1]["data"][0].pop(key)
+
+        decoded = self.fetcher.validate_svelte_detail_contract(sparse, "holdings")
+
+        self.assertIsInstance(decoded["holdings"], list)
+        self.assertIsInstance(decoded["sectors"], list)
+        self.assertNotIn("count", decoded)
+        self.assertNotIn("countries", decoded)
+        self.assertNotIn("date", decoded)
+
+    def test_initial_detail_reconcile_emits_honest_stockanalysis_partial(self) -> None:
+        original_fetch_svelte = self.fetcher.fetch_svelte_detail
+        original_fetch_json = self.fetcher.fetch_json
+        original_fetch_history = self.fetcher.fetch_etf_history_periods
+        history_called = False
+
+        def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
+            if surface == "overview":
+                return f"/etf/{ticker.lower()}/__data.json", {
+                    "holdings": 2,
+                    "holdingsTable": None,
+                    "inception": "Jan 1, 2024",
+                }
+            return f"/etf/{ticker.lower()}/holdings/__data.json", {
+                "holdings": [{"s": "GLD", "n": "SPDR Gold Shares", "w": 100}],
+                "sectors": [],
+            }
+
+        def fake_fetch_json(path: str, _timeout: int) -> dict:
+            self.assertEqual(path, "/api/quotes/e/AAAU")
+            return {"status": 200, "data": {"p": 20.0, "td": "2026-07-14"}}
+
+        def fake_fetch_history(_ticker: str, _timeout: int):
+            nonlocal history_called
+            history_called = True
+            return {}, {}, {}
+
+        self.fetcher.fetch_svelte_detail = fake_fetch_svelte
+        self.fetcher.fetch_json = fake_fetch_json
+        self.fetcher.fetch_etf_history_periods = fake_fetch_history
+        try:
+            payload = self.fetcher.fetch_etf("AAAU", 1, include_history=False)
+        finally:
+            self.fetcher.fetch_svelte_detail = original_fetch_svelte
+            self.fetcher.fetch_json = original_fetch_json
+            self.fetcher.fetch_etf_history_periods = original_fetch_history
+
+        self.assertFalse(history_called)
+        self.assertEqual(payload["detail_status"], "stockanalysis_partial")
+        self.assertIn("history_deferred_initial_reconcile", payload["partial_reason_codes"])
+        self.assertIn("holdings_count_unavailable", payload["partial_reason_codes"])
+        self.assertIn("holdings_date_unavailable", payload["partial_reason_codes"])
+        self.assertIn("holdings_countries_unavailable", payload["partial_reason_codes"])
+        self.assertEqual(payload["normalized"]["holding_count"], 1)
+        self.assertEqual(payload["source_as_of"], "2026-07-14T00:00:00Z")
 
     def test_etf_history_expected_400_is_recorded_as_unavailable_not_schema_drift(self) -> None:
         original_fetch_json = self.fetcher.fetch_json
@@ -1706,6 +1767,190 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(second["counts"]["tracked"], 0)
         self.assertEqual(second["cleared"], ["BETA"])
 
+    def test_provider_absence_is_degraded_coverage_state_not_fetch_failure(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.PUBLIC_DIR = Path(tmp) / "public" / "stockanalysis"
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "etf_universe.json").write_text(
+                    json.dumps({"records": [{"ticker": "ABSENT"}]}),
+                    encoding="utf-8",
+                )
+                ledger = self.fetcher.update_pending_ledger(
+                    results=[{
+                        "ticker": "ABSENT",
+                        "asset_type": "etf",
+                        "status": "provider_coverage_gap",
+                        "provider": "stockanalysis",
+                        "provider_availability_status": "absent",
+                        "provider_availability_reason": "provider_coverage_gap",
+                        "provider_response": "HTTP 404",
+                        "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+                        "error": None,
+                    }],
+                    selected_rows=[{"ticker": "ABSENT"}],
+                    cooldown_days=7,
+                    failure_threshold=1,
+                    mirror_public=False,
+                    now_dt=self.fetcher.parse_iso_timestamp("2026-07-14T00:00:00Z"),
+                )
+                coverage = self.fetcher.build_etf_detail_coverage()
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
+        entry = ledger["entries"]["ABSENT"]
+        self.assertEqual(entry["availability_status"], "provider_absent")
+        self.assertEqual(entry["availability_reason"], "provider_coverage_gap")
+        self.assertEqual(entry["provider_response"], "HTTP 404")
+        self.assertEqual(entry["consecutive_failures"], 0)
+        self.assertEqual(ledger["counts"]["provider_coverage_gaps"], 1)
+        self.assertEqual(coverage["missing_reason_summary"], {"provider_coverage_gap": 1})
+        self.assertEqual(coverage["missing_availability_summary"], {"provider_absent": 1})
+        self.assertEqual(coverage["provider_absent_tickers"], ["ABSENT"])
+
+    def test_missing_detail_reconcile_summary_counts_every_selected_response(self) -> None:
+        summary = self.fetcher.build_missing_detail_reconcile_summary(
+            initial_missing=["FETCH", "ABSENT", "BROKEN"],
+            selected=["FETCH", "ABSENT", "BROKEN"],
+            results=[
+                {
+                    "ticker": "FETCH",
+                    "asset_type": "etf",
+                    "status": "ok",
+                    "provider": "stockanalysis",
+                    "path": "etfs/FETCH.json",
+                    "provider_availability_status": "available",
+                    "provider_availability_reason": "provider_detail_contract_valid",
+                    "provider_response": "HTTP 200 contract valid",
+                    "error": None,
+                },
+                {
+                    "ticker": "ABSENT",
+                    "asset_type": "etf",
+                    "status": "provider_coverage_gap",
+                    "provider": "stockanalysis",
+                    "path": None,
+                    "provider_availability_status": "absent",
+                    "provider_availability_reason": "provider_coverage_gap",
+                    "provider_response": "HTTP 404",
+                    "error": None,
+                },
+                {
+                    "ticker": "BROKEN",
+                    "asset_type": "etf",
+                    "status": "error",
+                    "provider": None,
+                    "path": None,
+                    "provider_availability_status": None,
+                    "error": "HTTP Error 500",
+                },
+            ],
+            coverage={"counts": {"missing_detail_files": 2}},
+        )
+
+        self.assertEqual(summary["counts"]["initial_missing"], 3)
+        self.assertEqual(summary["counts"]["selected"], 3)
+        self.assertEqual(summary["counts"]["fetchable_fetched"], 1)
+        self.assertEqual(summary["counts"]["provider_absent"], 1)
+        self.assertEqual(summary["counts"]["unresolved"], 1)
+        self.assertEqual(summary["counts"]["remaining_missing"], 2)
+        self.assertEqual(summary["provider_absent_tickers"], ["ABSENT"])
+        self.assertEqual(summary["unresolved_tickers"], ["BROKEN"])
+
+    def test_reconcile_mode_fetches_available_and_names_absent_provider_gap(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        original_run_one = self.fetcher.run_one
+        original_argv = sys.argv
+        original_stdout = sys.stdout
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                out_dir = temp_root / "data" / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.PUBLIC_DIR = temp_root / "public" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                (out_dir / "etf_universe.json").parent.mkdir(parents=True)
+                (out_dir / "etf_universe.json").write_text(
+                    json.dumps({"records": [{"ticker": "FETCH"}, {"ticker": "ABSENT"}]}),
+                    encoding="utf-8",
+                )
+
+                def fake_run_one(kind: str, ticker: str, *_args, **kwargs) -> dict:
+                    self.assertEqual(kind, "etf")
+                    self.assertFalse(kwargs["include_etf_history"])
+                    self.assertFalse(kwargs["yf_fallback"])
+                    if ticker == "FETCH":
+                        detail_path = out_dir / "etfs" / "FETCH.json"
+                        detail_path.parent.mkdir(parents=True, exist_ok=True)
+                        detail_path.write_text(
+                            json.dumps({"source": "stockanalysis", "asset_type": "etf", "ticker": ticker}),
+                            encoding="utf-8",
+                        )
+                        return {
+                            "ticker": ticker,
+                            "asset_type": "etf",
+                            "status": "ok",
+                            "provider": "stockanalysis",
+                            "path": "etfs/FETCH.json",
+                            "provider_availability_status": "available",
+                            "provider_availability_reason": "provider_detail_contract_valid",
+                            "provider_response": "HTTP 200 contract valid",
+                            "latency_ms": 1,
+                            "error": None,
+                        }
+                    return {
+                        "ticker": ticker,
+                        "asset_type": "etf",
+                        "status": "provider_coverage_gap",
+                        "provider": "stockanalysis",
+                        "path": None,
+                        "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+                        "provider_availability_status": "absent",
+                        "provider_availability_reason": "provider_coverage_gap",
+                        "provider_response": "HTTP 404",
+                        "latency_ms": 1,
+                        "error": None,
+                    }
+
+                self.fetcher.run_one = fake_run_one
+                sys.argv = [
+                    "fetch-stockanalysis.py",
+                    "--reconcile-missing-etf-details",
+                    "--incremental-etf-limit",
+                    "0",
+                    "--sleep",
+                    "0",
+                    "--no-public-mirror",
+                ]
+                sys.stdout = io.StringIO()
+                self.fetcher.main()
+                reconcile = json.loads(
+                    (out_dir / self.fetcher.MISSING_DETAIL_RECONCILE_REL_PATH).read_text()
+                )
+                coverage = json.loads((out_dir / "coverage" / "etf_detail.json").read_text())
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+            self.fetcher.run_one = original_run_one
+            sys.argv = original_argv
+            sys.stdout = original_stdout
+
+        self.assertEqual(reconcile["counts"]["initial_missing"], 2)
+        self.assertEqual(reconcile["counts"]["fetchable_fetched"], 1)
+        self.assertEqual(reconcile["counts"]["provider_absent"], 1)
+        self.assertEqual(reconcile["counts"]["unresolved"], 0)
+        self.assertEqual(reconcile["counts"]["remaining_missing"], 1)
+        self.assertEqual(coverage["provider_absent_tickers"], ["ABSENT"])
+
     def test_successful_short_primary_cools_stably_then_complete_success_clears(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         original_public_dir = self.fetcher.PUBLIC_DIR
@@ -2022,6 +2267,43 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(len(observations), 1)
         self.assertEqual(observations[0]["provider"], "stockanalysis")
         self.assertEqual(observations[0]["validation_status"], "invalid")
+        self.assertEqual(observations[0]["reason_code"], "provider_coverage_gap")
+        self.assertEqual(observations[0]["availability_status"], "provider_absent")
+        self.assertEqual(observations[0]["provider_response"], "HTTP 404")
+
+    def test_etf_404_without_fallback_is_degraded_provider_gap(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+
+        def fake_fetch_etf(_ticker: str, _timeout: int, **_kwargs) -> dict:
+            raise urllib.error.URLError("HTTP Error 404: Not Found")
+
+        self.fetcher.fetch_etf = fake_fetch_etf
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.OUT_DIR = temp_root / "data" / "stockanalysis"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data-supply-state" / "v1"
+                result = self.fetcher.run_one(
+                    "etf",
+                    "ABSENT",
+                    timeout=1,
+                    mirror_public=False,
+                    yf_fallback=False,
+                    include_etf_history=False,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+        self.assertEqual(result["status"], "provider_coverage_gap")
+        self.assertEqual(result["provider"], "stockanalysis")
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["provider_availability_status"], "absent")
+        self.assertEqual(result["provider_availability_reason"], "provider_coverage_gap")
+        self.assertEqual(result["provider_response"], "HTTP 404")
 
     def test_schema_and_network_primary_failures_still_materialize_yahoo_candidate(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

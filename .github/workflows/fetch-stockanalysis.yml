@@ -45,6 +45,14 @@ on:
         description: 'Existing StockAnalysis ETF detail age before stale retry'
         required: false
         default: '720'
+      reconcile_missing_etf_details:
+        description: 'Classify and close missing ETF details; only provider HTTP 400/404 remains a named coverage gap'
+        required: false
+        default: 'false'
+      reconcile_missing_etf_limit:
+        description: 'Maximum missing ETF details to reconcile (0 = all)'
+        required: false
+        default: '0'
       history_gap_plan:
         description: 'Write a no-network ETF multi-year history gap plan only'
         required: false
@@ -137,6 +145,8 @@ jobs:
           INPUT_INCREMENTAL_ETF_BACKFILL: ${{ github.event.inputs.incremental_etf_backfill }}
           INPUT_INCREMENTAL_ETF_LIMIT: ${{ github.event.inputs.incremental_etf_limit }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
+          INPUT_RECONCILE_MISSING_ETF_DETAILS: ${{ github.event.inputs.reconcile_missing_etf_details }}
+          INPUT_RECONCILE_MISSING_ETF_LIMIT: ${{ github.event.inputs.reconcile_missing_etf_limit }}
           INPUT_HISTORY_GAP_PLAN: ${{ github.event.inputs.history_gap_plan }}
           INPUT_CORE_BASKET_REFRESH: ${{ github.event.inputs.core_basket_refresh }}
           INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only }}
@@ -207,7 +217,10 @@ jobs:
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
-          if [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
+          if [ "${INPUT_RECONCILE_MISSING_ETF_DETAILS:-false}" = "true" ]; then
+            ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --reconcile-missing-etf-details --incremental-etf-limit ${INPUT_RECONCILE_MISSING_ETF_LIMIT:-0}"
+            if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
+          elif [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"
             PLAN_LIMIT="${INPUT_INCREMENTAL_ETF_LIMIT:-0}"
             if [ "$PLAN_LIMIT" = "120" ]; then PLAN_LIMIT="0"; fi
