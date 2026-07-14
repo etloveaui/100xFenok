@@ -1443,7 +1443,8 @@ function runDeployBridgeChecks() {
   assert.ok(reconcileStart > stepStart, "detection floor is installed before KPI reconciliation");
   const step = workflow.slice(stepStart, reconcileStart);
   for (const required of [
-    "$RUNNER_TEMP/data-supply-detection-floor-",
+    "mktemp -d \"/tmp/fenok-data-supply-detection-floor-",
+    "trap 'rm -rf \"$output_root\"' EXIT",
     "--attempt-shard-root",
     "scripts/lib/data-supply-detection-calendars.json",
     "--verify-report \"$report_path\"",

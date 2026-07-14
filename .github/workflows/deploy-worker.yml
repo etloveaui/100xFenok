@@ -63,13 +63,13 @@ jobs:
 
           repo_root="$(pwd -P)"
           shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
-          output_root="$RUNNER_TEMP/data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
           report_path="$output_root/data-supply-detection-floor.json"
           installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
+          trap 'rm -rf "$output_root"' EXIT
 
           mkdir -p "$shard_root"
-          test ! -e "$output_root"
-          install -d -m 0700 "$output_root"
+          chmod 0700 "$output_root"
           now="$(node -e 'process.stdout.write(new Date().toISOString())')"
 
           node scripts/build-data-supply-detection-floor.mjs \
