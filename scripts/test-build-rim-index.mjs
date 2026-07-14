@@ -292,8 +292,15 @@ for (const id of ["SPX", "NDX"]) {
 
 // Coverage loss is honest lane degradation, not platform corruption. A stricter
 // fixture floor forces the real builder down that path without fabricating inputs.
+const degradedCoverageFixtureAsOf = Object.values(payload.indices)
+  .flatMap((item) => Object.values(item.observed ?? {}))
+  .map((field) => field?.as_of)
+  .filter((asOf) => typeof asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(asOf))
+  .sort()
+  .at(-1);
+assert.match(degradedCoverageFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "degraded coverage fixture source date");
 const degradedCoveragePayload = buildRimIndexInputs({
-  generatedAt: "2026-07-12T01:41:29.000Z",
+  generatedAt: `${degradedCoverageFixtureAsOf}T23:59:59.000Z`,
   minCoveredWeight: 0.99,
 });
 const degradedCoverageValidation = validateRimIndexInputs(degradedCoveragePayload, {
