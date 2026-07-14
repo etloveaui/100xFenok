@@ -442,11 +442,11 @@ function runConfigAndFixtureChecks() {
     .filter((item) => item.enforcement === "live")
     .map((item) => item.id);
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.enforcement, "shadow", "top-level enforcement remains shadow");
-  assert.deepEqual(liveLaneIds, ["fred_yardeni", "treasury_tga"], "only the two proven lanes are live");
+  assert.deepEqual(liveLaneIds, ["treasury_tga"], "only the evidence-proven TGA lane is live");
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);
-  assert.equal(fredYardeni.enforcement, "live");
-  assert.equal(fredYardeni.kpi_required, true);
+  assert.equal(fredYardeni.enforcement, "shadow");
+  assert.equal(fredYardeni.kpi_required, false);
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
@@ -512,7 +512,7 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].enforcement = "invalid"; },
     (value) => { value.lanes[0].kpi_required = true; },
     (value) => { value.lanes[0].enforcement = "live"; value.lanes[0].kpi_required = true; },
-    (value) => { value.lanes.find((item) => item.id === "fred_yardeni").enforcement = "shadow"; },
+    (value) => { const lane = value.lanes.find((item) => item.id === "fred_yardeni"); lane.enforcement = "live"; lane.kpi_required = true; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").enforcement = "shadow"; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").kpi_required = false; },
   ];

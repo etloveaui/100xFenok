@@ -314,7 +314,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 // honest unobserved state; malformed or contradictory evidence fails closed.
 {
   const liveConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
-  assert.deepEqual(liveConfigs.map((item) => item.id), ["fred_yardeni", "treasury_tga"]);
+  assert.deepEqual(liveConfigs.map((item) => item.id), ["treasury_tga"]);
   const report = (laneId = null, overrides = {}) => {
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
     if (laneId !== null) {
@@ -334,7 +334,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   });
 
   const readyLanes = buildDetectionFloorLanes(report());
-  assert.deepEqual(readyLanes.map((item) => item.id), ["fred_yardeni", "treasury_tga"]);
+  assert.deepEqual(readyLanes.map((item) => item.id), ["treasury_tga"]);
   for (const ready of readyLanes) {
     assert.equal(ready.status, "ready");
     assert.equal(ready.reason, "ok");
@@ -342,7 +342,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     assert.equal(ready.deployment_blocking, false);
   }
 
-  const stale = mapDetectionFloorRow(row("fred_yardeni", {
+  const stale = mapDetectionFloorRow(row("treasury_tga", {
     status: "stale",
     reason: "stale",
     artifact: { status: "stale", reason: "stale", source_as_of: "2026-07-03" },
@@ -362,7 +362,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(unreadableArtifact.artifact.source_as_of, null);
 
   const missing = buildDetectionFloorLanes(null);
-  assert.deepEqual(missing.map((item) => item.id), ["fred_yardeni", "treasury_tga"]);
+  assert.deepEqual(missing.map((item) => item.id), ["treasury_tga"]);
   for (const item of missing) {
     assert.equal(item.status, "degraded");
     assert.equal(item.reason, "workflow_unobserved");
@@ -372,13 +372,13 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   for (const malformed of [
     {},
-    report("fred_yardeni", { enforcement: "shadow" }),
-    report("fred_yardeni", { kpi_required: false }),
-    report("fred_yardeni", { status: "ready", reason: "stale" }),
-    report("fred_yardeni", { artifact: { status: "ready", reason: "ok", source_as_of: null } }),
-    report("fred_yardeni", { artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-99" } }),
+    report("treasury_tga", { enforcement: "shadow" }),
+    report("treasury_tga", { kpi_required: false }),
+    report("treasury_tga", { status: "ready", reason: "stale" }),
+    report("treasury_tga", { artifact: { status: "ready", reason: "ok", source_as_of: null } }),
+    report("treasury_tga", { artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-99" } }),
   ]) {
-    assert.throws(() => buildDetectionFloorLanes(malformed), /schema_error|detection floor|fred_yardeni/i);
+    assert.throws(() => buildDetectionFloorLanes(malformed), /schema_error|detection floor|treasury_tga/i);
   }
   const badCounts = report();
   badCounts.counts.ready += 1;
@@ -386,13 +386,14 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   for (const malformedRow of [
     row("unknown_lane"),
-    row("fred_yardeni", { label: "Wrong label" }),
-    row("fred_yardeni", { enforcement: "shadow" }),
-    row("fred_yardeni", { kpi_required: false }),
-    row("fred_yardeni", { status: "ready", reason: "stale" }),
-    row("fred_yardeni", { status: "ready", reason: "ok", artifact: { status: "stale", reason: "stale", source_as_of: "2026-07-03" } }),
-    row("fred_yardeni", { artifact: { status: "ready", reason: "ok", source_as_of: null } }),
-    row("fred_yardeni", { artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-99" } }),
+    row("fred_yardeni", { label: "FRED Yardeni model" }),
+    row("treasury_tga", { label: "Wrong label" }),
+    row("treasury_tga", { enforcement: "shadow" }),
+    row("treasury_tga", { kpi_required: false }),
+    row("treasury_tga", { status: "ready", reason: "stale" }),
+    row("treasury_tga", { status: "ready", reason: "ok", artifact: { status: "stale", reason: "stale", source_as_of: "2026-07-03" } }),
+    row("treasury_tga", { artifact: { status: "ready", reason: "ok", source_as_of: null } }),
+    row("treasury_tga", { artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-99" } }),
   ]) {
     assert.throws(() => mapDetectionFloorRow(malformedRow), /detection floor/i);
   }
@@ -724,7 +725,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
   const { root } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 12);
+  assert.equal(root.totals.lanes, 11);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);

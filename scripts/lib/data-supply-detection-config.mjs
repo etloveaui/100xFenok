@@ -18,7 +18,6 @@ const LANE_IDS = Object.freeze([
 ]);
 
 const LIVE_LANE_IDS = Object.freeze([
-  "fred_yardeni",
   "treasury_tga",
 ]);
 const LIVE_LANE_ID_SET = new Set(LIVE_LANE_IDS);
@@ -300,7 +299,6 @@ const config = {
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
       affectedSurfaceIds: ["yardeni_model"],
-      enforcement: "live",
     }),
     lane({
       id: "fdic_tier1",
