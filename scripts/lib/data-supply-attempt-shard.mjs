@@ -1,0 +1,252 @@
+import { randomBytes } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+
+import { ATTEMPT_SHARD_SCHEMA } from "../build-data-supply-detection-floor.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "./data-supply-detection-config.mjs";
+
+export { ATTEMPT_SHARD_SCHEMA };
+
+// FRED/FDIC producer support. Keep this ordering identical to
+// build-data-supply-detection-floor.mjs and
+// fetch-treasury-tga.mjs. One producer member reduces every request to the
+// single worst current-attempt tuple before publishing its lane shard.
+export const STATUS_SEVERITY = Object.freeze({
+  ready: 0,
+  unobserved: 1,
+  stale: 2,
+  drift: 3,
+  unavailable: 4,
+});
+
+const REASON_STATUS = Object.freeze({
+  ok: "ready",
+  workflow_unobserved: "unobserved",
+  stale: "stale",
+  schema_drift: "drift",
+  decode_error: "drift",
+  missing_artifact: "unavailable",
+  transport_error: "unavailable",
+  http_error: "unavailable",
+  auth_error: "unavailable",
+  rate_limited: "unavailable",
+  empty_payload: "unavailable",
+  future_source: "unavailable",
+  unexpected_error: "unavailable",
+});
+
+export function attemptResult(reason, attempt, document = null) {
+  return { status: REASON_STATUS[reason], reason, attempt, document };
+}
+
+export function returnedTuple({
+  httpStatus,
+  auth = "not_applicable",
+  rateLimited = false,
+  decode = "not_attempted",
+  payload = "not_available",
+  assertions = [],
+}) {
+  return {
+    execution: "returned",
+    exception_kind: null,
+    http_status: httpStatus,
+    auth,
+    rate_limited: rateLimited,
+    decode,
+    payload,
+    assertions,
+  };
+}
+
+export function threwTuple(exceptionKind) {
+  return {
+    execution: "threw",
+    exception_kind: exceptionKind,
+    http_status: null,
+    auth: "not_applicable",
+    rate_limited: false,
+    decode: "not_attempted",
+    payload: "not_available",
+    assertions: [],
+  };
+}
+
+export function worstRequestResult(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error("cannot fold an empty request result list");
+  return rows.reduce((worst, current) => {
+    if (!(current?.status in STATUS_SEVERITY)) throw new Error(`unknown request status: ${current?.status}`);
+    if (!worst || STATUS_SEVERITY[current.status] > STATUS_SEVERITY[worst.status]) return current;
+    return worst;
+  }, null);
+}
+
+export function classifyHttpResponse(response, { authRequired = false } = {}) {
+  const statusCode = response?.statusCode;
+  if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599) {
+    return attemptResult("unexpected_error", threwTuple("unexpected"));
+  }
+  if (statusCode === 401 || statusCode === 403) {
+    return attemptResult("auth_error", returnedTuple({ httpStatus: statusCode, auth: "rejected" }));
+  }
+  if (statusCode === 429) {
+    return attemptResult("rate_limited", returnedTuple({
+      httpStatus: statusCode,
+      auth: authRequired ? "ok" : "not_applicable",
+      rateLimited: true,
+    }));
+  }
+  if (statusCode < 200 || statusCode >= 300) {
+    return attemptResult("http_error", returnedTuple({ httpStatus: statusCode }));
+  }
+
+  let document;
+  try {
+    document = JSON.parse(String(response.body ?? ""));
+  } catch {
+    return attemptResult("decode_error", returnedTuple({
+      httpStatus: statusCode,
+      auth: authRequired ? "ok" : "not_applicable",
+      decode: "error",
+    }));
+  }
+  return attemptResult("ok", returnedTuple({
+    httpStatus: statusCode,
+    auth: authRequired ? "ok" : "not_applicable",
+    decode: "ok",
+    payload: document == null || (Array.isArray(document) && document.length === 0)
+      ? "empty"
+      : "non_empty",
+  }), document);
+}
+
+export function transportError(error) {
+  return typeof error?.code === "string" || error?.name === "AbortError";
+}
+
+function pointerValue(document, pointer) {
+  if (pointer === "") return document;
+  return pointer.slice(1).split("/").reduce((value, token) => {
+    if (value == null) return undefined;
+    const key = token.replaceAll("~1", "/").replaceAll("~0", "~");
+    return value[key];
+  }, document);
+}
+
+function assertionPassed(assertion, document) {
+  const value = pointerValue(document, assertion.pointer);
+  if (assertion.kind !== "type") throw new Error(`unsupported endpoint assertion kind: ${assertion.kind}`);
+  if (assertion.expected === "array") return Array.isArray(value);
+  if (assertion.expected === "null") return value === null;
+  return typeof value === assertion.expected && !Array.isArray(value);
+}
+
+export function evaluateEndpointAssertions(laneId, document) {
+  const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((candidate) => candidate.id === laneId);
+  if (!lane) throw new Error(`unknown detection lane: ${laneId}`);
+  return lane.endpoint_contract.assertions.map((assertion) => ({
+    id: assertion.id,
+    passed: assertionPassed(assertion, document),
+  }));
+}
+
+export function classifyEndpointResponse(response, { laneId, authRequired = false } = {}) {
+  const classified = classifyHttpResponse(response, { authRequired });
+  if (classified.status !== "ready") return classified;
+  if (classified.attempt.payload === "empty") {
+    return attemptResult("empty_payload", returnedTuple({
+      httpStatus: classified.attempt.http_status,
+      auth: classified.attempt.auth,
+      decode: "ok",
+      payload: "empty",
+    }), classified.document);
+  }
+  const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((candidate) => candidate.id === laneId);
+  if (!lane) throw new Error(`unknown detection lane: ${laneId}`);
+  const endpointAssertions = evaluateEndpointAssertions(laneId, classified.document);
+  const endpointValue = lane.endpoint_contract.assertions.length === 1
+    ? pointerValue(classified.document, lane.endpoint_contract.assertions[0].pointer)
+    : classified.document;
+  if (Array.isArray(endpointValue) && endpointValue.length === 0) {
+    return attemptResult("empty_payload", returnedTuple({
+      httpStatus: classified.attempt.http_status,
+      auth: classified.attempt.auth,
+      decode: "ok",
+      payload: "empty",
+    }), classified.document);
+  }
+  if (endpointAssertions.some((assertion) => !assertion.passed)) {
+    return attemptResult("schema_drift", returnedTuple({
+      httpStatus: classified.attempt.http_status,
+      auth: classified.attempt.auth,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: endpointAssertions,
+    }), classified.document);
+  }
+  return attemptResult("ok", returnedTuple({
+    httpStatus: classified.attempt.http_status,
+    auth: classified.attempt.auth,
+    decode: "ok",
+    payload: "non_empty",
+    assertions: endpointAssertions,
+  }), classified.document);
+}
+
+export function atomicWrite(filePath, bytes) {
+  const directory = path.dirname(filePath);
+  fs.mkdirSync(directory, { recursive: true });
+  const temporary = path.join(directory, `.${path.basename(filePath)}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`);
+  let fd = null;
+  try {
+    fd = fs.openSync(temporary, fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY, 0o600);
+    fs.writeFileSync(fd, bytes, "utf8");
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = null;
+    fs.renameSync(temporary, filePath);
+    const directoryFd = fs.openSync(directory, fs.constants.O_RDONLY);
+    try {
+      fs.fsyncSync(directoryFd);
+    } finally {
+      fs.closeSync(directoryFd);
+    }
+  } catch (error) {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch {}
+    }
+    try { fs.unlinkSync(temporary); } catch {}
+    throw error;
+  }
+}
+
+export function writeJsonAtomic(filePath, document) {
+  atomicWrite(filePath, `${JSON.stringify(document, null, 2)}\n`);
+}
+
+export function validObservedAt(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value)) && value.endsWith("Z");
+}
+
+export function defaultAttemptId(prefix, observedAt = new Date().toISOString()) {
+  const stamp = observedAt.replace(/[^0-9a-z]/gi, "").toLowerCase();
+  return `${prefix}-${stamp}-${randomBytes(4).toString("hex")}`;
+}
+
+export function writeAttemptShard({ laneId, attemptShardPath, observedAt, attemptId, result }) {
+  if (!validObservedAt(observedAt)) throw new Error("observedAt must be RFC3339 UTC");
+  if (!/^[a-z][a-z0-9_-]{0,95}$/.test(attemptId)) throw new Error("attemptId is invalid");
+  const row = {
+    lane_id: laneId,
+    member_id: null,
+    attempt_id: attemptId,
+    observed_at: observedAt,
+    ...result.attempt,
+  };
+  writeJsonAtomic(attemptShardPath, {
+    schema_version: ATTEMPT_SHARD_SCHEMA,
+    lane_id: laneId,
+    attempts: [row],
+  });
+  return row;
+}

@@ -1,15 +1,11 @@
-# FDIC Tier1 Capital Ratio 데이터 수집
-# 분기별 자동 실행 + 수동 실행 가능
-# 결과: data/fdic-tier1.json
+# FDIC Tier1 Capital Ratio collection with current-attempt evidence.
 
 name: Fetch FDIC Tier1 Data
 
 on:
   schedule:
-    # 월 첫째 주 월요일 06:00 UTC (한국 15:00)
-    # FDIC 분기 데이터는 지연 공개되므로 월간 보정으로 stale window를 줄인다.
     - cron: '0 6 1-7 * 1'
-  workflow_dispatch:  # 수동 실행 버튼
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,7 +19,6 @@ concurrency:
 jobs:
   fetch-fdic:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,126 +28,35 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Create data directory
-        run: mkdir -p data data/macro
+      - name: Test FDIC Tier1 producer contracts
+        run: node scripts/test-fetch-fdic-tier1.mjs
 
-      - name: Fetch FDIC Tier1 Data
-        run: |
-          echo "Fetching FDIC Tier1 Capital Ratio data..."
-
-          # 2009년부터 현재까지 모든 분기 데이터 수집
-          # API: https://api.fdic.gov/banks/financials (banking-health.html과 동일)
-
-          node << 'EOF'
-          const https = require('https');
-          const fs = require('fs');
-
-          // 2009 Q1 ~ 현재까지 분기 목록 생성 (YYYYMMDD 형식)
-          function generateQuarters() {
-            const quarterEnds = ['0331', '0630', '0930', '1231'];
-            const quarters = [];
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const cutoff = new Date(now);
-            cutoff.setDate(cutoff.getDate() - 45);
-
-            for (let year = 2009; year <= currentYear; year++) {
-              for (let q = 0; q < 4; q++) {
-                const qMonth = q * 3 + 2; // 2, 5, 8, 11 (0-indexed)
-                const quarterEnd = new Date(Date.UTC(year, qMonth + 1, 0));
-                if (quarterEnd <= cutoff) {
-                  quarters.push(`${year}${quarterEnds[q]}`);
-                }
-              }
-            }
-            return quarters;
-          }
-
-          // FDIC API 호출 (banking-health.html과 동일한 형식)
-          function fetchQuarter(quarterStr) {
-            return new Promise((resolve) => {
-              // 동일 API: https://api.fdic.gov/banks/financials
-              const url = `https://api.fdic.gov/banks/financials?limit=10000&fields=RBC1AAJ,RISDATE&filters=RISDATE:${quarterStr}`;
-
-              https.get(url, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                  try {
-                    const json = JSON.parse(data);
-                    const ratios = json.data?.map(r => r.data?.RBC1AAJ).filter(v => v != null && !isNaN(v)) || [];
-
-                    if (ratios.length > 0) {
-                      const avg = (ratios.reduce((a, b) => a + b, 0) / ratios.length).toFixed(2);
-                      const date = `${quarterStr.slice(0,4)}-${quarterStr.slice(4,6)}-${quarterStr.slice(6,8)}`;
-                      resolve({
-                        date: date,
-                        value: parseFloat(avg),
-                        banks: ratios.length
-                      });
-                      return;
-                    }
-                    resolve(null);
-                  } catch (e) {
-                    resolve(null);
-                  }
-                });
-              }).on('error', () => resolve(null));
-            });
-          }
-
-          async function main() {
-            const quarters = generateQuarters();
-            console.log(`Fetching ${quarters.length} quarters...`);
-
-            const results = [];
-            for (const q of quarters) {
-              const result = await fetchQuarter(q);
-              if (result) {
-                results.push(result);
-                console.log(`${q}: ${result.value}% (${result.banks} banks)`);
-              } else {
-                console.log(`${q}: No data`);
-              }
-              // Rate limiting
-              await new Promise(r => setTimeout(r, 300));
-            }
-
-            // 날짜순 정렬
-            results.sort((a, b) => a.date.localeCompare(b.date));
-
-            // JSON 저장
-            const output = {
-              updated: new Date().toISOString(),
-              source: 'FDIC',
-              description: 'Average Tier 1 Capital Ratio (RBC1AAJ)',
-              data: results
-            };
-
-            fs.mkdirSync('data/macro', { recursive: true });
-            fs.writeFileSync('data/macro/fdic-tier1.json', JSON.stringify(output, null, 2));
-            fs.mkdirSync('100xfenok-next/public/data/macro', { recursive: true });
-            fs.writeFileSync('100xfenok-next/public/data/macro/fdic-tier1.json', JSON.stringify(output, null, 2));
-            console.log(`\nSaved ${results.length} quarters to data/macro/fdic-tier1.json`);
-          }
-
-          main().catch(console.error);
-          EOF
+      - name: Fetch FDIC Tier1 data and persist attempt evidence
+        id: fetch_fdic
+        run: node scripts/fetch-fdic-tier1.mjs
 
       - name: Verify output
+        if: ${{ steps.fetch_fdic.outcome == 'success' }}
         run: |
-          echo "=== Generated JSON ==="
           head -20 data/macro/fdic-tier1.json
-          echo "..."
           echo "Total lines: $(wc -l < data/macro/fdic-tier1.json)"
 
       - name: Commit and push
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_fdic.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json
+          SHARD="data/admin/data-supply-state/detection-attempts/fdic_tier1.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json
+          fi
           if git diff --staged --quiet; then
             echo "No FDIC Tier1 changes to publish"
             exit 0
@@ -160,7 +64,6 @@ jobs:
           git commit -m "chore: update FDIC Tier1 data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
               git rebase --abort >/dev/null 2>&1 || true
               sleep 3
               continue
@@ -169,7 +72,6 @@ jobs:
               gh workflow run update-manifest.yml --ref main
               exit 0
             fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
             sleep 3
           done
           echo "git push failed after retrying concurrent main updates"

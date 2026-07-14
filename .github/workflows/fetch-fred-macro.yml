@@ -1,5 +1,5 @@
-# Macro FRED 데이터 수집
-# 결과: data/macro/fred-macro.json + public mirror
+# Macro FRED data collection with current-attempt evidence.
+# Outputs: data/macro/fred-macro.json + public mirror + one lane shard.
 
 name: Fetch FRED Macro Data
 
@@ -31,112 +31,35 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Create data directories
-        run: mkdir -p data/macro 100xfenok-next/public/data/macro
+      - name: Test FRED macro producer contracts
+        run: node scripts/test-fetch-fred-macro.mjs
 
-      - name: Fetch macro FRED data
+      - name: Fetch macro FRED data and persist attempt evidence
+        id: fetch_macro
+        run: node scripts/fetch-fred-macro.mjs
+
+      - name: Verify output
+        if: ${{ steps.fetch_macro.outcome == 'success' }}
         run: |
-          node << 'EOF'
-          const https = require('https');
-          const fs = require('fs');
-
-          const API_KEY = process.env.FRED_API_KEY;
-          if (!API_KEY) throw new Error('FRED_API_KEY secret missing');
-
-          const SERIES = [
-            { id: 'M2SL', days: 3650 },
-            { id: 'WALCL', days: 3650 },
-            { id: 'RRPONTSYD', days: 3650 },
-            { id: 'SOFR', days: 3650 },
-            { id: 'IORB', days: 3650 },
-            { id: 'WRESBAL', days: 3650 },
-            { id: 'GDP', days: 1095 }
-          ];
-
-          function formatDate(date) {
-            return date.toISOString().split('T')[0];
-          }
-
-          const MAX_RETRIES = 2;
-          const BACKOFFS_MS = [1000, 2000, 4000];
-          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-          async function fetchSeries(seriesId, days) {
-            const end = formatDate(new Date());
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
-            const start = formatDate(startDate);
-            const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
-
-            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-              try {
-                if (attempt > 0) {
-                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
-                  console.error(`[retry] ${seriesId} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
-                  await sleep(delay);
-                }
-                const result = await new Promise((resolve, reject) => {
-                  https.get(url, (res) => {
-                    let data = '';
-                    res.on('data', (chunk) => { data += chunk; });
-                    res.on('end', () => {
-                      try {
-                        const json = JSON.parse(data);
-                        const observations = Array.isArray(json.observations) ? json.observations : [];
-                        const rows = observations
-                          .filter((item) => item.value !== '.')
-                          .map((item) => ({ date: item.date, value: Number(item.value) }))
-                          .filter((item) => item.date && Number.isFinite(item.value));
-                        console.log(`${seriesId}: ${rows.length} points`);
-                        resolve({ id: seriesId, data: rows });
-                      } catch (error) {
-                        reject(new Error(`${seriesId}: parse error - ${error.message}`));
-                      }
-                    });
-                  }).on('error', reject);
-                });
-                return result;
-              } catch (error) {
-                if (attempt < MAX_RETRIES) continue;
-                console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${error.message}`);
-                return { id: seriesId, data: [] };
-              }
-            }
-            return { id: seriesId, data: [] };
-          }
-
-          async function main() {
-            const series = {};
-            for (const item of SERIES) {
-              const result = await fetchSeries(item.id, item.days);
-              series[item.id] = result.data;
-              await new Promise((resolve) => setTimeout(resolve, 500));
-            }
-
-            const output = {
-              updated: new Date().toISOString(),
-              series
-            };
-
-            const payload = JSON.stringify(output, null, 2);
-            fs.writeFileSync('data/macro/fred-macro.json', payload);
-            fs.writeFileSync('100xfenok-next/public/data/macro/fred-macro.json', payload);
-            console.log('Saved fred-macro.json to source and public mirror');
-          }
-
-          main().catch((error) => {
-            console.error(error);
-            process.exit(1);
-          });
-          EOF
+          head -20 data/macro/fred-macro.json
+          echo "Total lines: $(wc -l < data/macro/fred-macro.json)"
 
       - name: Commit and push macro FRED data
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_macro.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/macro/fred-macro.json 100xfenok-next/public/data/macro/fred-macro.json
+          SHARD="data/admin/data-supply-state/detection-attempts/fred_macro.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- data/macro/fred-macro.json 100xfenok-next/public/data/macro/fred-macro.json
+          fi
           if git diff --staged --quiet; then
             echo "No FRED macro changes to publish"
             exit 0
@@ -144,7 +67,6 @@ jobs:
           git commit -m "chore: update FRED macro data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
               git rebase --abort >/dev/null 2>&1 || true
               sleep 3
               continue
@@ -153,7 +75,6 @@ jobs:
               gh workflow run update-manifest.yml --ref main
               exit 0
             fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
             sleep 3
           done
           echo "git push failed after retrying concurrent main updates"
