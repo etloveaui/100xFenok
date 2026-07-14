@@ -242,16 +242,21 @@ export async function checkBundleIdentity(root) {
     return { verified: false, expected: null, observed: null };
   }
 
-  const cacheBust = `stockanalysis-${Date.now()}-${process.pid}`;
-  const { response, text } = await fetchText(`${root}/BUILD_ID?cb=${cacheBust}`);
-  assert(response.ok, `BUILD_ID returned HTTP ${response.status}`);
-  const observed = text.trim();
-  assert(nonEmptyString(observed), "BUILD_ID is empty");
-  assert(
-    observed === expected,
-    `stale bundle rejected: expected BUILD_ID ${expected}, observed ${observed}`,
-  );
-  return { verified: true, expected, observed };
+  let observed = null;
+  for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
+    const cacheBust = `stockanalysis-${Date.now()}-${process.pid}-${attempt}`;
+    const { response, text } = await fetchText(`${root}/BUILD_ID?cb=${cacheBust}`);
+    assert(response.ok, `BUILD_ID returned HTTP ${response.status}`);
+    observed = text.trim();
+    assert(nonEmptyString(observed), "BUILD_ID is empty");
+    if (observed === expected) {
+      return { verified: true, expected, observed };
+    }
+    if (attempt < RETRIES) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    }
+  }
+  fail(`stale bundle rejected: expected BUILD_ID ${expected}, observed ${observed}`);
 }
 
 function buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer }) {
