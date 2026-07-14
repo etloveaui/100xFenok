@@ -31,145 +31,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Create data directory
-        run: mkdir -p data data/macro 100xfenok-next/public/data/macro
+      - name: Test Yahoo ticker producer contracts
+        run: node scripts/test-fetch-yahoo-ticker.mjs
 
-      - name: Fetch Yahoo Finance chart snapshot
-        run: |
-          node << 'EOF_NODE'
-          const https = require('https');
-          const fs = require('fs');
-
-          const TICKERS = ['TQQQ', 'SOXL'];
-          // Route via our Cloudflare worker — Yahoo blocks GitHub Actions runner IPs with HTTP 429,
-          // but Cloudflare worker IPs succeed and share the same Yahoo origin data. Worker also
-          // applies deriveMarketStateFromTradingPeriods fallback + 5min edge cache.
-          const WORKER_BASE = 'https://ticker-api.etloveaui.workers.dev/api/ticker';
-
-          const MAX_RETRIES = 2;
-          const BACKOFFS_MS = [1000, 2000, 4000];
-          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-          async function fetchJson(url) {
-            let lastError;
-            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-              try {
-                if (attempt > 0) {
-                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
-                  console.error(`[retry] ${url} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
-                  await sleep(delay);
-                }
-                return await new Promise((resolve, reject) => {
-                  https.get(url, { headers: { 'Accept': 'application/json' } }, (res) => {
-                    let data = '';
-                    res.on('data', chunk => data += chunk);
-                    res.on('end', () => {
-                      try {
-                        if (res.statusCode < 200 || res.statusCode >= 300) {
-                          throw new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
-                        }
-                        resolve(JSON.parse(data));
-                      } catch (e) {
-                        reject(e);
-                      }
-                    });
-                  }).on('error', reject);
-                });
-              } catch (e) {
-                lastError = e;
-                if (attempt < MAX_RETRIES) continue;
-              }
-            }
-            throw lastError;
-          }
-
-          function toFiniteNumber(value) {
-            if (typeof value === 'number' && Number.isFinite(value)) return value;
-            if (typeof value === 'string' && value.trim() !== '') {
-              const n = Number(value);
-              if (Number.isFinite(n)) return n;
-            }
-            return null;
-          }
-
-          async function fetchTicker(symbol) {
-            const url = `${WORKER_BASE}?symbol=${encodeURIComponent(symbol)}`;
-            const payload = await fetchJson(url);
-            const price = toFiniteNumber(payload.price);
-            if (price === null || price <= 0) {
-              throw new Error(`Worker payload for ${symbol} has no valid price`);
-            }
-            const previousClose = toFiniteNumber(payload.previousClose) ?? price;
-            const change = toFiniteNumber(payload.change) ?? (price - previousClose);
-            const changePercent =
-              toFiniteNumber(payload.changePercent) ??
-              (previousClose > 0 ? (change / previousClose) * 100 : 0);
-
-            return {
-              symbol,
-              price,
-              previousClose,
-              change,
-              changePercent,
-              marketState: String(payload.marketState ?? 'UNKNOWN'),
-              regularMarketTime: toFiniteNumber(payload.regularMarketTime),
-              currency: payload.currency ?? null,
-              exchangeName: payload.exchangeName ?? null
-            };
-          }
-
-          async function main() {
-            const tickers = {};
-            const errors = [];
-
-            for (const symbol of TICKERS) {
-              try {
-                const quote = await fetchTicker(symbol);
-                tickers[symbol] = {
-                  price: quote.price,
-                  previousClose: quote.previousClose,
-                  change: quote.change,
-                  changePercent: quote.changePercent,
-                  marketState: quote.marketState,
-                  regularMarketTime: quote.regularMarketTime,
-                  currency: quote.currency,
-                  exchangeName: quote.exchangeName
-                };
-                console.log(`${symbol}: price=${quote.price} change=${quote.change.toFixed(4)} (${quote.changePercent.toFixed(2)}%)`);
-              } catch (e) {
-                errors.push({ symbol, message: e.message });
-                console.error(`${symbol}: ERROR — ${e.message}`);
-              }
-              await new Promise(r => setTimeout(r, 500));
-            }
-
-            if (Object.keys(tickers).length === 0) {
-              throw new Error(`Yahoo ticker snapshot empty — all symbols failed: ${JSON.stringify(errors)}`);
-            }
-
-            const output = {
-              updated: new Date().toISOString(),
-              source: 'ticker-api-worker (yahoo-finance origin)',
-              endpoint: 'https://ticker-api.etloveaui.workers.dev/api/ticker',
-              tickers,
-              errors: errors.length > 0 ? errors : undefined
-            };
-
-            fs.mkdirSync('data/macro', { recursive: true });
-            fs.mkdirSync('100xfenok-next/public/data/macro', { recursive: true });
-            const payload = JSON.stringify(output, null, 2);
-            fs.writeFileSync('data/macro/yahoo-ticker.json', payload);
-            fs.writeFileSync('100xfenok-next/public/data/macro/yahoo-ticker.json', payload);
-            console.log(`Saved ${Object.keys(tickers).length} ticker(s) to data/macro/yahoo-ticker.json and public mirror`);
-          }
-
-          main().catch((err) => {
-            console.error(err);
-            process.exit(1);
-          });
-          EOF_NODE
+      - name: Fetch Yahoo Finance chart snapshot and persist attempt evidence
+        id: fetch_yahoo
+        run: node scripts/fetch-yahoo-ticker.mjs
 
       - name: Verify output
+        if: ${{ steps.fetch_yahoo.outcome == 'success' }}
         run: |
           echo "=== Generated JSON ==="
           head -40 data/macro/yahoo-ticker.json
@@ -177,12 +47,21 @@ jobs:
           echo "Total lines: $(wc -l < data/macro/yahoo-ticker.json)"
 
       - name: Commit and push
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_yahoo.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/macro/yahoo-ticker.json 100xfenok-next/public/data/macro/yahoo-ticker.json
+          SHARD="data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- data/macro/yahoo-ticker.json 100xfenok-next/public/data/macro/yahoo-ticker.json
+          fi
           if git diff --staged --quiet; then
             echo "No Yahoo ticker changes to publish"
             exit 0

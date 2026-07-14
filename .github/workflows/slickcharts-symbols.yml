@@ -50,6 +50,8 @@ jobs:
   scrape-batch:
     if: ${{ github.event.inputs.batch != 'single' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
+    env:
+      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-symbols-${{ matrix.batch }}.jsonl
     strategy:
       fail-fast: false
       matrix:
@@ -93,11 +95,20 @@ jobs:
           path: data/slickcharts/symbols-${{ matrix.batch }}.json
           retention-days: 1
 
+      - name: Upload symbol attempt telemetry
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: attempt-symbols-${{ matrix.batch }}
+          path: ${{ env.SLICKCHARTS_ATTEMPT_EVENTS_PATH }}
+          if-no-files-found: ignore
+          retention-days: 1
+
   # Merge all batches into single file
   merge-batches:
     needs: scrape-batch
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.batch == 'ALL' || github.event_name == 'schedule' }}
+    if: ${{ always() && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule') }}
 
     steps:
       - name: Checkout repository
@@ -112,6 +123,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Install dependencies
         run: |
@@ -148,35 +164,35 @@ jobs:
           rm -f data/slickcharts/symbols-M-R.json
           rm -f data/slickcharts/symbols-S-Z.json
 
+      - name: Emit SlickCharts symbols attempt
+        if: ${{ always() }}
+        run: |
+          node scripts/emit-slickcharts-attempt.mjs \
+            --member symbols \
+            --events-root artifacts \
+            --outcome "${{ needs.scrape-batch.result }}" \
+            --outcome "${{ job.status }}" \
+            --row "$RUNNER_TEMP/slickcharts-symbols-row.json"
+
       - name: Commit and push changes
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add -- data/slickcharts/symbols.json
-          git diff --staged --quiet || git commit -m "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push origin HEAD:main; then
-              gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
+          scripts/publish-slickcharts-attempt.sh \
+            symbols \
+            "$RUNNER_TEMP/slickcharts-symbols-row.json" \
+            "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)" \
+            data/slickcharts/symbols.json
 
   # Single symbol scraping for testing
   scrape-single:
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
+    env:
+      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-symbols-single.jsonl
 
     steps:
       - name: Checkout repository
@@ -192,6 +208,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4
@@ -201,3 +222,24 @@ jobs:
           python scripts/scrapers/symbol-scraper.py \
             --symbol ${{ github.event.inputs.symbol }} \
             --pretty
+
+      - name: Emit SlickCharts symbols attempt
+        if: ${{ always() }}
+        run: |
+          node scripts/emit-slickcharts-attempt.mjs \
+            --member symbols \
+            --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
+            --outcome "${{ job.status }}" \
+            --row "$RUNNER_TEMP/slickcharts-symbols-row.json"
+
+      - name: Commit symbols attempt
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          scripts/publish-slickcharts-attempt.sh \
+            symbols \
+            "$RUNNER_TEMP/slickcharts-symbols-row.json" \
+            "chore: record SlickCharts symbols attempt $(date -u +%Y-%m-%d)"

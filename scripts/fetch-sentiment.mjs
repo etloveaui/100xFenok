@@ -40,6 +40,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  buildAttemptRow,
+  buildSingleLaneShard,
+  classifyEndpointResponse,
+  foldWorstTuples,
+  threwTuple,
+  transportError,
+  tupleStatus,
+  writeJsonAtomic,
+} from './lib/data-supply-attempt-shard.mjs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -67,6 +78,11 @@ const CNN_COMPONENT_TAIL_FILES = [
 ];
 
 const today = new Date().toISOString().slice(0, 10);
+let sentimentAttemptTuples = [];
+
+export function recordSentimentAttemptTuple(tuple) {
+  sentimentAttemptTuples.push(tuple);
+}
 
 // ─── HTTP ─────────────────────────────────────────────────────────────────────
 
@@ -86,30 +102,31 @@ async function fetchJson(url, { headers = {}, timeoutMs = 30000 } = {}) {
         console.error(`[retry] ${url} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
         await sleepMs(delay);
       }
-      return await new Promise((resolve, reject) => {
+      const response = await new Promise((resolve, reject) => {
         const req = https.get(url, { headers }, (res) => {
           let data = '';
           res.on('data', (chunk) => { data += chunk; });
           res.on('end', () => {
-            if (res.statusCode < 200 || res.statusCode >= 300) {
-              reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 160)}`));
-              return;
-            }
-            try {
-              resolve(JSON.parse(data));
-            } catch (e) {
-              reject(new Error(`JSON parse failed: ${e.message} :: ${data.slice(0, 120)}`));
-            }
+            resolve({ statusCode: res.statusCode ?? 0, body: data });
           });
         });
         req.on('error', reject);
         req.setTimeout(timeoutMs, () => {
-          req.destroy(new Error(`timeout after ${timeoutMs}ms`));
+          req.destroy(Object.assign(new Error(`timeout after ${timeoutMs}ms`), { code: 'ETIMEDOUT' }));
         });
       });
+      const classified = classifyEndpointResponse(response, { laneId: 'sentiment' });
+      if (classified.attempt.execution === 'returned' && classified.attempt.decode === 'ok') {
+        recordSentimentAttemptTuple(classified.attempt);
+        return classified.document;
+      }
+      throw Object.assign(new Error(classified.reason), { attemptTuple: classified.attempt });
     } catch (err) {
       lastError = err;
       if (attempt < MAX_RETRIES) continue;
+      const tuple = err.attemptTuple ?? threwTuple(transportError(err) ? 'transport' : 'unexpected');
+      recordSentimentAttemptTuple(tuple);
+      err.attemptRecorded = true;
     }
   }
   throw lastError;
@@ -379,51 +396,80 @@ async function runCrypto() {
 
 // ─── Orchestration ──────────────────────────────────────────────────────────────
 
-async function main() {
-  console.log('='.repeat(60));
-  console.log('fetch-sentiment.mjs');
-  console.log(`  date    : ${today}`);
-  console.log(`  outputs : ${OUTPUT_DIRS.map((d) => path.relative(REPO_ROOT, d)).join(', ')}`);
-  console.log('='.repeat(60));
-
-  const sources = [
+export async function runSentiment({
+  sources = [
     ['CNN (proxy)', runCnn],
     ['VIX (Yahoo)', runVix],
     ['MOVE (Yahoo)', runMove],
     ['CFTC COT', runCftc],
     ['Crypto (alternative.me)', runCrypto],
-  ];
+  ],
+  attemptShardPath = path.join(REPO_ROOT, 'data', 'admin', 'data-supply-state', 'detection-attempts', 'sentiment.json'),
+  observedAt = new Date().toISOString(),
+  attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-sentiment`,
+  quiet = false,
+} = {}) {
+  sentimentAttemptTuples = [];
+  if (!quiet) {
+    console.log('='.repeat(60));
+    console.log('fetch-sentiment.mjs');
+    console.log(`  date    : ${today}`);
+    console.log(`  outputs : ${OUTPUT_DIRS.map((d) => path.relative(REPO_ROOT, d)).join(', ')}`);
+    console.log('='.repeat(60));
+  }
 
   let okCount = 0;
   let failCount = 0;
 
   for (const [label, fn] of sources) {
+    const tupleCountBefore = sentimentAttemptTuples.length;
     try {
       const results = await fn();
+      if (sentimentAttemptTuples.length === tupleCountBefore) recordSentimentAttemptTuple(threwTuple('unexpected'));
       okCount++;
       for (const r of results) {
         const counts = r.appended != null
           ? `appended ${r.appended}, updated ${r.updated}`
           : `${r.action} (len ${r.before}→${r.after})`;
-        console.log(`✅ ${label} → ${r.file}: ${counts}`);
-        console.log(`   sample: ${JSON.stringify(r.sample)}`);
+        if (!quiet) {
+          console.log(`✅ ${label} → ${r.file}: ${counts}`);
+          console.log(`   sample: ${JSON.stringify(r.sample)}`);
+        }
       }
     } catch (e) {
+      const sourceTuples = sentimentAttemptTuples.slice(tupleCountBefore);
+      if (sourceTuples.length === 0 || sourceTuples.every((tuple) => tupleStatus(tuple) === 'ready')) {
+        recordSentimentAttemptTuple(threwTuple('unexpected'));
+      }
       failCount++;
-      console.error(`⚠️  ${label} FAILED (skipped, others continue): ${e.message}`);
+      if (!quiet) console.error(`⚠️  ${label} FAILED (skipped, others continue): ${e.message}`);
     }
   }
 
-  console.log('─'.repeat(60));
-  console.log(`Done: ${okCount} source group(s) ok, ${failCount} failed.`);
+  if (sentimentAttemptTuples.length === 0) recordSentimentAttemptTuple(threwTuple('unexpected'));
+  const tuple = foldWorstTuples(sentimentAttemptTuples);
+  const row = buildAttemptRow({ laneId: 'sentiment', memberId: null, observedAt, attemptId, tuple });
+  const shard = buildSingleLaneShard({ laneId: 'sentiment', row });
+  writeJsonAtomic(attemptShardPath, shard);
 
-  if (okCount === 0) {
+  if (!quiet) {
+    console.log('─'.repeat(60));
+    console.log(`Done: ${okCount} source group(s) ok, ${failCount} failed.`);
+    console.log(JSON.stringify({ attempt: row }));
+  }
+  return { ok: okCount > 0, okCount, failCount, row, shard };
+}
+
+async function main() {
+  const result = await runSentiment();
+  if (!result.ok) {
     console.error('❌ All sources failed — exiting non-zero.');
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 
-main().catch((err) => {
+const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
+if (invokedPath === fileURLToPath(import.meta.url)) main().catch((err) => {
   console.error('Fatal:', err);
-  process.exit(1);
+  process.exitCode = 1;
 });

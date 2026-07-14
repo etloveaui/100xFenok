@@ -34,10 +34,15 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Test sentiment producer contracts
+        run: node scripts/test-fetch-sentiment.mjs
+
       - name: Fetch sentiment series
+        id: fetch_sentiment
         run: node scripts/fetch-sentiment.mjs
 
       - name: Verify output
+        if: ${{ steps.fetch_sentiment.outcome == 'success' }}
         run: |
           echo "=== Latest points (data/sentiment) ==="
           for f in cnn-fear-greed cnn-components cnn-put-call cnn-momentum cnn-strength cnn-breadth cnn-junk-bond cnn-safe-haven vix move cftc-sp500 crypto-fear-greed; do
@@ -45,13 +50,22 @@ jobs:
             node -e "const d=require('./data/sentiment/$f.json');console.log('len',d.length,'last',JSON.stringify(d[d.length-1]))"
           done
 
-      - name: Commit and push
+      - name: Commit sentiment data
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_sentiment.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/sentiment/*.json 100xfenok-next/public/data/sentiment/*.json
+          SHARD="data/admin/data-supply-state/detection-attempts/sentiment.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- data/sentiment/*.json 100xfenok-next/public/data/sentiment/*.json
+          fi
           if git diff --staged --quiet; then
             echo "No sentiment changes to publish"
             exit 0

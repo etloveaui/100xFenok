@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
@@ -46,6 +47,75 @@ REQUEST_TIMEOUT = 30
 # ==============================================================================
 # HTTP Functions
 # ==============================================================================
+
+def _returned_attempt_tuple(
+    status: int,
+    *,
+    auth: str = "not_applicable",
+    rate_limited: bool = False,
+    decode: str = "not_attempted",
+    payload: str = "not_available",
+    assertions: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    return {
+        "execution": "returned",
+        "exception_kind": None,
+        "http_status": status,
+        "auth": auth,
+        "rate_limited": rate_limited,
+        "decode": decode,
+        "payload": payload,
+        "assertions": assertions or [],
+    }
+
+
+def _threw_attempt_tuple(exception_kind: str) -> Dict[str, Any]:
+    return {
+        "execution": "threw",
+        "exception_kind": exception_kind,
+        "http_status": None,
+        "auth": "not_applicable",
+        "rate_limited": False,
+        "decode": "not_attempted",
+        "payload": "not_available",
+        "assertions": [],
+    }
+
+
+def _emit_attempt_tuple(row: Dict[str, Any]) -> None:
+    target = os.environ.get("SLICKCHARTS_ATTEMPT_EVENTS_PATH")
+    if not target:
+        return
+    path = Path(target)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = (json.dumps(row, separators=(",", ":")) + "\n").encode("utf-8")
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    try:
+        os.write(descriptor, data)
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _returned_failure_tuple(status: int) -> Dict[str, Any]:
+    if status in (401, 403):
+        return _returned_attempt_tuple(status, auth="rejected")
+    if status == 429:
+        return _returned_attempt_tuple(status, rate_limited=True)
+    return _returned_attempt_tuple(status)
+
+
+def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
+    if not html.strip():
+        return _returned_attempt_tuple(status, decode="ok", payload="empty")
+    soup = BeautifulSoup(html, "html.parser")
+    has_rows = any(row.find("td") is not None for row in soup.select("table tr"))
+    return _returned_attempt_tuple(
+        status,
+        decode="ok",
+        payload="non_empty",
+        assertions=[{"id": "table_rows", "passed": has_rows}],
+    )
 
 def fetch_html_playwright(
     url: str,
@@ -80,13 +150,19 @@ def fetch_html_playwright(
     Raises:
         RuntimeError: If page load or selector wait times out
     """
-    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+    from playwright.sync_api import (
+        Error as PlaywrightError,
+        TimeoutError as PlaywrightTimeout,
+        sync_playwright,
+    )
 
     attempts = retry + 1
     last_error: Exception | None = None
+    last_status: int | None = None
     effective_user_agent = user_agent or USER_AGENT
 
     for attempt in range(1, attempts + 1):
+        status: int | None = None
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
@@ -97,7 +173,8 @@ def fetch_html_playwright(
                     context_options["viewport"] = viewport
                 context = browser.new_context(**context_options)
                 page = context.new_page()
-                page.goto(url, wait_until=wait_until, timeout=timeout)
+                navigation = page.goto(url, wait_until=wait_until, timeout=timeout)
+                status = navigation.status if navigation is not None else 200
                 if post_load_wait_ms > 0:
                     page.wait_for_timeout(post_load_wait_ms)
                 page.wait_for_selector(wait_for_selector, timeout=15000)
@@ -110,16 +187,33 @@ def fetch_html_playwright(
             if challenge_detector and challenge_detector(html):
                 raise RuntimeError(f"Challenge page detected for {url} (title={title})")
 
+            _emit_attempt_tuple(_html_attempt_tuple(status, html))
             return html
-        except (PlaywrightTimeout, RuntimeError) as exc:
+        except (PlaywrightError, RuntimeError) as exc:
             last_error = exc
+            if isinstance(status, int) and 100 <= status <= 599:
+                last_status = status
             if attempt == attempts:
                 break
             time.sleep(RATE_LIMIT_SECONDS)
             continue
 
     if last_error is None:
+        _emit_attempt_tuple(_threw_attempt_tuple("unexpected"))
         raise RuntimeError(f"Playwright failed fetching {url}")
+    if last_status is not None:
+        if 200 <= last_status < 300:
+            _emit_attempt_tuple(_returned_attempt_tuple(
+                last_status,
+                decode="ok",
+                payload="non_empty",
+                assertions=[{"id": "table_rows", "passed": False}],
+            ))
+        else:
+            _emit_attempt_tuple(_returned_failure_tuple(last_status))
+    else:
+        kind = "transport" if isinstance(last_error, PlaywrightError) else "unexpected"
+        _emit_attempt_tuple(_threw_attempt_tuple(kind))
     raise RuntimeError(f"Playwright failed fetching {url}: {last_error}") from last_error
 
 
@@ -165,13 +259,25 @@ def fetch_html(
                     response=response,
                 )
             response.raise_for_status()
-            return response.text
+            try:
+                html = response.text
+            except Exception:
+                _emit_attempt_tuple(_returned_attempt_tuple(response.status_code, decode="error"))
+                raise RuntimeError(f"Unable to decode {url}")
+            _emit_attempt_tuple(_html_attempt_tuple(response.status_code, html))
+            return html
         except requests.RequestException as exc:
             last_error = exc
             if attempt == max_retries:
                 break
             continue
 
+    response = getattr(last_error, "response", None)
+    status = getattr(response, "status_code", None)
+    if isinstance(status, int) and 100 <= status <= 599:
+        _emit_attempt_tuple(_returned_failure_tuple(status))
+    else:
+        _emit_attempt_tuple(_threw_attempt_tuple("transport"))
     raise RuntimeError(f"Unable to fetch {url}") from last_error
 
 

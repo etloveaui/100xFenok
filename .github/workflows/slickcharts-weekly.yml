@@ -41,6 +41,8 @@ concurrency:
 jobs:
   scrape-weekly:
     runs-on: ubuntu-latest
+    env:
+      SLICKCHARTS_ATTEMPT_EVENTS_PATH: ${{ runner.temp }}/slickcharts-weekly-attempt-events.jsonl
 
     steps:
       - name: Checkout repository
@@ -99,31 +101,27 @@ jobs:
             --output data/slickcharts/berkshire.json \
             --pretty
 
+      - name: Emit SlickCharts weekly attempt
+        if: ${{ always() }}
+        run: |
+          node scripts/emit-slickcharts-attempt.mjs \
+            --member weekly \
+            --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
+            --outcome "${{ job.status }}" \
+            --row "$RUNNER_TEMP/slickcharts-weekly-row.json"
+
       - name: Commit and push changes
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add -- \
+          scripts/publish-slickcharts-attempt.sh \
+            weekly \
+            "$RUNNER_TEMP/slickcharts-weekly-row.json" \
+            "chore: update SlickCharts weekly data $(date -u +%Y-%m-%d)" \
             data/slickcharts/sp500.json \
             data/slickcharts/magnificent7.json \
             data/slickcharts/etf.json \
             data/slickcharts/berkshire.json
-          git diff --staged --quiet || git commit -m "chore: update SlickCharts weekly data $(date -u +%Y-%m-%d)"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push origin HEAD:main; then
-              gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1

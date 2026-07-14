@@ -2,12 +2,17 @@ import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { ATTEMPT_SHARD_SCHEMA } from "../build-data-supply-detection-floor.mjs";
+import {
+  ATTEMPT_SHARD_SCHEMA,
+  validateAttemptEvidence,
+  validateAttemptShard,
+} from "../build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./data-supply-detection-config.mjs";
 
 export { ATTEMPT_SHARD_SCHEMA };
+const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
 
-// FRED/FDIC producer support. Keep this ordering identical to
+// Shared producer support. Keep this ordering identical to
 // build-data-supply-detection-floor.mjs and
 // fetch-treasury-tga.mjs. One producer member reduces every request to the
 // single worst current-attempt tuple before publishing its lane shard.
@@ -70,6 +75,98 @@ export function threwTuple(exceptionKind) {
     payload: "not_available",
     assertions: [],
   };
+}
+
+export function unobservedTuple() {
+  return {
+    execution: "unobserved",
+    exception_kind: null,
+    http_status: null,
+    auth: "not_applicable",
+    rate_limited: false,
+    decode: "not_attempted",
+    payload: "not_available",
+    assertions: [],
+  };
+}
+
+export function tupleStatus(tuple) {
+  if (tuple?.execution === "unobserved") return "unobserved";
+  if (tuple?.execution === "threw") return "unavailable";
+  if (tuple?.execution !== "returned") throw new Error(`unknown tuple execution: ${tuple?.execution}`);
+  const status = tuple.http_status;
+  if (status === 401 || status === 403 || status === 429 || status < 200 || status >= 300) return "unavailable";
+  if (tuple.decode === "error") return "drift";
+  if (tuple.payload === "empty") return "unavailable";
+  if (tuple.decode !== "ok" || tuple.payload !== "non_empty") return "unavailable";
+  return tuple.assertions.some((assertion) => assertion.passed === false) ? "drift" : "ready";
+}
+
+export function foldWorstTuples(tuples) {
+  if (!Array.isArray(tuples) || tuples.length === 0) throw new Error("cannot fold an empty tuple list");
+  return tuples.reduce((worst, current) => (
+    STATUS_SEVERITY[tupleStatus(current)] > STATUS_SEVERITY[tupleStatus(worst)] ? current : worst
+  ));
+}
+
+export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, observedAt = null }) {
+  if (!tuple || typeof tuple !== "object") throw new Error("attempt tuple is required");
+  const unobserved = tuple.execution === "unobserved";
+  const row = {
+    lane_id: laneId,
+    member_id: memberId,
+    attempt_id: unobserved ? null : attemptId,
+    observed_at: unobserved ? null : observedAt,
+    execution: tuple.execution,
+    exception_kind: tuple.exception_kind,
+    http_status: tuple.http_status,
+    auth: tuple.auth,
+    rate_limited: tuple.rate_limited,
+    decode: tuple.decode,
+    payload: tuple.payload,
+    assertions: tuple.assertions,
+  };
+  validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] });
+  return row;
+}
+
+export function buildSingleLaneShard({ laneId, row }) {
+  if (row?.lane_id !== laneId || row?.member_id !== null) throw new Error(`invalid single-lane row for ${laneId}`);
+  const shard = { schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: laneId, attempts: [structuredClone(row)] };
+  validateAttemptShard(shard, laneId);
+  return shard;
+}
+
+export function mergeCompositeShard({ laneId, memberIds, baseShard, row }) {
+  if (!Array.isArray(memberIds) || memberIds.length === 0 || new Set(memberIds).size !== memberIds.length) {
+    throw new Error("memberIds must be a non-empty unique list");
+  }
+  if (row?.lane_id !== laneId || !memberIds.includes(row?.member_id)) {
+    throw new Error(`unknown member for ${laneId}: ${row?.member_id}`);
+  }
+  validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] });
+
+  let attempts;
+  if (baseShard === null || baseShard === undefined) {
+    attempts = memberIds.map((memberId) => buildAttemptRow({
+      laneId,
+      memberId,
+      tuple: unobservedTuple(),
+    }));
+  } else {
+    validateAttemptShard(baseShard, laneId);
+    attempts = baseShard.attempts.map((attempt) => structuredClone(attempt));
+  }
+
+  const byMember = new Map(attempts.map((attempt) => [attempt.member_id, attempt]));
+  byMember.set(row.member_id, structuredClone(row));
+  const shard = {
+    schema_version: ATTEMPT_SHARD_SCHEMA,
+    lane_id: laneId,
+    attempts: memberIds.map((memberId) => byMember.get(memberId)),
+  };
+  validateAttemptShard(shard, laneId);
+  return shard;
 }
 
 export function worstRequestResult(rows) {
@@ -236,17 +333,7 @@ export function defaultAttemptId(prefix, observedAt = new Date().toISOString()) 
 export function writeAttemptShard({ laneId, attemptShardPath, observedAt, attemptId, result }) {
   if (!validObservedAt(observedAt)) throw new Error("observedAt must be RFC3339 UTC");
   if (!/^[a-z][a-z0-9_-]{0,95}$/.test(attemptId)) throw new Error("attemptId is invalid");
-  const row = {
-    lane_id: laneId,
-    member_id: null,
-    attempt_id: attemptId,
-    observed_at: observedAt,
-    ...result.attempt,
-  };
-  writeJsonAtomic(attemptShardPath, {
-    schema_version: ATTEMPT_SHARD_SCHEMA,
-    lane_id: laneId,
-    attempts: [row],
-  });
+  const row = buildAttemptRow({ laneId, memberId: null, attemptId, observedAt, tuple: result.attempt });
+  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId, row }));
   return row;
 }
