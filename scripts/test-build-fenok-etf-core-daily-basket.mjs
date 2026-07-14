@@ -8,6 +8,7 @@ import {
   structuralReasons,
   validateEtfCoreDailyBasket,
 } from "./build-fenok-etf-core-daily-basket.mjs";
+import { classifyEtfCoreReadiness } from "../100xfenok-next/scripts/check-fenok-etf-core-daily-basket.mjs";
 
 function fixtureCandidates(count, { status, scoreBase, prefix }) {
   const candidates = [];
@@ -158,6 +159,34 @@ if (admin.readiness.core_daily_basket_ready) {
   const { selected } = selectBasketRows([...stale, ...fresh]);
   assert.equal(selected.length, ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount);
   assert.ok(selected.some((row) => row.status === "needs_refresh"));
+}
+
+{
+  const honestDegraded = classifyEtfCoreReadiness({
+    core_daily_basket_ready: false,
+    readiness_status: "not_ready",
+    stale_selected_count: 2,
+    blockers: ["two selected rows need refresh"],
+  });
+  assert.deepEqual(honestDegraded.errors, []);
+  assert.ok(honestDegraded.warnings.some((message) => message.includes("DEGRADED")));
+  assert.ok(honestDegraded.warnings.some((message) => message.includes("stale_selected_count=2")));
+
+  const falseReady = classifyEtfCoreReadiness({
+    core_daily_basket_ready: true,
+    readiness_status: "ready",
+    stale_selected_count: 1,
+    blockers: [],
+  });
+  assert.ok(falseReady.errors.some((message) => message.includes("false-ready")));
+
+  const malformed = classifyEtfCoreReadiness({
+    core_daily_basket_ready: "yes",
+    readiness_status: "green",
+    stale_selected_count: "2",
+    blockers: null,
+  });
+  assert.equal(malformed.errors.length, 4);
 }
 
 console.log("test-build-fenok-etf-core-daily-basket: ok");

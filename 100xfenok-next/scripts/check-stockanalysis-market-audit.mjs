@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import vm from "node:vm";
 import { pathToFileURL } from "node:url";
 
@@ -43,6 +43,8 @@ const ACTIVE_ROUTE_PREFIXES = [
 ];
 
 const ALLOWED_HISTORY_PERIODS = new Set(["daily_1y", "weekly_1y", "monthly_1y", "weekly_3y", "monthly_3y", "monthly_5y"]);
+const ALLOWED_SURFACE_STATUSES = new Set(["ready", "partial", "pending", "stale", "unavailable", "error"]);
+const SURFACE_STATUS_PRIORITY = ["error", "unavailable", "stale", "pending", "partial", "ready"];
 
 const REQUIRED_RENDERED_SECTIONS = [
   "ETF 상세 수집",
@@ -99,10 +101,6 @@ function readText(path) {
   return readFileSync(path, "utf8");
 }
 
-function readJson(relPath) {
-  return JSON.parse(readText(pathOf(relPath)));
-}
-
 function sumObjectValues(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return 0;
   return Object.values(value).reduce((sum, item) => sum + (Number(item) || 0), 0);
@@ -112,10 +110,68 @@ function assert(condition, message, errors) {
   if (!condition) errors.push(message);
 }
 
-function assertMirror(label, sourceRelPath, publicRelPath, errors) {
-  const source = readText(pathOf(sourceRelPath));
-  const mirror = readText(pathOf(publicRelPath));
+function warn(condition, message, warnings) {
+  if (!condition) warnings.push(message);
+}
+
+function expectedSurfaceStatus(checks) {
+  return SURFACE_STATUS_PRIORITY.find((status) => checks.some((check) => check?.status === status)) ?? "ready";
+}
+
+function validateFiniteNumbers(value, context, errors) {
+  if (typeof value === "number") {
+    assert(Number.isFinite(value), `${context} must be finite`, errors);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => validateFiniteNumbers(item, `${context}[${index}]`, errors));
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) validateFiniteNumbers(item, `${context}.${key}`, errors);
+  }
+}
+
+function assertRequiredMirror(label, sourceRelPath, publicRelPath, errors) {
+  const sourcePath = pathOf(sourceRelPath);
+  const publicPath = pathOf(publicRelPath);
+  const sourceExists = existsSync(sourcePath);
+  const publicExists = existsSync(publicPath);
+  assert(sourceExists, `${label}: required source file is missing`, errors);
+  assert(publicExists, `${label}: required public file is missing`, errors);
+  if (!sourceExists || !publicExists) return false;
+  const source = readText(sourcePath);
+  const mirror = readText(publicPath);
   assert(source === mirror, `${label}: source and public mirror differ`, errors);
+  return source === mirror;
+}
+
+function readOptionalJsonPair(label, sourceRelPath, publicRelPath, errors, warnings) {
+  const sourcePath = pathOf(sourceRelPath);
+  const publicPath = pathOf(publicRelPath);
+  const sourceExists = existsSync(sourcePath);
+  const publicExists = existsSync(publicPath);
+  if (!sourceExists && !publicExists) {
+    warnings.push(`${label} is unavailable in both root and public data`);
+    return null;
+  }
+  if (!sourceExists || !publicExists) {
+    errors.push(`${label}: root/public mirror divergence (source=${sourceExists}, public=${publicExists})`);
+    return null;
+  }
+
+  const source = readText(sourcePath);
+  const mirror = readText(publicPath);
+  if (source !== mirror) {
+    errors.push(`${label}: source and public mirror differ`);
+    return null;
+  }
+  try {
+    return JSON.parse(mirror);
+  } catch (error) {
+    errors.push(`${label}: malformed JSON (${error.message})`);
+    return null;
+  }
 }
 
 function assertDataLabDevVersion(errors) {
@@ -132,14 +188,14 @@ function assertDataLabDevVersion(errors) {
   );
 }
 
-function assertCoverageContract(coverage, errors) {
+export function assertCoverageContract(coverage, errors, warnings = []) {
   const counts = coverage?.counts || {};
   const missing = Number(counts.missing_detail_files || 0);
   const covered = Number(counts.covered_detail_files || counts.detail_files || 0);
   const total = Number(counts.candidate_total || 0);
   const coveragePct = Number(counts.coverage_pct);
 
-  assert(total > 0, "ETF coverage: candidate_total must be positive", errors);
+  warn(total > 0, "ETF detail lane has no candidate universe", warnings);
   assert(covered >= 0 && covered <= total, "ETF coverage: covered detail count must fit candidate_total", errors);
   assert(missing === total - covered, "ETF coverage: missing_detail_files must equal candidate_total - covered_detail_files", errors);
   assert(Number.isFinite(coveragePct) && coveragePct >= 0 && coveragePct <= 100, "ETF coverage: coverage_pct must be 0..100", errors);
@@ -157,7 +213,7 @@ function assertCoverageContract(coverage, errors) {
   }
 }
 
-function assertBackfillContract(audit, incremental, incrementalPlan, pendingLedger, factsIndex, errors) {
+export function assertBackfillContract(audit, incremental, incrementalPlan, pendingLedger, factsIndex, errors, warnings = []) {
   const auditCounts = audit?.incremental_etf?.counts || {};
   const incrementalCounts = incremental?.counts || {};
   const planCounts = incrementalPlan?.counts || {};
@@ -174,14 +230,14 @@ function assertBackfillContract(audit, incremental, incrementalPlan, pendingLedg
   assert(Number(incrementalCounts.selected ?? auditCounts.selected ?? -1) >= 0, "ETF incremental proof: selected count is required", errors);
   assert(Number(planCounts.incremental_selected ?? auditCounts.plan_selected ?? -1) >= 0, "ETF incremental plan: selected count is required", errors);
   assert(Number(planCounts.history_gap ?? auditCounts.plan_history_gap ?? -1) >= 0, "ETF incremental plan: history_gap count is required", errors);
-  assert(Number(auditCounts.hard_failed ?? 0) === 0, "Market audit: hard_failed must remain zero for the current QA data pack", errors);
+  warn(Number(auditCounts.hard_failed ?? 0) === 0, `ETF incremental lane has ${Number(auditCounts.hard_failed ?? 0)} hard-failed items`, warnings);
   assert(ledgerRows.length === ledgerTracked, "ETF pending ledger: entries count must match tracked count", errors);
   if (ledgerCooldown > 0) {
     assert(ledgerRows.some((row) => typeof row.next_attempt_after_utc === "string" && row.next_attempt_after_utc.length >= 10), "ETF pending ledger: cooldown rows need next_attempt_after_utc", errors);
   }
 
   const coverage = factsIndex?.coverage || audit?.market_facts?.coverage || {};
-  assert(Number(coverage.etf || 0) > 0, "Market facts: ETF coverage must be present", errors);
+  warn(Number(coverage.etf || 0) > 0, "Market facts ETF coverage is unavailable", warnings);
   assert("stockanalysis_yf_fallback" in coverage, "Market facts: fallback coverage key must be present", errors);
 }
 
@@ -214,7 +270,7 @@ function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
   assert(audit?.incremental_etf?.plan_generated_at === incrementalPlan?.generated_at, "Market audit: plan_generated_at must match incremental plan generated_at", errors);
 }
 
-export function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) {
+export function assertHistoryGapReportContract(report, incrementalPlan, audit, errors, warnings = []) {
   const requiredPeriods = Array.isArray(report?.required_history_periods) ? report.required_history_periods : [];
   const planRequiredPeriods = Array.isArray(incrementalPlan?.required_history_periods) ? incrementalPlan.required_history_periods : [];
   const missingByPeriod = report?.missing_by_period || {};
@@ -232,7 +288,7 @@ export function assertHistoryGapReportContract(report, incrementalPlan, audit, e
   assert(typeof report?.generated_at === "string" && report.generated_at.length >= 10, "ETF history gap report: generated_at is required", errors);
   assert(requiredPeriods.length > 0, "ETF history gap report: at least one required history period is required", errors);
   assert(requiredPeriods.join(",") === planRequiredPeriods.join(","), "ETF history gap report: required periods must match incremental plan", errors);
-  assert(Number(report?.primary_stockanalysis_detail_files || 0) > 0, "ETF history gap report: primary detail count must be positive", errors);
+  warn(Number(report?.primary_stockanalysis_detail_files || 0) > 0, "ETF primary detail coverage is unavailable", warnings);
   assert(Number(report?.missing_required_history ?? -1) >= 0, "ETF history gap report: missing history count is required", errors);
   assert(Number(report?.fetchable_required_history ?? -1) >= 0, "ETF history gap report: fetchable history count is required", errors);
   assert(Number(report?.inception_limited_required_history ?? -1) >= 0, "ETF history gap report: inception-limited history count is required", errors);
@@ -289,7 +345,7 @@ export function assertHistoryGapReportContract(report, incrementalPlan, audit, e
   }
 }
 
-function assertReturnCoverageContract(audit, errors) {
+export function assertReturnCoverageContract(audit, errors, warnings = []) {
   const returnCoverage = audit?.market_facts?.return_field_coverage || {};
   const requiredFields = [
     "return_1m",
@@ -306,18 +362,18 @@ function assertReturnCoverageContract(audit, errors) {
     assert(returnCoverage[field] && typeof returnCoverage[field] === "object", `Market facts: ${field} coverage is required`, errors);
     assert(Number(returnCoverage[field]?.etf || 0) >= 0, `Market facts: ${field} ETF coverage count is required`, errors);
   }
-  assert(Number(returnCoverage.return_3m?.stockanalysis_history || 0) > 0, "Market facts: return_3m must include StockAnalysis history coverage", errors);
-  assert(Number(returnCoverage.return_10y_avg?.stockanalysis_performance || 0) > 0, "Market facts: return_10y_avg must include StockAnalysis performance coverage", errors);
-  assert(Number(returnCoverage.return_max_avg?.stockanalysis_performance || 0) > 0, "Market facts: return_max_avg must include StockAnalysis performance coverage", errors);
+  warn(Number(returnCoverage.return_3m?.stockanalysis_history || 0) > 0, "StockAnalysis 3-month return coverage is unavailable", warnings);
+  warn(Number(returnCoverage.return_10y_avg?.stockanalysis_performance || 0) > 0, "StockAnalysis 10-year return coverage is unavailable", warnings);
+  warn(Number(returnCoverage.return_max_avg?.stockanalysis_performance || 0) > 0, "StockAnalysis since-listing return coverage is unavailable", warnings);
 }
 
-function assertSurfaceConsumerContract(surfaceIndex, consumers, errors) {
+export function assertSurfaceConsumerContract(surfaceIndex, consumers, errors, warnings = []) {
   const indexSurfaces = new Set((Array.isArray(surfaceIndex?.results) ? surfaceIndex.results : [])
     .map((row) => String(row?.surface || "").trim())
     .filter(Boolean));
   const rows = Array.isArray(consumers?.surfaces) ? consumers.surfaces : [];
 
-  assert(indexSurfaces.size > 0, "Surface consumers: surfaces/index.json must have rows", errors);
+  warn(indexSurfaces.size > 0, "StockAnalysis surface index has no rows", warnings);
   assert(rows.length === indexSurfaces.size, "Surface consumers: consumer row count must match surface index count", errors);
 
   for (const row of rows) {
@@ -426,7 +482,7 @@ function assertRenderedMarketAudit(payloads, errors) {
   }
 }
 
-function assertProductSurfaceCoverageContract(payload, errors) {
+export function assertProductSurfaceCoverageContract(payload, errors, warnings = []) {
   const requiredIds = new Set([
     "stock_detail",
     "market_valuation",
@@ -437,24 +493,56 @@ function assertProductSurfaceCoverageContract(payload, errors) {
     "admin_data_lab",
   ]);
   const surfaces = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
+  const seenIds = new Set();
+  const actualTotals = Object.fromEntries([...ALLOWED_SURFACE_STATUSES].map((status) => [status, 0]));
   assert(payload?.schema_version === "product-surface-coverage/v1", "Product surface coverage: schema_version is required", errors);
-  assert(typeof payload?.generated_at === "string" && payload.generated_at.length >= 10, "Product surface coverage: generated_at is required", errors);
-  assert(surfaces.length >= requiredIds.size, "Product surface coverage: expected core product surfaces", errors);
+  assert(payload?.source_stamp_version === 1, "Product surface coverage: source_stamp_version must be 1", errors);
+  assert(typeof payload?.generated_at === "string" && Number.isFinite(new Date(payload.generated_at).getTime()), "Product surface coverage: generated_at must be a valid timestamp", errors);
+  assert(payload?.raw_policy?.public_mirror_allowed === true, "Product surface coverage: public mirror must be allowed", errors);
+  assert(payload?.raw_policy?.raw_rows_included === false, "Product surface coverage: raw rows must not be included", errors);
+  assert(payload?.raw_policy?.private_artifact_paths_included === false, "Product surface coverage: private artifact paths must not be included", errors);
+  validateFiniteNumbers(payload, "Product surface coverage", errors);
+  warn(surfaces.length >= requiredIds.size, "Product surface coverage is missing one or more core lanes", warnings);
   const ids = new Set(surfaces.map((surface) => surface?.id));
   for (const id of requiredIds) {
-    assert(ids.has(id), `Product surface coverage: missing surface ${id}`, errors);
+    warn(ids.has(id), `Product surface coverage lane ${id} is missing`, warnings);
   }
   for (const surface of surfaces) {
+    const id = surface?.id || "(unknown)";
+    assert(typeof surface?.id === "string" && surface.id.trim().length > 0, "Product surface coverage: every surface needs an id", errors);
+    assert(!seenIds.has(id), `Product surface coverage: duplicate surface id ${id}`, errors);
+    seenIds.add(id);
     assert(typeof surface?.route === "string" && surface.route.startsWith("/"), `Product surface coverage: ${surface?.id || "(unknown)"} route must start with /`, errors);
-    assert(typeof surface?.status === "string" && surface.status.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} status is required`, errors);
+    assert(ALLOWED_SURFACE_STATUSES.has(surface?.status), `Product surface coverage: ${id} status is invalid`, errors);
+    if (ALLOWED_SURFACE_STATUSES.has(surface?.status)) actualTotals[surface.status] += 1;
+    warn(surface?.status === "ready", `Product surface ${id} is ${surface?.status || "unavailable"}`, warnings);
     assert(Array.isArray(surface?.checks) && surface.checks.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} checks are required`, errors);
-    assert(typeof surface?.as_of === "string" && surface.as_of.length >= 10, `Product surface coverage: ${surface?.id || "(unknown)"} as_of is required`, errors);
-    const freshnessChecks = surface.checks.filter((check) => typeof check?.as_of === "string");
+    assert(surface?.status === expectedSurfaceStatus(Array.isArray(surface?.checks) ? surface.checks : []), `Product surface coverage: ${id} status must derive from checks`, errors);
+    assert(typeof surface?.as_of === "string" && Number.isFinite(new Date(surface.as_of).getTime()), `Product surface coverage: ${surface?.id || "(unknown)"} as_of must be a valid collection timestamp`, errors);
+    assert(Object.prototype.hasOwnProperty.call(surface || {}, "source_as_of"), `Product surface coverage: ${id} source_as_of key is required`, errors);
+    if (surface?.source_as_of === null) {
+      assert(typeof surface?.source_as_of_reason === "string" && surface.source_as_of_reason.length > 0, `Product surface coverage: ${id} null source_as_of needs a reason`, errors);
+    } else {
+      assert(typeof surface?.source_as_of === "string" && Number.isFinite(new Date(surface.source_as_of).getTime()), `Product surface coverage: ${id} source_as_of must be a valid source date`, errors);
+      assert(surface?.source_as_of_reason === null || surface?.source_as_of_reason === undefined, `Product surface coverage: ${id} dated source_as_of must not carry a missing-date reason`, errors);
+    }
+    const freshnessChecks = surface.checks.filter((check) => Object.prototype.hasOwnProperty.call(check || {}, "max_age_days"));
     assert(freshnessChecks.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} needs a freshness check`, errors);
     for (const check of freshnessChecks) {
-      assert(typeof check.age_days === "number", `Product surface coverage: ${surface?.id || "(unknown)"} freshness check age_days is required`, errors);
+      assert(ALLOWED_SURFACE_STATUSES.has(check?.status), `Product surface coverage: ${id} freshness status is invalid`, errors);
       assert(typeof check.max_age_days === "number", `Product surface coverage: ${surface?.id || "(unknown)"} freshness check max_age_days is required`, errors);
+      if (check?.as_of === null) {
+        assert(check?.age_days === null, `Product surface coverage: ${id} missing source date needs age_days null`, errors);
+        assert(typeof check?.reason === "string" && check.reason.length > 0, `Product surface coverage: ${id} missing source date needs a reason`, errors);
+      } else {
+        assert(typeof check?.as_of === "string" && Number.isFinite(new Date(check.as_of).getTime()), `Product surface coverage: ${id} freshness source date is invalid`, errors);
+        assert(typeof check.age_days === "number", `Product surface coverage: ${id} freshness check age_days is required`, errors);
+      }
     }
+  }
+  assert(Number.isInteger(payload?.totals?.surfaces) && payload.totals.surfaces === surfaces.length, "Product surface coverage: totals.surfaces must match surface count", errors);
+  for (const status of ALLOWED_SURFACE_STATUSES) {
+    assert(Number.isInteger(payload?.totals?.[status]) && payload.totals[status] === actualTotals[status], `Product surface coverage: totals.${status} must match surface statuses`, errors);
   }
 }
 
@@ -462,43 +550,63 @@ function assertProductSurfaceCoverageContract(payload, errors) {
 // to unit-test the exported contract functions without triggering the real-file audit run.
 function main() {
   const errors = [];
+  const warnings = [];
 
-  assertMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
-  assertMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
-  assertMirror("Data Lab DEV", DATA_LAB_DEV_SOURCE_PATH, DATA_LAB_DEV_PUBLIC_PATH, errors);
-  assertDataLabDevVersion(errors);
+  const dashboardReady = assertRequiredMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
+  const rendererReady = assertRequiredMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
+  const devReady = assertRequiredMirror("Data Lab DEV", DATA_LAB_DEV_SOURCE_PATH, DATA_LAB_DEV_PUBLIC_PATH, errors);
+  const formattersReady = existsSync(FORMATTERS_PATH);
+  assert(formattersReady, "Data Lab formatters: required public build file is missing", errors);
+  if (devReady) assertDataLabDevVersion(errors);
+  const jsonPayloads = new Map();
   for (const [label, sourceRelPath, publicRelPath] of JSON_PAIRS) {
-    assertMirror(label, sourceRelPath, publicRelPath, errors);
+    jsonPayloads.set(label, readOptionalJsonPair(label, sourceRelPath, publicRelPath, errors, warnings));
   }
 
   const payloads = {
-    audit: readJson("public/data/computed/market_data_audit.json"),
-    sourceParity: readJson("public/data/computed/market_source_parity.json"),
-    stockanalysisIndex: readJson("public/data/stockanalysis/index.json"),
-    coverage: readJson("public/data/stockanalysis/coverage/etf_detail.json"),
-    classification: readJson("public/data/stockanalysis/classification/latest.json"),
-    surfaceIndex: readJson("public/data/stockanalysis/surfaces/index.json"),
-    surfaceConsumers: readJson("public/data/stockanalysis/surface_consumers.json"),
-    etfUniverse: readJson("public/data/stockanalysis/etf_universe.json"),
-    etfScreener: readJson("public/data/stockanalysis/surfaces/etf_screener.json"),
-    newEtfs: readJson("public/data/stockanalysis/surfaces/new_etfs.json"),
-    incremental: readJson("public/data/stockanalysis/backfill/incremental_latest.json"),
-    incrementalPlan: readJson("public/data/stockanalysis/backfill/incremental_plan_latest.json"),
-    historyGapReport: readJson("public/data/stockanalysis/backfill/history_gap_report_latest.json"),
-    pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
-    marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
-    productSurfaceCoverage: readJson("public/data/admin/product-surface-coverage.json"),
+    audit: jsonPayloads.get("Market data audit"),
+    sourceParity: jsonPayloads.get("Market source parity"),
+    stockanalysisIndex: jsonPayloads.get("StockAnalysis index"),
+    coverage: jsonPayloads.get("ETF coverage"),
+    classification: jsonPayloads.get("StockAnalysis classification"),
+    surfaceIndex: jsonPayloads.get("StockAnalysis surfaces index"),
+    surfaceConsumers: jsonPayloads.get("StockAnalysis surface consumers"),
+    etfUniverse: jsonPayloads.get("ETF universe"),
+    etfScreener: jsonPayloads.get("StockAnalysis ETF screener"),
+    newEtfs: jsonPayloads.get("StockAnalysis new ETFs"),
+    incremental: jsonPayloads.get("ETF incremental proof"),
+    incrementalPlan: jsonPayloads.get("ETF incremental plan"),
+    historyGapReport: jsonPayloads.get("ETF history gap report"),
+    pendingLedger: jsonPayloads.get("ETF pending ledger"),
+    marketFactsIndex: jsonPayloads.get("Market facts index"),
+    productSurfaceCoverage: jsonPayloads.get("Product surface coverage"),
   };
-  payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener);
+  payloads.etfUniverseApi = payloads.etfUniverse && payloads.etfScreener
+    ? buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener)
+    : null;
 
-  assertCoverageContract(payloads.coverage, errors);
-  assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors);
-  assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
-  assertHistoryGapReportContract(payloads.historyGapReport, payloads.incrementalPlan, payloads.audit, errors);
-  assertReturnCoverageContract(payloads.audit, errors);
-  assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
-  assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors);
-  assertRenderedMarketAudit(payloads, errors);
+  if (payloads.coverage) assertCoverageContract(payloads.coverage, errors, warnings);
+  if (payloads.audit && payloads.incremental && payloads.incrementalPlan && payloads.pendingLedger && payloads.marketFactsIndex) {
+    assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors, warnings);
+  }
+  if (payloads.audit && payloads.incrementalPlan) assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
+  if (payloads.historyGapReport && payloads.incrementalPlan && payloads.audit) {
+    assertHistoryGapReportContract(payloads.historyGapReport, payloads.incrementalPlan, payloads.audit, errors, warnings);
+  }
+  if (payloads.audit) assertReturnCoverageContract(payloads.audit, errors, warnings);
+  if (payloads.surfaceIndex && payloads.surfaceConsumers) {
+    assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors, warnings);
+  }
+  if (payloads.productSurfaceCoverage) {
+    assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors, warnings);
+  }
+
+  const renderPayloadsReady = Object.values(payloads).every((payload) => payload !== null);
+  if (dashboardReady && rendererReady && formattersReady && renderPayloadsReady) {
+    assertRenderedMarketAudit(payloads, errors);
+  } else if (!renderPayloadsReady) {
+    warnings.push("Data Lab market audit render proof skipped because one or more lane payloads are unavailable");
+  }
 
   if (errors.length > 0) {
     console.error("stockanalysis market audit check failed");
@@ -506,7 +614,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log("stockanalysis market audit check passed");
+  for (const warning of warnings) console.warn(`::warning:: StockAnalysis lane degraded: ${warning}`);
+
+  console.log(JSON.stringify({ ok: true, status: warnings.length > 0 ? "degraded" : "ready", warnings }, null, 2));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

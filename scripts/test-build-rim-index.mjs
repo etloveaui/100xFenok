@@ -124,6 +124,26 @@ function makeKrxBridgeFixture() {
   return tempRoot;
 }
 
+function makeBenchmarkAvailabilityFixture({ missing = false, stale = false } = {}) {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-availability-"));
+  for (const dir of ["computed", "damodaran", "indices", "macro", "slickcharts", "stockanalysis", "yf"]) {
+    fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
+  }
+  if (!missing) {
+    fs.mkdirSync(path.join(tempRoot, "benchmarks"), { recursive: true });
+    for (const file of ["us.json", "emerging.json", "micro_sectors.json"]) {
+      const payload = readJson(path.join(dataRoot, "benchmarks", file));
+      if (stale) {
+        for (const section of Object.values(payload.sections ?? {})) {
+          for (const row of Array.isArray(section?.data) ? section.data : []) row.date = "2026-05-01";
+        }
+      }
+      writeJson(path.join(tempRoot, "benchmarks", file), payload);
+    }
+  }
+  return tempRoot;
+}
+
 const ciSundayKrxFreshness = krxInputFreshness(
   "2026-07-09",
   "2026-07-12T01:41:29.000Z",
@@ -268,6 +288,82 @@ for (const id of ["SPX", "NDX"]) {
   }
 }
 
+// Coverage loss is honest lane degradation, not platform corruption. A stricter
+// fixture floor forces the real builder down that path without fabricating inputs.
+const degradedCoveragePayload = buildRimIndexInputs({
+  generatedAt: "2026-07-12T01:41:29.000Z",
+  minCoveredWeight: 0.99,
+});
+const degradedCoverageValidation = validateRimIndexInputs(degradedCoveragePayload, {
+  minCoveredWeight: 0.99,
+});
+assert.equal(degradedCoverageValidation.ok, true, degradedCoverageValidation.errors.join("\n"));
+assert.ok(degradedCoverageValidation.warnings.length > 0, "coverage degradation must be named");
+for (const id of ["SPX", "NDX"]) {
+  const item = degradedCoveragePayload.indices[id];
+  assert.equal(item.public_status, "input_only_primary_with_caveats", `${id}: degraded public status`);
+  assert.ok(item.blockers.length > 0, `${id}: degradation blockers`);
+  assert.equal(
+    item.derived.forecast_grid_v1.public_status,
+    "input_only_primary_with_caveats_no_fair_value",
+    `${id}: degraded forecast-grid status`,
+  );
+}
+
+// Claiming READY with the same low coverage remains a false-ready corruption.
+const falseReadyPayload = JSON.parse(JSON.stringify(degradedCoveragePayload));
+falseReadyPayload.indices.SPX.public_status = "ready_inputs_and_forecast_grid";
+falseReadyPayload.indices.SPX.derived.forecast_grid_v1.public_status = "ready_inputs_only_no_fair_value";
+const falseReadyValidation = validateRimIndexInputs(falseReadyPayload, { minCoveredWeight: 0.99 });
+assert.equal(falseReadyValidation.ok, false);
+assert.ok(falseReadyValidation.errors.some((error) => /SPX: false-ready/.test(error)));
+
+// Formula/source-tier integrity remains platform-blocking even when availability
+// is otherwise healthy.
+const tamperedFormulaPayload = JSON.parse(JSON.stringify(payload));
+tamperedFormulaPayload.indices.SPX.derived.cost_of_equity.formula = "risk_free_rate";
+assert.equal(validateRimIndexInputs(tamperedFormulaPayload).ok, false);
+const tamperedValuePayload = JSON.parse(JSON.stringify(payload));
+tamperedValuePayload.indices.SPX.derived.cost_of_equity.value += 0.1;
+assert.equal(validateRimIndexInputs(tamperedValuePayload).ok, false);
+
+const missingBenchmarkRoot = makeBenchmarkAvailabilityFixture({ missing: true });
+try {
+  const missingBenchmarkPayload = buildRimIndexInputs({
+    dataRootOverride: missingBenchmarkRoot,
+    generatedAt: "2026-07-12T00:00:00.000Z",
+  });
+  const missingBenchmarkValidation = validateRimIndexInputs(missingBenchmarkPayload);
+  assert.equal(missingBenchmarkValidation.ok, true, missingBenchmarkValidation.errors.join("\n"));
+  for (const id of ["SPX", "NDX", "KOSPI", "SOX"]) {
+    assert.ok(missingBenchmarkPayload.indices[id].blockers.some((row) => row.code === "source_unavailable"));
+    assert.equal(missingBenchmarkPayload.indices[id].observed.price.value, null);
+    assert.match(missingBenchmarkPayload.indices[id].observed.price.reason, /unavailable/);
+  }
+} finally {
+  fs.rmSync(missingBenchmarkRoot, { recursive: true, force: true });
+}
+
+const staleBenchmarkRoot = makeBenchmarkAvailabilityFixture({ stale: true });
+try {
+  const staleBenchmarkPayload = buildRimIndexInputs({
+    dataRootOverride: staleBenchmarkRoot,
+    generatedAt: "2026-07-12T00:00:00.000Z",
+  });
+  const staleBenchmarkValidation = validateRimIndexInputs(staleBenchmarkPayload);
+  assert.equal(staleBenchmarkValidation.ok, true, staleBenchmarkValidation.errors.join("\n"));
+  for (const id of ["SPX", "NDX"]) {
+    assert.equal(staleBenchmarkPayload.indices[id].public_status, "input_only_primary_with_caveats");
+    assert.ok(staleBenchmarkPayload.indices[id].blockers.some((row) => row.code === "benchmark_source_refresh_recommended"));
+  }
+  assert.equal(staleBenchmarkPayload.indices.SOX.public_status, "input_only_sox_methodology_weights_with_caveats");
+  const tamperedDegradedSecondary = JSON.parse(JSON.stringify(staleBenchmarkPayload));
+  tamperedDegradedSecondary.indices.SOX.derived.cost_of_equity.formula = "risk_free_rate";
+  assert.equal(validateRimIndexInputs(tamperedDegradedSecondary).ok, false);
+} finally {
+  fs.rmSync(staleBenchmarkRoot, { recursive: true, force: true });
+}
+
 assert.equal(payload.indices.CCMP.role, "secondary_input_only");
 assert.ok(payload.indices.CCMP.blockers.some((blocker) => blocker.code === "missing_named_constituent_weight_path"));
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.proxy_ticker, "ONEQ");
@@ -321,7 +417,7 @@ const fixtureRoot = makeKr10yFixture();
 try {
   const payloadWithKr10y = buildRimIndexInputs({
     dataRootOverride: fixtureRoot,
-    generatedAt: "2026-07-08T00:00:00.000Z",
+    generatedAt: "2026-07-12T00:00:00.000Z",
   });
   const kospiRiskFree = payloadWithKr10y.indices.KOSPI.observed.risk_free_rate;
   assert.equal(kospiRiskFree.source_tier, "observed_source");
@@ -339,7 +435,7 @@ const bridgeFixtureRoot = makeKrxBridgeFixture();
 try {
   const payloadWithBridgeOnlyKrx = buildRimIndexInputs({
     dataRootOverride: bridgeFixtureRoot,
-    generatedAt: "2026-07-09T00:00:00.000Z",
+    generatedAt: "2026-07-12T00:00:00.000Z",
   });
   assert.equal(validateRimIndexInputs(payloadWithBridgeOnlyKrx).ok, true);
   const kospiBridge = payloadWithBridgeOnlyKrx.indices.KOSPI;

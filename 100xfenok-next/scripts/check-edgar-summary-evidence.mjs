@@ -10,6 +10,7 @@ const INDEX_PATH = `${PUBLIC_ROOT}/index.json`;
 const SOURCE_INDEX_PATH = `${SOURCE_ROOT}/index.json`;
 const SUMMARY_SECTIONS = ["keyPoints", "riskChanges", "businessChanges", "financialHighlights", "watchItems"];
 const SUMMARY_STANCES = new Set(["fact", "management_claim", "feno_interpretation"]);
+const ARTIFACT_STATUSES = new Set(["ready", "pending", "failed", "unavailable", "not_available"]);
 const MAX_EVIDENCE_DIGEST_CHARS = 1000;
 const COMMA_GROUPED_NUMBER_RE = /(?:^|[^\d,])(\d+(?:,\d+)+)(?![\d,])/g;
 const VALID_COMMA_GROUPED_NUMBER_RE = /^\d{1,3}(?:,\d{3})*$/;
@@ -101,14 +102,23 @@ function expectArrayEqual(actual, expected, label, errors) {
   if (actualText !== expectedText) errors.push(`${label}: expected '${expectedText}', got '${actualText}'`);
 }
 
-function checkMirror(publicPath, sourcePath, errors) {
-  if (!existsSync(publicPath)) errors.push(`${publicPath}: missing public file`);
-  if (!existsSync(sourcePath)) errors.push(`${sourcePath}: missing source mirror`);
-  if (existsSync(publicPath) && existsSync(sourcePath)) {
+function checkMirror(publicPath, sourcePath, errors, noteDegraded, label) {
+  const publicExists = existsSync(publicPath);
+  const sourceExists = existsSync(sourcePath);
+  if (!publicExists && !sourceExists) {
+    noteDegraded("missing_artifact", `${label}: source and public artifact are both unavailable`);
+    return false;
+  }
+  if (!publicExists || !sourceExists) {
+    errors.push(`${label}: root/public mirror divergence (public=${publicExists}, source=${sourceExists})`);
+    return false;
+  }
+  if (publicExists && sourceExists) {
     const publicRaw = readFileSync(publicPath, "utf8");
     const sourceRaw = readFileSync(sourcePath, "utf8");
     if (publicRaw !== sourceRaw) errors.push(`${basename(publicPath)}: public/source mirror mismatch`);
   }
+  return true;
 }
 
 function isApprovedPaidGeneration(generation) {
@@ -132,13 +142,40 @@ function checkGenerationCostPolicy(generation, label, errors) {
 }
 
 const errors = [];
-checkMirror(INDEX_PATH, SOURCE_INDEX_PATH, errors);
+const degradedCounts = new Map();
+const degradedSamples = new Map();
+function noteDegraded(key, message) {
+  degradedCounts.set(key, (degradedCounts.get(key) ?? 0) + 1);
+  const samples = degradedSamples.get(key) ?? [];
+  if (samples.length < 5) samples.push(message);
+  degradedSamples.set(key, samples);
+}
 
-const index = existsSync(INDEX_PATH) ? readJson(INDEX_PATH) : { tickers: [], byTicker: {} };
-const tickers = Array.isArray(index.tickers) ? index.tickers.map((ticker) => String(ticker).trim().toUpperCase()).filter(Boolean) : [];
-const byTicker = index.byTicker && typeof index.byTicker === "object" ? index.byTicker : {};
+const indexAvailable = checkMirror(
+  INDEX_PATH,
+  SOURCE_INDEX_PATH,
+  errors,
+  noteDegraded,
+  "EDGAR summary index",
+);
 
-if (tickers.length === 0) errors.push("index.json: tickers must not be empty");
+const index = indexAvailable ? readJson(INDEX_PATH) : { tickers: [], byTicker: {} };
+if (indexAvailable && index.schemaVersion !== 1) errors.push("index.schemaVersion must be 1");
+if (indexAvailable && index.artifactType !== "edgar_korean_summary_index") errors.push("index.artifactType is invalid");
+if (indexAvailable && !Array.isArray(index.tickers)) errors.push("index.tickers must be an array");
+if (indexAvailable && (!index.byTicker || typeof index.byTicker !== "object" || Array.isArray(index.byTicker))) {
+  errors.push("index.byTicker must be an object");
+}
+const tickers = Array.isArray(index.tickers) ? index.tickers.map((ticker) => String(ticker).trim().toUpperCase()) : [];
+const byTicker = index.byTicker && typeof index.byTicker === "object" && !Array.isArray(index.byTicker) ? index.byTicker : {};
+if (tickers.some((ticker) => !ticker)) errors.push("index.tickers contains a missing ticker identity");
+if (new Set(tickers).size !== tickers.length) errors.push("index.tickers contains duplicate ticker identities");
+const byTickerKeys = Object.keys(byTicker).sort();
+if (indexAvailable && JSON.stringify([...tickers].sort()) !== JSON.stringify(byTickerKeys)) {
+  errors.push("index.tickers and index.byTicker keys must reconcile exactly");
+}
+
+if (tickers.length === 0) noteDegraded("empty_index", "index.json has no enrolled tickers");
 
 let filingCount = 0;
 let bulletCount = 0;
@@ -146,38 +183,80 @@ let evidenceCount = 0;
 
 for (const ticker of tickers) {
   const manifestDataPath = byTicker[ticker];
-  if (!manifestDataPath) {
+  if (typeof manifestDataPath !== "string" || !manifestDataPath.startsWith("/data/edgar-korean-summaries/")) {
     errors.push(`${ticker}: missing byTicker path`);
     continue;
   }
   const publicManifestPath = publicPathFromDataPath(manifestDataPath);
   const sourceManifestPath = sourcePathFromDataPath(manifestDataPath);
-  checkMirror(publicManifestPath, sourceManifestPath, errors);
-  if (!existsSync(publicManifestPath)) continue;
+  const manifestAvailable = checkMirror(
+    publicManifestPath,
+    sourceManifestPath,
+    errors,
+    noteDegraded,
+    `${ticker}: filing manifest`,
+  );
+  if (!manifestAvailable) continue;
 
   const manifest = readJson(publicManifestPath);
+  if (manifest.schemaVersion !== 1) errors.push(`${ticker}: manifest.schemaVersion must be 1`);
+  if (manifest.artifactType !== "edgar_korean_summary_ticker_manifest") errors.push(`${ticker}: manifest.artifactType is invalid`);
+  if (normalizeTicker(manifest.ticker) !== ticker) errors.push(`${ticker}: manifest ticker identity mismatch`);
+  if (!Array.isArray(manifest.filings)) errors.push(`${ticker}: manifest.filings must be an array`);
   const filings = Array.isArray(manifest.filings) ? manifest.filings : [];
-  if (filings.length === 0) errors.push(`${ticker}: manifest has no filings`);
+  const accessions = filings.map((filing) => String(filing?.accession ?? "").trim());
+  if (accessions.some((accession) => !accession)) errors.push(`${ticker}: filing missing accession identity`);
+  if (new Set(accessions).size !== accessions.length) errors.push(`${ticker}: duplicate filing accession identity`);
+  if (filings.length === 0) noteDegraded("empty_manifest", `${ticker}: manifest has no filings`);
 
   for (const filing of filings) {
     filingCount += 1;
+    if (!ARTIFACT_STATUSES.has(filing.translationStatus)) errors.push(`${ticker}/${filing.accession}: invalid translationStatus '${filing.translationStatus}'`);
+    if (!ARTIFACT_STATUSES.has(filing.summaryStatus)) errors.push(`${ticker}/${filing.accession}: invalid summaryStatus '${filing.summaryStatus}'`);
     if (!filing.sourceUrl) errors.push(`${ticker}/${filing.accession}: missing sourceUrl`);
     if (filing.translationStatus === "ready") {
       if (!filing.translationPath) {
         errors.push(`${ticker}/${filing.accession}: translationStatus='ready' requires translationPath`);
       } else {
-        checkMirror(publicPathFromDataPath(filing.translationPath), sourcePathFromDataPath(filing.translationPath), errors);
+        const translationAvailable = checkMirror(
+          publicPathFromDataPath(filing.translationPath),
+          sourcePathFromDataPath(filing.translationPath),
+          errors,
+          noteDegraded,
+          `${ticker}/${filing.accession}: translation`,
+        );
+        if (!translationAvailable) {
+          errors.push(`${ticker}/${filing.accession}: false-ready translation artifact is unavailable`);
+        }
       }
     }
     if (filing.translationPath && filing.translationStatus !== "ready") {
       errors.push(`${ticker}/${filing.accession}: translationPath requires translationStatus='ready'`);
     }
-    if (!filing.summaryPath) continue;
+    if (!filing.summaryPath) {
+      if (filing.summaryStatus === "ready") {
+        errors.push(`${ticker}/${filing.accession}: summaryStatus='ready' requires summaryPath`);
+      } else {
+        noteDegraded("summary_pending", `${ticker}/${filing.accession}: summary is ${filing.summaryStatus ?? "unavailable"}`);
+      }
+      continue;
+    }
 
     const publicArtifactPath = publicPathFromDataPath(filing.summaryPath);
     const sourceArtifactPath = sourcePathFromDataPath(filing.summaryPath);
-    checkMirror(publicArtifactPath, sourceArtifactPath, errors);
-    if (!existsSync(publicArtifactPath)) continue;
+    const summaryAvailable = checkMirror(
+      publicArtifactPath,
+      sourceArtifactPath,
+      errors,
+      noteDegraded,
+      `${ticker}/${filing.accession}: summary`,
+    );
+    if (!summaryAvailable) {
+      if (filing.summaryStatus === "ready") {
+        errors.push(`${ticker}/${filing.accession}: false-ready summary artifact is unavailable`);
+      }
+      continue;
+    }
 
     const artifact = readJson(publicArtifactPath);
     expectEqual(artifact.schemaVersion, 1, `${ticker}/${filing.accession}: artifact.schemaVersion`, errors);
@@ -232,6 +311,11 @@ for (const ticker of tickers) {
     checkGenerationCostPolicy(artifact.generation, `${ticker}/${filing.accession}`, errors);
 
     const evidenceRows = Array.isArray(artifact.evidence) ? artifact.evidence : [];
+    if (!Array.isArray(artifact.evidence)) errors.push(`${ticker}/${filing.accession}: evidence must be an array`);
+    const evidenceIds = evidenceRows.map((row) => String(row?.id ?? "").trim());
+    if (new Set(evidenceIds).size !== evidenceIds.length) {
+      errors.push(`${ticker}/${filing.accession}: duplicate evidence ids`);
+    }
     const evidenceById = new Map(evidenceRows.map((row) => [row.id, row]));
     evidenceCount += evidenceRows.length;
     if (["10-K", "10-Q", "8-K", "20-F", "40-F", "6-K"].includes(String(filing.form ?? "").toUpperCase())) {
@@ -290,4 +374,17 @@ for (const ticker of tickers) {
 
 if (errors.length > 0) fail(errors);
 
-console.log(`edgar summary evidence check passed (${tickers.length} tickers, ${filingCount} filings, ${bulletCount} bullets, ${evidenceCount} evidence rows)`);
+const warnings = [...degradedCounts.entries()].map(([key, count]) => ({
+  key,
+  count,
+  samples: degradedSamples.get(key) ?? [],
+}));
+for (const warning of warnings) {
+  console.warn(`::warning:: EDGAR lane degraded: ${warning.key}=${warning.count}; ${warning.samples.join(" | ")}`);
+}
+console.log(JSON.stringify({
+  ok: true,
+  status: warnings.length > 0 ? "degraded" : "ready",
+  counts: { tickers: tickers.length, filings: filingCount, bullets: bulletCount, evidence_rows: evidenceCount },
+  warnings,
+}, null, 2));

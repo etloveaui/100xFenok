@@ -10,7 +10,11 @@
  */
 import assert from "node:assert/strict";
 
-import { assertHistoryGapReportContract } from "./check-stockanalysis-market-audit.mjs";
+import {
+  assertCoverageContract,
+  assertHistoryGapReportContract,
+  assertProductSurfaceCoverageContract,
+} from "./check-stockanalysis-market-audit.mjs";
 import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
 
 let passed = 0;
@@ -100,6 +104,100 @@ console.log("# stockanalysis market-audit history-gap dispatch fixtures");
   const errors = run(baseReport({ fetchable: 0, scoredDailyFetchable: 2, status: "banana", inputs: DAILY_INPUTS }));
   assert.ok(errors.some((e) => /unknown recommended_dispatch\.status banana/.test(e)), "arbitrary unknown status must hard-fail");
   ok("(e) arbitrary unknown status -> hard error (vocabulary drift is loud)");
+}
+
+// (f) A genuinely empty lane is a lane-local degradation, not structural corruption.
+{
+  const errors = [];
+  const warnings = [];
+  assertCoverageContract({
+    counts: {
+      candidate_total: 0,
+      covered_detail_files: 0,
+      missing_detail_files: 0,
+      coverage_pct: 0,
+      yahoo_fallback_files: 0,
+    },
+    missing_reason_summary: {},
+    missing_status_summary: {},
+  }, errors, warnings);
+  assert.deepEqual(errors, [], `empty coverage must not be a global blocker: ${errors.join("; ")}`);
+  assert.ok(warnings.some((warning) => /no candidate universe/.test(warning)), "empty coverage must be named as degraded");
+  ok("(f) empty ETF candidate universe -> DEGRADED warning, not global failure");
+}
+
+function surfaceFixture(overrides = {}) {
+  return {
+    id: "stock_detail",
+    route: "/stock/AAPL",
+    status: "unavailable",
+    as_of: "2026-07-13T00:00:00.000Z",
+    source_as_of: null,
+    source_as_of_reason: "provider publishes no aggregate source date",
+    checks: [{
+      key: "source_freshness",
+      ok: false,
+      status: "unavailable",
+      as_of: null,
+      age_days: null,
+      max_age_days: 3,
+      reason: "provider publishes no aggregate source date",
+    }],
+    ...overrides,
+  };
+}
+
+function coverageFixture(surfaces) {
+  const statuses = ["ready", "partial", "pending", "stale", "unavailable", "error"];
+  return {
+    schema_version: "product-surface-coverage/v1",
+    source_stamp_version: 1,
+    generated_at: "2026-07-13T00:00:00.000Z",
+    raw_policy: {
+      public_mirror_allowed: true,
+      raw_rows_included: false,
+      private_artifact_paths_included: false,
+    },
+    totals: {
+      surfaces: surfaces.length,
+      ...Object.fromEntries(statuses.map((status) => [status, surfaces.filter((surface) => surface.status === status).length])),
+    },
+    surfaces,
+  };
+}
+
+// (g) Honest null + reason is accepted and visible as lane-local degradation.
+{
+  const errors = [];
+  const warnings = [];
+  assertProductSurfaceCoverageContract(coverageFixture([surfaceFixture()]), errors, warnings);
+  assert.deepEqual(errors, [], `honest null must pass structural validation: ${errors.join("; ")}`);
+  assert.ok(warnings.some((warning) => /stock_detail is unavailable/.test(warning)), "unavailable lane must be named as degraded");
+  ok("(g) source_as_of:null + explicit reason -> accepted, stale lane named DEGRADED");
+}
+
+// (h) A null with no provenance reason is still dishonest and must fail.
+{
+  const errors = [];
+  const warnings = [];
+  assertProductSurfaceCoverageContract(coverageFixture([surfaceFixture({ source_as_of_reason: null })]), errors, warnings);
+  assert.ok(errors.some((error) => /null source_as_of needs a reason/.test(error)), "reasonless null must fail");
+  ok("(h) source_as_of:null without reason -> hard error");
+}
+
+// (i) A malformed claimed source date remains corruption and must fail.
+{
+  const errors = [];
+  const warnings = [];
+  assertProductSurfaceCoverageContract(coverageFixture([surfaceFixture({
+      status: "ready",
+      source_as_of: "not-a-date",
+      source_as_of_reason: null,
+      checks: [{ key: "source_freshness", ok: true, status: "ready", as_of: "not-a-date", age_days: 0, max_age_days: 3 }],
+    })]), errors, warnings);
+  assert.ok(errors.some((error) => /source_as_of must be a valid source date/.test(error)), "malformed source date must fail");
+  assert.ok(errors.some((error) => /freshness source date is invalid/.test(error)), "malformed freshness date must fail");
+  ok("(i) malformed claimed source date -> hard error");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

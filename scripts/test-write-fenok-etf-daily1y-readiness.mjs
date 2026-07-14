@@ -714,7 +714,7 @@ fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
 const effectiveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-etf-effective-detail-"));
 seedR2State(effectiveRoot, [
-  { ticker: "FBC", fetched_at: "2026-07-10T00:00:00Z", history: dailyRows(200) },
+  { ticker: "FBC", fetched_at: "2026-07-10T00:00:00Z", history: dailyRows(200, "2025-12-22") },
   { ticker: "FBI", fetched_at: "2026-07-01T00:00:00Z", history: weekdayRows(25, "2026-06-01") },
   { ticker: "PRI", fetched_at: "2026-07-10T00:00:00Z", history: weekdayRows(25, "2026-06-01") },
   { ticker: "UNAV", fetched_at: "2026-06-18T00:00:00Z", history: dailyRows(200) },
@@ -754,7 +754,7 @@ for (const [caseName, mutateObject, expectedPattern] of [
 ]) {
   const badRoot = fs.mkdtempSync(path.join(os.tmpdir(), `fenok-etf-effective-${caseName}-`));
   seedR2State(badRoot, [
-    { ticker: "BAD", fetched_at: "2026-07-10T00:00:00Z", history: dailyRows(200) },
+    { ticker: "BAD", fetched_at: "2026-07-10T00:00:00Z", history: dailyRows(200, "2025-12-22") },
   ]);
   const bad = activeSelection(badRoot, "BAD");
   mutateObject(path.join(bad.stateRoot, bad.selection.payload_ref.path));

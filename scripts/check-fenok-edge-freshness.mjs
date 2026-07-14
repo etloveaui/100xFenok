@@ -2,9 +2,10 @@
 /**
  * Validate Fenok Edge coverage/freshness semantics.
  *
- * This is a local admin gate. It reads derived stats only and fails closed on
- * missing/stale counted daily sources, raw-public leakage, or unsafe public
- * readiness claims.
+ * This is a local admin gate. It reads derived stats only. Deploy verification
+ * reports missing/stale source availability as lane-local degradation while
+ * still failing on corruption, unsafe public claims, and false-ready evidence.
+ * The explicit S0 DAILY/GATED proof remains strict.
  */
 
 import fs from "node:fs";
@@ -21,16 +22,20 @@ const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data"
 const PUBLIC_INDEX_PATH = path.join(PUBLIC_DATA_ROOT, "admin", "fenok-edge-coverage-index.json");
 const JSON_MODE = process.argv.includes("--json");
 const REQUIRE_ACTIVE_S0_DAILY_GATED = process.argv.includes("--require-active-s0-daily-gated");
+const LANE_LOCAL_DEGRADATION_MODE = !REQUIRE_ACTIVE_S0_DAILY_GATED;
 const PUBLIC_BUNDLE_MODE = process.argv.includes("--public-bundle") || process.argv.includes("--warn-stale-counted-sources");
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
 const S0_LEDGER_MAX_GENERATED_LAG_MS = 10 * 60 * 1000;
-const COUNTED_DAILY_SOURCE_FRESHNESS_IDS = new Set([
-  "korea_counted_source_date",
-  "us_flow_source_date",
-  "us_occ_source_date",
-  "us_class_yf_source_date",
-  "asia_ex_taiwan_yf_source_date",
+const DEGRADED_AVAILABILITY_STATUSES = new Set(["stale", "missing", "partial", "behind", "unavailable", "error"]);
+const SOURCE_AVAILABILITY_STATUSES = new Set(["ready", "partial", "missing", "stale", "behind", "unavailable", "error", "not_in_universe"]);
+const DEGRADED_FRESHNESS_STATUSES = new Set([
+  ...DEGRADED_AVAILABILITY_STATUSES,
+  "blocked_fetchable_gap",
+  "blocked_fetchable_daily_gap",
+  "blocked_for_numerator",
+  "not_in_universe",
 ]);
+const FULL_COVERAGE_CLAIM_SCOPES = new Set(["source_available", "proxy_source_available", "yf_daily_source_available"]);
 const PUBLIC_FORBIDDEN_PATTERNS = [
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
@@ -58,7 +63,8 @@ function add(list, message, extra = {}) {
   list.push({ message, ...extra });
 }
 
-function fmt(status) {
+function fmt(status, degraded = false) {
+  if (degraded) return "DEGRADED";
   if (status === "ready") return "OK";
   if (String(status ?? "").startsWith("blocked") || status === "not_in_universe") return "WARN";
   return "FAIL";
@@ -104,10 +110,9 @@ function freshnessReady(checks, id) {
   return findById(checks, id)?.status === "ready";
 }
 
-function warnOnlyStaleCountedSource(check, enabled = PUBLIC_BUNDLE_MODE) {
-  return enabled
-    && COUNTED_DAILY_SOURCE_FRESHNESS_IDS.has(check?.id)
-    && check?.status === "stale";
+function warnOnlyAvailabilityIssue(value, enabled = LANE_LOCAL_DEGRADATION_MODE) {
+  const status = value?.status ?? value?.availability_status;
+  return enabled && DEGRADED_FRESHNESS_STATUSES.has(status);
 }
 
 function fullSourceCoverage(row) {
@@ -115,6 +120,39 @@ function fullSourceCoverage(row) {
     && row.availability_status === "ready"
     && Number(row.denominator) > 0
     && Number(row.covered_count) === Number(row.denominator);
+}
+
+function sourceAvailabilityIntegrityErrors(row) {
+  const errors = [];
+  if (!row || typeof row !== "object" || Array.isArray(row)) return ["source availability row must be an object"];
+  if (typeof row.id !== "string" || !row.id.trim()) errors.push("source availability row id must be a non-empty string");
+  const covered = row.covered_count;
+  const denominator = row.denominator;
+  if (!Number.isInteger(covered) || covered < 0) errors.push(`${row.id}: covered_count must be a non-negative integer`);
+  if (!Number.isInteger(denominator) || denominator < 0) errors.push(`${row.id}: denominator must be a non-negative integer`);
+  if (!SOURCE_AVAILABILITY_STATUSES.has(row.availability_status)) {
+    errors.push(`${row.id}: unknown availability_status=${row.availability_status}`);
+  }
+  if (Number.isInteger(covered) && Number.isInteger(denominator) && covered > denominator) {
+    errors.push(`${row.id}: covered_count exceeds denominator`);
+  }
+  if (row.availability_status === "ready"
+    && FULL_COVERAGE_CLAIM_SCOPES.has(row.claim_scope)
+    && (denominator <= 0 || covered !== denominator)) {
+    errors.push(`${row.id}: false-ready availability ${covered}/${denominator}`);
+  }
+  if (row.claim_scope === "run_health") {
+    const targetCount = row.target_universe?.ticker_count;
+    if (!Number.isInteger(targetCount) || targetCount < 0) {
+      errors.push(`${row.id}: run_health target_universe.ticker_count must be a non-negative integer`);
+    } else if (covered !== targetCount) {
+      errors.push(`${row.id}: run_health covered_count ${covered} != target ticker_count ${targetCount}`);
+    }
+  }
+  if (row.availability_status === "partial" && !(denominator > 0 && covered > 0 && covered < denominator)) {
+    errors.push(`${row.id}: partial availability must satisfy 0 < covered_count < denominator`);
+  }
+  return errors;
 }
 
 function requirementsReady(requirements) {
@@ -129,6 +167,73 @@ function activeS0DailyGatedReady(track, activeCount) {
     && track.readiness_status === "ready"
     && track.public_done_claim_allowed === true
     && requirementsReady(track.requirements);
+}
+
+function compactPublicSourceRow(row) {
+  return {
+    id: row.id,
+    label: row.label,
+    covered_count: row.covered_count,
+    denominator: row.denominator,
+    denominator_label: row.denominator_label,
+    coverage_pct: row.coverage_pct,
+    active_scoring_coverage_pct: row.active_scoring_coverage_pct,
+    source_date: row.source_date,
+    availability_status: row.availability_status,
+    claim_scope: row.claim_scope,
+    not_public_scoring: row.not_public_scoring === true,
+    caveat: row.caveat,
+  };
+}
+
+function expectedPublicMirror(index) {
+  return {
+    schema_version: "fenok-edge-coverage-index-public/v0.1",
+    source_schema_version: index.schema_version,
+    generated_at: index.generated_at,
+    purpose: "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
+    raw_policy: {
+      raw_public: index.raw_policy?.raw_public === true,
+      raw_rows_included: index.raw_policy?.raw_rows_included === true,
+      private_artifact_paths_included: false,
+    },
+    active_scoring_universe: {
+      generated_at: index.active_scoring_universe?.generated_at ?? null,
+      current_only: index.active_scoring_universe?.current_only === true,
+      total: index.active_scoring_universe?.total ?? null,
+      by_market: index.active_scoring_universe?.by_market ?? [],
+      buckets: index.active_scoring_universe?.buckets ?? {},
+    },
+    expanded_stock_candidate_universe: {
+      generated_at: index.expanded_stock_candidate_universe?.generated_at ?? null,
+      collected_asset_total: index.expanded_stock_candidate_universe?.collected_asset_total ?? null,
+      collected_stock_candidates: index.expanded_stock_candidate_universe?.collected_stock_candidates ?? null,
+      scored_public_stock: index.expanded_stock_candidate_universe?.scored_public_stock ?? null,
+      stock_promotion_audit_gap: index.expanded_stock_candidate_universe?.stock_promotion_audit_gap ?? null,
+      stage: index.expanded_stock_candidate_universe?.stage ?? null,
+      public_done_claim_allowed: index.expanded_stock_candidate_universe?.public_done_claim_allowed === true,
+      caveat: index.expanded_stock_candidate_universe?.caveat ?? null,
+    },
+    etf_universe: {
+      collected_etf_candidates: index.etf_universe?.collected_etf_candidates ?? null,
+      eligible_etf_count: index.etf_universe?.eligible_etf_count ?? null,
+      stage: index.etf_universe?.stage ?? null,
+      scored_public_etf: index.etf_universe?.scored_public_etf ?? null,
+      public_done_claim_allowed: index.etf_universe?.public_done_claim_allowed === true,
+      evidence_based_readiness: index.etf_universe?.evidence_based_readiness ?? null,
+      core_daily_basket: index.etf_universe?.core_daily_basket ?? null,
+      caveat: index.etf_universe?.caveat ?? null,
+    },
+    source_availability: {
+      not_public_scoring: index.source_availability?.not_public_scoring === true,
+      caveat: index.source_availability?.caveat ?? null,
+      source_count: (index.source_availability?.sources ?? []).length,
+      sources: (index.source_availability?.sources ?? []).map(compactPublicSourceRow),
+    },
+    source_availability_composites: index.source_availability_composites ?? null,
+    public_scoring_readiness: index.public_scoring_readiness ?? null,
+    freshness_gate: index.freshness_gate ?? null,
+  };
 }
 
 function publicMirrorEvidence(index, activeTotal) {
@@ -167,6 +272,8 @@ function publicMirrorEvidence(index, activeTotal) {
     && mirror.raw_policy?.private_artifact_paths_included === false;
   const generated_at_matches = Boolean(mirror) && mirror.generated_at === index.generated_at;
   const active_total_matches = Boolean(mirror) && Number(mirror.active_scoring_universe?.total) === activeTotal;
+  const exact_projection_matches = Boolean(mirror)
+    && JSON.stringify(mirror) === JSON.stringify(expectedPublicMirror(index));
   return {
     public_index_path: path.relative(REPO_ROOT, PUBLIC_INDEX_PATH),
     exists,
@@ -175,6 +282,7 @@ function publicMirrorEvidence(index, activeTotal) {
     raw_policy_safe,
     generated_at_matches,
     active_total_matches,
+    exact_projection_matches,
     unsafe_public_index_tokens,
     forbidden_public_files: forbidden_public_files.slice(0, 12),
     forbidden_public_file_count: forbidden_public_files.length,
@@ -184,6 +292,7 @@ function publicMirrorEvidence(index, activeTotal) {
       && raw_policy_safe
       && generated_at_matches
       && active_total_matches
+      && exact_projection_matches
       && unsafe_public_index_tokens.length === 0
       && forbidden_public_files.length === 0,
   };
@@ -286,6 +395,22 @@ function s0FinraOccLedgerEvidence(index, activeTotal) {
   const finraSource = findById(sourceRows, "us_finra_flow_proxy");
   const occSource = findById(sourceRows, "us_occ_options_proxy");
 
+  const integrity_ready = exists
+    && !read_error
+    && ledger?.schema_version === "fenok-s0-finra-occ-mapping-ledger/v0.1"
+    && ledger?.raw_policy?.fetches_external_data === false
+    && ledger?.raw_policy?.public_bundle_safe === false
+    && ledger?.raw_policy?.admin_local_only === true
+    && ledger?.raw_policy?.raw_private_cache_included === false
+    && ledger?.service_boundary?.active_s0_daily_source_gate_blocker === false
+    && Number(ledger?.counts?.active_us_total) === Number(index.active_scoring_universe?.buckets?.us)
+    && Number(ledger?.counts?.plain_us_finra_denominator) === Number(finraSource?.denominator)
+    && Number(ledger?.counts?.plain_us_finra_source_ready) === Number(finraSource?.covered_count)
+    && Number(ledger?.counts?.plain_us_occ_denominator) === Number(occSource?.denominator)
+    && Number(ledger?.counts?.plain_us_occ_source_ready) === Number(occSource?.covered_count)
+    && Number(index.active_scoring_universe?.total) === Number(activeTotal)
+    && row_count_checks.every((item) => item.ok);
+
   const evidence = {
     path: path.relative(REPO_ROOT, S0_FINRA_OCC_LEDGER_PATH),
     exists,
@@ -300,22 +425,8 @@ function s0FinraOccLedgerEvidence(index, activeTotal) {
     service_boundary: ledger?.service_boundary ?? null,
     counts: ledger?.counts ?? null,
     row_count_checks,
-    ready: exists
-      && !read_error
-      && ledger?.schema_version === "fenok-s0-finra-occ-mapping-ledger/v0.1"
-      && ledger?.raw_policy?.fetches_external_data === false
-      && ledger?.raw_policy?.public_bundle_safe === false
-      && ledger?.raw_policy?.admin_local_only === true
-      && ledger?.raw_policy?.raw_private_cache_included === false
-      && ledger?.service_boundary?.active_s0_daily_source_gate_blocker === false
-      && Number(ledger?.counts?.active_us_total) === Number(index.active_scoring_universe?.buckets?.us)
-      && Number(ledger?.counts?.plain_us_finra_denominator) === Number(finraSource?.denominator)
-      && Number(ledger?.counts?.plain_us_finra_source_ready) === Number(finraSource?.covered_count)
-      && Number(ledger?.counts?.plain_us_occ_denominator) === Number(occSource?.denominator)
-      && Number(ledger?.counts?.plain_us_occ_source_ready) === Number(occSource?.covered_count)
-      && Number(index.active_scoring_universe?.total) === Number(activeTotal)
-      && generated_fresh
-      && row_count_checks.every((item) => item.ok),
+    integrity_ready,
+    ready: integrity_ready && generated_fresh,
   };
 
   return evidence;
@@ -338,7 +449,8 @@ if (index.source_coverages || index.combined_coverage || index.universe) {
 }
 
 const active = index.active_scoring_universe ?? {};
-const activeTotal = Number(active.total) || 0;
+const activeTotalValid = Number.isInteger(active.total) && active.total >= 0;
+const activeTotal = activeTotalValid ? active.total : 0;
 const activeMarketTotal = sumCounts(active.by_market);
 const buckets = active.buckets ?? {};
 const sourceAvailability = index.source_availability ?? {};
@@ -354,10 +466,36 @@ const etfCoreEvidence = etfCoreReadinessTrack?.evidence_based_readiness ?? index
 const freshnessChecks = asArray(index.freshness_gate?.checks);
 const activeS0Evidence = buildActiveS0Evidence(index, activeTotal, activeS0ReadinessTrack, sourceRows, composites, freshnessChecks);
 const s0LedgerEvidence = s0FinraOccLedgerEvidence(index, activeTotal);
-const publicBundleDegradedChecks = [];
+const publicBundleDegradedChecks = new Set();
 
-if (!activeTotal) add(errors, "active_scoring_universe.total must be derived and non-zero");
-if (activeMarketTotal && activeMarketTotal !== activeTotal) {
+function addAvailabilityProblem(id, message, detail = {}) {
+  if (LANE_LOCAL_DEGRADATION_MODE) {
+    publicBundleDegradedChecks.add(id);
+    add(warnings, `${message} (lane-local degraded; deploy proceeds)`, {
+      ...detail,
+      degraded_for_public_bundle: true,
+    });
+    return;
+  }
+  add(errors, message, detail);
+}
+
+if (!activeTotalValid) add(errors, "active_scoring_universe.total must be a non-negative integer");
+if (!Array.isArray(active.by_market)) add(errors, "active_scoring_universe.by_market must be an array");
+for (const row of asArray(active.by_market)) {
+  if (!row || typeof row !== "object" || Array.isArray(row) || !Number.isInteger(row.count) || row.count < 0) {
+    add(errors, "active_scoring_universe.by_market rows need non-negative integer counts");
+  }
+}
+for (const key of ["us", "korea", "asia_ex_taiwan", "explicit_taiwan"]) {
+  if (!Number.isInteger(buckets[key]) || buckets[key] < 0) {
+    add(errors, `active_scoring_universe.buckets.${key} must be a non-negative integer`);
+  }
+}
+if (activeTotalValid && activeTotal === 0) {
+  addAvailabilityProblem("active_scoring_universe", "active_scoring_universe is empty");
+}
+if (activeTotalValid && activeMarketTotal !== activeTotal) {
   add(errors, `active_scoring_universe.by_market sum ${activeMarketTotal} does not match total ${activeTotal}`);
 }
 if ((Number(buckets.us) || 0) + (Number(buckets.korea) || 0) + (Number(buckets.asia_ex_taiwan) || 0) + (Number(buckets.explicit_taiwan) || 0) !== activeTotal) {
@@ -369,22 +507,29 @@ if (buckets.explicit_taiwan !== 0) {
 if (asArray(active.taiwan_ticker_anomalies).length > 0) {
   add(warnings, `Taiwan ticker anomaly count=${active.taiwan_ticker_anomalies.length}; mapping cleanup required.`);
 }
+if (!Array.isArray(active.taiwan_ticker_anomalies)) {
+  add(errors, "active_scoring_universe.taiwan_ticker_anomalies must be an array");
+}
 
 if (sourceAvailability.not_public_scoring !== true) {
   add(errors, "source_availability must be marked not_public_scoring=true");
 }
+if (!Array.isArray(sourceAvailability.sources)) add(errors, "source_availability.sources must be an array");
+if (!Array.isArray(readiness.tracks)) add(errors, "public_scoring_readiness.tracks must be an array");
+if (!Array.isArray(index.freshness_gate?.checks)) add(errors, "freshness_gate.checks must be an array");
+const publicMirrorCheck = activeS0Evidence.gated_checks.find((item) => item.id === "public_mirror_ready");
+if (!publicMirrorCheck?.ok) add(errors, "public Fenok Edge mirror must exactly match the safe root projection", publicMirrorCheck);
 for (const row of sourceRows) {
-  if (Number(row.covered_count) > Number(row.denominator)) {
-    add(errors, `${row.id}: covered_count exceeds denominator`);
-  }
+  for (const message of sourceAvailabilityIntegrityErrors(row)) add(errors, message);
+  if (!row || typeof row !== "object" || Array.isArray(row)) continue;
   if (row.not_public_scoring !== true) {
     add(errors, `${row.id}: source availability row must be not_public_scoring=true`);
   }
   if (!row.claim_scope || row.claim_scope === "public_scoring") {
     add(errors, `${row.id}: source availability row has unsafe claim_scope=${row.claim_scope}`);
   }
-  if (row.availability_status === "missing" || row.availability_status === "stale") {
-    add(errors, `${row.id}: ${row.availability_status}`, row);
+  if (DEGRADED_AVAILABILITY_STATUSES.has(row.availability_status)) {
+    addAvailabilityProblem(row.id, `${row.id}: ${row.availability_status}`, row);
   }
 }
 
@@ -433,8 +578,12 @@ if (activeS0ReadinessTrack?.readiness_status === "ready" && activeS0Evidence.gat
 if (activeS0ReadinessTrack?.public_done_claim_allowed === true && activeS0Evidence.gated_ready !== true) {
   add(errors, `${ACTIVE_S0_TRACK_ID}: public_done_claim_allowed=true requires active_s0_daily_gated_evidence.gated_ready=true`);
 }
-if (!s0LedgerEvidence.ready) {
-  add(errors, "s0_finra_occ_mapping_ledger: ledger must be fresh, admin-local, and internally count-consistent", s0LedgerEvidence);
+if (!s0LedgerEvidence.exists) {
+  add(errors, "s0_finra_occ_mapping_ledger: required count-reconciliation ledger is missing", s0LedgerEvidence);
+} else if (s0LedgerEvidence.read_error || !s0LedgerEvidence.integrity_ready) {
+  add(errors, "s0_finra_occ_mapping_ledger: ledger must be well-formed, admin-local, and internally count-consistent", s0LedgerEvidence);
+} else if (!s0LedgerEvidence.generated_fresh) {
+  addAvailabilityProblem("s0_finra_occ_mapping_ledger", "s0_finra_occ_mapping_ledger: ledger generation is behind the coverage index", s0LedgerEvidence);
 }
 
 if (etfReadinessTrack?.requirements?.public === true && etfEvidence?.public_ready !== true) {
@@ -494,24 +643,18 @@ if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
 }
 
 for (const check of freshnessChecks) {
-  if (check.status === "stale" || check.status === "missing") {
-    if (warnOnlyStaleCountedSource(check)) {
-      publicBundleDegradedChecks.push(check.id);
-      add(warnings, `${check.id}: ${check.status} (public deploy warn-only)`, {
-        ...check,
-        warn_only_for_public_bundle: true,
-      });
-    } else {
-      add(errors, `${check.id}: ${check.status}`, check);
-    }
+  if (DEGRADED_FRESHNESS_STATUSES.has(check.status)) {
+    if (warnOnlyAvailabilityIssue(check)) addAvailabilityProblem(check.id, `${check.id}: ${check.status}`, check);
+    else addAvailabilityProblem(check.id, `${check.id}: ${check.status}`, check);
   } else if (check.status !== "ready") {
-    add(warnings, `${check.id}: ${check.status}`, check);
+    add(errors, `${check.id}: unknown freshness status ${check.status}`, check);
   }
 }
 
 const result = {
-  mode: PUBLIC_BUNDLE_MODE ? "public-bundle" : REQUIRE_ACTIVE_S0_DAILY_GATED ? "strict-s0-daily-gated" : "strict",
+  mode: REQUIRE_ACTIVE_S0_DAILY_GATED ? "strict-s0-daily-gated" : PUBLIC_BUNDLE_MODE ? "public-bundle" : "deploy-verification",
   ok: errors.length === 0,
+  status: errors.length > 0 ? "blocked" : warnings.length > 0 ? "degraded" : "ready",
   generated_at: index.generated_at,
   active_scoring_universe: {
     total: activeTotal,
@@ -543,8 +686,9 @@ const result = {
     requirements: activeS0ReadinessTrack?.requirements ?? null,
   } : null,
   public_deploy_warn_only: {
-    stale_counted_sources: PUBLIC_BUNDLE_MODE,
-    degraded_checks: publicBundleDegradedChecks,
+    stale_counted_sources: LANE_LOCAL_DEGRADATION_MODE,
+    availability_issues: LANE_LOCAL_DEGRADATION_MODE,
+    degraded_checks: [...publicBundleDegradedChecks],
   },
   active_s0_daily_gated_evidence: activeS0Evidence,
   s0_finra_occ_mapping_ledger_evidence: s0LedgerEvidence,
@@ -553,7 +697,8 @@ const result = {
   checks: freshnessChecks.map((check) => ({
     id: check.id,
     status: check.status,
-    result: fmt(check.status),
+    degraded: publicBundleDegradedChecks.has(check.id),
+    result: fmt(check.status, publicBundleDegradedChecks.has(check.id)),
     source_date: check.source_date ?? null,
     age_days: check.age_days ?? null,
   })),
@@ -566,7 +711,7 @@ const result = {
 if (JSON_MODE) {
   console.log(JSON.stringify(result, null, 2));
 } else {
-  console.log(`Fenok Edge freshness gate: ${result.ok ? "PASS" : "FAIL"}`);
+  console.log(`Fenok Edge freshness gate: ${result.ok ? result.status === "degraded" ? "PASS (DEGRADED)" : "PASS" : "FAIL"}`);
   console.log(`generated_at: ${result.generated_at}`);
   console.log(`active scoring universe: ${activeTotal}`);
   console.log(`source availability rows: ${sourceRows.length} (not public scoring)`);
@@ -578,7 +723,8 @@ if (JSON_MODE) {
     console.log(`strict S0 DAILY/GATED: ${strict.ok ? "PASS" : "FAIL"} track=${strict.track_id} active=${strict.active_stock_count}/${strict.expected_active_stock_count}`);
   }
   if (PUBLIC_BUNDLE_MODE) {
-    console.log(`public bundle mode: ${publicBundleDegradedChecks.length ? `WARN-ONLY ${publicBundleDegradedChecks.join(",")}` : "no degraded checks"}`);
+    const degradedChecks = [...publicBundleDegradedChecks];
+    console.log(`public bundle mode: ${degradedChecks.length ? `DEGRADED ${degradedChecks.join(",")}` : "no degraded checks"}`);
   }
   for (const check of result.checks) {
     console.log(`- ${check.result} ${check.id}${check.source_date ? ` source_date=${check.source_date}` : ""}${check.age_days != null ? ` age_days=${check.age_days}` : ""}`);
@@ -604,7 +750,9 @@ export {
   activeS0DailyGatedReady,
   freshnessReady,
   fullSourceCoverage,
+  expectedPublicMirror,
   requirementsReady,
   s0FinraOccLedgerEvidence,
-  warnOnlyStaleCountedSource,
+  sourceAvailabilityIntegrityErrors,
+  warnOnlyAvailabilityIssue,
 };

@@ -1334,7 +1334,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("FIX 4: fenok_edge_coverage_index plain unavailable degrades its lane without freezing publication");
 }
 
-// 27. real generator on temp root — ALL 6 surfaces stamp collection-time source dates (#331)
+// 27. real generator on temp root — source dates remain distinct from collection clocks.
 {
   const runGen = (seed) => {
     const tmp = mkTmp("real-generator");
@@ -1346,6 +1346,13 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
       count: 3,
       core_surface_source_as_of: seed.marketFacts,
       full_universe_floor_as_of: seed.marketFactsFloor ?? seed.marketFacts,
+      source_stamp_diagnostics: {
+        core_member_count: 1,
+        core_price_stamped_count: seed.marketFacts ? 1 : 0,
+        core_price_missing_count: seed.marketFacts ? 0 : 1,
+        core_price_missing_tickers: seed.marketFacts ? [] : ["MISSING"],
+        core_price_source_complete: Boolean(seed.marketFacts),
+      },
       rows: [],
     });
     const surfaceDay = String(seed.surfaces || "").slice(0, 10) || null;
@@ -1373,34 +1380,36 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     return getSurfaceStamp;
   };
 
-  // READY: all six carry a real collection-time source date
+  // Only surfaces with upstream source dates carry a stamp. Aggregate
+  // StockAnalysis products stay honest nulls even when collection clocks exist.
   const ready = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z" });
   assert.equal(ready("market_valuation"), "2026-07-03");
   assert.equal(ready("screener"), "2026-07-02");
-  assert.equal(ready("stock_detail"), "2026-07-08", "stock_detail = market_facts.source_as_of (OLDEST fetched_at, Python-stamped)");
-  assert.equal(ready("market_events"), "2026-07-09", "market_events = payload OLDEST == surfaces index == mirror");
-  assert.equal(ready("etf_center"), "2026-07-07", "etf_center = OLDEST(universe, ETF route payloads, market facts)");
-  assert.equal(ready("sectors"), "2026-07-08", "sectors = OLDEST(sector route payloads, market facts)");
+  assert.equal(ready("stock_detail"), "2026-07-08", "stock_detail = market_facts selected-price source floor");
+  assert.equal(ready("market_events"), null, "market_events provider publishes no aggregate source date");
+  assert.equal(ready("etf_center"), null, "ETF aggregate provider publishes no source date");
+  assert.equal(ready("sectors"), "2026-07-08", "sectors = market_facts selected-price source floor");
   assert.equal(ready.diagnostics.market_facts_full_universe_floor_as_of, "2026-07-08", "full-universe floor remains visible as a diagnostic");
   assert.equal(ready.diagnostics.full_universe_floor_sla_bound, false, "full-universe floor is never SLA-bound");
 
-  // STALE (old collection dates) still stamp — the KPI decides stale, not the generator
+  // STALE real source dates still stamp — the KPI decides stale, not the generator.
   const stale = runGen({ rim: "2026-06-01", yard: "2026-06-01", screener: "2026-06-01", marketFacts: "2026-06-01", surfaces: "2026-06-01T00:00:00Z", etfUniverse: "2026-06-01T00:00:00Z" });
-  for (const id of ["stock_detail", "market_events", "etf_center", "sectors"]) assert.equal(stale(id), "2026-06-01", `${id} stamps an old date (stale decided downstream)`);
+  for (const id of ["stock_detail", "sectors"]) assert.equal(stale(id), "2026-06-01", `${id} stamps an old source date (stale decided downstream)`);
+  for (const id of ["market_events", "etf_center"]) assert.equal(stale(id), null, `${id} does not fabricate a source date from collection time`);
 
-  // FUTURE collection evidence fails closed in the generator before aggregation.
+  // Collection clocks are never source evidence, whether future or impossible.
   const future = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-20T00:00:00Z", etfUniverse: "2026-07-07T22:37:04Z" });
-  assert.equal(future("market_events"), null, "future collection date fails closed");
+  assert.equal(future("market_events"), null, "future collection date is not promoted");
   const impossible = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-02-31T00:00:00Z", etfUniverse: "2026-07-07T22:37:04Z" });
-  assert.equal(impossible("market_events"), null, "impossible collection timestamp fails closed");
+  assert.equal(impossible("market_events"), null, "impossible collection timestamp is not promoted");
 
   // NULL fail-closed: missing market_facts stamp -> stock_detail & sectors stay null
   const partial = runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: undefined, surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z" });
   assert.equal(partial("stock_detail"), null, "no market_facts stamp -> stock_detail null (fail-closed)");
   assert.equal(partial("sectors"), null, "no market_facts stamp -> sectors null (OLDEST-required fail-closed)");
-  assert.equal(partial("market_events"), "2026-07-09", "market_events still stamps from surfaces alone");
+  assert.equal(partial("market_events"), null, "market_events remains an honest aggregate null");
   assert.equal(partial("etf_center"), null, "no market_facts stamp -> ETF center null");
-  ok("#331: real generator stamps all 6 surfaces (ready/stale/future) from collection-time dates; fail-closed to null when an input is missing");
+  ok("#331: real generator uses upstream source dates and never promotes collection clocks");
 }
 
 // 28. rev5.5 STRICT-BYPASS PROBES
