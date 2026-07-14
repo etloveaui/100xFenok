@@ -673,10 +673,14 @@ async function checkMissingEtfDetailFallbacks(root) {
     assert(payload?.ticker === ticker, `${ticker} missing-detail fallback ticker mismatch`);
     assert(payload?.asset_type === "etf", `${ticker} missing-detail fallback must be ETF`);
     assert(
-      ["surface_only", "universe_only"].includes(payload?.detail_status),
+      ["surface_only", "universe_only", "yf_fallback"].includes(payload?.detail_status),
       `${ticker} missing-detail fallback status invalid: ${payload?.detail_status}`,
     );
-    degrade(hasValue(payload?.normalized?.overview?.name), `${ticker} fallback is degraded: overview name is missing.`);
+    if (payload.detail_status === "yf_fallback") {
+      degrade(false, `${ticker} missing-detail fallback is degraded: using explicit yf_fallback (Yahoo).`);
+    } else {
+      degrade(hasValue(payload?.normalized?.overview?.name), `${ticker} fallback is degraded: overview name is missing.`);
+    }
     results.push({
       ticker,
       detail_status: payload.detail_status,
