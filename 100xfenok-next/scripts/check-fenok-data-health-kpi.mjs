@@ -28,6 +28,7 @@ import {
   slaStatusForAge,
   classifyProductSurface,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
@@ -40,6 +41,7 @@ const SCHEMA_VERSION_V2 = "fenok-data-health-kpi/v2";
 const STRICT = process.env.KPI_STRICT === "1" || process.argv.includes("--strict");
 const FRESHNESS_TOLERANCE_MINUTES = TOLERANCE_MINUTES;
 
+const DETECTION_LIVE_LANE_CONFIGS = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
 const REQUIRED_LANES = new Set([
   "stock_s0_active_daily_gate",
   "stock_s1_candidate_gate",
@@ -51,7 +53,7 @@ const REQUIRED_LANES = new Set([
   "finra_occ_plain_us_and_mapping_policy",
   "automation_contract",
   "public_mirror_safety",
-  "treasury_tga",
+  ...DETECTION_LIVE_LANE_CONFIGS.map((item) => item.id),
 ]);
 const FORBIDDEN_PUBLIC_TOKENS = [
   "_private/",
@@ -116,26 +118,29 @@ function isDetectionSourceStamp(value) {
     && Number.isFinite(new Date(value).getTime());
 }
 
-export function checkDetectionFloorTgaLane(lane, errors) {
+export function checkDetectionFloorLane(lane, errors, expectedConfig) {
+  const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
   const expectedStatus = lane?.reason === "ok" ? "ready" : "degraded";
   const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
-  push(errors, lane?.id === "treasury_tga", "treasury_tga: lane identity is invalid");
-  push(errors, lane?.label === "US Treasury TGA", "treasury_tga: label is invalid");
-  push(errors, lane?.required === true, "treasury_tga: lane must be required");
-  push(errors, DETECTION_KPI_REASONS.has(lane?.reason), `treasury_tga: reason is invalid (${lane?.reason})`);
+  push(errors, expectedConfig?.enforcement === "live" && expectedConfig?.kpi_required === true,
+    `${laneId}: canonical detection-floor config is not live/required`);
+  push(errors, lane?.id === expectedConfig?.id, `${laneId}: lane identity is invalid`);
+  push(errors, lane?.label === expectedConfig?.label, `${laneId}: label is invalid`);
+  push(errors, lane?.required === true, `${laneId}: lane must be required`);
+  push(errors, DETECTION_KPI_REASONS.has(lane?.reason), `${laneId}: reason is invalid (${lane?.reason})`);
   push(errors, lane?.status === expectedStatus,
-    `treasury_tga: status ${lane?.status} contradicts reason ${lane?.reason}`);
-  push(errors, lane?.deployment_blocking === false, "treasury_tga: must remain lane-local and non-deployment-blocking");
+    `${laneId}: status ${lane?.status} contradicts reason ${lane?.reason}`);
+  push(errors, lane?.deployment_blocking === false, `${laneId}: must remain lane-local and non-deployment-blocking`);
   push(errors, sourceAsOf === null || isDetectionSourceStamp(sourceAsOf),
-    "treasury_tga: artifact.source_as_of is malformed");
+    `${laneId}: artifact.source_as_of is malformed`);
   push(errors, !["ok", "stale"].includes(lane?.reason) || sourceAsOf !== null,
-    "treasury_tga: ready/stale reason contradicts null source_as_of");
-  push(errors, lane?.as_of === sourceAsOf, "treasury_tga: as_of must preserve artifact.source_as_of");
+    `${laneId}: ready/stale reason contradicts null source_as_of`);
+  push(errors, lane?.as_of === sourceAsOf, `${laneId}: as_of must preserve artifact.source_as_of`);
   push(errors, statusCheck?.status === (expectedStatus === "ready" ? "ready" : "blocked"),
-    "treasury_tga: detection_floor_status check does not match lane status");
+    `${laneId}: detection_floor_status check does not match lane status`);
   push(errors, statusCheck?.platform_blocking === false,
-    "treasury_tga: detection_floor_status must not be platform blocking");
+    `${laneId}: detection_floor_status must not be platform blocking`);
 }
 
 function ageHoursBetween(fromIso, nowIso) {
@@ -215,7 +220,9 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
       push(errors, Number(payload?.totals?.[status]) === count,
         `totals.${status} mismatch: ${payload?.totals?.[status]} vs derived ${count}`);
     }
-    checkDetectionFloorTgaLane(lanesById.get("treasury_tga"), errors);
+    for (const laneConfig of DETECTION_LIVE_LANE_CONFIGS) {
+      checkDetectionFloorLane(lanesById.get(laneConfig.id), errors, laneConfig);
+    }
     push(errors, Number(payload?.totals?.required_not_ready) === derivedRequiredNotReady,
       `totals.required_not_ready mismatch: ${payload?.totals?.required_not_ready} vs derived ${derivedRequiredNotReady}`);
     push(errors, Number(payload?.totals?.platform_blocking_not_ready) === derivedIntegrityBlockers.length,

@@ -50,6 +50,7 @@ const ARTIFACTS_PATH = path.join(FIXTURE_DIR, "artifacts.fixture.json");
 const EXPECTED_PATH = path.join(FIXTURE_DIR, "cases.expected.json");
 const ADMIN_REPORT = path.join(REPO_ROOT, "data", "admin", REPORT_BASENAME);
 const DEPLOY_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "deploy-worker.yml");
+const UPDATE_MANIFEST_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "update-manifest.yml");
 const TEST_PREFIX = "fenok-dfloor-test-";
 const PROTECTED_RELATIVE_PATHS = [
   ".github/workflows/deploy-worker.yml",
@@ -436,14 +437,21 @@ function runConfigAndFixtureChecks() {
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 18);
   assert.deepEqual(DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts").producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
   const treasuryTga = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "treasury_tga");
+  const fredYardeni = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_yardeni");
+  const liveLaneIds = DATA_SUPPLY_DETECTION_CONFIG.lanes
+    .filter((item) => item.enforcement === "live")
+    .map((item) => item.id);
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.enforcement, "shadow", "top-level enforcement remains shadow");
+  assert.deepEqual(liveLaneIds, ["fred_yardeni", "treasury_tga"], "only the two proven lanes are live");
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);
+  assert.equal(fredYardeni.enforcement, "live");
+  assert.equal(fredYardeni.kpi_required, true);
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
   assert.equal(treasuryTga.producer_members[0].cadence_calendar, "utc");
-  for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.id !== "treasury_tga")) {
+  for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => !liveLaneIds.includes(item.id))) {
     assert.equal(laneConfig.enforcement, "shadow", `${laneConfig.id} stays shadow`);
     assert.equal(laneConfig.kpi_required, false, `${laneConfig.id} stays optional in KPI`);
   }
@@ -501,7 +509,10 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = null; },
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = { kind: "payload_field", evidence: "not-a-pointer" }; value.lanes[0].producer_members[0].workflow = null; value.lanes[0].owner_workflow = null; },
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = { kind: "owner_contract", evidence: "?" }; value.lanes[0].producer_members[0].workflow = null; value.lanes[0].owner_workflow = null; },
+    (value) => { value.lanes[0].enforcement = "invalid"; },
+    (value) => { value.lanes[0].kpi_required = true; },
     (value) => { value.lanes[0].enforcement = "live"; value.lanes[0].kpi_required = true; },
+    (value) => { value.lanes.find((item) => item.id === "fred_yardeni").enforcement = "shadow"; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").enforcement = "shadow"; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").kpi_required = false; },
   ];
@@ -1435,14 +1446,16 @@ function runPrivacyAndProtectedChecks(report) {
   assert.equal(fs.existsSync(ADMIN_REPORT), false, "Stage 1 canonical admin report stays absent");
 }
 
-function runDeployBridgeChecks() {
+function runWorkflowBridgeChecks() {
   const workflow = fs.readFileSync(DEPLOY_WORKFLOW, "utf8");
-  const stepStart = workflow.indexOf("      - name: Build data supply detection floor\n");
+  const updateWorkflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW, "utf8");
+  const stepName = "      - name: Build data supply detection floor\n";
+  const stepStart = workflow.indexOf(stepName);
   const reconcileStart = workflow.indexOf("      - name: Reconcile derived data\n");
   assert.ok(stepStart >= 0, "deploy workflow runs the detection floor");
   assert.ok(reconcileStart > stepStart, "detection floor is installed before KPI reconciliation");
   const step = workflow.slice(stepStart, reconcileStart);
-  for (const required of [
+  const requiredTokens = [
     "mktemp -d \"/tmp/fenok-data-supply-detection-floor-",
     "trap 'rm -rf \"$output_root\"' EXIT",
     "--attempt-shard-root",
@@ -1451,10 +1464,24 @@ function runDeployBridgeChecks() {
     "install -m 0644 \"$report_path\" \"$installed_path\"",
     "cmp -s \"$report_path\" \"$installed_path\"",
     "--verify-report \"$installed_path\"",
-  ]) {
+  ];
+  for (const required of requiredTokens) {
     assert.ok(step.includes(required), `deploy bridge includes ${required}`);
+    assert.equal(updateWorkflow.split(required).length - 1, 2, `update-manifest initial and retry bridges include ${required}`);
   }
   assert.equal(step.includes("--output-root \"$repo_root/data"), false, "builder never writes under repo data");
+  assert.equal(updateWorkflow.split("--output-root \"$repo_root/data").length - 1, 0, "update-manifest builder never writes under repo data");
+
+  const initialBridgeStart = updateWorkflow.indexOf(stepName);
+  const initialKpiStart = updateWorkflow.indexOf("      - name: Build data health KPI\n");
+  assert.ok(initialBridgeStart >= 0, "update-manifest initial path runs the detection floor");
+  assert.ok(initialKpiStart > initialBridgeStart, "update-manifest initial path installs the floor before KPI build");
+  const retryReset = updateWorkflow.indexOf("git reset --hard origin/main");
+  const retryBridgeStart = updateWorkflow.indexOf("repo_root=\"$(pwd -P)\"", retryReset);
+  const retryKpiStart = updateWorkflow.indexOf("npm --prefix 100xfenok-next run build:fenok-data-health-kpi", retryReset);
+  assert.ok(retryReset >= 0 && retryBridgeStart > retryReset, "update-manifest retry rebuilds the floor after resetting to latest main");
+  assert.ok(retryKpiStart > retryBridgeStart, "update-manifest retry installs the floor before KPI rebuild");
+  assert.equal(updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"), false, "ephemeral report is not added to the manifest commit pathspec");
 }
 
 function runCurrentRepositoryDryRun() {
@@ -1507,7 +1534,7 @@ async function main() {
     runCliReproduction(artifactRoot);
     assertRepositoryUnchanged("CLI success and failure cases");
     runPrivacyAndProtectedChecks(report);
-    runDeployBridgeChecks();
+    runWorkflowBridgeChecks();
     assertRepositoryUnchanged("deploy bridge contract checks");
     runCurrentRepositoryDryRun();
     assertRepositoryUnchanged("current-repository read-only dry run");

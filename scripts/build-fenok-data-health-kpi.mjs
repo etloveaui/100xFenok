@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { validateDetectionReport } from "./build-data-supply-detection-floor.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
 import { assertValidCronDeferrals } from "./lib/kpi-runtime-slots.mjs";
 import {
@@ -636,27 +637,30 @@ function assertDetectionStatusReason(row, context, { allowUnavailableSchemaDrift
   }
 }
 
-export function mapDetectionFloorTgaRow(row) {
+export function mapDetectionFloorRow(row) {
+  const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
-    throw new Error("detection floor treasury_tga row is malformed");
+    throw new Error(`detection floor ${laneId} row is malformed`);
   }
-  if (row.label !== "US Treasury TGA" || row.enforcement !== "live" || row.kpi_required !== true) {
-    throw new Error("detection floor treasury_tga identity/enforcement contract is malformed");
+  const laneConfig = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === row.id);
+  if (!laneConfig || laneConfig.enforcement !== "live" || laneConfig.kpi_required !== true
+    || row.label !== laneConfig.label || row.enforcement !== "live" || row.kpi_required !== true) {
+    throw new Error(`detection floor ${laneId} identity/enforcement contract is malformed`);
   }
-  assertDetectionStatusReason(row, "treasury_tga", { allowUnavailableSchemaDrift: true });
-  assertDetectionStatusReason(row.artifact, "treasury_tga.artifact", { allowUnavailableSchemaDrift: true });
+  assertDetectionStatusReason(row, laneId, { allowUnavailableSchemaDrift: true });
+  assertDetectionStatusReason(row.artifact, `${laneId}.artifact`, { allowUnavailableSchemaDrift: true });
   if (DETECTION_STATUS_SEVERITY[row.artifact.status] > DETECTION_STATUS_SEVERITY[row.status]) {
-    throw new Error("detection floor treasury_tga status is better than its artifact status");
+    throw new Error(`detection floor ${laneId} status is better than its artifact status`);
   }
   const sourceAsOf = row.artifact.source_as_of;
   if (sourceAsOf !== null && !isDetectionSourceStamp(sourceAsOf)) {
-    throw new Error("detection floor treasury_tga artifact.source_as_of is malformed");
+    throw new Error(`detection floor ${laneId} artifact.source_as_of is malformed`);
   }
   if ((row.artifact.status === "ready" || row.artifact.status === "stale") && sourceAsOf === null) {
-    throw new Error("detection floor treasury_tga artifact status contradicts null source_as_of");
+    throw new Error(`detection floor ${laneId} artifact status contradicts null source_as_of`);
   }
 
-  const result = lane("treasury_tga", row.label, [
+  const result = lane(row.id, row.label, [
     check(
       "detection_floor_status",
       "Detection floor status",
@@ -671,25 +675,28 @@ export function mapDetectionFloorTgaRow(row) {
   };
 }
 
-export function buildDetectionFloorTgaLane(report) {
+export function buildDetectionFloorLanes(report) {
+  const liveLaneConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
   if (report === null || report === undefined) {
-    return mapDetectionFloorTgaRow({
-      id: "treasury_tga",
-      label: "US Treasury TGA",
+    return liveLaneConfigs.map((laneConfig) => mapDetectionFloorRow({
+      id: laneConfig.id,
+      label: laneConfig.label,
       enforcement: "live",
       kpi_required: true,
       status: "unobserved",
       reason: "workflow_unobserved",
       artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
-    });
+    }));
   }
   validateDetectionReport(report);
   if (report?.schema_version !== "data-supply-detection-floor/v1" || !Array.isArray(report?.lanes)) {
     throw new Error("detection floor report schema is malformed");
   }
-  const matches = report.lanes.filter((item) => item?.id === "treasury_tga");
-  if (matches.length !== 1) throw new Error(`detection floor treasury_tga cardinality is ${matches.length}`);
-  return mapDetectionFloorTgaRow(matches[0]);
+  return liveLaneConfigs.map((laneConfig) => {
+    const matches = report.lanes.filter((item) => item?.id === laneConfig.id);
+    if (matches.length !== 1) throw new Error(`detection floor ${laneConfig.id} cardinality is ${matches.length}`);
+    return mapDetectionFloorRow(matches[0]);
+  });
 }
 
 function trackById(coverageIndex, id) {
@@ -1503,7 +1510,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
-    buildDetectionFloorTgaLane(detectionFloor),
+    ...buildDetectionFloorLanes(detectionFloor),
   ];
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])

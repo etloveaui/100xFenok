@@ -219,6 +219,33 @@ jobs:
           cp data/computed/market_facts/index.json 100xfenok-next/public/data/computed/market_facts/index.json
           (cd 100xfenok-next && node sync-static-overrides.mjs)
 
+      - name: Build data supply detection floor
+        run: |
+          set -euo pipefail
+
+          repo_root="$(pwd -P)"
+          shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
+          output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
+          report_path="$output_root/data-supply-detection-floor.json"
+          installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
+          trap 'rm -rf "$output_root"' EXIT
+
+          mkdir -p "$shard_root"
+          chmod 0700 "$output_root"
+          now="$(node -e 'process.stdout.write(new Date().toISOString())')"
+
+          node scripts/build-data-supply-detection-floor.mjs \
+            --artifact-root "$repo_root" \
+            --attempt-shard-root "$shard_root" \
+            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
+            --now "$now" \
+            --output-root "$output_root"
+          node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
+
+          install -m 0644 "$report_path" "$installed_path"
+          cmp -s "$report_path" "$installed_path"
+          node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
+
       - name: Build data health KPI
         run: |
           npm --prefix 100xfenok-next run build:fenok-data-health-kpi
@@ -354,6 +381,32 @@ jobs:
             cp data/computed/fenok_occ_options_availability.json 100xfenok-next/public/data/computed/fenok_occ_options_availability.json
             cp data/computed/market_facts/index.json 100xfenok-next/public/data/computed/market_facts/index.json
             (cd 100xfenok-next && node sync-static-overrides.mjs)
+            (
+              set -euo pipefail
+
+              repo_root="$(pwd -P)"
+              shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
+              output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
+              report_path="$output_root/data-supply-detection-floor.json"
+              installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
+              trap 'rm -rf "$output_root"' EXIT
+
+              mkdir -p "$shard_root"
+              chmod 0700 "$output_root"
+              now="$(node -e 'process.stdout.write(new Date().toISOString())')"
+
+              node scripts/build-data-supply-detection-floor.mjs \
+                --artifact-root "$repo_root" \
+                --attempt-shard-root "$shard_root" \
+                --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
+                --now "$now" \
+                --output-root "$output_root"
+              node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
+
+              install -m 0644 "$report_path" "$installed_path"
+              cmp -s "$report_path" "$installed_path"
+              node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
+            )
             npm --prefix 100xfenok-next run build:fenok-data-health-kpi
             node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
             npm --prefix 100xfenok-next run qa:fenok-data-health-kpi

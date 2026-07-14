@@ -17,6 +17,12 @@ const LANE_IDS = Object.freeze([
   "gdelt_news_tone",
 ]);
 
+const LIVE_LANE_IDS = Object.freeze([
+  "fred_yardeni",
+  "treasury_tga",
+]);
+const LIVE_LANE_ID_SET = new Set(LIVE_LANE_IDS);
+
 const MEMBER_IDS = Object.freeze([
   "fred_macro",
   "fred_banking",
@@ -294,6 +300,7 @@ const config = {
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
       affectedSurfaceIds: ["yardeni_model"],
+      enforcement: "live",
     }),
     lane({
       id: "fdic_tier1",
@@ -819,7 +826,7 @@ function validateLane(laneValue, index) {
   validateFreshness(laneValue.freshness, `${context}.freshness`);
   requireUniqueStrings(laneValue.affected_surface_ids, `${context}.affected_surface_ids`, { identifiers: true });
   if (!VISIBILITIES.has(laneValue.visibility)) fail(`${context}.visibility is invalid`);
-  const expectedEnforcement = laneValue.id === "treasury_tga" ? "live" : "shadow";
+  const expectedEnforcement = LIVE_LANE_ID_SET.has(laneValue.id) ? "live" : "shadow";
   if (laneValue.enforcement !== expectedEnforcement) fail(`${context}.enforcement must be ${expectedEnforcement}`);
   if (laneValue.kpi_required !== (expectedEnforcement === "live")) fail(`${context}.kpi_required contradicts lane enforcement`);
 
