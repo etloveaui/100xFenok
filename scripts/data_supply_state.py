@@ -146,7 +146,12 @@ def _validate_sha(value: Any, field: str) -> str:
     return value
 
 
-def validate_observation(record: Mapping[str, Any], *, require_valid: bool = False) -> dict[str, Any]:
+def validate_observation(
+    record: Mapping[str, Any],
+    *,
+    require_valid: bool = False,
+    allow_legacy_failure_source_as_of: bool = False,
+) -> dict[str, Any]:
     if not isinstance(record, Mapping):
         raise SchemaError("observation must be an object")
     row = dict(record)
@@ -176,12 +181,16 @@ def validate_observation(record: Mapping[str, Any], *, require_valid: bool = Fal
     _safe_label(row["provider_schema"], "provider_schema")
     row["provider_path"] = _safe_relative_path(row["provider_path"], "provider_path")
     _validate_sha(row["payload_sha256"], "payload_sha256")
-    source = _parse_timestamp(row["source_as_of"], "source_as_of")
-    observed = _parse_timestamp(row["observed_at"], "observed_at")
-    if observed < source:
-        raise SchemaError("observed_at cannot precede source_as_of")
     if row["validation_status"] not in {"valid", "invalid"}:
         raise SchemaError("validation_status must be valid or invalid")
+    source = None
+    if row["source_as_of"] is not None:
+        source = _parse_timestamp(row["source_as_of"], "source_as_of")
+    elif row["validation_status"] == "valid":
+        raise SchemaError("valid observations require source_as_of")
+    observed = _parse_timestamp(row["observed_at"], "observed_at")
+    if source is not None and observed < source:
+        raise SchemaError("observed_at cannot precede source_as_of")
     if "observation_origin" in row and row["observation_origin"] not in {
         "natural",
         "cache",
@@ -193,6 +202,8 @@ def validate_observation(record: Mapping[str, Any], *, require_valid: bool = Fal
     if has_failure_extension:
         if row["validation_status"] != "invalid" or row.get("payload_available") is not False:
             raise SchemaError("payload-unavailable extension is allowed only for invalid observations")
+        if row["source_as_of"] is not None and not allow_legacy_failure_source_as_of:
+            raise SchemaError("payload-unavailable observations require source_as_of null")
         failure_detail_sha256 = _validate_sha(
             row.get("failure_detail_sha256"), "failure_detail_sha256"
         )
@@ -668,7 +679,10 @@ class DataSupplyStateStore:
                     else:
                         try:
                             if category == "observations":
-                                validate_observation(parsed_tail)
+                                validate_observation(
+                                    parsed_tail,
+                                    allow_legacy_failure_source_as_of=True,
+                                )
                             else:
                                 _validate_decision(parsed_tail)
                         except SchemaError as exc:
@@ -688,7 +702,10 @@ class DataSupplyStateStore:
                         raise IntegrityError(f"history row {index} has no event_id")
                     try:
                         if category == "observations":
-                            validate_observation(parsed)
+                            validate_observation(
+                                parsed,
+                                allow_legacy_failure_source_as_of=True,
+                            )
                         else:
                             _validate_decision(parsed)
                     except SchemaError as exc:
@@ -729,7 +746,10 @@ class DataSupplyStateStore:
                 try:
                     parsed = json.loads(line.decode("utf-8"))
                     if category == "observations":
-                        validate_observation(parsed)
+                        validate_observation(
+                            parsed,
+                            allow_legacy_failure_source_as_of=True,
+                        )
                     else:
                         _validate_decision(parsed)
                 except (UnicodeDecodeError, json.JSONDecodeError, SchemaError) as exc:
@@ -1156,7 +1176,10 @@ class DataSupplyStateStore:
     ) -> list[dict[str, Any]]:
         if not isinstance(evidence_observations, list):
             raise SchemaError("evidence_observations must be a list")
-        evidence = [validate_observation(row) for row in evidence_observations]
+        evidence = [
+            validate_observation(row, allow_legacy_failure_source_as_of=True)
+            for row in evidence_observations
+        ]
         event_ids = [row["event_id"] for row in evidence]
         if len(event_ids) != len(set(event_ids)):
             raise SchemaError("evidence_observations must not contain duplicates")

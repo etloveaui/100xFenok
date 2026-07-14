@@ -34,6 +34,14 @@ MIGRATION_SCHEMA = "data-supply-migration/v1"
 class MinimumDetailUnavailable(SchemaError):
     """Historical Yahoo identity is valid but no selectable detail exists."""
 
+    reason_code = "migration_minimum_detail_missing"
+
+
+class SourceDateUnavailable(SchemaError):
+    """Historical Yahoo payload is usable but carries no provider observation date."""
+
+    reason_code = "migration_source_date_unavailable"
+
 
 def _parse_timestamp(value: str, field: str) -> dt.datetime:
     if not isinstance(value, str) or not value:
@@ -46,6 +54,31 @@ def _parse_timestamp(value: str, field: str) -> dt.datetime:
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise SchemaError(f"{field} must include a timezone")
     return parsed.astimezone(dt.timezone.utc)
+
+
+def _yahoo_raw_source_timestamp(raw: Mapping[str, Any]) -> str | None:
+    data = raw.get("data") if isinstance(raw.get("data"), Mapping) else {}
+    info = data.get("info") if isinstance(data.get("info"), Mapping) else {}
+    epoch = info.get("regularMarketTime")
+    if isinstance(epoch, (int, float)) and not isinstance(epoch, bool):
+        try:
+            parsed = dt.datetime.fromtimestamp(float(epoch), dt.timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            parsed = None
+        if parsed is not None:
+            return parsed.isoformat().replace("+00:00", "Z")
+    dates: list[dt.date] = []
+    for row in data.get("history_1y") if isinstance(data.get("history_1y"), list) else []:
+        if not isinstance(row, Mapping):
+            continue
+        value = row.get("date")
+        if not isinstance(value, str):
+            continue
+        try:
+            dates.append(dt.date.fromisoformat(value[:10]))
+        except ValueError:
+            continue
+    return f"{max(dates).isoformat()}T00:00:00Z" if dates else None
 
 
 def _safe_relative_path(value: str) -> str:
@@ -187,8 +220,15 @@ class LegacyYahooMigration:
             or normalized.get("ticker") != entity
         ):
             raise SchemaError(f"normalized Yahoo identity is invalid: {entity}")
+        provider_source_as_of = _yahoo_raw_source_timestamp(raw)
+        if provider_source_as_of is None:
+            raise SourceDateUnavailable(f"Yahoo provider source date is unavailable: {entity}")
         source_as_of = normalized.get("source_as_of")
-        _parse_timestamp(source_as_of, f"{entity} source_as_of")
+        if _parse_timestamp(source_as_of, f"{entity} source_as_of") != _parse_timestamp(
+            provider_source_as_of,
+            f"{entity} provider source_as_of",
+        ):
+            raise SchemaError(f"normalized Yahoo source stamp disagrees with provider evidence: {entity}")
         normalized_bytes = _pretty_json_bytes(normalized)
         return legacy, raw, normalized_bytes
 
@@ -219,7 +259,7 @@ class LegacyYahooMigration:
                     legacy_path=legacy_path,
                     raw_path=raw_path,
                 )
-            except MinimumDetailUnavailable:
+            except (MinimumDetailUnavailable, SourceDateUnavailable) as exc:
                 self._identity_payloads(
                     entity=entity,
                     legacy_path=legacy_path,
@@ -229,7 +269,7 @@ class LegacyYahooMigration:
                     {
                         **common,
                         "migration_action": "invalid_unavailable",
-                        "reason_code": "migration_minimum_detail_missing",
+                        "reason_code": exc.reason_code,
                         "evidence_path": f"data/yf/migration-evidence/etf-details/{entity}-{legacy_sha}.json",
                     }
                 )
@@ -311,6 +351,13 @@ class LegacyYahooMigration:
         actions = [entry.get("migration_action") if isinstance(entry, Mapping) else None for entry in row["entries"]]
         if any(action not in {"valid_candidate", "invalid_unavailable"} for action in actions):
             raise SchemaError("migration entry action is invalid")
+        if any(
+            entry.get("reason_code")
+            not in {"migration_minimum_detail_missing", "migration_source_date_unavailable"}
+            for entry in row["entries"]
+            if entry.get("migration_action") == "invalid_unavailable"
+        ):
+            raise SchemaError("migration invalid entry reason is unsupported")
         expected_refs = [
             {"path": entry["provider_object_path"], "sha256": entry["normalized_sha256"]}
             for entry in row["entries"]
@@ -354,8 +401,9 @@ class LegacyYahooMigration:
                         legacy_path=legacy_path,
                         raw_path=raw_path,
                     )
-                except MinimumDetailUnavailable:
-                    pass
+                except (MinimumDetailUnavailable, SourceDateUnavailable) as exc:
+                    if entry.get("reason_code") != exc.reason_code:
+                        raise IntegrityError(f"approved invalid reason changed: {entity}") from exc
                 else:
                     raise IntegrityError(f"approved invalid entry became selectable: {entity}")
                 continue
@@ -384,7 +432,7 @@ class LegacyYahooMigration:
             "provider_path": f"data/stockanalysis/etfs/{entity}.json",
             "payload_sha256": canonical_sha256(descriptor),
             "provider_schema": "stockanalysis/v1",
-            "source_as_of": decided_at,
+            "source_as_of": None,
             "observed_at": decided_at,
             "validation_status": "invalid",
             "reason_code": descriptor["reason_code"],
@@ -402,16 +450,20 @@ class LegacyYahooMigration:
         decided_at: str,
     ) -> dict[str, Any]:
         entity = entry["entity"]
-        failure_detail_sha = hashlib.sha256(
-            b"historical Yahoo payload lacks minimum ETF detail"
-        ).hexdigest()
+        reason_code = entry["reason_code"]
+        failure_detail = (
+            "historical Yahoo payload lacks minimum ETF detail"
+            if reason_code == "migration_minimum_detail_missing"
+            else "historical Yahoo payload has no provider observation date"
+        )
+        failure_detail_sha = hashlib.sha256(failure_detail.encode("utf-8")).hexdigest()
         descriptor = {
             "provider": "yahoo_finance",
             "endpoint_family": "yahoo_finance_etf_detail",
             "domain": "etf_detail",
             "entity": entity,
             "observed_at": decided_at,
-            "reason_code": "migration_minimum_detail_missing",
+            "reason_code": reason_code,
             "failure_detail_sha256": failure_detail_sha,
         }
         row = {
@@ -419,8 +471,8 @@ class LegacyYahooMigration:
             **{key: descriptor[key] for key in ("provider", "endpoint_family", "domain", "entity")},
             "provider_path": entry["raw_path"],
             "payload_sha256": canonical_sha256(descriptor),
-            "provider_schema": "yf-finance/v2",
-            "source_as_of": decided_at,
+            "provider_schema": "yf-etf-detail/v1",
+            "source_as_of": None,
             "observed_at": decided_at,
             "validation_status": "invalid",
             "reason_code": descriptor["reason_code"],
@@ -454,7 +506,7 @@ class LegacyYahooMigration:
             entity=entity,
             evidence_observations=[primary_failure, yahoo_failure],
             expected_active_transaction_id=active["transaction_id"],
-            reason_code="migration_minimum_detail_missing",
+            reason_code=entry["reason_code"],
             decided_at=decided_at,
         )
         store.commit_prepared("etf_detail", transaction_id)

@@ -45,7 +45,13 @@ def write_json(path, value):
     path.write_bytes(canonical_bytes(value))
 
 
-def stockanalysis_payload(ticker, *, fetched_at="2026-07-10T00:00:00Z", price=10.0):
+def stockanalysis_payload(
+    ticker,
+    *,
+    fetched_at="2026-07-11T00:00:00Z",
+    source_as_of="2026-07-10T00:00:00Z",
+    price=10.0,
+):
     return {
         "schema_version": "stockanalysis/v1",
         "source": "stockanalysis",
@@ -57,18 +63,25 @@ def stockanalysis_payload(ticker, *, fetched_at="2026-07-10T00:00:00Z", price=10
             "quote": {
                 "symbol": ticker,
                 "uid": ticker,
+                "td": source_as_of[:10],
                 "p": price,
                 "cl": price - 1,
                 "pd": price - 1,
                 "c": 1.0,
                 "cp": 10.0,
             },
-            "history": [{"t": "2026-07-09", "c": price - 1}],
+            "history": [{"t": source_as_of[:10], "c": price - 1}],
         },
     }
 
 
-def yahoo_payload(ticker, *, fetched_at="2026-07-10T00:00:00Z", price=11.0):
+def yahoo_payload(
+    ticker,
+    *,
+    fetched_at="2026-07-11T00:00:00Z",
+    source_as_of="2026-07-10T00:00:00Z",
+    price=11.0,
+):
     return {
         "schema_version": "yf-finance/v2",
         "source": "yahoo_finance",
@@ -81,7 +94,7 @@ def yahoo_payload(ticker, *, fetched_at="2026-07-10T00:00:00Z", price=11.0):
                 "currentPrice": price,
                 "previousClose": price - 1,
             },
-            "history_1y": [{"date": "2026-07-09", "Close": price - 1}],
+            "history_1y": [{"date": source_as_of[:10], "Close": price - 1}],
         },
     }
 
@@ -90,17 +103,29 @@ def write_pair(
     root,
     ticker,
     *,
-    sa_fetched_at="2026-07-10T00:00:00Z",
-    yf_fetched_at="2026-07-10T00:00:00Z",
+    sa_fetched_at="2026-07-11T00:00:00Z",
+    yf_fetched_at="2026-07-11T00:00:00Z",
+    sa_source_as_of="2026-07-10T00:00:00Z",
+    yf_source_as_of="2026-07-10T00:00:00Z",
     price=10.0,
 ):
     write_json(
         root / f"data/stockanalysis/stocks/{ticker}.json",
-        stockanalysis_payload(ticker, fetched_at=sa_fetched_at, price=price),
+        stockanalysis_payload(
+            ticker,
+            fetched_at=sa_fetched_at,
+            source_as_of=sa_source_as_of,
+            price=price,
+        ),
     )
     write_json(
         root / f"data/yf/finance/{ticker}.json",
-        yahoo_payload(ticker, fetched_at=yf_fetched_at, price=price + 1),
+        yahoo_payload(
+            ticker,
+            fetched_at=yf_fetched_at,
+            source_as_of=yf_source_as_of,
+            price=price + 1,
+        ),
     )
 
 
@@ -354,6 +379,8 @@ class StockDetailMigrationTests(unittest.TestCase):
             "AAPL",
             sa_fetched_at="2026-06-20T00:00:00Z",
             yf_fetched_at="2026-06-20T00:00:00Z",
+            sa_source_as_of="2026-06-20T00:00:00Z",
+            yf_source_as_of="2026-06-20T00:00:00Z",
         )
         migration = self.migration(("AAPL",))
         first = self.plan(("AAPL",), migration=migration)
@@ -371,6 +398,8 @@ class StockDetailMigrationTests(unittest.TestCase):
             "AAPL",
             sa_fetched_at="2026-07-01T00:00:00Z",
             yf_fetched_at="2026-07-01T00:00:00Z",
+            sa_source_as_of="2026-07-01T00:00:00Z",
+            yf_source_as_of="2026-07-01T00:00:00Z",
         )
         migration = self.migration(("AAPL",))
         manifest = self.plan(("AAPL",), migration=migration)
@@ -582,6 +611,8 @@ class StockDetailMigrationTests(unittest.TestCase):
                     "AAPL",
                     sa_fetched_at="2026-07-01T00:00:00Z",
                     yf_fetched_at="2026-07-01T00:00:00Z",
+                    sa_source_as_of="2026-07-01T00:00:00Z",
+                    yf_source_as_of="2026-07-01T00:00:00Z",
                 )
                 crashing = StockDetailMigration(repo, state, tickers=("AAPL",), failpoint_hook=OneShotCrash(point), enforce_approved_digests=False)
                 manifest = crashing.plan(
@@ -719,7 +750,12 @@ class StockDetailMigrationTests(unittest.TestCase):
                 state = repo / "data/admin/data-supply-state/v1"
                 write_protected_index(repo)
                 stamp = "2026-07-01T00:00:00Z" if case == "latest" else "2026-07-10T00:00:00Z"
-                write_pair(repo, "AAPL", sa_fetched_at=stamp, yf_fetched_at=stamp)
+                write_pair(
+                    repo,
+                    "AAPL",
+                    sa_source_as_of=stamp,
+                    yf_source_as_of=stamp,
+                )
                 migration = StockDetailMigration(repo, state, tickers=("AAPL",), enforce_approved_digests=False)
                 manifest = migration.plan(
                     expected_count=1,

@@ -29,6 +29,7 @@ class LegacyYahooMigrationTests(unittest.TestCase):
         *,
         raw_ticker=None,
         fetched_at="2026-07-10T00:00:00Z",
+        source_as_of="2026-07-10T00:00:00Z",
         minimum_detail=True,
     ):
         legacy = {
@@ -54,7 +55,11 @@ class LegacyYahooMigrationTests(unittest.TestCase):
                     else {"quoteType": "MUTUALFUND"}
                 ),
                 "funds_data": {"top_holdings": []} if minimum_detail else None,
-                "history_1y": [] if minimum_detail else None,
+                "history_1y": (
+                    [{"date": source_as_of[:10], "Close": 10.0}]
+                    if minimum_detail and source_as_of
+                    else None
+                ),
             },
         }
         legacy_path = self.repo / f"data/stockanalysis/etfs/{ticker}.json"
@@ -112,7 +117,10 @@ class LegacyYahooMigrationTests(unittest.TestCase):
         self.assertFalse((self.repo / "data/yf/etf-details/GOOD.json").exists())
 
     def test_expired_candidate_materializes_verified_unavailable_state_with_deletion_held(self):
-        legacy_path, _ = self.write_legacy(fetched_at="2026-06-18T00:00:00Z")
+        legacy_path, _ = self.write_legacy(
+            fetched_at="2026-07-11T00:00:00Z",
+            source_as_of="2026-06-18T00:00:00Z",
+        )
         migration = LegacyYahooMigration(self.repo, self.state)
         manifest = migration.plan(expected_count=1, created_at="2026-07-11T00:00:00Z")
         result = migration.apply(
@@ -132,7 +140,10 @@ class LegacyYahooMigrationTests(unittest.TestCase):
         self.assertEqual(list((self.state / "providers/yahoo_finance/etf_detail/pending").glob("*.json")), [])
 
     def test_lkg_candidate_clears_consumed_pending_pointer(self):
-        self.write_legacy(fetched_at="2026-07-01T00:00:00Z")
+        self.write_legacy(
+            fetched_at="2026-07-11T00:00:00Z",
+            source_as_of="2026-07-01T00:00:00Z",
+        )
         migration = LegacyYahooMigration(self.repo, self.state)
         manifest = migration.plan(expected_count=1, created_at="2026-07-11T00:00:00Z")
         result = migration.apply(manifest, decided_at="2026-07-11T00:00:00Z", delete_legacy=False)
@@ -144,7 +155,8 @@ class LegacyYahooMigrationTests(unittest.TestCase):
     def test_minimum_detail_exception_is_invalid_unavailable_without_provider_object(self):
         legacy_path, raw_path = self.write_legacy(
             ticker="GLX",
-            fetched_at="2026-06-30T00:00:00Z",
+            fetched_at="2026-07-11T00:00:00Z",
+            source_as_of="2026-06-30T00:00:00Z",
             minimum_detail=False,
         )
         migration = LegacyYahooMigration(self.repo, self.state)
@@ -164,6 +176,33 @@ class LegacyYahooMigrationTests(unittest.TestCase):
         self.assertEqual(active["recovery"]["GLX"]["last_transition"], "unavailable")
         object_root = self.state / "providers/yahoo_finance/etf_detail/objects/GLX"
         self.assertFalse(object_root.exists())
+
+    def test_missing_provider_source_date_is_invalid_unavailable_not_a_plan_abort(self):
+        legacy_path, raw_path = self.write_legacy(
+            ticker="NODATE",
+            fetched_at="2026-07-11T00:00:00Z",
+            source_as_of=None,
+            minimum_detail=True,
+        )
+        migration = LegacyYahooMigration(self.repo, self.state)
+        manifest = migration.plan(expected_count=1, created_at="2026-07-11T00:00:00Z")
+        entry = manifest["entries"][0]
+        self.assertEqual(entry["migration_action"], "invalid_unavailable")
+        self.assertEqual(entry["reason_code"], "migration_source_date_unavailable")
+        self.assertEqual(manifest["payload_refs"], [])
+
+        result = migration.apply(
+            manifest,
+            decided_at="2026-07-11T00:00:00Z",
+            delete_legacy=False,
+        )
+        self.assertTrue(result["deletion_held"])
+        self.assertTrue(legacy_path.exists())
+        self.assertTrue(raw_path.exists())
+        active = DataSupplyStateStore(self.state).read_active_domain("etf_detail")
+        self.assertNotIn("NODATE", active["current"])
+        self.assertEqual(active["recovery"]["NODATE"]["last_transition"], "unavailable")
+        self.assertFalse((self.state / "providers/yahoo_finance/etf_detail/objects/NODATE").exists())
 
 
 if __name__ == "__main__":

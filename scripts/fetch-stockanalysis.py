@@ -541,6 +541,81 @@ def collection_date(value: str | None) -> str | None:
     return day.isoformat() if day <= datetime.now(timezone.utc).date() else None
 
 
+def epoch_source_timestamp(value) -> str | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return None
+    seconds = float(value) / 1000 if abs(float(value)) >= 100_000_000_000 else float(value)
+    try:
+        parsed = datetime.fromtimestamp(seconds, timezone.utc)
+    except (OverflowError, OSError, ValueError):
+        return None
+    if parsed > datetime.now(timezone.utc) + timedelta(days=1):
+        return None
+    return utc_iso(parsed)
+
+
+def date_source_timestamp(value) -> str | None:
+    day = collection_date(value)
+    return f"{day}T00:00:00Z" if day else None
+
+
+def quote_source_timestamp(quote: dict | None) -> str | None:
+    if not isinstance(quote, dict):
+        return None
+    timestamp = epoch_source_timestamp(quote.get("ts"))
+    source_day = collection_date(quote.get("td"))
+    if timestamp and (not source_day or timestamp[:10] == source_day):
+        return timestamp
+    return date_source_timestamp(source_day)
+
+
+def latest_history_source_timestamp(payload: dict | None) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+    history_periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
+    candidates = [
+        normalized.get("history"),
+        history_periods.get("daily_1y"),
+        data.get("history_1y"),
+    ]
+    days = []
+    for rows in candidates:
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            day = collection_date(row.get("date") or row.get("t") or row.get("time"))
+            if day:
+                days.append(day)
+    return date_source_timestamp(max(days)) if days else None
+
+
+def stockanalysis_detail_source_timestamp(payload: dict | None) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    return (
+        quote_source_timestamp(raw.get("quote"))
+        or quote_source_timestamp(normalized.get("quote"))
+        or latest_history_source_timestamp(payload)
+    )
+
+
+def yahoo_detail_source_timestamp(payload: dict | None) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+    if not data and isinstance(raw.get("yf"), dict):
+        data = raw["yf"]
+    info = data.get("info") if isinstance(data.get("info"), dict) else {}
+    return epoch_source_timestamp(info.get("regularMarketTime")) or latest_history_source_timestamp(payload)
+
+
 def normalize_space(value: str | None) -> str:
     return " ".join(str(value or "").split())
 
@@ -1430,6 +1505,8 @@ def fetch_table_surface(name: str, definition: dict, timeout: int) -> dict:
         "group": definition["group"],
         "priority": definition["priority"],
         "role": definition["role"],
+        "source_as_of": None,
+        "source_as_of_reason": "provider publishes no aggregate source date",
         "fetched_at": now_iso(),
         "endpoint": path,
         "url": f"{BASE_URL}{page_path}",
@@ -1488,6 +1565,8 @@ def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
         "group": definition["group"],
         "priority": definition["priority"],
         "role": definition["role"],
+        "source_as_of": None,
+        "source_as_of_reason": "provider publishes no aggregate source date",
         "fetched_at": now_iso(),
         "endpoint": path,
         "url": f"{BASE_URL}{page_path}",
@@ -1554,10 +1633,8 @@ def surface_stamp_membership(consumers: dict | None) -> dict[str, set[str]] | No
 def build_surface_stamp_map(
     requested: list[str],
     results: list[dict],
-    previous_index: dict | None,
+    _previous_index: dict | None,
 ) -> dict[str, str | None]:
-    previous = previous_index.get("source_as_of") if isinstance(previous_index, dict) else None
-    previous = previous if isinstance(previous, dict) else {}
     membership = surface_stamp_membership(read_json(OUT_DIR / "surface_consumers.json"))
     if membership is None:
         return {domain: None for domain in SURFACE_STAMP_ROUTES}
@@ -1568,7 +1645,9 @@ def build_surface_stamp_map(
         attempted = bool(required & requested_set)
         full_attempt = required.issubset(requested_set)
         if not attempted or not full_attempt:
-            stamps[domain] = collection_date(previous.get(domain))
+            # A legacy aggregate stamp has no provider evidence. Partial or
+            # unattempted domains must stay unknown instead of inheriting it.
+            stamps[domain] = None
             continue
         dates: list[str] = []
         complete = True
@@ -1579,17 +1658,16 @@ def build_surface_stamp_map(
             ]
             result = matches[0] if len(matches) == 1 else None
             payload = read_json(OUT_DIR / "surfaces" / f"{surface}.json")
-            fetched = collection_date((payload or {}).get("fetched_at")) if isinstance(payload, dict) else None
-            if not result or result.get("error") is not None or not fetched:
+            source_as_of = collection_date((payload or {}).get("source_as_of")) if isinstance(payload, dict) else None
+            if not result or result.get("error") is not None or not source_as_of:
                 complete = False
                 break
-            dates.append(fetched)
+            dates.append(source_as_of)
         stamps[domain] = min(dates) if complete and dates else None
     return stamps
 
 
 def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_public: bool) -> dict:
-    previous_index = read_json(OUT_DIR / "surfaces" / "index.json")
     results = []
     for idx, name in enumerate(surface_names, 1):
         definition = SURFACE_DEFINITIONS[name]
@@ -1635,12 +1713,17 @@ def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_
         )
         time.sleep(sleep)
 
+    source_as_of = build_surface_stamp_map(surface_names, results, None)
     summary = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "asset_type": "surface_index",
         "generated_at": now_iso(),
-        "source_as_of": build_surface_stamp_map(surface_names, results, previous_index),
+        "source_as_of": source_as_of,
+        "source_as_of_reason": {
+            domain: None if stamp else "provider publishes no aggregate source date or this run did not fully refresh the domain"
+            for domain, stamp in source_as_of.items()
+        },
         "counts": {
             "surfaces_requested": len(surface_names),
             "ok": sum(1 for item in results if item["error"] is None),
@@ -1719,7 +1802,9 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         "source": "stockanalysis",
         "asset_type": "etf",
         "generated_at": collected_at,
-        "source_as_of": collection_date(collected_at),
+        "source_as_of": None,
+        "source_as_of_reason": "provider publishes no aggregate source date",
+        "fetched_at": collected_at,
         "endpoint": "/etf/",
         "counts": {
             "records": len(records),
@@ -1784,12 +1869,14 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         overview=overview_data,
         holdings=normalized_holdings,
     )
+    fetched_at = now_iso()
     payload = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "asset_type": "etf",
         "ticker": ticker,
-        "fetched_at": now_iso(),
+        "source_as_of": quote_source_timestamp(raw.get("quote")) or latest_history_source_timestamp({"normalized": {"history_periods": history_periods}}),
+        "fetched_at": fetched_at,
         "endpoints": paths,
         "endpoint_contracts": {
             "overview": {
@@ -1869,12 +1956,14 @@ def fetch_stock(ticker: str, timeout: int, financials: dict | None = None) -> di
             "summary": financials.get("summary"),
         }
 
+    fetched_at = now_iso()
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "asset_type": "stock",
         "ticker": ticker,
-        "fetched_at": now_iso(),
+        "source_as_of": quote_source_timestamp(raw.get("quote")) or latest_history_source_timestamp({"normalized": normalized}),
+        "fetched_at": fetched_at,
         "endpoints": paths,
         "normalized": normalized,
         "financials_path": financials_path,
@@ -1915,7 +2004,16 @@ def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
         or payload.get("ticker") != ticker
     ):
         raise ValueError("StockAnalysis ETF detail identity mismatch")
-    validate_aware_timestamp(payload.get("fetched_at"), "StockAnalysis ETF detail source stamp")
+    provider_source = stockanalysis_detail_source_timestamp(payload)
+    if provider_source is None:
+        raise ValueError("StockAnalysis ETF detail provider source date is unavailable")
+    validate_aware_timestamp(provider_source, "StockAnalysis ETF detail provider source stamp")
+    claimed = validate_aware_timestamp(
+        payload.get("source_as_of"),
+        "StockAnalysis ETF detail source stamp",
+    )
+    if parse_iso_timestamp(claimed) != parse_iso_timestamp(provider_source):
+        raise ValueError("StockAnalysis ETF detail source stamp disagrees with provider evidence")
 
 
 def read_json(path: Path):
@@ -1946,6 +2044,12 @@ def build_yf_payload(ticker: str, data: dict, fetched_at: str | None = None) -> 
         "source": "yahoo_finance",
         "source_context": "stockanalysis_etf_fallback",
     }
+    payload["source_as_of"] = yahoo_detail_source_timestamp(payload)
+    payload["source_as_of_reason"] = (
+        None
+        if payload["source_as_of"]
+        else "provider payload carries no market observation date"
+    )
     return payload
 
 
@@ -1962,7 +2066,16 @@ def write_yf_etf_detail_payload(ticker: str, payload: dict) -> Path:
         raise ValueError("Yahoo ETF detail candidate schema mismatch")
     if payload.get("source_provider") != "yahoo_finance" or payload.get("ticker") != ticker:
         raise ValueError("Yahoo ETF detail candidate identity mismatch")
-    validate_aware_timestamp(payload.get("source_as_of"), "Yahoo ETF detail candidate source stamp")
+    provider_source = yahoo_detail_source_timestamp(payload)
+    if provider_source is None:
+        raise ValueError("Yahoo ETF detail provider source date is unavailable")
+    validate_aware_timestamp(provider_source, "Yahoo ETF detail provider source stamp")
+    claimed = validate_aware_timestamp(
+        payload.get("source_as_of"),
+        "Yahoo ETF detail candidate source stamp",
+    )
+    if parse_iso_timestamp(claimed) != parse_iso_timestamp(provider_source):
+        raise ValueError("Yahoo ETF detail source stamp disagrees with provider evidence")
     path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
     write_json(path, payload)
     return path
@@ -2033,7 +2146,7 @@ def record_etf_detail_failure_observation(
         "provider_path": provider_path,
         "payload_sha256": canonical_sha256(failure_descriptor),
         "provider_schema": provider_schema,
-        "source_as_of": observed_at,
+        "source_as_of": None,
         "observed_at": observed_at,
         "validation_status": "invalid",
         "reason_code": reason_code,
@@ -3595,7 +3708,12 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
         "detail_status": "yf_fallback",
         "asset_type": "etf",
         "ticker": ticker,
-        "source_as_of": yf_payload.get("fetched_at"),
+        "source_as_of": yahoo_detail_source_timestamp(yf_payload),
+        "source_as_of_reason": (
+            None
+            if yahoo_detail_source_timestamp(yf_payload)
+            else "provider payload carries no market observation date"
+        ),
         "inceptionDate": inception,
         "fetched_at": yf_payload.get("fetched_at") or now_iso(),
         "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
@@ -3605,7 +3723,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
             "sectors": sector_weightings,
             "countries": None,
             "holding_count": len(holdings) if holdings else None,
-            "holdings_updated": yf_payload.get("fetched_at"),
+            "holdings_updated": yahoo_detail_source_timestamp(yf_payload),
             "classification": classification,
             "overview": overview,
             "quote": {
@@ -3615,7 +3733,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
                     "pd": previous_close,
                     "c": change,
                     "cp": change_pct,
-                    "u": yf_payload.get("fetched_at"),
+                    "u": yahoo_detail_source_timestamp(yf_payload),
                     "ex": "yahoo_finance",
                 }.items()
                 if value is not None
@@ -3639,24 +3757,26 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
     fetched_at = now_iso()
     yf_payload = build_yf_payload(ticker, data, fetched_at)
     raw_payload = write_yf_payload(ticker, data, mirror_public, fetched_at)
-    raw_path = YF_OUT_DIR / f"{ticker}.json"
     try:
         etf_payload = yahoo_etf_payload(ticker, yf_payload)
-    except ValueError:
-        record_etf_detail_observation(
+        candidate_path = write_yf_etf_detail_payload(ticker, etf_payload)
+    except ValueError as exc:
+        record_etf_detail_failure_observation(
             provider="yahoo_finance",
             endpoint_family="yahoo_etf_detail",
             ticker=ticker,
             provider_path=f"data/yf/finance/{ticker}.json",
-            payload_path=raw_path,
             provider_schema=raw_payload["schema_version"],
-            source_as_of=fetched_at,
-            observed_at=fetched_at,
-            validation_status="invalid",
-            reason_code="normalization_invalid",
+            reason_code=(
+                "source_date_unavailable"
+                if "source date is unavailable" in str(exc)
+                else "source_date_mismatch"
+                if "disagrees with provider evidence" in str(exc)
+                else "normalization_invalid"
+            ),
+            failure_detail=f"{type(exc).__name__}: {exc}",
         )
         raise
-    candidate_path = write_yf_etf_detail_payload(ticker, etf_payload)
     record_etf_detail_observation(
         provider="yahoo_finance",
         endpoint_family="yahoo_etf_detail",
@@ -3813,7 +3933,13 @@ def run_one(
                         ticker=ticker,
                         provider_path=f"data/stockanalysis/etfs/{ticker}.json",
                         provider_schema=SCHEMA_VERSION,
-                        reason_code="schema_invalid",
+                        reason_code=(
+                            "source_date_unavailable"
+                            if "source date is unavailable" in str(exc)
+                            else "source_date_mismatch"
+                            if "disagrees with provider evidence" in str(exc)
+                            else "schema_invalid"
+                        ),
                         failure_detail=f"{type(exc).__name__}: {exc}",
                     )
                     raise
@@ -3846,7 +3972,9 @@ def run_one(
             write_payload(rel_path, payload, mirror_public)
             if kind == "etf":
                 provider_path = OUT_DIR / rel_path
-                source_as_of = payload.get("fetched_at") or now_iso()
+                source_as_of = payload.get("source_as_of")
+                observed_at = payload.get("fetched_at") or now_iso()
+                validate_aware_timestamp(source_as_of, "StockAnalysis ETF detail source stamp")
                 record_etf_detail_observation(
                     provider="stockanalysis",
                     endpoint_family="stockanalysis_etf_detail",
@@ -3855,7 +3983,7 @@ def run_one(
                     payload_path=provider_path,
                     provider_schema=payload.get("schema_version") or SCHEMA_VERSION,
                     source_as_of=source_as_of,
-                    observed_at=source_as_of,
+                    observed_at=observed_at,
                     validation_status="valid",
                     reason_code="contract_valid",
                 )
@@ -4163,12 +4291,16 @@ def main() -> None:
 
     etf_detail_coverage = write_etf_detail_coverage(mirror_public)
     etf_detail_coverage_counts = etf_detail_coverage.get("counts") or {}
-    prior_index = read_json(OUT_DIR / "index.json") or {}
-    prior_source_as_of = prior_index.get("source_as_of") if isinstance(prior_index.get("source_as_of"), dict) else {}
-    prior_surface_stamps = prior_source_as_of.get("surfaces") if isinstance(prior_source_as_of.get("surfaces"), dict) else {}
-    current_surface_stamps = (surface_summary or {}).get("source_as_of") if isinstance((surface_summary or {}).get("source_as_of"), dict) else prior_surface_stamps
-    current_universe = universe_payload if isinstance(universe_payload, dict) else (read_json(OUT_DIR / "etf_universe.json") or {})
-    universe_stamp = collection_date(current_universe.get("source_as_of")) or collection_date(prior_source_as_of.get("etf_universe"))
+    current_surface_stamps = (
+        surface_summary.get("source_as_of")
+        if isinstance(surface_summary, dict) and isinstance(surface_summary.get("source_as_of"), dict)
+        else {}
+    )
+    universe_stamp = (
+        collection_date(universe_payload.get("source_as_of"))
+        if isinstance(universe_payload, dict)
+        else None
+    )
     source_as_of = {
         "surfaces": {
             domain: collection_date(current_surface_stamps.get(domain))
@@ -4176,11 +4308,23 @@ def main() -> None:
         },
         "etf_universe": universe_stamp,
     }
+    source_as_of_reason = {
+        "surfaces": {
+            domain: None if stamp else "no provider-backed aggregate source date was produced in this run"
+            for domain, stamp in source_as_of["surfaces"].items()
+        },
+        "etf_universe": (
+            None
+            if universe_stamp
+            else "provider publishes no aggregate source date or the universe was not fetched in this run"
+        ),
+    }
     summary = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "generated_at": now_iso(),
         "source_as_of": source_as_of,
+        "source_as_of_reason": source_as_of_reason,
         "counts": {
             "etf_universe": etf_universe_record_count(universe_payload),
             "etf_candidate_total": etf_detail_coverage_counts.get("candidate_total", 0),

@@ -20,6 +20,7 @@ import argparse
 from datetime import date, datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import sys
@@ -146,6 +147,77 @@ def collection_date(value) -> str | None:
     return day.isoformat() if day <= datetime.now(timezone.utc).date() else None
 
 
+def source_date(value) -> str | None:
+    """Normalize a provider observation date/timestamp without treating fetch time as source time."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+        try:
+            day = date.fromisoformat(text)
+        except ValueError:
+            return None
+    else:
+        try:
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        day = parsed.astimezone(timezone.utc).date()
+    return day.isoformat() if day <= datetime.now(timezone.utc).date() else None
+
+
+def epoch_source_date(value) -> str | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return None
+    seconds = float(value) / 1000 if abs(float(value)) >= 100_000_000_000 else float(value)
+    try:
+        day = datetime.fromtimestamp(seconds, timezone.utc).date()
+    except (OverflowError, OSError, ValueError):
+        return None
+    return day.isoformat() if day <= datetime.now(timezone.utc).date() else None
+
+
+def latest_row_source_date(rows, *keys) -> str | None:
+    dates = []
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        for key in keys:
+            day = source_date(row.get(key))
+            if day:
+                dates.append(day)
+                break
+    return max(dates) if dates else None
+
+
+def yf_source_as_of(yf_payload) -> str | None:
+    if not isinstance(yf_payload, dict):
+        return None
+    data = yf_payload.get("data") if isinstance(yf_payload.get("data"), dict) else {}
+    info = data.get("info") if isinstance(data.get("info"), dict) else {}
+    return (
+        epoch_source_date(info.get("regularMarketTime"))
+        or latest_row_source_date(data.get("history_1y"), "date")
+    )
+
+
+def stockanalysis_source_as_of(sa_payload) -> str | None:
+    if not isinstance(sa_payload, dict):
+        return None
+    normalized = sa_payload.get("normalized") if isinstance(sa_payload.get("normalized"), dict) else {}
+    raw = sa_payload.get("raw") if isinstance(sa_payload.get("raw"), dict) else {}
+    quote = raw.get("quote") if isinstance(raw.get("quote"), dict) else normalized.get("quote")
+    quote_day = source_date((quote or {}).get("td")) or epoch_source_date((quote or {}).get("ts"))
+    periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
+    return (
+        quote_day
+        or latest_row_source_date(periods.get("daily_1y"), "date", "t")
+        or latest_row_source_date(normalized.get("history"), "date", "t")
+    )
+
+
 def oldest_collection_date(values) -> str | None:
     """OLDEST of the given collection dates; None if empty or any value is invalid
     (fail-closed — a missing collection date must not be silently dropped)."""
@@ -156,9 +228,9 @@ def oldest_collection_date(values) -> str | None:
 
 
 def load_core_surface_members() -> set[str] | None:
-    stock_payload = load_json(DATA / "computed" / "stock_action_index.json")
+    stock_payload = load_json(DATA / "global-scouter" / "core" / "stocks_analyzer.json")
     etf_payload = load_json(DATA / "admin" / "fenok-etf-core-daily-basket.json")
-    stock_rows = stock_payload.get("rows") if isinstance(stock_payload, dict) else None
+    stock_rows = stock_payload.get("data") if isinstance(stock_payload, dict) else None
     etf_tickers = ((etf_payload.get("daily_refresh_universe") or {}).get("tickers")) if isinstance(etf_payload, dict) else None
     if not isinstance(stock_rows, list) or not isinstance(etf_tickers, list) or not stock_rows or not etf_tickers:
         return None
@@ -185,30 +257,49 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
     core_valid = bool(core_members) and set(core_members).issubset(row_set)
     full_dates: list[str] = []
     core_dates: list[str] = []
+    core_price_missing: list[str] = []
     missing_fact_stamps = 0
     core_price_stamped = 0
     for ticker in row_tickers:
         payload = load_json(ticker_root / f"{ticker}.json")
         facts = payload.get("facts") if isinstance(payload, dict) else None
         values = list(facts.values()) if isinstance(facts, dict) and facts else []
-        dates = [collection_date((value or {}).get("fetched_at")) for value in values if isinstance(value, dict)]
+        if not values:
+            missing_fact_stamps += 1
+        dates = [source_date((value or {}).get("as_of")) for value in values if isinstance(value, dict)]
         full_dates.extend(date_value for date_value in dates if date_value)
-        missing_fact_stamps += sum(1 for date_value in dates if not date_value)
+        missing_fact_stamps += sum(
+            1
+            for value in values
+            if not isinstance(value, dict) or not source_date(value.get("as_of"))
+        )
         if core_members and ticker in core_members:
-            price_date = collection_date(((facts or {}).get("price") or {}).get("fetched_at")) if isinstance(facts, dict) else None
+            price_date = source_date(((facts or {}).get("price") or {}).get("as_of")) if isinstance(facts, dict) else None
             if price_date:
                 core_dates.append(price_date)
                 core_price_stamped += 1
             else:
-                core_valid = False
+                core_price_missing.append(ticker)
     return {
-        "core_surface_source_as_of": min(core_dates) if core_valid and core_dates else None,
-        "full_universe_floor_as_of": min(full_dates) if full_dates else None,
+        "core_surface_source_as_of": (
+            min(core_dates)
+            if core_valid and core_dates
+            else None
+        ),
+        "full_universe_floor_as_of": (
+            min(full_dates)
+            if full_dates
+            else None
+        ),
         "source_stamp_diagnostics": {
             "core_member_count": len(core_members or []),
             "core_price_stamped_count": core_price_stamped,
+            "core_price_missing_count": len(core_price_missing),
+            "core_price_missing_tickers": core_price_missing,
+            "core_price_source_complete": core_valid and len(core_price_missing) == 0,
             "full_fact_stamped_count": len(full_dates),
             "full_fact_missing_stamp_count": missing_fact_stamps,
+            "full_fact_source_complete": missing_fact_stamps == 0,
         },
     }
 
@@ -371,28 +462,28 @@ def yf_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     value = info.get(key)
-    return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"))
+    return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
 
 
 def yf_percent_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     value = number(info.get(key))
-    return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
+    return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
 
 
 def yf_annual_return_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     value = annual_return_percent(info.get(key))
-    return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
+    return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
 
 
 def yf_fast_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     fast_info = data.get("fast_info") or {}
     value = fast_info.get(key)
-    return fact(value, "yf.fast_info", fetched_at=(yf_payload or {}).get("fetched_at"))
+    return fact(value, "yf.fast_info", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
 
 
 def yf_derived_change_fact(yf_payload):
@@ -402,7 +493,7 @@ def yf_derived_change_fact(yf_payload):
     previous = number(info.get("previousClose"))
     if current is None or previous is None:
         return None
-    return fact(current - previous, "yf.derived", fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
+    return fact(current - previous, "yf.derived", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
 
 
 def yf_derived_change_pct_fact(yf_payload):
@@ -412,7 +503,7 @@ def yf_derived_change_pct_fact(yf_payload):
     previous = number(info.get("previousClose"))
     if current is None or previous in (None, 0):
         return None
-    return fact(((current - previous) / previous) * 100, "yf.derived", fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
+    return fact(((current - previous) / previous) * 100, "yf.derived", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
 
 
 def parse_history_date(value):
@@ -602,7 +693,7 @@ def stockanalysis_quote_fact(sa_payload, key):
     source = "stockanalysis.quote"
     if (sa_payload or {}).get("source_provider") == "yahoo_finance" or (sa_payload or {}).get("source") == "yahoo_finance":
         source = "yf.stockanalysis_fallback.quote"
-    return fact(quote.get(key), source, fetched_at=(sa_payload or {}).get("fetched_at"))
+    return fact(quote.get(key), source, as_of=stockanalysis_source_as_of(sa_payload), fetched_at=(sa_payload or {}).get("fetched_at"))
 
 
 def stockanalysis_overview_fact(sa_payload, key, unit=None):
@@ -612,7 +703,7 @@ def stockanalysis_overview_fact(sa_payload, key, unit=None):
     source = "stockanalysis.overview"
     if (sa_payload or {}).get("source_provider") == "yahoo_finance" or (sa_payload or {}).get("source") == "yahoo_finance":
         source = "yf.stockanalysis_fallback.overview"
-    return fact(parsed if parsed is not None else value, source, fetched_at=(sa_payload or {}).get("fetched_at"), unit=unit)
+    return fact(parsed if parsed is not None else value, source, as_of=stockanalysis_source_as_of(sa_payload), fetched_at=(sa_payload or {}).get("fetched_at"), unit=unit)
 
 
 def stockanalysis_performance_fact(payload, field, source):
@@ -631,34 +722,40 @@ def stockanalysis_performance_fact(payload, field, source):
     return fact(
         value,
         source,
+        as_of=stockanalysis_source_as_of(payload),
         fetched_at=(payload or {}).get("fetched_at") or (payload or {}).get("generated_at"),
         confidence="observed",
         unit="percent_points",
     )
 
 
-def slick_current_or_latest_metrics(slick_payload):
+def slick_metric_with_source_date(slick_payload, key):
+    """Return a SlickCharts metric with a date only when a dated row proves that value."""
     current = (slick_payload or {}).get("current")
-    if isinstance(current, dict) and current:
-        return current, (slick_payload or {}).get("updated")
-
     metrics_history = (slick_payload or {}).get("metrics_history") or []
-    rows = [row for row in metrics_history if isinstance(row, dict)]
-    if not rows:
-        return {}, (slick_payload or {}).get("updated")
-
-    latest = sorted(rows, key=lambda row: str(row.get("date") or ""), reverse=True)[0]
-    return latest, latest.get("date") or (slick_payload or {}).get("updated")
+    rows = sorted(
+        [row for row in metrics_history if isinstance(row, dict) and source_date(row.get("date"))],
+        key=lambda row: str(row.get("date") or ""),
+        reverse=True,
+    )
+    if isinstance(current, dict) and key in current:
+        value = current.get(key)
+        evidence = rows[0] if rows and rows[0].get(key) == value else None
+        return value, source_date((evidence or {}).get("date"))
+    if rows:
+        latest = rows[0]
+        return latest.get(key), source_date(latest.get("date"))
+    return None, None
 
 
 def slick_fact(slick_payload, key, unit=None):
-    current, as_of = slick_current_or_latest_metrics(slick_payload)
-    return fact(current.get(key), "slickcharts", as_of=as_of, unit=unit)
+    value, as_of = slick_metric_with_source_date(slick_payload, key)
+    return fact(value, "slickcharts", as_of=as_of, unit=unit)
 
 
 def slick_market_cap_fact(slick_payload):
-    current, as_of = slick_current_or_latest_metrics(slick_payload)
-    parsed = number(current.get("market_cap_billions"))
+    raw_value, as_of = slick_metric_with_source_date(slick_payload, "market_cap_billions")
+    parsed = number(raw_value)
     value = parsed * 1_000_000_000 if parsed is not None else None
     return fact(value, "slickcharts", as_of=as_of)
 
@@ -771,11 +868,15 @@ def build_one(
     }
     facts = {key: value for key, value in facts.items() if value is not None}
 
+    price_source_as_of = source_date((price or {}).get("as_of")) if isinstance(price, dict) else None
     return {
         "schema_version": SCHEMA_VERSION,
         "ticker": ticker,
         "asset_type": asset_type,
         "generated_at": now_iso(),
+        "source_as_of": price_source_as_of,
+        "source_as_of_scope": "selected_price_fact",
+        "source_as_of_reason": None if price_source_as_of else "selected price fact has no provider source date",
         "identity": {
             "name": info.get("longName") or info.get("shortName") or (slick_payload or {}).get("company") or ticker,
             "exchange": info.get("exchange"),

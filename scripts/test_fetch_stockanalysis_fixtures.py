@@ -442,7 +442,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIsNone(self.fetcher.collection_date("2026-07-09junk"))
         self.assertIsNone(self.fetcher.collection_date("2099-01-01T00:00:00Z"))
 
-    def test_surface_stamp_map_uses_consumer_ownership_and_partial_preservation(self) -> None:
+    def test_surface_stamp_map_uses_consumer_ownership_and_rejects_unproven_prior_stamps(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
             with tempfile.TemporaryDirectory() as tmp:
@@ -459,7 +459,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 }
                 (out_dir / "surface_consumers.json").write_text(json.dumps(consumers), encoding="utf-8")
                 for name, stamp in {"event_a": "2026-07-09T01:00:00Z", "event_b": "2026-07-08T01:00:00Z", "sector_a": "2026-07-07T01:00:00Z", "etf_a": "2026-07-06T01:00:00Z"}.items():
-                    (out_dir / "surfaces" / f"{name}.json").write_text(json.dumps({"fetched_at": stamp}), encoding="utf-8")
+                    (out_dir / "surfaces" / f"{name}.json").write_text(
+                        json.dumps({"source_as_of": stamp, "fetched_at": "2026-07-12T00:00:00Z"}),
+                        encoding="utf-8",
+                    )
                 ok_rows = [{"surface": name, "status": "ok", "error": None} for name in ("event_a", "event_b", "sector_a", "etf_a")]
                 stamps = self.fetcher.build_surface_stamp_map([row["surface"] for row in ok_rows], ok_rows, None)
                 self.assertEqual(stamps, {"market_events": "2026-07-08", "sectors": "2026-07-07", "etf_center": "2026-07-06"})
@@ -472,7 +475,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
                 prior = {"source_as_of": {"market_events": "2026-06-30", "sectors": "2026-06-29", "etf_center": "2026-06-28"}}
                 partial = self.fetcher.build_surface_stamp_map(["event_a"], [ok_rows[0]], prior)
-                self.assertEqual(partial, prior["source_as_of"], "partial domain fetch preserves prior stamps")
+                self.assertEqual(
+                    partial,
+                    {"market_events": None, "sectors": None, "etf_center": None},
+                    "partial domains do not inherit legacy stamps without provider evidence",
+                )
 
                 failed_rows = [*ok_rows]
                 failed_rows[1] = {"surface": "event_b", "status": "error", "error": "fixture"}
@@ -2028,7 +2035,13 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             @staticmethod
             def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
                 return {
-                    "info": {"symbol": "VYMI", "quoteType": "ETF", "currentPrice": 70.0},
+                    "info": {
+                        "symbol": "VYMI",
+                        "quoteType": "ETF",
+                        "currentPrice": 70.0,
+                        "previousClose": 69.5,
+                        "regularMarketTime": 1783641600,
+                    },
                     "funds_data": {"top_holdings": []},
                     "history_1y": [],
                 }, 10, None
@@ -2084,8 +2097,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     "source": "stockanalysis",
                     "asset_type": "etf",
                     "ticker": ticker,
+                    "source_as_of": "2026-07-10T00:00:00Z",
                     "fetched_at": "2026-07-10T00:00:00Z",
                     "normalized": {"overview": {"aum": 1}},
+                    "raw": {"quote": {"td": "2026-07-10", "ts": 1783641600}},
                 }
                 result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
                 primary_exists = (self.fetcher.OUT_DIR / "etfs" / "VYMI.json").exists()
@@ -2119,6 +2134,23 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(observations[0]["observation_origin"], "natural")
         self.assertEqual(provider_object_bytes, primary_bytes)
         self.assertEqual(pending["observation_event_id"], observations[0]["event_id"])
+
+    def test_stockanalysis_self_asserted_source_date_without_provider_evidence_is_invalid(self) -> None:
+        payload = {
+            "schema_version": self.fetcher.SCHEMA_VERSION,
+            "source": "stockanalysis",
+            "asset_type": "etf",
+            "ticker": "VYMI",
+            "source_as_of": "2026-07-10T00:00:00Z",
+            "fetched_at": "2026-07-10T00:00:00Z",
+            "normalized": {"overview": {"aum": 1}},
+        }
+        with self.assertRaisesRegex(ValueError, "provider source date is unavailable"):
+            self.fetcher.validate_stockanalysis_etf_payload("VYMI", payload)
+
+        payload["raw"] = {"quote": {"td": "2026-07-09", "ts": 1783555200}}
+        with self.assertRaisesRegex(ValueError, "disagrees with provider evidence"):
+            self.fetcher.validate_stockanalysis_etf_payload("VYMI", payload)
 
     def test_stockanalysis_path_rejects_cross_provider_payload(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
@@ -2169,8 +2201,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     "source": "stockanalysis",
                     "asset_type": "etf",
                     "ticker": ticker,
-                    "fetched_at": "not-a-timeZ",
+                    "source_as_of": "not-a-timeZ",
+                    "fetched_at": "2026-07-10T00:00:00Z",
                     "normalized": {"overview": {"aum": 1}},
+                    "raw": {"quote": {"td": "2026-07-10", "ts": 1783641600}},
                 }
                 result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=False)
                 after_bytes = detail_path.read_bytes()
@@ -2203,6 +2237,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                         "quoteType": "ETF",
                         "currentPrice": 70.0,
                         "previousClose": 69.5,
+                        "regularMarketTime": 1783641600,
                     },
                     "funds_data": {"top_holdings": []},
                     "history_1y": [],
@@ -2275,7 +2310,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             "BSJY",
             {
                 "ticker": "BSJY",
-                "fetched_at": "2026-06-18T07:30:51Z",
+                "fetched_at": "2026-06-19T07:30:51Z",
                 "data": {
                     "info": {
                         "symbol": "BSJY",
@@ -2283,6 +2318,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                         "longName": "Invesco BulletShares 2034 High Yield Corporate Bond ETF",
                         "currentPrice": 25.07,
                         "previousClose": 25.205,
+                        "regularMarketTime": 1781767851,
                         "navPrice": 20.21,
                         "netExpenseRatio": 0.42,
                         "fundFamily": "Invesco",
@@ -2311,6 +2347,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(payload["source"], "yahoo_finance")
         self.assertEqual(payload["schema_version"], "yf-etf-detail/v1")
         self.assertEqual(payload["source_as_of"], "2026-06-18T07:30:51Z")
+        self.assertNotEqual(payload["source_as_of"], payload["fetched_at"])
         self.assertEqual(payload["source_provider"], "yahoo_finance")
         self.assertEqual(payload["detail_status"], "yf_fallback")
         self.assertEqual(payload["normalized"]["quote"]["ex"], "yahoo_finance")
@@ -2419,6 +2456,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertFalse(candidate_exists)
         self.assertEqual(len(observations), 1)
         self.assertEqual(observations[0]["validation_status"], "invalid")
+        self.assertIsNone(observations[0]["source_as_of"])
         self.assertEqual(observations[0]["provider_path"], "data/yf/finance/ADIU.json")
 
     def test_malformed_yahoo_container_still_records_invalid_observation(self) -> None:
@@ -2458,6 +2496,53 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertFalse(candidate_exists)
         self.assertEqual(len(observations), 1)
         self.assertEqual(observations[0]["validation_status"], "invalid")
+        self.assertIsNone(observations[0]["source_as_of"])
+
+    def test_undated_yahoo_candidate_records_source_unavailable_observation(self) -> None:
+        original_loader = self.fetcher.load_yf_finance_module
+        original_yf_out_dir = self.fetcher.YF_OUT_DIR
+        original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+
+        class FakeYahooModule:
+            @staticmethod
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
+                return {
+                    "info": {
+                        "symbol": "ADIU",
+                        "quoteType": "ETF",
+                        "currentPrice": 10,
+                        "previousClose": 9.5,
+                    },
+                    "funds_data": {"top_holdings": []},
+                    "history_1y": [],
+                }, 10, None
+
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                temp_root = Path(tmp)
+                self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
+                self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
+                self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                with self.assertRaisesRegex(ValueError, "provider source date is unavailable"):
+                    self.fetcher.fetch_yahoo_etf_fallback("ADIU", mirror_public=False)
+                history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
+                observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
+                raw_payload = json.loads((self.fetcher.YF_OUT_DIR / "ADIU.json").read_text(encoding="utf-8"))
+                candidate_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "ADIU.json").exists()
+        finally:
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.YF_OUT_DIR = original_yf_out_dir
+            self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+        self.assertIsNone(raw_payload["source_as_of"])
+        self.assertEqual(raw_payload["source_as_of_reason"], "provider payload carries no market observation date")
+        self.assertFalse(candidate_exists)
+        self.assertEqual(len(observations), 1)
+        self.assertEqual(observations[0]["reason_code"], "source_date_unavailable")
+        self.assertIsNone(observations[0]["source_as_of"])
 
     def test_etf_classification_separates_index_and_single_stock_leverage(self) -> None:
         index_etf = self.fetcher.classify_etf(

@@ -50,14 +50,14 @@ def market_fact(ticker, *, both=True, price=100.0):
             "price": {
                 "value": price,
                 "source": "yf",
-                "as_of": None,
-                "fetched_at": "2026-07-10T00:00:00Z",
+                "as_of": "2026-07-10",
+                "fetched_at": "2026-07-11T00:00:00Z",
             },
             "change": {
                 "value": 1.0,
                 "source": "stockanalysis.quote",
-                "as_of": None,
-                "fetched_at": "2026-07-10T00:00:00Z",
+                "as_of": "2026-07-10",
+                "fetched_at": "2026-07-11T00:00:00Z",
             },
         },
         "sources": {
@@ -145,6 +145,8 @@ class StockDetailShadowBuilderTests(unittest.TestCase):
             "ABBV",
             sa_fetched_at="2026-07-01T00:00:00Z",
             yf_fetched_at="2026-07-10T00:00:00Z",
+            sa_source_as_of="2026-07-01T00:00:00Z",
+            yf_source_as_of="2026-07-10T00:00:00Z",
             price=20.0,
         )
         write_pair(
@@ -152,6 +154,8 @@ class StockDetailShadowBuilderTests(unittest.TestCase):
             "AMAT",
             sa_fetched_at="2026-07-01T00:00:00Z",
             yf_fetched_at="2026-07-01T00:00:00Z",
+            sa_source_as_of="2026-07-01T00:00:00Z",
+            yf_source_as_of="2026-07-01T00:00:00Z",
             price=30.0,
         )
         write_pair(
@@ -159,6 +163,8 @@ class StockDetailShadowBuilderTests(unittest.TestCase):
             "AMD",
             sa_fetched_at="2026-06-20T00:00:00Z",
             yf_fetched_at="2026-06-20T00:00:00Z",
+            sa_source_as_of="2026-06-20T00:00:00Z",
+            yf_source_as_of="2026-06-20T00:00:00Z",
             price=40.0,
         )
         self.market = write_market_facts(self.repo, self.tickers, yahoo_only=3)

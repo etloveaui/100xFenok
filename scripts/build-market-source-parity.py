@@ -68,28 +68,27 @@ def relative_spread_pct(values: list[float]) -> float | None:
 
 
 def parse_ts(cand: dict) -> datetime | None:
-    """Parse a candidate timestamp (fetched_at preferred, else as_of).
+    """Parse the candidate's real source observation date.
 
-    Accepts ISO 8601 strings that may end with ``Z`` or ``+00:00``.
-    Returns ``None`` when neither timestamp is present or parseable.
+    Collection/build timestamps are deliberately excluded. Accepts ISO 8601
+    ``as_of`` strings ending with ``Z`` or an explicit offset and returns
+    ``None`` when the provider did not publish a usable source date.
     """
-    for key in ("fetched_at", "as_of"):
-        raw = cand.get(key)
-        if not raw or not isinstance(raw, str):
-            continue
-        text = raw.strip()
-        if not text:
-            continue
-        if text.endswith("Z"):
-            text = text[:-1] + "+00:00"
-        try:
-            parsed = datetime.fromisoformat(text)
-        except ValueError:
-            continue
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        return parsed
-    return None
+    raw = cand.get("as_of")
+    if not raw or not isinstance(raw, str):
+        return None
+    text = raw.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def diagnose_divergence(field: str, candidates: list, policy: list) -> dict:

@@ -54,7 +54,7 @@ class StockDetailValidationTests(unittest.TestCase):
         candidate = self.validate("stockanalysis", "BRK.A", "stockanalysis_valid.fixture.json")
         self.assertEqual(candidate.payload_bytes, self.fixture("stockanalysis_valid.fixture.json"))
         self.assertEqual(candidate.payload_sha256, hashlib.sha256(candidate.payload_bytes).hexdigest())
-        self.assertEqual(candidate.source_as_of, "2026-07-10T10:00:00Z")
+        self.assertEqual(candidate.source_as_of, "2026-07-10T00:00:00Z")
 
     def test_yahoo_valid_preserves_exact_bytes(self):
         candidate = self.validate("yahoo_finance", "BRK.A", "yahoo_equity_valid.fixture.json")
@@ -93,8 +93,8 @@ class StockDetailValidationTests(unittest.TestCase):
     def test_naive_future_and_expected_digest_corruption_fail_closed(self):
         base = self.fixture("stockanalysis_valid.fixture.json")
         cases = (
-            (base.replace(b"2026-07-10T10:00:00Z", b"2026-07-10T10:00:00"), None),
-            (base.replace(b"2026-07-10T10:00:00Z", b"2026-07-11T10:00:00Z"), None),
+            (base.replace(b'"t":"2026-07-10"', b'"t":"not-a-date"'), None),
+            (base.replace(b'"t":"2026-07-10"', b'"t":"2026-07-11"'), None),
             (base, "0" * 64),
         )
         for payload, digest in cases:
@@ -188,6 +188,8 @@ class StockDetailValidationTests(unittest.TestCase):
             )
             self.assertEqual(store.read_active_domain("stock_detail"), before)
             self.assertEqual(row["validation_status"], "invalid")
+            self.assertIsNone(row["source_as_of"])
+            self.assertEqual(row["reason_code"], "schema_invalid")
             self.assertFalse((Path(tmp) / "state" / "providers").exists())
 
 

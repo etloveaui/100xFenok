@@ -68,10 +68,12 @@ function isoNow() {
 }
 
 function readJson(relPath, fallback = null) {
+  const abs = path.join(dataRoot, relPath);
   try {
-    return JSON.parse(fs.readFileSync(path.join(dataRoot, relPath), "utf8"));
-  } catch {
-    return fallback;
+    return JSON.parse(fs.readFileSync(abs, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") return fallback;
+    throw new Error(`Cannot read valid JSON from ${abs}: ${error?.message || error}`, { cause: error });
   }
 }
 
@@ -220,8 +222,28 @@ function cueCounts(text) {
   return { positive, negative };
 }
 
+function articleSeenAt(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const compact = text.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})Z?$/);
+  const normalized = compact
+    ? `${compact[1]}-${compact[2]}-${compact[3]}T${compact[4]}:${compact[5]}:${compact[6]}Z`
+    : text;
+  const parsed = new Date(normalized);
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : null;
+}
+
+function latestArticleSeenAt(articles) {
+  const dates = (Array.isArray(articles) ? articles : [])
+    .map((article) => articleSeenAt(article?.seendate))
+    .filter(Boolean)
+    .sort();
+  return dates.at(-1) ?? null;
+}
+
 function computeTone({ ticker, company, payload }) {
   const articles = Array.isArray(payload.articles) ? payload.articles : [];
+  const sourceSeenAt = latestArticleSeenAt(articles);
   let positive = 0;
   let negative = 0;
   let cueBearing = 0;
@@ -239,7 +261,8 @@ function computeTone({ ticker, company, payload }) {
   return {
     ticker,
     company,
-    as_of: payload.fetched_at,
+    as_of: sourceSeenAt,
+    as_of_reason: sourceSeenAt ? null : "GDELT articles do not expose a usable seendate",
     confidence: articleCount >= 15 ? "medium" : articleCount >= 5 ? "low" : "very_low",
     coverage_ratio: Math.round(Math.min(1, articleCount / 25) * 100) / 100,
     source_families: ["GDELT DOC 2.0 ArtList"],
@@ -287,9 +310,19 @@ async function build(args) {
     }
   }
   const generatedAt = isoNow();
+  const rowsWithArticles = rows.filter((row) => row.direct_news_tone_proxy.article_count > 0);
+  const rowSourceDates = rows.map((row) => row.as_of);
+  const sourceAsOf = rowSourceDates.length > 0 && rowSourceDates.every(Boolean)
+    ? [...rowSourceDates].sort().at(0)
+    : null;
   const snapshot = {
     schema_version: 1,
     generated_at: generatedAt,
+    source_as_of: sourceAsOf,
+    source_as_of_reason: sourceAsOf
+      ? null
+      : "aggregate source floor unavailable because one or more article rows lack a usable seendate",
+    status: errors.length > 0 || sourceAsOf === null ? "degraded" : "ready",
     formula_version: FORMULA_VERSION,
     public_surface_status: "private_admin_derived_only_not_public",
     raw_policy: {
@@ -368,9 +401,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  articleSeenAt,
   cleanCompanyName,
   computeTone,
   cueCounts,
   fetchJsonWithRetry,
+  latestArticleSeenAt,
   queryForTicker,
 };

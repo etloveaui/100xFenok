@@ -53,6 +53,8 @@ jobs:
 
       # ===== Daily =====
       - name: Fetch Daily FRED Data
+        id: daily
+        continue-on-error: true
         if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'daily'
         run: |
           echo "Fetching daily FRED series..."
@@ -92,11 +94,15 @@ jobs:
                     res.on('data', chunk => data += chunk);
                     res.on('end', () => {
                       try {
+                        if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}`);
                         const json = JSON.parse(data);
-                        const observations = json.observations || [];
+                        if (!Array.isArray(json.observations)) throw new Error('observations array missing');
+                        const observations = json.observations;
                         const points = observations
-                          .filter(o => o.value !== '.')
-                          .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                          .filter(o => String(o.value ?? '').trim() !== '' && String(o.value).trim() !== '.')
+                          .map(o => ({ date: o.date, value: Number(o.value) }))
+                          .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
+                        if (points.length === 0) throw new Error('no usable observations');
                         console.log(`${seriesId}: ${points.length} points`);
                         resolve({ id: seriesId, data: points });
                       } catch (e) {
@@ -109,24 +115,44 @@ jobs:
               } catch (e) {
                 if (attempt < MAX_RETRIES) continue;
                 console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${e.message}`);
-                return { id: seriesId, data: [] };
+                return { id: seriesId, data: null, error: e.message };
               }
             }
-            return { id: seriesId, data: [] };
+            return { id: seriesId, data: null, error: 'retry loop exhausted' };
           }
 
           async function main() {
             console.log('Fetching daily series...');
             const results = {};
+            const failures = [];
+            const targetPath = 'data/macro/fred-banking-daily.json';
+            const previous = fs.existsSync(targetPath) ? JSON.parse(fs.readFileSync(targetPath, 'utf8')) : {};
+            const previousSeries = previous.series && typeof previous.series === 'object' ? previous.series : {};
 
             for (const series of DAILY_SERIES) {
               const result = await fetchSeries(series.id);
-              results[series.id] = result.data;
+              if (Array.isArray(result.data) && result.data.length > 0) {
+                results[series.id] = result.data;
+              } else {
+                const lkg = Array.isArray(previousSeries[series.id]) ? previousSeries[series.id] : [];
+                results[series.id] = lkg;
+                failures.push({ series_id: series.id, error: result.error ?? 'fetch failed', lkg_points: lkg.length });
+              }
               await new Promise(r => setTimeout(r, 500));
             }
 
+            const fetchedAt = new Date().toISOString();
+            const latestBySeries = Object.values(results).map(points => points.at(-1)?.date ?? null);
+            const sourceAsOf = latestBySeries.length > 0 && latestBySeries.every(Boolean)
+              ? [...latestBySeries].sort().at(0)
+              : null;
             const output = {
-              updated: new Date().toISOString(),
+              updated: sourceAsOf,
+              source_as_of: sourceAsOf,
+              source_as_of_reason: sourceAsOf ? null : 'one or more required FRED series have no usable observation date',
+              fetched_at: fetchedAt,
+              status: failures.length > 0 ? 'degraded' : 'ready',
+              failed_series: failures,
               type: 'daily',
               series: results
             };
@@ -136,13 +162,16 @@ jobs:
             fs.writeFileSync('data/macro/fred-banking-daily.json', payload);
             fs.writeFileSync('100xfenok-next/public/data/macro/fred-banking-daily.json', payload);
             console.log('Saved fred-banking-daily.json to source and public mirror');
+            if (failures.length > 0) throw new Error(`FRED daily partial failure: ${failures.map(row => row.series_id).join(', ')}`);
           }
 
-          main().catch(console.error);
+          main().catch(error => { console.error(error); process.exitCode = 1; });
           EOF
 
       # ===== Weekly =====
       - name: Fetch Weekly FRED Data
+        id: weekly
+        continue-on-error: true
         if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'weekly'
         run: |
           echo "Fetching weekly FRED series..."
@@ -170,21 +199,25 @@ jobs:
                 res.on('data', chunk => data += chunk);
                 res.on('end', () => {
                   try {
+                    if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}`);
                     const json = JSON.parse(data);
-                    const observations = json.observations || [];
+                    if (!Array.isArray(json.observations)) throw new Error('observations array missing');
+                    const observations = json.observations;
                     const result = observations
-                      .filter(o => o.value !== '.')
-                      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                      .filter(o => String(o.value ?? '').trim() !== '' && String(o.value).trim() !== '.')
+                      .map(o => ({ date: o.date, value: Number(o.value) }))
+                      .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
+                    if (result.length === 0) throw new Error('no usable observations');
                     console.log(`${seriesId}: ${result.length} points`);
                     resolve({ id: seriesId, data: result });
                   } catch (e) {
                     console.error(`${seriesId}: Error - ${e.message}`);
-                    resolve({ id: seriesId, data: [] });
+                    resolve({ id: seriesId, data: null, error: e.message });
                   }
                 });
               }).on('error', (e) => {
                 console.error(`${seriesId}: Network error - ${e.message}`);
-                resolve({ id: seriesId, data: [] });
+                resolve({ id: seriesId, data: null, error: e.message });
               });
             });
           }
@@ -192,15 +225,35 @@ jobs:
           async function main() {
             console.log('Fetching weekly series...');
             const results = {};
+            const failures = [];
+            const targetPath = 'data/macro/fred-banking-weekly.json';
+            const previous = fs.existsSync(targetPath) ? JSON.parse(fs.readFileSync(targetPath, 'utf8')) : {};
+            const previousSeries = previous.series && typeof previous.series === 'object' ? previous.series : {};
 
             for (const series of WEEKLY_SERIES) {
               const result = await fetchSeries(series.id);
-              results[series.id] = result.data;
+              if (Array.isArray(result.data) && result.data.length > 0) {
+                results[series.id] = result.data;
+              } else {
+                const lkg = Array.isArray(previousSeries[series.id]) ? previousSeries[series.id] : [];
+                results[series.id] = lkg;
+                failures.push({ series_id: series.id, error: result.error ?? 'fetch failed', lkg_points: lkg.length });
+              }
               await new Promise(r => setTimeout(r, 500));
             }
 
+            const fetchedAt = new Date().toISOString();
+            const latestBySeries = Object.values(results).map(points => points.at(-1)?.date ?? null);
+            const sourceAsOf = latestBySeries.length > 0 && latestBySeries.every(Boolean)
+              ? [...latestBySeries].sort().at(0)
+              : null;
             const output = {
-              updated: new Date().toISOString(),
+              updated: sourceAsOf,
+              source_as_of: sourceAsOf,
+              source_as_of_reason: sourceAsOf ? null : 'one or more required FRED series have no usable observation date',
+              fetched_at: fetchedAt,
+              status: failures.length > 0 ? 'degraded' : 'ready',
+              failed_series: failures,
               type: 'weekly',
               series: results
             };
@@ -210,13 +263,16 @@ jobs:
             fs.writeFileSync('data/macro/fred-banking-weekly.json', payload);
             fs.writeFileSync('100xfenok-next/public/data/macro/fred-banking-weekly.json', payload);
             console.log('Saved fred-banking-weekly.json to source and public mirror');
+            if (failures.length > 0) throw new Error(`FRED weekly partial failure: ${failures.map(row => row.series_id).join(', ')}`);
           }
 
-          main().catch(console.error);
+          main().catch(error => { console.error(error); process.exitCode = 1; });
           EOF
 
       # ===== Quarterly =====
       - name: Fetch Quarterly FRED Data
+        id: quarterly
+        continue-on-error: true
         if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'quarterly'
         run: |
           echo "Fetching quarterly FRED series..."
@@ -267,11 +323,15 @@ jobs:
                     res.on('data', chunk => data += chunk);
                     res.on('end', () => {
                       try {
+                        if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}`);
                         const json = JSON.parse(data);
-                        const observations = json.observations || [];
+                        if (!Array.isArray(json.observations)) throw new Error('observations array missing');
+                        const observations = json.observations;
                         const points = observations
-                          .filter(o => o.value !== '.')
-                          .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                          .filter(o => String(o.value ?? '').trim() !== '' && String(o.value).trim() !== '.')
+                          .map(o => ({ date: o.date, value: Number(o.value) }))
+                          .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
+                        if (points.length === 0) throw new Error('no usable observations');
                         console.log(`${seriesId}: ${points.length} points`);
                         resolve({ id: seriesId, data: points });
                       } catch (e) {
@@ -284,24 +344,44 @@ jobs:
               } catch (e) {
                 if (attempt < MAX_RETRIES) continue;
                 console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${e.message}`);
-                return { id: seriesId, data: [] };
+                return { id: seriesId, data: null, error: e.message };
               }
             }
-            return { id: seriesId, data: [] };
+            return { id: seriesId, data: null, error: 'retry loop exhausted' };
           }
 
           async function main() {
             console.log('Fetching quarterly series...');
             const results = {};
+            const failures = [];
+            const targetPath = 'data/macro/fred-banking-quarterly.json';
+            const previous = fs.existsSync(targetPath) ? JSON.parse(fs.readFileSync(targetPath, 'utf8')) : {};
+            const previousSeries = previous.series && typeof previous.series === 'object' ? previous.series : {};
 
             for (const series of QUARTERLY_SERIES) {
               const result = await fetchSeries(series.id);
-              results[series.id] = result.data;
+              if (Array.isArray(result.data) && result.data.length > 0) {
+                results[series.id] = result.data;
+              } else {
+                const lkg = Array.isArray(previousSeries[series.id]) ? previousSeries[series.id] : [];
+                results[series.id] = lkg;
+                failures.push({ series_id: series.id, error: result.error ?? 'fetch failed', lkg_points: lkg.length });
+              }
               await new Promise(r => setTimeout(r, 500));
             }
 
+            const fetchedAt = new Date().toISOString();
+            const latestBySeries = Object.values(results).map(points => points.at(-1)?.date ?? null);
+            const sourceAsOf = latestBySeries.length > 0 && latestBySeries.every(Boolean)
+              ? [...latestBySeries].sort().at(0)
+              : null;
             const output = {
-              updated: new Date().toISOString(),
+              updated: sourceAsOf,
+              source_as_of: sourceAsOf,
+              source_as_of_reason: sourceAsOf ? null : 'one or more required FRED series have no usable observation date',
+              fetched_at: fetchedAt,
+              status: failures.length > 0 ? 'degraded' : 'ready',
+              failed_series: failures,
               type: 'quarterly',
               series: results
             };
@@ -311,9 +391,10 @@ jobs:
             fs.writeFileSync('data/macro/fred-banking-quarterly.json', payload);
             fs.writeFileSync('100xfenok-next/public/data/macro/fred-banking-quarterly.json', payload);
             console.log('Saved fred-banking-quarterly.json to source and public mirror');
+            if (failures.length > 0) throw new Error(`FRED quarterly partial failure: ${failures.map(row => row.series_id).join(', ')}`);
           }
 
-          main().catch(console.error);
+          main().catch(error => { console.error(error); process.exitCode = 1; });
           EOF
 
       # ===== 단일 커밋 & Push =====
@@ -325,6 +406,7 @@ jobs:
             data/macro/fred-banking-*.json \
             100xfenok-next/public/data/macro/fred-banking-*.json
           git diff --staged --quiet || git commit -m "chore: update FRED banking data"
+          pushed=0
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
               echo "git rebase failed on attempt ${attempt}; aborting and retrying"
@@ -333,10 +415,19 @@ jobs:
               continue
             fi
             if git push; then
-              exit 0
+              pushed=1
+              break
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"
             sleep 3
           done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
+          if [[ "${pushed}" -ne 1 ]]; then
+            echo "git push failed after retrying concurrent main updates"
+            exit 1
+          fi
+          for outcome in "${{ steps.daily.outcome }}" "${{ steps.weekly.outcome }}" "${{ steps.quarterly.outcome }}"; do
+            if [[ "${outcome}" == "failure" ]]; then
+              echo "One or more FRED fetch slices degraded; LKG payload was committed and the natural run remains red"
+              exit 1
+            fi
+          done

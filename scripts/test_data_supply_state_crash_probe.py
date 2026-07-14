@@ -55,7 +55,7 @@ def make_failure(provider, suffix, observed_at, *, domain="etf_detail", entity="
             "endpoint_family": provider_policy.endpoint_family,
             "provider_path": provider_path(provider, domain, entity, suffix),
             "provider_schema": provider_policy.schema,
-            "source_as_of": observed_at,
+            "source_as_of": None,
             "observed_at": observed_at,
             "validation_status": "invalid",
             "reason_code": "fetch_failed",

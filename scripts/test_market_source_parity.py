@@ -48,8 +48,8 @@ class SourceParityDiagnosisTest(unittest.TestCase):
     def test_stale_percent_is_not_scale_mismatch(self) -> None:
         # PERCENT field: fresh 5.0 (now) vs stale 0.05 (now - 20 days).
         candidates = [
-            cand(5.0, "stockanalysis.quote", fetched_at=self.now_iso),
-            cand(0.05, "yf", fetched_at=self.old_iso),
+            cand(5.0, "stockanalysis.quote", as_of=self.now_iso),
+            cand(0.05, "yf", as_of=self.old_iso),
         ]
         result = self.mod.diagnose_divergence(
             "dividend_yield", candidates, ["stockanalysis.quote", "yf"]
@@ -65,8 +65,8 @@ class SourceParityDiagnosisTest(unittest.TestCase):
     def test_true_scale_mismatch_when_both_fresh(self) -> None:
         # PERCENT field: two FRESH candidates 5.0 and 0.05 (both now).
         candidates = [
-            cand(5.0, "stockanalysis.quote", fetched_at=self.now_iso),
-            cand(0.05, "yf", fetched_at=self.now_iso),
+            cand(5.0, "stockanalysis.quote", as_of=self.now_iso),
+            cand(0.05, "yf", as_of=self.now_iso),
         ]
         result = self.mod.diagnose_divergence(
             "dividend_yield", candidates, ["stockanalysis.quote", "yf"]
@@ -80,8 +80,8 @@ class SourceParityDiagnosisTest(unittest.TestCase):
 
     def test_sign_divergence(self) -> None:
         candidates = [
-            cand(2.0, "stockanalysis.quote", fetched_at=self.now_iso),
-            cand(-2.0, "yf.derived", fetched_at=self.now_iso),
+            cand(2.0, "stockanalysis.quote", as_of=self.now_iso),
+            cand(-2.0, "yf.derived", as_of=self.now_iso),
         ]
         result = self.mod.diagnose_divergence(
             "change_pct", candidates, ["stockanalysis.quote", "yf", "yf.derived"]
@@ -93,8 +93,8 @@ class SourceParityDiagnosisTest(unittest.TestCase):
 
     def test_agreement(self) -> None:
         candidates = [
-            cand(100.0, "yf", fetched_at=self.now_iso),
-            cand(100.4, "stockanalysis.quote", fetched_at=self.now_iso),
+            cand(100.0, "yf", as_of=self.now_iso),
+            cand(100.4, "stockanalysis.quote", as_of=self.now_iso),
         ]
         result = self.mod.diagnose_divergence(
             "price", candidates, ["yf", "stockanalysis.quote"]
@@ -107,7 +107,7 @@ class SourceParityDiagnosisTest(unittest.TestCase):
 
     def test_parse_ts_handles_z_and_offset_and_none(self) -> None:
         self.assertEqual(
-            self.mod.parse_ts({"fetched_at": "2026-06-18T00:00:00Z"}),
+            self.mod.parse_ts({"as_of": "2026-06-18T00:00:00Z"}),
             self.now,
         )
         self.assertEqual(
@@ -115,6 +115,13 @@ class SourceParityDiagnosisTest(unittest.TestCase):
             self.now,
         )
         self.assertIsNone(self.mod.parse_ts({"fetched_at": None, "as_of": None}))
+
+    def test_parse_ts_does_not_promote_collection_time(self) -> None:
+        self.assertIsNone(self.mod.parse_ts({"fetched_at": self.now_iso}))
+        self.assertEqual(
+            self.mod.parse_ts({"fetched_at": self.now_iso, "as_of": self.old_iso}),
+            self.now - timedelta(days=20),
+        )
 
 
 if __name__ == "__main__":

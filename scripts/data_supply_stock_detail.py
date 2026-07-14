@@ -104,6 +104,70 @@ def _timestamp(value: Any, label: str) -> dt.datetime:
     return parsed.astimezone(dt.timezone.utc)
 
 
+def _source_timestamp_from_epoch(value: Any) -> str | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return None
+    seconds = float(value) / 1000 if abs(float(value)) >= 100_000_000_000 else float(value)
+    try:
+        parsed = dt.datetime.fromtimestamp(seconds, dt.timezone.utc)
+    except (OverflowError, OSError, ValueError):
+        return None
+    return parsed.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _source_timestamp_from_date(value: Any) -> str | None:
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        return None
+    try:
+        parsed = dt.date.fromisoformat(value)
+    except ValueError:
+        return None
+    return f"{parsed.isoformat()}T00:00:00Z"
+
+
+def _latest_history_source_timestamp(rows: Any, *date_keys: str) -> str | None:
+    if not isinstance(rows, list):
+        return None
+    dates = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for key in date_keys:
+            stamp = _source_timestamp_from_date(row.get(key))
+            if stamp:
+                dates.append(stamp)
+                break
+    return max(dates) if dates else None
+
+
+def _stockanalysis_source_as_of(payload: dict[str, Any]) -> str | None:
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    for quote in (raw.get("quote"), normalized.get("quote")):
+        if not isinstance(quote, dict):
+            continue
+        timestamp = _source_timestamp_from_epoch(quote.get("ts"))
+        source_date = _source_timestamp_from_date(quote.get("td"))
+        if timestamp and (not source_date or timestamp[:10] == source_date[:10]):
+            return timestamp
+        if source_date:
+            return source_date
+    history_periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
+    return (
+        _latest_history_source_timestamp(history_periods.get("daily_1y"), "date", "t")
+        or _latest_history_source_timestamp(normalized.get("history"), "date", "t")
+    )
+
+
+def _yahoo_source_as_of(payload: dict[str, Any]) -> str | None:
+    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+    info = data.get("info") if isinstance(data.get("info"), dict) else {}
+    return (
+        _source_timestamp_from_epoch(info.get("regularMarketTime"))
+        or _latest_history_source_timestamp(data.get("history_1y"), "date")
+    )
+
+
 def _finite_number(value: Any, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         _fail("quote_invalid", f"{label} must be a finite number")
@@ -236,11 +300,15 @@ def validate_stock_detail_candidate(
     if expected_sha256 is not None and payload_sha256 != expected_sha256:
         _fail("digest_mismatch", "stock-detail payload digest mismatch")
     payload = _strict_json_bytes(payload_bytes)
-    source_as_of = payload.get("fetched_at")
-    source_time = _timestamp(source_as_of, "fetched_at")
+    source_as_of = (
+        _stockanalysis_source_as_of(payload)
+        if provider == _POLICY.primary.name
+        else _yahoo_source_as_of(payload)
+    )
+    source_time = _timestamp(source_as_of, "source_as_of")
     observed_time = _timestamp(observed_at, "observed_at")
     if source_time > observed_time:
-        _fail("time_invalid", "fetched_at cannot follow observed_at")
+        _fail("time_invalid", "source_as_of cannot follow observed_at")
     if provider == _POLICY.primary.name:
         _validate_stockanalysis(entity, payload)
     else:
@@ -347,7 +415,7 @@ def record_stock_detail_failure(
         "provider_path": provider_path,
         "payload_sha256": canonical_sha256(descriptor),
         "provider_schema": provider_policy.schema,
-        "source_as_of": observed_at,
+        "source_as_of": None,
         "observed_at": observed_at,
         "validation_status": "invalid",
         "reason_code": reason_code,

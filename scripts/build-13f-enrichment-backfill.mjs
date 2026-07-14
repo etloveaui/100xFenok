@@ -87,6 +87,12 @@ function guardYfSummary(data, filePath) {
   }
 }
 
+function requireNonNegativeInteger(value, filePath, key) {
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`${filePath}: ${key} must be a non-negative integer`);
+  }
+}
+
 function guardQuarterCloses(data, filePath) {
   requireKeys(data, filePath, ["tickers"]);
   requireObject(data.tickers, filePath, "tickers");
@@ -174,6 +180,13 @@ function dateFromTimestamp(value) {
   return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : null;
 }
 
+function dateFromUnixSeconds(value) {
+  const seconds = numberOrNull(value);
+  if (!(seconds > 0)) return null;
+  const date = new Date(seconds * 1000);
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : null;
+}
+
 function quarterEnd(quarter) {
   const match = String(quarter ?? "").match(/^(\d{4})-Q([1-4])$/);
   if (!match) return null;
@@ -186,21 +199,56 @@ function quarterEnd(quarter) {
   }[match[2]];
 }
 
-function ensureYfSummaryOk() {
+function loadYfSummaryState() {
+  if (!fs.existsSync(YF_SUMMARY_PATH)) {
+    return {
+      summary: { count: 0, ok: 0, failed: 0, errors: [], generated_at: null },
+      warnings: ["YF finance summary is unavailable; preserving existing 13F enrichment where source rows are absent"],
+    };
+  }
   const summary = loadJsonGuarded(YF_SUMMARY_PATH, guardYfSummary);
   const count = Number(summary.count ?? 0);
   const ok = Number(summary.ok ?? 0);
   const failed = Number(summary.failed ?? 0);
   const errors = Array.isArray(summary.errors) ? summary.errors.length : Number(summary.errors ?? 0);
-  if (!count || ok !== count || failed !== 0 || errors !== 0) {
+  for (const [key, value] of [["count", count], ["ok", ok], ["failed", failed], ["errors", errors]]) {
+    requireNonNegativeInteger(value, YF_SUMMARY_PATH, key);
+  }
+  if (ok + failed !== count || errors !== failed) {
     throw new Error(
-      `YF finance summary is not clean: count=${count} ok=${ok} failed=${failed} errors=${errors}`,
+      `YF finance summary count reconciliation failed: count=${count} ok=${ok} failed=${failed} errors=${errors}`,
     );
   }
-  return summary;
+  if (failed > 0 && !Array.isArray(summary.errors)) {
+    throw new Error("YF finance summary must name every failed ticker before partial 13F enrichment can preserve LKG safely");
+  }
+  const failedSymbols = new Set();
+  if (Array.isArray(summary.errors)) {
+    for (const [index, row] of summary.errors.entries()) {
+      const ticker = String(row?.ticker ?? "").trim().toUpperCase();
+      if (!ticker || !SYMBOL_RE.test(ticker)) {
+        throw new Error(`${YF_SUMMARY_PATH}: errors[${index}].ticker must be a valid symbol`);
+      }
+      if (failedSymbols.has(ticker)) {
+        throw new Error(`${YF_SUMMARY_PATH}: duplicate failed ticker ${ticker}`);
+      }
+      failedSymbols.add(ticker);
+    }
+  }
+  const warnings = [];
+  if (count === 0) warnings.push("YF finance summary has no rows");
+  if (failed > 0) {
+    const sample = [...failedSymbols].slice(0, 10).join(", ") || "symbols unavailable";
+    warnings.push(`YF finance is partial: ${failed}/${count} tickers failed (${sample}); those 13F fields remain LKG`);
+  }
+  return { summary, warnings, failedSymbols };
 }
 
-const yfSummary = ensureYfSummaryOk();
+const {
+  summary: yfSummary,
+  warnings: yfWarnings,
+  failedSymbols: yfFailedSymbols = new Set(),
+} = loadYfSummaryState();
 const quarterDoc = readExistingJson(QUARTER_CLOSES_PATH, {}, guardQuarterCloses);
 const quarterCloses = quarterDoc.tickers ?? {};
 const resolver = loadTickerResolver(ROOT);
@@ -210,6 +258,10 @@ function profileForSymbol(symbol) {
   const clean = String(symbol ?? "").trim().toUpperCase();
   if (!SYMBOL_RE.test(clean)) return null;
   if (profileCache.has(clean)) return profileCache.get(clean);
+  if (yfFailedSymbols.has(clean)) {
+    profileCache.set(clean, null);
+    return null;
+  }
 
   const filePath = path.join(YF_DIR, `${clean}.json`);
   if (!fs.existsSync(filePath)) {
@@ -218,10 +270,20 @@ function profileForSymbol(symbol) {
   }
 
   const payload = loadJsonGuarded(filePath, guardYfProfile);
+  const payloadTicker = String(payload.ticker ?? "").trim().toUpperCase();
+  if (payloadTicker !== clean) {
+    throw new Error(`${filePath}: ticker identity mismatch; expected ${clean}, got ${payloadTicker || "(missing)"}`);
+  }
   const info = payload.data?.info ?? {};
+  const fetchedAt = dateFromTimestamp(payload.fetched_at);
+  const sourceAsOf = dateFromUnixSeconds(info.regularMarketTime);
+  if (sourceAsOf && fetchedAt && sourceAsOf > fetchedAt) {
+    throw new Error(`${filePath}: regularMarketTime ${sourceAsOf} is after fetched_at ${fetchedAt}`);
+  }
   const profile = {
     symbol: clean,
-    fetched_at: dateFromTimestamp(payload.fetched_at),
+    fetched_at: fetchedAt,
+    source_as_of: sourceAsOf,
     sector: normalizeSector(info.sector),
     industry: typeof info.industry === "string" && info.industry.trim() ? info.industry.trim() : null,
     market_cap: numberOrNull(info.marketCap),
@@ -292,7 +354,10 @@ function backfillHolding(holding, filing, stats) {
   if (profile.market_cap !== null && profile.market_cap > 0) {
     holding.market_cap_usd = profile.market_cap;
     holding.market_cap_bucket_abs = classifyMarketCap(profile.market_cap);
-    holding.market_cap_as_of = profile.fetched_at ?? yfSummary.generated_at?.slice(0, 10) ?? null;
+    holding.market_cap_as_of = profile.source_as_of;
+    holding.market_cap_as_of_reason = profile.source_as_of
+      ? null
+      : "Yahoo profile did not publish a usable regularMarketTime for this observation";
     holding.market_cap_source = "yf-local";
     touched = true;
   }
@@ -425,6 +490,8 @@ for (const file of investorFiles) {
     ...(doc.metadata ?? {}),
     enrichment_backfill: {
       source: "local_yf_finance",
+      status: yfWarnings.length > 0 ? "degraded" : "ready",
+      warnings: yfWarnings,
       generated_at: generatedAt,
     },
   };
@@ -448,6 +515,8 @@ summary.metadata = {
   enrichment_denominator: "public_filtered_holdings",
   enrichment_backfill: {
     source: "local_yf_finance",
+    status: yfWarnings.length > 0 ? "degraded" : "ready",
+    warnings: yfWarnings,
     generated_at: generatedAt,
     yf_finance_generated_at: yfSummary.generated_at ?? null,
     yf_finance_files: yfSummary.count ?? null,
@@ -467,6 +536,8 @@ summary.metadata = {
 };
 writeRootAndPublic("data/sec-13f/summary.json", summary);
 writeRootAndPublic("data/sec-13f/by_sector.json", bySector);
+
+for (const warning of yfWarnings) console.warn(`::warning:: 13F enrichment degraded: ${warning}`);
 
 console.log(
   `13f_enrichment_backfill: holdings=${coverage.total_holdings} ` +

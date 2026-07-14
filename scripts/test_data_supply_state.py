@@ -943,6 +943,7 @@ class DataSupplyStateTests(unittest.TestCase):
 
     def test_payload_unavailable_observation_extension_is_digest_bound(self):
         row = observation(status="invalid")
+        row["source_as_of"] = None
         row["payload_available"] = False
         row["failure_detail_sha256"] = "f" * 64
         descriptor = {
@@ -967,6 +968,56 @@ class DataSupplyStateTests(unittest.TestCase):
         invalid_valid["event_id"] = deterministic_event_id("observation", invalid_valid)
         with self.assertRaises(SchemaError):
             self.store.record_observation(invalid_valid)
+
+    def test_new_payload_unavailable_observation_rejects_fabricated_source_date(self):
+        row = observation(status="invalid")
+        row["payload_available"] = False
+        row["failure_detail_sha256"] = "f" * 64
+        descriptor = {
+            "provider": row["provider"],
+            "endpoint_family": row["endpoint_family"],
+            "domain": row["domain"],
+            "entity": row["entity"],
+            "observed_at": row["observed_at"],
+            "reason_code": row["reason_code"],
+            "failure_detail_sha256": row["failure_detail_sha256"],
+        }
+        row["payload_sha256"] = canonical_sha256(descriptor)
+        row["event_id"] = deterministic_event_id("observation", row)
+        with self.assertRaises(SchemaError):
+            self.store.record_observation(row)
+
+    def test_legacy_payload_unavailable_source_date_remains_readable_but_not_promotable(self):
+        legacy = observation(status="invalid")
+        legacy["payload_available"] = False
+        legacy["failure_detail_sha256"] = "f" * 64
+        descriptor = {
+            "provider": legacy["provider"],
+            "endpoint_family": legacy["endpoint_family"],
+            "domain": legacy["domain"],
+            "entity": legacy["entity"],
+            "observed_at": legacy["observed_at"],
+            "reason_code": legacy["reason_code"],
+            "failure_detail_sha256": legacy["failure_detail_sha256"],
+        }
+        legacy["payload_sha256"] = canonical_sha256(descriptor)
+        legacy["event_id"] = deterministic_event_id("observation", legacy)
+        history = self.root / "history" / "observations" / "2026-07-10.jsonl"
+        history.parent.mkdir(parents=True, exist_ok=True)
+        history.write_bytes(canonical_json_bytes(legacy) + b"\n")
+
+        fresh = observation(suffix="b")
+        self.assertTrue(self.store.record_observation(fresh))
+        self.assertTrue(self.store._history_contains("observations", legacy["observed_at"], legacy))
+        with self.assertRaises(SchemaError):
+            build_selection(
+                legacy,
+                selected_at="2026-07-10T02:00:00Z",
+                resolution_state="fallback_primary_lkg",
+                reason_code="primary_invalid_lkg",
+                fallback_depth=1,
+                payload_ref_kind="provider_lkg",
+            )
 
     def test_partial_jsonl_tail_is_recovered_and_duplicate_stays_single(self):
         row = observation()
