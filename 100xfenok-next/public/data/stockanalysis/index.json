@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-14T14:52:12Z",
+  "generated_at": "2026-07-14T23:47:47Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -26,7 +26,7 @@
     "etf_detail_missing": 766,
     "etf_detail_coverage_pct": 86.02,
     "etf_detail_primary_pct": 86.02,
-    "etfs_requested": 5,
+    "etfs_requested": 0,
     "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
@@ -34,110 +34,24 @@
     "financials_requested": 0,
     "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 5,
+    "ok": 0,
     "failed": 0,
     "hard_failed": 0,
-    "etfs_stockanalysis_ok": 5,
+    "etfs_stockanalysis_ok": 0,
     "etfs_yahoo_fallback_ok": 0,
-    "etfs_provider_available": 5,
+    "etfs_provider_available": 0,
     "etfs_provider_absent": 0,
     "etfs_still_pending": 0,
     "incremental_etf_backfill_candidates": 0,
     "incremental_etf_backfill_selected": 0,
     "incremental_etf_cooldown_skipped": 0,
-    "incremental_etf_ledger_tracked": 0,
-    "incremental_etf_ledger_cooldown": 0
+    "incremental_etf_ledger_tracked": 92,
+    "incremental_etf_ledger_cooldown": 80
   },
-  "results": [
-    {
-      "ticker": "AAAU",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "etfs/AAAU.json",
-      "candidate_path": null,
-      "financials_path": null,
-      "latency_ms": 19703,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_contract_valid",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
-    {
-      "ticker": "AAOX",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "etfs/AAOX.json",
-      "candidate_path": null,
-      "financials_path": null,
-      "latency_ms": 19623,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_contract_valid",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
-    {
-      "ticker": "AAPB",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "etfs/AAPB.json",
-      "candidate_path": null,
-      "financials_path": null,
-      "latency_ms": 19595,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_contract_valid",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
-    {
-      "ticker": "AAPE",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "etfs/AAPE.json",
-      "candidate_path": null,
-      "financials_path": null,
-      "latency_ms": 301,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_contract_valid",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
-    {
-      "ticker": "AAPR",
-      "asset_type": "etf",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "etfs/AAPR.json",
-      "candidate_path": null,
-      "financials_path": null,
-      "latency_ms": 19527,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_contract_valid",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    }
-  ],
+  "results": [],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-14T14:52:12Z",
+    "generated_at": "2026-07-14T23:47:47Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5480,
@@ -180,7 +94,58 @@
     }
   },
   "surface_results": null,
-  "incremental_etf_backfill": null,
+  "incremental_etf_backfill": {
+    "schema_version": "stockanalysis/v1",
+    "source": "stockanalysis",
+    "operation": "incremental_etf_backfill_select",
+    "generated_at": "2026-07-14T23:47:40Z",
+    "policy": {
+      "limit": 120,
+      "offset": 0,
+      "max_age_hours": null,
+      "cooldown_days": 7,
+      "cooldown_failure_threshold": 3,
+      "required_history_periods": [
+        "daily_1y"
+      ],
+      "history_gaps_only": true,
+      "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
+      "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+      "min_daily_1y_rows": 200
+    },
+    "counts": {
+      "candidates": 0,
+      "selected": 0,
+      "missing": 0,
+      "fallback_retry": 0,
+      "history_gap": 0,
+      "inception_limited_history_gap": 0,
+      "total_history_gap": 0,
+      "stale": 0,
+      "cooldown_skipped": 0,
+      "prior_failed_candidates": 0,
+      "daily_1y_missing_file": 0,
+      "daily_1y_short_rows": 0,
+      "offset_skipped": 0,
+      "scheduled_plan_rows": 0,
+      "ledger_tracked": 92,
+      "ledger_cooldown": 80
+    },
+    "selected": [],
+    "cooldown": [],
+    "inception_limited": [],
+    "pending_ledger": {
+      "path": "backfill/pending_ledger.json",
+      "generated_at": "2026-07-14T23:47:40Z",
+      "counts": {
+        "tracked": 92,
+        "cooldown": 80,
+        "provider_coverage_gaps": 0,
+        "updated": 0,
+        "cleared": 0
+      }
+    }
+  },
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
     "counts": {
@@ -191,16 +156,6 @@
       "cleared": 0
     }
   },
-  "missing_detail_reconcile": {
-    "path": "backfill/missing_detail_reconcile_latest.json",
-    "counts": {
-      "initial_missing": 771,
-      "selected": 5,
-      "fetchable_fetched": 5,
-      "provider_absent": 0,
-      "unresolved": 0,
-      "remaining_missing": 766
-    }
-  },
+  "missing_detail_reconcile": null,
   "stop_reason": null
 }
