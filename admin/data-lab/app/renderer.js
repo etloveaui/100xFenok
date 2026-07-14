@@ -50,7 +50,16 @@ const Renderer = (function() {
    */
   function renderSummary(summary, health) {
     if (!elements?.summaryContainer) return;
-    elements.summaryContainer.innerHTML = StatusCard.renderSummary(summary, health);
+    const honestHealth = Number(summary?.unknown || 0) > 0
+      && Number(summary?.critical || 0) === 0
+      && Number(summary?.stale || 0) === 0
+      ? {
+          signal: '⚪',
+          label: 'Source Dates Incomplete',
+          description: `${summary.unknown} data source(s) report an honest unknown source date`
+        }
+      : health;
+    elements.summaryContainer.innerHTML = StatusCard.renderSummary(summary, honestHealth);
   }
 
   /**
@@ -160,7 +169,7 @@ const Renderer = (function() {
       ${renderOpsCard({
         title: 'Freshness Guard',
         icon: 'fa-clock-rotate-left',
-        description: '실제 화면이 읽는 JSON 기준 시각',
+        description: '실제 화면이 읽는 JSON 원천 기준일',
         items: results.freshness || []
       })}
     `;
@@ -204,7 +213,7 @@ const Renderer = (function() {
         <div class="flex items-start justify-between gap-3 mb-4">
           <div class="min-w-0">
             <h3 class="font-semibold text-gray-800">미러/사용 현황</h3>
-            <p class="text-xs text-gray-500 mt-1 break-words">${escapeHtml(manifest?.generated_at || '-')}</p>
+            <p class="text-xs text-gray-500 mt-1 break-words">목록 생성 ${escapeHtml(manifest?.generated_at || '-')}</p>
           </div>
           <span class="px-2 py-1 rounded-full border text-xs font-bold ${manifest?.mirror_sync_status === 'ok' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
             ${manifest?.mirror_sync_status === 'ok' ? '동기화됨' : '점검'}
@@ -399,7 +408,7 @@ const Renderer = (function() {
       ${renderMarketAuditCard({
         title: '소스 일치성',
         status: Number(facts.policy_mismatch_fields || 0) === 0 && Number(facts.percent_scale_warnings || 0) === 0 ? 'pass' : 'warn',
-        code: escapeHtml(generatedAt).slice(0, 10),
+        code: `검사 ${escapeHtml(generatedAt).slice(0, 10)}`,
         rows: [
           ['검사 파일', parity.inspected_ticker_files || facts.audited_ticker_files],
           ['복수 후보', parity.multi_candidate_fields || facts.multi_candidate_fields],
@@ -446,7 +455,7 @@ const Renderer = (function() {
       ['서비스 연결', `${Formatters.formatNumber(graphSummary.stocks_with_single_stock_etfs || 0, 0)}개 종목`],
       ['매크로 카탈로그', `${Formatters.formatNumber(macroSeries.length, 0)}개 시리즈`],
       ['추가 확인', `${Formatters.formatNumber(followUpCount, 0)}개 화면 · ${Formatters.formatNumber(unresolved, 0)}개 ETF`],
-      ['기준일', escapeHtml(String(generatedAt)).slice(0, 10)]
+      ['빌드 시각', `생성 ${escapeHtml(String(generatedAt)).slice(0, 10)}`]
     ];
 
     return `
@@ -516,7 +525,7 @@ const Renderer = (function() {
       .filter((row) => row?.s)
       .sort((a, b) => String(b?.inceptionDate || '').localeCompare(String(a?.inceptionDate || '')) || String(a?.s || '').localeCompare(String(b?.s || '')))
       .slice(0, 8);
-    const latestDate = newestRows[0]?.inceptionDate || newEtfs?.fetched_at || '-';
+    const latestDate = newestRows[0]?.inceptionDate || '-';
     const fetchedAt = newEtfs?.fetched_at || mergedUniverse?.screener_fetched_at || universe?.generated_at || '-';
 
     return `
@@ -527,7 +536,7 @@ const Renderer = (function() {
             <p class="text-xs text-gray-500 mt-1">ETF 목록 API · 신규 상장 데이터 · 상세 커버리지</p>
           </div>
           <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
-            ${escapeHtml(fetchedAt).slice(0, 10)}
+            수집 ${escapeHtml(fetchedAt).slice(0, 10)}
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-2">
@@ -690,12 +699,16 @@ const Renderer = (function() {
         .slice(0, 2)
         .map((item) => `${item.label}: ${item.status_label || item.status}`)
         .join(' / ');
+      const sourceClock = surface?.source_as_of
+        ? `원천 기준 ${String(surface.source_as_of).slice(0, 10)}`
+        : `원천 기준일 미확인${surface?.source_as_of_reason ? ` (${surface.source_as_of_reason})` : ''}`;
+      const buildClock = surface?.as_of ? ` · 생성 ${String(surface.as_of).slice(0, 10)}` : '';
       return [
         surface?.label || surface?.id || '-',
         surface?.route || '-',
         surface?.status_label || surface?.status || '-',
         typeof surface?.coverage_score === 'number' ? `${Formatters.formatNumber(surface.coverage_score, 0)}%` : '점검',
-        surface?.as_of ? `기준 ${String(surface.as_of).slice(0, 10)}${weak ? ` · ${weak}` : ''}` : weak || '주요 데이터 준비'
+        `${sourceClock}${buildClock}${weak ? ` · ${weak}` : ''}`
       ];
     });
 
@@ -847,7 +860,7 @@ const Renderer = (function() {
     return renderMarketAuditCard({
       title: 'ETF 분류',
       status: 'pass',
-      code: escapeHtml(generatedAt).slice(0, 10),
+      code: `검사 ${escapeHtml(generatedAt).slice(0, 10)}`,
       rows: [
         ['전체 목록 L/I/S', formatClassificationCounts(universe?.classification)],
         ['스크리너 L/I/S', formatClassificationCounts(screener?.classification)],
@@ -1027,7 +1040,7 @@ const Renderer = (function() {
             <p class="text-xs text-gray-500 mt-1">index.json · incremental_latest.json · incremental_plan_latest.json · pending_ledger.json</p>
           </div>
           <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
-            ${escapeHtml(generatedAt).slice(0, 10)}
+            생성 ${escapeHtml(generatedAt).slice(0, 10)}
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
@@ -1387,7 +1400,7 @@ const Renderer = (function() {
         <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h3 class="font-semibold text-gray-800">필드 맵</h3>
-            <p class="mt-1 text-xs text-gray-500">${escapeHtml(stockFieldManifest.generated_at || '-')}</p>
+            <p class="mt-1 text-xs text-gray-500">필드 맵 생성 ${escapeHtml(stockFieldManifest.generated_at || '-')}</p>
           </div>
           <div class="flex flex-wrap gap-2">
             ${STOCK_FIELD_STATUS_ORDER.map(renderStockStatusButton).join('')}
@@ -1689,6 +1702,9 @@ const Renderer = (function() {
     const color = StatusCard.getColor(folderName);
     const icon = StatusCard.getIcon(folderName);
     const statusClasses = FreshnessChecker.getStatusClasses(freshness.status);
+    const sourceClockText = config.updated
+      ? `원천 기준 ${Formatters.formatDate(config.updated, 'YYYY-MM-DD')} · ${FreshnessChecker.formatDaysAgo(freshness.daysAgo)}`
+      : `원천 기준 미상 · ${config.updated_reason || '생산자가 원천 기준일 사유를 제공하지 않음'}`;
 
     elements.detailsPanel.innerHTML = `
       <div class="p-6">
@@ -1713,7 +1729,7 @@ const Renderer = (function() {
           <div class="flex items-center justify-between">
             <span class="text-lg">${freshness.signal} ${freshness.label}</span>
             <span class="text-sm ${statusClasses.text}">
-              업데이트 ${FreshnessChecker.formatDaysAgo(freshness.daysAgo)}
+              ${escapeHtml(sourceClockText)}
             </span>
           </div>
         </div>
@@ -1799,7 +1815,7 @@ const Renderer = (function() {
    */
   function updateTimestamp(timestamp) {
     if (elements?.timestampEl) {
-      elements.timestampEl.textContent = `마지막 업데이트: ${Formatters.formatDate(timestamp, 'YYYY-MM-DD')}`;
+      elements.timestampEl.textContent = `화면 확인 시각: ${Formatters.formatDate(timestamp, 'YYYY-MM-DD')}`;
     }
   }
 

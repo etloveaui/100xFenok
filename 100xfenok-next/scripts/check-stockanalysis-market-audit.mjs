@@ -554,6 +554,8 @@ function main() {
 
   const dashboardReady = assertRequiredMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
   const rendererReady = assertRequiredMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
+  assertRequiredMirror("Data Lab ops console", "../admin/data-lab/app/ops-console.js", "public/admin/data-lab/app/ops-console.js", errors);
+  assertRequiredMirror("Admin folder hub", "../admin/shared/templates/folder-hub.js", "public/admin/shared/templates/folder-hub.js", errors);
   const devReady = assertRequiredMirror("Data Lab DEV", DATA_LAB_DEV_SOURCE_PATH, DATA_LAB_DEV_PUBLIC_PATH, errors);
   const formattersReady = existsSync(FORMATTERS_PATH);
   assert(formattersReady, "Data Lab formatters: required public build file is missing", errors);

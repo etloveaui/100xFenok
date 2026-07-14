@@ -39,35 +39,40 @@ const OpsConsole = (function() {
     {
       label: 'Manifest catalog',
       path: '/data/manifest.json',
-      datePath: 'last_updated',
+      sourceDateReason: 'manifest spans sources with independent publishing schedules; no single freshness verdict',
+      collectionPath: 'generatedAt',
       warnAfterDays: 1,
       failAfterDays: 3
     },
     {
       label: 'Sector momentum',
-      path: '/data/benchmarks/summaries.json',
-      datePath: 'metadata.generated',
+      path: '/data/benchmarks/us.json',
+      sourceDateResolver: resolveBenchmarkSourceClock,
+      collectionPath: 'metadata.generated',
       warnAfterDays: 7,
       failAfterDays: 14
     },
     {
       label: 'Scouter stock index',
       path: '/data/global-scouter/core/stocks_index.json',
-      datePath: 'source_date',
+      sourceDatePath: 'source_date',
+      collectionPath: 'generated_at',
       warnAfterDays: 7,
       failAfterDays: 14
     },
     {
       label: 'Sector ETF table',
       path: '/data/global-scouter/etfs/index.json',
-      datePath: 'source_date',
+      sourceDatePath: 'source_date',
+      collectionPath: 'generated_at',
       warnAfterDays: 7,
       failAfterDays: 14
     },
     {
       label: 'SlickCharts universe',
       path: '/data/slickcharts/universe.json',
-      datePath: 'updated',
+      sourceDateReason: 'provider publishes no source date; updated is collection time',
+      collectionPath: 'updated',
       minCountPath: 'uniqueCount',
       minCount: 500,
       warnAfterDays: 7,
@@ -76,7 +81,8 @@ const OpsConsole = (function() {
     {
       label: 'SlickCharts returns',
       path: '/data/slickcharts/stocks-returns.json',
-      datePath: 'updated',
+      sourceDateReason: 'provider publishes no source date; updated is collection time',
+      collectionPath: 'updated',
       minCountPath: 'count',
       minCount: 500,
       warnAfterDays: 7,
@@ -85,7 +91,8 @@ const OpsConsole = (function() {
     {
       label: 'SlickCharts dividends',
       path: '/data/slickcharts/stocks-dividends.json',
-      datePath: 'updated',
+      sourceDateReason: 'provider publishes no source date; updated is collection time',
+      collectionPath: 'updated',
       minCountPath: 'count',
       minCount: 500,
       warnAfterDays: 7,
@@ -94,7 +101,8 @@ const OpsConsole = (function() {
     {
       label: 'ETF 전체 목록',
       path: '/data/stockanalysis/etf_universe.json',
-      datePath: 'generated_at',
+      sourceDateReason: 'provider publishes no aggregate source date',
+      collectionPath: 'generated_at',
       minCountPath: 'counts.records',
       minCount: 5000,
       warnAfterDays: 7,
@@ -103,21 +111,24 @@ const OpsConsole = (function() {
     {
       label: 'ETF 분류',
       path: '/data/stockanalysis/classification/latest.json',
-      datePath: 'generated_at',
+      sourceDateReason: 'derived classification has no independent source date',
+      collectionPath: 'generated_at',
       warnAfterDays: 7,
       failAfterDays: 14
     },
     {
       label: 'StockAnalysis 수집 인덱스',
       path: '/data/stockanalysis/index.json',
-      datePath: 'generated_at',
+      sourceDateReason: 'provider publishes no aggregate source date',
+      collectionPath: 'generated_at',
       warnAfterDays: 7,
       failAfterDays: 14
     },
     {
       label: '시장 데이터 수집 목록',
       path: '/data/stockanalysis/surfaces/index.json',
-      datePath: 'generated_at',
+      sourceDateReason: 'provider publishes no aggregate source date',
+      collectionPath: 'generated_at',
       minCountPath: 'counts.rows',
       minCount: 10000,
       warnAfterDays: 7,
@@ -126,7 +137,8 @@ const OpsConsole = (function() {
     {
       label: '시장 데이터 소비처',
       path: '/data/stockanalysis/surface_consumers.json',
-      datePath: 'updated_at',
+      sourceDateReason: 'consumer registry has a build time but no upstream source date',
+      collectionPath: 'updated_at',
       minCountPath: 'surfaces.length',
       minCount: 25,
       warnAfterDays: 7,
@@ -135,7 +147,8 @@ const OpsConsole = (function() {
     {
       label: '어닝 일정 데이터',
       path: '/data/stockanalysis/surfaces/earnings_calendar.json',
-      datePath: 'fetched_at',
+      sourceDateReason: 'provider publishes no aggregate source date',
+      collectionPath: 'fetched_at',
       minCountPath: 'counts.records',
       minCount: 1000,
       warnAfterDays: 7,
@@ -144,7 +157,8 @@ const OpsConsole = (function() {
     {
       label: '신규 ETF 데이터',
       path: '/data/stockanalysis/surfaces/new_etfs.json',
-      datePath: 'fetched_at',
+      sourceDateReason: 'provider publishes no aggregate source date',
+      collectionPath: 'fetched_at',
       minCountPath: 'counts.records',
       minCount: 10,
       warnAfterDays: 7,
@@ -153,7 +167,8 @@ const OpsConsole = (function() {
     {
       label: 'Market data audit',
       path: '/data/computed/market_data_audit.json',
-      datePath: 'market_source_parity.generated_at',
+      sourceDateReason: 'audit payload has a build time but no aggregate source date',
+      collectionPath: 'market_source_parity.generated_at',
       minCountPath: 'market_facts.count',
       minCount: 5000,
       warnAfterDays: 7,
@@ -162,14 +177,15 @@ const OpsConsole = (function() {
     {
       label: 'Computed signals',
       path: '/data/computed/signals.json',
-      datePath: 'as_of',
+      sourceDateReason: 'computed signals span independent source schedules; use lane-specific readiness',
+      collectionPath: 'generated_at',
       warnAfterDays: 1,
       failAfterDays: 3
     },
     {
       label: 'Fear & Greed',
       path: '/data/sentiment/cnn-fear-greed.json',
-      datePath: '',
+      sourceDatePath: '',
       arrayLastDate: true,
       warnAfterDays: 1,
       failAfterDays: 3
@@ -177,15 +193,16 @@ const OpsConsole = (function() {
     {
       label: 'PMI activity',
       path: '/data/macro/activity-surveys.json',
-      datePath: 'meta.coverage.pmi_manufacturing.latest_release_date',
+      sourceDatePath: 'meta.coverage.pmi_manufacturing.latest_date',
+      collectionPath: 'meta.generated_at',
       warnAfterDays: 45,
       failAfterDays: 75
     },
     {
       label: 'Banking quarterly',
       path: '/data/macro/fred-banking-quarterly.json',
-      datePath: 'series.DRALACBN',
-      arrayLastDate: true,
+      sourceDateResolver: resolveSeriesSourceClock,
+      collectionPath: 'fetched_at',
       warnAfterDays: 150,
       failAfterDays: 220
     }
@@ -535,15 +552,19 @@ const OpsConsole = (function() {
       }
 
       const payload = await response.json();
-      const rawDate = resolveDateValue(payload, check);
+      const sourceClock = resolveSourceClock(payload, check);
+      const rawDate = sourceClock.value;
       const parsed = parseDateValue(rawDate);
+      const countCheck = checkCountGuard(payload, check);
+      const countDetail = countCheck.detail ? ` · ${countCheck.detail}` : '';
+      const collectionDetail = formatCollectionDetail(payload, check);
 
       if (!parsed) {
         return {
           label: check.label,
-          status: 'fail',
-          code: 'missing',
-          detail: `${check.path} has no readable date at ${formatDatePath(check)}.`
+          status: countCheck.status === 'fail' ? 'fail' : 'warn',
+          code: 'unknown',
+          detail: `source date unknown: ${sourceClock.reason || 'no source date or reason was emitted'}${collectionDetail}${countDetail}`
         };
       }
 
@@ -553,15 +574,13 @@ const OpsConsole = (function() {
         : ageDays > check.warnAfterDays
           ? 'warn'
           : 'pass';
-      const countCheck = checkCountGuard(payload, check);
       const status = countCheck.status === 'fail' ? 'fail' : dateStatus;
-      const countDetail = countCheck.detail ? ` · ${countCheck.detail}` : '';
 
       return {
         label: check.label,
         status,
         code: ageDays <= 0 ? 'today' : `${ageDays}d`,
-        detail: `${formatDatePath(check)}=${formatDateValue(rawDate)} · warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d${countDetail}`
+        detail: `${sourceClock.path}=${formatDateValue(rawDate)} · warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d${collectionDetail}${countDetail}`
       };
     } catch (error) {
       return {
@@ -573,13 +592,82 @@ const OpsConsole = (function() {
     }
   }
 
-  function resolveDateValue(payload, check) {
-    const value = check.datePath ? getByPath(payload, check.datePath) : payload;
+  function resolveSourceClock(payload, check) {
+    if (typeof check.sourceDateResolver === 'function') {
+      return check.sourceDateResolver(payload);
+    }
+
+    const value = check.sourceDatePath ? getByPath(payload, check.sourceDatePath) : payload;
     if (check.arrayLastDate) {
       const item = Array.isArray(value) ? value[value.length - 1] : null;
-      return item?.date || item?.updated || item?.as_of || null;
+      return {
+        value: item?.date || item?.as_of || item?.source_date || null,
+        reason: check.sourceDateReason || null,
+        path: check.sourceDatePath ? `${check.sourceDatePath}[-1].date` : 'last[].date'
+      };
     }
-    return value;
+    return {
+      value: check.sourceDatePath ? value : null,
+      reason: (check.sourceReasonPath ? getByPath(payload, check.sourceReasonPath) : null)
+        || check.sourceDateReason
+        || null,
+      path: check.sourceDatePath || 'source date'
+    };
+  }
+
+  function completeSourceFloor(namedValues, label) {
+    const missing = namedValues.filter((entry) => !parseDateValue(entry.value));
+    if (!namedValues.length || missing.length) {
+      const names = missing.length ? missing.map((entry) => entry.name) : ['no required inputs'];
+      return {
+        value: null,
+        reason: `source date unavailable for required ${label}: ${names.slice(0, 4).join(', ')}${names.length > 4 ? ` (+${names.length - 4} more)` : ''}`,
+        path: `${label} complete floor`
+      };
+    }
+
+    const oldest = [...namedValues]
+      .sort((a, b) => parseDateValue(a.value) - parseDateValue(b.value))[0];
+    return {
+      value: oldest.value,
+      reason: null,
+      path: `${label} complete floor`
+    };
+  }
+
+  function latestDatedRow(rows) {
+    if (!Array.isArray(rows)) return null;
+    return rows
+      .map((row) => row?.date || row?.as_of || row?.source_date || null)
+      .filter((value) => parseDateValue(value))
+      .sort((a, b) => parseDateValue(a) - parseDateValue(b))
+      .slice(-1)[0] || null;
+  }
+
+  function resolveBenchmarkSourceClock(payload) {
+    const sections = payload?.sections && typeof payload.sections === 'object'
+      ? Object.entries(payload.sections)
+      : [];
+    return completeSourceFloor(
+      sections.map(([name, section]) => ({ name, value: latestDatedRow(section?.data) })),
+      'benchmark sections'
+    );
+  }
+
+  function resolveSeriesSourceClock(payload) {
+    const series = payload?.series && typeof payload.series === 'object'
+      ? Object.entries(payload.series)
+      : [];
+    return completeSourceFloor(
+      series.map(([name, rows]) => ({ name, value: latestDatedRow(rows) })),
+      'series'
+    );
+  }
+
+  function formatCollectionDetail(payload, check) {
+    if (!check.collectionPath) return '';
+    const value = getByPath(payload, check.collectionPath);
+    return value ? ` · collection/build ${check.collectionPath}=${formatDateValue(value)}` : '';
   }
 
   function checkCountGuard(payload, check) {
@@ -616,7 +704,12 @@ const OpsConsole = (function() {
     const dateOnly = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (dateOnly) {
       const [, year, month, day] = dateOnly;
-      return new Date(Number(year), Number(month) - 1, Number(day));
+      const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+      return parsed.getFullYear() === Number(year)
+        && parsed.getMonth() === Number(month) - 1
+        && parsed.getDate() === Number(day)
+        ? parsed
+        : null;
     }
 
     const parsed = new Date(text.replace(' ', 'T'));
@@ -629,12 +722,6 @@ const OpsConsole = (function() {
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
     return Math.floor((now - target) / 86400000);
-  }
-
-  function formatDatePath(check) {
-    if (check.arrayLastDate && !check.datePath) return 'last[].date';
-    if (check.arrayLastDate) return `${check.datePath}[-1].date`;
-    return check.datePath;
   }
 
   function formatDateValue(value) {
