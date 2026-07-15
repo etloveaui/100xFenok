@@ -18,6 +18,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from stockanalysis_recovery_state import (  # noqa: E402
     StockAnalysisRecoveryStateStore,
+    payload_source_fields,
     validate_controlled_failure_scope,
 )
 
@@ -64,7 +65,7 @@ def financial_payload(ticker: str, period_as_of: str) -> dict:
     }
 
 
-def surface_payload(name: str, fetched_at: str, row: str) -> dict:
+def surface_payload(name: str, fetched_at: str, row: str, provider_date: str = "2026-07-14") -> dict:
     return {
         "schema_version": "stockanalysis/v1",
         "source": "stockanalysis",
@@ -79,7 +80,7 @@ def surface_payload(name: str, fetched_at: str, row: str) -> dict:
         "url": f"https://stockanalysis.com/{name}",
         "format": "svelte_devalue",
         "counts": {"records": 1},
-        "records": [{"symbol": row}],
+        "records": [{"symbol": row, "date": provider_date}],
         "metadata": {},
     }
 
@@ -153,6 +154,23 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertEqual(index["degraded_surfaces"], ["actions_recent"])
         self.assertEqual(self.store.assess_current_attempt(index)["status"], "degraded")
 
+    def test_provider_row_dates_supply_strict_advancement_markers(self) -> None:
+        stock = stock_payload("AAPL", "2026-07-14T20:00:00Z")
+        stock["source_as_of"] = None
+        stock["normalized"]["quote"]["td"] = "2026-07-14"
+        stock["normalized"]["history"] = [{"t": "2026-07-13", "c": 10}]
+        surface = surface_payload(
+            "actions_recent", "2026-07-15T07:00:00Z", "AAPL", "Jul 14, 2026"
+        )
+        self.assertEqual(
+            payload_source_fields("stock", stock)["source_as_of"],
+            "2026-07-14T00:00:00Z",
+        )
+        self.assertEqual(
+            payload_source_fields("surface", surface)["source_as_of"],
+            "2026-07-14T00:00:00Z",
+        )
+
     def test_recovery_requires_source_advancement_then_records_failure_provenance(self) -> None:
         self.seed_lane()
         self.store.bootstrap_existing(self.run_context("bootstrap"))
@@ -176,10 +194,19 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                 "financial", "AAPL", financial_payload("AAPL", "2026-06-30")
             )
         )
+        self.assertFalse(
+            self.store.recovery_candidate_advances(
+                "surface",
+                "actions_recent",
+                surface_payload("actions_recent", "2026-07-15T08:04:00Z", "MSFT"),
+            )
+        )
         advanced = {
             "stock": stock_payload("AAPL", "2026-07-15T20:00:00Z"),
             "financial": financial_payload("AAPL", "2026-07-15"),
-            "surface": surface_payload("actions_recent", "2026-07-15T08:05:00Z", "MSFT"),
+            "surface": surface_payload(
+                "actions_recent", "2026-07-15T08:05:00Z", "MSFT", "2026-07-15"
+            ),
         }
         for kind, payload in advanced.items():
             entity = "actions_recent" if kind == "surface" else "AAPL"

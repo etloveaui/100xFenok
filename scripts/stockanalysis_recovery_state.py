@@ -18,6 +18,10 @@ ATTEMPT_RETENTION = 14
 ARTIFACT_KINDS = ("stock", "financial", "surface")
 _ENTITY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_SURFACE_DATE_KEYS = {
+    "as_of", "date", "event_date", "filing_date", "filingdate",
+    "ipo_date", "priced_date", "trade_date", "updated", "week_of",
+}
 
 SYSTEMIC_FAILURE_MARKERS = {
     "authentication": (
@@ -76,7 +80,10 @@ def _iso_timestamp(value: Any) -> datetime | None:
     try:
         parsed = datetime.fromisoformat(text)
     except ValueError:
-        return None
+        try:
+            parsed = datetime.strptime(text, "%b %d, %Y")
+        except ValueError:
+            return None
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
@@ -140,10 +147,41 @@ def _financial_source_as_of(payload: dict) -> str | None:
     return max(dates) if dates else None
 
 
+def _stock_source_as_of(payload: dict) -> str | None:
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    quote = normalized.get("quote") if isinstance(normalized.get("quote"), dict) else {}
+    candidates = [payload.get("source_as_of"), quote.get("td"), quote.get("etd")]
+    for row in normalized.get("history") or []:
+        if isinstance(row, dict):
+            candidates.append(row.get("date") or row.get("t") or row.get("time"))
+    parsed = [stamp for value in candidates if (stamp := _iso_timestamp(value)) is not None]
+    return max(parsed).strftime("%Y-%m-%dT%H:%M:%SZ") if parsed else None
+
+
+def _surface_source_as_of(payload: dict) -> str | None:
+    candidates = [payload.get("source_as_of")]
+    records = list(payload.get("records") or [])
+    for table in payload.get("tables") or []:
+        if isinstance(table, dict):
+            records.extend(table.get("records") or [])
+    for row in records:
+        if not isinstance(row, dict):
+            continue
+        for key, value in row.items():
+            if str(key).lower() in _SURFACE_DATE_KEYS:
+                candidates.append(value)
+    parsed = [stamp for value in candidates if (stamp := _iso_timestamp(value)) is not None]
+    return max(parsed).strftime("%Y-%m-%dT%H:%M:%SZ") if parsed else None
+
+
 def payload_source_fields(kind: str, payload: dict) -> dict[str, str | None]:
     source_as_of = payload.get("source_as_of") if isinstance(payload.get("source_as_of"), str) else None
-    if kind == "financial":
+    if kind == "stock":
+        source_as_of = _stock_source_as_of(payload)
+    elif kind == "financial":
         source_as_of = _financial_source_as_of(payload)
+    elif kind == "surface":
+        source_as_of = _surface_source_as_of(payload)
     return {
         "source_as_of": source_as_of,
         "fetched_at": payload.get("fetched_at") if isinstance(payload.get("fetched_at"), str) else None,

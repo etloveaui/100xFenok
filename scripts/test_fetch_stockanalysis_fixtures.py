@@ -3446,7 +3446,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "surface": name, "group": "events", "priority": "high", "role": "fixture",
                 "source_as_of": None, "source_as_of_reason": "provider publishes no aggregate source date",
                 "fetched_at": "2026-07-15T07:00:00Z", "endpoint": "/actions/", "url": "https://stockanalysis.com/actions/",
-                "format": "html_table", "counts": {"tables": 1, "rows": 1}, "tables": [{"records": [{"symbol": "AAPL"}]}],
+                "format": "html_table", "counts": {"tables": 1, "rows": 1}, "tables": [{"records": [{"symbol": "AAPL", "date": "Jul 14, 2026"}]}],
             }
             self.fetcher.write_json(truth, lkg_payload)
             expected_lkg = truth.read_bytes()
@@ -3468,7 +3468,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 self.fetcher.fetch_svelte_surface = lambda *_args, **_kwargs: {
                     **lkg_payload,
                     "fetched_at": "2026-07-15T08:05:00Z",
-                    "tables": [{"records": [{"symbol": "MSFT"}]}],
+                    "tables": [{"records": [{"symbol": "MSFT", "date": "Jul 15, 2026"}]}],
                 }
                 succeeded = self.fetcher.fetch_surfaces(
                     [name], 1, 0, False,
