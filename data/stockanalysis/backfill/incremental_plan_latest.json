@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-07-14T23:47:47Z",
+  "generated_at": "2026-07-15T23:46:21Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "daily_1y"
@@ -20,14 +20,14 @@
     "inception_limited_history_gap": 0,
     "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "cooldown_skipped": 0
+    "cooldown_skipped": 8
   },
   "etfs": [],
   "incremental_etf_backfill": {
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-14T23:47:47Z",
+    "generated_at": "2026-07-15T23:46:21Z",
     "policy": {
       "limit": 0,
       "offset": 0,
@@ -51,15 +51,136 @@
       "inception_limited_history_gap": 0,
       "total_history_gap": 0,
       "stale": 0,
-      "cooldown_skipped": 0,
+      "cooldown_skipped": 8,
       "prior_failed_candidates": 0,
       "daily_1y_missing_file": 0,
       "daily_1y_short_rows": 0,
       "offset_skipped": 0,
-      "scheduled_plan_rows": 0
+      "scheduled_plan_rows": 8
     },
     "selected": [],
-    "cooldown": [],
+    "cooldown": [
+      {
+        "ticker": "BGCG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 29 unique daily_1y dates (< 200)",
+        "plan_order": 0,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": "2026-06-02"
+      },
+      {
+        "ticker": "BGGG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 30 unique daily_1y dates (< 200)",
+        "plan_order": 1,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": "2026-06-02"
+      },
+      {
+        "ticker": "EMEM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 36 unique daily_1y dates (< 200)",
+        "plan_order": 2,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MAUG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "plan_order": 3,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MFEB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "plan_order": 4,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MMAY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "plan_order": 5,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MNVR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "plan_order": 6,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "WDE",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 35 unique daily_1y dates (< 200)",
+        "plan_order": 7,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      }
+    ],
     "inception_limited": []
   }
 }
