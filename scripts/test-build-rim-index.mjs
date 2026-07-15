@@ -41,7 +41,8 @@ function makeKr10yFixture() {
   return tempRoot;
 }
 
-function makeKrxBridgeFixture() {
+function makeKrxBridgeFixture(asOf) {
+  assert.match(asOf, /^\d{4}-\d{2}-\d{2}$/, "KRX bridge fixture source date");
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-krx-bridge-"));
   for (const dir of ["benchmarks", "computed", "damodaran", "macro", "slickcharts", "stockanalysis", "yf"]) {
     fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
@@ -67,20 +68,20 @@ function makeKrxBridgeFixture() {
   const bridgeSource = "admin/fenok-edge-korea-krx-daily-index.json";
   writeJson(path.join(tempRoot, bridgeSource), {
     schema_version: "fenok-edge-korea-krx-bridge/v1",
-    generated_at: "2026-07-08T15:00:00.000Z",
+    generated_at: `${asOf}T15:00:00.000Z`,
     market: "Korea",
     source: "KRX_OPEN_API",
     raw_public: false,
     license_or_terms_note: "fixture raw stays private",
     bridge_scope: "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows",
-    as_of: "2026-07-08",
+    as_of: asOf,
     private_artifacts: {
       raw_root: "_private/admin/fenok-edge-korea/daily/fixture/raw",
     },
     derived_rim_inputs: {
       schema_version: "krx_derived_rim_inputs.v1",
-      generated_at: "2026-07-08T15:00:00.000Z",
-      as_of: "2026-07-08",
+      generated_at: `${asOf}T15:00:00.000Z`,
+      as_of: asOf,
       raw_public: false,
       license_or_terms_note: "fixture raw stays private",
       status: "ready",
@@ -88,7 +89,7 @@ function makeKrxBridgeFixture() {
       kospi_weights: {
         source: `${bridgeSource}#derived_rim_inputs.kospi_weights`,
         source_field: "derived_rim_inputs.kospi_weights.rows[].weight",
-        as_of: "2026-07-08",
+        as_of: asOf,
         raw_public: false,
         license_or_terms_note: "fixture raw stays private",
         row_count: rows.length,
@@ -111,7 +112,7 @@ function makeKrxBridgeFixture() {
       },
       korea_10y: {
         value: 0.04241,
-        date: "2026-07-08",
+        date: asOf,
         raw_value_percent: 4.241,
         source: `${bridgeSource}#derived_rim_inputs.korea_10y`,
         source_field: "derived_rim_inputs.korea_10y.value",
@@ -292,15 +293,18 @@ for (const id of ["SPX", "NDX"]) {
 
 // Coverage loss is honest lane degradation, not platform corruption. A stricter
 // fixture floor forces the real builder down that path without fabricating inputs.
-const degradedCoverageFixtureAsOf = Object.values(payload.indices)
+// Availability fixtures symlink shared sources from the live data tree. Pin their
+// clock to the newest observed source date so those sources cannot outrun the test.
+const currentLiveFixtureAsOf = Object.values(payload.indices)
   .flatMap((item) => Object.values(item.observed ?? {}))
   .map((field) => field?.as_of)
   .filter((asOf) => typeof asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(asOf))
   .sort()
   .at(-1);
-assert.match(degradedCoverageFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "degraded coverage fixture source date");
+assert.match(currentLiveFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "current live fixture source date");
+const currentLiveFixtureGeneratedAt = `${currentLiveFixtureAsOf}T23:59:59.000Z`;
 const degradedCoveragePayload = buildRimIndexInputs({
-  generatedAt: `${degradedCoverageFixtureAsOf}T23:59:59.000Z`,
+  generatedAt: currentLiveFixtureGeneratedAt,
   minCoveredWeight: 0.99,
 });
 const degradedCoverageValidation = validateRimIndexInputs(degradedCoveragePayload, {
@@ -340,7 +344,7 @@ const missingBenchmarkRoot = makeBenchmarkAvailabilityFixture({ missing: true })
 try {
   const missingBenchmarkPayload = buildRimIndexInputs({
     dataRootOverride: missingBenchmarkRoot,
-    generatedAt: "2026-07-12T00:00:00.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const missingBenchmarkValidation = validateRimIndexInputs(missingBenchmarkPayload);
   assert.equal(missingBenchmarkValidation.ok, true, missingBenchmarkValidation.errors.join("\n"));
@@ -357,7 +361,7 @@ const staleBenchmarkRoot = makeBenchmarkAvailabilityFixture({ stale: true });
 try {
   const staleBenchmarkPayload = buildRimIndexInputs({
     dataRootOverride: staleBenchmarkRoot,
-    generatedAt: "2026-07-12T00:00:00.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const staleBenchmarkValidation = validateRimIndexInputs(staleBenchmarkPayload);
   assert.equal(staleBenchmarkValidation.ok, true, staleBenchmarkValidation.errors.join("\n"));
@@ -426,7 +430,7 @@ const fixtureRoot = makeKr10yFixture();
 try {
   const payloadWithKr10y = buildRimIndexInputs({
     dataRootOverride: fixtureRoot,
-    generatedAt: "2026-07-12T00:00:00.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const kospiRiskFree = payloadWithKr10y.indices.KOSPI.observed.risk_free_rate;
   assert.equal(kospiRiskFree.source_tier, "observed_source");
@@ -440,11 +444,11 @@ try {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
 }
 
-const bridgeFixtureRoot = makeKrxBridgeFixture();
+const bridgeFixtureRoot = makeKrxBridgeFixture(currentLiveFixtureAsOf);
 try {
   const payloadWithBridgeOnlyKrx = buildRimIndexInputs({
     dataRootOverride: bridgeFixtureRoot,
-    generatedAt: "2026-07-12T00:00:00.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   assert.equal(validateRimIndexInputs(payloadWithBridgeOnlyKrx).ok, true);
   const kospiBridge = payloadWithBridgeOnlyKrx.indices.KOSPI;
@@ -457,9 +461,11 @@ try {
   assert.ok(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.matched_weight_ratio >= 0.75);
   assert.equal(kospiBridge.derived.forecast_grid_v1.public_status, "input_only_krx_exact_weights_no_fair_value");
 
+  const staleBridgeGeneratedAt = new Date(currentLiveFixtureGeneratedAt);
+  staleBridgeGeneratedAt.setUTCDate(staleBridgeGeneratedAt.getUTCDate() + 14);
   const staleBridgePayload = buildRimIndexInputs({
     dataRootOverride: bridgeFixtureRoot,
-    generatedAt: "2026-07-13T02:30:00.000Z",
+    generatedAt: staleBridgeGeneratedAt.toISOString(),
   });
   const staleKospiBridge = staleBridgePayload.indices.KOSPI;
   assert.equal(staleKospiBridge.public_status, "input_only_krx_exact_weights_with_caveats");
