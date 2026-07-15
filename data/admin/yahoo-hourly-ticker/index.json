@@ -1,0 +1,52 @@
+{
+  "schema_version": "producer-lkg-index/v1",
+  "lane_id": "yahoo_hourly_ticker",
+  "generated_at": "2026-07-15T13:08:53.762Z",
+  "keys": [
+    "TQQQ.json",
+    "SOXL.json"
+  ],
+  "counts": {
+    "keys": 2,
+    "fresh": 0,
+    "lkg": 2,
+    "retry": 2,
+    "unavailable": 0,
+    "failed": 2,
+    "recovered": 0
+  },
+  "retry_keys": [
+    "TQQQ.json",
+    "SOXL.json"
+  ],
+  "lkg_details": [
+    {
+      "key": "TQQQ.json",
+      "payload_sha256": "4cd340026428c61946f09b7ce25ff76a50d8999f0d6aa9976c1cc1d358a32cd3",
+      "source_as_of": "2026-07-14T20:00:00.000Z",
+      "failure_run_id": "29417720099",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "SOXL.json",
+      "payload_sha256": "70c8980ceb18182dbfbc2e855bf19942422e15203b926c42226e582f64b246e0",
+      "source_as_of": "2026-07-14T20:00:00.000Z",
+      "failure_run_id": "29417720099",
+      "failure_run_attempt": 1
+    }
+  ],
+  "recovery_details": [],
+  "current_attempt": {
+    "run_id": "29417720099",
+    "run_attempt": 1,
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-07-15T13:08:53.762Z",
+    "attempted": 2,
+    "successes": 0,
+    "failed": 2,
+    "failed_keys": [
+      "TQQQ.json",
+      "SOXL.json"
+    ]
+  }
+}
