@@ -1,0 +1,14 @@
+name: Valid step-level runner temp
+
+on:
+  workflow_dispatch:
+
+jobs:
+  valid-runner-temp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Export runner temp
+        run: echo "JOB_TEMP=$RUNNER_TEMP/job" >> "$GITHUB_ENV"
+
+      - name: Use exported temp
+        run: echo "$JOB_TEMP"

@@ -10,10 +10,14 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/**'
+      - 'scripts/ops/fixtures/workflow-actionlint/**'
+      - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
   pull_request:
     paths:
       - '.github/workflows/**'
+      - 'scripts/ops/fixtures/workflow-actionlint/**'
+      - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
   workflow_dispatch:
 
@@ -29,3 +33,19 @@ jobs:
 
       - name: Parse workflow YAML
         run: ruby scripts/ops/validate-workflow-yaml.rb
+
+      - name: Install pinned actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl --fail --location --silent --show-error \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}" \
+            --output "$RUNNER_TEMP/$archive"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" actionlint
+          echo "ACTIONLINT_BIN=$RUNNER_TEMP/actionlint" >> "$GITHUB_ENV"
+
+      - name: Validate workflow expressions
+        run: bash scripts/ops/validate-workflow-actionlint.sh

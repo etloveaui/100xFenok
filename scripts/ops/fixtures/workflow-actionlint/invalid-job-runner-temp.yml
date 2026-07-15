@@ -1,0 +1,13 @@
+name: Invalid job-level runner context
+
+on:
+  workflow_dispatch:
+
+jobs:
+  invalid-runner-context:
+    runs-on: ubuntu-latest
+    env:
+      JOB_TEMP: ${{ runner.temp }}
+    steps:
+      - name: Use job temp
+        run: echo "$JOB_TEMP"
