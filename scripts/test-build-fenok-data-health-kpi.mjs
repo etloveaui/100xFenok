@@ -399,9 +399,61 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     /retry_set omits active items/,
     "an index cannot hide retry:true items by omitting their keys",
   );
-  const recoveryCheckerErrors = [];
-  checkDetectionFloorLane(fdicRecoveryLane, recoveryCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
-  assert.deepEqual(recoveryCheckerErrors, []);
+  const fdicRecoveryCheckerErrors = [];
+  checkDetectionFloorLane(fdicRecoveryLane, fdicRecoveryCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
+  assert.deepEqual(fdicRecoveryCheckerErrors, []);
+
+  const recoveryIndex = (laneId, keys, overrides = {}) => ({
+    schema_version: "producer-lkg-index/v1",
+    lane_id: laneId,
+    generated_at: "2026-07-15T01:00:00Z",
+    keys,
+    counts: { keys: keys.length, fresh: keys.length, lkg: 0, retry: 0, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: [],
+    lkg_details: [],
+    recovery_details: [],
+    current_attempt: {
+      run_id: "300", run_attempt: 1, event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
+      attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [],
+    },
+    ...overrides,
+  });
+  const yahooRecovery = recoveryIndex("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"], {
+    counts: { keys: 2, fresh: 1, lkg: 1, retry: 1, unavailable: 0, failed: 1, recovered: 0 },
+    retry_keys: ["TQQQ.json"],
+    lkg_details: [{
+      key: "TQQQ.json",
+      payload_sha256: "a".repeat(64),
+      source_as_of: "2026-07-14T04:00:00.000Z",
+      failure_run_id: "300",
+    }],
+    current_attempt: {
+      run_id: "300", run_attempt: 1, event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
+      attempted: 2, successes: 1, failed: 1, failed_keys: ["TQQQ.json"],
+    },
+  });
+  const yahooDegraded = mapDetectionFloorRow(row("yahoo_ticker_macro"), yahooRecovery);
+  assert.equal(yahooDegraded.status, "degraded");
+  assert.equal(yahooDegraded.reason, "recovery_degraded");
+  assert.equal(yahooDegraded.details.detection_reason, "ok");
+  assert.deepEqual(yahooDegraded.details.recovery.retry_keys, ["TQQQ.json"]);
+  assert.equal(yahooDegraded.checks.find((item) => item.id === "recovery_retry_set_empty")?.status, "blocked");
+  assert.equal(yahooDegraded.deployment_blocking, false);
+
+  const recoveryAware = buildDetectionFloorLanes(report(), {
+    yahoo_ticker_macro: yahooRecovery,
+    slickcharts: recoveryIndex("slickcharts_daily_delivery", [
+      "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
+    ]),
+  });
+  assert.equal(recoveryAware.find((item) => item.id === "yahoo_ticker_macro")?.status, "degraded");
+  assert.equal(recoveryAware.find((item) => item.id === "slickcharts")?.status, "ready");
+  assert.equal(recoveryAware.find((item) => item.id === "treasury_tga")?.checks.some((item) => item.id.startsWith("recovery_")), false);
+
+  const missingRecovery = mapDetectionFloorRow(row("slickcharts"), null);
+  assert.equal(missingRecovery.status, "degraded");
+  assert.equal(missingRecovery.reason, "recovery_degraded");
+  assert.equal(missingRecovery.checks.find((item) => item.id === "recovery_state_present")?.status, "blocked");
 
   const stale = mapDetectionFloorRow(row("treasury_tga", {
     status: "stale",
@@ -466,6 +518,9 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   tampered.status = "ready";
   checkDetectionFloorLane(tampered, checkerErrors, liveConfigs.find((item) => item.id === stale.id));
   assert.ok(checkerErrors.some((entry) => /status/i.test(entry)), "checker independently rejects KPI status laundering");
+  const recoveryCheckerErrors = [];
+  checkDetectionFloorLane(yahooDegraded, recoveryCheckerErrors, liveConfigs.find((item) => item.id === yahooDegraded.id));
+  assert.deepEqual(recoveryCheckerErrors, []);
 }
 
 // The canonical lanes the checker's validateCoreShape REQUIRED_LANES demands.
@@ -486,6 +541,47 @@ const REQUIRED_LANE_IDS = [
     .map((item) => item.id),
 ];
 
+const TARGET_RECOVERY_FIXTURES = Object.freeze({
+  yahoo_ticker_macro: { laneId: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
+  slickcharts: {
+    laneId: "slickcharts_daily_delivery",
+    keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"],
+  },
+});
+
+function readyRecoveryIndex(laneId, keys, generatedAt = "2026-07-14T11:00:00Z") {
+  return {
+    schema_version: "producer-lkg-index/v1",
+    lane_id: laneId,
+    generated_at: generatedAt,
+    keys,
+    counts: { keys: keys.length, fresh: keys.length, lkg: 0, retry: 0, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: [],
+    lkg_details: [],
+    recovery_details: [],
+    current_attempt: {
+      run_id: "ready", run_attempt: 1, event_name: "schedule", observed_at: generatedAt,
+      attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [],
+    },
+  };
+}
+
+function readyDetectionProjection(id, now) {
+  const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
+  if (!config) return {};
+  const row = {
+    id,
+    label: config.label,
+    enforcement: "live",
+    kpi_required: true,
+    status: "ready",
+    reason: "ok",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-10" },
+  };
+  const recovery = TARGET_RECOVERY_FIXTURES[id];
+  return mapDetectionFloorRow(row, recovery ? readyRecoveryIndex(recovery.laneId, recovery.keys, now) : undefined);
+}
+
 // HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
 // data/admin KPI doc. validateCoreShape hard-requires canonical deployment integrity,
 // while lane readiness may honestly be degraded.
@@ -500,24 +596,7 @@ function readyCoreV2(now) {
     status_label: "정상",
     required: true,
     checks: [],
-    ...(DATA_SUPPLY_DETECTION_CONFIG.lanes.some((item) => item.id === id && item.enforcement === "live") ? {
-      label: DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id).label,
-      reason: "ok",
-      artifact: { source_as_of: "2026-07-10" },
-      as_of: "2026-07-10",
-      deployment_blocking: false,
-      details: { recovery_retry_set: [] },
-      checks: [
-        {
-          id: "detection_floor_status", label: "Detection floor status", status: "ready",
-          status_label: "정상", detail: "ok; source_as_of 2026-07-10", platform_blocking: false,
-        },
-        {
-          id: "lkg_retry_set_empty", label: "LKG retry set empty", status: "ready",
-          status_label: "정상", detail: "empty", platform_blocking: false,
-        },
-      ],
-    } : {}),
+    ...readyDetectionProjection(id, now),
     ...(id === "yahoo_batch_quote_history" ? {
       as_of: "2026-07-09T00:00:00Z",
       deployment_blocking: false,
@@ -587,6 +666,7 @@ function readyCoreV2(now) {
 // Build a genuinely-ready v2 doc pair (synthesized ready core + a v2 runtime) so the
 // checker's status/lane gate is satisfied and only runtime/sla/projection is exercised.
 function seedReadyV2(tmp, { now, runtime, sla }) {
+  writeReadyTargetRecoveryIndexes(tmp, now);
   const root = { ...readyCoreV2(now), runtime, source_sla: sla };
   const pub = projectPublicKpi(root, now);
   writeJson(path.join(tmp, "data", KPI_REL), root);
@@ -685,6 +765,17 @@ function mkTmp(name) {
 function writeJson(absPath, payload) {
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
   fs.writeFileSync(absPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+function writeReadyRecoveryIndex(tmp, relPath, laneId, keys, generatedAt = "2026-07-14T11:00:00Z") {
+  writeJson(path.join(tmp, "data", "admin", relPath, "index.json"), readyRecoveryIndex(laneId, keys, generatedAt));
+}
+
+function writeReadyTargetRecoveryIndexes(tmp, generatedAt) {
+  for (const [laneId, recovery] of Object.entries(TARGET_RECOVERY_FIXTURES)) {
+    const relPath = laneId === "yahoo_ticker_macro" ? "yahoo-hourly-ticker" : "slickcharts-daily-delivery";
+    writeReadyRecoveryIndex(tmp, relPath, recovery.laneId, recovery.keys, generatedAt);
+  }
 }
 
 function seedPrior(tmp, priorDoc) {
@@ -827,7 +918,11 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const tmp = mkTmp("detection-floor-live-installed");
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
-  const { root } = runBuilder(tmp, {}, now);
+  writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  writeReadyRecoveryIndex(tmp, "slickcharts-daily-delivery", "slickcharts_daily_delivery", [
+    "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
+  ]);
+  const { root, public: pub } = runBuilder(tmp, {}, now);
   assert.equal(root.totals.lanes, 18);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
@@ -844,6 +939,12 @@ console.log("# KPI v2 runtime self-proof fixtures");
     public_mirror: false,
     public_safe: false,
   });
+  assert.equal(root.source_artifacts.find((item) => item.id === "yahoo_hourly_ticker_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
+  assert.equal(root.source_artifacts.find((item) => item.id === "slickcharts_daily_delivery_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
+  const publicYahooRecovery = pub.lanes.find((item) => item.id === "yahoo_ticker_macro")?.details?.recovery;
+  assert.deepEqual(Object.keys(publicYahooRecovery).sort(), ["counts", "generated_at", "keys", "lane_id", "retry_keys"]);
+  assert.equal(JSON.stringify(publicYahooRecovery).includes("run_id"), false);
+  assert.equal(JSON.stringify(publicYahooRecovery).includes("payload_sha256"), false);
 
   const malformed = mkTmp("detection-floor-live-malformed-json");
   fs.writeFileSync(path.join(malformed, "data", "admin", "data-supply-detection-floor.json"), "{", "utf8");
@@ -974,6 +1075,19 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(result.exit, 1);
   assert.match(result.stderr, /KPI recovery_retry_set does not match its source index/);
   ok("checker rejects KPI recovery evidence that omits a source-index retry key");
+}
+
+{
+  const tmp = mkTmp("checker-target-recovery-source");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "target-recovery-source" });
+  runtime.cadence.v2_activated_at = now;
+  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /yahoo_ticker_macro: KPI recovery evidence does not match its source index/);
+  ok("checker rejects Yahoo/Slick KPI recovery evidence that diverges from the per-file source index");
 }
 
 // 4c. Yahoo lane count/attempt evidence is numeric and arithmetically closed.
@@ -2136,6 +2250,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   root.status_message = "1 required lane(s) are not ready; healthy lanes may still publish.";
   root.totals = { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length - 1, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
   const tmp = mkTmp("lane-degraded");
+  writeReadyTargetRecoveryIndexes(tmp, now);
   writeJson(path.join(tmp, "data", KPI_REL), root);
   writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
   assert.equal(runChecker(tmp, now, { strict: true }).exit, 0,
@@ -2162,6 +2277,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     blockers: [{ lane_id: "automation_contract", check_id: integrityCheck.id, label: integrityCheck.label, detail: integrityCheck.detail }],
   };
   const blockedTmp = mkTmp("platform-blocked");
+  writeReadyTargetRecoveryIndexes(blockedTmp, now);
   writeJson(path.join(blockedTmp, "data", KPI_REL), blockedRoot);
   writeJson(path.join(blockedTmp, "public", "data", KPI_REL), projectPublicKpi(blockedRoot, now));
   assert.equal(runChecker(blockedTmp, now, { strict: true }).exit, 1,

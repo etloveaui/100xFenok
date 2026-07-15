@@ -27,6 +27,7 @@ import {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
+  compactRecoveryIndex,
   projectRecoveryRetrySet,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
@@ -117,8 +118,9 @@ function push(list, condition, message) {
 const DETECTION_KPI_REASONS = new Set([
   "ok", "missing_artifact", "workflow_unobserved", "transport_error", "http_error",
   "auth_error", "rate_limited", "decode_error", "schema_drift", "empty_payload",
-  "future_source", "stale", "unexpected_error",
+  "future_source", "stale", "unexpected_error", "recovery_degraded",
 ]);
+const TARGET_RECOVERY_LANE_IDS = new Set(["yahoo_ticker_macro", "slickcharts"]);
 
 function isDetectionSourceStamp(value) {
   if (typeof value !== "string") return false;
@@ -131,8 +133,13 @@ function isDetectionSourceStamp(value) {
 export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
+  const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
+  const recoveryChecks = (lane?.checks || []).filter((item) => String(item?.id ?? "").startsWith("recovery_"));
+  const targetRecovery = TARGET_RECOVERY_LANE_IDS.has(laneId);
+  const detectionReason = targetRecovery ? lane?.details?.detection_reason : lane?.reason;
+  const expectedDetectionStatus = detectionReason === "ok" ? "ready" : "blocked";
   const recoveryRetrySet = lane?.details?.recovery_retry_set;
-  const retrySetValid = Array.isArray(recoveryRetrySet) && recoveryRetrySet.every((item) => {
+  const retrySetValid = targetRecovery ? true : Array.isArray(recoveryRetrySet) && recoveryRetrySet.every((item) => {
     const keys = item && typeof item === "object" && !Array.isArray(item) ? Object.keys(item).sort() : [];
     return JSON.stringify(keys) === JSON.stringify([
       "failure_run_id", "key", "recovered_from_run_id", "resolution_state",
@@ -144,10 +151,10 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
         || (typeof item.recovered_from_run_id === "string" && item.recovered_from_run_id !== ""));
   }) && new Set(recoveryRetrySet.map((item) => item.key)).size === recoveryRetrySet.length
     && recoveryRetrySet.every((item, index) => index === 0 || recoveryRetrySet[index - 1].key.localeCompare(item.key) < 0);
-  const hasRetry = Array.isArray(recoveryRetrySet) && recoveryRetrySet.length > 0;
-  const expectedStatus = lane?.reason === "ok" && !hasRetry ? "ready" : "degraded";
-  const detectionExpectedStatus = lane?.reason === "ok" ? "ready" : "blocked";
-  const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
+  const hasRetry = !targetRecovery && Array.isArray(recoveryRetrySet) && recoveryRetrySet.length > 0;
+  const expectedStatus = targetRecovery
+    ? (lane?.reason === "recovery_degraded" || detectionReason !== "ok" ? "degraded" : "ready")
+    : (lane?.reason === "ok" && !hasRetry ? "ready" : "degraded");
   const retryCheck = (lane?.checks || []).find((item) => item?.id === "lkg_retry_set_empty");
   push(errors, expectedConfig?.enforcement === "live" && expectedConfig?.kpi_required === true,
     `${laneId}: canonical detection-floor config is not live/required`);
@@ -155,23 +162,46 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   push(errors, lane?.label === expectedConfig?.label, `${laneId}: label is invalid`);
   push(errors, lane?.required === true, `${laneId}: lane must be required`);
   push(errors, DETECTION_KPI_REASONS.has(lane?.reason), `${laneId}: reason is invalid (${lane?.reason})`);
+  push(errors, DETECTION_KPI_REASONS.has(detectionReason) && detectionReason !== "recovery_degraded",
+    `${laneId}: detection reason is invalid (${detectionReason})`);
   push(errors, lane?.status === expectedStatus,
     `${laneId}: status ${lane?.status} contradicts reason ${lane?.reason}`);
+  push(errors, !targetRecovery || lane?.reason !== "recovery_degraded"
+    || (detectionReason === "ok" && recoveryChecks.some((item) => item?.status === "blocked")),
+    `${laneId}: recovery_degraded lacks a failed named recovery check`);
   push(errors, lane?.deployment_blocking === false, `${laneId}: must remain lane-local and non-deployment-blocking`);
   push(errors, sourceAsOf === null || isDetectionSourceStamp(sourceAsOf),
     `${laneId}: artifact.source_as_of is malformed`);
-  push(errors, !["ok", "stale"].includes(lane?.reason) || sourceAsOf !== null,
+  push(errors, !["ok", "stale"].includes(detectionReason) || sourceAsOf !== null,
     `${laneId}: ready/stale reason contradicts null source_as_of`);
   push(errors, lane?.as_of === sourceAsOf, `${laneId}: as_of must preserve artifact.source_as_of`);
-  push(errors, retrySetValid, `${laneId}: details.recovery_retry_set is malformed`);
-  push(errors, statusCheck?.status === detectionExpectedStatus,
+  push(errors, statusCheck?.status === expectedDetectionStatus,
     `${laneId}: detection_floor_status check does not match detection reason`);
   push(errors, statusCheck?.platform_blocking === false,
     `${laneId}: detection_floor_status must not be platform blocking`);
-  push(errors, retryCheck?.status === (hasRetry ? "blocked" : "ready"),
-    `${laneId}: lkg_retry_set_empty check does not match retry evidence`);
-  push(errors, retryCheck?.platform_blocking === false,
-    `${laneId}: lkg_retry_set_empty must not be platform blocking`);
+  if (targetRecovery) {
+    const expectedRecoveryIds = [
+      "recovery_state_present",
+      "recovery_current_attempt",
+      "recovery_retry_set_empty",
+      "recovery_lkg_integrity",
+    ];
+    push(errors,
+      JSON.stringify(recoveryChecks.map((item) => item?.id)) === JSON.stringify(expectedRecoveryIds),
+      `${laneId}: named recovery checks are incomplete or out of order`);
+    for (const recoveryCheck of recoveryChecks) {
+      push(errors, ["ready", "blocked"].includes(recoveryCheck?.status),
+        `${laneId}: ${recoveryCheck?.id} status is invalid`);
+      push(errors, recoveryCheck?.platform_blocking === false,
+        `${laneId}: ${recoveryCheck?.id} must not be platform blocking`);
+    }
+  } else {
+    push(errors, retrySetValid, `${laneId}: details.recovery_retry_set is malformed`);
+    push(errors, retryCheck?.status === (hasRetry ? "blocked" : "ready"),
+      `${laneId}: lkg_retry_set_empty check does not match retry evidence`);
+    push(errors, retryCheck?.platform_blocking === false,
+      `${laneId}: lkg_retry_set_empty must not be platform blocking`);
+  }
 }
 
 function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
@@ -189,6 +219,18 @@ function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
     const actual = lanesById.get(laneId)?.details?.recovery_retry_set;
     push(errors, JSON.stringify(actual) === JSON.stringify(expected),
       `${laneId}: KPI recovery_retry_set does not match its source index`);
+  }
+  for (const [laneId, stateDir] of [
+    ["yahoo_ticker_macro", "yahoo-hourly-ticker"],
+    ["slickcharts", "slickcharts-daily-delivery"],
+  ]) {
+    const state = readOptionalJson(path.join(adminRoot, stateDir, "index.json"));
+    const lane = lanesById.get(laneId);
+    if (state === null && !Object.hasOwn(lane?.details ?? {}, "recovery")) continue;
+    const expected = compactRecoveryIndex(state);
+    const actual = lane?.details?.recovery;
+    push(errors, JSON.stringify(actual) === JSON.stringify(expected),
+      `${laneId}: KPI recovery evidence does not match its source index`);
   }
 }
 

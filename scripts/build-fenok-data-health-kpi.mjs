@@ -619,6 +619,10 @@ const DETECTION_REASON_STATUS = Object.freeze({
   future_source: "unavailable",
   unexpected_error: "unavailable",
 });
+const DETECTION_RECOVERY_CONFIG = Object.freeze({
+  yahoo_ticker_macro: { lane_id: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
+  slickcharts: { lane_id: "slickcharts_daily_delivery", keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"] },
+});
 
 function isDetectionSourceStamp(value) {
   if (typeof value !== "string") return false;
@@ -696,7 +700,83 @@ export function projectRecoveryRetrySet(state, laneId) {
   });
 }
 
-export function mapDetectionFloorRow(row, recoveryState = null) {
+export function compactRecoveryIndex(index) {
+  if (!index || typeof index !== "object" || Array.isArray(index)) return null;
+  return {
+    lane_id: index.lane_id ?? null,
+    generated_at: index.generated_at ?? null,
+    keys: Array.isArray(index.keys) ? index.keys : [],
+    counts: index.counts ?? null,
+    retry_keys: Array.isArray(index.retry_keys) ? index.retry_keys : [],
+    lkg_details: Array.isArray(index.lkg_details) ? index.lkg_details.map((row) => ({
+      key: row?.key ?? null,
+      payload_sha256: row?.payload_sha256 ?? null,
+      source_as_of: row?.source_as_of ?? null,
+      failure_run_id: row?.failure_run_id ?? null,
+      failure_run_attempt: row?.failure_run_attempt ?? null,
+    })) : [],
+    recovery_details: Array.isArray(index.recovery_details) ? index.recovery_details.map((row) => ({
+      key: row?.key ?? null,
+      recovered_from_run_id: row?.recovered_from_run_id ?? null,
+      recovery_run_id: row?.recovery_run_id ?? null,
+      recovery_run_attempt: row?.recovery_run_attempt ?? null,
+      recovery_event_name: row?.recovery_event_name ?? null,
+      recovered_at: row?.recovered_at ?? null,
+      source_as_of: row?.source_as_of ?? null,
+    })) : [],
+    current_attempt: index.current_attempt ? {
+      run_id: index.current_attempt.run_id ?? null,
+      run_attempt: index.current_attempt.run_attempt ?? null,
+      event_name: index.current_attempt.event_name ?? null,
+      observed_at: index.current_attempt.observed_at ?? null,
+      attempted: index.current_attempt.attempted ?? null,
+      successes: index.current_attempt.successes ?? null,
+      failed: index.current_attempt.failed ?? null,
+      failed_keys: Array.isArray(index.current_attempt.failed_keys) ? index.current_attempt.failed_keys : [],
+    } : null,
+  };
+}
+
+function recoveryChecks(laneId, index) {
+  const config = DETECTION_RECOVERY_CONFIG[laneId];
+  if (!config) return { checks: [], details: null };
+  const present = index?.schema_version === "producer-lkg-index/v1"
+    && index?.lane_id === config.lane_id
+    && Number(index?.counts?.keys) === config.keys.length
+    && Array.isArray(index?.keys)
+    && JSON.stringify(index.keys) === JSON.stringify(config.keys)
+    && Array.isArray(index?.retry_keys)
+    && Array.isArray(index?.lkg_details)
+    && Array.isArray(index?.recovery_details);
+  const current = present
+    && typeof index?.current_attempt?.run_id === "string"
+    && Number.isInteger(index?.current_attempt?.run_attempt)
+    && index.current_attempt.run_attempt >= 1
+    && ["schedule", "workflow_dispatch"].includes(index?.current_attempt?.event_name)
+    && typeof index?.current_attempt?.observed_at === "string"
+    && Number.isInteger(index?.current_attempt?.attempted)
+    && Array.isArray(index?.current_attempt?.failed_keys);
+  const retryEmpty = present
+    && index.retry_keys.length === 0
+    && Number(index.counts?.retry) === 0;
+  const lkgIntegrity = present
+    && Number(index.counts?.unavailable) === 0
+    && index.lkg_details.every((row) => typeof row?.key === "string"
+      && /^[a-f0-9]{64}$/u.test(row?.payload_sha256)
+      && typeof row?.source_as_of === "string")
+    && index.retry_keys.every((key) => index.lkg_details.some((row) => row?.key === key));
+  return {
+    checks: [
+      check("recovery_state_present", "Recovery state", present, present ? `${config.keys.length} exact per-file keys are named` : "recovery index is missing or malformed"),
+      check("recovery_current_attempt", "Recovery current attempt", current, current ? `run ${index.current_attempt.run_id}` : "current-attempt recovery evidence is missing"),
+      check("recovery_retry_set_empty", "Recovery retry set", retryEmpty, retryEmpty ? "retry set is empty" : `${index?.retry_keys?.length ?? 0} key(s) remain on retained LKG`),
+      check("recovery_lkg_integrity", "Recovery LKG integrity", lkgIntegrity, lkgIntegrity ? "all retained LKG rows are sha256-bound" : "LKG binding is missing, malformed, or unavailable"),
+    ],
+    details: compactRecoveryIndex(index),
+  };
+}
+
+export function mapDetectionFloorRow(row, recoveryState = undefined) {
   const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
     throw new Error(`detection floor ${laneId} row is malformed`);
@@ -719,7 +799,9 @@ export function mapDetectionFloorRow(row, recoveryState = null) {
     throw new Error(`detection floor ${laneId} artifact status contradicts null source_as_of`);
   }
 
-  const recoveryRetrySet = projectRecoveryRetrySet(recoveryState, row.id);
+  const targetRecovery = Object.hasOwn(DETECTION_RECOVERY_CONFIG, row.id) && recoveryState !== undefined;
+  const recoveryRetrySet = targetRecovery ? null : projectRecoveryRetrySet(recoveryState, row.id);
+  const recovery = targetRecovery ? recoveryChecks(row.id, recoveryState) : null;
   const result = lane(row.id, row.label, [
     check(
       "detection_floor_status",
@@ -727,26 +809,30 @@ export function mapDetectionFloorRow(row, recoveryState = null) {
       row.status === "ready",
       `${row.reason}; source_as_of ${sourceAsOf ?? "null"}`,
     ),
-    check(
-      "lkg_retry_set_empty",
-      "LKG retry set empty",
-      recoveryRetrySet.length === 0,
-      recoveryRetrySet.length === 0
-        ? "empty"
-        : recoveryRetrySet.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; "),
-    ),
+    ...(targetRecovery
+      ? recovery.checks
+      : [check(
+        "lkg_retry_set_empty",
+        "LKG retry set empty",
+        recoveryRetrySet.length === 0,
+        recoveryRetrySet.length === 0
+          ? "empty"
+          : recoveryRetrySet.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; "),
+      )]),
   ], {
     asOf: sourceAsOf,
-    details: { recovery_retry_set: recoveryRetrySet },
+    details: targetRecovery
+      ? { detection_reason: row.reason, recovery: recovery.details }
+      : { recovery_retry_set: recoveryRetrySet },
   });
   return {
     ...result,
-    reason: row.reason,
+    reason: targetRecovery && row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
     artifact: { source_as_of: sourceAsOf },
   };
 }
 
-export function buildDetectionFloorLanes(report, recoveryStates = {}) {
+export function buildDetectionFloorLanes(report, recoveryStates = undefined) {
   const liveLaneConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
   if (report === null || report === undefined) {
     return liveLaneConfigs.map((laneConfig) => mapDetectionFloorRow({
@@ -757,7 +843,7 @@ export function buildDetectionFloorLanes(report, recoveryStates = {}) {
       status: "unobserved",
       reason: "workflow_unobserved",
       artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
-    }, recoveryStates[laneConfig.id] ?? null));
+    }, recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null));
   }
   validateDetectionReport(report);
   if (report?.schema_version !== "data-supply-detection-floor/v1" || !Array.isArray(report?.lanes)) {
@@ -766,7 +852,7 @@ export function buildDetectionFloorLanes(report, recoveryStates = {}) {
   return liveLaneConfigs.map((laneConfig) => {
     const matches = report.lanes.filter((item) => item?.id === laneConfig.id);
     if (matches.length !== 1) throw new Error(`detection floor ${laneConfig.id} cardinality is ${matches.length}`);
-    return mapDetectionFloorRow(matches[0], recoveryStates[laneConfig.id] ?? null);
+    return mapDetectionFloorRow(matches[0], recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null);
   });
 }
 
@@ -1617,10 +1703,15 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const stockanalysisRecovery = readJson("admin/stockanalysis-recovery/index.json");
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
-  const recoveryStates = Object.fromEntries(
+  const generalRecoveryStates = Object.fromEntries(
     ["fred_macro", "fred_banking", "fdic_tier1"]
       .map((laneId) => [laneId, readOptionalJsonStrict(`admin/${laneId}/index.json`)]),
   );
+  const detectionRecovery = {
+    yahoo_ticker_macro: readOptionalJsonStrict("admin/yahoo-hourly-ticker/index.json"),
+    slickcharts: readOptionalJsonStrict("admin/slickcharts-daily-delivery/index.json"),
+  };
+  const recoveryStates = { ...generalRecoveryStates, ...detectionRecovery };
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 
   const lanes = [
@@ -1698,6 +1789,8 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       { id: "stockanalysis_recovery_state", generated_at: stockanalysisRecovery?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "occ_options_availability", generated_at: occAvailability?.generated_at ?? null, public_mirror: true, public_safe: true },
       { id: "data_supply_detection_floor", generated_at: detectionFloor?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "yahoo_hourly_ticker_recovery_state", generated_at: detectionRecovery.yahoo_ticker_macro?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "slickcharts_daily_delivery_recovery_state", generated_at: detectionRecovery.slickcharts?.generated_at ?? null, public_mirror: false, public_safe: false },
     ],
     totals,
     lanes,

@@ -31,4 +31,17 @@ for (const member of ["history", "symbols"]) {
   assert.match(workflow, /if-no-files-found: ignore/);
 }
 
+{
+  const daily = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-daily.yml"), "utf8");
+  assert.match(daily, /controlled_failure_files/);
+  assert.match(daily, /SLICKCHARTS_DAILY_OUTCOMES_PATH/);
+  assert.match(daily, /scripts\/run-slickcharts-daily-key\.mjs/g);
+  assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs prepare/);
+  assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs finalize/);
+  assert.match(daily, /node scripts\/test-slickcharts-daily-recovery\.mjs/);
+  for (const key of ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]) {
+    assert.match(daily, new RegExp(`--key ${key.replace(".", "\\.")}`));
+  }
+}
+
 console.log("test-slickcharts-attempt-workflows: ok");

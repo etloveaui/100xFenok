@@ -75,6 +75,7 @@ export function runSlickchartsAttempt({
   rowPath,
   observedAt,
   attemptId,
+  outcomesPath = null,
 }) {
   if (!SLICKCHARTS_MEMBERS.includes(memberId)) throw new Error(`unknown SlickCharts member: ${memberId}`);
   let tuples;
@@ -88,7 +89,12 @@ export function runSlickchartsAttempt({
     tuples = [threwTuple("unexpected")];
   }
   const nonSuccess = producerOutcomes.filter((outcome) => new Set(["failure", "cancelled", "timed_out"]).has(outcome));
-  if (nonSuccess.length > 0 || tuples.length === 0) tuples.push(threwTuple("unexpected"));
+  let perFileFailure = false;
+  if (outcomesPath && fs.existsSync(outcomesPath)) {
+    const outcomes = readEvents([outcomesPath]);
+    perFileFailure = outcomes.some((row) => row?.outcome === "failure");
+  }
+  if (nonSuccess.length > 0 || perFileFailure || tuples.length === 0) tuples.push(threwTuple("unexpected"));
   const tuple = foldWorstTuples(tuples);
   const row = buildAttemptRow({ laneId: "slickcharts", memberId, attemptId, observedAt, tuple });
   writeJsonAtomic(rowPath, row);
@@ -139,6 +145,7 @@ function main(argv = process.argv.slice(2)) {
     rowPath,
     observedAt: argumentValue(argv, "--observed-at", new Date().toISOString()),
     attemptId: argumentValue(argv, "--attempt-id", defaultAttemptId(memberId)),
+    outcomesPath: argumentValue(argv, "--outcomes-file"),
   });
   console.log(JSON.stringify({ member_id: memberId, request_events: result.eventCount, attempt: result.row }));
 }

@@ -3,8 +3,8 @@
  *
  * projectPublicKpi(rootDoc, nowIso) returns a deep copy of rootDoc with the
  * runtime block reduced to a public allowlist and freshness flags evaluated at
- * nowIso. Non-runtime shape (schema_version, lanes, source_sla, ...) passes
- * through untouched. v1 documents (no runtime block) pass through unchanged.
+ * nowIso. Admin-only per-file recovery provenance is reduced to public-safe
+ * lane/count/retry summaries. Other non-runtime shape passes through unchanged.
  *
  * Consumers (contract §4): the builder's public-mirror write, sync-static-overrides
  * post-copy, and the checker's equality recompute. All three must agree, so the
@@ -22,6 +22,20 @@ export { PUBLIC_RUNTIME_DENY_KEYS };
 
 function deepClone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function projectLaneRecoveryDetails(doc) {
+  for (const lane of Array.isArray(doc?.lanes) ? doc.lanes : []) {
+    const recovery = lane?.details?.recovery;
+    if (!recovery || typeof recovery !== "object" || Array.isArray(recovery)) continue;
+    lane.details.recovery = {
+      lane_id: recovery.lane_id ?? null,
+      generated_at: recovery.generated_at ?? null,
+      keys: Array.isArray(recovery.keys) ? recovery.keys : [],
+      counts: recovery.counts ?? null,
+      retry_keys: Array.isArray(recovery.retry_keys) ? recovery.retry_keys : [],
+    };
+  }
 }
 
 function ageHours(fromIso, nowIso) {
@@ -83,6 +97,7 @@ export function projectRuntime(runtime, nowIso) {
 export function projectPublicKpi(rootDoc, nowIso) {
   if (!rootDoc || typeof rootDoc !== "object") return rootDoc;
   const doc = deepClone(rootDoc);
+  projectLaneRecoveryDetails(doc);
   if (!("runtime" in doc) || doc.runtime == null) return doc;
   doc.runtime = projectRuntime(doc.runtime, nowIso);
   return doc;

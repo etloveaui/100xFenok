@@ -15,5 +15,9 @@ assert.match(script, /--row-in "\$row_path"/);
 assert.ok((script.match(/merge_saved_row/g) ?? []).length >= 4, "the saved row must be reapplied before commit and push");
 assert.doesNotMatch(script, /git add (?:-A|--all)/);
 assert.match(script, /git push origin HEAD:main/);
+assert.match(script, /SLICKCHARTS_RECOVERY_STATUS_PATH/);
+assert.match(script, /data\/admin\/slickcharts-daily-delivery/);
+assert.match(script, /publish_data/);
+assert.match(script, /recovery_exit/);
 
 console.log("test-publish-slickcharts-attempt: ok");

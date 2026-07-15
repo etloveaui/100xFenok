@@ -27,6 +27,11 @@ on:
           - treasury
           - currency
           - mortgage
+      controlled_failure_files:
+        description: 'Dispatch-only comma-separated chaos targets from the five daily JSON files'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -43,7 +48,11 @@ jobs:
 
     steps:
       - name: Configure attempt telemetry path
-        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-daily-attempt-events.jsonl" >> "$GITHUB_ENV"
+        run: |
+          echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-daily-attempt-events.jsonl" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_DAILY_OUTCOMES_PATH=$RUNNER_TEMP/slickcharts-daily-outcomes.jsonl" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_RECOVERY_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-daily-baseline" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_RECOVERY_STATUS_PATH=$RUNNER_TEMP/slickcharts-daily-recovery-status.json" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,6 +72,14 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Test per-file LKG recovery contracts
+        run: |
+          node scripts/test-producer-lkg-state.mjs
+          node scripts/test-slickcharts-daily-recovery.mjs
+
+      - name: Prepare per-file LKG baseline
+        run: node scripts/slickcharts-daily-recovery.mjs prepare --snapshot-dir "$SLICKCHARTS_RECOVERY_SNAPSHOT_DIR"
+
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4 playwright
@@ -70,43 +87,88 @@ jobs:
 
       # Gainers - cumulative mode
       - name: Run Gainers scraper
-        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'gainers' || github.event_name == 'schedule' }}
+        env:
+          INPUT_CONTROLLED_FAILURE_FILES: ${{ inputs.controlled_failure_files || '' }}
         run: |
-          python scripts/scrapers/gainers-scraper.py \
+          node scripts/run-slickcharts-daily-key.mjs \
+            --key gainers.json \
+            --outcomes "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
+            --event-name "${{ github.event_name }}" \
+            --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
+            --controlled-failure-files "$INPUT_CONTROLLED_FAILURE_FILES" \
+            -- python scripts/scrapers/gainers-scraper.py \
             --output data/slickcharts/gainers.json \
             --pretty --cumulative
 
       # Losers - cumulative mode
       - name: Run Losers scraper
-        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'losers' || github.event_name == 'schedule' }}
+        env:
+          INPUT_CONTROLLED_FAILURE_FILES: ${{ inputs.controlled_failure_files || '' }}
         run: |
-          python scripts/scrapers/losers-scraper.py \
+          node scripts/run-slickcharts-daily-key.mjs \
+            --key losers.json \
+            --outcomes "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
+            --event-name "${{ github.event_name }}" \
+            --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
+            --controlled-failure-files "$INPUT_CONTROLLED_FAILURE_FILES" \
+            -- python scripts/scrapers/losers-scraper.py \
             --output data/slickcharts/losers.json \
             --pretty --cumulative
 
       # Treasury rates - cumulative mode
       - name: Run Treasury scraper
-        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'treasury' || github.event_name == 'schedule' }}
+        env:
+          INPUT_CONTROLLED_FAILURE_FILES: ${{ inputs.controlled_failure_files || '' }}
         run: |
-          python scripts/scrapers/treasury-scraper.py \
+          node scripts/run-slickcharts-daily-key.mjs \
+            --key treasury.json \
+            --outcomes "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
+            --event-name "${{ github.event_name }}" \
+            --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
+            --controlled-failure-files "$INPUT_CONTROLLED_FAILURE_FILES" \
+            -- python scripts/scrapers/treasury-scraper.py \
             --output data/slickcharts/treasury.json \
             --pretty --cumulative
 
       # Crypto currency - cumulative mode
       - name: Run Currency scraper
-        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'currency' || github.event_name == 'schedule' }}
+        env:
+          INPUT_CONTROLLED_FAILURE_FILES: ${{ inputs.controlled_failure_files || '' }}
         run: |
-          python scripts/scrapers/currency-scraper.py \
+          node scripts/run-slickcharts-daily-key.mjs \
+            --key currency.json \
+            --outcomes "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
+            --event-name "${{ github.event_name }}" \
+            --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
+            --controlled-failure-files "$INPUT_CONTROLLED_FAILURE_FILES" \
+            -- python scripts/scrapers/currency-scraper.py \
             --output data/slickcharts/currency.json \
             --pretty --cumulative
 
       # Mortgage rates - cumulative mode
       - name: Run Mortgage scraper
-        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'mortgage' || github.event_name == 'schedule' }}
+        env:
+          INPUT_CONTROLLED_FAILURE_FILES: ${{ inputs.controlled_failure_files || '' }}
         run: |
-          python scripts/scrapers/mortgage-scraper.py \
+          node scripts/run-slickcharts-daily-key.mjs \
+            --key mortgage.json \
+            --outcomes "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
+            --event-name "${{ github.event_name }}" \
+            --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
+            --controlled-failure-files "$INPUT_CONTROLLED_FAILURE_FILES" \
+            -- python scripts/scrapers/mortgage-scraper.py \
             --output data/slickcharts/mortgage.json \
             --pretty --cumulative
+
+      - name: Finalize per-file LKG recovery
+        if: ${{ always() }}
+        run: |
+          node scripts/slickcharts-daily-recovery.mjs finalize \
+            --snapshot-dir "$SLICKCHARTS_RECOVERY_SNAPSHOT_DIR" \
+            --outcomes "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
+            --status "$SLICKCHARTS_RECOVERY_STATUS_PATH" \
+            --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
+            --job-status "${{ job.status }}"
 
       - name: Emit SlickCharts daily attempt
         if: ${{ always() }}
@@ -114,6 +176,7 @@ jobs:
           node scripts/emit-slickcharts-attempt.mjs \
             --member daily \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
+            --outcomes-file "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
             --outcome "${{ job.status }}" \
             --row "$RUNNER_TEMP/slickcharts-daily-row.json"
 

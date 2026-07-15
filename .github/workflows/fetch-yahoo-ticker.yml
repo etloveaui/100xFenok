@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: '5 * * * *'
   workflow_dispatch:
+    inputs:
+      controlled_failure_tickers:
+        description: 'Dispatch-only comma-separated chaos targets (TQQQ,SOXL)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -36,6 +42,8 @@ jobs:
 
       - name: Fetch Yahoo Finance chart snapshot and persist attempt evidence
         id: fetch_yahoo
+        env:
+          INPUT_CONTROLLED_FAILURE_TICKERS: ${{ inputs.controlled_failure_tickers || '' }}
         run: node scripts/fetch-yahoo-ticker.mjs
 
       - name: Verify output
@@ -56,15 +64,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           SHARD="data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json"
+          STATE_ROOT="data/admin/yahoo-hourly-ticker"
+          RECOVERY_EXIT=0
+          if [[ "$FETCH_OUTCOME" != "success" ]]; then
+            RECOVERY_EXIT=2
+          fi
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
+          fi
+          if [[ -d "$STATE_ROOT" ]]; then
+            git add -- "$STATE_ROOT"
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- data/macro/yahoo-ticker.json 100xfenok-next/public/data/macro/yahoo-ticker.json
           fi
           if git diff --staged --quiet; then
             echo "No Yahoo ticker changes to publish"
-            exit 0
+            exit "$RECOVERY_EXIT"
           fi
           git commit -m "data: refresh yahoo-ticker snapshot (TQQQ/SOXL)"
           for attempt in $(seq 1 5); do
@@ -76,7 +92,7 @@ jobs:
             fi
             if git push; then
               gh workflow run update-manifest.yml --ref main
-              exit 0
+              exit "$RECOVERY_EXIT"
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"
             sleep 3
