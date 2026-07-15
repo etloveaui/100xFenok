@@ -403,6 +403,91 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   checkDetectionFloorLane(fdicRecoveryLane, fdicRecoveryCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
   assert.deepEqual(fdicRecoveryCheckerErrors, []);
 
+  const fdicRecovered = structuredClone(fdicRecovery);
+  fdicRecovered.updated_at = "2026-07-16T01:00:00.000Z";
+  fdicRecovered.retry_set = [];
+  fdicRecovered.items.fdic_tier1 = {
+    ...fdicRecovered.items.fdic_tier1,
+    resolution_state: "fresh_primary",
+    retry: false,
+    current: {
+      path: "data/fdic/fdic-tier1.json",
+      payload_sha256: "b".repeat(64),
+      source_as_of: "2026-06-30",
+    },
+    recovered_from_run_id: "4001",
+    recovered_at: "2026-07-16T01:00:00.000Z",
+    recovery_run_id: "4002",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    last_recovered_failure: {
+      run_id: "4001",
+      run_attempt: 1,
+      observed_at: "2026-07-15T01:00:00.000Z",
+      reason: "controlled_failure",
+    },
+  };
+  delete fdicRecovered.items.fdic_tier1.latest_failure;
+  const recoveredLanes = buildDetectionFloorLanes(report(), { fdic_tier1: fdicRecovered });
+  const fdicRecoveredLane = recoveredLanes.find((item) => item.id === "fdic_tier1");
+  assert.equal(fdicRecoveredLane.status, "ready", "a named natural recovery remains lane-ready");
+  assert.equal(fdicRecoveredLane.deployment_blocking, false, "a recovered lane never becomes a platform blocker");
+  assert.deepEqual(fdicRecoveredLane.details.recovery_retry_set, []);
+  assert.deepEqual(fdicRecoveredLane.details.recovery_recovered, [{
+    key: "fdic_tier1",
+    resolution_state: "fresh_primary",
+    retry: false,
+    recovered_from_run_id: "4001",
+    recovery_run_id: "4002",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    recovered_at: "2026-07-16T01:00:00.000Z",
+    lkg_source_as_of: "2026-03-31",
+    source_as_of: "2026-06-30",
+  }]);
+  assert.equal(JSON.stringify(fdicRecoveredLane).includes("payload_sha256"), false, "recovery evidence names provenance without exposing digests");
+  const recoveredCheckerErrors = [];
+  checkDetectionFloorLane(fdicRecoveredLane, recoveredCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
+  assert.deepEqual(recoveredCheckerErrors, []);
+
+  const legacyDispatchRecovery = structuredClone(fdicRecovered);
+  delete legacyDispatchRecovery.items.fdic_tier1.recovery_run_id;
+  delete legacyDispatchRecovery.items.fdic_tier1.recovery_run_attempt;
+  delete legacyDispatchRecovery.items.fdic_tier1.recovery_event_name;
+  const legacyDispatchLane = buildDetectionFloorLanes(report(), { fdic_tier1: legacyDispatchRecovery })
+    .find((item) => item.id === "fdic_tier1");
+  assert.deepEqual(legacyDispatchLane.details.recovery_recovered, [], "legacy dispatch recovery is not natural-run proof");
+
+  const partialRecoveryProof = structuredClone(fdicRecovered);
+  delete partialRecoveryProof.items.fdic_tier1.recovery_event_name;
+  assert.throws(
+    () => buildDetectionFloorLanes(report(), { fdic_tier1: partialRecoveryProof }),
+    /recovery provenance.*malformed/i,
+    "partial natural-run provenance fails closed",
+  );
+  const explicitDispatchRecovery = structuredClone(fdicRecovered);
+  explicitDispatchRecovery.items.fdic_tier1.recovery_event_name = "workflow_dispatch";
+  assert.throws(
+    () => buildDetectionFloorLanes(report(), { fdic_tier1: explicitDispatchRecovery }),
+    /recovery provenance.*malformed/i,
+    "explicit dispatch recovery cannot be projected as natural proof",
+  );
+
+  const projectedRecovered = projectPublicKpi({
+    lanes: [{
+      id: "fdic_tier1",
+      details: {
+        recovery_recovered: [{
+          ...fdicRecoveredLane.details.recovery_recovered[0],
+          payload_sha256: "b".repeat(64),
+          private_path: "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+        }],
+      },
+    }],
+  }, "2026-07-16T01:00:00.000Z");
+  assert.deepEqual(projectedRecovered.lanes[0].details.recovery_recovered, fdicRecoveredLane.details.recovery_recovered,
+    "public projection preserves named recovery proof through an explicit allowlist");
+
   const recoveryIndex = (laneId, keys, overrides = {}) => ({
     schema_version: "producer-lkg-index/v1",
     lane_id: laneId,
@@ -1075,6 +1160,52 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(result.exit, 1);
   assert.match(result.stderr, /KPI recovery_retry_set does not match its source index/);
   ok("checker rejects KPI recovery evidence that omits a source-index retry key");
+}
+
+{
+  const tmp = mkTmp("checker-recovered-source");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "recovered-source" });
+  runtime.cadence.v2_activated_at = now;
+  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  writeJson(path.join(tmp, "data", "admin", "fdic_tier1", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "fdic_tier1",
+    updated_at: "2026-07-10T01:00:00.000Z",
+    retry_set: [],
+    items: {
+      fdic_tier1: {
+        key: "fdic_tier1",
+        resolution_state: "fresh_primary",
+        retry: false,
+        current: {
+          path: "data/fdic/fdic-tier1.json",
+          payload_sha256: "b".repeat(64),
+          source_as_of: "2026-06-30",
+        },
+        lkg: {
+          path: "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-03-31",
+        },
+        recovered_from_run_id: "4001",
+        recovered_at: "2026-07-10T01:00:00.000Z",
+        recovery_run_id: "4002",
+        recovery_run_attempt: 1,
+        recovery_event_name: "schedule",
+        last_recovered_failure: {
+          run_id: "4001",
+          run_attempt: 1,
+          observed_at: "2026-07-09T01:00:00.000Z",
+          reason: "controlled_failure",
+        },
+      },
+    },
+  });
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /KPI recovery_recovered does not match its source index/);
+  ok("checker rejects KPI evidence that drops a source-index natural recovery");
 }
 
 {

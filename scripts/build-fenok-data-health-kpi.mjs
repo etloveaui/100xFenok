@@ -641,8 +641,8 @@ function assertDetectionStatusReason(row, context, { allowUnavailableSchemaDrift
   }
 }
 
-export function projectRecoveryRetrySet(state, laneId) {
-  if (state === null || state === undefined) return [];
+function validateRecoveryState(state, laneId) {
+  if (state === null || state === undefined) return null;
   if (!state || typeof state !== "object" || Array.isArray(state)
     || state.schema_version !== "data-supply-lkg-state/v1"
     || state.lane_id !== laneId
@@ -666,6 +666,13 @@ export function projectRecoveryRetrySet(state, laneId) {
   if (JSON.stringify(itemRetryKeys) !== JSON.stringify(retrySet)) {
     throw new Error(`detection floor ${laneId} recovery retry_set omits active items`);
   }
+  return { state, retrySet };
+}
+
+export function projectRecoveryRetrySet(state, laneId) {
+  const validated = validateRecoveryState(state, laneId);
+  if (validated === null) return [];
+  const { retrySet } = validated;
   return retrySet.map((key) => {
     const item = state.items[key];
     const failureRunId = item?.latest_failure?.run_id;
@@ -698,6 +705,65 @@ export function projectRecoveryRetrySet(state, laneId) {
       recovered_from_run_id: recoveredFromRunId,
     };
   });
+}
+
+export function projectRecoveryRecoveredSet(state, laneId) {
+  const validated = validateRecoveryState(state, laneId);
+  if (validated === null) return [];
+  return Object.entries(validated.state.items)
+    .map(([key, item]) => {
+      const naturalProofFields = [
+        item?.recovery_run_id,
+        item?.recovery_run_attempt,
+        item?.recovery_event_name,
+      ];
+      const hasNaturalProof = naturalProofFields.some((value) => value !== null && value !== undefined);
+      if (!hasNaturalProof) {
+        // Pre-natural-gate dispatch recoveries used only recovered_from_run_id/recovered_at.
+        // They remain stored for lineage but are not eligible KPI recovery proof.
+        return null;
+      }
+
+      const current = item?.current;
+      const lkg = item?.lkg;
+      const lastFailure = item?.last_recovered_failure;
+      if (!item || item.key !== key
+        || item.resolution_state !== "fresh_primary" || item.retry !== false
+        || typeof item.recovered_from_run_id !== "string" || item.recovered_from_run_id === ""
+        || typeof item.recovery_run_id !== "string" || item.recovery_run_id === ""
+        || item.recovery_run_id === item.recovered_from_run_id
+        || item.recovery_run_attempt !== 1
+        || item.recovery_event_name !== "schedule"
+        || !isDetectionSourceStamp(item.recovered_at)
+        || !current || typeof current.path !== "string" || current.path === ""
+        || !/^[0-9a-f]{64}$/.test(current.payload_sha256 ?? "")
+        || !isDetectionSourceStamp(current.source_as_of)
+        || !lkg || lkg.path !== `data/admin/${laneId}/lkg/${key}.json`
+        || !/^[0-9a-f]{64}$/.test(lkg.payload_sha256 ?? "")
+        || !isDetectionSourceStamp(lkg.source_as_of)
+        || Date.parse(current.source_as_of) <= Date.parse(lkg.source_as_of)
+        || !lastFailure || lastFailure.run_id !== item.recovered_from_run_id
+        || !Number.isInteger(lastFailure.run_attempt) || lastFailure.run_attempt < 1
+        || !isDetectionSourceStamp(lastFailure.observed_at)
+        || typeof lastFailure.reason !== "string" || lastFailure.reason === ""
+        || Date.parse(item.recovered_at) < Date.parse(lastFailure.observed_at)) {
+        throw new Error(`detection floor ${laneId} recovery provenance ${key} is malformed`);
+      }
+      return {
+        key,
+        resolution_state: item.resolution_state,
+        retry: item.retry,
+        recovered_from_run_id: item.recovered_from_run_id,
+        recovery_run_id: item.recovery_run_id,
+        recovery_run_attempt: item.recovery_run_attempt,
+        recovery_event_name: item.recovery_event_name,
+        recovered_at: item.recovered_at,
+        lkg_source_as_of: lkg.source_as_of,
+        source_as_of: current.source_as_of,
+      };
+    })
+    .filter((item) => item !== null)
+    .sort((left, right) => left.key.localeCompare(right.key));
 }
 
 export function compactRecoveryIndex(index) {
@@ -801,6 +867,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
 
   const targetRecovery = Object.hasOwn(DETECTION_RECOVERY_CONFIG, row.id) && recoveryState !== undefined;
   const recoveryRetrySet = targetRecovery ? null : projectRecoveryRetrySet(recoveryState, row.id);
+  const recoveryRecovered = targetRecovery ? null : projectRecoveryRecoveredSet(recoveryState, row.id);
   const recovery = targetRecovery ? recoveryChecks(row.id, recoveryState) : null;
   const result = lane(row.id, row.label, [
     check(
@@ -823,7 +890,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
     asOf: sourceAsOf,
     details: targetRecovery
       ? { detection_reason: row.reason, recovery: recovery.details }
-      : { recovery_retry_set: recoveryRetrySet },
+      : { recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered },
   });
   return {
     ...result,

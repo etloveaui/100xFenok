@@ -28,6 +28,7 @@ import {
   slaStatusForAge,
   classifyProductSurface,
   compactRecoveryIndex,
+  projectRecoveryRecoveredSet,
   projectRecoveryRetrySet,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
@@ -139,6 +140,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const detectionReason = targetRecovery ? lane?.details?.detection_reason : lane?.reason;
   const expectedDetectionStatus = detectionReason === "ok" ? "ready" : "blocked";
   const recoveryRetrySet = lane?.details?.recovery_retry_set;
+  const recoveryRecovered = lane?.details?.recovery_recovered;
   const retrySetValid = targetRecovery ? true : Array.isArray(recoveryRetrySet) && recoveryRetrySet.every((item) => {
     const keys = item && typeof item === "object" && !Array.isArray(item) ? Object.keys(item).sort() : [];
     return JSON.stringify(keys) === JSON.stringify([
@@ -151,6 +153,25 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
         || (typeof item.recovered_from_run_id === "string" && item.recovered_from_run_id !== ""));
   }) && new Set(recoveryRetrySet.map((item) => item.key)).size === recoveryRetrySet.length
     && recoveryRetrySet.every((item, index) => index === 0 || recoveryRetrySet[index - 1].key.localeCompare(item.key) < 0);
+  const recoveredValid = targetRecovery ? true : Array.isArray(recoveryRecovered) && recoveryRecovered.every((item) => {
+    const keys = item && typeof item === "object" && !Array.isArray(item) ? Object.keys(item).sort() : [];
+    return JSON.stringify(keys) === JSON.stringify([
+      "key", "lkg_source_as_of", "recovered_at", "recovered_from_run_id", "recovery_event_name",
+      "recovery_run_attempt", "recovery_run_id", "resolution_state", "retry", "source_as_of",
+    ])
+      && typeof item.key === "string" && item.key !== ""
+      && item.resolution_state === "fresh_primary" && item.retry === false
+      && typeof item.recovered_from_run_id === "string" && item.recovered_from_run_id !== ""
+      && typeof item.recovery_run_id === "string" && item.recovery_run_id !== ""
+      && item.recovery_run_id !== item.recovered_from_run_id
+      && item.recovery_run_attempt === 1 && item.recovery_event_name === "schedule"
+      && isDetectionSourceStamp(item.recovered_at)
+      && isDetectionSourceStamp(item.lkg_source_as_of)
+      && isDetectionSourceStamp(item.source_as_of)
+      && Date.parse(item.source_as_of) > Date.parse(item.lkg_source_as_of);
+  }) && new Set(recoveryRecovered.map((item) => item.key)).size === recoveryRecovered.length
+    && recoveryRecovered.every((item, index) => index === 0 || recoveryRecovered[index - 1].key.localeCompare(item.key) < 0)
+    && recoveryRecovered.every((item) => !recoveryRetrySet.some((retryItem) => retryItem.key === item.key));
   const hasRetry = !targetRecovery && Array.isArray(recoveryRetrySet) && recoveryRetrySet.length > 0;
   const expectedStatus = targetRecovery
     ? (lane?.reason === "recovery_degraded" || detectionReason !== "ok" ? "degraded" : "ready")
@@ -197,6 +218,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
     }
   } else {
     push(errors, retrySetValid, `${laneId}: details.recovery_retry_set is malformed`);
+    push(errors, recoveredValid, `${laneId}: details.recovery_recovered is malformed`);
     push(errors, retryCheck?.status === (hasRetry ? "blocked" : "ready"),
       `${laneId}: lkg_retry_set_empty check does not match retry evidence`);
     push(errors, retryCheck?.platform_blocking === false,
@@ -208,17 +230,22 @@ function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
   const adminRoot = path.dirname(rootKpiPath);
   const lanesById = new Map((rootDoc?.lanes || []).map((lane) => [lane?.id, lane]));
   for (const laneId of ["fred_macro", "fred_banking", "fdic_tier1"]) {
-    let expected;
+    let expectedRetry;
+    let expectedRecovered;
     try {
       const state = readOptionalJson(path.join(adminRoot, laneId, "index.json"));
-      expected = projectRecoveryRetrySet(state, laneId);
+      expectedRetry = projectRecoveryRetrySet(state, laneId);
+      expectedRecovered = projectRecoveryRecoveredSet(state, laneId);
     } catch (error) {
       errors.push(`${laneId}: recovery state source is invalid (${error.message})`);
       continue;
     }
-    const actual = lanesById.get(laneId)?.details?.recovery_retry_set;
-    push(errors, JSON.stringify(actual) === JSON.stringify(expected),
+    const actualRetry = lanesById.get(laneId)?.details?.recovery_retry_set;
+    const actualRecovered = lanesById.get(laneId)?.details?.recovery_recovered;
+    push(errors, JSON.stringify(actualRetry) === JSON.stringify(expectedRetry),
       `${laneId}: KPI recovery_retry_set does not match its source index`);
+    push(errors, JSON.stringify(actualRecovered) === JSON.stringify(expectedRecovered),
+      `${laneId}: KPI recovery_recovered does not match its source index`);
   }
   for (const [laneId, stateDir] of [
     ["yahoo_ticker_macro", "yahoo-hourly-ticker"],

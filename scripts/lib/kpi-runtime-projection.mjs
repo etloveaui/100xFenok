@@ -4,7 +4,8 @@
  * projectPublicKpi(rootDoc, nowIso) returns a deep copy of rootDoc with the
  * runtime block reduced to a public allowlist and freshness flags evaluated at
  * nowIso. Admin-only per-file recovery provenance is reduced to public-safe
- * lane/count/retry summaries. Other non-runtime shape passes through unchanged.
+ * lane/count/retry summaries; generic natural-recovery rows use an explicit
+ * field allowlist. Other non-runtime shape passes through unchanged.
  *
  * Consumers (contract §4): the builder's public-mirror write, sync-static-overrides
  * post-copy, and the checker's equality recompute. All three must agree, so the
@@ -26,6 +27,21 @@ function deepClone(value) {
 
 function projectLaneRecoveryDetails(doc) {
   for (const lane of Array.isArray(doc?.lanes) ? doc.lanes : []) {
+    const recovered = lane?.details?.recovery_recovered;
+    if (Array.isArray(recovered)) {
+      lane.details.recovery_recovered = recovered.map((row) => ({
+        key: row?.key ?? null,
+        resolution_state: row?.resolution_state ?? null,
+        retry: row?.retry ?? null,
+        recovered_from_run_id: row?.recovered_from_run_id ?? null,
+        recovery_run_id: row?.recovery_run_id ?? null,
+        recovery_run_attempt: row?.recovery_run_attempt ?? null,
+        recovery_event_name: row?.recovery_event_name ?? null,
+        recovered_at: row?.recovered_at ?? null,
+        lkg_source_as_of: row?.lkg_source_as_of ?? null,
+        source_as_of: row?.source_as_of ?? null,
+      }));
+    }
     const recovery = lane?.details?.recovery;
     if (!recovery || typeof recovery !== "object" || Array.isArray(recovery)) continue;
     lane.details.recovery = {
