@@ -151,7 +151,6 @@ jobs:
           python3 scripts/rebuild-yf-finance-summary.py
           python3 scripts/build-market-facts.py --no-public-mirror
           python3 scripts/build-market-source-parity.py
-          npm --prefix 100xfenok-next run build:history-gap-daily1y
           python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
           node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
 
@@ -168,6 +167,7 @@ jobs:
         run: |
           node scripts/build-rim-index.mjs
           node scripts/build-fenok-etf-signals.mjs
+          npm --prefix 100xfenok-next run build:history-gap-daily1y
           node scripts/build-fenok-etf-action-index.mjs
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
 
@@ -343,7 +343,6 @@ jobs:
             python3 scripts/rebuild-yf-finance-summary.py
             python3 scripts/build-market-facts.py --no-public-mirror
             python3 scripts/build-market-source-parity.py
-            npm --prefix 100xfenok-next run build:history-gap-daily1y
             python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
             node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
             node scripts/export-computed-signals.mjs
@@ -351,6 +350,7 @@ jobs:
             node scripts/build-fenok-signals.mjs
             node scripts/build-rim-index.mjs
             node scripts/build-fenok-etf-signals.mjs
+            npm --prefix 100xfenok-next run build:history-gap-daily1y
             node scripts/build-fenok-etf-action-index.mjs
             node scripts/build-fenok-etf-core-daily-basket.mjs --check
             node scripts/build-fenok-edge-coverage-index.mjs

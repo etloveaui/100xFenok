@@ -529,8 +529,16 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(initial_build.count(report_command), 1)
         self.assertEqual(initial_build.count(signal_command), 1)
         self.assertEqual(initial_build.count(basket_command), 1)
-        self.assertLess(initial_build.index(report_command), initial_build.index(basket_command))
         self.assertLess(initial_build.index(signal_command), initial_build.index(basket_command))
+        self.assertLess(initial_build.index(signal_command), initial_build.index(report_command))
+        self.assertLess(initial_build.index(report_command), initial_build.index(basket_command))
+
+        retry_build = manifest.split("      - name: Commit and push manifest (with rebase retry)", 1)[1]
+        self.assertEqual(retry_build.count(report_command), 1)
+        self.assertEqual(retry_build.count(signal_command), 1)
+        self.assertEqual(retry_build.count(basket_command), 1)
+        self.assertLess(retry_build.index(signal_command), retry_build.index(report_command))
+        self.assertLess(retry_build.index(report_command), retry_build.index(basket_command))
 
         projection_command = "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/"
         override_command = "(cd 100xfenok-next && node sync-static-overrides.mjs)"
@@ -3431,6 +3439,68 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "chaos-1")
+
+    def test_stock_controlled_failure_also_retains_financial_lkg_and_retry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data-supply-state"
+            stock_payload = {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "stock", "ticker": "AAPL",
+                "source_as_of": "2026-07-14T20:00:00Z", "fetched_at": "2026-07-14T21:00:00Z",
+                "normalized": {
+                    "overview": {},
+                    "quote": {"symbol": "AAPL", "uid": "AAPL"},
+                    "history": [{"t": "2026-07-14", "c": 10}],
+                },
+            }
+            financial_payload = {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "stock", "ticker": "AAPL",
+                "fetched_at": "2026-07-14T21:00:00Z",
+                "statements": {"annual": {"income": {"periods": ["2026-06-30"]}}},
+            }
+            stock_path = self.fetcher.OUT_DIR / "stocks" / "AAPL.json"
+            financial_path = self.fetcher.OUT_DIR / "financials" / "AAPL.json"
+            self.fetcher.write_json(stock_path, stock_payload)
+            self.fetcher.write_json(financial_path, financial_payload)
+            expected_financial_lkg = financial_path.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            bootstrap = {"run_id": "bootstrap", "run_attempt": 1, "event_name": "local", "observed_at": "2026-07-15T07:00:00Z"}
+            chaos = {"run_id": "chaos-financial", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:00:00Z"}
+            store.bootstrap_existing(bootstrap)
+            try:
+                failed = self.fetcher.run_one(
+                    "stock", "AAPL", 1, False,
+                    include_financials=True,
+                    recovery_store=store,
+                    recovery_run=chaos,
+                    controlled_failure=True,
+                )
+                index = store.rebuild_index(chaos)
+            finally:
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT = original_dirs
+
+            financial_state = json.loads(
+                (store.root / "states" / "financial" / "AAPL.json").read_text()
+            )
+            self.assertIsNotNone(failed["error"])
+            self.assertEqual(financial_state["resolution_state"], "lkg_primary")
+            self.assertTrue(financial_state["retry"])
+            self.assertTrue(financial_state["latest_failure"]["controlled"])
+            self.assertEqual(
+                (store.root / "lkg" / "financial" / "AAPL.json").read_bytes(),
+                expected_financial_lkg,
+            )
+            self.assertIn(
+                {"artifact_kind": "financial", "entity": "AAPL"},
+                index["retry_artifacts"],
+            )
 
     def test_surface_controlled_failure_retains_lkg_then_real_fetch_recovers(self) -> None:
         original = self.fetcher.fetch_svelte_surface

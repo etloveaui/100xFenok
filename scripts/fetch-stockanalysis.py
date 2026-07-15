@@ -4485,10 +4485,21 @@ def run_one(
         else:
             stock_supply = load_stock_detail_supply()
             if controlled_failure:
-                error = f"RuntimeError: controlled failure injection for stock:{ticker}"
+                stock_error = f"RuntimeError: controlled failure injection for stock:{ticker}"
                 if recovery_store is not None and recovery_run is not None:
+                    if include_financials:
+                        financials_error = (
+                            f"RuntimeError: controlled failure injection for financial:{ticker}"
+                        )
+                        recovery_store.record_failure(
+                            "financial",
+                            ticker,
+                            financials_error,
+                            recovery_run,
+                            controlled=True,
+                        )
                     recovery_store.record_failure(
-                        "stock", ticker, error, recovery_run, controlled=True
+                        "stock", ticker, stock_error, recovery_run, controlled=True
                     )
                     recovery_failure_recorded = True
                 raise RuntimeError(f"controlled failure injection for stock:{ticker}")
