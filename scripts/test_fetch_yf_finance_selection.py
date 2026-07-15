@@ -167,7 +167,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIn("FAIL", index["retry_symbols"])
         self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
         self.assertIn("FAIL", {row["symbol"] for row in index["lkg_details"]})
-        self.assertIn("[degraded]", output)
+        self.assertIn("[degraded] retained LKG: FAIL; deferred without LKG: none", output)
 
     def test_lkg_less_transient_provider_miss_is_deferred_and_exits_zero(self) -> None:
         code, state, index, output = self._run_low_rate_failure(
@@ -184,7 +184,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIn("FAIL", index["retry_symbols"])
         self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
         self.assertIn("FAIL", {row["symbol"] for row in index["unavailable_details"]})
-        self.assertIn("[degraded]", output)
+        self.assertIn("[degraded] retained LKG: none; deferred without LKG: FAIL", output)
 
     def test_controlled_lkg_less_chaos_is_deferred_and_exits_zero(self) -> None:
         code, state, index, output = self._run_low_rate_failure(
@@ -195,7 +195,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(state["latest_failure"]["deferred_acquisition"])
         self.assertIn("FAIL", {row["symbol"] for row in index["unavailable_details"]})
-        self.assertIn("[degraded]", output)
+        self.assertIn("[degraded] retained LKG: none; deferred without LKG: FAIL", output)
 
     def test_loss_of_previously_advertised_data_without_lkg_exits_nonzero(self) -> None:
         code, state, _index, output = self._run_low_rate_failure(

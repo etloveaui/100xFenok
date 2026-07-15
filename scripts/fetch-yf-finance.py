@@ -1239,13 +1239,25 @@ def _valid_retained_lkg(state_store, ticker, state):
 
 def yahoo_failure_exit_assessment(errors, state_store, state_index):
     if not errors:
-        return {"exit_code": 0, "tickers": [], "reasons": []}
+        return {
+            "exit_code": 0,
+            "tickers": [],
+            "reasons": [],
+            "retained_lkg_tickers": [],
+            "deferred_without_lkg_tickers": [],
+        }
 
     tickers = sorted({str(row.get("ticker") or "") for row in errors if row.get("ticker")})
     reasons = _systemic_failure_reasons(errors)
     if state_store is None or not isinstance(state_index, dict):
         reasons.append("Yahoo batch state/KPI evidence is unavailable")
-        return {"exit_code": 2, "tickers": tickers, "reasons": reasons}
+        return {
+            "exit_code": 2,
+            "tickers": tickers,
+            "reasons": reasons,
+            "retained_lkg_tickers": [],
+            "deferred_without_lkg_tickers": [],
+        }
 
     current_attempt = state_index.get("current_attempt") if isinstance(state_index.get("current_attempt"), dict) else {}
     named_attempts = {
@@ -1267,6 +1279,8 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         for row in state_index.get("unavailable_details") or []
         if isinstance(row, dict) and row.get("symbol")
     )
+    retained_lkg_tickers = []
+    deferred_without_lkg_tickers = []
 
     for ticker in tickers:
         state = _load_failure_state(state_store, ticker)
@@ -1294,6 +1308,10 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
             and latest_failure.get("lkg_status") == "absent"
             and latest_failure.get("data_loss") is False
         )
+        if valid_lkg:
+            retained_lkg_tickers.append(ticker)
+        elif deferred:
+            deferred_without_lkg_tickers.append(ticker)
         if not valid_lkg and not deferred:
             if isinstance(latest_failure, dict) and latest_failure.get("data_loss") is True:
                 reasons.append(f"{ticker} lost previously advertised Yahoo data/LKG")
@@ -1302,7 +1320,13 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         if ticker not in named_attempts or ticker not in kpi_names:
             reasons.append(f"{ticker} is not named in the Yahoo KPI evidence")
 
-    return {"exit_code": 2 if reasons else 0, "tickers": tickers, "reasons": reasons}
+    return {
+        "exit_code": 2 if reasons else 0,
+        "tickers": tickers,
+        "reasons": reasons,
+        "retained_lkg_tickers": retained_lkg_tickers,
+        "deferred_without_lkg_tickers": deferred_without_lkg_tickers,
+    }
 
 
 def usable_existing_payload(path):
@@ -1755,9 +1779,11 @@ def main():
     if errors:
         assessment = yahoo_failure_exit_assessment(errors, state_store, finalized_index)
         if assessment["exit_code"] == 0:
+            retained = ", ".join(assessment["retained_lkg_tickers"]) or "none"
+            deferred = ", ".join(assessment["deferred_without_lkg_tickers"]) or "none"
             print(
-                "[degraded] Yahoo failures retained valid LKG, joined the retry set, "
-                f"and are named in KPI evidence: {', '.join(assessment['tickers'])}"
+                f"[degraded] retained LKG: {retained}; deferred without LKG: {deferred}; "
+                "all failures joined the retry set and are named in KPI evidence"
             )
         else:
             print(f"[corrupt] Yahoo batch integrity failure: {'; '.join(assessment['reasons'])}")
