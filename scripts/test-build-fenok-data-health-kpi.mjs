@@ -259,6 +259,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     current_attempt: { run_id: "100", attempted: 2, successes: 2, failed: 0, skipped: 0, fetch_attempts: 2, errors: [] },
     pending_details: [],
     lkg_details: [],
+    unavailable_details: [],
   };
   const readyLane = buildYahooBatchLane(readyIndex);
   assert.equal(readyLane.status, "ready");
@@ -268,8 +269,8 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(agedLane.status, "degraded", "unchanged Yahoo state must age against the KPI build clock");
 
   const degradedIndex = structuredClone(readyIndex);
-  degradedIndex.counts = { active: 3, untracked: 0, fresh: 0, lkg: 2, pending_history: 1, unavailable: 0, retry: 3, failed: 1, stale: 1 };
-  degradedIndex.current_attempt = { run_id: "101", attempted: 1, successes: 0, failed: 1, skipped: 0, fetch_attempts: 2, errors: [{ symbol: "AAPL" }] };
+  degradedIndex.counts = { active: 4, untracked: 0, fresh: 0, lkg: 2, pending_history: 1, unavailable: 1, retry: 4, failed: 2, stale: 1 };
+  degradedIndex.current_attempt = { run_id: "101", attempted: 2, successes: 0, failed: 2, skipped: 0, fetch_attempts: 3, errors: [{ symbol: "AAPL" }, { symbol: "HOLX" }] };
   degradedIndex.lkg_details = [{ symbol: "AAPL", payload_sha256: "abc", source_as_of: "2026-07-10T00:00:00Z", failure_run_id: "101", raw_error: "must-not-publish" }];
   degradedIndex.stale_groups = [{
     source_as_of: "2026-06-26",
@@ -279,6 +280,19 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     symbols: ["FLEX", "GOOGL"],
   }];
   degradedIndex.pending_details = [{ symbol: "NEW", discovered_from: ["market_facts"], missing: ["history"], expected_resolution: "next_natural_yahoo_run", private_path: "/tmp/private" }];
+  degradedIndex.unavailable_details = [{
+    symbol: "HOLX",
+    failure_run_id: "101",
+    failure_observed_at: "2026-07-13T01:59:00Z",
+    failure_kind: "transient_provider_miss",
+    lkg_status: "absent",
+    data_loss: false,
+    deferred_acquisition: true,
+    retry: true,
+    expected_resolution: "next_natural_yahoo_run",
+    raw_error: "must-not-publish",
+    private_path: "/tmp/private",
+  }];
   const degradedLane = buildYahooBatchLane(degradedIndex);
   assert.equal(degradedLane.status, "degraded");
   assert.equal(degradedLane.deployment_blocking, false);
@@ -286,9 +300,38 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.match(degradedLane.checks.find((item) => item.id === "no_pending_history")?.detail, /NEW.*market_facts.*history.*next natural Yahoo run/i);
   assert.match(degradedLane.checks.find((item) => item.id === "no_lkg_primary")?.detail, /AAPL.*101.*2026-07-10/i);
   assert.match(degradedLane.checks.find((item) => item.id === "no_lkg_primary")?.detail, /FLEX, GOOGL.*2026-06-26.*10 business days.*6-day bound.*next natural Yahoo run/i);
+  assert.match(degradedLane.checks.find((item) => item.id === "no_unavailable")?.detail, /HOLX.*transient provider miss.*next natural Yahoo run/i);
   assert.equal(degradedLane.details.lkg[0].raw_error, undefined);
   assert.deepEqual(degradedLane.details.stale_groups[0].symbols, ["FLEX", "GOOGL"]);
   assert.equal(degradedLane.details.pending_history[0].private_path, undefined);
+  assert.deepEqual(degradedLane.details.unavailable, [{
+    symbol: "HOLX",
+    failure_attempt_ref: "101",
+    failure_observed_at: "2026-07-13T01:59:00Z",
+    failure_kind: "transient_provider_miss",
+    lkg_status: "absent",
+    data_loss: false,
+    deferred_acquisition: true,
+    retry: true,
+    expected_resolution: "next_natural_yahoo_run",
+  }]);
+
+  const legacyUnavailableIndex = structuredClone(degradedIndex);
+  delete legacyUnavailableIndex.unavailable_details;
+  legacyUnavailableIndex.generated_at = "2026-07-15T00:10:40Z";
+  legacyUnavailableIndex.counts.unavailable = 2;
+  legacyUnavailableIndex.current_attempt.run_id = "29378156187";
+  legacyUnavailableIndex.current_attempt.errors.push({ symbol: "MMC" });
+  legacyUnavailableIndex.retry_symbols = ["HOLX", "MMC"];
+  const legacyUnavailableLane = buildYahooBatchLane(legacyUnavailableIndex);
+  assert.deepEqual(legacyUnavailableLane.details.unavailable.map((item) => item.symbol), ["HOLX", "MMC"]);
+  assert.equal(legacyUnavailableLane.details.unavailable[0].failure_kind, "legacy_unclassified");
+  assert.match(legacyUnavailableLane.checks.find((item) => item.id === "no_unavailable")?.detail, /HOLX.*MMC.*legacy unclassified/i);
+
+  const ambiguousLegacyUnavailableIndex = structuredClone(legacyUnavailableIndex);
+  ambiguousLegacyUnavailableIndex.current_attempt.run_id = "different-run";
+  const ambiguousLegacyLane = buildYahooBatchLane(ambiguousLegacyUnavailableIndex);
+  assert.deepEqual(ambiguousLegacyLane.details.unavailable, [], "unknown legacy names fail closed");
 
   const malformedIndex = structuredClone(readyIndex);
   malformedIndex.oldest_source_as_of = "2026-07-99junk";
@@ -1239,6 +1282,67 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(result.exit, 1, "checker rejects Yahoo numeric coercion and attempt arithmetic tamper");
   assert.match(result.stderr, /oldest source timestamp\/date is malformed/);
   ok("Yahoo lane checker rejects coercive counts and unreconciled current-attempt evidence");
+}
+
+{
+  const tmp = mkTmp("checker-yahoo-unavailable-detail");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "yahoo-unavailable-detail" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const yahoo = root.lanes.find((lane) => lane.id === "yahoo_batch_quote_history");
+  yahoo.details.unavailable = [{
+    symbol: "HOLX",
+    failure_attempt_ref: "101",
+    failure_observed_at: now,
+    failure_kind: "transient_provider_miss",
+    lkg_status: "absent",
+    data_loss: false,
+    deferred_acquisition: true,
+    retry: true,
+    expected_resolution: "next_natural_yahoo_run",
+    private_path: "/tmp/private",
+  }];
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /unavailable detail count mismatch/);
+  assert.match(result.stderr, /unavailable contains non-public fields: private_path/);
+  ok("Yahoo unavailable details are count-bound and reject private fields");
+
+  yahoo.details.unavailable[0] = {
+    ...yahoo.details.unavailable[0],
+    data_loss: "false",
+    deferred_acquisition: "true",
+  };
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const booleanResult = runChecker(tmp, now);
+  assert.match(booleanResult.stderr, /data_loss must be boolean/);
+  assert.match(booleanResult.stderr, /deferred_acquisition must be boolean/);
+
+  yahoo.details.unavailable[0] = {
+    ...yahoo.details.unavailable[0],
+    data_loss: false,
+    deferred_acquisition: false,
+  };
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const deferredResult = runChecker(tmp, now);
+  assert.match(deferredResult.stderr, /deferred acquisition provenance is invalid/);
+
+  yahoo.details.unavailable[0] = {
+    ...yahoo.details.unavailable[0],
+    failure_kind: "legacy_unclassified",
+    lkg_status: "lost",
+    data_loss: false,
+    deferred_acquisition: false,
+  };
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const dataLossResult = runChecker(tmp, now);
+  assert.match(dataLossResult.stderr, /data-loss provenance is invalid/);
 }
 
 // 4d. HERMETICITY — seedReadyV2 must NOT inherit a live/regenerated doc's state. Simulate

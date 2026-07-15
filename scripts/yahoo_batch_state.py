@@ -407,8 +407,15 @@ class YahooBatchStateStore:
         run: dict,
         discovered_from: list[str],
         evidence: dict,
+        *,
+        failure_kind: str = "unexpected",
     ) -> dict:
         state = self._load_state(ticker)
+        previously_advertised_data = (
+            state.get("resolution_state") in {"fresh_primary", "lkg_primary", "pending_history"}
+            or isinstance(state.get("current"), dict)
+            or isinstance(state.get("lkg"), dict)
+        )
         attempt = _attempt(run, "failed", evidence, error=error)
         self._append_attempt(state, attempt)
         canonical = self.finance_dir / f"{ticker}.json"
@@ -439,6 +446,9 @@ class YahooBatchStateStore:
                 **source,
             }
 
+        lkg_status = "retained" if lkg else "lost" if previously_advertised_data else "absent"
+        data_loss = lkg_status == "lost"
+        deferred_acquisition = failure_kind == "transient_provider_miss" and lkg_status == "absent"
         failure = {
             "run_id": attempt["run_id"],
             "run_attempt": attempt["run_attempt"],
@@ -446,6 +456,10 @@ class YahooBatchStateStore:
             "error": _bounded_error(error),
             "attempts_used": attempt["attempts_used"],
             "failures": attempt["failures"],
+            "failure_kind": failure_kind,
+            "lkg_status": lkg_status,
+            "data_loss": data_loss,
+            "deferred_acquisition": deferred_acquisition,
         }
         state.update({
             "schema_version": "yahoo-batch-quote-history-state/v1",
@@ -539,6 +553,7 @@ class YahooBatchStateStore:
         lkg_symbols = []
         pending_details = []
         lkg_details = []
+        unavailable_details = []
         failures = []
         source_rows = []
         current_attempts = []
@@ -594,6 +609,22 @@ class YahooBatchStateStore:
                 })
             elif resolution == "unavailable":
                 counts["unavailable"] += 1
+                failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else {}
+                last_attempt = state.get("last_attempt") if isinstance(state.get("last_attempt"), dict) else {}
+                evidence = failure or last_attempt
+                unavailable_details.append({
+                    "symbol": ticker,
+                    "failure_run_id": evidence.get("run_id"),
+                    "failure_observed_at": evidence.get("observed_at"),
+                    "failure_kind": failure.get("failure_kind") or (
+                        "history_unavailable" if last_attempt.get("outcome") == "unavailable" else "legacy_unclassified"
+                    ),
+                    "lkg_status": failure.get("lkg_status") or "absent",
+                    "data_loss": failure.get("data_loss") is True,
+                    "deferred_acquisition": failure.get("deferred_acquisition") is True,
+                    "retry": state.get("retry") is True,
+                    "expected_resolution": "next_natural_yahoo_run" if state.get("retry") is True else None,
+                })
             if state.get("retry") is True:
                 counts["retry"] += 1
                 retry_symbols.append(ticker)
@@ -628,6 +659,10 @@ class YahooBatchStateStore:
             lkg_details,
             key=lambda row: (row.get("symbol") not in current_failure_symbols, row.get("symbol") or ""),
         )
+        prioritized_unavailable_details = sorted(
+            unavailable_details,
+            key=lambda row: (row.get("symbol") not in current_failure_symbols, row.get("symbol") or ""),
+        )
         oldest = min(source_rows) if source_rows else (None, None)
         latest_failure = max(failures, key=lambda row: str(row.get("observed_at") or "")) if failures else None
         if batch_failure:
@@ -651,6 +686,7 @@ class YahooBatchStateStore:
             "lkg_symbols": lkg_symbols[:20],
             "pending_details": pending_details[:20],
             "lkg_details": prioritized_lkg_details[:20],
+            "unavailable_details": prioritized_unavailable_details[:20],
             "stale_groups": [
                 {
                     "source_as_of": key[0] or None,

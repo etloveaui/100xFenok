@@ -72,24 +72,47 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             },
         )
 
-    def _run_low_rate_failure(self, *, error: str, retain_lkg: bool) -> tuple[int, dict, dict, str]:
+    def _run_low_rate_failure(
+        self,
+        *,
+        error: str,
+        retain_lkg: bool,
+        lose_existing_data: bool = False,
+        failure_evidence_error: str | None = None,
+    ) -> tuple[int, dict, dict, str]:
         failed_ticker = "FAIL"
         tickers = [failed_ticker, *[f"OK{index:02d}" for index in range(10)]]
         self.fetcher.load_universe_sources = lambda **_kwargs: {
             ticker: ["test_fixture"] for ticker in tickers
         }
-        if retain_lkg:
-            write_json(self.fetcher.OUT_DIR / f"{failed_ticker}.json", self._daily_payload(failed_ticker))
+        if retain_lkg or lose_existing_data:
+            payload = self._daily_payload(failed_ticker)
+            canonical = self.fetcher.OUT_DIR / f"{failed_ticker}.json"
+            write_json(canonical, payload)
+            if lose_existing_data:
+                store = self.fetcher.YahooBatchStateStore(
+                    self.fetcher.YAHOO_BATCH_STATE_ROOT,
+                    self.fetcher.OUT_DIR,
+                )
+                store.record_success(
+                    failed_ticker,
+                    payload,
+                    self._run("seed-existing-data"),
+                    ["test_fixture"],
+                    {"attempts_used": 1, "failures": [], "latency_ms": 1},
+                )
+                canonical.unlink()
 
         def fake_fetch(ticker, **_kwargs):
             if ticker == failed_ticker:
+                evidence_error = failure_evidence_error or error
                 return (
                     None,
                     0,
                     error,
                     {
                         "attempts_used": 1,
-                        "failures": [{"attempt": 1, "error": error}],
+                        "failures": [{"attempt": 1, "error": evidence_error}],
                         "latency_ms": 0,
                     },
                 )
@@ -146,16 +169,46 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIn("FAIL", {row["symbol"] for row in index["lkg_details"]})
         self.assertIn("[degraded]", output)
 
-    def test_low_rate_data_loss_without_lkg_exits_nonzero(self) -> None:
+    def test_lkg_less_transient_provider_miss_is_deferred_and_exits_zero(self) -> None:
         code, state, index, output = self._run_low_rate_failure(
-            error="isolated provider coverage gap",
+            error="ValueError: provider source timestamp is unavailable for HOLX",
             retain_lkg=False,
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(state["resolution_state"], "unavailable")
+        self.assertTrue(state["retry"])
+        self.assertEqual(state["latest_failure"]["failure_kind"], "transient_provider_miss")
+        self.assertEqual(state["latest_failure"]["lkg_status"], "absent")
+        self.assertTrue(state["latest_failure"]["deferred_acquisition"])
+        self.assertIn("FAIL", index["retry_symbols"])
+        self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
+        self.assertIn("FAIL", {row["symbol"] for row in index["unavailable_details"]})
+        self.assertIn("[degraded]", output)
+
+    def test_controlled_lkg_less_chaos_is_deferred_and_exits_zero(self) -> None:
+        code, state, index, output = self._run_low_rate_failure(
+            error="controlled failure injection for HOLX",
+            retain_lkg=False,
+        )
+
+        self.assertEqual(code, 0)
+        self.assertTrue(state["latest_failure"]["deferred_acquisition"])
+        self.assertIn("FAIL", {row["symbol"] for row in index["unavailable_details"]})
+        self.assertIn("[degraded]", output)
+
+    def test_loss_of_previously_advertised_data_without_lkg_exits_nonzero(self) -> None:
+        code, state, _index, output = self._run_low_rate_failure(
+            error="ValueError: provider source timestamp is unavailable for FAIL",
+            retain_lkg=False,
+            lose_existing_data=True,
         )
 
         self.assertEqual(code, 2)
         self.assertEqual(state["resolution_state"], "unavailable")
         self.assertTrue(state["retry"])
-        self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
+        self.assertEqual(state["latest_failure"]["lkg_status"], "lost")
+        self.assertFalse(state["latest_failure"]["deferred_acquisition"])
         self.assertIn("[corrupt]", output)
 
     def test_low_rate_systemic_break_exits_nonzero_even_with_lkg(self) -> None:
@@ -168,6 +221,105 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(state["resolution_state"], "lkg_primary")
         self.assertTrue(state["retry"])
         self.assertIn("systemic", output)
+
+    def test_swallowed_systemic_evidence_cannot_be_laundered_by_transient_terminal_error(self) -> None:
+        code, state, _index, output = self._run_low_rate_failure(
+            error="empty payload",
+            failure_evidence_error="YFRateLimitError: HTTP 429 Too Many Requests",
+            retain_lkg=False,
+        )
+
+        self.assertEqual(code, 2)
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_rate_limit")
+        self.assertFalse(state["latest_failure"]["deferred_acquisition"])
+        self.assertIn("[corrupt]", output)
+
+    def test_lkg_less_systemic_or_unknown_failure_remains_corrupt(self) -> None:
+        for error in [
+            "HTTP 401 Unauthorized",
+            "HTTP 429 Too Many Requests",
+            "JSONDecodeError: Expecting value",
+            "unexpected invariant violation",
+        ]:
+            with self.subTest(error=error):
+                code, state, _index, output = self._run_low_rate_failure(
+                    error=error,
+                    retain_lkg=False,
+                )
+                self.assertEqual(code, 2)
+                self.assertFalse(state["latest_failure"]["deferred_acquisition"])
+                self.assertIn("[corrupt]", output)
+
+    def test_actual_mixed_shape_six_lkg_plus_holx_mmc_transient_is_degraded(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT,
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("mixed-natural")
+        tickers = {"HOLX", "MMC", *{f"LKG{index}" for index in range(6)}}
+        errors = []
+
+        for ticker in sorted(tickers):
+            if ticker.startswith("LKG"):
+                write_json(self.fetcher.OUT_DIR / f"{ticker}.json", self._daily_payload(ticker))
+                error = "isolated provider coverage gap"
+            else:
+                error = f"ValueError: provider source timestamp is unavailable for {ticker}"
+            row = {"ticker": ticker, "error": error, "failures": []}
+            store.record_failure(
+                ticker,
+                error,
+                run,
+                ["market_facts"],
+                {"attempts_used": 1, "failures": [], "latency_ms": 0},
+                failure_kind=self.fetcher.yahoo_failure_kind(row, event_name=run["event_name"]),
+            )
+            errors.append(row)
+
+        index = store.rebuild_index(tickers, run)
+        assessment = self.fetcher.yahoo_failure_exit_assessment(errors, store, index)
+
+        self.assertEqual(assessment["exit_code"], 0)
+        self.assertEqual(index["counts"]["lkg"], 6)
+        self.assertEqual(index["counts"]["unavailable"], 2)
+        self.assertEqual(index["counts"]["retry"], 8)
+        self.assertEqual(index["counts"]["failed"], 8)
+        self.assertEqual({row["symbol"] for row in index["unavailable_details"]}, {"HOLX", "MMC"})
+        self.assertTrue(all(row["deferred_acquisition"] for row in index["unavailable_details"]))
+
+    def test_legacy_unavailable_state_is_safely_named_during_schema_transition(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT,
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("legacy-index-rebuild")
+        legacy_failure = {
+            "run_id": "old-run",
+            "run_attempt": 1,
+            "observed_at": "2026-07-10T01:00:00Z",
+            "error": "ValueError: provider source timestamp is unavailable for HOLX",
+            "attempts_used": 1,
+            "failures": [],
+        }
+        write_json(store._state_path("HOLX"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": "HOLX",
+            "resolution_state": "unavailable",
+            "retry": True,
+            "latest_failure": legacy_failure,
+            "last_attempt": {**legacy_failure, "outcome": "failed"},
+            "attempts": [{**legacy_failure, "outcome": "failed"}],
+        })
+
+        index = store.rebuild_index({"HOLX"}, run)
+        detail = index["unavailable_details"][0]
+
+        self.assertEqual(detail["symbol"], "HOLX")
+        self.assertEqual(detail["failure_kind"], "legacy_unclassified")
+        self.assertEqual(detail["lkg_status"], "absent")
+        self.assertFalse(detail["deferred_acquisition"])
+        self.assertTrue(detail["retry"])
+        self.assertEqual(detail["expected_resolution"], "next_natural_yahoo_run")
 
     def test_korean_provider_gap_with_stale_lkg_remains_degraded_not_corrupt(self) -> None:
         ticker = "012510.KS"
@@ -206,6 +358,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 ],
                 "latency_ms": 0,
             },
+            failure_kind=self.fetcher.yahoo_failure_kind(
+                {"ticker": ticker, "error": "empty payload", "failures": []},
+                event_name=run["event_name"],
+            ),
         )
         index = store.rebuild_index({ticker}, run)
         assessment = self.fetcher.yahoo_failure_exit_assessment(
@@ -421,6 +577,34 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIsNone(data)
         self.assertEqual(latency_ms, 0)
         self.assertEqual(error, "SLOW exceeded ticker timeout (1s)")
+
+    def test_fetch_with_retry_preserves_swallowed_systemic_provider_error(self) -> None:
+        def swallowed_rate_limit(*_args, **_kwargs):
+            self.fetcher.safe(
+                lambda: (_ for _ in ()).throw(RuntimeError("HTTP 429 Too Many Requests"))
+            )
+            return {"info": None, "history_1y": None}, 1
+
+        self.fetcher.fetch_ticker = swallowed_rate_limit
+
+        data, latency_ms, error, evidence = self.fetcher.fetch_with_retry(
+            "HOLX",
+            retries=0,
+            timeout_seconds=1,
+            include_evidence=True,
+        )
+
+        self.assertIsNone(data)
+        self.assertEqual(latency_ms, 0)
+        self.assertEqual(error, "empty payload")
+        self.assertIn("HTTP 429", " ".join(row["error"] for row in evidence["failures"]))
+        self.assertEqual(
+            self.fetcher.yahoo_failure_kind(
+                {"ticker": "HOLX", "error": error, "failures": evidence["failures"]},
+                event_name="schedule",
+            ),
+            "systemic_rate_limit",
+        )
 
     def test_source_timestamps_are_provider_derived_and_distinct_from_fetch_time(self) -> None:
         payload = self.fetcher.decorate_finance_payload(

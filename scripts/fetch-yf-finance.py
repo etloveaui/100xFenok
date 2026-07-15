@@ -23,6 +23,7 @@ Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 import argparse
 import atexit
 from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -101,6 +102,19 @@ SHARES_FULL_ENTRIES = 48
 
 class FetchTimeout(Exception):
     pass
+
+
+_SAFE_PROVIDER_FAILURES = ContextVar("safe_provider_failures", default=None)
+
+
+@contextmanager
+def capture_safe_provider_failures():
+    failures = []
+    token = _SAFE_PROVIDER_FAILURES.set(failures)
+    try:
+        yield failures
+    finally:
+        _SAFE_PROVIDER_FAILURES.reset(token)
 
 
 @contextmanager
@@ -675,7 +689,10 @@ def safe(fn, default=None):
         return fn()
     except FetchTimeout:
         raise
-    except Exception:
+    except Exception as exc:
+        failures = _SAFE_PROVIDER_FAILURES.get()
+        if failures is not None and len(failures) < 6:
+            failures.append(f"{type(exc).__name__}: {exc}"[:500])
         return default
 
 
@@ -780,16 +797,22 @@ def fetch_with_retry(
     last_err = None
     failures = []
     for attempt in range(retries + 1):
+        safe_failures = []
         try:
-            with ticker_timeout(timeout_seconds, ticker):
-                data, latency_ms = fetch_ticker(
-                    ticker,
-                    profile=profile,
-                    include_options=include_options,
-                    include_shares_full=include_shares_full,
-                )
+            with capture_safe_provider_failures() as safe_failures:
+                with ticker_timeout(timeout_seconds, ticker):
+                    data, latency_ms = fetch_ticker(
+                        ticker,
+                        profile=profile,
+                        include_options=include_options,
+                        include_shares_full=include_shares_full,
+                    )
             # treat fully-empty payload as failure (likely rate-limited)
             if any(v is not None for v in data.values()):
+                failures.extend(
+                    {"attempt": attempt + 1, "error": error, "source": "provider_safe_call"}
+                    for error in safe_failures
+                )
                 result = (data, latency_ms, None)
                 if include_evidence:
                     return (*result, {
@@ -803,6 +826,10 @@ def fetch_with_retry(
             last_err = str(e)
         except Exception as e:
             last_err = str(e)
+        failures.extend(
+            {"attempt": attempt + 1, "error": error, "source": "provider_safe_call"}
+            for error in safe_failures
+        )
         failures.append({"attempt": attempt + 1, "error": last_err})
         if attempt < retries:
             time.sleep(backoffs[min(attempt, len(backoffs) - 1)])
@@ -1120,6 +1147,27 @@ SYSTEMIC_FAILURE_MARKERS = {
     ),
 }
 
+TRANSIENT_PROVIDER_MISS_MARKERS = (
+    "provider source timestamp is unavailable",
+    "quote_as_of is unavailable",
+    "possibly delisted",
+    "no price data found",
+    "no data found",
+    "no timezone found",
+    "empty payload",
+    "exceeded ticker timeout",
+    "timed out",
+    "timeout",
+    "temporarily unavailable",
+    "connection reset",
+    "connection aborted",
+    "connection error",
+)
+CONTROLLED_FAILURE_MARKERS = (
+    "controlled failure injection",
+    "owner-approved controlled failure injection",
+)
+
 
 def _failure_text(row):
     values = [str(row.get("error") or "")]
@@ -1138,6 +1186,18 @@ def _systemic_failure_reasons(errors):
                 reasons.append(f"{row.get('ticker') or 'unknown'} indicates systemic {category} failure")
                 break
     return reasons
+
+
+def yahoo_failure_kind(row, *, event_name=None):
+    text = _failure_text(row)
+    for category, markers in SYSTEMIC_FAILURE_MARKERS.items():
+        if any(marker in text for marker in markers):
+            return f"systemic_{category}"
+    if event_name == "workflow_dispatch" and any(marker in text for marker in CONTROLLED_FAILURE_MARKERS):
+        return "transient_provider_miss"
+    if any(marker in text for marker in TRANSIENT_PROVIDER_MISS_MARKERS):
+        return "transient_provider_miss"
+    return "unexpected"
 
 
 def _load_failure_state(state_store, ticker):
@@ -1202,11 +1262,14 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
     for group in state_index.get("stale_groups") or []:
         if isinstance(group, dict):
             kpi_names.update(str(value) for value in group.get("symbols") or [])
+    kpi_names.update(
+        str(row.get("symbol"))
+        for row in state_index.get("unavailable_details") or []
+        if isinstance(row, dict) and row.get("symbol")
+    )
 
     for ticker in tickers:
         state = _load_failure_state(state_store, ticker)
-        if not _valid_retained_lkg(state_store, ticker, state):
-            reasons.append(f"{ticker} lost data or has no valid retained LKG")
         if not isinstance(state, dict) or state.get("retry") is not True or ticker not in retry_symbols:
             reasons.append(f"{ticker} did not join the retry set")
         latest_failure = state.get("latest_failure") if isinstance(state, dict) else None
@@ -1216,6 +1279,26 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
             or int(latest_failure.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
         ):
             reasons.append(f"{ticker} LKG evidence is not bound to the current attempt")
+        row = next((item for item in errors if str(item.get("ticker") or "") == ticker), {})
+        expected_kind = row.get("failure_kind") or yahoo_failure_kind(
+            row,
+            event_name=current_attempt.get("event_name"),
+        )
+        if not isinstance(latest_failure, dict) or latest_failure.get("failure_kind") != expected_kind:
+            reasons.append(f"{ticker} failure classification is not bound to the current attempt")
+        valid_lkg = _valid_retained_lkg(state_store, ticker, state)
+        deferred = (
+            isinstance(latest_failure, dict)
+            and latest_failure.get("deferred_acquisition") is True
+            and latest_failure.get("failure_kind") == "transient_provider_miss"
+            and latest_failure.get("lkg_status") == "absent"
+            and latest_failure.get("data_loss") is False
+        )
+        if not valid_lkg and not deferred:
+            if isinstance(latest_failure, dict) and latest_failure.get("data_loss") is True:
+                reasons.append(f"{ticker} lost previously advertised Yahoo data/LKG")
+            else:
+                reasons.append(f"{ticker} has no valid retained LKG for a non-transient failure")
         if ticker not in named_attempts or ticker not in kpi_names:
             reasons.append(f"{ticker} is not named in the Yahoo KPI evidence")
 
@@ -1608,26 +1691,36 @@ def main():
                 print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
             else:
                 if state_store:
+                    failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
                     state_store.record_failure(
                         ticker,
                         error,
                         run_context,
                         universe_sources.get(ticker, []),
                         evidence,
+                        failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                     )
                 print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
         else:
             record_finance_failure(ticker, error)
             if state_store:
+                failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
                 state_store.record_failure(
                     ticker,
                     error,
                     run_context,
                     universe_sources.get(ticker, []),
                     evidence,
+                    failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                 )
             print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
-        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False})
+        result = {"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False}
+        if error is not None:
+            result["failure_kind"] = yahoo_failure_kind(
+                {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []},
+                event_name=args.event_name,
+            )
+        results.append(result)
         if state_store:
             inflight["ticker"] = None
         time.sleep(args.sleep)

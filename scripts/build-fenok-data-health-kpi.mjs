@@ -1100,6 +1100,47 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       failure_attempt_ref: item?.failure_run_id ?? null,
       failure_observed_at: item?.failure_observed_at ?? null,
     }));
+  // One-time bridge for the exact pre-unavailable_details incident artifact.
+  // Never infer names from bounded LKG/error lists: equal counts can still name
+  // the wrong symbols. A subsequent state rebuild writes canonical details.
+  const legacyIncidentSymbols = ["HOLX", "MMC"];
+  const currentErrorSymbols = new Set(
+    (Array.isArray(currentAttempt?.errors) ? currentAttempt.errors : [])
+      .map((item) => item?.ticker ?? item?.symbol)
+      .filter(Boolean),
+  );
+  const retrySymbols = new Set((Array.isArray(state?.retry_symbols) ? state.retry_symbols : []).filter(Boolean));
+  const exactKnownLegacyIncident = currentAttempt?.run_id === "29378156187"
+    && state?.generated_at === "2026-07-15T00:10:40Z"
+    && number(counts.unavailable) === legacyIncidentSymbols.length
+    && legacyIncidentSymbols.every((symbol) => currentErrorSymbols.has(symbol) && retrySymbols.has(symbol));
+  const legacyUnavailableDetails = !Array.isArray(state?.unavailable_details)
+    && exactKnownLegacyIncident
+    ? legacyIncidentSymbols.map((symbol) => ({
+        symbol,
+        failure_run_id: currentAttempt.run_id ?? null,
+        failure_observed_at: state?.generated_at ?? null,
+        failure_kind: "legacy_unclassified",
+        lkg_status: "absent",
+        data_loss: false,
+        deferred_acquisition: false,
+        retry: true,
+        expected_resolution: "next_natural_yahoo_run",
+      }))
+    : [];
+  const unavailableDetails = (Array.isArray(state?.unavailable_details) ? state.unavailable_details : legacyUnavailableDetails)
+    .slice(0, 20)
+    .map((item) => ({
+      symbol: item?.symbol ?? null,
+      failure_attempt_ref: item?.failure_run_id ?? null,
+      failure_observed_at: item?.failure_observed_at ?? null,
+      failure_kind: item?.failure_kind ?? null,
+      lkg_status: item?.lkg_status ?? null,
+      data_loss: item?.data_loss === true,
+      deferred_acquisition: item?.deferred_acquisition === true,
+      retry: item?.retry === true,
+      expected_resolution: item?.expected_resolution ?? null,
+    }));
   const staleGroups = (Array.isArray(state?.stale_groups) ? state.stale_groups : [])
     .map((item) => {
       const sourceAsOf = item?.source_as_of ?? null;
@@ -1166,6 +1207,15 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     )).join(" ")
     : "";
   const lkgStatusDetail = [lkgDetail, staleDetail].filter(Boolean).join(" ");
+  const unavailableDetail = unavailableDetails.length > 0
+    ? unavailableDetails.map((item) => (
+      item.deferred_acquisition
+        ? `${item.symbol || "unknown"} has a transient provider miss without LKG; retry queued for the next natural Yahoo run.`
+        : item.data_loss
+          ? `${item.symbol || "unknown"} lost previously advertised Yahoo data/LKG.`
+          : `${item.symbol || "unknown"} is unavailable after ${String(item.failure_kind || "unknown").replaceAll("_", " ")}.`
+    )).join(" ")
+    : `${number(counts.unavailable)} unavailable`;
   return lane("yahoo_batch_quote_history", "Yahoo batch quote/history", [
     check("state_artifact_present", "Yahoo bounded state", Boolean(state), state?.generated_at || "missing"),
     check(
@@ -1187,7 +1237,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     check("no_current_failures", "current Yahoo attempt failures", number(currentAttempt.failed) === 0, `run ${currentAttempt.run_id || "missing"}: ${number(currentAttempt.failed)} failed`),
     check("no_lkg_primary", "LKG primary", number(counts.lkg) === 0, lkgStatusDetail),
     check("no_pending_history", "pending Yahoo history", number(counts.pending_history) === 0, pendingDetail),
-    check("no_unavailable", "Yahoo unavailable", number(counts.unavailable) === 0, `${number(counts.unavailable)} unavailable`),
+    check("no_unavailable", "Yahoo unavailable", number(counts.unavailable) === 0, unavailableDetail),
     check("retry_set_empty", "Yahoo retry set", number(counts.retry) === 0, `${number(counts.retry)} active-universe retry candidate(s)`),
   ], {
     counts: {
@@ -1211,6 +1261,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       lkg: lkgDetails,
       stale_groups: staleGroups,
       pending_history: pendingDetails,
+      unavailable: unavailableDetails,
       recovery_policy: "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success.",
     },
     asOf: oldestSourceValid ? oldestSourceAsOf : null,

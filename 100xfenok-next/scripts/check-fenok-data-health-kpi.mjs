@@ -438,6 +438,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
     const detailRules = [
       ["lkg", new Set(["symbol", "payload_sha256", "source_as_of", "failure_attempt_ref", "failure_observed_at"])],
       ["pending_history", new Set(["symbol", "discovered_from", "missing", "first_trade_date", "initial_attempt_ref", "expected_resolution", "reason"])],
+      ["unavailable", new Set(["symbol", "failure_attempt_ref", "failure_observed_at", "failure_kind", "lkg_status", "data_loss", "deferred_acquisition", "retry", "expected_resolution"])],
     ];
     for (const [key, allowlist] of detailRules) {
       const rows = yahoo?.details?.[key] ?? [];
@@ -449,6 +450,42 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
           `yahoo_batch_quote_history.details.${key} contains non-public fields: ${extraKeys.join(", ")}`);
       }
     }
+    const unavailableDetails = yahoo?.details?.unavailable ?? [];
+    const unavailableSymbols = [];
+    push(errors, Array.isArray(unavailableDetails)
+      && unavailableDetails.length === Math.min(Number(yahooCounts.unavailable), 20),
+      `yahoo_batch_quote_history unavailable detail count mismatch: ${Array.isArray(unavailableDetails) ? unavailableDetails.length : "invalid"} vs ${Math.min(Number(yahooCounts.unavailable), 20)}`);
+    for (const row of Array.isArray(unavailableDetails) ? unavailableDetails : []) {
+      push(errors, typeof row?.symbol === "string" && row.symbol.length > 0,
+        "yahoo_batch_quote_history unavailable symbol must be a non-empty string");
+      unavailableSymbols.push(row?.symbol);
+      push(errors, row?.retry === true,
+        "yahoo_batch_quote_history unavailable detail must remain in the retry set");
+      push(errors, ["absent", "lost"].includes(row?.lkg_status),
+        "yahoo_batch_quote_history unavailable LKG status is invalid");
+      push(errors, typeof row?.data_loss === "boolean",
+        "yahoo_batch_quote_history unavailable data_loss must be boolean");
+      push(errors, typeof row?.deferred_acquisition === "boolean",
+        "yahoo_batch_quote_history unavailable deferred_acquisition must be boolean");
+      push(errors, typeof row?.failure_kind === "string" && row.failure_kind.length > 0,
+        "yahoo_batch_quote_history unavailable failure kind is required");
+      push(errors, typeof row?.failure_attempt_ref === "string" && row.failure_attempt_ref.length > 0,
+        "yahoo_batch_quote_history unavailable failure attempt is required");
+      push(errors, typeof row?.failure_observed_at === "string" && Number.isFinite(new Date(row.failure_observed_at).getTime()),
+        "yahoo_batch_quote_history unavailable failure timestamp is invalid");
+      push(errors, row?.expected_resolution === "next_natural_yahoo_run",
+        "yahoo_batch_quote_history unavailable recovery path is invalid");
+      const expectedDataLoss = row?.lkg_status === "lost";
+      push(errors, row?.data_loss === expectedDataLoss,
+        "yahoo_batch_quote_history data-loss provenance is invalid");
+      const expectedDeferred = row?.failure_kind === "transient_provider_miss"
+        && row?.lkg_status === "absent"
+        && row?.data_loss === false;
+      push(errors, row?.deferred_acquisition === expectedDeferred,
+        "yahoo_batch_quote_history deferred acquisition provenance is invalid");
+    }
+    push(errors, new Set(unavailableSymbols).size === unavailableSymbols.length,
+      "yahoo_batch_quote_history unavailable symbols must be unique");
     const staleGroups = yahoo?.details?.stale_groups ?? [];
     push(errors, Array.isArray(staleGroups) && staleGroups.length <= active,
       "yahoo_batch_quote_history.details.stale_groups must be bounded by the active universe");
