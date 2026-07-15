@@ -352,6 +352,52 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     assert.equal(ready.deployment_blocking, false);
   }
 
+  const recoveryIndex = (laneId, keys, overrides = {}) => ({
+    schema_version: "producer-lkg-index/v1",
+    lane_id: laneId,
+    generated_at: "2026-07-15T01:00:00Z",
+    keys,
+    counts: { keys: keys.length, fresh: keys.length, lkg: 0, retry: 0, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: [],
+    lkg_details: [],
+    recovery_details: [],
+    current_attempt: { run_id: "300", run_attempt: 1, attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [] },
+    ...overrides,
+  });
+  const yahooRecovery = recoveryIndex("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"], {
+    counts: { keys: 2, fresh: 1, lkg: 1, retry: 1, unavailable: 0, failed: 1, recovered: 0 },
+    retry_keys: ["TQQQ.json"],
+    lkg_details: [{
+      key: "TQQQ.json",
+      payload_sha256: "a".repeat(64),
+      source_as_of: "2026-07-14T04:00:00.000Z",
+      failure_run_id: "300",
+    }],
+    current_attempt: { run_id: "300", run_attempt: 1, attempted: 2, successes: 1, failed: 1, failed_keys: ["TQQQ.json"] },
+  });
+  const yahooDegraded = mapDetectionFloorRow(row("yahoo_ticker_macro"), yahooRecovery);
+  assert.equal(yahooDegraded.status, "degraded");
+  assert.equal(yahooDegraded.reason, "recovery_degraded");
+  assert.equal(yahooDegraded.details.detection_reason, "ok");
+  assert.deepEqual(yahooDegraded.details.recovery.retry_keys, ["TQQQ.json"]);
+  assert.equal(yahooDegraded.checks.find((item) => item.id === "recovery_retry_set_empty")?.status, "blocked");
+  assert.equal(yahooDegraded.deployment_blocking, false);
+
+  const recoveryAware = buildDetectionFloorLanes(report(), {
+    yahoo_ticker_macro: yahooRecovery,
+    slickcharts: recoveryIndex("slickcharts_daily_delivery", [
+      "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
+    ]),
+  });
+  assert.equal(recoveryAware.find((item) => item.id === "yahoo_ticker_macro")?.status, "degraded");
+  assert.equal(recoveryAware.find((item) => item.id === "slickcharts")?.status, "ready");
+  assert.equal(recoveryAware.find((item) => item.id === "treasury_tga")?.checks.some((item) => item.id.startsWith("recovery_")), false);
+
+  const missingRecovery = mapDetectionFloorRow(row("slickcharts"), null);
+  assert.equal(missingRecovery.status, "degraded");
+  assert.equal(missingRecovery.reason, "recovery_degraded");
+  assert.equal(missingRecovery.checks.find((item) => item.id === "recovery_state_present")?.status, "blocked");
+
   const stale = mapDetectionFloorRow(row("treasury_tga", {
     status: "stale",
     reason: "stale",
@@ -415,6 +461,9 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   tampered.status = "ready";
   checkDetectionFloorLane(tampered, checkerErrors, liveConfigs.find((item) => item.id === stale.id));
   assert.ok(checkerErrors.some((entry) => /status/i.test(entry)), "checker independently rejects KPI status laundering");
+  const recoveryCheckerErrors = [];
+  checkDetectionFloorLane(yahooDegraded, recoveryCheckerErrors, liveConfigs.find((item) => item.id === yahooDegraded.id));
+  assert.deepEqual(recoveryCheckerErrors, []);
 }
 
 // The canonical lanes the checker's validateCoreShape REQUIRED_LANES demands.
@@ -629,6 +678,20 @@ function writeJson(absPath, payload) {
   fs.writeFileSync(absPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
+function writeReadyRecoveryIndex(tmp, relPath, laneId, keys) {
+  writeJson(path.join(tmp, "data", "admin", relPath, "index.json"), {
+    schema_version: "producer-lkg-index/v1",
+    lane_id: laneId,
+    generated_at: "2026-07-14T11:00:00Z",
+    keys,
+    counts: { keys: keys.length, fresh: keys.length, lkg: 0, retry: 0, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: [],
+    lkg_details: [],
+    recovery_details: [],
+    current_attempt: { run_id: "ready", run_attempt: 1, attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [] },
+  });
+}
+
 function seedPrior(tmp, priorDoc) {
   writeJson(path.join(tmp, "data", KPI_REL), priorDoc);
 }
@@ -734,6 +797,10 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const tmp = mkTmp("detection-floor-live-installed");
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  writeReadyRecoveryIndex(tmp, "slickcharts-daily-delivery", "slickcharts_daily_delivery", [
+    "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
+  ]);
   const { root } = runBuilder(tmp, {}, now);
   assert.equal(root.totals.lanes, 18);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
@@ -751,6 +818,8 @@ console.log("# KPI v2 runtime self-proof fixtures");
     public_mirror: false,
     public_safe: false,
   });
+  assert.equal(root.source_artifacts.find((item) => item.id === "yahoo_hourly_ticker_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
+  assert.equal(root.source_artifacts.find((item) => item.id === "slickcharts_daily_delivery_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
 
   const malformed = mkTmp("detection-floor-live-malformed-json");
   fs.writeFileSync(path.join(malformed, "data", "admin", "data-supply-detection-floor.json"), "{", "utf8");

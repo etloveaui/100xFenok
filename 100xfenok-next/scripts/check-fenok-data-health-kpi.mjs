@@ -107,7 +107,7 @@ function push(list, condition, message) {
 const DETECTION_KPI_REASONS = new Set([
   "ok", "missing_artifact", "workflow_unobserved", "transport_error", "http_error",
   "auth_error", "rate_limited", "decode_error", "schema_drift", "empty_payload",
-  "future_source", "stale", "unexpected_error",
+  "future_source", "stale", "unexpected_error", "recovery_degraded",
 ]);
 
 function isDetectionSourceStamp(value) {
@@ -121,26 +121,38 @@ function isDetectionSourceStamp(value) {
 export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
-  const expectedStatus = lane?.reason === "ok" ? "ready" : "degraded";
+  const detectionReason = lane?.details?.detection_reason ?? lane?.reason;
+  const expectedDetectionStatus = detectionReason === "ok" ? "ready" : "degraded";
+  const expectedStatus = lane?.reason === "recovery_degraded" ? "degraded" : expectedDetectionStatus;
   const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
+  const recoveryChecks = (lane?.checks || []).filter((item) => String(item?.id ?? "").startsWith("recovery_"));
   push(errors, expectedConfig?.enforcement === "live" && expectedConfig?.kpi_required === true,
     `${laneId}: canonical detection-floor config is not live/required`);
   push(errors, lane?.id === expectedConfig?.id, `${laneId}: lane identity is invalid`);
   push(errors, lane?.label === expectedConfig?.label, `${laneId}: label is invalid`);
   push(errors, lane?.required === true, `${laneId}: lane must be required`);
   push(errors, DETECTION_KPI_REASONS.has(lane?.reason), `${laneId}: reason is invalid (${lane?.reason})`);
+  push(errors, DETECTION_KPI_REASONS.has(detectionReason) && detectionReason !== "recovery_degraded",
+    `${laneId}: detection reason is invalid (${detectionReason})`);
   push(errors, lane?.status === expectedStatus,
     `${laneId}: status ${lane?.status} contradicts reason ${lane?.reason}`);
+  push(errors, lane?.reason !== "recovery_degraded"
+    || (detectionReason === "ok" && recoveryChecks.some((item) => item?.status === "blocked")),
+  `${laneId}: recovery_degraded lacks a failed named recovery check`);
   push(errors, lane?.deployment_blocking === false, `${laneId}: must remain lane-local and non-deployment-blocking`);
   push(errors, sourceAsOf === null || isDetectionSourceStamp(sourceAsOf),
     `${laneId}: artifact.source_as_of is malformed`);
-  push(errors, !["ok", "stale"].includes(lane?.reason) || sourceAsOf !== null,
+  push(errors, !["ok", "stale"].includes(detectionReason) || sourceAsOf !== null,
     `${laneId}: ready/stale reason contradicts null source_as_of`);
   push(errors, lane?.as_of === sourceAsOf, `${laneId}: as_of must preserve artifact.source_as_of`);
-  push(errors, statusCheck?.status === (expectedStatus === "ready" ? "ready" : "blocked"),
+  push(errors, statusCheck?.status === (expectedDetectionStatus === "ready" ? "ready" : "blocked"),
     `${laneId}: detection_floor_status check does not match lane status`);
   push(errors, statusCheck?.platform_blocking === false,
     `${laneId}: detection_floor_status must not be platform blocking`);
+  for (const recoveryCheck of recoveryChecks) {
+    push(errors, recoveryCheck?.platform_blocking === false,
+      `${laneId}: ${recoveryCheck?.id} must not be platform blocking`);
+  }
 }
 
 function ageHoursBetween(fromIso, nowIso) {

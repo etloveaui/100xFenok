@@ -619,6 +619,10 @@ const DETECTION_REASON_STATUS = Object.freeze({
   future_source: "unavailable",
   unexpected_error: "unavailable",
 });
+const DETECTION_RECOVERY_CONFIG = Object.freeze({
+  yahoo_ticker_macro: { lane_id: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
+  slickcharts: { lane_id: "slickcharts_daily_delivery", keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"] },
+});
 
 function isDetectionSourceStamp(value) {
   if (typeof value !== "string") return false;
@@ -637,7 +641,76 @@ function assertDetectionStatusReason(row, context, { allowUnavailableSchemaDrift
   }
 }
 
-export function mapDetectionFloorRow(row) {
+function compactRecoveryIndex(index) {
+  if (!index || typeof index !== "object" || Array.isArray(index)) return null;
+  return {
+    lane_id: index.lane_id ?? null,
+    generated_at: index.generated_at ?? null,
+    keys: Array.isArray(index.keys) ? index.keys : [],
+    counts: index.counts ?? null,
+    retry_keys: Array.isArray(index.retry_keys) ? index.retry_keys : [],
+    lkg_details: Array.isArray(index.lkg_details) ? index.lkg_details.map((row) => ({
+      key: row?.key ?? null,
+      payload_sha256: row?.payload_sha256 ?? null,
+      source_as_of: row?.source_as_of ?? null,
+      failure_run_id: row?.failure_run_id ?? null,
+      failure_run_attempt: row?.failure_run_attempt ?? null,
+    })) : [],
+    recovery_details: Array.isArray(index.recovery_details) ? index.recovery_details.map((row) => ({
+      key: row?.key ?? null,
+      recovered_from_run_id: row?.recovered_from_run_id ?? null,
+      recovery_run_id: row?.recovery_run_id ?? null,
+      source_as_of: row?.source_as_of ?? null,
+    })) : [],
+    current_attempt: index.current_attempt ? {
+      run_id: index.current_attempt.run_id ?? null,
+      run_attempt: index.current_attempt.run_attempt ?? null,
+      attempted: index.current_attempt.attempted ?? null,
+      successes: index.current_attempt.successes ?? null,
+      failed: index.current_attempt.failed ?? null,
+      failed_keys: Array.isArray(index.current_attempt.failed_keys) ? index.current_attempt.failed_keys : [],
+    } : null,
+  };
+}
+
+function recoveryChecks(laneId, index) {
+  const config = DETECTION_RECOVERY_CONFIG[laneId];
+  if (!config) return { checks: [], details: null };
+  const present = index?.schema_version === "producer-lkg-index/v1"
+    && index?.lane_id === config.lane_id
+    && Number(index?.counts?.keys) === config.keys.length
+    && Array.isArray(index?.keys)
+    && JSON.stringify(index.keys) === JSON.stringify(config.keys)
+    && Array.isArray(index?.retry_keys)
+    && Array.isArray(index?.lkg_details)
+    && Array.isArray(index?.recovery_details);
+  const current = present
+    && typeof index?.current_attempt?.run_id === "string"
+    && Number.isInteger(index?.current_attempt?.run_attempt)
+    && index.current_attempt.run_attempt >= 1
+    && Number.isInteger(index?.current_attempt?.attempted)
+    && Array.isArray(index?.current_attempt?.failed_keys);
+  const retryEmpty = present
+    && index.retry_keys.length === 0
+    && Number(index.counts?.retry) === 0;
+  const lkgIntegrity = present
+    && Number(index.counts?.unavailable) === 0
+    && index.lkg_details.every((row) => typeof row?.key === "string"
+      && /^[a-f0-9]{64}$/u.test(row?.payload_sha256)
+      && typeof row?.source_as_of === "string")
+    && index.retry_keys.every((key) => index.lkg_details.some((row) => row?.key === key));
+  return {
+    checks: [
+      check("recovery_state_present", "Recovery state", present, present ? `${config.keys.length} exact per-file keys are named` : "recovery index is missing or malformed"),
+      check("recovery_current_attempt", "Recovery current attempt", current, current ? `run ${index.current_attempt.run_id}` : "current-attempt recovery evidence is missing"),
+      check("recovery_retry_set_empty", "Recovery retry set", retryEmpty, retryEmpty ? "retry set is empty" : `${index?.retry_keys?.length ?? 0} key(s) remain on retained LKG`),
+      check("recovery_lkg_integrity", "Recovery LKG integrity", lkgIntegrity, lkgIntegrity ? "all retained LKG rows are sha256-bound" : "LKG binding is missing, malformed, or unavailable"),
+    ],
+    details: compactRecoveryIndex(index),
+  };
+}
+
+export function mapDetectionFloorRow(row, recoveryIndex = undefined) {
   const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
     throw new Error(`detection floor ${laneId} row is malformed`);
@@ -660,6 +733,9 @@ export function mapDetectionFloorRow(row) {
     throw new Error(`detection floor ${laneId} artifact status contradicts null source_as_of`);
   }
 
+  const recovery = recoveryIndex === undefined
+    ? { checks: [], details: null }
+    : recoveryChecks(row.id, recoveryIndex);
   const result = lane(row.id, row.label, [
     check(
       "detection_floor_status",
@@ -667,15 +743,22 @@ export function mapDetectionFloorRow(row) {
       row.status === "ready",
       `${row.reason}; source_as_of ${sourceAsOf ?? "null"}`,
     ),
-  ], { asOf: sourceAsOf });
+    ...recovery.checks,
+  ], {
+    asOf: sourceAsOf,
+    details: recoveryIndex === undefined ? {} : {
+      detection_reason: row.reason,
+      recovery: recovery.details,
+    },
+  });
   return {
     ...result,
-    reason: row.reason,
+    reason: row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
     artifact: { source_as_of: sourceAsOf },
   };
 }
 
-export function buildDetectionFloorLanes(report) {
+export function buildDetectionFloorLanes(report, recoveryByLane = undefined) {
   const liveLaneConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
   if (report === null || report === undefined) {
     return liveLaneConfigs.map((laneConfig) => mapDetectionFloorRow({
@@ -686,7 +769,7 @@ export function buildDetectionFloorLanes(report) {
       status: "unobserved",
       reason: "workflow_unobserved",
       artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
-    }));
+    }, recoveryByLane === undefined ? undefined : recoveryByLane?.[laneConfig.id]));
   }
   validateDetectionReport(report);
   if (report?.schema_version !== "data-supply-detection-floor/v1" || !Array.isArray(report?.lanes)) {
@@ -695,7 +778,7 @@ export function buildDetectionFloorLanes(report) {
   return liveLaneConfigs.map((laneConfig) => {
     const matches = report.lanes.filter((item) => item?.id === laneConfig.id);
     if (matches.length !== 1) throw new Error(`detection floor ${laneConfig.id} cardinality is ${matches.length}`);
-    return mapDetectionFloorRow(matches[0]);
+    return mapDetectionFloorRow(matches[0], recoveryByLane === undefined ? undefined : recoveryByLane?.[laneConfig.id]);
   });
 }
 
@@ -1497,6 +1580,10 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
+  const detectionRecovery = {
+    yahoo_ticker_macro: readOptionalJsonStrict("admin/yahoo-hourly-ticker/index.json"),
+    slickcharts: readOptionalJsonStrict("admin/slickcharts-daily-delivery/index.json"),
+  };
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 
   const lanes = [
@@ -1510,7 +1597,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
-    ...buildDetectionFloorLanes(detectionFloor),
+    ...buildDetectionFloorLanes(detectionFloor, detectionRecovery),
   ];
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])
@@ -1573,6 +1660,8 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       { id: "yahoo_batch_quote_history_state", generated_at: yahooBatchState?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "occ_options_availability", generated_at: occAvailability?.generated_at ?? null, public_mirror: true, public_safe: true },
       { id: "data_supply_detection_floor", generated_at: detectionFloor?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "yahoo_hourly_ticker_recovery_state", generated_at: detectionRecovery.yahoo_ticker_macro?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "slickcharts_daily_delivery_recovery_state", generated_at: detectionRecovery.slickcharts?.generated_at ?? null, public_mirror: false, public_safe: false },
     ],
     totals,
     lanes,

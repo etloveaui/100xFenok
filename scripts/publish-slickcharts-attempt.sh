@@ -12,6 +12,20 @@ commit_message=$3
 shift 3
 
 shard_path="data/admin/data-supply-state/detection-attempts/slickcharts.json"
+state_root="data/admin/slickcharts-daily-delivery"
+recovery_exit=0
+publish_data=true
+
+if [[ "$member" == "daily" ]]; then
+  if [[ -z "${SLICKCHARTS_RECOVERY_STATUS_PATH:-}" || ! -f "$SLICKCHARTS_RECOVERY_STATUS_PATH" ]]; then
+    echo "SlickCharts daily recovery status is missing" >&2
+    recovery_exit=2
+    publish_data=false
+  else
+    recovery_exit=$(node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); if (![0,2].includes(s.exit_code)) process.exit(2); process.stdout.write(String(s.exit_code))' "$SLICKCHARTS_RECOVERY_STATUS_PATH")
+    publish_data=$(node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.stdout.write(s.publish_data === true ? "true" : "false")' "$SLICKCHARTS_RECOVERY_STATUS_PATH")
+  fi
+fi
 
 if [[ ! -f "$row_path" ]]; then
   echo "saved SlickCharts row is missing: $row_path" >&2
@@ -26,17 +40,20 @@ merge_saved_row() {
 }
 
 stage_owned_paths() {
-  if [[ $# -gt 0 ]]; then
+  if [[ $# -gt 0 && "$publish_data" == "true" ]]; then
     git add -- "$@"
   fi
   git add -- "$shard_path"
+  if [[ "$member" == "daily" && -d "$state_root" ]]; then
+    git add -- "$state_root"
+  fi
 }
 
 merge_saved_row
 stage_owned_paths "$@"
 if git diff --staged --quiet; then
   echo "No SlickCharts ${member} changes to publish"
-  exit 0
+  exit "$recovery_exit"
 fi
 git commit -m "$commit_message"
 
@@ -75,7 +92,7 @@ for attempt in $(seq 1 5); do
     if command -v gh >/dev/null 2>&1 && [[ -n "${GH_TOKEN:-}" ]]; then
       gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
     fi
-    exit 0
+    exit "$recovery_exit"
   fi
   echo "git push race on attempt ${attempt}; retrying with saved ${member} row"
   sleep 3

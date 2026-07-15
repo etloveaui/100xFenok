@@ -17,6 +17,12 @@ function eventPath(name, rows) {
   return filePath;
 }
 
+function outcomePath(name, rows) {
+  const filePath = path.join(root, `${name}-outcomes.jsonl`);
+  fs.writeFileSync(filePath, rows.map((row) => JSON.stringify(row)).join("\n") + "\n");
+  return filePath;
+}
+
 const ready = {
   execution: "returned",
   exception_kind: null,
@@ -48,6 +54,13 @@ const rate = {
     rowPath,
     observedAt: "2026-07-14T01:00:00Z",
     attemptId: "gh-200-1-daily",
+    outcomesPath: outcomePath("daily", [
+      { key: "gainers.json", outcome: "success" },
+      { key: "losers.json", outcome: "success" },
+      { key: "treasury.json", outcome: "success" },
+      { key: "currency.json", outcome: "success" },
+      { key: "mortgage.json", outcome: "success" },
+    ]),
   });
   assert.equal(result.row.member_id, "daily");
   assert.equal(result.row.assertions[0].passed, true);
@@ -55,6 +68,27 @@ const rate = {
   assert.deepEqual(result.shard.attempts.map((row) => row.member_id), ["daily", "weekly", "monthly", "history", "symbols"]);
   assert.deepEqual(result.shard.attempts.map((row) => row.execution), ["returned", "unobserved", "unobserved", "unobserved", "unobserved"]);
   assert.deepEqual(JSON.parse(fs.readFileSync(rowPath, "utf8")), result.row);
+}
+
+{
+  const result = runSlickchartsAttempt({
+    memberId: "daily",
+    eventPaths: [eventPath("daily-controlled", [ready])],
+    producerOutcomes: ["success"],
+    outcomesPath: outcomePath("daily-controlled", [
+      { key: "gainers.json", outcome: "success" },
+      { key: "losers.json", outcome: "success" },
+      { key: "treasury.json", outcome: "failure", failure_kind: "controlled" },
+      { key: "currency.json", outcome: "success" },
+      { key: "mortgage.json", outcome: "success" },
+    ]),
+    shardPath,
+    rowPath: path.join(root, "daily-controlled-row.json"),
+    observedAt: "2026-07-14T01:30:00Z",
+    attemptId: "gh-200b-1-daily",
+  });
+  assert.equal(result.row.execution, "threw", "controlled per-file failure remains visible in attempt evidence");
+  assert.equal(result.row.exception_kind, "unexpected");
 }
 
 {
@@ -68,7 +102,7 @@ const rate = {
     attemptId: "gh-201-1-weekly",
   });
   assert.equal(result.row.http_status, 429, "the member attempt is the worst HTTP request");
-  assert.equal(result.shard.attempts[0].attempt_id, "gh-200-1-daily", "another workflow's row is preserved");
+  assert.equal(result.shard.attempts[0].attempt_id, "gh-200b-1-daily", "another workflow's row is preserved");
 }
 
 {
