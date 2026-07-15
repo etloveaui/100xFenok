@@ -277,6 +277,18 @@ jobs:
 
       - name: Validate StockAnalysis contracts
         run: |
+          # The source producer intentionally leaves permanent public projection to
+          # update-manifest. Project surfaces only for this parity gate, then restore
+          # the checkout so the producer commit remains canonical-source-only.
+          PUBLIC_SURFACE_DIR="100xfenok-next/public/data/stockanalysis/surfaces"
+          PUBLIC_SURFACE_BACKUP="$(mktemp -d "$RUNNER_TEMP/stockanalysis-public-surfaces-XXXXXX")"
+          rsync -a --checksum --delete "$PUBLIC_SURFACE_DIR/" "$PUBLIC_SURFACE_BACKUP/"
+          restore_public_surfaces() {
+            rsync -a --checksum --delete "$PUBLIC_SURFACE_BACKUP/" "$PUBLIC_SURFACE_DIR/"
+          }
+          trap restore_public_surfaces EXIT
+          rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PUBLIC_SURFACE_DIR/"
+
           python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
           python3 -m unittest scripts/test_stockanalysis_surface_contract.py
           python3 scripts/test-stockanalysis-financials-fixtures.py
@@ -289,6 +301,10 @@ jobs:
           TMPDIR="$ALT_TMPDIR" python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
           TMPDIR="$ALT_TMPDIR" node scripts/test-write-fenok-etf-daily1y-readiness.mjs
           TMPDIR="$ALT_TMPDIR" node scripts/test-build-fenok-etf-core-daily-basket.mjs
+
+          restore_public_surfaces
+          trap - EXIT
+          diff -qr "$PUBLIC_SURFACE_BACKUP" "$PUBLIC_SURFACE_DIR"
 
       - name: Commit and push
         run: |
