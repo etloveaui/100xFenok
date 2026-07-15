@@ -3465,6 +3465,19 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 )
                 self.assertEqual(failed["counts"]["failed"], 1)
                 self.assertEqual(truth.read_bytes(), expected_lkg)
+                canonical_after_failure = json.loads(
+                    (self.fetcher.OUT_DIR / "surfaces" / "index.json").read_text()
+                )
+                actions_row = next(
+                    row for row in canonical_after_failure["results"]
+                    if row["surface"] == name
+                )
+                self.assertEqual(actions_row["status"], "ok")
+                self.assertEqual(actions_row["path"], f"surfaces/{name}.json")
+                self.assertIsNone(actions_row["error"])
+                self.assertEqual(
+                    canonical_after_failure["latest_attempt"]["counts"]["failed"], 1
+                )
                 self.fetcher.fetch_svelte_surface = lambda *_args, **_kwargs: {
                     **lkg_payload,
                     "fetched_at": "2026-07-15T08:05:00Z",

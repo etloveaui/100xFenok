@@ -1696,6 +1696,79 @@ def build_surface_stamp_map(
     return stamps
 
 
+def rebuild_canonical_surface_index(attempt_summary: dict, mirror_public: bool) -> dict:
+    """Rebuild the canonical surface inventory from retained payloads.
+
+    A targeted attempt may fail or select only one surface. Its attempt evidence
+    belongs in the producer audit, while surfaces/index.json must continue to
+    describe every valid current/LKG surface payload.
+    """
+    current_rows = {
+        str(row.get("surface")): row
+        for row in attempt_summary.get("results") or []
+        if isinstance(row, dict) and row.get("surface")
+    }
+    previous = read_json(OUT_DIR / "surfaces" / "index.json") or {}
+    previous_rows = {
+        str(row.get("surface")): row
+        for row in previous.get("results") or []
+        if isinstance(row, dict) and row.get("surface")
+    }
+    results = []
+    for name, definition in SURFACE_DEFINITIONS.items():
+        payload = read_json(OUT_DIR / "surfaces" / f"{name}.json")
+        valid = bool(
+            isinstance(payload, dict)
+            and payload.get("schema_version") == SCHEMA_VERSION
+            and payload.get("source") == "stockanalysis"
+            and payload.get("surface") == name
+            and isinstance(payload.get("counts"), dict)
+        )
+        evidence = current_rows.get(name) or previous_rows.get(name) or {}
+        counts = payload.get("counts") if valid else {}
+        results.append({
+            "surface": name,
+            "group": definition["group"],
+            "format": payload.get("format") if valid else definition.get("format", "html_table"),
+            "status": "ok" if valid else "error",
+            "path": f"surfaces/{name}.json" if valid else None,
+            "endpoint": definition["path"],
+            "tables": counts.get("tables", 0) if valid else 0,
+            "rows": counts.get("rows", counts.get("records", 0)) if valid else 0,
+            "latency_ms": evidence.get("latency_ms", 0),
+            "error": None if valid else evidence.get("error") or "canonical surface payload is missing or invalid",
+        })
+
+    names = list(SURFACE_DEFINITIONS)
+    source_as_of = build_surface_stamp_map(names, results, None)
+    summary = {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "asset_type": "surface_index",
+        "generated_at": now_iso(),
+        "source_as_of": source_as_of,
+        "source_as_of_reason": {
+            domain: None if stamp else "provider publishes no aggregate source date or the canonical domain is incomplete"
+            for domain, stamp in source_as_of.items()
+        },
+        "counts": {
+            "surfaces_requested": len(names),
+            "ok": sum(1 for item in results if item["error"] is None),
+            "failed": sum(1 for item in results if item["error"] is not None),
+            "tables": sum(item["tables"] for item in results),
+            "rows": sum(item["rows"] for item in results),
+        },
+        "results": results,
+        "latest_attempt": {
+            "generated_at": attempt_summary.get("generated_at"),
+            "counts": attempt_summary.get("counts"),
+            "results": attempt_summary.get("results"),
+        },
+    }
+    write_payload("surfaces/index.json", summary, mirror_public)
+    return summary
+
+
 def fetch_surfaces(
     surface_names: list[str],
     timeout: int,
@@ -1797,7 +1870,8 @@ def fetch_surfaces(
         },
         "results": results,
     }
-    write_payload("surfaces/index.json", summary, mirror_public)
+    canonical = rebuild_canonical_surface_index(summary, mirror_public)
+    summary["canonical_index_counts"] = canonical["counts"]
     return summary
 
 
