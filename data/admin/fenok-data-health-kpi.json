@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-15T14:11:27.047Z",
+  "generated_at": "2026-07-15T14:58:54.866Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "11 required lane(s) are not ready; healthy lanes may still publish.",
@@ -32,11 +32,11 @@
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-15T14:11:27.047Z",
-      "run_id": "29421983434",
+      "built_at": "2026-07-15T14:58:54.866Z",
+      "run_id": "29424579654",
       "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "a25c4de9e8eb17ec2960770496e133799164a43b"
+      "event_name": "push",
+      "sha": "e8464be40ce29c2f8bec9d5d363858a62d969a1d"
     },
     "cadence": {
       "crons_utc": [
@@ -298,7 +298,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-15T14:11:04.421Z",
+      "source_date": "2026-07-15T14:58:31.845Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -314,7 +314,7 @@
       "calendar": "wall_clock",
       "max_staleness": 30,
       "required": true,
-      "age": 5.76,
+      "age": 6.55,
       "status": "ready"
     },
     {
@@ -325,7 +325,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 23.15,
+      "age": 23.94,
       "status": "ready"
     },
     {
@@ -336,7 +336,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 22.86,
+      "age": 23.65,
       "status": "ready"
     },
     {
@@ -347,7 +347,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 23.1,
+      "age": 23.89,
       "status": "ready"
     },
     {
@@ -358,44 +358,44 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 22.97,
+      "age": 23.76,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-15T14:10:53.994Z",
+      "generated_at": "2026-07-15T14:58:21.335Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-15T14:11:18.802Z",
+      "generated_at": "2026-07-15T14:58:46.183Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-15T14:11:20.390Z",
+      "generated_at": "2026-07-15T14:58:47.754Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-15T14:11:04.362Z",
+      "generated_at": "2026-07-15T14:58:31.787Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-15T14:11:04.421Z",
+      "generated_at": "2026-07-15T14:58:31.845Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-15T14:10:45.090Z",
+      "generated_at": "2026-07-15T14:58:12.468Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -419,7 +419,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-07-15T14:11:25.548Z",
+      "generated_at": "2026-07-15T14:58:53.365Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -455,7 +455,7 @@
       "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 1 blockers; us_class_yf_daily_source_ready: 57 / 59 · 2026-07-08. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:10:53.994Z",
+      "as_of": "2026-07-15T14:58:21.335Z",
       "counts": {
         "active_total": 1176,
         "by_market": [
@@ -610,7 +610,7 @@
       "status_message": "S1 candidate promotion gate is not ready: PUBLIC+DAILY+GATED with blocked ledger: NORMALIZED; gate blockers: 2 blockers. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:10:11.419Z",
+      "as_of": "2026-07-15T14:57:39.283Z",
       "counts": {
         "denominator": 1391,
         "current_public_stock": 1176,
@@ -668,7 +668,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-15T14:10:11.419Z",
+          "detail": "2026-07-15T14:57:39.283Z",
           "platform_blocking": false
         },
         {
@@ -725,7 +725,7 @@
       "status_message": "ETF public scoring and daily gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:11:04.421Z",
+      "as_of": "2026-07-15T14:58:31.845Z",
       "counts": {
         "eligible_etf_count": 4527,
         "scored_public_etf": 4527,
@@ -800,7 +800,7 @@
       "label": "Yahoo batch quote/history",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "Yahoo batch quote/history is not ready: active-universe state coverage: 2079 classified / 6665 active; 4586 untracked; oldest Yahoo source age: 47 / 6 business days; current Yahoo attempt failures: run 29378156187: 8 failed; LKG primary: 230360.KQ holds LKG after failing run 29378156187; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. BK holds LKG after failing run 29378156187; source date 2026-07-02; payload hash 9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c. BLD holds LKG after failing run 29378156187; source date 2026-06-30; payload hash bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644. BRK.A holds LKG after failing run 29378156187; source date 2026-07-08; payload hash 245dd9eac827ffae496e5c513b00f2f4180bb664f55db695c1184464e227da67. CTRA holds LKG after failing run 29378156187; source date 2026-05-06; payload hash c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27. SATS holds LKG after failing run 29378156187; source date 2026-06-26; payload hash 75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2. CTRA hold LKG because Yahoo source date 2026-05-06 is 47 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CHNL hold LKG because Yahoo source date 2026-06-09 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL hold LKG because Yahoo source date 2026-06-17 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB, AETH, AKAF, AUGU, AVGG, AVGX, BEG, BIL, BILS, BITU, CBOY, CPSN, CRWL, CWVX, DDM, DEFI, DFEN, DIA, ELIL, FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 379800.KS, 379810.KS hold LKG because Yahoo source date 2026-06-26 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAU, AAPR, AAPW, ACGO, ACGR, ACLC, ACVU, AIOO, AIX, AJAN, AJUL, AMDW, AMZW, APOC, APRH, APRJ, APRT, APRW, ARKB, ARLU, AVGW, AVNV, BALT, BAPR, BAR, BAUG, BBB, BCCC, BDEC, BETE, BETH, BFEB, BGLD, BITB, BITC, BITO, BITS, BJAN, BJUL, BJUN, BLST, BLTD, BMAR, BMAY, BNDW, BNDY, BNOV, BOCT, BRKW, BRRR, BSCA, BSEP, BSGR, BSGT, BSJY, BSOL, BSTP, BSTS, BSTU, BSTV, BTC, BTCO, BTCW, BTRN, BUCK, CBOJ, CBTJ, CBTY, CBXY, CERY, CEW, CHYG, CIEI, COIW, COM, CPAG, CPHY, CPNJ, CPNM, CPNQ, CPNS, CPRA, CPRJ, CPRO, CPRY, CPSA, CPSD, CPSF, CPSJ, CPSM, CPSO, CPSP, CPSR, CPST, CPSU, CPSY, CSEN, CTJN, CUSD, DDX, DECU, DHSB, DRUP, DVIN, DVQQ, DVRE, DVSP, DVUT, DVXB, DVXC, DVXE, DVXF, DVXK, DVXP, DVXV, DVXY, DWWN, EALT, EAPR, EBUF, EETH, EJAN, EMCS, EOCT, ETH, ETHA, ETHE, ETHV, ETHW, EVMT, EZBC, EZET, FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAP, ACLZ, ACMM, AEHG, AMAA, AMDC, AMEI, AMEM, AMGR, APPC, AQLG, ASD, ASEC, ASTG, ASTT, BGCG, BGGG, BKLG, BTCK, CAMC, CARX, CDNG, CGOV, CIVG, CJUN, COIX, CRUC, DDFZ, DDTZ, DFAL, DRAL, DRMP, EMEM, EMJN, EMSC, ENTL, FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ADIU, APHG, AXTL, FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARLI hold LKG because Yahoo source date 2026-07-01 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CBOO hold LKG because Yahoo source date 2026-07-01 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.; Yahoo unavailable: 2 unavailable; Yahoo retry set: 557 active-universe retry candidate(s). Other lanes may publish.",
+      "status_message": "Yahoo batch quote/history is not ready: active-universe state coverage: 2079 classified / 6665 active; 4586 untracked; oldest Yahoo source age: 47 / 6 business days; current Yahoo attempt failures: run 29378156187: 8 failed; LKG primary: 230360.KQ holds LKG after failing run 29378156187; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. BK holds LKG after failing run 29378156187; source date 2026-07-02; payload hash 9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c. BLD holds LKG after failing run 29378156187; source date 2026-06-30; payload hash bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644. BRK.A holds LKG after failing run 29378156187; source date 2026-07-08; payload hash 245dd9eac827ffae496e5c513b00f2f4180bb664f55db695c1184464e227da67. CTRA holds LKG after failing run 29378156187; source date 2026-05-06; payload hash c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27. SATS holds LKG after failing run 29378156187; source date 2026-06-26; payload hash 75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2. CTRA hold LKG because Yahoo source date 2026-05-06 is 47 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CHNL hold LKG because Yahoo source date 2026-06-09 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL hold LKG because Yahoo source date 2026-06-17 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB, AETH, AKAF, AUGU, AVGG, AVGX, BEG, BIL, BILS, BITU, CBOY, CPSN, CRWL, CWVX, DDM, DEFI, DFEN, DIA, ELIL, FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 379800.KS, 379810.KS hold LKG because Yahoo source date 2026-06-26 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAU, AAPR, AAPW, ACGO, ACGR, ACLC, ACVU, AIOO, AIX, AJAN, AJUL, AMDW, AMZW, APOC, APRH, APRJ, APRT, APRW, ARKB, ARLU, AVGW, AVNV, BALT, BAPR, BAR, BAUG, BBB, BCCC, BDEC, BETE, BETH, BFEB, BGLD, BITB, BITC, BITO, BITS, BJAN, BJUL, BJUN, BLST, BLTD, BMAR, BMAY, BNDW, BNDY, BNOV, BOCT, BRKW, BRRR, BSCA, BSEP, BSGR, BSGT, BSJY, BSOL, BSTP, BSTS, BSTU, BSTV, BTC, BTCO, BTCW, BTRN, BUCK, CBOJ, CBTJ, CBTY, CBXY, CERY, CEW, CHYG, CIEI, COIW, COM, CPAG, CPHY, CPNJ, CPNM, CPNQ, CPNS, CPRA, CPRJ, CPRO, CPRY, CPSA, CPSD, CPSF, CPSJ, CPSM, CPSO, CPSP, CPSR, CPST, CPSU, CPSY, CSEN, CTJN, CUSD, DDX, DECU, DHSB, DRUP, DVIN, DVQQ, DVRE, DVSP, DVUT, DVXB, DVXC, DVXE, DVXF, DVXK, DVXP, DVXV, DVXY, DWWN, EALT, EAPR, EBUF, EETH, EJAN, EMCS, EOCT, ETH, ETHA, ETHE, ETHV, ETHW, EVMT, EZBC, EZET, FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAP, ACLZ, ACMM, AEHG, AMAA, AMDC, AMEI, AMEM, AMGR, APPC, AQLG, ASD, ASEC, ASTG, ASTT, BGCG, BGGG, BKLG, BTCK, CAMC, CARX, CDNG, CGOV, CIVG, CJUN, COIX, CRUC, DDFZ, DDTZ, DFAL, DRAL, DRMP, EMEM, EMJN, EMSC, ENTL, FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ADIU, APHG, AXTL, FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARLI hold LKG because Yahoo source date 2026-07-01 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CBOO hold LKG because Yahoo source date 2026-07-01 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.; Yahoo unavailable: HOLX is unavailable after legacy unclassified. MMC is unavailable after legacy unclassified.; Yahoo retry set: 557 active-universe retry candidate(s). Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-05-06",
@@ -1602,6 +1602,30 @@
           }
         ],
         "pending_history": [],
+        "unavailable": [
+          {
+            "symbol": "HOLX",
+            "failure_attempt_ref": "29378156187",
+            "failure_observed_at": "2026-07-15T00:10:40Z",
+            "failure_kind": "legacy_unclassified",
+            "lkg_status": "absent",
+            "data_loss": false,
+            "deferred_acquisition": false,
+            "retry": true,
+            "expected_resolution": "next_natural_yahoo_run"
+          },
+          {
+            "symbol": "MMC",
+            "failure_attempt_ref": "29378156187",
+            "failure_observed_at": "2026-07-15T00:10:40Z",
+            "failure_kind": "legacy_unclassified",
+            "lkg_status": "absent",
+            "data_loss": false,
+            "deferred_acquisition": false,
+            "retry": true,
+            "expected_resolution": "next_natural_yahoo_run"
+          }
+        ],
         "recovery_policy": "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success."
       },
       "checks": [
@@ -1682,7 +1706,7 @@
           "label": "Yahoo unavailable",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "2 unavailable",
+          "detail": "HOLX is unavailable after legacy unclassified. MMC is unavailable after legacy unclassified.",
           "platform_blocking": false
         },
         {
@@ -1810,7 +1834,7 @@
       "status_message": "RIM inputs is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:11:18.802Z",
+      "as_of": "2026-07-15T14:58:46.183Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -1928,7 +1952,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 3 stale. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:11:20.390Z",
+      "as_of": "2026-07-15T14:58:47.754Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -1969,7 +1993,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-15T14:11:20.390Z",
+          "detail": "2026-07-15T14:58:47.754Z",
           "platform_blocking": false
         },
         {
@@ -2026,7 +2050,7 @@
       "status_message": "FINRA/OCC source gate is not ready: OCC current delivery: OCC target 2026-07-15 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-14. Current run remains degraded across 3 non-empty batch(es).. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:11:04.362Z",
+      "as_of": "2026-07-15T14:58:31.787Z",
       "counts": {
         "active_us_total": 748,
         "plain_us_finra_denominator": 689,
@@ -2038,10 +2062,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-15T14:10:13.353Z",
+          "signals_generated_at": "2026-07-15T14:57:41.190Z",
           "finra_source_date": "20260714",
           "occ_source_date": "20260714",
-          "coverage_index_generated_at": "2026-07-15T14:10:53.994Z",
+          "coverage_index_generated_at": "2026-07-15T14:58:21.335Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -2079,7 +2103,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-15T14:11:04.362Z",
+          "detail": "2026-07-15T14:58:31.787Z",
           "platform_blocking": true
         },
         {
@@ -2132,7 +2156,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-15T14:11:27.320Z",
+      "as_of": "2026-07-15T14:58:55.133Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -2905,7 +2929,7 @@
       "check_id": "no_unavailable",
       "status": "blocked",
       "label": "Yahoo unavailable",
-      "detail": "2 unavailable",
+      "detail": "HOLX is unavailable after legacy unclassified. MMC is unavailable after legacy unclassified.",
       "required": true
     },
     {

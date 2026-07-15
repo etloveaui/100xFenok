@@ -1,0 +1,271 @@
+{
+  "schema_version": "market-facts/v1",
+  "ticker": "ACYQ",
+  "asset_type": "etf",
+  "generated_at": "2026-07-15T14:54:16Z",
+  "source_as_of": null,
+  "source_as_of_scope": "selected_price_fact",
+  "source_as_of_reason": "selected price fact has no provider source date",
+  "identity": {
+    "name": "ACYQ",
+    "exchange": null,
+    "currency": null,
+    "sector": null,
+    "industry": null,
+    "fund_family": null,
+    "category": null
+  },
+  "facts": {
+    "total_assets": {
+      "value": 16100000.000000002,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-15T14:32:01Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 16100000.000000002,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-15T14:32:01Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.75,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-15T14:32:01Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.75,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-15T14:32:01Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
+  "etf": {
+    "holdings_count": 5,
+    "holdings_updated": "Jul 13, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Dreyfus Govt Cm Inst 289",
+        "weight_pct": 99.32,
+        "shares": 6994613,
+        "raw": {
+          "no": 1,
+          "n": "Dreyfus Govt Cm Inst 289",
+          "as": "99.32%",
+          "sh": "6,994,613"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Acyqbnp01",
+        "weight_pct": 0.26,
+        "shares": 2334208,
+        "raw": {
+          "no": 2,
+          "n": "Acyqbnp01",
+          "as": "0.26%",
+          "sh": "2,334,208"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Acyqjpm01",
+        "weight_pct": 0.24,
+        "shares": 2334208,
+        "raw": {
+          "no": 3,
+          "n": "Acyqjpm01",
+          "as": "0.24%",
+          "sh": "2,334,208"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Acyqcit01",
+        "weight_pct": 0.16,
+        "shares": 2334208,
+        "raw": {
+          "no": 4,
+          "n": "Acyqcit01",
+          "as": "0.16%",
+          "sh": "2,334,208"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash",
+        "weight_pct": 0.02,
+        "shares": 1362,
+        "raw": {
+          "no": 5,
+          "n": "Cash",
+          "as": "0.02%",
+          "sh": "1,362"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
+  "financials": null,
+  "sources": {
+    "yf": false,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": false,
+    "slickcharts": false
+  },
+  "source_files": {
+    "yf": null,
+    "stockanalysis": "stockanalysis/etfs/ACYQ.json",
+    "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": null,
+    "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "detail_authority": "stockanalysis:strict_unenrolled",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_3m": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf",
+        "stockanalysis.detail.history"
+      ],
+      "return_5y_avg": [
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_10y_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_max_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
+  }
+}
