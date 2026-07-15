@@ -6,6 +6,12 @@ on:
   schedule:
     - cron: '0 6 1-7 * 1'
   workflow_dispatch:
+    inputs:
+      controlled_failure_key:
+        description: 'Dispatch-only chaos key (latest or an owned quarter)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -33,6 +39,8 @@ jobs:
 
       - name: Fetch FDIC Tier1 data and persist attempt evidence
         id: fetch_fdic
+        env:
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-fdic-tier1.mjs
 
       - name: Verify output
@@ -53,6 +61,12 @@ jobs:
           SHARD="data/admin/data-supply-state/detection-attempts/fdic_tier1.json"
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
+          fi
+          if [[ -f data/admin/fdic_tier1/index.json ]]; then
+            git add -- data/admin/fdic_tier1/index.json
+          fi
+          if [[ -f data/admin/fdic_tier1/lkg/fdic_tier1.json ]]; then
+            git add -- data/admin/fdic_tier1/lkg/fdic_tier1.json
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json

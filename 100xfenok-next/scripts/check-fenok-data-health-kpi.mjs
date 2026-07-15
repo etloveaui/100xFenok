@@ -27,6 +27,7 @@ import {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
+  projectRecoveryRetrySet,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
 
@@ -100,6 +101,15 @@ function readJson(filePath) {
   }
 }
 
+function readOptionalJson(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw new Error(`${filePath} read failed: ${error.message}`);
+  }
+}
+
 function push(list, condition, message) {
   if (!condition) list.push(message);
 }
@@ -121,8 +131,24 @@ function isDetectionSourceStamp(value) {
 export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
-  const expectedStatus = lane?.reason === "ok" ? "ready" : "degraded";
+  const recoveryRetrySet = lane?.details?.recovery_retry_set;
+  const retrySetValid = Array.isArray(recoveryRetrySet) && recoveryRetrySet.every((item) => {
+    const keys = item && typeof item === "object" && !Array.isArray(item) ? Object.keys(item).sort() : [];
+    return JSON.stringify(keys) === JSON.stringify([
+      "failure_run_id", "key", "recovered_from_run_id", "resolution_state",
+    ])
+      && typeof item.key === "string" && item.key !== ""
+      && ["lkg_primary", "unavailable"].includes(item.resolution_state)
+      && typeof item.failure_run_id === "string" && item.failure_run_id !== ""
+      && (item.recovered_from_run_id === null
+        || (typeof item.recovered_from_run_id === "string" && item.recovered_from_run_id !== ""));
+  }) && new Set(recoveryRetrySet.map((item) => item.key)).size === recoveryRetrySet.length
+    && recoveryRetrySet.every((item, index) => index === 0 || recoveryRetrySet[index - 1].key.localeCompare(item.key) < 0);
+  const hasRetry = Array.isArray(recoveryRetrySet) && recoveryRetrySet.length > 0;
+  const expectedStatus = lane?.reason === "ok" && !hasRetry ? "ready" : "degraded";
+  const detectionExpectedStatus = lane?.reason === "ok" ? "ready" : "blocked";
   const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
+  const retryCheck = (lane?.checks || []).find((item) => item?.id === "lkg_retry_set_empty");
   push(errors, expectedConfig?.enforcement === "live" && expectedConfig?.kpi_required === true,
     `${laneId}: canonical detection-floor config is not live/required`);
   push(errors, lane?.id === expectedConfig?.id, `${laneId}: lane identity is invalid`);
@@ -137,10 +163,33 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   push(errors, !["ok", "stale"].includes(lane?.reason) || sourceAsOf !== null,
     `${laneId}: ready/stale reason contradicts null source_as_of`);
   push(errors, lane?.as_of === sourceAsOf, `${laneId}: as_of must preserve artifact.source_as_of`);
-  push(errors, statusCheck?.status === (expectedStatus === "ready" ? "ready" : "blocked"),
-    `${laneId}: detection_floor_status check does not match lane status`);
+  push(errors, retrySetValid, `${laneId}: details.recovery_retry_set is malformed`);
+  push(errors, statusCheck?.status === detectionExpectedStatus,
+    `${laneId}: detection_floor_status check does not match detection reason`);
   push(errors, statusCheck?.platform_blocking === false,
     `${laneId}: detection_floor_status must not be platform blocking`);
+  push(errors, retryCheck?.status === (hasRetry ? "blocked" : "ready"),
+    `${laneId}: lkg_retry_set_empty check does not match retry evidence`);
+  push(errors, retryCheck?.platform_blocking === false,
+    `${laneId}: lkg_retry_set_empty must not be platform blocking`);
+}
+
+function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
+  const adminRoot = path.dirname(rootKpiPath);
+  const lanesById = new Map((rootDoc?.lanes || []).map((lane) => [lane?.id, lane]));
+  for (const laneId of ["fred_macro", "fred_banking", "fdic_tier1"]) {
+    let expected;
+    try {
+      const state = readOptionalJson(path.join(adminRoot, laneId, "index.json"));
+      expected = projectRecoveryRetrySet(state, laneId);
+    } catch (error) {
+      errors.push(`${laneId}: recovery state source is invalid (${error.message})`);
+      continue;
+    }
+    const actual = lanesById.get(laneId)?.details?.recovery_retry_set;
+    push(errors, JSON.stringify(actual) === JSON.stringify(expected),
+      `${laneId}: KPI recovery_retry_set does not match its source index`);
+  }
 }
 
 function ageHoursBetween(fromIso, nowIso) {
@@ -751,7 +800,7 @@ export function freshnessReport(rootDoc, nowIso) {
   };
 }
 
-function validateV2({ rootDoc, publicDoc, publicKpiPath, nowIso }) {
+function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso }) {
   const errors = [];
   const warnings = [];
   validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings);
@@ -760,6 +809,7 @@ function validateV2({ rootDoc, publicDoc, publicKpiPath, nowIso }) {
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso);
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
+  checkRecoveryStateSources(rootDoc, rootKpiPath, errors);
   checkPublicProjection(rootDoc, publicDoc, { errors, warnings });
   const report = { schema: SCHEMA_VERSION_V2, freshness: freshnessReport(rootDoc, nowIso) };
   return { errors, warnings, report };
@@ -773,7 +823,7 @@ function main() {
 
   const version = rootDoc?.schema_version;
   const result = version === SCHEMA_VERSION_V2
-    ? validateV2({ rootDoc, publicDoc, publicKpiPath, nowIso })
+    ? validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso })
     : validateV1({ rootDoc, publicDoc, publicKpiPath });
 
   for (const warning of result.warnings) console.warn(`::warning:: fenok KPI [warn-only] ${warning}`);

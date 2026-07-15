@@ -26,8 +26,8 @@ function response(statusCode, payload) {
   return { statusCode, body: typeof payload === "string" ? payload : JSON.stringify(payload) };
 }
 
-function observations(seriesId) {
-  return { observations: [{ date: "2026-07-11", value: seriesId.length.toString() }] };
+function observations(seriesId, date = "2026-07-11") {
+  return { observations: [{ date, value: seriesId.length.toString() }] };
 }
 
 function makePaths(root) {
@@ -38,6 +38,7 @@ function makePaths(root) {
     publicPaths[group.id] = path.join(root, "public", "data", "macro", `fred-banking-${group.id}.json`);
   }
   return {
+    repoRoot: root,
     canonicalPaths: canonical,
     publicPaths,
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fred_banking.json"),
@@ -113,6 +114,7 @@ function assertValidShard(shard) {
   });
   assert.equal(result.ok, false);
   assert.equal(result.reason, "rate_limited", "unavailable must outrank drift");
+  assert.equal(result.exitCode, 2, "systemic failure with invalid canonical artifacts is fatal");
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   const row = shard.attempts[0];
@@ -125,11 +127,142 @@ function assertValidShard(shard) {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-source-binding-test-"));
+  const paths = makePaths(root);
+  await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    observedAt: "2026-07-14T11:00:00.000Z",
+    attemptId: "fred-banking-binding-baseline",
+    runId: "binding-baseline",
+    sleep: async () => {},
+  });
+  const tampered = readJson(paths.canonicalPaths.daily);
+  tampered.source_as_of = "2026-07-10";
+  fs.writeFileSync(paths.canonicalPaths.daily, `${JSON.stringify(tampered, null, 2)}\n`);
+  const failed = await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "DGS10",
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T12:00:00.000Z",
+    attemptId: "fred-banking-binding-failure",
+    runId: "binding-failure",
+    sleep: async () => {},
+  });
+  assert.equal(failed.exitCode, 2, "declared source_as_of must match the payload series boundary before becoming LKG");
+  assert.equal(failed.corrupt, true);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-chaos-test-"));
+  const paths = makePaths(root);
+  await runFredBanking({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    observedAt: "2026-07-14T11:00:00.000Z",
+    attemptId: "fred-banking-baseline",
+    runId: "baseline-run",
+    sleep: async () => {},
+  });
+  const failed = await runFredBanking({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "DGS10",
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T12:00:00.000Z",
+    attemptId: "fred-banking-controlled-failure",
+    runId: "controlled-failure-run",
+    sleep: async () => {},
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.degraded, true);
+  assert.equal(failed.exitCode, 0);
+  assert.deepEqual(failed.retrySet, [
+    "daily",
+    "quarterly",
+    "weekly",
+  ]);
+  const statePath = path.join(root, "data", "admin", "fred_banking", "index.json");
+  const state = readJson(statePath);
+  assert.equal(state.items.daily.resolution_state, "lkg_primary");
+  for (const key of failed.retrySet) {
+    assert.equal(fs.existsSync(path.join(root, "data", "admin", "fred_banking", "lkg", `${key}.json`)), true);
+  }
+
+  const dailySeries = new Set(FRED_BANKING_GROUPS.find((group) => group.id === "daily").series.map((item) => item.id));
+  const partial = await runFredBanking({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId, dailySeries.has(seriesId) ? "2026-07-12" : "2026-07-11")),
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T12:30:00.000Z",
+    attemptId: "fred-banking-partial-recovery",
+    runId: "partial-recovery-run",
+    sleep: async () => {},
+  });
+  assert.equal(partial.ok, false);
+  assert.equal(partial.degraded, true);
+  assert.equal(partial.updated, true);
+  assert.equal(partial.recovered, true);
+  assert.deepEqual(partial.retrySet, ["quarterly", "weekly"]);
+  const partialState = readJson(statePath);
+  assert.equal(partialState.items.daily.resolution_state, "fresh_primary");
+  assert.equal(partialState.items.daily.recovered_from_run_id, "controlled-failure-run");
+  assert.equal(partialState.items.weekly.resolution_state, "lkg_primary");
+  assert.equal(partialState.items.quarterly.resolution_state, "lkg_primary");
+
+  const recovered = await runFredBanking({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId, "2026-07-12")),
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T13:00:00.000Z",
+    attemptId: "fred-banking-recovery",
+    runId: "recovery-run",
+    sleep: async () => {},
+  });
+  assert.equal(recovered.ok, true);
+  assert.equal(recovered.recovered, true);
+  const recoveredState = readJson(statePath);
+  assert.deepEqual(recoveredState.retry_set, []);
+  for (const key of failed.retrySet) {
+    assert.equal(recoveredState.items[key].resolution_state, "fresh_primary");
+    assert.equal(recoveredState.items[key].recovered_from_run_id, "controlled-failure-run");
+  }
+
+  await assert.rejects(() => runFredBanking({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "DGS10",
+    eventName: "schedule",
+    observedAt: "2026-07-14T14:00:00.000Z",
+    attemptId: "fred-banking-invalid-chaos",
+    runId: "invalid-chaos",
+    sleep: async () => {},
+  }), /workflow_dispatch/);
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-banking.yml"), "utf8");
   assert.match(workflow, /node scripts\/test-fetch-fred-banking\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fred-banking\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
+  assert.doesNotMatch(workflow, /git add -A/);
   assert.match(workflow, /detection-attempts\/fred_banking\.json/);
+  assert.match(workflow, /controlled_failure_key/);
+  assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
+  assert.match(workflow, /data\/admin\/fred_banking\/index\.json/);
+  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/daily\.json/);
+  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/weekly\.json/);
+  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/quarterly\.json/);
   assert.match(workflow, /- name: Commit and push owned FRED banking data\n\s+if: \$\{\{ always\(\) \}\}/);
 }
 

@@ -16,6 +16,12 @@ import {
   worstRequestResult,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  allNaturalRequestsFailed,
+  classifyLkgFailure,
+  systemicLkgFailureReason,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,7 +81,10 @@ function usableObservations(document) {
     .filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.date) && Number.isFinite(item.value));
 }
 
-async function evaluateSeries({ request, apiKey, series, observedAt, sleep }) {
+async function evaluateSeries({ request, apiKey, series, observedAt, sleep, controlledFailureKey }) {
+  if (series.id === controlledFailureKey) {
+    return attemptResult("transport_error", threwTuple("transport"));
+  }
   const url = buildUrl(series.id, series.days, observedAt, apiKey);
   let last = null;
   for (let retry = 0; retry <= MAX_RETRIES; retry += 1) {
@@ -107,7 +116,34 @@ async function evaluateSeries({ request, apiKey, series, observedAt, sleep }) {
   return last;
 }
 
+function macroSourceAsOf(document) {
+  const dates = Object.values(document?.series ?? {}).flatMap((rows) => (
+    Array.isArray(rows) ? rows.map((row) => row?.date).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)) : []
+  ));
+  return dates.length > 0 ? dates.sort().at(-1) : null;
+}
+
+function validMacroDocument(document) {
+  if (!document || typeof document !== "object" || Array.isArray(document) || !document.series || typeof document.series !== "object") return false;
+  return FRED_MACRO_SERIES.every(({ id }) => {
+    const rows = document.series[id];
+    return Array.isArray(rows) && rows.length > 0 && rows.every((row) => (
+      /^\d{4}-\d{2}-\d{2}$/.test(row?.date) && Number.isFinite(row?.value)
+    ));
+  }) && macroSourceAsOf(document) !== null;
+}
+
+function validateControlledFailureKey(controlledFailureKey, eventName) {
+  if (!controlledFailureKey) return null;
+  if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
+  if (!FRED_MACRO_SERIES.some((series) => series.id === controlledFailureKey)) {
+    throw new Error(`unknown controlled FRED macro key: ${controlledFailureKey}`);
+  }
+  return controlledFailureKey;
+}
+
 export async function runFredMacro({
+  repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fred-macro.json"),
   publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fred-macro.json"),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_macro.json"),
@@ -115,15 +151,28 @@ export async function runFredMacro({
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = defaultAttemptId("fred-macro", observedAt),
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
+  const injectedKey = validateControlledFailureKey(controlledFailureKey.trim(), eventName);
+  const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fred_macro" });
+  const lkgArtifacts = [{
+    key: "fred_macro",
+    canonicalPath,
+    validateDocument: validMacroDocument,
+    sourceAsOf: macroSourceAsOf,
+  }];
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), observedAt };
   let requestResults;
   if (!apiKey) {
     requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
   } else {
     requestResults = [];
     for (const series of FRED_MACRO_SERIES) {
-      requestResults.push(await evaluateSeries({ request, apiKey, series, observedAt, sleep }));
+      requestResults.push(await evaluateSeries({ request, apiKey, series, observedAt, sleep, controlledFailureKey: injectedKey }));
       if (series !== FRED_MACRO_SERIES.at(-1)) await sleep(500);
     }
   }
@@ -136,24 +185,60 @@ export async function runFredMacro({
     attemptId,
     result: worst,
   });
-  if (worst.status !== "ready") return { ok: false, reason: worst.reason, updated: false, attempt };
+  if (worst.status !== "ready") {
+    const systemicOutage = allNaturalRequestsFailed(
+      requestResults,
+      (_row, index) => FRED_MACRO_SERIES[index]?.id === injectedKey,
+    );
+    const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
+      ?? (injectedKey && !systemicOutage ? "controlled_failure" : worst.reason);
+    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
+    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
+    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+  }
 
   const series = Object.fromEntries(FRED_MACRO_SERIES.map((item, index) => [item.id, requestResults[index].rows]));
   const output = { updated: observedAt, series };
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
+  const candidate = {
+    key: "fred_macro",
+    currentRelativePath: "data/macro/fred-macro.json",
+    payloadBytes: Buffer.from(serialized),
+    sourceAsOf: macroSourceAsOf(output),
+    validateDocument: validMacroDocument,
+    deriveSourceAsOf: macroSourceAsOf,
+  };
+  const promotable = lkgStore.promotableCandidates([candidate]);
+  if (promotable.length === 0) {
+    return {
+      ok: false,
+      reason: "recovery_not_advanced",
+      updated: false,
+      attempt,
+      retrySet: lkgStore.stateSnapshot().retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
   atomicWrite(canonicalPath, serialized);
   atomicWrite(publicPath, serialized);
-  return { ok: true, reason: "ok", updated: true, attempt, seriesCount: FRED_MACRO_SERIES.length };
+  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
+  const recovered = success.state.items.fred_macro?.recovered_at === observedAt;
+  return { ok: true, reason: "ok", updated: true, attempt, seriesCount: FRED_MACRO_SERIES.length, recovered };
 }
 
 async function main() {
   const result = await runFredMacro();
   if (!result.ok) {
-    console.error(`FRED macro fetch failed: ${result.reason}; last-known-good artifacts retained`);
-    process.exitCode = 1;
+    const prefix = result.degraded ? "[degraded]" : "[corrupt]";
+    const message = `${prefix} FRED macro ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    if (result.degraded) console.log(message);
+    else console.error(message);
+    process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved ${result.seriesCount} FRED macro series and current-attempt evidence`);
+  console.log(`Saved ${result.seriesCount} FRED macro series and current-attempt evidence${result.recovered ? "; recovered from LKG" : ""}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

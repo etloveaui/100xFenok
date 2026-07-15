@@ -26,16 +26,17 @@ function response(statusCode, payload) {
   return { statusCode, body: typeof payload === "string" ? payload : JSON.stringify(payload) };
 }
 
-function observations(seriesId) {
+function observations(seriesId, date = "2026-07-11") {
   return {
     observations: [
-      { date: "2026-07-11", value: seriesId === "GDP" ? "29.1" : "5.25" },
+      { date, value: seriesId === "GDP" ? "29.1" : "5.25" },
     ],
   };
 }
 
 function makePaths(root) {
   return {
+    repoRoot: root,
     canonicalPath: path.join(root, "data", "macro", "fred-macro.json"),
     publicPath: path.join(root, "public", "data", "macro", "fred-macro.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fred_macro.json"),
@@ -101,11 +102,16 @@ async function runCase(request) {
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-macro-lkg-test-"));
   const paths = makePaths(root);
-  fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
-  const lkg = `${JSON.stringify({ marker: "lkg" }, null, 2)}\n`;
-  fs.writeFileSync(paths.canonicalPath, lkg);
-  fs.writeFileSync(paths.publicPath, lkg);
+  await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    observedAt: "2026-07-14T11:00:00.000Z",
+    attemptId: "fred-macro-baseline",
+    runId: "baseline",
+    sleep: async () => {},
+  });
+  const canonicalBefore = fs.readFileSync(paths.canonicalPath, "utf8");
   const result = await runFredMacro({
     ...paths,
     apiKey: "test-key",
@@ -114,18 +120,126 @@ async function runCase(request) {
       : response(200, observations(seriesId)),
     observedAt: OBSERVED_AT,
     attemptId: ATTEMPT_ID,
+    runId: "systemic-rate-limit",
     sleep: async () => {},
   });
   assert.equal(result.ok, false);
   assert.equal(result.reason, "rate_limited");
-  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), lkg);
-  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), lkg);
+  assert.equal(result.exitCode, 2, "systemic failure remains fatal even with LKG");
+  assert.equal(result.corrupt, true);
+  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBefore);
+  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), canonicalBefore);
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   const row = shard.attempts[0];
   assert.equal(row.http_status, 429);
   assert.equal(row.rate_limited, true);
   assert.deepEqual(row.assertions, []);
+
+  const maskedSystemic = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => {
+      if (seriesId === "M2SL") return response(500, { error: "upstream" });
+      if (seriesId === "WALCL") return response(401, { error: "unauthorized" });
+      return response(200, observations(seriesId));
+    },
+    observedAt: "2026-07-14T12:45:00.000Z",
+    attemptId: "fred-macro-masked-systemic",
+    runId: "masked-systemic",
+    sleep: async () => {},
+  });
+  assert.equal(maskedSystemic.reason, "auth_error", "systemic failure cannot hide behind the first equal-severity HTTP failure");
+  assert.equal(maskedSystemic.exitCode, 2);
+  assert.equal(readJson(paths.attemptShardPath).attempts[0].http_status, 500, "existing current-attempt fold remains unchanged");
+
+  const systemicOutage = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async () => response(500, { error: "upstream" }),
+    observedAt: "2026-07-14T12:50:00.000Z",
+    attemptId: "fred-macro-systemic-http-outage",
+    runId: "systemic-http-outage",
+    sleep: async () => {},
+  });
+  assert.equal(systemicOutage.reason, "http_error");
+  assert.equal(systemicOutage.exitCode, 2, "all-request HTTP outage is systemic even with valid LKG");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-macro-chaos-test-"));
+  const paths = makePaths(root);
+  await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    observedAt: "2026-07-14T11:00:00.000Z",
+    attemptId: "fred-macro-chaos-baseline",
+    runId: "baseline-run",
+    sleep: async () => {},
+  });
+  const failed = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "WALCL",
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T12:00:00.000Z",
+    attemptId: "fred-macro-controlled-failure",
+    runId: "controlled-failure-run",
+    sleep: async () => {},
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.degraded, true);
+  assert.equal(failed.exitCode, 0);
+  assert.deepEqual(failed.retrySet, ["fred_macro"]);
+  const statePath = path.join(root, "data", "admin", "fred_macro", "index.json");
+  const lkgPath = path.join(root, "data", "admin", "fred_macro", "lkg", "fred_macro.json");
+  assert.equal(fs.existsSync(lkgPath), true);
+  assert.equal(readJson(statePath).items.fred_macro.resolution_state, "lkg_primary");
+
+  const notAdvanced = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T13:00:00.000Z",
+    attemptId: "fred-macro-same-source",
+    runId: "same-source-run",
+    sleep: async () => {},
+  });
+  assert.equal(notAdvanced.reason, "recovery_not_advanced");
+  assert.equal(notAdvanced.degraded, true);
+  assert.equal(readJson(statePath).items.fred_macro.resolution_state, "lkg_primary");
+
+  const recovered = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId, "2026-07-12")),
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T14:00:00.000Z",
+    attemptId: "fred-macro-recovery",
+    runId: "recovery-run",
+    sleep: async () => {},
+  });
+  assert.equal(recovered.ok, true);
+  assert.equal(recovered.recovered, true);
+  const recoveredState = readJson(statePath);
+  assert.deepEqual(recoveredState.retry_set, []);
+  assert.equal(recoveredState.items.fred_macro.resolution_state, "fresh_primary");
+  assert.equal(recoveredState.items.fred_macro.recovered_from_run_id, "controlled-failure-run");
+
+  await assert.rejects(() => runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "WALCL",
+    eventName: "schedule",
+    observedAt: "2026-07-14T15:00:00.000Z",
+    attemptId: "fred-macro-invalid-chaos",
+    runId: "invalid-chaos",
+    sleep: async () => {},
+  }), /workflow_dispatch/);
 }
 
 for (const failure of [
@@ -195,7 +309,12 @@ for (const failure of [
   assert.match(workflow, /node scripts\/test-fetch-fred-macro\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fred-macro\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
+  assert.doesNotMatch(workflow, /git add -A/);
   assert.match(workflow, /detection-attempts\/fred_macro\.json/);
+  assert.match(workflow, /controlled_failure_key/);
+  assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
+  assert.match(workflow, /data\/admin\/fred_macro\/index\.json/);
+  assert.match(workflow, /data\/admin\/fred_macro\/lkg\/fred_macro\.json/);
   assert.match(workflow, /- name: Commit and push macro FRED data\n\s+if: \$\{\{ always\(\) \}\}/);
 }
 

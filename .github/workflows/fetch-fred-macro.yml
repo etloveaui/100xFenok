@@ -7,6 +7,12 @@ on:
   schedule:
     - cron: '0 8 * * *'
   workflow_dispatch:
+    inputs:
+      controlled_failure_key:
+        description: 'Dispatch-only chaos key (one configured FRED series id)'
+        required: false
+        default: ''
+        type: string
 
 env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
@@ -36,6 +42,8 @@ jobs:
 
       - name: Fetch macro FRED data and persist attempt evidence
         id: fetch_macro
+        env:
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-fred-macro.mjs
 
       - name: Verify output
@@ -56,6 +64,12 @@ jobs:
           SHARD="data/admin/data-supply-state/detection-attempts/fred_macro.json"
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
+          fi
+          if [[ -f data/admin/fred_macro/index.json ]]; then
+            git add -- data/admin/fred_macro/index.json
+          fi
+          if [[ -f data/admin/fred_macro/lkg/fred_macro.json ]]; then
+            git add -- data/admin/fred_macro/lkg/fred_macro.json
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- data/macro/fred-macro.json 100xfenok-next/public/data/macro/fred-macro.json

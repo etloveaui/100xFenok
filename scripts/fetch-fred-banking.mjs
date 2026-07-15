@@ -15,6 +15,12 @@ import {
   worstRequestResult,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  allNaturalRequestsFailed,
+  classifyLkgFailure,
+  systemicLkgFailureReason,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,7 +107,10 @@ function usableObservations(document) {
     .filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isFinite(row.value));
 }
 
-async function evaluateSeries({ request, apiKey, group, series, observedAt, sleep }) {
+async function evaluateSeries({ request, apiKey, group, series, observedAt, sleep, controlledFailureKey }) {
+  if (series.id === controlledFailureKey) {
+    return { ...attemptResult("transport_error", threwTuple("transport")), groupId: group.id, seriesId: series.id };
+  }
   const url = buildUrl(series.id, group.days, observedAt, apiKey);
   let last = null;
   for (let retry = 0; retry <= MAX_RETRIES; retry += 1) {
@@ -133,6 +142,37 @@ async function evaluateSeries({ request, apiKey, group, series, observedAt, slee
   return { ...last, groupId: group.id, seriesId: series.id };
 }
 
+function bankingSourceAsOf(document, group) {
+  const sourceDates = group.series.map(({ id }) => {
+    const rows = document?.series?.[id];
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+    const dates = rows.map((row) => row?.date).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value));
+    return dates.length === rows.length ? dates.sort().at(-1) : null;
+  });
+  return sourceDates.every(Boolean) ? [...sourceDates].sort().at(0) : null;
+}
+
+function validBankingDocument(document, group) {
+  if (!document || typeof document !== "object" || Array.isArray(document)
+    || document.type !== group.id || typeof document.source_as_of !== "string"
+    || !Number.isFinite(Date.parse(document.source_as_of)) || !document.series || typeof document.series !== "object") return false;
+  return document.source_as_of === bankingSourceAsOf(document, group) && group.series.every(({ id }) => {
+    const rows = document.series[id];
+    return Array.isArray(rows) && rows.length > 0 && rows.every((row) => (
+      /^\d{4}-\d{2}-\d{2}$/.test(row?.date) && Number.isFinite(row?.value)
+    ));
+  });
+}
+
+function validateControlledFailureKey(controlledFailureKey, eventName, selectedGroups) {
+  if (!controlledFailureKey) return null;
+  if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
+  if (!selectedGroups.some((group) => group.series.some((series) => series.id === controlledFailureKey))) {
+    throw new Error(`unknown controlled FRED banking key: ${controlledFailureKey}`);
+  }
+  return controlledFailureKey;
+}
+
 function defaultCanonicalPaths() {
   return Object.fromEntries(FRED_BANKING_GROUPS.map((group) => [
     group.id,
@@ -148,6 +188,7 @@ function defaultPublicPaths() {
 }
 
 export async function runFredBanking({
+  repoRoot = REPO_ROOT,
   canonicalPaths = defaultCanonicalPaths(),
   publicPaths = defaultPublicPaths(),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_banking.json"),
@@ -156,12 +197,25 @@ export async function runFredBanking({
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = defaultAttemptId("fred-banking", observedAt),
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
   const selectedGroups = type === "all"
     ? FRED_BANKING_GROUPS
     : FRED_BANKING_GROUPS.filter((group) => group.id === type);
   if (selectedGroups.length === 0) throw new Error(`unknown FRED banking type: ${type}`);
+  const injectedKey = validateControlledFailureKey(controlledFailureKey.trim(), eventName, selectedGroups);
+  const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fred_banking" });
+  const lkgArtifacts = selectedGroups.map((group) => ({
+    key: group.id,
+    canonicalPath: canonicalPaths[group.id],
+    validateDocument: (document) => validBankingDocument(document, group),
+    sourceAsOf: (document) => bankingSourceAsOf(document, group),
+  }));
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), observedAt };
 
   let requestResults;
   if (!apiKey) {
@@ -170,7 +224,7 @@ export async function runFredBanking({
     requestResults = [];
     const targets = selectedGroups.flatMap((group) => group.series.map((series) => ({ group, series })));
     for (const [index, target] of targets.entries()) {
-      requestResults.push(await evaluateSeries({ request, apiKey, ...target, observedAt, sleep }));
+      requestResults.push(await evaluateSeries({ request, apiKey, ...target, observedAt, sleep, controlledFailureKey: injectedKey }));
       if (index < targets.length - 1) await sleep(500);
     }
   }
@@ -183,7 +237,14 @@ export async function runFredBanking({
     attemptId,
     result: worst,
   });
-  if (worst.status !== "ready") return { ok: false, reason: worst.reason, updated: false, attempt };
+  if (worst.status !== "ready") {
+    const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.seriesId === injectedKey);
+    const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
+      ?? (injectedKey && !systemicOutage ? "controlled_failure" : worst.reason);
+    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
+    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
+    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+  }
 
   const outputs = {};
   for (const group of selectedGroups) {
@@ -206,12 +267,51 @@ export async function runFredBanking({
     };
   }
 
-  for (const group of selectedGroups) {
+  const candidates = selectedGroups.map((group) => {
     const serialized = `${JSON.stringify(outputs[group.id], null, 2)}\n`;
-    atomicWrite(canonicalPaths[group.id], serialized);
-    atomicWrite(publicPaths[group.id], serialized);
+    return {
+      key: group.id,
+      currentRelativePath: `data/macro/fred-banking-${group.id}.json`,
+      payloadBytes: Buffer.from(serialized),
+      sourceAsOf: outputs[group.id].source_as_of,
+      validateDocument: (document) => validBankingDocument(document, group),
+      deriveSourceAsOf: (document) => bankingSourceAsOf(document, group),
+      serialized,
+    };
+  });
+  const promotable = lkgStore.promotableCandidates(candidates);
+  if (promotable.length === 0) {
+    return {
+      ok: false,
+      reason: "recovery_not_advanced",
+      updated: false,
+      attempt,
+      retrySet: lkgStore.stateSnapshot().retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
   }
-  return { ok: true, reason: "ok", updated: true, attempt, groups: selectedGroups.map((group) => group.id) };
+  for (const candidate of promotable) {
+    atomicWrite(canonicalPaths[candidate.key], candidate.serialized);
+    atomicWrite(publicPaths[candidate.key], candidate.serialized);
+  }
+  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
+  const recovered = promotable.some((candidate) => success.state.items[candidate.key]?.recovered_at === observedAt);
+  if (success.retrySet.length > 0) {
+    return {
+      ok: false,
+      reason: "recovery_not_advanced",
+      updated: true,
+      attempt,
+      retrySet: success.retrySet,
+      recovered,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+  return { ok: true, reason: "ok", updated: true, attempt, groups: selectedGroups.map((group) => group.id), recovered };
 }
 
 function parseType(argv) {
@@ -227,11 +327,14 @@ function parseType(argv) {
 async function main() {
   const result = await runFredBanking({ type: parseType(process.argv.slice(2)) });
   if (!result.ok) {
-    console.error(`FRED banking fetch failed: ${result.reason}; last-known-good artifacts retained`);
-    process.exitCode = 1;
+    const prefix = result.degraded ? "[degraded]" : "[corrupt]";
+    const message = `${prefix} FRED banking ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    if (result.degraded) console.log(message);
+    else console.error(message);
+    process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved FRED banking ${result.groups.join(", ")} artifacts and one current-attempt shard`);
+  console.log(`Saved FRED banking ${result.groups.join(", ")} artifacts and one current-attempt shard${result.recovered ? "; recovered from LKG" : ""}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

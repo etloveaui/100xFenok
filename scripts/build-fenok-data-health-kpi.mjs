@@ -637,7 +637,66 @@ function assertDetectionStatusReason(row, context, { allowUnavailableSchemaDrift
   }
 }
 
-export function mapDetectionFloorRow(row) {
+export function projectRecoveryRetrySet(state, laneId) {
+  if (state === null || state === undefined) return [];
+  if (!state || typeof state !== "object" || Array.isArray(state)
+    || state.schema_version !== "data-supply-lkg-state/v1"
+    || state.lane_id !== laneId
+    || !Array.isArray(state.retry_set)
+    || !state.items || typeof state.items !== "object" || Array.isArray(state.items)) {
+    throw new Error(`detection floor ${laneId} recovery state is malformed`);
+  }
+  const retrySet = [...state.retry_set];
+  if (retrySet.some((key) => typeof key !== "string" || key === "")
+    || new Set(retrySet).size !== retrySet.length
+    || retrySet.some((key, index) => index > 0 && retrySet[index - 1].localeCompare(key) >= 0)) {
+    throw new Error(`detection floor ${laneId} recovery retry_set is malformed`);
+  }
+  const itemRetryKeys = Object.entries(state.items)
+    .filter(([, item]) => item?.retry === true)
+    .map(([key, item]) => {
+      if (item.key !== key) throw new Error(`detection floor ${laneId} recovery item ${key} identity is malformed`);
+      return key;
+    })
+    .sort();
+  if (JSON.stringify(itemRetryKeys) !== JSON.stringify(retrySet)) {
+    throw new Error(`detection floor ${laneId} recovery retry_set omits active items`);
+  }
+  return retrySet.map((key) => {
+    const item = state.items[key];
+    const failureRunId = item?.latest_failure?.run_id;
+    const recoveredFromRunId = item?.recovered_from_run_id ?? null;
+    if (!item || item.key !== key || item.retry !== true
+      || !["lkg_primary", "unavailable"].includes(item.resolution_state)
+      || typeof failureRunId !== "string" || failureRunId === ""
+      || (recoveredFromRunId !== null && (typeof recoveredFromRunId !== "string" || recoveredFromRunId === ""))) {
+      throw new Error(`detection floor ${laneId} recovery item ${key} is malformed`);
+    }
+    if (item.resolution_state === "lkg_primary") {
+      const current = item.current;
+      const lkg = item.lkg;
+      if (!current || !lkg
+        || current.path !== `data/admin/${laneId}/lkg/${key}.json`
+        || lkg.path !== current.path
+        || !/^[0-9a-f]{64}$/.test(current.payload_sha256 ?? "")
+        || lkg.payload_sha256 !== current.payload_sha256
+        || lkg.source_as_of !== current.source_as_of
+        || !isDetectionSourceStamp(current.source_as_of)) {
+        throw new Error(`detection floor ${laneId} retained LKG ${key} is malformed`);
+      }
+    } else if (item.current != null || item.lkg != null) {
+      throw new Error(`detection floor ${laneId} unavailable recovery item ${key} is contradictory`);
+    }
+    return {
+      key,
+      resolution_state: item.resolution_state,
+      failure_run_id: failureRunId,
+      recovered_from_run_id: recoveredFromRunId,
+    };
+  });
+}
+
+export function mapDetectionFloorRow(row, recoveryState = null) {
   const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
     throw new Error(`detection floor ${laneId} row is malformed`);
@@ -660,6 +719,7 @@ export function mapDetectionFloorRow(row) {
     throw new Error(`detection floor ${laneId} artifact status contradicts null source_as_of`);
   }
 
+  const recoveryRetrySet = projectRecoveryRetrySet(recoveryState, row.id);
   const result = lane(row.id, row.label, [
     check(
       "detection_floor_status",
@@ -667,7 +727,18 @@ export function mapDetectionFloorRow(row) {
       row.status === "ready",
       `${row.reason}; source_as_of ${sourceAsOf ?? "null"}`,
     ),
-  ], { asOf: sourceAsOf });
+    check(
+      "lkg_retry_set_empty",
+      "LKG retry set empty",
+      recoveryRetrySet.length === 0,
+      recoveryRetrySet.length === 0
+        ? "empty"
+        : recoveryRetrySet.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; "),
+    ),
+  ], {
+    asOf: sourceAsOf,
+    details: { recovery_retry_set: recoveryRetrySet },
+  });
   return {
     ...result,
     reason: row.reason,
@@ -675,7 +746,7 @@ export function mapDetectionFloorRow(row) {
   };
 }
 
-export function buildDetectionFloorLanes(report) {
+export function buildDetectionFloorLanes(report, recoveryStates = {}) {
   const liveLaneConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
   if (report === null || report === undefined) {
     return liveLaneConfigs.map((laneConfig) => mapDetectionFloorRow({
@@ -686,7 +757,7 @@ export function buildDetectionFloorLanes(report) {
       status: "unobserved",
       reason: "workflow_unobserved",
       artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
-    }));
+    }, recoveryStates[laneConfig.id] ?? null));
   }
   validateDetectionReport(report);
   if (report?.schema_version !== "data-supply-detection-floor/v1" || !Array.isArray(report?.lanes)) {
@@ -695,7 +766,7 @@ export function buildDetectionFloorLanes(report) {
   return liveLaneConfigs.map((laneConfig) => {
     const matches = report.lanes.filter((item) => item?.id === laneConfig.id);
     if (matches.length !== 1) throw new Error(`detection floor ${laneConfig.id} cardinality is ${matches.length}`);
-    return mapDetectionFloorRow(matches[0]);
+    return mapDetectionFloorRow(matches[0], recoveryStates[laneConfig.id] ?? null);
   });
 }
 
@@ -1546,6 +1617,10 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const stockanalysisRecovery = readJson("admin/stockanalysis-recovery/index.json");
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
+  const recoveryStates = Object.fromEntries(
+    ["fred_macro", "fred_banking", "fdic_tier1"]
+      .map((laneId) => [laneId, readOptionalJsonStrict(`admin/${laneId}/index.json`)]),
+  );
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 
   const lanes = [
@@ -1559,7 +1634,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
-    ...buildDetectionFloorLanes(detectionFloor),
+    ...buildDetectionFloorLanes(detectionFloor, recoveryStates),
   ];
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])

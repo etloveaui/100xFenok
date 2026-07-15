@@ -15,6 +15,11 @@ on:
           - daily
           - weekly
           - quarterly
+      controlled_failure_key:
+        description: 'Dispatch-only chaos key (one configured FRED series id)'
+        required: false
+        default: ''
+        type: string
 
 env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
@@ -51,6 +56,7 @@ jobs:
         id: fetch_banking
         env:
           DATA_TYPE: ${{ github.event.inputs.data_type || 'all' }}
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-fred-banking.mjs --type "$DATA_TYPE"
 
       - name: Commit and push owned FRED banking data
@@ -66,10 +72,29 @@ jobs:
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
           fi
+          if [[ -f data/admin/fred_banking/index.json ]]; then
+            git add -- data/admin/fred_banking/index.json
+          fi
+          for LKG_FILE in \
+            data/admin/fred_banking/lkg/daily.json \
+            data/admin/fred_banking/lkg/weekly.json \
+            data/admin/fred_banking/lkg/quarterly.json; do
+            if [[ -f "$LKG_FILE" ]]; then
+              git add -- "$LKG_FILE"
+            fi
+          done
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
-            git add -- \
-              data/macro/fred-banking-*.json \
-              100xfenok-next/public/data/macro/fred-banking-*.json
+            for CANONICAL_FILE in \
+              data/macro/fred-banking-daily.json \
+              data/macro/fred-banking-weekly.json \
+              data/macro/fred-banking-quarterly.json \
+              100xfenok-next/public/data/macro/fred-banking-daily.json \
+              100xfenok-next/public/data/macro/fred-banking-weekly.json \
+              100xfenok-next/public/data/macro/fred-banking-quarterly.json; do
+              if [[ -f "$CANONICAL_FILE" ]]; then
+                git add -- "$CANONICAL_FILE"
+              fi
+            done
           fi
           if git diff --staged --quiet; then
             echo "No FRED banking changes to publish"

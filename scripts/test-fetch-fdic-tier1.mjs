@@ -30,6 +30,7 @@ function fdicRows(value) {
 
 function makePaths(root) {
   return {
+    repoRoot: root,
     canonicalPath: path.join(root, "data", "macro", "fdic-tier1.json"),
     publicPath: path.join(root, "public", "data", "macro", "fdic-tier1.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fdic_tier1.json"),
@@ -100,6 +101,7 @@ function assertValidShard(shard) {
   });
   assert.equal(result.ok, false);
   assert.equal(result.reason, "http_error");
+  assert.equal(result.exitCode, 2, "a transient failure without a valid canonical LKG is fatal");
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), lkg);
   assert.equal(fs.readFileSync(paths.publicPath, "utf8"), lkg);
   const shard = readJson(paths.attemptShardPath);
@@ -108,11 +110,93 @@ function assertValidShard(shard) {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-chaos-test-"));
+  const paths = makePaths(root);
+  await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    observedAt: "2026-07-14T11:00:00.000Z",
+    attemptId: "fdic-tier1-baseline",
+    runId: "baseline-run",
+    sleep: async () => {},
+  });
+  const failed = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    controlledFailureKey: "latest",
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T12:00:00.000Z",
+    attemptId: "fdic-tier1-controlled-failure",
+    runId: "controlled-failure-run",
+    sleep: async () => {},
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.degraded, true);
+  assert.equal(failed.exitCode, 0);
+  assert.deepEqual(failed.retrySet, ["fdic_tier1"]);
+  const statePath = path.join(root, "data", "admin", "fdic_tier1", "index.json");
+  const lkgPath = path.join(root, "data", "admin", "fdic_tier1", "lkg", "fdic_tier1.json");
+  assert.equal(fs.existsSync(lkgPath), true);
+  assert.equal(readJson(statePath).items.fdic_tier1.resolution_state, "lkg_primary");
+
+  const notAdvanced = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T13:00:00.000Z",
+    attemptId: "fdic-tier1-same-source",
+    runId: "same-source-run",
+    sleep: async () => {},
+  });
+  assert.equal(notAdvanced.reason, "recovery_not_advanced");
+  assert.equal(notAdvanced.degraded, true);
+  assert.equal(readJson(statePath).items.fdic_tier1.resolution_state, "lkg_primary");
+
+  const advancedQuarters = [...QUARTERS, "20260630"];
+  const recovered = await runFdicTier1({
+    ...paths,
+    quarters: advancedQuarters,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T14:00:00.000Z",
+    attemptId: "fdic-tier1-recovery",
+    runId: "recovery-run",
+    sleep: async () => {},
+  });
+  assert.equal(recovered.ok, true);
+  assert.equal(recovered.recovered, true);
+  const recoveredState = readJson(statePath);
+  assert.deepEqual(recoveredState.retry_set, []);
+  assert.equal(recoveredState.items.fdic_tier1.resolution_state, "fresh_primary");
+  assert.equal(recoveredState.items.fdic_tier1.recovered_from_run_id, "controlled-failure-run");
+
+  await assert.rejects(() => runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(12)),
+    controlledFailureKey: "latest",
+    eventName: "schedule",
+    observedAt: "2026-07-14T15:00:00.000Z",
+    attemptId: "fdic-tier1-invalid-chaos",
+    runId: "invalid-chaos",
+    sleep: async () => {},
+  }), /workflow_dispatch/);
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
   assert.match(workflow, /node scripts\/test-fetch-fdic-tier1\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fdic-tier1\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
+  assert.doesNotMatch(workflow, /git add -A/);
   assert.match(workflow, /detection-attempts\/fdic_tier1\.json/);
+  assert.match(workflow, /controlled_failure_key/);
+  assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
+  assert.match(workflow, /data\/admin\/fdic_tier1\/index\.json/);
+  assert.match(workflow, /data\/admin\/fdic_tier1\/lkg\/fdic_tier1\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
 }
 

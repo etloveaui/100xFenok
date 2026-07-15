@@ -352,6 +352,57 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     assert.equal(ready.deployment_blocking, false);
   }
 
+  const fdicRecovery = {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "fdic_tier1",
+    updated_at: "2026-07-15T01:00:00.000Z",
+    retry_set: ["fdic_tier1"],
+    items: {
+      fdic_tier1: {
+        key: "fdic_tier1",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-03-31",
+        },
+        lkg: {
+          path: "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-03-31",
+        },
+        latest_failure: {
+          run_id: "4001",
+          run_attempt: 1,
+          observed_at: "2026-07-15T01:00:00.000Z",
+          reason: "controlled_failure",
+        },
+      },
+    },
+  };
+  const recoveryLanes = buildDetectionFloorLanes(report(), { fdic_tier1: fdicRecovery });
+  const fdicRecoveryLane = recoveryLanes.find((item) => item.id === "fdic_tier1");
+  assert.equal(fdicRecoveryLane.status, "degraded", "a ready endpoint cannot hide an active LKG retry set");
+  assert.match(fdicRecoveryLane.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail, /fdic_tier1.*lkg_primary.*4001/i);
+  assert.deepEqual(fdicRecoveryLane.details.recovery_retry_set, [{
+    key: "fdic_tier1",
+    resolution_state: "lkg_primary",
+    failure_run_id: "4001",
+    recovered_from_run_id: null,
+  }]);
+  assert.equal(JSON.stringify(fdicRecoveryLane).includes("payload_sha256"), false, "private digests stay out of KPI evidence");
+  const omittedRetry = structuredClone(fdicRecovery);
+  omittedRetry.retry_set = [];
+  assert.throws(
+    () => buildDetectionFloorLanes(report(), { fdic_tier1: omittedRetry }),
+    /retry_set omits active items/,
+    "an index cannot hide retry:true items by omitting their keys",
+  );
+  const recoveryCheckerErrors = [];
+  checkDetectionFloorLane(fdicRecoveryLane, recoveryCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
+  assert.deepEqual(recoveryCheckerErrors, []);
+
   const stale = mapDetectionFloorRow(row("treasury_tga", {
     status: "stale",
     reason: "stale",
@@ -455,10 +506,17 @@ function readyCoreV2(now) {
       artifact: { source_as_of: "2026-07-10" },
       as_of: "2026-07-10",
       deployment_blocking: false,
-      checks: [{
-        id: "detection_floor_status", label: "Detection floor status", status: "ready",
-        status_label: "정상", detail: "ok; source_as_of 2026-07-10", platform_blocking: false,
-      }],
+      details: { recovery_retry_set: [] },
+      checks: [
+        {
+          id: "detection_floor_status", label: "Detection floor status", status: "ready",
+          status_label: "정상", detail: "ok; source_as_of 2026-07-10", platform_blocking: false,
+        },
+        {
+          id: "lkg_retry_set_empty", label: "LKG retry set empty", status: "ready",
+          status_label: "정상", detail: "empty", platform_blocking: false,
+        },
+      ],
     } : {}),
     ...(id === "yahoo_batch_quote_history" ? {
       as_of: "2026-07-09T00:00:00Z",
@@ -879,6 +937,43 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(runChecker(tmp, now).exit, 0, "checker green on ready v2 doc (fresh sources)");
   assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict mode also green when everything fresh");
   ok("checker passes end-to-end on a ready v2 doc in both warn-only and strict modes");
+}
+
+// 4b2. Checker independently compares bounded KPI recovery evidence to the source index.
+{
+  const tmp = mkTmp("checker-recovery-source");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "recovery-source" });
+  runtime.cadence.v2_activated_at = now;
+  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  writeJson(path.join(tmp, "data", "admin", "fdic_tier1", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "fdic_tier1",
+    updated_at: now,
+    retry_set: ["fdic_tier1"],
+    items: {
+      fdic_tier1: {
+        key: "fdic_tier1",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-03-31",
+        },
+        lkg: {
+          path: "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-03-31",
+        },
+        latest_failure: { run_id: "4001" },
+      },
+    },
+  });
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /KPI recovery_retry_set does not match its source index/);
+  ok("checker rejects KPI recovery evidence that omits a source-index retry key");
 }
 
 // 4c. Yahoo lane count/attempt evidence is numeric and arithmetically closed.
