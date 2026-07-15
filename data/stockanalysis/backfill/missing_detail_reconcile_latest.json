@@ -1,32 +1,39 @@
 {
   "schema_version": "stockanalysis-etf-detail-reconcile/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-14T14:52:12Z",
+  "generated_at": "2026-07-15T06:36:29Z",
   "operation": "reconcile_missing_etf_details",
-  "method": "probe every selected missing ticker against StockAnalysis overview and holdings; write an honest stockanalysis_partial detail when the overview exists, including a named holdings-surface omission and null source_as_of with an explicit reason when provider dates are unavailable; classify only overview HTTP 400/404 as provider_absent; keep all other responses unresolved and fail the run",
+  "method": "probe every selected missing ticker against StockAnalysis overview and holdings; write an honest stockanalysis_partial detail when the overview exists, including a named holdings-surface omission and null source_as_of with an explicit reason when provider dates are unavailable; classify only overview HTTP 400/404 as provider_absent; keep all other responses unresolved, named in retry evidence, and degraded when any selected ticker resolves; fail only when no selected ticker resolves, failures are systemic, or canonical coverage regresses",
   "counts": {
-    "initial_missing": 771,
-    "selected": 5,
-    "fetchable_fetched": 5,
+    "initial_missing": 766,
+    "selected": 12,
+    "fetchable_fetched": 12,
     "provider_absent": 0,
     "unresolved": 0,
-    "remaining_missing": 766
+    "remaining_missing": 754
   },
   "selected_tickers": [
-    "AAAU",
-    "AAOX",
-    "AAPB",
-    "AAPE",
-    "AAPR"
+    "XTJA",
+    "XTJL",
+    "XTOC",
+    "YBTC",
+    "YCL",
+    "YCS",
+    "YETH",
+    "ZALT",
+    "ZAPR",
+    "ZDEK",
+    "ZJAN",
+    "ZVOL"
   ],
   "provider_absent_tickers": [],
   "unresolved_tickers": [],
   "results": [
     {
-      "ticker": "AAAU",
+      "ticker": "XTJA",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/AAAU.json",
+      "path": "etfs/XTJA.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -34,10 +41,10 @@
       "error": null
     },
     {
-      "ticker": "AAOX",
+      "ticker": "XTJL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/AAOX.json",
+      "path": "etfs/XTJL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -45,10 +52,10 @@
       "error": null
     },
     {
-      "ticker": "AAPB",
+      "ticker": "XTOC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/AAPB.json",
+      "path": "etfs/XTOC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -56,10 +63,10 @@
       "error": null
     },
     {
-      "ticker": "AAPE",
+      "ticker": "YBTC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/AAPE.json",
+      "path": "etfs/YBTC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -67,15 +74,98 @@
       "error": null
     },
     {
-      "ticker": "AAPR",
+      "ticker": "YCL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/AAPR.json",
+      "path": "etfs/YCL.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "YCS",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/YCS.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "YETH",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/YETH.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ZALT",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ZALT.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ZAPR",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ZAPR.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ZDEK",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ZDEK.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ZJAN",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ZJAN.json",
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ZVOL",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ZVOL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
       "stockanalysis_error": null,
       "error": null
     }
-  ]
+  ],
+  "exit_assessment": {
+    "status": "ready",
+    "exit_code": 0,
+    "unresolved_tickers": [],
+    "reasons": []
+  }
 }
