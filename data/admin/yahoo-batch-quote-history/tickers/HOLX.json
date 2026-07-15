@@ -27,6 +27,25 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "controlled failure injection for HOLX",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "owner-approved controlled failure injection"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-07-15T15:00:39Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29424594863",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "discovered_from": [
@@ -34,29 +53,43 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: provider source timestamp is unavailable for HOLX",
-    "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 659,
-    "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "error": "controlled failure injection for HOLX",
+    "event_name": "workflow_dispatch",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "owner-approved controlled failure injection"
+      }
+    ],
+    "latency_ms": 0,
+    "natural": false,
+    "observed_at": "2026-07-15T15:00:39Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29378156187",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "29424594863",
+    "schedule": "",
+    "shard": ""
   },
   "latest_failure": {
     "attempts_used": 1,
-    "error": "ValueError: provider source timestamp is unavailable for HOLX",
-    "failures": [],
-    "observed_at": "2026-07-15T00:10:40Z",
+    "data_loss": false,
+    "deferred_acquisition": true,
+    "error": "controlled failure injection for HOLX",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "owner-approved controlled failure injection"
+      }
+    ],
+    "lkg_status": "absent",
+    "observed_at": "2026-07-15T15:00:39Z",
     "run_attempt": 1,
-    "run_id": "29378156187"
+    "run_id": "29424594863"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "HOLX",
-  "updated_at": "2026-07-15T00:10:40Z"
+  "updated_at": "2026-07-15T15:00:39Z"
 }
