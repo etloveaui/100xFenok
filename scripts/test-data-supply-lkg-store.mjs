@@ -16,12 +16,26 @@ import {
 const FAILURE_RUN = Object.freeze({
   runId: "4001",
   runAttempt: 1,
+  eventName: "workflow_dispatch",
   observedAt: "2026-07-15T01:00:00.000Z",
 });
 const RECOVERY_RUN = Object.freeze({
   runId: "4002",
   runAttempt: 1,
+  eventName: "schedule",
   observedAt: "2026-07-15T02:00:00.000Z",
+});
+const MANUAL_RUN = Object.freeze({
+  runId: "4003",
+  runAttempt: 1,
+  eventName: "workflow_dispatch",
+  observedAt: "2026-07-15T01:30:00.000Z",
+});
+const SCHEDULE_RERUN = Object.freeze({
+  runId: "4004",
+  runAttempt: 2,
+  eventName: "schedule",
+  observedAt: "2026-07-15T01:45:00.000Z",
 });
 
 function writeJson(filePath, document) {
@@ -134,7 +148,7 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.deepEqual(store.promotableCandidates([
     candidate("daily", "2026-07-15"),
     candidate("quarterly", "2026-07-14"),
-  ]).map((item) => item.key), ["daily"], "only the advancing key may recover");
+  ], RECOVERY_RUN).map((item) => item.key), ["daily"], "only the advancing key may recover");
   assert.equal(store.recoveryCandidateAdvances([
     candidate("daily", "2026-07-15"),
     candidate("quarterly", "2026-07-15"),
@@ -158,7 +172,8 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.equal(failed.hasCompleteLkg, false);
   assert.deepEqual(failed.retrySet, ["fdic-tier1"]);
   assert.equal(failed.state.items["fdic-tier1"].resolution_state, "unavailable");
-  assert.deepEqual(store.promotableCandidates([candidate("fdic-tier1", "2026-07-15")]).map((item) => item.key), ["fdic-tier1"]);
+  assert.deepEqual(store.promotableCandidates([candidate("fdic-tier1", "2026-07-15")], MANUAL_RUN), [], "manual dispatch cannot recover an unavailable retry item");
+  assert.deepEqual(store.promotableCandidates([candidate("fdic-tier1", "2026-07-15")], RECOVERY_RUN).map((item) => item.key), ["fdic-tier1"]);
   assert.deepEqual(classifyLkgFailure({ reason: "transport_error", hasCompleteLkg: false }), {
     degraded: false,
     corrupt: true,
@@ -189,12 +204,28 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.equal(store.recoveryCandidateAdvances([candidate("macro", "2026-07-14")]), false);
   const advanced = candidate("macro", "2026-07-15");
   assert.equal(store.recoveryCandidateAdvances([advanced]), true);
+  assert.deepEqual(store.promotableCandidates([advanced], MANUAL_RUN), [], "manual dispatch cannot promote an advancing recovery candidate");
+  assert.throws(
+    () => store.recordSuccess({ artifacts: [advanced], run: MANUAL_RUN }),
+    /natural schedule/i,
+    "recordSuccess must independently reject manual recovery promotion",
+  );
+  assert.deepEqual(store.promotableCandidates([advanced], SCHEDULE_RERUN), [], "a manually rerun schedule attempt cannot promote recovery");
+  assert.throws(
+    () => store.recordSuccess({ artifacts: [advanced], run: SCHEDULE_RERUN }),
+    /natural schedule/i,
+  );
+  assert.equal(store.stateSnapshot().items.macro.resolution_state, "lkg_primary");
+  assert.deepEqual(store.promotableCandidates([advanced], RECOVERY_RUN).map((item) => item.key), ["macro"]);
   const recovered = store.recordSuccess({ artifacts: [advanced], run: RECOVERY_RUN });
   assert.deepEqual(recovered.retrySet, []);
   assert.equal(recovered.state.items.macro.resolution_state, "fresh_primary");
   assert.equal(recovered.state.items.macro.retry, false);
   assert.equal(recovered.state.items.macro.current.payload_sha256, sha256(advanced.payloadBytes));
   assert.equal(recovered.state.items.macro.recovered_from_run_id, FAILURE_RUN.runId);
+  assert.equal(recovered.state.items.macro.recovery_run_id, RECOVERY_RUN.runId);
+  assert.equal(recovered.state.items.macro.recovery_run_attempt, 1);
+  assert.equal(recovered.state.items.macro.recovery_event_name, "schedule");
   assert.equal(recovered.state.items.macro.last_recovered_failure.run_id, FAILURE_RUN.runId);
   assert.equal(recovered.state.items.macro.latest_failure, undefined);
 }

@@ -20,6 +20,7 @@ import {
   LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
+  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 
@@ -165,7 +166,7 @@ export async function runFredMacro({
     validateDocument: validMacroDocument,
     sourceAsOf: macroSourceAsOf,
   }];
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), observedAt };
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   let requestResults;
   if (!apiKey) {
     requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
@@ -208,7 +209,20 @@ export async function runFredMacro({
     validateDocument: validMacroDocument,
     deriveSourceAsOf: macroSourceAsOf,
   };
-  const promotable = lkgStore.promotableCandidates([candidate]);
+  const recoveryState = lkgStore.stateSnapshot();
+  if (recoveryState.items.fred_macro?.retry === true && !isNaturalScheduleRun(run)) {
+    return {
+      ok: false,
+      reason: "recovery_requires_schedule",
+      updated: false,
+      attempt,
+      retrySet: recoveryState.retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+  const promotable = lkgStore.promotableCandidates([candidate], run);
   if (promotable.length === 0) {
     return {
       ok: false,

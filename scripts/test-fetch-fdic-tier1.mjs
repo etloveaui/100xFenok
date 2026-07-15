@@ -145,7 +145,7 @@ function assertValidShard(shard) {
     ...paths,
     quarters: QUARTERS,
     request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
-    eventName: "workflow_dispatch",
+    eventName: "schedule",
     observedAt: "2026-07-14T13:00:00.000Z",
     attemptId: "fdic-tier1-same-source",
     runId: "same-source-run",
@@ -156,14 +156,30 @@ function assertValidShard(shard) {
   assert.equal(readJson(statePath).items.fdic_tier1.resolution_state, "lkg_primary");
 
   const advancedQuarters = [...QUARTERS, "20260630"];
-  const recovered = await runFdicTier1({
+  const manualAdvanced = await runFdicTier1({
     ...paths,
     quarters: advancedQuarters,
     request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
     eventName: "workflow_dispatch",
     observedAt: "2026-07-14T14:00:00.000Z",
-    attemptId: "fdic-tier1-recovery",
-    runId: "recovery-run",
+    attemptId: "fdic-tier1-manual-advanced",
+    runId: "manual-advanced-run",
+    sleep: async () => {},
+  });
+  assert.equal(manualAdvanced.ok, false);
+  assert.equal(manualAdvanced.degraded, true);
+  assert.equal(manualAdvanced.reason, "recovery_requires_schedule");
+  assert.equal(readJson(statePath).items.fdic_tier1.resolution_state, "lkg_primary");
+  assert.equal(readJson(paths.canonicalPath).data.at(-1).date, "2026-03-31", "manual recovery candidate must not overwrite canonical payload");
+
+  const recovered = await runFdicTier1({
+    ...paths,
+    quarters: advancedQuarters,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
+    eventName: "schedule",
+    observedAt: "2026-07-14T14:30:00.000Z",
+    attemptId: "fdic-tier1-scheduled-recovery",
+    runId: "scheduled-recovery-run",
     sleep: async () => {},
   });
   assert.equal(recovered.ok, true);

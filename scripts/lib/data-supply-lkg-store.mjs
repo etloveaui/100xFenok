@@ -41,7 +41,12 @@ function validateRun(run) {
   if (!run || typeof run !== "object") throw new Error("run context is required");
   if (typeof run.runId !== "string" || run.runId.length === 0) throw new Error("runId is required");
   if (!Number.isInteger(Number(run.runAttempt)) || Number(run.runAttempt) < 1) throw new Error("runAttempt is invalid");
+  if (typeof run.eventName !== "string" || run.eventName.length === 0) throw new Error("eventName is required");
   if (!validUtc(run.observedAt)) throw new Error("observedAt must be RFC3339 UTC");
+}
+
+export function isNaturalScheduleRun(run) {
+  return run?.eventName === "schedule" && Number(run?.runAttempt ?? 1) === 1;
 }
 
 function validateArtifactDescriptor(artifact) {
@@ -257,6 +262,9 @@ export class LaneLkgStore {
       }
       delete state.items[artifact.key].recovered_from_run_id;
       delete state.items[artifact.key].recovered_at;
+      delete state.items[artifact.key].recovery_run_id;
+      delete state.items[artifact.key].recovery_run_attempt;
+      delete state.items[artifact.key].recovery_event_name;
     }
     state.updated_at = run.observedAt;
     state.retry_set = Object.values(state.items)
@@ -295,7 +303,7 @@ export class LaneLkgStore {
     return true;
   }
 
-  promotableCandidates(artifacts) {
+  promotableCandidates(artifacts, run = null) {
     if (!Array.isArray(artifacts) || artifacts.length === 0) throw new Error("recovery candidates are required");
     const state = this._loadState();
     const seen = new Set();
@@ -304,7 +312,9 @@ export class LaneLkgStore {
       if (seen.has(artifact.key)) throw new Error("recovery candidate keys must be unique");
       seen.add(artifact.key);
       const item = state.items[artifact.key];
-      if (item?.retry !== true || item?.resolution_state !== "lkg_primary") return true;
+      if (item?.retry !== true) return true;
+      if (!isNaturalScheduleRun(run)) return false;
+      if (item?.resolution_state !== "lkg_primary") return true;
       const before = Date.parse(item?.lkg?.source_as_of);
       const after = Date.parse(artifact.sourceAsOf);
       return Number.isFinite(before) && Number.isFinite(after) && after > before;
@@ -313,6 +323,11 @@ export class LaneLkgStore {
 
   recordSuccess({ artifacts, run }) {
     validateRun(run);
+    const priorState = this._loadState();
+    const recovering = artifacts.some((artifact) => priorState.items[artifact?.key]?.retry === true);
+    if (recovering && !isNaturalScheduleRun(run)) {
+      throw new Error(`recovery promotion requires a natural schedule run for ${this.laneId}`);
+    }
     if (!this.recoveryCandidateAdvances(artifacts)) {
       throw new Error(`recovery candidate does not advance beyond retained LKG for ${this.laneId}`);
     }
@@ -337,6 +352,9 @@ export class LaneLkgStore {
       if (priorItem.resolution_state === "lkg_primary" && latestFailure?.run_id) {
         nextItem.recovered_from_run_id = latestFailure.run_id;
         nextItem.recovered_at = run.observedAt;
+        nextItem.recovery_run_id = run.runId;
+        nextItem.recovery_run_attempt = Number(run.runAttempt);
+        nextItem.recovery_event_name = run.eventName;
         nextItem.last_recovered_failure = latestFailure;
       }
       delete nextItem.latest_failure;

@@ -209,20 +209,39 @@ function assertValidShard(shard) {
   });
   assert.equal(partial.ok, false);
   assert.equal(partial.degraded, true);
-  assert.equal(partial.updated, true);
-  assert.equal(partial.recovered, true);
-  assert.deepEqual(partial.retrySet, ["quarterly", "weekly"]);
+  assert.equal(partial.updated, false);
+  assert.equal(partial.reason, "recovery_requires_schedule");
+  assert.deepEqual(partial.retrySet, ["daily", "quarterly", "weekly"]);
   const partialState = readJson(statePath);
-  assert.equal(partialState.items.daily.resolution_state, "fresh_primary");
-  assert.equal(partialState.items.daily.recovered_from_run_id, "controlled-failure-run");
+  assert.equal(partialState.items.daily.resolution_state, "lkg_primary");
   assert.equal(partialState.items.weekly.resolution_state, "lkg_primary");
   assert.equal(partialState.items.quarterly.resolution_state, "lkg_primary");
+  assert.equal(readJson(paths.canonicalPaths.daily).source_as_of, "2026-07-11", "manual recovery candidate must not overwrite canonical payload");
+
+  const scheduledPartial = await runFredBanking({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId, dailySeries.has(seriesId) ? "2026-07-12" : "2026-07-11")),
+    eventName: "schedule",
+    observedAt: "2026-07-14T12:45:00.000Z",
+    attemptId: "fred-banking-scheduled-partial-recovery",
+    runId: "scheduled-partial-recovery-run",
+    sleep: async () => {},
+  });
+  assert.equal(scheduledPartial.ok, false);
+  assert.equal(scheduledPartial.degraded, true);
+  assert.equal(scheduledPartial.updated, true);
+  assert.equal(scheduledPartial.recovered, true);
+  assert.deepEqual(scheduledPartial.retrySet, ["quarterly", "weekly"]);
+  const scheduledPartialState = readJson(statePath);
+  assert.equal(scheduledPartialState.items.daily.resolution_state, "fresh_primary");
+  assert.equal(scheduledPartialState.items.daily.recovered_from_run_id, "controlled-failure-run");
 
   const recovered = await runFredBanking({
     ...paths,
     apiKey: "test-key",
     request: async (_url, seriesId) => response(200, observations(seriesId, "2026-07-12")),
-    eventName: "workflow_dispatch",
+    eventName: "schedule",
     observedAt: "2026-07-14T13:00:00.000Z",
     attemptId: "fred-banking-recovery",
     runId: "recovery-run",

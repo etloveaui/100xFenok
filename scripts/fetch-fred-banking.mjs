@@ -19,6 +19,7 @@ import {
   LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
+  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 
@@ -215,7 +216,7 @@ export async function runFredBanking({
     validateDocument: (document) => validBankingDocument(document, group),
     sourceAsOf: (document) => bankingSourceAsOf(document, group),
   }));
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), observedAt };
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
 
   let requestResults;
   if (!apiKey) {
@@ -279,7 +280,21 @@ export async function runFredBanking({
       serialized,
     };
   });
-  const promotable = lkgStore.promotableCandidates(candidates);
+  const recoveryState = lkgStore.stateSnapshot();
+  const hasSelectedRetry = candidates.some((candidate) => recoveryState.items[candidate.key]?.retry === true);
+  if (hasSelectedRetry && !isNaturalScheduleRun(run)) {
+    return {
+      ok: false,
+      reason: "recovery_requires_schedule",
+      updated: false,
+      attempt,
+      retrySet: recoveryState.retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+  const promotable = lkgStore.promotableCandidates(candidates, run);
   if (promotable.length === 0) {
     return {
       ok: false,

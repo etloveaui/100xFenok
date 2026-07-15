@@ -202,7 +202,7 @@ async function runCase(request) {
     ...paths,
     apiKey: "test-key",
     request: async (_url, seriesId) => response(200, observations(seriesId)),
-    eventName: "workflow_dispatch",
+    eventName: "schedule",
     observedAt: "2026-07-14T13:00:00.000Z",
     attemptId: "fred-macro-same-source",
     runId: "same-source-run",
@@ -212,14 +212,30 @@ async function runCase(request) {
   assert.equal(notAdvanced.degraded, true);
   assert.equal(readJson(statePath).items.fred_macro.resolution_state, "lkg_primary");
 
-  const recovered = await runFredMacro({
+  const manualAdvanced = await runFredMacro({
     ...paths,
     apiKey: "test-key",
     request: async (_url, seriesId) => response(200, observations(seriesId, "2026-07-12")),
     eventName: "workflow_dispatch",
     observedAt: "2026-07-14T14:00:00.000Z",
-    attemptId: "fred-macro-recovery",
-    runId: "recovery-run",
+    attemptId: "fred-macro-manual-advanced",
+    runId: "manual-advanced-run",
+    sleep: async () => {},
+  });
+  assert.equal(manualAdvanced.ok, false);
+  assert.equal(manualAdvanced.degraded, true);
+  assert.equal(manualAdvanced.reason, "recovery_requires_schedule");
+  assert.equal(readJson(statePath).items.fred_macro.resolution_state, "lkg_primary");
+  assert.equal(readJson(paths.canonicalPath).series.M2SL.at(-1).date, "2026-07-11", "manual recovery candidate must not overwrite canonical payload");
+
+  const recovered = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId, "2026-07-12")),
+    eventName: "schedule",
+    observedAt: "2026-07-14T14:30:00.000Z",
+    attemptId: "fred-macro-scheduled-recovery",
+    runId: "scheduled-recovery-run",
     sleep: async () => {},
   });
   assert.equal(recovered.ok, true);

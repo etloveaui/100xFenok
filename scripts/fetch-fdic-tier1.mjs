@@ -19,6 +19,7 @@ import {
   LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
+  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 
@@ -163,7 +164,7 @@ export async function runFdicTier1({
     validateDocument: validFdicDocument,
     sourceAsOf: fdicSourceAsOf,
   }];
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), observedAt };
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const requestResults = [];
   for (const [index, quarter] of quarters.entries()) {
     requestResults.push(await evaluateQuarter({ request, quarter, controlledFailureQuarter: injectedQuarter }));
@@ -202,7 +203,20 @@ export async function runFdicTier1({
     validateDocument: validFdicDocument,
     deriveSourceAsOf: fdicSourceAsOf,
   };
-  const promotable = lkgStore.promotableCandidates([candidate]);
+  const recoveryState = lkgStore.stateSnapshot();
+  if (recoveryState.items.fdic_tier1?.retry === true && !isNaturalScheduleRun(run)) {
+    return {
+      ok: false,
+      reason: "recovery_requires_schedule",
+      updated: false,
+      attempt,
+      retrySet: recoveryState.retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+  const promotable = lkgStore.promotableCandidates([candidate], run);
   if (promotable.length === 0) {
     return {
       ok: false,
