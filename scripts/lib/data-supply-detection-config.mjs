@@ -18,7 +18,14 @@ const LANE_IDS = Object.freeze([
 ]);
 
 const LIVE_LANE_IDS = Object.freeze([
+  "fred_macro",
+  "fred_banking",
+  "fred_yardeni",
+  "fdic_tier1",
   "treasury_tga",
+  "yahoo_ticker_macro",
+  "sentiment",
+  "slickcharts",
 ]);
 const LIVE_LANE_ID_SET = new Set(LIVE_LANE_IDS);
 
@@ -191,8 +198,8 @@ function lane({
   freshnessPolicy,
   affectedSurfaceIds,
   visibility = "public_safe_aggregate",
-  enforcement = "shadow",
 }) {
+  const enforcement = LIVE_LANE_ID_SET.has(id) ? "live" : "shadow";
   const sourceBasis = [...new Set(members.flatMap((memberValue) => memberValue.artifact_contracts
     .map((contract) => contract.source_selector.pointer)
     .filter((pointer) => typeof pointer === "string")))];
@@ -337,7 +344,6 @@ const config = {
       endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_federal_business", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_tga"],
-      enforcement: "live",
     }),
     lane({
       id: "yahoo_ticker_macro",

@@ -314,7 +314,17 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 // honest unobserved state; malformed or contradictory evidence fails closed.
 {
   const liveConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
-  assert.deepEqual(liveConfigs.map((item) => item.id), ["treasury_tga"]);
+  const liveLaneIds = [
+    "fred_macro",
+    "fred_banking",
+    "fred_yardeni",
+    "fdic_tier1",
+    "treasury_tga",
+    "yahoo_ticker_macro",
+    "sentiment",
+    "slickcharts",
+  ];
+  assert.deepEqual(liveConfigs.map((item) => item.id), liveLaneIds);
   const report = (laneId = null, overrides = {}) => {
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
     if (laneId !== null) {
@@ -334,7 +344,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   });
 
   const readyLanes = buildDetectionFloorLanes(report());
-  assert.deepEqual(readyLanes.map((item) => item.id), ["treasury_tga"]);
+  assert.deepEqual(readyLanes.map((item) => item.id), liveLaneIds);
   for (const ready of readyLanes) {
     assert.equal(ready.status, "ready");
     assert.equal(ready.reason, "ok");
@@ -362,7 +372,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(unreadableArtifact.artifact.source_as_of, null);
 
   const missing = buildDetectionFloorLanes(null);
-  assert.deepEqual(missing.map((item) => item.id), ["treasury_tga"]);
+  assert.deepEqual(missing.map((item) => item.id), liveLaneIds);
   for (const item of missing) {
     assert.equal(item.status, "degraded");
     assert.equal(item.reason, "workflow_unobserved");
@@ -386,7 +396,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   for (const malformedRow of [
     row("unknown_lane"),
-    row("fred_yardeni", { label: "FRED Yardeni model" }),
+    row("fred_yardeni", { label: "Wrong label" }),
     row("treasury_tga", { label: "Wrong label" }),
     row("treasury_tga", { enforcement: "shadow" }),
     row("treasury_tga", { kpi_required: false }),
@@ -725,7 +735,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
   const { root } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 11);
+  assert.equal(root.totals.lanes, 18);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);

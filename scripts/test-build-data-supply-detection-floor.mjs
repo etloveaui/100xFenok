@@ -442,11 +442,20 @@ function runConfigAndFixtureChecks() {
     .filter((item) => item.enforcement === "live")
     .map((item) => item.id);
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.enforcement, "shadow", "top-level enforcement remains shadow");
-  assert.deepEqual(liveLaneIds, ["treasury_tga"], "only the evidence-proven TGA lane is live");
+  assert.deepEqual(liveLaneIds, [
+    "fred_macro",
+    "fred_banking",
+    "fred_yardeni",
+    "fdic_tier1",
+    "treasury_tga",
+    "yahoo_ticker_macro",
+    "sentiment",
+    "slickcharts",
+  ], "only attempt-proven lanes are live");
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);
-  assert.equal(fredYardeni.enforcement, "shadow");
-  assert.equal(fredYardeni.kpi_required, false);
+  assert.equal(fredYardeni.enforcement, "live");
+  assert.equal(fredYardeni.kpi_required, true);
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
@@ -510,9 +519,9 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = { kind: "payload_field", evidence: "not-a-pointer" }; value.lanes[0].producer_members[0].workflow = null; value.lanes[0].owner_workflow = null; },
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = { kind: "owner_contract", evidence: "?" }; value.lanes[0].producer_members[0].workflow = null; value.lanes[0].owner_workflow = null; },
     (value) => { value.lanes[0].enforcement = "invalid"; },
-    (value) => { value.lanes[0].kpi_required = true; },
-    (value) => { value.lanes[0].enforcement = "live"; value.lanes[0].kpi_required = true; },
-    (value) => { const lane = value.lanes.find((item) => item.id === "fred_yardeni"); lane.enforcement = "live"; lane.kpi_required = true; },
+    (value) => { value.lanes[0].kpi_required = false; },
+    (value) => { value.lanes[0].enforcement = "shadow"; value.lanes[0].kpi_required = false; },
+    (value) => { const lane = value.lanes.find((item) => item.id === "edgar_filings"); lane.enforcement = "live"; lane.kpi_required = true; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").enforcement = "shadow"; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").kpi_required = false; },
   ];
