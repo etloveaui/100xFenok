@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ZVOL",
   "asset_type": "etf",
-  "generated_at": "2026-07-14T04:12:01Z",
+  "generated_at": "2026-07-15T13:20:47Z",
   "source_as_of": "2026-06-29",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -108,6 +108,31 @@
       ],
       "candidate_count": 1
     },
+    "return_1m": {
+      "value": 6.607,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:28:53Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 6.607,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:28:53Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_3m": {
       "value": 20.304098832823676,
       "source": "stockanalysis.detail.history",
@@ -126,6 +151,82 @@
           "as_of": "2026-06-29",
           "fetched_at": "2026-06-30T00:23:47Z",
           "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 5.931,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:28:53Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 5.931,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:28:53Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 16.296,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:28:53Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 16.296,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:28:53Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_max_avg": {
+      "value": 14.943,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-10T13:28:53Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 14.943,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-10T13:28:53Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -155,14 +256,14 @@
     "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/ZVOL.json",
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

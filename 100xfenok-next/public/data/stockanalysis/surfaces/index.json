@@ -2,11 +2,16 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "surface_index",
-  "generated_at": "2026-07-10T13:29:05Z",
+  "generated_at": "2026-07-15T10:41:19Z",
   "source_as_of": {
-    "market_events": "2026-07-10",
-    "sectors": "2026-07-10",
-    "etf_center": "2026-07-10"
+    "market_events": null,
+    "sectors": null,
+    "etf_center": null
+  },
+  "source_as_of_reason": {
+    "market_events": "provider publishes no aggregate source date or the canonical domain is incomplete",
+    "sectors": "provider publishes no aggregate source date or the canonical domain is incomplete",
+    "etf_center": "provider publishes no aggregate source date or the canonical domain is incomplete"
   },
   "counts": {
     "surfaces_requested": 25,
@@ -145,7 +150,7 @@
       "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
       "tables": 0,
       "rows": 1933,
-      "latency_ms": 258,
+      "latency_ms": 21,
       "error": null
     },
     {
@@ -316,5 +321,29 @@
       "latency_ms": 189,
       "error": null
     }
-  ]
+  ],
+  "latest_attempt": {
+    "generated_at": "2026-07-15T10:41:19Z",
+    "counts": {
+      "surfaces_requested": 1,
+      "ok": 0,
+      "failed": 1,
+      "tables": 0,
+      "rows": 0
+    },
+    "results": [
+      {
+        "surface": "actions_recent",
+        "group": "corporate_actions",
+        "format": "svelte_devalue",
+        "status": "error",
+        "path": null,
+        "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
+        "tables": 0,
+        "rows": 0,
+        "latency_ms": 21,
+        "error": "RuntimeError: controlled failure injection for surface:actions_recent"
+      }
+    ]
+  }
 }

@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-15T10:35:32.377Z",
-  "classification_as_of": "2026-07-15T10:34:38.489Z",
+  "generated_at": "2026-07-15T13:21:45.536Z",
+  "classification_as_of": "2026-07-15T13:21:23.585Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -24,12 +24,12 @@
     "fetchable_plan_output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
   },
   "daily_1y_readiness": {
-    "denominator": 4515,
-    "daily_1y_complete": 3706,
-    "daily_1y_missing": 809,
+    "denominator": 4527,
+    "daily_1y_complete": 3700,
+    "daily_1y_missing": 827,
     "daily_1y_fetchable": 8,
     "inception_limited_daily_1y_gap": 730,
-    "terminal_limited_daily_1y_gap": 71,
+    "terminal_limited_daily_1y_gap": 89,
     "fetchable_breakdown": {
       "counts": {
         "stockanalysis_short_rows": 8
@@ -48,7 +48,7 @@
       }
     },
     "terminal_limited_breakdown": {
-      "data_supply_unavailable": 9,
+      "data_supply_unavailable": 27,
       "provider_history_start_limited": 8,
       "provider_rejected_non_etf": 47,
       "stockanalysis_recent_short_rows": 6,
@@ -68,21 +68,21 @@
     "caveat": "Only immediately fetchable daily 1Y gaps block the full scored-ETF diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves."
   },
   "generated_count_checks": {
-    "summary_rows": 4515,
+    "summary_rows": 4527,
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
     "coverage_index_fetchable_daily_1y_gap": 8,
     "coverage_index_inception_limited_daily_1y_gap": 730,
-    "coverage_index_terminal_limited_daily_1y_gap": 71,
+    "coverage_index_terminal_limited_daily_1y_gap": 89,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
-    "history_gap_report_scored_etf_count": 4515,
+    "history_gap_report_scored_etf_count": 4527,
     "history_gap_report_fetchable_daily_1y_gap": 8,
     "history_gap_report_inception_limited_daily_1y_gap": 730,
-    "history_gap_report_terminal_limited_daily_1y_gap": 71
+    "history_gap_report_terminal_limited_daily_1y_gap": 89
   },
   "samples": {
     "fetchable": [
@@ -299,7 +299,7 @@
         "effective_start_source": null
       },
       {
-        "ticker": "CLNK",
+        "ticker": "CBIL",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null,
@@ -307,7 +307,7 @@
         "effective_start_source": null
       },
       {
-        "ticker": "CLOO",
+        "ticker": "CBOX",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null,
@@ -365,7 +365,7 @@
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 1,
     "default_batch_size": 120,
-    "yf_local_crosscheck_gap_count": 4140,
+    "yf_local_crosscheck_gap_count": 4146,
     "yf_local_crosscheck_matches": false,
     "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
