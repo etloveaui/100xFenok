@@ -26,6 +26,9 @@ const LIVE_LANE_IDS = Object.freeze([
   "yahoo_ticker_macro",
   "sentiment",
   "slickcharts",
+  "edgar_filings",
+  "finra_short_volume",
+  "occ_options_volume",
 ]);
 const LIVE_LANE_ID_SET = new Set(LIVE_LANE_IDS);
 

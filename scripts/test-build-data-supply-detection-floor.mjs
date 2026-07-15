@@ -451,6 +451,9 @@ function runConfigAndFixtureChecks() {
     "yahoo_ticker_macro",
     "sentiment",
     "slickcharts",
+    "edgar_filings",
+    "finra_short_volume",
+    "occ_options_volume",
   ], "only attempt-proven lanes are live");
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);
@@ -521,7 +524,7 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].enforcement = "invalid"; },
     (value) => { value.lanes[0].kpi_required = false; },
     (value) => { value.lanes[0].enforcement = "shadow"; value.lanes[0].kpi_required = false; },
-    (value) => { const lane = value.lanes.find((item) => item.id === "edgar_filings"); lane.enforcement = "live"; lane.kpi_required = true; },
+    (value) => { const lane = value.lanes.find((item) => item.id === "sec_13f"); lane.enforcement = "live"; lane.kpi_required = true; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").enforcement = "shadow"; },
     (value) => { value.lanes.find((item) => item.id === "treasury_tga").kpi_required = false; },
   ];
