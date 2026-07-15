@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-15T10:41:27Z",
+  "generated_at": "2026-07-15T13:24:22Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -28,12 +28,12 @@
     "etf_detail_primary_pct": 86.24,
     "etfs_requested": 0,
     "stocks_requested": 1,
-    "surfaces_requested": 1,
+    "surfaces_requested": 0,
     "surfaces_ok": 0,
-    "surfaces_failed": 1,
-    "financials_requested": 0,
+    "surfaces_failed": 0,
+    "financials_requested": 1,
     "financials_ok": 0,
-    "financials_failed": 0,
+    "financials_failed": 1,
     "ok": 0,
     "failed": 1,
     "hard_failed": 1,
@@ -55,13 +55,13 @@
       "status": "error",
       "provider": null,
       "path": null,
-      "latency_ms": 7,
+      "latency_ms": 9,
       "error": "RuntimeError: controlled failure injection for stock:AAPL"
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-15T10:41:27Z",
+    "generated_at": "2026-07-15T13:24:22Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5480,
@@ -103,20 +103,7 @@
       "provider_coverage_gaps": 0
     }
   },
-  "surface_results": [
-    {
-      "surface": "actions_recent",
-      "group": "corporate_actions",
-      "format": "svelte_devalue",
-      "status": "error",
-      "path": null,
-      "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
-      "tables": 0,
-      "rows": 0,
-      "latency_ms": 21,
-      "error": "RuntimeError: controlled failure injection for surface:actions_recent"
-    }
-  ],
+  "surface_results": null,
   "incremental_etf_backfill": null,
   "pending_ledger": null,
   "missing_detail_reconcile": null,
@@ -124,10 +111,10 @@
     "artifact_id": "stockanalysis_recovery_state",
     "counts": {
       "tracked": 117,
-      "fresh": 115,
-      "lkg": 2,
+      "fresh": 114,
+      "lkg": 3,
       "unavailable": 0,
-      "retry": 2,
+      "retry": 3,
       "failed": 2,
       "recovered": 0
     },
@@ -140,7 +127,7 @@
     "recovered_tickers": [],
     "recovered_surfaces": [],
     "current_attempt": {
-      "run_id": "29408382764",
+      "run_id": "29418957357",
       "run_attempt": 1,
       "event_name": "workflow_dispatch",
       "schedule": "",
@@ -158,9 +145,9 @@
           "data_loss": false
         },
         {
-          "artifact_kind": "surface",
-          "entity": "actions_recent",
-          "error": "RuntimeError: controlled failure injection for surface:actions_recent",
+          "artifact_kind": "financial",
+          "entity": "AAPL",
+          "error": "RuntimeError: controlled failure injection for financial:AAPL",
           "controlled": true,
           "data_loss": false
         }

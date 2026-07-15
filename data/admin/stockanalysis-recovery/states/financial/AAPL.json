@@ -2,14 +2,53 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "financial",
   "entity": "AAPL",
-  "attempts": [],
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "attempts": [
+    {
+      "run_id": "29418957357",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-07-15T13:24:13Z",
+      "outcome": "failed",
+      "controlled": true,
+      "error": "RuntimeError: controlled failure injection for financial:AAPL"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/stockanalysis/financials/AAPL.json",
+    "path": "data/admin/stockanalysis-recovery/lkg/financial/AAPL.json",
     "payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
     "source_as_of": "2026-03-28",
     "fetched_at": "2026-07-08T22:45:24Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-15T13:24:13Z",
+  "last_attempt": {
+    "run_id": "29418957357",
+    "run_attempt": 1,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-07-15T13:24:13Z",
+    "outcome": "failed",
+    "controlled": true,
+    "error": "RuntimeError: controlled failure injection for financial:AAPL"
+  },
+  "latest_failure": {
+    "run_id": "29418957357",
+    "run_attempt": 1,
+    "observed_at": "2026-07-15T13:24:13Z",
+    "error": "RuntimeError: controlled failure injection for financial:AAPL",
+    "controlled": true,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
+    "data_loss": false
+  },
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/financial/AAPL.json",
+    "payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
+    "source_as_of": "2026-03-28",
+    "fetched_at": "2026-07-08T22:45:24Z"
+  }
 }
