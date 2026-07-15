@@ -178,7 +178,7 @@ export function worstRequestResult(rows) {
   }, null);
 }
 
-export function classifyHttpResponse(response, { authRequired = false } = {}) {
+export function classifyHttpResponse(response, { authRequired = false, decodeBody = JSON.parse } = {}) {
   const statusCode = response?.statusCode;
   if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599) {
     return attemptResult("unexpected_error", threwTuple("unexpected"));
@@ -199,7 +199,7 @@ export function classifyHttpResponse(response, { authRequired = false } = {}) {
 
   let document;
   try {
-    document = JSON.parse(String(response.body ?? ""));
+    document = decodeBody(String(response.body ?? ""));
   } catch {
     return attemptResult("decode_error", returnedTuple({
       httpStatus: statusCode,
@@ -218,7 +218,9 @@ export function classifyHttpResponse(response, { authRequired = false } = {}) {
 }
 
 export function transportError(error) {
-  return typeof error?.code === "string" || error?.name === "AbortError";
+  return typeof error?.code === "string"
+    || typeof error?.cause?.code === "string"
+    || error?.name === "AbortError";
 }
 
 function pointerValue(document, pointer) {
@@ -247,8 +249,8 @@ export function evaluateEndpointAssertions(laneId, document) {
   }));
 }
 
-export function classifyEndpointResponse(response, { laneId, authRequired = false } = {}) {
-  const classified = classifyHttpResponse(response, { authRequired });
+export function classifyEndpointResponse(response, { laneId, authRequired = false, decodeBody = JSON.parse } = {}) {
+  const classified = classifyHttpResponse(response, { authRequired, decodeBody });
   if (classified.status !== "ready") return classified;
   if (classified.attempt.payload === "empty") {
     return attemptResult("empty_payload", returnedTuple({
@@ -334,6 +336,52 @@ export function writeAttemptShard({ laneId, attemptShardPath, observedAt, attemp
   if (!validObservedAt(observedAt)) throw new Error("observedAt must be RFC3339 UTC");
   if (!/^[a-z][a-z0-9_-]{0,95}$/.test(attemptId)) throw new Error("attemptId is invalid");
   const row = buildAttemptRow({ laneId, memberId: null, attemptId, observedAt, tuple: result.attempt });
+  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId, row }));
+  return row;
+}
+
+function tupleFromAttemptRow(row) {
+  return {
+    execution: row.execution,
+    exception_kind: row.exception_kind,
+    http_status: row.http_status,
+    auth: row.auth,
+    rate_limited: row.rate_limited,
+    decode: row.decode,
+    payload: row.payload,
+    assertions: structuredClone(row.assertions),
+  };
+}
+
+export function writeMergedAttemptShard({
+  laneId,
+  attemptShardPath,
+  observedAt,
+  attemptId,
+  result,
+}) {
+  if (!validObservedAt(observedAt)) throw new Error("observedAt must be RFC3339 UTC");
+  if (!/^[a-z][a-z0-9_-]{0,95}$/.test(attemptId)) throw new Error("attemptId is invalid");
+  let tuple = result.attempt;
+  if (fs.existsSync(attemptShardPath)) {
+    const base = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+    validateAttemptShard(base, laneId);
+    const current = base.attempts[0];
+    if (current.attempt_id === attemptId) {
+      const currentTuple = tupleFromAttemptRow(current);
+      if (currentTuple.execution === "unobserved") {
+        // The first batch may have had no contract-bearing request (for
+        // example an empty tail or an expected provider-unavailable response).
+        // A later observed tuple becomes the run evidence.
+      } else if (tuple.execution === "unobserved") {
+        // A neutral batch cannot erase evidence already observed in this run.
+        tuple = currentTuple;
+      } else {
+        tuple = foldWorstTuples([currentTuple, tuple]);
+      }
+    }
+  }
+  const row = buildAttemptRow({ laneId, memberId: null, attemptId, observedAt, tuple });
   writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId, row }));
   return row;
 }

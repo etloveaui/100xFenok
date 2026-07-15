@@ -8,6 +8,17 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  attemptResult,
+  classifyEndpointResponse,
+  defaultAttemptId,
+  returnedTuple,
+  threwTuple,
+  transportError,
+  unobservedTuple,
+  worstRequestResult,
+  writeMergedAttemptShard,
+} from "./lib/data-supply-attempt-shard.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -389,7 +400,7 @@ function occQueryUrl({ ymd, ticker, side }) {
   return `${OCC_ENDPOINT}?${params.toString()}`;
 }
 
-function fetchText(url, { timeoutMs = 30000 } = {}) {
+function fetchResponse(url, { timeoutMs = 30000 } = {}) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, { headers: { "User-Agent": "FenokResearch/1.0" } }, (res) => {
       let data = "";
@@ -398,11 +409,7 @@ function fetchText(url, { timeoutMs = 30000 } = {}) {
         data += chunk;
       });
       res.on("end", () => {
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 160)}`));
-          return;
-        }
-        resolve(data);
+        resolve({ statusCode: res.statusCode ?? 0, body: data });
       });
     });
     req.on("error", reject);
@@ -455,6 +462,68 @@ function parseOccCsv(text) {
   });
 }
 
+function classifyOccEndpointResponse(response) {
+  if (response?.statusCode === 200 && /^No record\(s\) found\s*$/i.test(String(response.body ?? "").trim())) {
+    return {
+      ...attemptResult("empty_payload", returnedTuple({
+        httpStatus: 200,
+        decode: "ok",
+        payload: "empty",
+      })),
+      expectedUnavailable: true,
+      expectedKind: "no_record",
+    };
+  }
+  const classified = classifyEndpointResponse(response, {
+    laneId: "occ_options_volume",
+    decodeBody: (body) => ({ rows: parseOccCsv(body) }),
+  });
+  if (response?.statusCode === 200 && /^Report date cannot be greater than /i.test(String(response.body ?? "").trim())) {
+    return {
+      ...classified,
+      expectedUnavailable: true,
+      expectedKind: "date_not_available",
+    };
+  }
+  return {
+    ...classified,
+    expectedUnavailable: false,
+    expectedKind: null,
+  };
+}
+
+function reduceOccEndpointResults(results) {
+  if (!Array.isArray(results) || results.length === 0) {
+    return attemptResult("workflow_unobserved", unobservedTuple());
+  }
+  const ready = results.filter((result) => result.status === "ready");
+  const actionable = results.filter((result) => result.expectedUnavailable !== true);
+  if (actionable.length === 0) {
+    // Exact provider no-record/future-date responses are neutral for a
+    // multi-batch run. The canonical shard retains another batch's observed
+    // tuple, while an all-neutral run remains explicitly unobserved.
+    return attemptResult("workflow_unobserved", unobservedTuple());
+  }
+  if (ready.length > 0 && actionable.every((result) => result.status === "ready")) {
+    return worstRequestResult(ready);
+  }
+  return worstRequestResult(actionable);
+}
+
+function thrownEndpointResult(error) {
+  const exceptionKind = transportError(error) ? "transport" : "unexpected";
+  return attemptResult(
+    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+    threwTuple(exceptionKind),
+  );
+}
+
+function stableAttemptId(prefix, observedAt) {
+  const runId = String(process.env.GITHUB_RUN_ID || "").trim();
+  const runAttempt = String(process.env.GITHUB_RUN_ATTEMPT || "1").trim();
+  return runId ? `${prefix}-${runId}-${runAttempt}` : defaultAttemptId(prefix, observedAt);
+}
+
 function classifyOccError(error) {
   const message = String(error?.message ?? error ?? "");
   if (/No record\(s\) found/i.test(message)) return "no_record";
@@ -462,14 +531,15 @@ function classifyOccError(error) {
   return "failed";
 }
 
-async function loadOccCsv({ ymd, ticker, side, noFetch }) {
-  const cachePath = path.join(OCC_CACHE_DIR, ymd, `${ticker}_${side}.csv`);
+async function loadOccCsv({ ymd, ticker, side, noFetch, request, cacheDir }) {
+  const cachePath = path.join(cacheDir, ymd, `${ticker}_${side}.csv`);
   if (fs.existsSync(cachePath)) {
     return {
       text: fs.readFileSync(cachePath, "utf8"),
       source_url: occQueryUrl({ ymd, ticker, side }),
       cache_path: path.relative(repoRoot, cachePath),
       cache_hit: true,
+      response: null,
     };
   }
   if (noFetch) {
@@ -479,23 +549,29 @@ async function loadOccCsv({ ymd, ticker, side, noFetch }) {
       cache_path: path.relative(repoRoot, cachePath),
       cache_hit: false,
       missing_no_fetch: true,
+      response: null,
     };
   }
   const url = occQueryUrl({ ymd, ticker, side });
-  const text = await fetchText(url);
-  ensureDir(cachePath);
-  fs.writeFileSync(cachePath, text, "utf8");
+  const response = await request(url);
+  const text = String(response.body ?? "");
+  if (response.statusCode >= 200 && response.statusCode < 300
+    && !/^Report date cannot be greater than /i.test(text.trim())) {
+    ensureDir(cachePath);
+    fs.writeFileSync(cachePath, text, "utf8");
+  }
   return {
     text,
     source_url: url,
     cache_path: path.relative(repoRoot, cachePath),
     cache_hit: false,
+    response,
   };
 }
 
-async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch }) {
+async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, cacheDir }) {
   try {
-    const load = await loadOccCsv({ ymd, ticker, side, noFetch });
+    const load = await loadOccCsv({ ymd, ticker, side, noFetch, request, cacheDir });
     const base = {
       ticker,
       source_date: ymd,
@@ -512,6 +588,25 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch }) {
           status: "cache_missing_no_fetch",
           error_class: "cache_missing_no_fetch",
         },
+        endpointResult: null,
+      };
+    }
+    const endpointResult = load.response ? classifyOccEndpointResponse(load.response) : null;
+    if (endpointResult && endpointResult.status !== "ready") {
+      const status = endpointResult.expectedKind === "no_record"
+        ? "no_record"
+        : ["rate_limited", "http_error", "transport_error"].includes(endpointResult.reason)
+          ? "transient_failed"
+          : "failed";
+      return {
+        load,
+        evidence: {
+          ...base,
+          status,
+          error_class: status,
+          error: endpointResult.reason,
+        },
+        endpointResult,
       };
     }
     try {
@@ -523,6 +618,7 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch }) {
           status: "loaded",
           error_class: null,
         },
+        endpointResult,
       };
     } catch (error) {
       return {
@@ -533,9 +629,11 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch }) {
           error_class: classifyOccError(error),
           error: String(error.message ?? error).slice(0, 240),
         },
+        endpointResult,
       };
     }
   } catch (error) {
+    const endpointResult = thrownEndpointResult(error);
     return {
       load: null,
       evidence: {
@@ -549,6 +647,7 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch }) {
         error_class: classifyOccError(error),
         error: String(error.message ?? error).slice(0, 240),
       },
+      endpointResult,
     };
   }
 }
@@ -628,15 +727,18 @@ function buildTickerRow({ ticker, ymd, callLoad, putLoad, callEvidence = { statu
   };
 }
 
-async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }) {
+async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold, request, cacheDir }) {
   const rows = [];
   const attempts = [];
   const sideAttempts = [];
   const tickerAvailability = [];
+  const endpointResults = [];
   for (const ticker of tickers) {
-    const call = await loadOccSideWithEvidence({ ymd, ticker, side: "C", noFetch });
+    const call = await loadOccSideWithEvidence({ ymd, ticker, side: "C", noFetch, request, cacheDir });
+    if (call.endpointResult) endpointResults.push(call.endpointResult);
     if (sleepMs > 0 && call.load && !call.load.cache_hit) await sleep(sleepMs);
-    const put = await loadOccSideWithEvidence({ ymd, ticker, side: "P", noFetch });
+    const put = await loadOccSideWithEvidence({ ymd, ticker, side: "P", noFetch, request, cacheDir });
+    if (put.endpointResult) endpointResults.push(put.endpointResult);
     if (sleepMs > 0 && put.load && !put.load.cache_hit) await sleep(sleepMs);
     sideAttempts.push(call.evidence, put.evidence);
     const summary = summarizeTickerAvailability({ ticker, ymd, sideAttempts: [call.evidence, put.evidence] });
@@ -668,7 +770,14 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }
         break;
     }
   }
-  return { ymd, rows, attempts, side_attempts: sideAttempts, ticker_availability: tickerAvailability };
+  return {
+    ymd,
+    rows,
+    attempts,
+    side_attempts: sideAttempts,
+    ticker_availability: tickerAvailability,
+    endpoint_results: endpointResults,
+  };
 }
 
 function summarizeTickerAvailability({ ticker, ymd, sideAttempts }) {
@@ -977,7 +1086,13 @@ function mergeHistory(snapshot) {
   };
 }
 
-async function build(args) {
+async function build(args, {
+  request = fetchResponse,
+  cacheDir = OCC_CACHE_DIR,
+  attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/occ_options_volume.json"),
+  observedAt = new Date().toISOString(),
+  attemptId = stableAttemptId("occ-options-volume", observedAt),
+} = {}) {
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
   const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
@@ -1002,7 +1117,7 @@ async function build(args) {
         max_requests: args.maxRequests || null,
         status: args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests ? "blocked_over_budget" : "within_budget",
       },
-      raw_cache_dir: path.relative(repoRoot, OCC_CACHE_DIR),
+      raw_cache_dir: path.relative(repoRoot, cacheDir),
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
       availability_file: `data/${AVAILABILITY_FILE}`,
@@ -1017,21 +1132,26 @@ async function build(args) {
     };
   }
 
-  if (!args.noFetch && args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests) {
-    throw new Error(`OCC request budget exceeded: estimated ${estimatedMaxLiveRequests}, max ${args.maxRequests}. Use --plan-only, smaller --batch-size, or explicit approval.`);
-  }
+  const endpointResults = [];
+  try {
+    if (!args.noFetch && args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests) {
+      throw new Error(`OCC request budget exceeded: estimated ${estimatedMaxLiveRequests}, max ${args.maxRequests}. Use --plan-only, smaller --batch-size, or explicit approval.`);
+    }
 
-  const dateAttempts = [];
-  for (const ymd of dates) {
-    const result = await loadRowsForDate({
+    const dateAttempts = [];
+    for (const ymd of dates) {
+      const result = await loadRowsForDate({
       ymd,
       tickers,
       noFetch: args.noFetch,
       sleepMs: args.sleepMs,
       failThreshold: args.failThreshold,
-    });
-    dateAttempts.push(summarizeDateAttempt(result));
-    const availabilitySnapshot = buildAvailabilitySnapshot({
+      request,
+      cacheDir,
+      });
+      endpointResults.push(...result.endpoint_results);
+      dateAttempts.push(summarizeDateAttempt(result));
+      const availabilitySnapshot = buildAvailabilitySnapshot({
       ymd,
       generatedAt: isoNow(),
       universe,
@@ -1042,13 +1162,13 @@ async function build(args) {
         max_requests: args.maxRequests || null,
       },
     });
-    const availability = mergeAvailabilitySnapshot(readJson(AVAILABILITY_FILE, null), availabilitySnapshot);
-    if (!args.noWrite && (result.side_attempts.length > 0 || result.ticker_availability.length > 0)) {
-      writeJson(AVAILABILITY_FILE, availability);
-    }
-    const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
-    if (usableRows.length === 0) {
-      if (args.maxWalkbackDays === 0 || ymd === dates.at(-1)) {
+      const availability = mergeAvailabilitySnapshot(readJson(AVAILABILITY_FILE, null), availabilitySnapshot);
+      if (!args.noWrite && (result.side_attempts.length > 0 || result.ticker_availability.length > 0)) {
+        writeJson(AVAILABILITY_FILE, availability);
+      }
+      const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
+      if (usableRows.length === 0) {
+        if (args.maxWalkbackDays === 0 || ymd === dates.at(-1)) {
         const batchAttempt = buildOccBatchAttempt({
           attemptRef: process.env.GITHUB_RUN_ID || "local",
           attemptNumber: process.env.GITHUB_RUN_ATTEMPT || 1,
@@ -1072,7 +1192,7 @@ async function build(args) {
           wrote = true;
         }
         if (currentAttempt.status === "unavailable") console.log(`::warning:: ${currentAttempt.message}`);
-        return {
+          return {
           output_file: `data/${OUTPUT_FILE}`,
           history_file: `data/${HISTORY_FILE}`,
           availability_file: `data/${AVAILABILITY_FILE}`,
@@ -1096,11 +1216,11 @@ async function build(args) {
               return acc;
             }, {}),
           },
-        };
+          };
+        }
+        continue;
       }
-      continue;
-    }
-    const snapshot = buildSnapshot({
+      const snapshot = buildSnapshot({
       rows: result.rows,
       ymd,
       generatedAt: isoNow(),
@@ -1108,7 +1228,7 @@ async function build(args) {
       maxWalkbackDays: args.maxWalkbackDays,
       sleepMs: args.sleepMs,
     });
-    const batchAttempt = buildOccBatchAttempt({
+      const batchAttempt = buildOccBatchAttempt({
       attemptRef: process.env.GITHUB_RUN_ID || "local",
       attemptNumber: process.env.GITHUB_RUN_ATTEMPT || 1,
       batchIndex: args.batchIndex,
@@ -1117,23 +1237,23 @@ async function build(args) {
       servedYmd: ymd,
       dateAttempts,
     });
-    const previousOutput = readJson(OUTPUT_FILE, null);
-    snapshot.current_attempt = mergeOccCurrentAttempt(previousOutput?.current_attempt, batchAttempt);
-    const outputSnapshot = mergeOutputSnapshot(previousOutput, snapshot);
-    const availabilityWithAttempt = {
+      const previousOutput = readJson(OUTPUT_FILE, null);
+      snapshot.current_attempt = mergeOccCurrentAttempt(previousOutput?.current_attempt, batchAttempt);
+      const outputSnapshot = mergeOutputSnapshot(previousOutput, snapshot);
+      const availabilityWithAttempt = {
       ...availability,
       current_attempt: mergeOccCurrentAttempt(availability.current_attempt, batchAttempt),
     };
-    const history = mergeHistory(outputSnapshot);
-    if (!args.noWrite) {
-      writeJson(OUTPUT_FILE, outputSnapshot);
-      writeJson(HISTORY_FILE, history);
-      writeJson(AVAILABILITY_FILE, availabilityWithAttempt);
-    }
-    if (outputSnapshot.current_attempt.status === "degraded_walkback") {
-      console.log(`::warning:: ${outputSnapshot.current_attempt.message}`);
-    }
-    return {
+      const history = mergeHistory(outputSnapshot);
+      if (!args.noWrite) {
+        writeJson(OUTPUT_FILE, outputSnapshot);
+        writeJson(HISTORY_FILE, history);
+        writeJson(AVAILABILITY_FILE, availabilityWithAttempt);
+      }
+      if (outputSnapshot.current_attempt.status === "degraded_walkback") {
+        console.log(`::warning:: ${outputSnapshot.current_attempt.message}`);
+      }
+      return {
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
       availability_file: `data/${AVAILABILITY_FILE}`,
@@ -1151,9 +1271,18 @@ async function build(args) {
       date_attempts: dateAttempts,
       current_attempt: outputSnapshot.current_attempt,
       reference_rows: outputSnapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
-    };
+      };
+    }
+    throw new Error(`No OCC option volume rows available in requested window: ${JSON.stringify(dateAttempts)}`);
+  } finally {
+    writeMergedAttemptShard({
+      laneId: "occ_options_volume",
+      attemptShardPath,
+      observedAt,
+      attemptId,
+      result: reduceOccEndpointResults(endpointResults),
+    });
   }
-  throw new Error(`No OCC option volume rows available in requested window: ${JSON.stringify(dateAttempts)}`);
 }
 
 async function main() {
@@ -1177,6 +1306,7 @@ export {
   buildAvailabilitySnapshot,
   buildRowsForTest,
   candidateDates,
+  classifyOccEndpointResponse,
   directionFromOptionsVolume,
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
@@ -1189,6 +1319,7 @@ export {
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   parseArgs,
+  reduceOccEndpointResults,
   scoreOptionsVolume,
   summarizeTickerAvailability,
   summarizeDateAttempt,

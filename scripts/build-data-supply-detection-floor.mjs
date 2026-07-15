@@ -884,7 +884,10 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
         if (!new Set(["transport", "unexpected"]).has(row.exception_kind) || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} threw tuple is contradictory`);
       } else {
         if (row.exception_kind !== null || !Number.isInteger(row.http_status) || row.http_status < 100 || row.http_status > 599) fail("schema_error", `${key} returned tuple is invalid`);
-        const authFailure = row.http_status === 401 || row.http_status === 403;
+        const finraMissingResponse = row.lane_id === "finra_short_volume"
+          && row.http_status === 403
+          && row.auth === "not_applicable";
+        const authFailure = row.http_status === 401 || (row.http_status === 403 && !finraMissingResponse);
         const rateFailure = row.http_status === 429;
         const otherHttpFailure = (row.http_status < 200 || row.http_status >= 300) && !authFailure && !rateFailure;
         if (authFailure) {
@@ -954,7 +957,9 @@ export function loadAttemptShards({ shardRoot, config = DATA_SUPPLY_DETECTION_CO
 export function classifyAttempt(row) {
   if (!row || row.execution === "unobserved") return reasonResult("workflow_unobserved", { observed_at: null });
   if (row.execution === "threw") return reasonResult(row.exception_kind === "transport" ? "transport_error" : "unexpected_error", { observed_at: row.observed_at });
-  if (row.http_status === 401 || row.http_status === 403) return reasonResult("auth_error", { observed_at: row.observed_at });
+  if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) {
+    return reasonResult("auth_error", { observed_at: row.observed_at });
+  }
   if (row.http_status === 429) return reasonResult("rate_limited", { observed_at: row.observed_at });
   if (row.http_status < 200 || row.http_status >= 300) return reasonResult("http_error", { observed_at: row.observed_at });
   if (row.decode === "error") return reasonResult("decode_error", { observed_at: row.observed_at });

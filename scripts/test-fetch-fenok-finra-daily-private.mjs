@@ -8,6 +8,7 @@ import {
   buildManifest,
   buildPayload,
   cachePathForDate,
+  classifyFinraEndpointResponse,
   datasetConfig,
   endpointForDate,
   expandDateRange,
@@ -15,6 +16,7 @@ import {
   normalizeDate,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
+  reduceFinraEndpointResults,
   run,
 } from "./fetch-fenok-finra-daily-private.mjs";
 
@@ -47,6 +49,27 @@ assert.equal(rows[0].symbol, "BRK.B");
 assert.equal(rows[1].symbol, "NVDA");
 assert.equal(rows[1].short_volume_ratio, 0.123);
 assert.equal(rows[1].short_exempt_ratio, 0.004);
+
+const readyEndpoint = classifyFinraEndpointResponse({ statusCode: 200, body: sample }, "20260626");
+assert.equal(readyEndpoint.status, "ready");
+assert.deepEqual(readyEndpoint.attempt.assertions, [{ id: "regsho_rows", passed: true }]);
+const malformedEndpoint = classifyFinraEndpointResponse({ statusCode: 200, body: "bad header" }, "20260626");
+assert.equal(malformedEndpoint.reason, "decode_error");
+const missingEndpoint = classifyFinraEndpointResponse({ statusCode: 403, body: "<Error>AccessDenied</Error>" }, "20260703");
+assert.equal(missingEndpoint.expectedMissing, true);
+assert.equal(reduceFinraEndpointResults([missingEndpoint, readyEndpoint]).status, "ready");
+assert.equal(reduceFinraEndpointResults([missingEndpoint]).attempt.http_status, 403);
+const latestDueMissingEndpoint = classifyFinraEndpointResponse(
+  { statusCode: 403, body: "<Error>AccessDenied</Error>" },
+  "20260714",
+);
+assert.equal(latestDueMissingEndpoint.expectedMissing, false, "a trading-day 403 is actionable, not a holiday");
+assert.equal(latestDueMissingEndpoint.attempt.auth, "not_applicable");
+assert.equal(
+  reduceFinraEndpointResults([readyEndpoint, latestDueMissingEndpoint]).attempt.http_status,
+  403,
+  "an older ready file cannot hide the latest due trading-day miss",
+);
 
 const payload = buildPayload({
   yyyymmdd: "20260626",
@@ -87,6 +110,47 @@ assert.equal(manifest.raw_public, false);
 assert.equal(manifest.collections.length, 1);
 
 {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-emitter-test-"));
+  const attemptShardPath = path.join(tmpDir, "finra_short_volume.json");
+  const result = await run([
+    "--dataset",
+    "regsho-daily",
+    "--date",
+    "2026-06-26",
+    "--no-write",
+  ], {
+    request: async () => ({ statusCode: 200, body: sample }),
+    attemptShardPath,
+    observedAt: "2026-07-15T03:00:00Z",
+    attemptId: "finra-short-volume-test-1",
+  });
+  assert.equal(result.row_count, 2);
+  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(shard.lane_id, "finra_short_volume");
+  assert.deepEqual(shard.attempts[0].assertions, [{ id: "regsho_rows", passed: true }]);
+}
+
+{
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-missing-emitter-test-"));
+  const attemptShardPath = path.join(tmpDir, "finra_short_volume.json");
+  await assert.rejects(() => run([
+    "--dataset",
+    "regsho-daily",
+    "--date",
+    "2026-07-03",
+    "--no-write",
+  ], {
+    request: async () => ({ statusCode: 403, body: "<Error>AccessDenied</Error>" }),
+    attemptShardPath,
+    observedAt: "2026-07-15T03:05:00Z",
+    attemptId: "finra-short-volume-test-missing",
+  }), /all files missing/);
+  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].http_status, 403);
+  assert.equal(shard.attempts[0].auth, "not_applicable", "FINRA not-published 403 is not mislabeled as auth rejection");
+}
+
+{
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-test-"));
   const fixture = path.join(tmpDir, "CNMSshvol20260626.txt");
   fs.writeFileSync(fixture, sample, "utf8");
@@ -98,7 +162,11 @@ assert.equal(manifest.collections.length, 1);
     "--input-file",
     fixture,
     "--no-write",
-  ]);
+  ], {
+    attemptShardPath: path.join(tmpDir, "input-finra-attempt.json"),
+    observedAt: "2026-06-28T00:00:00Z",
+    attemptId: "finra-input-test-1",
+  });
   assert.equal(result.dataset, "regsho-daily");
   assert.equal(result.wrote, false);
   assert.equal(result.manifest_file, null);

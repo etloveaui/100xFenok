@@ -1245,7 +1245,7 @@ function runCliReproduction(artifactRoot) {
     const classifyAttempt = (row) => {
       if (!row || row.execution === "unobserved") return "workflow_unobserved";
       if (row.execution === "threw") return row.exception_kind === "transport" ? "transport_error" : "unexpected_error";
-      if (row.http_status === 401 || row.http_status === 403) return "auth_error";
+      if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) return "auth_error";
       if (row.http_status === 429) return "rate_limited";
       if (row.http_status < 200 || row.http_status >= 300) return "http_error";
       if (row.decode === "error") return "decode_error";

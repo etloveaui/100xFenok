@@ -11,6 +11,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  attemptResult,
+  classifyEndpointResponse,
+  defaultAttemptId,
+  returnedTuple,
+  threwTuple,
+  transportError,
+  unobservedTuple,
+  worstRequestResult,
+  writeAttemptShard,
+} from "./lib/data-supply-attempt-shard.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -22,6 +33,12 @@ const DEFAULT_DATASET = "regsho-daily";
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_BACKOFF_MS = 2000;
 const DEFAULT_SLEEP_MS = 0;
+const DETECTION_CALENDARS = JSON.parse(fs.readFileSync(
+  path.join(__dirname, "lib", "data-supply-detection-calendars.json"),
+  "utf8",
+));
+const US_TRADING_CALENDAR = DETECTION_CALENDARS.calendars.find((calendar) => calendar.id === "us_trading");
+const US_TRADING_HOLIDAYS = new Set(US_TRADING_CALENDAR?.holidays ?? []);
 const FINRA_AVAILABILITY_POLICY = {
   source_id: "finra_daily_short_sale_volume_files",
   availability_status: "official_release_by_time_verified",
@@ -135,6 +152,13 @@ function latestWeekdayYmd(referenceDate = new Date()) {
     d.setUTCDate(d.getUTCDate() - 1);
   }
   return ymdFromDate(d);
+}
+
+function isUsTradingDate(yyyymmdd) {
+  const iso = isoFromYmd(yyyymmdd);
+  const date = new Date(`${iso}T00:00:00Z`);
+  const day = date.getUTCDay();
+  return day !== 0 && day !== 6 && !US_TRADING_HOLIDAYS.has(iso);
 }
 
 function expandDateRange({ date, from, to }) {
@@ -258,14 +282,9 @@ function buildPayload({ yyyymmdd, sourceUrl, fetchedAt, rows }) {
   };
 }
 
-async function fetchText(url) {
+async function fetchResponse(url) {
   const response = await fetch(url);
-  if (!response.ok) {
-    const error = new Error(`FINRA fetch failed: ${response.status} ${response.statusText}`);
-    error.httpStatus = response.status;
-    throw error;
-  }
-  return response.text();
+  return { statusCode: response.status, body: await response.text() };
 }
 
 function isMissingFileError(err) {
@@ -278,19 +297,70 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchTextWithRetry(url, { retries = DEFAULT_RETRIES, retryBackoffMs = DEFAULT_RETRY_BACKOFF_MS } = {}) {
+async function fetchResponseWithRetry(url, {
+  retries = DEFAULT_RETRIES,
+  retryBackoffMs = DEFAULT_RETRY_BACKOFF_MS,
+  request = fetchResponse,
+} = {}) {
   let lastError = null;
+  let lastResponse = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return await fetchText(url);
+      lastResponse = await request(url);
+      if ((lastResponse.statusCode >= 200 && lastResponse.statusCode < 300) || [403, 404].includes(lastResponse.statusCode)) {
+        return lastResponse;
+      }
+      lastError = null;
     } catch (err) {
       lastError = err;
-      if (isMissingFileError(err)) break;
-      if (attempt >= retries) break;
-      if (retryBackoffMs > 0) await sleep(retryBackoffMs);
     }
+    if (attempt >= retries) break;
+    if (retryBackoffMs > 0) await sleep(retryBackoffMs);
   }
-  throw lastError;
+  if (lastError) throw lastError;
+  return lastResponse;
+}
+
+function thrownEndpointResult(error) {
+  const exceptionKind = transportError(error) ? "transport" : "unexpected";
+  return attemptResult(
+    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+    threwTuple(exceptionKind),
+  );
+}
+
+function stableAttemptId(prefix, observedAt) {
+  const runId = String(process.env.GITHUB_RUN_ID || "").trim();
+  const runAttempt = String(process.env.GITHUB_RUN_ATTEMPT || "1").trim();
+  return runId ? `${prefix}-${runId}-${runAttempt}` : defaultAttemptId(prefix, observedAt);
+}
+
+function classifyFinraEndpointResponse(response, expectedDate = "") {
+  if ([403, 404].includes(response?.statusCode)) {
+    return {
+      ...attemptResult("http_error", returnedTuple({ httpStatus: response.statusCode })),
+      expectedMissing: Boolean(expectedDate) && !isUsTradingDate(expectedDate),
+    };
+  }
+  return {
+    ...classifyEndpointResponse(response, {
+      laneId: "finra_short_volume",
+      decodeBody: (body) => ({ rows: parseFinraDailyShortVolume(body, expectedDate) }),
+    }),
+    expectedMissing: false,
+  };
+}
+
+function reduceFinraEndpointResults(results) {
+  if (!Array.isArray(results) || results.length === 0) {
+    return attemptResult("workflow_unobserved", unobservedTuple());
+  }
+  const ready = results.filter((result) => result.status === "ready");
+  const actionable = results.filter((result) => result.expectedMissing !== true);
+  if (ready.length > 0 && actionable.every((result) => result.status === "ready")) {
+    return worstRequestResult(ready);
+  }
+  return worstRequestResult(actionable.length > 0 ? actionable : results);
 }
 
 function cachePathForDate(yyyymmdd) {
@@ -370,7 +440,7 @@ function manifestEntry({ payload, outputAbs, rawTextAbs, sourceUrl, sourceKind }
   };
 }
 
-async function loadTextForDate({ yyyymmdd, inputFile, noFetch, retries, retryBackoffMs }) {
+async function loadTextForDate({ yyyymmdd, inputFile, noFetch, retries, retryBackoffMs, request }) {
   const rawTextAbs = rawTextPathForDate(yyyymmdd);
   if (inputFile) {
     const abs = path.resolve(inputFile);
@@ -380,6 +450,7 @@ async function loadTextForDate({ yyyymmdd, inputFile, noFetch, retries, retryBac
       sourceKind: "input_file",
       rawTextAbs: abs,
       shouldCacheRawText: false,
+      endpointResult: null,
     };
   }
   if (fs.existsSync(rawTextAbs)) {
@@ -389,23 +460,33 @@ async function loadTextForDate({ yyyymmdd, inputFile, noFetch, retries, retryBac
       sourceKind: "private_raw_cache",
       rawTextAbs,
       shouldCacheRawText: false,
+      endpointResult: null,
     };
   }
   if (noFetch) {
     throw new Error(`FINRA raw cache missing for ${yyyymmdd}: ${path.relative(repoRoot, rawTextAbs)}`);
   }
   const sourceUrl = endpointForDate(yyyymmdd);
+  const response = await fetchResponseWithRetry(sourceUrl, { retries, retryBackoffMs, request });
+  const endpointResult = classifyFinraEndpointResponse(response, yyyymmdd);
+  if (endpointResult.status !== "ready") {
+    const error = new Error(`FINRA fetch failed: HTTP ${response.statusCode}`);
+    error.httpStatus = response.statusCode;
+    error.endpointResult = endpointResult;
+    throw error;
+  }
   return {
-    text: await fetchTextWithRetry(sourceUrl, { retries, retryBackoffMs }),
+    text: response.body,
     sourceUrl,
     sourceKind: "remote_fetch",
     rawTextAbs,
     shouldCacheRawText: true,
+    endpointResult,
   };
 }
 
-async function collectRegshoDailyDate({ yyyymmdd, inputFile, noFetch, noWrite, generatedAt, retries, retryBackoffMs }) {
-  const source = await loadTextForDate({ yyyymmdd, inputFile, noFetch, retries, retryBackoffMs });
+async function collectRegshoDailyDate({ yyyymmdd, inputFile, noFetch, noWrite, generatedAt, retries, retryBackoffMs, request }) {
+  const source = await loadTextForDate({ yyyymmdd, inputFile, noFetch, retries, retryBackoffMs, request });
   const rows = parseFinraDailyShortVolume(source.text, yyyymmdd);
   const payload = buildPayload({
     yyyymmdd,
@@ -430,10 +511,16 @@ async function collectRegshoDailyDate({ yyyymmdd, inputFile, noFetch, noWrite, g
     payload,
     outputAbs,
     rawTextAbs: rawTextAbs && rawTextAbs.startsWith(repoRoot) ? rawTextAbs : null,
+    endpointResult: source.endpointResult,
   };
 }
 
-async function run(argv = process.argv.slice(2)) {
+async function run(argv = process.argv.slice(2), {
+  request = fetchResponse,
+  attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/finra_short_volume.json"),
+  observedAt = new Date().toISOString(),
+  attemptId = stableAttemptId("finra-short-volume", observedAt),
+} = {}) {
   const args = parseArgs(argv);
   const dataset = datasetConfig(args.dataset);
   const dates = expandDateRange(args);
@@ -466,12 +553,14 @@ async function run(argv = process.argv.slice(2)) {
     };
   }
 
-  const generatedAt = new Date().toISOString();
+  const generatedAt = observedAt;
   const results = [];
   const skippedDates = [];
-  for (const yyyymmdd of dates) {
-    try {
-      results.push(await collectRegshoDailyDate({
+  const endpointResults = [];
+  try {
+    for (const yyyymmdd of dates) {
+      try {
+        const collected = await collectRegshoDailyDate({
         yyyymmdd,
         inputFile: args.inputFile,
         noFetch: args.noFetch,
@@ -479,26 +568,31 @@ async function run(argv = process.argv.slice(2)) {
         generatedAt,
         retries: args.retries,
         retryBackoffMs: args.retryBackoffMs,
-      }));
-    } catch (err) {
-      if (!isMissingFileError(err)) throw err;
-      // Holiday or not-yet-published file inside the window: record and move on
-      // instead of failing the whole run (and with it the downstream data push).
-      skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
-      console.warn(`[finra-daily] skip ${yyyymmdd}: file not published (HTTP ${err.httpStatus})`);
-      continue;
+        request,
+        });
+        results.push(collected);
+        if (collected.endpointResult) endpointResults.push(collected.endpointResult);
+      } catch (err) {
+        const endpointResult = err?.endpointResult ?? thrownEndpointResult(err);
+        endpointResults.push(endpointResult);
+        if (!isMissingFileError(err)) throw err;
+        // Holiday or not-yet-published file inside the window: record and move on
+        // instead of failing the whole run (and with it the downstream data push).
+        skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
+        console.warn(`[finra-daily] skip ${yyyymmdd}: file not published (HTTP ${err.httpStatus})`);
+        continue;
+      }
+      if (args.sleepMs > 0) await sleep(args.sleepMs);
     }
-    if (args.sleepMs > 0) await sleep(args.sleepMs);
-  }
-  if (results.length === 0 && dates.length > 0) {
-    throw new Error(
-      `FINRA fetch produced no data for any requested date (${dates[0]}..${dates[dates.length - 1]}); ` +
-      "all files missing — refusing to treat a fully-missing window as success.",
-    );
-  }
+    if (results.length === 0 && dates.length > 0) {
+      throw new Error(
+        `FINRA fetch produced no data for any requested date (${dates[0]}..${dates[dates.length - 1]}); ` +
+        "all files missing — refusing to treat a fully-missing window as success.",
+      );
+    }
 
-  let manifestFile = null;
-  if (!args.noWrite) {
+    let manifestFile = null;
+    if (!args.noWrite) {
     const entries = results.map((result) => manifestEntry({
       payload: result.payload,
       outputAbs: result.outputAbs,
@@ -512,11 +606,11 @@ async function run(argv = process.argv.slice(2)) {
       generatedAt,
     });
     manifestFile = path.relative(repoRoot, writeJson(MANIFEST_FILE, manifest));
-  }
+    }
 
-  const totalRows = results.reduce((sum, result) => sum + result.row_count, 0);
-  const first = results[0];
-  return {
+    const totalRows = results.reduce((sum, result) => sum + result.row_count, 0);
+    const first = results[0];
+    return {
     dataset: dataset.dataset_id,
     dates,
     wrote: !args.noWrite,
@@ -534,7 +628,16 @@ async function run(argv = process.argv.slice(2)) {
     manifest_file: manifestFile,
     skipped_dates: skippedDates,
     outputs: results.map(({ payload, outputAbs, rawTextAbs, ...result }) => result),
-  };
+    };
+  } finally {
+    writeAttemptShard({
+      laneId: "finra_short_volume",
+      attemptShardPath,
+      observedAt,
+      attemptId,
+      result: reduceFinraEndpointResults(endpointResults),
+    });
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -552,6 +655,7 @@ export {
   buildPayload,
   buildManifest,
   cachePathForDate,
+  classifyFinraEndpointResponse,
   datasetConfig,
   endpointForDate,
   expandDateRange,
@@ -559,5 +663,6 @@ export {
   normalizeDate,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
+  reduceFinraEndpointResults,
   run,
 };

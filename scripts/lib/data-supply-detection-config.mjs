@@ -446,7 +446,7 @@ const config = {
           ],
         }),
       ], "us_federal_business")],
-      endpointContract: endpoint("sec_edgar", "recent_filings_array", "/filings/recent", "array"),
+      endpointContract: endpoint("sec_edgar", "recent_form_array", "/filings/recent/form", "array"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "due_window",
@@ -495,7 +495,7 @@ const config = {
           assertions: [exactAssertion("formula_version", "/formula_version", "fenok-flow-proxies-v0.1-finra-daily"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("finra_regsho", "csv_rows", "/rows", "array"),
+      endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_flow_proxies"],
       visibility: "admin_only",

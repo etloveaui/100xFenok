@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 import {
   applyTickerBatch,
@@ -9,6 +12,7 @@ import {
   buildOccBatchAttempt,
   buildRowsForTest,
   candidateDates,
+  classifyOccEndpointResponse,
   estimateMaxLiveRequests,
   loadS0OccClassShareUniverse,
   loadS0OccMissingUniverse,
@@ -19,6 +23,7 @@ import {
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   parseArgs,
+  reduceOccEndpointResults,
   scoreOptionsVolume,
   summarizeDateAttempt,
   summarizeTickerAvailability,
@@ -40,6 +45,108 @@ const callRows = parseOccCsv(callCsv);
 assert.equal(callRows.length, 2);
 assert.equal(callRows[0].quantity, 4000000);
 assert.equal(callRows[0].porc, "C");
+
+const readyEndpoint = classifyOccEndpointResponse({ statusCode: 200, body: callCsv });
+assert.equal(readyEndpoint.status, "ready");
+assert.deepEqual(readyEndpoint.attempt.assertions, [{ id: "csv_rows", passed: true }]);
+const noRecordEndpoint = classifyOccEndpointResponse({ statusCode: 200, body: "No record(s) found" });
+assert.equal(noRecordEndpoint.expectedUnavailable, true);
+assert.equal(reduceOccEndpointResults([noRecordEndpoint, readyEndpoint]).status, "ready");
+assert.equal(reduceOccEndpointResults([noRecordEndpoint]).reason, "workflow_unobserved");
+const headerOnlyEndpoint = classifyOccEndpointResponse({
+  statusCode: 200,
+  body: "quantity,underlying,symbol,actype,porc,exchange,actdate\n",
+});
+assert.equal(headerOnlyEndpoint.expectedUnavailable, false);
+assert.equal(reduceOccEndpointResults([headerOnlyEndpoint, readyEndpoint]).reason, "empty_payload");
+const semanticErrorEndpoint = classifyOccEndpointResponse({
+  statusCode: 200,
+  body: "Report date cannot be greater than 07/14/2026",
+});
+assert.equal(semanticErrorEndpoint.reason, "decode_error");
+assert.equal(semanticErrorEndpoint.expectedUnavailable, true);
+assert.equal(reduceOccEndpointResults([semanticErrorEndpoint, readyEndpoint]).status, "ready");
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-ready-"));
+  const attemptShardPath = path.join(root, "occ_options_volume.json");
+  const options = {
+    cacheDir: path.join(root, "cache-ready"),
+    attemptShardPath,
+    observedAt: "2026-07-15T03:30:00Z",
+    attemptId: "occ-options-volume-test-run-1",
+    request: async (url) => ({
+      statusCode: 200,
+      body: new URL(url).searchParams.get("porc") === "C" ? callCsv : putCsv,
+    }),
+  };
+  const result = await build(parseArgs([
+    "--tickers", "NVDA",
+    "--date", "20260626",
+    "--max-walkback-days", "0",
+    "--max-requests", "2",
+    "--sleep-ms", "0",
+    "--no-write",
+  ]), options);
+  assert.equal(result.no_usable_rows, undefined);
+  let shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.deepEqual(shard.attempts[0].assertions, [{ id: "csv_rows", passed: true }]);
+
+  await build(parseArgs([
+    "--tickers", "NVDA",
+    "--date", "20260626",
+    "--max-walkback-days", "0",
+    "--max-requests", "2",
+    "--sleep-ms", "0",
+    "--no-write",
+  ]), {
+    ...options,
+    cacheDir: path.join(root, "cache-rate-limited"),
+    observedAt: "2026-07-15T03:31:00Z",
+    request: async () => ({ statusCode: 429, body: "rate limited" }),
+  });
+  shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].http_status, 429, "same-run later batch failure is retained");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-empty-tail-"));
+  const attemptShardPath = path.join(root, "occ_options_volume.json");
+  const options = {
+    cacheDir: path.join(root, "cache"),
+    attemptShardPath,
+    observedAt: "2026-07-15T03:40:00Z",
+    attemptId: "occ-options-volume-test-empty-tail",
+    request: async (url) => ({
+      statusCode: 200,
+      body: new URL(url).searchParams.get("porc") === "C" ? callCsv : putCsv,
+    }),
+  };
+  await build(parseArgs([
+    "--tickers", "NVDA",
+    "--date", "20260626",
+    "--max-walkback-days", "0",
+    "--max-requests", "2",
+    "--sleep-ms", "0",
+    "--no-write",
+  ]), options);
+  await build(parseArgs([
+    "--all-eligible",
+    "--batch-size", "1",
+    "--batch-index", "999999",
+    "--date", "20260626",
+    "--max-walkback-days", "0",
+    "--no-fetch",
+    "--no-write",
+  ]), {
+    ...options,
+    observedAt: "2026-07-15T03:41:00Z",
+    request: async () => { throw new Error("empty tail must not request"); },
+  });
+  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].attempt_id, options.attemptId);
+  assert.equal(shard.attempts[0].payload, "non_empty", "empty tail cannot erase observed same-run evidence");
+}
 
 assert.deepEqual(
   candidateDates({ requestedDate: "20260628", maxWalkbackDays: 4 }),
@@ -349,6 +456,7 @@ assert.equal(resetAttempt.status, "unavailable");
 assert.equal(resetAttempt.served_source_date, null);
 assert.equal(resetAttempt.batches.length, 1, "new run resets the bounded current-attempt batch list");
 
+const noFetchAttemptRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-no-fetch-attempt-"));
 const noFetchNoWrite = await build(parseArgs([
   "--tickers",
   "ZZZTEST",
@@ -358,7 +466,12 @@ const noFetchNoWrite = await build(parseArgs([
   "0",
   "--no-fetch",
   "--no-write",
-]));
+]), {
+  cacheDir: path.join(noFetchAttemptRoot, "cache"),
+  attemptShardPath: path.join(noFetchAttemptRoot, "occ_options_volume.json"),
+  observedAt: "2026-07-15T04:00:00Z",
+  attemptId: "occ-options-volume-no-fetch-test",
+});
 assert.equal(noFetchNoWrite.no_usable_rows, true);
 assert.equal(noFetchNoWrite.wrote, false);
 assert.equal(noFetchNoWrite.availability_summary.latest_status_counts.cache_missing_no_fetch, 1);

@@ -21,14 +21,27 @@ import {
   requireKeys,
   requireObject,
 } from "./lib/guarded-json.mjs";
+import {
+  attemptResult,
+  classifyEndpointResponse,
+  classifyHttpResponse,
+  defaultAttemptId,
+  threwTuple,
+  transportError,
+  worstRequestResult,
+  writeAttemptShard,
+} from "./lib/data-supply-attempt-shard.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-const ANALYZER_PATH = path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json");
-const EDGAR_CACHE_PATH = path.join(ROOT, "data/edgar/company_tickers.json");
-const SUMMARY_ROOT = path.join(ROOT, "data/edgar-korean-summaries");
-const PUBLIC_SUMMARY_ROOT = path.join(ROOT, "100xfenok-next/public/data/edgar-korean-summaries");
+const DEFAULT_PATHS = Object.freeze({
+  analyzerPath: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
+  edgarCachePath: path.join(ROOT, "data/edgar/company_tickers.json"),
+  summaryRoot: path.join(ROOT, "data/edgar-korean-summaries"),
+  publicSummaryRoot: path.join(ROOT, "100xfenok-next/public/data/edgar-korean-summaries"),
+  attemptShardPath: path.join(ROOT, "data/admin/data-supply-state/detection-attempts/edgar_filings.json"),
+});
 const SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SEC_SUBMISSIONS_BASE_URL = "https://data.sec.gov/submissions";
 const DEFAULT_FORMS = ["10-K", "10-Q", "8-K", "20-F", "40-F", "6-K"];
@@ -98,7 +111,7 @@ Options:
   --filings-per-ticker 12  max newly discovered pending filings per ticker
   --forms 10-K,10-Q,8-K    SEC forms to include
   --sleep 0.6              seconds between SEC requests
-  --plan-only              resolve candidates without writing outputs
+  --plan-only              skip data artifacts but still publish attempt telemetry
 `);
 }
 
@@ -143,12 +156,12 @@ function guardExistingManifest(data, filePath) {
   requireArray(data.filings, filePath, "filings");
 }
 
-function loadUniverse(args) {
+function loadUniverse(args, paths) {
   if (args.tickers.length > 0) {
     return uniqueTickers(["NVDA", ...args.tickers]);
   }
 
-  const analyzer = readExistingJson(ANALYZER_PATH, { data: [] }, guardStocksAnalyzer);
+  const analyzer = readExistingJson(paths.analyzerPath, { data: [] }, guardStocksAnalyzer);
   const rows = Array.isArray(analyzer?.data) ? analyzer.data : [];
   const tickers = rows
     .filter((row) => row?.country === "US")
@@ -177,19 +190,20 @@ function tickerAliases(ticker) {
   return [...aliases];
 }
 
-async function fetchJson(url) {
+export async function requestBytes(url) {
   const response = await fetch(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
     },
   });
-  if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
-  return response.json();
+  return { statusCode: response.status, body: await response.text() };
 }
 
-async function loadCompanyTickers() {
-  const payload = await fetchJson(SEC_COMPANY_TICKERS_URL);
+async function loadCompanyTickers(request, observedAt) {
+  const classified = classifyHttpResponse(await request(SEC_COMPANY_TICKERS_URL));
+  if (classified.status !== "ready") return { result: classified, rows: [], cache: null };
+  const payload = classified.document;
   const rows = Object.values(payload)
     .map((row) => ({
       cik: cik10(row.cik_str),
@@ -202,11 +216,11 @@ async function loadCompanyTickers() {
     schemaVersion: 1,
     artifactType: "sec_company_tickers_cache",
     sourceUrl: SEC_COMPANY_TICKERS_URL,
-    generatedAt: new Date().toISOString(),
+    generatedAt: observedAt,
     count: rows.length,
     rows,
   };
-  return { rows, cache };
+  return { result: classified, rows, cache };
 }
 
 function buildCikMap(companyRows) {
@@ -219,8 +233,11 @@ function buildCikMap(companyRows) {
   return map;
 }
 
-async function fetchSubmissions(cik) {
-  return fetchJson(`${SEC_SUBMISSIONS_BASE_URL}/CIK${cik}.json`);
+async function fetchSubmissions(cik, request) {
+  return classifyEndpointResponse(
+    await request(`${SEC_SUBMISSIONS_BASE_URL}/CIK${cik}.json`),
+    { laneId: "edgar_filings" },
+  );
 }
 
 function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, forms, limit }) {
@@ -258,11 +275,11 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
   return rows;
 }
 
-function loadExistingManifests() {
+function loadExistingManifests(paths) {
   const manifests = new Map();
   const dirs = [
-    path.join(SUMMARY_ROOT, "by-ticker"),
-    path.join(PUBLIC_SUMMARY_ROOT, "by-ticker"),
+    path.join(paths.summaryRoot, "by-ticker"),
+    path.join(paths.publicSummaryRoot, "by-ticker"),
   ];
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) continue;
@@ -318,13 +335,13 @@ function mergeFilings({ ticker, companyName, cik, existingManifest, discoveredRo
   };
 }
 
-function writeManifestMirror(ticker, manifest) {
+function writeManifestMirror(paths, ticker, manifest) {
   const fileName = `${ticker.toLowerCase()}.json`;
-  writeJson(path.join(SUMMARY_ROOT, "by-ticker", fileName), manifest);
-  writeJson(path.join(PUBLIC_SUMMARY_ROOT, "by-ticker", fileName), manifest);
+  writeJson(path.join(paths.summaryRoot, "by-ticker", fileName), manifest);
+  writeJson(path.join(paths.publicSummaryRoot, "by-ticker", fileName), manifest);
 }
 
-function writeIndex({ manifests, updated }) {
+function writeIndex(paths, { manifests, updated, generatedAt }) {
   const tickers = [...manifests.keys()].sort();
   const byTicker = {};
   for (const ticker of tickers) {
@@ -334,87 +351,152 @@ function writeIndex({ manifests, updated }) {
     schemaVersion: 1,
     artifactType: "edgar_korean_summary_index",
     updated,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     tickers,
     byTicker,
   };
-  writeJson(path.join(SUMMARY_ROOT, "index.json"), payload);
-  writeJson(path.join(PUBLIC_SUMMARY_ROOT, "index.json"), payload);
+  writeJson(path.join(paths.summaryRoot, "index.json"), payload);
+  writeJson(path.join(paths.publicSummaryRoot, "index.json"), payload);
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const updated = new Date().toISOString().slice(0, 10);
-  const universe = loadUniverse(args);
-  console.log(
-    `edgar_filing_timeline: candidates=${universe.length} limit=${args.fullUniverse ? "full" : args.limit} filings_per_ticker=${args.filingsPerTicker} forms=${args.forms.join(",")} plan_only=${args.planOnly}`,
+function thrownResult(error) {
+  const exceptionKind = transportError(error) ? "transport" : "unexpected";
+  return attemptResult(
+    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+    threwTuple(exceptionKind),
   );
+}
 
-  const { rows: companyRows, cache } = await loadCompanyTickers();
-  const cikMap = buildCikMap(companyRows);
-  const existingManifests = loadExistingManifests();
-  const nextManifests = new Map(existingManifests);
+export async function runEdgarFilingTimeline({
+  argv = process.argv.slice(2),
+  paths = DEFAULT_PATHS,
+  request = requestBytes,
+  observedAt = new Date().toISOString(),
+  attemptId = defaultAttemptId("edgar-filings", observedAt),
+  sleepFn = sleep,
+} = {}) {
+  let args = null;
+  const requestResults = [];
+  let bootstrapResult = null;
   const stats = { resolved: 0, unresolved: 0, fetched: 0, filings: 0, readyPreserved: 0, errors: 0 };
+  let fatalError = null;
 
-  if (!args.planOnly) {
-    writeJson(EDGAR_CACHE_PATH, cache);
-  }
-
-  for (const ticker of universe) {
-    const cikRow = tickerAliases(ticker).map((alias) => cikMap.get(alias)).find(Boolean);
-    if (!cikRow) {
-      stats.unresolved += 1;
-      continue;
-    }
-    stats.resolved += 1;
-
+  try {
+    args = parseArgs(argv);
+    const updated = observedAt.slice(0, 10);
+    const universe = loadUniverse(args, paths);
+    console.log(
+      `edgar_filing_timeline: candidates=${universe.length} limit=${args.fullUniverse ? "full" : args.limit} filings_per_ticker=${args.filingsPerTicker} forms=${args.forms.join(",")} plan_only=${args.planOnly}`,
+    );
+    let company;
     try {
-      const submissions = await fetchSubmissions(cikRow.cik);
-      stats.fetched += 1;
-      const companyName = submissions?.name || cikRow.title || ticker;
-      const discoveredRows = filingRowsFromSubmissions({
-        ticker,
-        companyName,
-        cik: cikRow.cik,
-        submissions,
-        forms: args.forms,
-        limit: args.filingsPerTicker,
-      });
-      stats.filings += discoveredRows.length;
-      const existingManifest = existingManifests.get(ticker);
-      const readyBefore = (existingManifest?.filings ?? []).filter(isReadySummaryRow).length;
-      const manifest = mergeFilings({
-        ticker,
-        companyName,
-        cik: cikRow.cik,
-        existingManifest,
-        discoveredRows,
-        updated,
-      });
-      const readyAfter = manifest.filings.filter(isReadySummaryRow).length;
-      stats.readyPreserved += Math.min(readyBefore, readyAfter);
-      nextManifests.set(ticker, manifest);
-      if (!args.planOnly && manifest.filings.length > 0) writeManifestMirror(ticker, manifest);
-      console.log(`  ${ticker}: filings=${manifest.filings.length} ready=${readyAfter} cik=${cikRow.cik}`);
+      company = await loadCompanyTickers(request, observedAt);
+      bootstrapResult = company.result;
     } catch (error) {
-      stats.errors += 1;
-      console.warn(`  ${ticker}: ${error instanceof Error ? error.message : String(error)}`);
+      bootstrapResult = thrownResult(error);
+      throw error;
+    }
+    if (bootstrapResult.status !== "ready") {
+      throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}`);
+    }
+    const cikMap = buildCikMap(company.rows);
+    const existingManifests = loadExistingManifests(paths);
+    const nextManifests = new Map(existingManifests);
+
+    if (!args.planOnly) writeJson(paths.edgarCachePath, company.cache);
+
+    for (const ticker of universe) {
+      const cikRow = tickerAliases(ticker).map((alias) => cikMap.get(alias)).find(Boolean);
+      if (!cikRow) {
+        stats.unresolved += 1;
+        continue;
+      }
+      stats.resolved += 1;
+      let endpointResult;
+      try {
+        endpointResult = await fetchSubmissions(cikRow.cik, request);
+      } catch (error) {
+        endpointResult = thrownResult(error);
+      }
+      requestResults.push(endpointResult);
+      if (endpointResult.status !== "ready") {
+        stats.errors += 1;
+        console.warn(`  ${ticker}: SEC submissions ${endpointResult.reason}`);
+      } else {
+        const submissions = endpointResult.document;
+        stats.fetched += 1;
+        const companyName = submissions?.name || cikRow.title || ticker;
+        const discoveredRows = filingRowsFromSubmissions({
+          ticker,
+          companyName,
+          cik: cikRow.cik,
+          submissions,
+          forms: args.forms,
+          limit: args.filingsPerTicker,
+        });
+        stats.filings += discoveredRows.length;
+        const existingManifest = existingManifests.get(ticker);
+        const readyBefore = (existingManifest?.filings ?? []).filter(isReadySummaryRow).length;
+        const manifest = mergeFilings({
+          ticker,
+          companyName,
+          cik: cikRow.cik,
+          existingManifest,
+          discoveredRows,
+          updated,
+        });
+        const readyAfter = manifest.filings.filter(isReadySummaryRow).length;
+        stats.readyPreserved += Math.min(readyBefore, readyAfter);
+        nextManifests.set(ticker, manifest);
+        if (!args.planOnly && manifest.filings.length > 0) writeManifestMirror(paths, ticker, manifest);
+        console.log(`  ${ticker}: filings=${manifest.filings.length} ready=${readyAfter} cik=${cikRow.cik}`);
+      }
+      if (args.sleep > 0) await sleepFn(args.sleep * 1000);
     }
 
-    if (args.sleep > 0) {
-      await sleep(args.sleep * 1000);
+    if (!args.planOnly && stats.fetched > 0) {
+      writeIndex(paths, { manifests: nextManifests, updated, generatedAt: observedAt });
     }
+  } catch (error) {
+    fatalError = error;
+  } finally {
+    const telemetry = requestResults.length > 0
+      ? worstRequestResult(requestResults)
+      : bootstrapResult && bootstrapResult.status !== "ready"
+        ? bootstrapResult
+        : attemptResult("unexpected_error", threwTuple("unexpected"));
+    writeAttemptShard({
+      laneId: "edgar_filings",
+      attemptShardPath: paths.attemptShardPath,
+      observedAt,
+      attemptId,
+      result: telemetry,
+    });
   }
-
-  if (!args.planOnly) {
-    writeIndex({ manifests: nextManifests, updated });
-  }
+  if (fatalError) throw fatalError;
+  const telemetry = requestResults.length > 0
+    ? worstRequestResult(requestResults)
+    : bootstrapResult && bootstrapResult.status !== "ready"
+      ? bootstrapResult
+      : attemptResult("unexpected_error", threwTuple("unexpected"));
   console.log(
     `edgar_filing_timeline: resolved=${stats.resolved} unresolved=${stats.unresolved} fetched=${stats.fetched} filings=${stats.filings} ready_preserved=${stats.readyPreserved} errors=${stats.errors}`,
   );
+  const produced = stats.fetched > 0;
+  return {
+    ok: produced,
+    reason: produced ? "ok" : telemetry.reason === "ok" ? "unexpected_error" : telemetry.reason,
+    telemetry_status: telemetry.status,
+    telemetry_reason: telemetry.reason,
+    stats,
+  };
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.stack || error.message : error);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  runEdgarFilingTimeline().then((result) => {
+    if (!result.ok) process.exitCode = 2;
+  }).catch((error) => {
+    console.error(error instanceof Error ? error.stack || error.message : error);
+    process.exitCode = 1;
+  });
+}

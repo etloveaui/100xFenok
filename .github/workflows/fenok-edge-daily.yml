@@ -77,6 +77,13 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify FINRA and OCC attempt emitter contracts
+        run: |
+          node scripts/test-data-supply-attempt-producer.mjs
+          node scripts/test-fetch-fenok-finra-daily-private.mjs
+          node scripts/test-fetch-fenok-occ-options-volume.mjs
+          node scripts/test-fenok-edge-daily-attempt-workflow.mjs
+
       - name: Resolve bounded window
         id: window
         env:
@@ -117,6 +124,7 @@ jobs:
           echo "FENOK_EDGE_NO_FETCH=${INPUT_NO_FETCH:-false}" >> "$GITHUB_ENV"
 
       - name: Refresh FINRA and OCC derived proxies
+        id: refresh_edge
         shell: bash
         env:
           # Route step outputs through env so dispatch-time inputs are never
@@ -153,16 +161,25 @@ jobs:
           node scripts/update-fenok-signal-lens-proxies.mjs "${ARGS[@]}"
 
       - name: Commit and push owned source artifacts
-        if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}
+        if: ${{ always() }}
         shell: bash
+        env:
+          REFRESH_OUTCOME: ${{ steps.refresh_edge.outcome }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            data/computed/fenok_flow_proxies*.json \
-            data/computed/fenok_occ_options_availability.json \
-            data/computed/fenok_occ_options_volume*.json \
-            data/computed/fenok_signal_lens_proxies*.json
+          for SHARD in \
+            data/admin/data-supply-state/detection-attempts/finra_short_volume.json \
+            data/admin/data-supply-state/detection-attempts/occ_options_volume.json; do
+            if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
+          done
+          if [ "${FENOK_EDGE_PLAN_ONLY:-false}" != "true" ] && [ "$REFRESH_OUTCOME" = "success" ]; then
+            git add -- \
+              data/computed/fenok_flow_proxies*.json \
+              data/computed/fenok_occ_options_availability.json \
+              data/computed/fenok_occ_options_volume*.json \
+              data/computed/fenok_signal_lens_proxies*.json
+          fi
           git diff --staged --quiet || git commit -m "chore: update fenok edge daily data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
