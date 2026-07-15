@@ -1,0 +1,54 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "surface",
+  "entity": "actions_recent",
+  "attempts": [
+    {
+      "run_id": "29408382764",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-07-15T10:41:17Z",
+      "outcome": "failed",
+      "controlled": true,
+      "error": "RuntimeError: controlled failure injection for surface:actions_recent"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/surface/actions_recent.json",
+    "payload_sha256": "2b230a10ba967d11a2ee03994c72025214db54970235abe67d94f1aea81723f6",
+    "source_as_of": "2026-07-10T00:00:00Z",
+    "fetched_at": "2026-07-10T13:28:57Z"
+  },
+  "updated_at": "2026-07-15T10:41:17Z",
+  "last_attempt": {
+    "run_id": "29408382764",
+    "run_attempt": 1,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-07-15T10:41:17Z",
+    "outcome": "failed",
+    "controlled": true,
+    "error": "RuntimeError: controlled failure injection for surface:actions_recent"
+  },
+  "latest_failure": {
+    "run_id": "29408382764",
+    "run_attempt": 1,
+    "observed_at": "2026-07-15T10:41:17Z",
+    "error": "RuntimeError: controlled failure injection for surface:actions_recent",
+    "controlled": true,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "2b230a10ba967d11a2ee03994c72025214db54970235abe67d94f1aea81723f6",
+    "data_loss": false
+  },
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/surface/actions_recent.json",
+    "payload_sha256": "2b230a10ba967d11a2ee03994c72025214db54970235abe67d94f1aea81723f6",
+    "source_as_of": "2026-07-10T00:00:00Z",
+    "fetched_at": "2026-07-10T13:28:57Z"
+  }
+}

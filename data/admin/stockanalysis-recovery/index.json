@@ -1,0 +1,105 @@
+{
+  "schema_version": "stockanalysis-recovery-index/v1",
+  "generated_at": "2026-07-15T10:41:17Z",
+  "counts": {
+    "tracked": 117,
+    "fresh": 115,
+    "lkg": 2,
+    "unavailable": 0,
+    "retry": 2,
+    "failed": 2,
+    "recovered": 0
+  },
+  "counts_by_kind": {
+    "stock": {
+      "tracked": 49,
+      "fresh": 48,
+      "lkg": 1,
+      "unavailable": 0,
+      "retry": 1
+    },
+    "financial": {
+      "tracked": 43,
+      "fresh": 43,
+      "lkg": 0,
+      "unavailable": 0,
+      "retry": 0
+    },
+    "surface": {
+      "tracked": 25,
+      "fresh": 24,
+      "lkg": 1,
+      "unavailable": 0,
+      "retry": 1
+    }
+  },
+  "retry_artifacts": [
+    {
+      "artifact_kind": "stock",
+      "entity": "AAPL"
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_recent"
+    }
+  ],
+  "degraded_details": [
+    {
+      "artifact_kind": "stock",
+      "entity": "AAPL",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "25cb07334425ff3c20edea88f9a1d4127c3b90dcf207e5ad18b91677b4195b37",
+      "source_as_of": "2026-07-08T00:00:00Z",
+      "failure_run_id": "29408382764",
+      "failure_observed_at": "2026-07-15T10:41:17Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_recent",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "2b230a10ba967d11a2ee03994c72025214db54970235abe67d94f1aea81723f6",
+      "source_as_of": "2026-07-10T00:00:00Z",
+      "failure_run_id": "29408382764",
+      "failure_observed_at": "2026-07-15T10:41:17Z",
+      "data_loss": false
+    }
+  ],
+  "degraded_tickers": [
+    "AAPL"
+  ],
+  "degraded_surfaces": [
+    "actions_recent"
+  ],
+  "recovered_details": [],
+  "recovered_tickers": [],
+  "recovered_surfaces": [],
+  "current_attempt": {
+    "run_id": "29408382764",
+    "run_attempt": 1,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "attempted": 2,
+    "successes": 0,
+    "failed": 2,
+    "recovered": 0,
+    "errors": [
+      {
+        "artifact_kind": "stock",
+        "entity": "AAPL",
+        "error": "RuntimeError: controlled failure injection for stock:AAPL",
+        "controlled": true,
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "error": "RuntimeError: controlled failure injection for surface:actions_recent",
+        "controlled": true,
+        "data_loss": false
+      }
+    ],
+    "success_rows": []
+  }
+}
