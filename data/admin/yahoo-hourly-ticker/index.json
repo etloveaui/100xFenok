@@ -1,52 +1,50 @@
 {
   "schema_version": "producer-lkg-index/v1",
   "lane_id": "yahoo_hourly_ticker",
-  "generated_at": "2026-07-15T13:08:53.762Z",
+  "generated_at": "2026-07-15T14:04:52.506Z",
   "keys": [
     "TQQQ.json",
     "SOXL.json"
   ],
   "counts": {
     "keys": 2,
-    "fresh": 0,
-    "lkg": 2,
-    "retry": 2,
+    "fresh": 2,
+    "lkg": 0,
+    "retry": 0,
     "unavailable": 0,
-    "failed": 2,
-    "recovered": 0
+    "failed": 0,
+    "recovered": 2
   },
-  "retry_keys": [
-    "TQQQ.json",
-    "SOXL.json"
-  ],
-  "lkg_details": [
+  "retry_keys": [],
+  "lkg_details": [],
+  "recovery_details": [
     {
       "key": "TQQQ.json",
-      "payload_sha256": "4cd340026428c61946f09b7ce25ff76a50d8999f0d6aa9976c1cc1d358a32cd3",
-      "source_as_of": "2026-07-14T20:00:00.000Z",
-      "failure_run_id": "29417720099",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417720099",
+      "recovery_run_id": "29421917838",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-15T14:04:52.506Z",
+      "source_as_of": "2026-07-15T14:04:51.000Z"
     },
     {
       "key": "SOXL.json",
-      "payload_sha256": "70c8980ceb18182dbfbc2e855bf19942422e15203b926c42226e582f64b246e0",
-      "source_as_of": "2026-07-14T20:00:00.000Z",
-      "failure_run_id": "29417720099",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417720099",
+      "recovery_run_id": "29421917838",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-15T14:04:52.506Z",
+      "source_as_of": "2026-07-15T14:04:51.000Z"
     }
   ],
-  "recovery_details": [],
   "current_attempt": {
-    "run_id": "29417720099",
+    "run_id": "29421917838",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-15T13:08:53.762Z",
+    "event_name": "schedule",
+    "observed_at": "2026-07-15T14:04:52.506Z",
     "attempted": 2,
-    "successes": 0,
-    "failed": 2,
-    "failed_keys": [
-      "TQQQ.json",
-      "SOXL.json"
-    ]
+    "successes": 2,
+    "failed": 0,
+    "failed_keys": []
   }
 }
