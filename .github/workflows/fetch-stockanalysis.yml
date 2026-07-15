@@ -219,6 +219,7 @@ jobs:
           fi
           if [ "${INPUT_RECONCILE_MISSING_ETF_DETAILS:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --reconcile-missing-etf-details --incremental-etf-limit ${INPUT_RECONCILE_MISSING_ETF_LIMIT:-0}"
+            if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
           elif [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"

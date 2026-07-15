@@ -1939,8 +1939,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["counts"]["remaining_missing"], 2)
         self.assertEqual(summary["provider_absent_tickers"], ["ABSENT"])
         self.assertEqual(summary["unresolved_tickers"], ["BROKEN"])
+        self.assertEqual(summary["exit_assessment"]["status"], "degraded")
+        self.assertNotIn("fail the run", summary["method"])
 
-    def test_reconcile_mode_fetches_available_and_names_absent_provider_gap(self) -> None:
+    def test_reconcile_mode_commits_partial_success_and_names_unresolved(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         original_public_dir = self.fetcher.PUBLIC_DIR
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
@@ -1956,7 +1958,13 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
                 (out_dir / "etf_universe.json").parent.mkdir(parents=True)
                 (out_dir / "etf_universe.json").write_text(
-                    json.dumps({"records": [{"ticker": "FETCH"}, {"ticker": "ABSENT"}]}),
+                    json.dumps({
+                        "records": [
+                            {"ticker": "FETCH"},
+                            {"ticker": "ABSENT"},
+                            {"ticker": "BROKEN"},
+                        ]
+                    }),
                     encoding="utf-8",
                 )
 
@@ -1983,24 +1991,36 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                             "latency_ms": 1,
                             "error": None,
                         }
+                    if ticker == "ABSENT":
+                        return {
+                            "ticker": ticker,
+                            "asset_type": "etf",
+                            "status": "provider_coverage_gap",
+                            "provider": "stockanalysis",
+                            "path": None,
+                            "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+                            "provider_availability_status": "absent",
+                            "provider_availability_reason": "provider_coverage_gap",
+                            "provider_response": "HTTP 404",
+                            "latency_ms": 1,
+                            "error": None,
+                        }
                     return {
                         "ticker": ticker,
                         "asset_type": "etf",
-                        "status": "provider_coverage_gap",
-                        "provider": "stockanalysis",
+                        "status": "error",
+                        "provider": None,
                         "path": None,
-                        "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-                        "provider_availability_status": "absent",
-                        "provider_availability_reason": "provider_coverage_gap",
-                        "provider_response": "HTTP 404",
                         "latency_ms": 1,
-                        "error": None,
+                        "error": "TimeoutError: transient timeout",
                     }
 
                 self.fetcher.run_one = fake_run_one
                 sys.argv = [
                     "fetch-stockanalysis.py",
                     "--reconcile-missing-etf-details",
+                    "--etfs",
+                    "FETCH,ABSENT,BROKEN",
                     "--incremental-etf-limit",
                     "0",
                     "--sleep",
@@ -2009,10 +2029,13 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 ]
                 sys.stdout = io.StringIO()
                 self.fetcher.main()
+                output = sys.stdout.getvalue()
                 reconcile = json.loads(
                     (out_dir / self.fetcher.MISSING_DETAIL_RECONCILE_REL_PATH).read_text()
                 )
                 coverage = json.loads((out_dir / "coverage" / "etf_detail.json").read_text())
+                index = json.loads((out_dir / "index.json").read_text())
+                fetched_detail = json.loads((out_dir / "etfs" / "FETCH.json").read_text())
         finally:
             self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.PUBLIC_DIR = original_public_dir
@@ -2021,12 +2044,140 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             sys.argv = original_argv
             sys.stdout = original_stdout
 
-        self.assertEqual(reconcile["counts"]["initial_missing"], 2)
+        self.assertEqual(reconcile["counts"]["initial_missing"], 3)
         self.assertEqual(reconcile["counts"]["fetchable_fetched"], 1)
         self.assertEqual(reconcile["counts"]["provider_absent"], 1)
-        self.assertEqual(reconcile["counts"]["unresolved"], 0)
-        self.assertEqual(reconcile["counts"]["remaining_missing"], 1)
+        self.assertEqual(reconcile["counts"]["unresolved"], 1)
+        self.assertEqual(reconcile["counts"]["remaining_missing"], 2)
+        self.assertEqual(reconcile["selected_tickers"], ["FETCH", "ABSENT", "BROKEN"])
+        self.assertEqual(reconcile["unresolved_tickers"], ["BROKEN"])
+        self.assertEqual(reconcile["exit_assessment"]["status"], "degraded")
+        self.assertEqual(reconcile["exit_assessment"]["exit_code"], 0)
+        self.assertIn("[degraded] StockAnalysis ETF detail reconcile deferred: BROKEN", output)
+        self.assertEqual(fetched_detail["ticker"], "FETCH")
         self.assertEqual(coverage["provider_absent_tickers"], ["ABSENT"])
+        self.assertEqual(index["counts"]["etfs_requested"], 3)
+        self.assertEqual(index["counts"]["ok"], 2)
+        self.assertEqual(index["counts"]["failed"], 1)
+        self.assertEqual(index["counts"]["hard_failed"], 1)
+
+    def test_reconcile_workflow_forwards_explicit_etf_targets(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(
+            encoding="utf-8"
+        )
+        reconcile_start = workflow.index(
+            'if [ "${INPUT_RECONCILE_MISSING_ETF_DETAILS:-false}" = "true" ]; then'
+        )
+        history_plan_start = workflow.index(
+            'elif [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then',
+            reconcile_start,
+        )
+        reconcile_block = workflow[reconcile_start:history_plan_start]
+        self.assertIn(
+            'if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi',
+            reconcile_block,
+        )
+
+    def test_reconcile_exit_assessment_rejects_true_corruption(self) -> None:
+        summary = self.fetcher.build_missing_detail_reconcile_summary(
+            initial_missing=["AUTH1", "AUTH2"],
+            selected=["AUTH1", "AUTH2"],
+            results=[
+                {
+                    "ticker": ticker,
+                    "asset_type": "etf",
+                    "status": "error",
+                    "provider": None,
+                    "path": None,
+                    "provider_availability_status": None,
+                    "error": "HTTP Error 401: Unauthorized",
+                }
+                for ticker in ("AUTH1", "AUTH2")
+            ],
+            coverage={"counts": {"missing_detail_files": 2}},
+        )
+
+        self.assertEqual(summary["exit_assessment"]["status"], "corrupt")
+        self.assertEqual(summary["exit_assessment"]["exit_code"], 2)
+        self.assertIn("no selected ticker resolved", summary["exit_assessment"]["reasons"])
+        self.assertTrue(
+            any("authentication" in reason for reason in summary["exit_assessment"]["reasons"])
+        )
+
+    def test_reconcile_exit_assessment_rejects_systemic_and_regressive_batches(self) -> None:
+        cases = (
+            ("rate_limit", "HTTP Error 429: Too Many Requests", "429 storm"),
+            ("decode", "JSONDecodeError: invalid JSON", "decode collapse"),
+        )
+        for label, error, expected_reason in cases:
+            with self.subTest(label=label):
+                summary = self.fetcher.build_missing_detail_reconcile_summary(
+                    initial_missing=["FETCH", "FAIL1", "FAIL2"],
+                    selected=["FETCH", "FAIL1", "FAIL2"],
+                    results=[
+                        {
+                            "ticker": "FETCH",
+                            "asset_type": "etf",
+                            "status": "ok",
+                            "provider": "stockanalysis",
+                            "path": "etfs/FETCH.json",
+                            "provider_availability_status": "available",
+                            "error": None,
+                        },
+                        *(
+                            {
+                                "ticker": ticker,
+                                "asset_type": "etf",
+                                "status": "error",
+                                "provider": None,
+                                "path": None,
+                                "provider_availability_status": None,
+                                "error": error,
+                            }
+                            for ticker in ("FAIL1", "FAIL2")
+                        ),
+                    ],
+                    coverage={"counts": {"missing_detail_files": 2}},
+                )
+                self.assertEqual(summary["exit_assessment"]["status"], "corrupt")
+                self.assertEqual(summary["exit_assessment"]["exit_code"], 2)
+                self.assertTrue(
+                    any(
+                        expected_reason in reason
+                        for reason in summary["exit_assessment"]["reasons"]
+                    )
+                )
+
+        regressed = self.fetcher.build_missing_detail_reconcile_summary(
+            initial_missing=["FETCH", "BROKEN"],
+            selected=["FETCH", "BROKEN"],
+            results=[
+                {
+                    "ticker": "FETCH",
+                    "asset_type": "etf",
+                    "status": "ok",
+                    "provider": "stockanalysis",
+                    "path": "etfs/FETCH.json",
+                    "provider_availability_status": "available",
+                    "error": None,
+                },
+                {
+                    "ticker": "BROKEN",
+                    "asset_type": "etf",
+                    "status": "error",
+                    "provider": None,
+                    "path": None,
+                    "provider_availability_status": None,
+                    "error": "TimeoutError: transient timeout",
+                },
+            ],
+            coverage={"counts": {"missing_detail_files": 3}},
+        )
+        self.assertEqual(regressed["exit_assessment"]["status"], "corrupt")
+        self.assertIn(
+            "canonical detail coverage regressed during reconcile",
+            regressed["exit_assessment"]["reasons"],
+        )
 
     def test_successful_short_primary_cools_stably_then_complete_success_clears(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

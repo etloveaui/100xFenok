@@ -3810,7 +3810,7 @@ def build_missing_detail_reconcile_summary(
         or row.get("provider_availability_status") not in {"available", "absent"}
     )
     coverage_counts = coverage.get("counts") if isinstance(coverage.get("counts"), dict) else {}
-    return {
+    summary = {
         "schema_version": "stockanalysis-etf-detail-reconcile/v1",
         "source": "stockanalysis",
         "generated_at": now_iso(),
@@ -3820,7 +3820,8 @@ def build_missing_detail_reconcile_summary(
             "write an honest stockanalysis_partial detail when the overview exists, including a named "
             "holdings-surface omission and null source_as_of with an explicit reason when provider dates "
             "are unavailable; classify only overview HTTP 400/404 as provider_absent; keep all other "
-            "responses unresolved and fail the run"
+            "responses unresolved, named in retry evidence, and degraded when any selected ticker resolves; "
+            "fail only when no selected ticker resolves, failures are systemic, or canonical coverage regresses"
         ),
         "counts": {
             "initial_missing": len(initial_missing),
@@ -3846,6 +3847,99 @@ def build_missing_detail_reconcile_summary(
             )
         ),
         "results": rows,
+    }
+    summary["exit_assessment"] = stockanalysis_reconcile_exit_assessment(summary)
+    return summary
+
+
+RECONCILE_CORRUPTION_MARKERS = {
+    "authentication": (
+        "http error 401",
+        "status 401",
+        "unauthorized",
+        "authentication failed",
+        "http error 403",
+        "status 403",
+        "forbidden",
+    ),
+    "rate_limit": (
+        "http error 429",
+        "status 429",
+        "error 429",
+        "too many requests",
+        "rate limit",
+        "rate-limit",
+        "ratelimit",
+    ),
+    "decode": (
+        "jsondecodeerror",
+        "json decode",
+        "decode_error",
+        "decode error",
+        "failed to decode",
+        "invalid json",
+        "malformed json",
+    ),
+}
+
+
+def stockanalysis_reconcile_exit_assessment(summary: dict) -> dict:
+    counts = summary.get("counts") if isinstance(summary.get("counts"), dict) else {}
+    results = summary.get("results") if isinstance(summary.get("results"), list) else []
+    unresolved_tickers = sorted(
+        str(ticker)
+        for ticker in summary.get("unresolved_tickers") or []
+        if ticker
+    )
+    selected = int(counts.get("selected") or 0)
+    fetchable_fetched = int(counts.get("fetchable_fetched") or 0)
+    provider_absent = int(counts.get("provider_absent") or 0)
+    initial_missing = int(counts.get("initial_missing") or 0)
+    remaining_missing = int(counts.get("remaining_missing") or 0)
+    reasons = []
+
+    if selected > 0 and unresolved_tickers and fetchable_fetched + provider_absent == 0:
+        reasons.append("no selected ticker resolved")
+    if remaining_missing > initial_missing:
+        reasons.append("canonical detail coverage regressed during reconcile")
+
+    marker_tickers = {category: set() for category in RECONCILE_CORRUPTION_MARKERS}
+    for row in results:
+        if not isinstance(row, dict) or not row.get("ticker"):
+            continue
+        ticker = str(row["ticker"])
+        if ticker not in unresolved_tickers:
+            continue
+        text = " ".join(
+            str(row.get(key) or "")
+            for key in ("error", "stockanalysis_error")
+        ).lower()
+        for category, markers in RECONCILE_CORRUPTION_MARKERS.items():
+            if any(marker in text for marker in markers):
+                marker_tickers[category].add(ticker)
+
+    if marker_tickers["authentication"]:
+        reasons.append(
+            "authentication failure: " + ", ".join(sorted(marker_tickers["authentication"]))
+        )
+    for category, label in (("rate_limit", "429 storm"), ("decode", "decode collapse")):
+        if len(marker_tickers[category]) >= 2:
+            reasons.append(f"{label}: " + ", ".join(sorted(marker_tickers[category])))
+
+    if reasons:
+        status = "corrupt"
+        exit_code = 2
+    elif unresolved_tickers:
+        status = "degraded"
+        exit_code = 0
+    else:
+        status = "ready"
+        exit_code = 0
+    return {
+        "status": status,
+        "exit_code": exit_code,
+        "unresolved_tickers": unresolved_tickers,
+        "reasons": reasons,
     }
 
 
@@ -4507,7 +4601,6 @@ def main() -> None:
             args.coverage_only,
             args.classify_etf_catalogs,
             args.stocks_only,
-            args.etfs,
             args.stocks,
             args.fetch_financials,
         )
@@ -4591,7 +4684,14 @@ def main() -> None:
     if args.reconcile_missing_etf_details:
         coverage_before = build_etf_detail_coverage()
         reconcile_initial_missing = list(coverage_before.get("missing_tickers") or [])
-        reconcile_selected = reconcile_initial_missing[max(0, args.offset):]
+        explicit_reconcile_etfs = parse_symbols(args.etfs)
+        if explicit_reconcile_etfs:
+            missing_set = set(reconcile_initial_missing)
+            reconcile_selected = [
+                ticker for ticker in explicit_reconcile_etfs if ticker in missing_set
+            ]
+        else:
+            reconcile_selected = reconcile_initial_missing[max(0, args.offset):]
         if args.incremental_etf_limit > 0:
             reconcile_selected = reconcile_selected[: args.incremental_etf_limit]
         etfs = reconcile_selected[:]
@@ -4729,6 +4829,7 @@ def main() -> None:
     etf_detail_coverage = write_etf_detail_coverage(mirror_public)
     etf_detail_coverage_counts = etf_detail_coverage.get("counts") or {}
     missing_detail_reconcile = None
+    reconcile_exit_assessment = None
     if args.reconcile_missing_etf_details:
         missing_detail_reconcile = build_missing_detail_reconcile_summary(
             reconcile_initial_missing,
@@ -4736,6 +4837,7 @@ def main() -> None:
             results,
             etf_detail_coverage,
         )
+        reconcile_exit_assessment = missing_detail_reconcile["exit_assessment"]
         write_payload(MISSING_DETAIL_RECONCILE_REL_PATH, missing_detail_reconcile, mirror_public)
         reconcile_counts = missing_detail_reconcile["counts"]
         print(
@@ -4746,6 +4848,18 @@ def main() -> None:
             f"remaining_missing={reconcile_counts['remaining_missing']}",
             flush=True,
         )
+        if reconcile_exit_assessment["status"] == "degraded":
+            print(
+                "[degraded] StockAnalysis ETF detail reconcile deferred: "
+                + ", ".join(reconcile_exit_assessment["unresolved_tickers"]),
+                flush=True,
+            )
+        elif reconcile_exit_assessment["status"] == "corrupt":
+            print(
+                "[corrupt] StockAnalysis ETF detail reconcile integrity failure: "
+                + "; ".join(reconcile_exit_assessment["reasons"]),
+                flush=True,
+            )
     current_surface_stamps = (
         surface_summary.get("source_as_of")
         if isinstance(surface_summary, dict) and isinstance(surface_summary.get("source_as_of"), dict)
@@ -4852,11 +4966,8 @@ def main() -> None:
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
     if stop_reason:
         raise SystemExit(2)
-    if (
-        missing_detail_reconcile is not None
-        and missing_detail_reconcile["counts"]["unresolved"] > 0
-    ):
-        raise SystemExit(2)
+    if reconcile_exit_assessment is not None and reconcile_exit_assessment["exit_code"] != 0:
+        raise SystemExit(reconcile_exit_assessment["exit_code"])
     if args.fail_on_error and summary["counts"]["failed"]:
         raise SystemExit(1)
 
