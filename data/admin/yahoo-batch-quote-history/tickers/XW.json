@@ -26,15 +26,28 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 463,
+      "natural": true,
+      "observed_at": "2026-07-15T00:10:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29378156187",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-18T19:31:21Z",
-    "history_as_of": "2026-06-18",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XW.json",
-    "payload_sha256": "695ad1f6102f88d4a3f14ed77c8a8227cfe0e382cddb765957035ae554a98463",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "fetched_at": "2026-07-15T00:11:15Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/yf/finance/XW.json",
+    "payload_sha256": "33c1ea07778402721605615ba9c63ae3cb584e4b6dea2878477bd0d04b907bbf",
+    "quote_as_of": "2026-07-13T14:11:12Z",
+    "source_as_of": "2026-07-13"
   },
   "discovered_from": [
     "market_facts",
@@ -42,19 +55,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for XW despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 30363,
+    "latency_ms": 463,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-15T00:10:40Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29378156187",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "error": "ValueError: quote_as_of is unavailable for XW despite available history",
     "failures": [],
@@ -70,8 +82,10 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-07-15T00:10:40Z",
+  "recovered_from_run_id": "29295146902",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 15,
@@ -84,5 +98,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "XW",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-15T00:10:40Z"
 }

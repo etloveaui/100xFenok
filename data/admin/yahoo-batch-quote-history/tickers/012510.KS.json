@@ -44,13 +44,26 @@
       "run_id": "29318385532",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 714,
+      "natural": true,
+      "observed_at": "2026-07-15T00:10:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29378156187",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:12:04Z",
-    "history_as_of": "2026-07-13",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/012510.KS.json",
-    "payload_sha256": "8cc6f713eb45ee335c1bc1ab262f9c9cf9719ae9b6a71ec2738170e0b4943b59",
+    "fetched_at": "2026-07-15T00:10:47Z",
+    "history_as_of": "2026-07-14",
+    "path": "data/yf/finance/012510.KS.json",
+    "payload_sha256": "3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410",
     "quote_as_of": "2026-06-25T06:30:30Z",
     "source_as_of": "2026-06-25T06:30:30Z"
   },
@@ -60,24 +73,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "controlled failure injection for 012510.KS",
-    "event_name": "workflow_dispatch",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "owner-approved controlled failure injection"
-      }
-    ],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-14T08:37:13Z",
-    "outcome": "failed",
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 714,
+    "natural": true,
+    "observed_at": "2026-07-15T00:10:40Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29318385532",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29378156187",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "error": "controlled failure injection for 012510.KS",
     "failures": [
@@ -98,8 +105,10 @@
     "quote_as_of": "2026-06-25T06:30:30Z",
     "source_as_of": "2026-06-25T06:30:30Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-07-15T00:10:40Z",
+  "recovered_from_run_id": "29318385532",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 13,
@@ -112,5 +121,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-07-14T08:37:13Z"
+  "updated_at": "2026-07-15T00:10:40Z"
 }
