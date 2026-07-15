@@ -14,6 +14,7 @@ import {
   assertCoverageContract,
   assertHistoryGapReportContract,
   assertProductSurfaceCoverageContract,
+  renderMarketAuditHtml,
 } from "./check-stockanalysis-market-audit.mjs";
 import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
 
@@ -65,6 +66,30 @@ function run(report) {
 const DAILY_INPUTS = { history_gaps_only: "true", required_history_periods: "daily_1y" };
 
 console.log("# stockanalysis market-audit history-gap dispatch fixtures");
+
+// A stock-only or surface-only run is still a real StockAnalysis run. Its zero ETF
+// request count must not erase the required latest-run card from Data Lab.
+{
+  const html = renderMarketAuditHtml({
+    stockanalysisIndex: {
+      generated_at: "2026-07-15T13:24:22Z",
+      counts: {
+        etfs_requested: 0,
+        stocks_requested: 1,
+        ok: 0,
+        failed: 1,
+        hard_failed: 1,
+        etf_candidate_total: 5480,
+        etf_detail_covered: 4726,
+        etf_detail_coverage_pct: 86.24,
+      },
+      results: [{ ticker: "AAPL", asset_type: "stock", status: "error" }],
+    },
+  });
+  assert.ok(html.includes("최근 ETF 상세 갱신"), "zero-ETF run must keep the latest ETF refresh card visible");
+  assert.ok(html.includes("이번 실행 ETF 요청 없음"), "zero-ETF run must name the no-request state honestly");
+  ok("(j) stock-only run with etfs_requested=0 keeps the latest ETF refresh card visible");
+}
 
 // (a) Branch-B — the exact GOLI-drain state: full-scan fetchable_required=0 while SCORED
 // daily_1y continuity gaps remain, status scheduled_backfill_active. Must PASS.

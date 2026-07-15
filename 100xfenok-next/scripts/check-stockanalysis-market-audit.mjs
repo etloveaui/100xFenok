@@ -435,7 +435,7 @@ function buildEtfUniverseApiPayload(universe, screener) {
   };
 }
 
-function renderMarketAuditHtml(payloads) {
+export function renderMarketAuditHtml(payloads) {
   const context = {
     console: {
       log() {},

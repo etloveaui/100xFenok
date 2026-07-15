@@ -873,7 +873,7 @@ const Renderer = (function() {
   function renderStockanalysisFetchAudit(index) {
     const counts = index?.counts || {};
     const requested = Number(counts.etfs_requested || 0);
-    if (!index || requested <= 0) return '';
+    if (!index) return '';
     const ok = Number(counts.ok || 0);
     const failed = Number(counts.failed || 0);
     const hardFailed = Number(counts.hard_failed || 0);
@@ -886,7 +886,9 @@ const Renderer = (function() {
     return renderMarketAuditCard({
       title: '최근 ETF 상세 갱신',
       status: hardFailed === 0 ? 'pass' : 'warn',
-      code: `${Formatters.formatNumber(ok, 0)} / ${Formatters.formatNumber(requested, 0)} 성공`,
+      code: requested > 0
+        ? `${Formatters.formatNumber(ok, 0)} / ${Formatters.formatNumber(requested, 0)} 성공`
+        : '이번 실행 ETF 요청 없음',
       rows: [
         ['실행일', escapeHtml(index.generated_at || '-').slice(0, 10)],
         ['이번 요청', requested],
