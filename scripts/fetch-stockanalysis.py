@@ -27,6 +27,7 @@ from html.parser import HTMLParser
 import importlib.util
 import json
 import math
+import os
 from pathlib import Path
 import re
 import sys
@@ -41,6 +42,10 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
+from stockanalysis_recovery_state import (
+    StockAnalysisRecoveryStateStore,
+    validate_controlled_failure_scope,
+)
 
 
 OUT_DIR = ROOT / "data" / "stockanalysis"
@@ -49,6 +54,7 @@ YF_OUT_DIR = ROOT / "data" / "yf" / "finance"
 YF_PUBLIC_DIR = ROOT / "100xfenok-next" / "public" / "data" / "yf" / "finance"
 YF_ETF_DETAIL_OUT_DIR = ROOT / "data" / "yf" / "etf-details"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
+STOCKANALYSIS_RECOVERY_ROOT = ROOT / "data" / "admin" / "stockanalysis-recovery"
 SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
@@ -1690,18 +1696,38 @@ def build_surface_stamp_map(
     return stamps
 
 
-def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_public: bool) -> dict:
+def fetch_surfaces(
+    surface_names: list[str],
+    timeout: int,
+    sleep: float,
+    mirror_public: bool,
+    *,
+    recovery_store: StockAnalysisRecoveryStateStore | None = None,
+    recovery_run: dict | None = None,
+    controlled_failure_surfaces: set[str] | None = None,
+) -> dict:
     results = []
+    controlled_failure_surfaces = controlled_failure_surfaces or set()
     for idx, name in enumerate(surface_names, 1):
         definition = SURFACE_DEFINITIONS[name]
         start = time.perf_counter()
         try:
+            if name in controlled_failure_surfaces:
+                raise RuntimeError(f"controlled failure injection for surface:{name}")
             if definition.get("format") == "svelte_devalue":
                 payload = fetch_svelte_surface(name, definition, timeout)
             else:
                 payload = fetch_table_surface(name, definition, timeout)
+            if recovery_store is not None and not recovery_store.recovery_candidate_advances(
+                "surface", name, payload
+            ):
+                raise ValueError(
+                    f"source did not advance beyond the retained LKG for surface:{name}"
+                )
             rel_path = f"surfaces/{name}.json"
             write_payload(rel_path, payload, mirror_public)
+            if recovery_store is not None and recovery_run is not None:
+                recovery_store.record_success("surface", name, payload, recovery_run)
             result = {
                 "surface": name,
                 "group": definition["group"],
@@ -1714,7 +1740,22 @@ def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_
                 "latency_ms": round((time.perf_counter() - start) * 1000),
                 "error": None,
             }
-        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            OSError,
+            json.JSONDecodeError,
+            RuntimeError,
+            ValueError,
+        ) as exc:
+            if recovery_store is not None and recovery_run is not None:
+                recovery_store.record_failure(
+                    "surface",
+                    name,
+                    f"{type(exc).__name__}: {exc}",
+                    recovery_run,
+                    controlled=name in controlled_failure_surfaces,
+                )
             result = {
                 "surface": name,
                 "group": definition["group"],
@@ -4249,12 +4290,17 @@ def run_one(
     include_financials: bool = False,
     yf_fallback: bool = False,
     include_etf_history: bool = True,
+    recovery_store: StockAnalysisRecoveryStateStore | None = None,
+    recovery_run: dict | None = None,
+    controlled_failure: bool = False,
 ) -> dict:
     start = time.perf_counter()
     preserved_primary = False
     provider_availability_status = None
     provider_availability_reason = None
     provider_response = None
+    recovery_failure_recorded = False
+    financials_error = None
     try:
         if kind == "etf":
             try:
@@ -4364,11 +4410,55 @@ def run_one(
             financials_rel_path = None
         else:
             stock_supply = load_stock_detail_supply()
-            financials = fetch_financials(ticker, timeout) if include_financials else None
-            financials_rel_path = f"financials/{ticker}.json" if financials is not None else None
+            if controlled_failure:
+                error = f"RuntimeError: controlled failure injection for stock:{ticker}"
+                if recovery_store is not None and recovery_run is not None:
+                    recovery_store.record_failure(
+                        "stock", ticker, error, recovery_run, controlled=True
+                    )
+                    recovery_failure_recorded = True
+                raise RuntimeError(f"controlled failure injection for stock:{ticker}")
+
+            financials = None
+            financials_rel_path = None
+            if include_financials:
+                try:
+                    financial_candidate = fetch_financials(ticker, timeout)
+                    if recovery_store is not None and not recovery_store.recovery_candidate_advances(
+                        "financial", ticker, financial_candidate
+                    ):
+                        raise ValueError(
+                            f"source did not advance beyond the retained LKG for financial:{ticker}"
+                        )
+                    financials = financial_candidate
+                    financials_rel_path = f"financials/{ticker}.json"
+                except (
+                    urllib.error.URLError,
+                    TimeoutError,
+                    OSError,
+                    json.JSONDecodeError,
+                    ValueError,
+                    RuntimeError,
+                ) as exc:
+                    financials_error = f"{type(exc).__name__}: {exc}"
+                    if recovery_store is not None and recovery_run is not None:
+                        recovery_store.record_failure(
+                            "financial", ticker, financials_error, recovery_run
+                        )
             try:
                 payload = fetch_stock(ticker, timeout, financials)
+                if recovery_store is not None and not recovery_store.recovery_candidate_advances(
+                    "stock", ticker, payload
+                ):
+                    raise ValueError(
+                        f"source did not advance beyond the retained LKG for stock:{ticker}"
+                    )
             except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
+                if recovery_store is not None and recovery_run is not None:
+                    recovery_store.record_failure(
+                        "stock", ticker, f"{type(exc).__name__}: {exc}", recovery_run
+                    )
+                    recovery_failure_recorded = True
                 if stock_supply.is_enrolled_stock_detail(ticker):
                     observed_at = now_iso()
                     stock_supply.record_stock_detail_failure(
@@ -4483,8 +4573,12 @@ def run_one(
                     observed_at=stock_observed_at,
                     origin="manual",
                 )
+            if kind == "stock" and recovery_store is not None and recovery_run is not None:
+                recovery_store.record_success("stock", ticker, payload, recovery_run)
         if financials is not None and financials_rel_path is not None:
             write_payload(financials_rel_path, financials, mirror_public)
+            if recovery_store is not None and recovery_run is not None:
+                recovery_store.record_success("financial", ticker, financials, recovery_run)
         return {
             "ticker": ticker,
             "asset_type": kind,
@@ -4501,6 +4595,7 @@ def run_one(
             "path": rel_path if provider == "stockanalysis" or preserved_primary else None,
             "candidate_path": f"data/yf/etf-details/{ticker}.json" if provider == "yahoo_finance" else None,
             "financials_path": financials_rel_path,
+            "financials_error": financials_error,
             "latency_ms": round((time.perf_counter() - start) * 1000),
             "stockanalysis_error": stockanalysis_error,
             "provider_availability_status": provider_availability_status,
@@ -4509,6 +4604,15 @@ def run_one(
             "error": None,
         }
     except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
+        if (
+            kind == "stock"
+            and recovery_store is not None
+            and recovery_run is not None
+            and not recovery_failure_recorded
+        ):
+            recovery_store.record_failure(
+                "stock", ticker, f"{type(exc).__name__}: {exc}", recovery_run
+            )
         return {
             "ticker": ticker,
             "asset_type": kind,
@@ -4519,6 +4623,15 @@ def run_one(
             "error": f"{type(exc).__name__}: {exc}",
         }
     except RuntimeError as exc:
+        if (
+            kind == "stock"
+            and recovery_store is not None
+            and recovery_run is not None
+            and not recovery_failure_recorded
+        ):
+            recovery_store.record_failure(
+                "stock", ticker, f"{type(exc).__name__}: {exc}", recovery_run
+            )
         return {
             "ticker": ticker,
             "asset_type": kind,
@@ -4540,6 +4653,36 @@ def is_expected_missing_error(error: str | None) -> bool:
 def is_hard_error(error: str | None) -> bool:
     """Hard errors should stop unattended backfill loops."""
     return bool(error and not is_expected_missing_error(error))
+
+
+def finalize_recovery_state(
+    store: StockAnalysisRecoveryStateStore | None,
+    run: dict,
+) -> tuple[dict | None, dict | None]:
+    if store is None:
+        return None, None
+    index = store.rebuild_index(run)
+    assessment = store.assess_current_attempt(index)
+    if assessment["status"] == "degraded":
+        print(
+            "[degraded] StockAnalysis recovery deferred: "
+            + ", ".join(assessment["artifacts"]),
+            flush=True,
+        )
+    elif assessment["status"] == "corrupt":
+        print(
+            "[corrupt] StockAnalysis recovery integrity failure: "
+            + "; ".join(assessment["reasons"]),
+            flush=True,
+        )
+    if index["recovered_tickers"] or index["recovered_surfaces"]:
+        print(
+            "[recovered] StockAnalysis self-recovery: "
+            f"tickers={','.join(index['recovered_tickers']) or '-'} "
+            f"surfaces={','.join(index['recovered_surfaces']) or '-'}",
+            flush=True,
+        )
+    return index, assessment
 
 
 def main() -> None:
@@ -4569,6 +4712,13 @@ def main() -> None:
     parser.add_argument("--surface-set", choices=sorted(SURFACE_SETS), default="core", help="named surface bundle to fetch")
     parser.add_argument("--surfaces", default="", help="comma-separated surface override; default = --surface-set")
     parser.add_argument("--surfaces-only", action="store_true", help="only refresh surfaces; do not deep-fetch ETF/stock payloads")
+    parser.add_argument("--controlled-failure-tickers", default="", help="workflow_dispatch-only stock recovery chaos targets; must be explicit --stocks")
+    parser.add_argument("--controlled-failure-surfaces", default="", help="workflow_dispatch-only surface recovery chaos targets; must be explicit --surfaces")
+    parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID", "local"))
+    parser.add_argument("--run-attempt", type=int, default=int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")))
+    parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
+    parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
+    parser.add_argument("--natural-run", action="store_true", help="prepend StockAnalysis recovery retry artifacts")
     parser.add_argument("--offset", type=int, default=0, help="ETF offset for universe backfill chunking")
     parser.add_argument("--limit-etfs", type=int, default=0)
     parser.add_argument("--max-universe-pages", type=int, default=100)
@@ -4608,6 +4758,40 @@ def main() -> None:
         raise SystemExit("--reconcile-missing-etf-details is an isolated producer mode")
 
     mirror_public = not args.no_public_mirror
+    explicit_stocks = parse_symbols(args.stocks)
+    stocks = explicit_stocks[:]
+    if args.fetch_financials and not stocks:
+        stocks = DEFAULT_STOCKS[:]
+    explicit_surfaces = (
+        parse_surface_names(args.surfaces, args.surface_set) if args.surfaces else []
+    )
+    surface_names = (
+        parse_surface_names(args.surfaces, args.surface_set) if args.fetch_surfaces else []
+    )
+    controlled_failure_tickers = set(parse_symbols(args.controlled_failure_tickers))
+    controlled_failure_surfaces = set(
+        parse_surface_names(args.controlled_failure_surfaces, args.surface_set)
+        if args.controlled_failure_surfaces
+        else []
+    )
+    try:
+        validate_controlled_failure_scope(
+            controlled_failure_tickers,
+            set(explicit_stocks) if not (args.surfaces_only or args.universe_only) else set(),
+            controlled_failure_surfaces,
+            set(explicit_surfaces) if args.fetch_surfaces else set(),
+            event_name=args.event_name,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    recovery_run = {
+        "run_id": args.run_id,
+        "run_attempt": args.run_attempt,
+        "event_name": args.event_name,
+        "schedule": args.event_schedule,
+        "natural": args.natural_run,
+        "observed_at": now_iso(),
+    }
     if args.endpoint_canary:
         canary = run_endpoint_canary(args.timeout)
         write_payload(ENDPOINT_CANARY_REL_PATH, canary, mirror_public)
@@ -4660,6 +4844,25 @@ def main() -> None:
         )
         return
 
+    recovery_store = None
+    retry_financials: set[str] = set()
+    if stocks or surface_names:
+        recovery_store = StockAnalysisRecoveryStateStore(
+            STOCKANALYSIS_RECOVERY_ROOT,
+            OUT_DIR.parent.parent,
+        )
+        recovery_store.bootstrap_existing(recovery_run)
+        if args.natural_run:
+            retry_financials = recovery_store.retry_entities("financial")
+            retry_stocks = recovery_store.retry_entities("stock") | retry_financials
+            stocks = unique_symbols(sorted(retry_stocks) + stocks)
+            retry_surfaces = [
+                name
+                for name in sorted(recovery_store.retry_entities("surface"))
+                if name in SURFACE_DEFINITIONS
+            ]
+            surface_names = list(dict.fromkeys(retry_surfaces + surface_names))
+
     universe_payload = None
     if args.discover_etf_universe:
         universe_payload = fetch_etf_universe(args.max_universe_pages, args.timeout, args.sleep)
@@ -4671,12 +4874,22 @@ def main() -> None:
 
     surface_summary = None
     if args.fetch_surfaces:
-        surface_names = parse_surface_names(args.surfaces, args.surface_set)
-        surface_summary = fetch_surfaces(surface_names, args.timeout, args.sleep, mirror_public)
+        surface_summary = fetch_surfaces(
+            surface_names,
+            args.timeout,
+            args.sleep,
+            mirror_public,
+            recovery_store=recovery_store,
+            recovery_run=recovery_run,
+            controlled_failure_surfaces=controlled_failure_surfaces,
+        )
 
     if args.universe_only or args.surfaces_only:
         coverage = write_etf_detail_coverage(mirror_public)
         attach_etf_detail_coverage_to_index(coverage, mirror_public)
+        _, recovery_assessment = finalize_recovery_state(recovery_store, recovery_run)
+        if recovery_assessment is not None and recovery_assessment["exit_code"] != 0:
+            raise SystemExit(recovery_assessment["exit_code"])
         return
 
     reconcile_initial_missing = []
@@ -4755,10 +4968,6 @@ def main() -> None:
             f"cooldown_skipped={incremental_summary['counts']['cooldown_skipped']}",
             flush=True,
         )
-    stocks = parse_symbols(args.stocks)
-    if args.fetch_financials and not stocks:
-        stocks = DEFAULT_STOCKS[:]
-
     results = []
     stop_reason = None
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
@@ -4768,13 +4977,21 @@ def main() -> None:
                 ticker,
                 args.timeout,
                 mirror_public,
-                include_financials=(kind == "stock" and args.fetch_financials),
+                include_financials=(
+                    kind == "stock"
+                    and (args.fetch_financials or ticker in retry_financials)
+                ),
                 yf_fallback=(
                     kind == "etf"
                     and args.yf_etf_fallback
                     and not args.reconcile_missing_etf_details
                 ),
                 include_etf_history=not args.reconcile_missing_etf_details,
+                recovery_store=recovery_store if kind == "stock" else None,
+                recovery_run=recovery_run if kind == "stock" else None,
+                controlled_failure=(
+                    kind == "stock" and ticker in controlled_failure_tickers
+                ),
             )
             results.append(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
@@ -4860,6 +5077,10 @@ def main() -> None:
                 + "; ".join(reconcile_exit_assessment["reasons"]),
                 flush=True,
             )
+    recovery_index, recovery_assessment = finalize_recovery_state(
+        recovery_store,
+        recovery_run,
+    )
     current_surface_stamps = (
         surface_summary.get("source_as_of")
         if isinstance(surface_summary, dict) and isinstance(surface_summary.get("source_as_of"), dict)
@@ -4907,10 +5128,12 @@ def main() -> None:
             "surfaces_requested": (surface_summary or {}).get("counts", {}).get("surfaces_requested", 0),
             "surfaces_ok": (surface_summary or {}).get("counts", {}).get("ok", 0),
             "surfaces_failed": (surface_summary or {}).get("counts", {}).get("failed", 0),
-            "financials_requested": len(stocks) if args.fetch_financials else 0,
+            "financials_requested": len(
+                set(stocks if args.fetch_financials else []) | retry_financials
+            ),
             "financials_ok": sum(1 for item in results if item.get("asset_type") == "stock" and item.get("financials_path") and item["error"] is None),
             "financials_failed": (
-                (len(stocks) if args.fetch_financials else 0)
+                len(set(stocks if args.fetch_financials else []) | retry_financials)
                 - sum(1 for item in results if item.get("asset_type") == "stock" and item.get("financials_path") and item["error"] is None)
             ),
             "ok": sum(1 for item in results if item["error"] is None),
@@ -4952,6 +5175,19 @@ def main() -> None:
             if missing_detail_reconcile is not None
             else None
         ),
+        "recovery": (
+            {
+                "artifact_id": "stockanalysis_recovery_state",
+                "counts": recovery_index.get("counts"),
+                "degraded_tickers": recovery_index.get("degraded_tickers"),
+                "degraded_surfaces": recovery_index.get("degraded_surfaces"),
+                "recovered_tickers": recovery_index.get("recovered_tickers"),
+                "recovered_surfaces": recovery_index.get("recovered_surfaces"),
+                "current_attempt": recovery_index.get("current_attempt"),
+            }
+            if recovery_index is not None
+            else None
+        ),
         "stop_reason": stop_reason,
     }
     if args.universe_backfill:
@@ -4968,6 +5204,8 @@ def main() -> None:
         raise SystemExit(2)
     if reconcile_exit_assessment is not None and reconcile_exit_assessment["exit_code"] != 0:
         raise SystemExit(reconcile_exit_assessment["exit_code"])
+    if recovery_assessment is not None and recovery_assessment["exit_code"] != 0:
+        raise SystemExit(recovery_assessment["exit_code"])
     if args.fail_on_error and summary["counts"]["failed"]:
         raise SystemExit(1)
 

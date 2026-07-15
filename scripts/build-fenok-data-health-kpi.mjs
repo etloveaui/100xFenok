@@ -749,18 +749,61 @@ function buildStockS0Lane(coverageIndex) {
   });
 }
 
-function buildStockS1Lane(coverageIndex) {
+function stockanalysisRecoveryEvidence(state, kinds) {
+  const allowed = new Set(kinds);
+  const degraded = (Array.isArray(state?.degraded_details) ? state.degraded_details : [])
+    .filter((item) => allowed.has(item?.artifact_kind))
+    .slice(0, 40)
+    .map((item) => ({
+      artifact_kind: item?.artifact_kind ?? null,
+      entity: item?.entity ?? null,
+      resolution_state: item?.resolution_state ?? null,
+      payload_sha256: item?.payload_sha256 ?? null,
+      source_as_of: item?.source_as_of ?? null,
+      failure_attempt_ref: item?.failure_run_id ?? null,
+      data_loss: item?.data_loss === true,
+    }));
+  const recovered = (Array.isArray(state?.recovered_details) ? state.recovered_details : [])
+    .filter((item) => allowed.has(item?.artifact_kind))
+    .slice(0, 40)
+    .map((item) => ({
+      artifact_kind: item?.artifact_kind ?? null,
+      entity: item?.entity ?? null,
+      payload_sha256: item?.payload_sha256 ?? null,
+      source_as_of: item?.source_as_of ?? null,
+      recovered_from_attempt_ref: item?.recovered_from_run_id ?? null,
+      recovered_at: item?.recovered_at ?? null,
+    }));
+  const currentErrors = (Array.isArray(state?.current_attempt?.errors) ? state.current_attempt.errors : [])
+    .filter((item) => allowed.has(item?.artifact_kind));
+  return {
+    state_present: Boolean(state),
+    generated_at: state?.generated_at ?? null,
+    current_attempt_ref: state?.current_attempt?.run_id ?? null,
+    current_attempt_number: number(state?.current_attempt?.run_attempt, 1),
+    current_failed_count: currentErrors.length,
+    degraded,
+    recovered,
+    degraded_entities: [...new Set(degraded.map((item) => item.entity).filter(Boolean))].sort(),
+    recovered_entities: [...new Set(recovered.map((item) => item.entity).filter(Boolean))].sort(),
+  };
+}
+
+function buildStockS1Lane(coverageIndex, stockanalysisRecovery) {
   const track = trackById(coverageIndex, "expanded_stock_candidates");
   const promotion = track?.promotion_gate_readiness || {};
   const counts = promotion.counts || {};
   const denominator = number(counts.denominator || track?.denominator);
   const closedCount = number(counts.current_public_candidate_overlap_plus_blocked);
+  const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["stock", "financial"]);
   return lane("stock_s1_candidate_gate", "S1 candidate promotion gate", [
     check("requirements_complete", "PUBLIC+DAILY+GATED with blocked ledger", allRequirementsReady(track?.requirements), track?.stage || "missing"),
     check("artifact_present", "promotion artifact", bool(promotion.artifact_present), promotion.artifact_generated_at || "missing"),
     check("gap_partition_closed", "public plus blocked equals denominator", denominator > 0 && closedCount === denominator, `${closedCount.toLocaleString("ko-KR")} / ${denominator.toLocaleString("ko-KR")}`),
     check("promotion_queue_empty", "promotion queue", number(counts.promotion_rows) === 0, `${number(counts.promotion_rows)} rows`),
     check("blockers_empty", "gate blockers", (promotion.blockers || []).length === 0, `${(promotion.blockers || []).length} blockers`),
+    diagnosticCheck("stockanalysis_recovery_state_present", "StockAnalysis stock/financial recovery state", recovery.state_present, recovery.generated_at || "missing", { service_gate: false }),
+    diagnosticCheck("stockanalysis_retry_empty", "StockAnalysis stock/financial retry set", recovery.degraded.length === 0, `${recovery.degraded.length} deferred: ${recovery.degraded_entities.join(", ") || "none"}`, { service_gate: false }),
   ], {
     counts: {
       denominator,
@@ -771,6 +814,7 @@ function buildStockS1Lane(coverageIndex) {
       blocked_excluded_count: number(counts.blocked_excluded_rows),
       current_public_candidate_overlap_plus_blocked: closedCount,
     },
+    details: { stockanalysis_recovery: recovery },
     asOf: promotion.artifact_generated_at || coverageIndex?.generated_at || null,
   });
 }
@@ -1211,13 +1255,16 @@ export function buildRimLane(rimInputs) {
   });
 }
 
-function buildProductSurfaceLane(productCoverage) {
+function buildProductSurfaceLane(productCoverage, stockanalysisRecovery) {
   const totals = productCoverage?.totals || {};
+  const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["surface"]);
   return lane("product_surface_freshness", "Product surface freshness", [
     check("surface_payload_present", "product-surface-coverage", Boolean(productCoverage), productCoverage?.generated_at || "missing"),
     check("no_stale_surfaces", "stale surfaces", number(totals.stale) === 0, `${number(totals.stale)} stale`),
     check("no_unavailable_surfaces", "unavailable surfaces", number(totals.unavailable) === 0, `${number(totals.unavailable)} unavailable`),
     check("no_error_surfaces", "error surfaces", number(totals.error) === 0, `${number(totals.error)} error`),
+    diagnosticCheck("stockanalysis_recovery_state_present", "StockAnalysis surface recovery state", recovery.state_present, recovery.generated_at || "missing", { service_gate: false }),
+    diagnosticCheck("stockanalysis_retry_empty", "StockAnalysis surface retry set", recovery.degraded.length === 0, `${recovery.degraded.length} deferred: ${recovery.degraded_entities.join(", ") || "none"}`, { service_gate: false }),
   ], {
     counts: {
       surfaces: number(totals.surfaces),
@@ -1228,6 +1275,7 @@ function buildProductSurfaceLane(productCoverage) {
       unavailable: number(totals.unavailable),
       error: number(totals.error),
     },
+    details: { stockanalysis_recovery: recovery },
     asOf: productCoverage?.generated_at ?? null,
   });
 }
@@ -1495,18 +1543,19 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json");
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
   const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
+  const stockanalysisRecovery = readJson("admin/stockanalysis-recovery/index.json");
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 
   const lanes = [
     buildStockS0Lane(coverageIndex),
-    buildStockS1Lane(coverageIndex),
+    buildStockS1Lane(coverageIndex, stockanalysisRecovery),
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket),
     buildYahooBatchLane(yahooBatchState, nowIso),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
     buildRimLane(rimInputs),
-    buildProductSurfaceLane(productCoverage),
+    buildProductSurfaceLane(productCoverage, stockanalysisRecovery),
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
@@ -1571,6 +1620,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
       { id: "etf_daily1y_readiness_admin", generated_at: etfDaily1y?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "etf_core_daily_basket_admin", generated_at: etfCoreBasket?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "yahoo_batch_quote_history_state", generated_at: yahooBatchState?.generated_at ?? null, public_mirror: false, public_safe: false },
+      { id: "stockanalysis_recovery_state", generated_at: stockanalysisRecovery?.generated_at ?? null, public_mirror: false, public_safe: false },
       { id: "occ_options_availability", generated_at: occAvailability?.generated_at ?? null, public_mirror: true, public_safe: true },
       { id: "data_supply_detection_floor", generated_at: detectionFloor?.generated_at ?? null, public_mirror: false, public_safe: false },
     ],

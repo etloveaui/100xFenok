@@ -3378,6 +3378,112 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 self.assertEqual(observation["reason_code"], expected_reason)
                 self.assertFalse((root / "data" / "stockanalysis" / "stocks" / "AAPL.json").exists())
 
+    def test_stock_controlled_failure_retains_lkg_then_real_fetch_recovers(self) -> None:
+        original = self.fetcher.fetch_stock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data-supply-state"
+            truth = self.fetcher.OUT_DIR / "stocks" / "AAPL.json"
+            lkg_payload = {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "stock", "ticker": "AAPL",
+                "source_as_of": "2026-07-14T20:00:00Z", "fetched_at": "2026-07-14T21:00:00Z",
+                "normalized": {"overview": {"marketCap": 1}, "quote": {"p": 10, "cl": 9, "symbol": "AAPL", "uid": "AAPL"}, "history": [{"t": "2026-07-14", "c": 10}]},
+            }
+            self.fetcher.write_json(truth, lkg_payload)
+            expected_lkg = truth.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            bootstrap = {"run_id": "bootstrap", "run_attempt": 1, "event_name": "local", "observed_at": "2026-07-15T07:00:00Z"}
+            chaos = {"run_id": "chaos-1", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:00:00Z"}
+            recovery = {"run_id": "real-1", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:05:00Z"}
+            store.bootstrap_existing(bootstrap)
+            try:
+                failed = self.fetcher.run_one(
+                    "stock", "AAPL", 1, False,
+                    recovery_store=store, recovery_run=chaos, controlled_failure=True,
+                )
+                self.assertIsNotNone(failed["error"])
+                self.assertEqual(truth.read_bytes(), expected_lkg)
+                self.assertEqual(
+                    (store.root / "lkg" / "stock" / "AAPL.json").read_bytes(), expected_lkg
+                )
+
+                advanced = json.loads(json.dumps(lkg_payload))
+                advanced["source_as_of"] = "2026-07-15T20:00:00Z"
+                advanced["fetched_at"] = "2026-07-15T21:00:00Z"
+                advanced["normalized"]["history"] = [{"t": "2026-07-15", "c": 11}]
+                self.fetcher.fetch_stock = lambda *_args, **_kwargs: advanced
+                succeeded = self.fetcher.run_one(
+                    "stock", "AAPL", 1, False,
+                    recovery_store=store, recovery_run=recovery,
+                )
+            finally:
+                self.fetcher.fetch_stock = original
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR, self.fetcher.DATA_SUPPLY_STATE_ROOT = original_dirs
+
+            state = json.loads((store.root / "states" / "stock" / "AAPL.json").read_text())
+            self.assertIsNone(succeeded["error"])
+            self.assertEqual(state["resolution_state"], "fresh_primary")
+            self.assertFalse(state["retry"])
+            self.assertEqual(state["recovered_from_run_id"], "chaos-1")
+
+    def test_surface_controlled_failure_retains_lkg_then_real_fetch_recovers(self) -> None:
+        original = self.fetcher.fetch_svelte_surface
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            name = "actions_recent"
+            truth = self.fetcher.OUT_DIR / "surfaces" / f"{name}.json"
+            lkg_payload = {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "surface": name, "group": "events", "priority": "high", "role": "fixture",
+                "source_as_of": None, "source_as_of_reason": "provider publishes no aggregate source date",
+                "fetched_at": "2026-07-15T07:00:00Z", "endpoint": "/actions/", "url": "https://stockanalysis.com/actions/",
+                "format": "html_table", "counts": {"tables": 1, "rows": 1}, "tables": [{"records": [{"symbol": "AAPL"}]}],
+            }
+            self.fetcher.write_json(truth, lkg_payload)
+            expected_lkg = truth.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            bootstrap = {"run_id": "bootstrap", "run_attempt": 1, "event_name": "local", "observed_at": "2026-07-15T07:00:00Z"}
+            chaos = {"run_id": "chaos-2", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:00:00Z"}
+            recovery = {"run_id": "real-2", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:05:00Z"}
+            store.bootstrap_existing(bootstrap)
+            try:
+                failed = self.fetcher.fetch_surfaces(
+                    [name], 1, 0, False,
+                    recovery_store=store, recovery_run=chaos,
+                    controlled_failure_surfaces={name},
+                )
+                self.assertEqual(failed["counts"]["failed"], 1)
+                self.assertEqual(truth.read_bytes(), expected_lkg)
+                self.fetcher.fetch_svelte_surface = lambda *_args, **_kwargs: {
+                    **lkg_payload,
+                    "fetched_at": "2026-07-15T08:05:00Z",
+                    "tables": [{"records": [{"symbol": "MSFT"}]}],
+                }
+                succeeded = self.fetcher.fetch_surfaces(
+                    [name], 1, 0, False,
+                    recovery_store=store, recovery_run=recovery,
+                )
+            finally:
+                self.fetcher.fetch_svelte_surface = original
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_dirs
+
+            state = json.loads((store.root / "states" / "surface" / f"{name}.json").read_text())
+            self.assertEqual(succeeded["counts"]["ok"], 1)
+            self.assertEqual(state["resolution_state"], "fresh_primary")
+            self.assertFalse(state["retry"])
+            self.assertEqual(state["recovered_from_run_id"], "chaos-2")
+
 
 if __name__ == "__main__":
     unittest.main()

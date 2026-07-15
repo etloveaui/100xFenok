@@ -21,6 +21,10 @@ on:
         description: 'Comma-separated stock symbols'
         required: false
         default: ''
+      stocks_only:
+        description: 'Skip ETF payload refresh and fetch only explicit/default stocks'
+        required: false
+        default: 'false'
       fetch_financials:
         description: 'Fetch stock financial statements for the stock focus set'
         required: false
@@ -85,6 +89,14 @@ on:
         description: 'Comma-separated surface override'
         required: false
         default: ''
+      controlled_failure_tickers:
+        description: 'Dispatch-only recovery chaos targets; subset of explicit stocks'
+        required: false
+        default: ''
+      controlled_failure_surfaces:
+        description: 'Dispatch-only recovery chaos targets; subset of explicit surfaces'
+        required: false
+        default: ''
       offset:
         description: 'ETF offset for universe backfill chunking'
         required: false
@@ -139,6 +151,7 @@ jobs:
         env:
           INPUT_ETFS: ${{ github.event.inputs.etfs }}
           INPUT_STOCKS: ${{ github.event.inputs.stocks }}
+          INPUT_STOCKS_ONLY: ${{ github.event.inputs.stocks_only }}
           INPUT_FETCH_FINANCIALS: ${{ github.event.inputs.fetch_financials }}
           INPUT_DISCOVER_UNIVERSE: ${{ github.event.inputs.discover_universe }}
           INPUT_UNIVERSE_BACKFILL: ${{ github.event.inputs.universe_backfill }}
@@ -155,6 +168,8 @@ jobs:
           INPUT_FETCH_SURFACES: ${{ github.event.inputs.fetch_surfaces }}
           INPUT_SURFACE_SET: ${{ github.event.inputs.surface_set }}
           INPUT_SURFACES: ${{ github.event.inputs.surfaces }}
+          INPUT_CONTROLLED_FAILURE_TICKERS: ${{ github.event.inputs.controlled_failure_tickers }}
+          INPUT_CONTROLLED_FAILURE_SURFACES: ${{ github.event.inputs.controlled_failure_surfaces }}
           INPUT_OFFSET: ${{ github.event.inputs.offset }}
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
@@ -249,12 +264,16 @@ jobs:
             if [ -n "$INPUT_SURFACES" ]; then ARGS="$ARGS --surfaces $INPUT_SURFACES"; fi
             if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
             if [ -n "$INPUT_STOCKS" ]; then ARGS="$ARGS --stocks $INPUT_STOCKS"; fi
+            if [ "${INPUT_STOCKS_ONLY:-false}" = "true" ]; then ARGS="$ARGS --stocks-only"; fi
             if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then ARGS="$ARGS --fetch-financials"; fi
+            if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi
+            if [ -n "$INPUT_CONTROLLED_FAILURE_SURFACES" ]; then ARGS="$ARGS --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" != "true" ] && [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --fail-on-error"; fi
           fi
+          if [ "$EVENT_NAME" = "schedule" ]; then ARGS="$ARGS --natural-run"; fi
           set -o pipefail
           PRIMARY_FETCH_LOG="$RUNNER_TEMP/stockanalysis-primary-fetch.log"
           PRIMARY_FETCHED_TICKERS="$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt"
@@ -290,6 +309,7 @@ jobs:
           rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PUBLIC_SURFACE_DIR/"
 
           python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
+          python3 scripts/test_stockanalysis_recovery_state.py
           python3 -m unittest scripts/test_stockanalysis_surface_contract.py
           python3 scripts/test-stockanalysis-financials-fixtures.py
           python3 -m unittest scripts/test_audit_market_data.py
@@ -313,7 +333,8 @@ jobs:
           git add -- \
             data/stockanalysis \
             data/yf/etf-details \
-            data/admin/data-supply-state/v1
+            data/admin/data-supply-state/v1 \
+            data/admin/stockanalysis-recovery
           git restore --staged --worktree -- \
             data/stockanalysis/backfill/history_gap_report_latest.json \
             data/yf/finance/_summary.json

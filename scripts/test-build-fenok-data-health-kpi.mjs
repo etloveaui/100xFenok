@@ -727,6 +727,41 @@ function v2Doc(runtime, extra = {}) {
 
 console.log("# KPI v2 runtime self-proof fixtures");
 
+// StockAnalysis L/R evidence is projected into the existing stock and surface
+// lanes without exposing raw provider errors from the private state artifact.
+{
+  const now = "2026-07-15T08:10:00.000Z";
+  const tmp = mkTmp("stockanalysis-recovery-evidence");
+  writeJson(path.join(tmp, "data", "admin", "stockanalysis-recovery", "index.json"), {
+    schema_version: "stockanalysis-recovery-index/v1",
+    generated_at: now,
+    degraded_details: [
+      { artifact_kind: "stock", entity: "AAPL", resolution_state: "lkg_primary", payload_sha256: "a".repeat(64), source_as_of: "2026-07-14T20:00:00Z", failure_run_id: "chaos-1", data_loss: false },
+      { artifact_kind: "financial", entity: "IBM", resolution_state: "lkg_primary", payload_sha256: "b".repeat(64), source_as_of: "2026-06-30", failure_run_id: "chaos-1", data_loss: false },
+      { artifact_kind: "surface", entity: "earnings_calendar", resolution_state: "lkg_primary", payload_sha256: "c".repeat(64), source_as_of: null, failure_run_id: "chaos-1", data_loss: false },
+    ],
+    recovered_details: [
+      { artifact_kind: "stock", entity: "MSFT", payload_sha256: "d".repeat(64), source_as_of: "2026-07-15T20:00:00Z", recovered_from_run_id: "chaos-0", recovered_at: now },
+      { artifact_kind: "surface", entity: "actions_recent", payload_sha256: "e".repeat(64), source_as_of: null, recovered_from_run_id: "chaos-0", recovered_at: now },
+    ],
+    current_attempt: {
+      run_id: "recovery-1",
+      run_attempt: 1,
+      errors: [{ artifact_kind: "stock", entity: "AAPL", error: "PRIVATE PROVIDER ERROR" }],
+    },
+  });
+  const { root } = runBuilder(tmp, {}, now);
+  const stockLane = root.lanes.find((item) => item.id === "stock_s1_candidate_gate");
+  const surfaceLane = root.lanes.find((item) => item.id === "product_surface_freshness");
+  assert.deepEqual(stockLane.details.stockanalysis_recovery.degraded_entities, ["AAPL", "IBM"]);
+  assert.deepEqual(stockLane.details.stockanalysis_recovery.recovered_entities, ["MSFT"]);
+  assert.deepEqual(surfaceLane.details.stockanalysis_recovery.degraded_entities, ["earnings_calendar"]);
+  assert.deepEqual(surfaceLane.details.stockanalysis_recovery.recovered_entities, ["actions_recent"]);
+  assert.equal(root.source_artifacts.find((item) => item.id === "stockanalysis_recovery_state").generated_at, now);
+  assert.equal(JSON.stringify(root).includes("PRIVATE PROVIDER ERROR"), false);
+  ok("StockAnalysis degraded/recovered entities are named in KPI evidence without raw errors");
+}
+
 // 0. Real CLI integration: every live row in the installed detection-floor
 // report is consumed from data/admin; malformed JSON fails closed.
 {
