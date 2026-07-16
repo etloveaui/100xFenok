@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-07-16T11:57:42.116Z",
+  "generated_at": "2026-07-16T12:09:14.540Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -1550,7 +1550,7 @@
       "id": "KOSPI",
       "label": "KOSPI",
       "role": "secondary_input_only",
-      "public_status": "input_only_krx_exact_weights_with_caveats",
+      "public_status": "ready_inputs_and_forecast_grid",
       "observed": {
         "price": {
           "value": 7475.94,
@@ -1597,11 +1597,11 @@
           "as_of": "2026-07-10"
         },
         "risk_free_rate": {
-          "value": 0.04257,
+          "value": 0.04329,
           "source": "admin_private_path_redacted",
           "source_field": "OutBlock_1[ISU_NM=국고04250-3606(26-6),BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100",
           "source_tier": "observed_source",
-          "as_of": "2026-07-13",
+          "as_of": "2026-07-15",
           "label": "KRX KTS 10Y benchmark government bond yield",
           "raw_public": false,
           "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication."
@@ -1626,7 +1626,7 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.105263,
+          "value": 0.103816,
           "formula": "krx_kospi_mktcap_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
@@ -1637,10 +1637,10 @@
           "coverage": {
             "stock_action_source_date": "2026-07-10",
             "index_key": "kospi_krx_mktcap",
-            "krx_weight_as_of": "2026-07-13",
+            "krx_weight_as_of": "2026-07-15",
             "krx_weight_source": "admin_private_path_redacted",
             "raw_public": false,
-            "weighted_dividend_yield": 0.0162248,
+            "weighted_dividend_yield": 0.01600189,
             "benchmark_as_of": "2026-07-10",
             "benchmark_earnings_yield": 0.15413639,
             "unmatched_krx_sample": [
@@ -1655,12 +1655,12 @@
               "097955:CJ제일제당 우",
               "000480:CR홀딩스"
             ],
-            "value": 0.016224797,
-            "covered_rows": 238,
-            "total_rows": 945,
+            "value": 0.016001889,
+            "covered_rows": 237,
+            "total_rows": 944,
             "total_weight": 100,
-            "covered_weight": 91.2776,
-            "covered_weight_ratio": 0.912776,
+            "covered_weight": 91.5616,
+            "covered_weight_ratio": 0.915616,
             "missing_sample": []
           },
           "notes": [
@@ -1669,7 +1669,7 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.20495,
+          "value": 0.204743,
           "formula": "krx_kospi_mktcap_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
@@ -1679,7 +1679,7 @@
           "coverage": {
             "stock_action_source_date": "2026-07-10",
             "index_key": "kospi_krx_mktcap",
-            "krx_weight_as_of": "2026-07-13",
+            "krx_weight_as_of": "2026-07-15",
             "krx_weight_source": "admin_private_path_redacted",
             "raw_public": false,
             "min_covered_weight_ratio": 0.75,
@@ -1695,12 +1695,12 @@
               "097955:CJ제일제당 우",
               "000480:CR홀딩스"
             ],
-            "value": 0.204950353,
+            "value": 0.204742786,
             "covered_rows": 212,
-            "total_rows": 945,
+            "total_rows": 944,
             "total_weight": 100,
-            "covered_weight": 88.7726,
-            "covered_weight_ratio": 0.887726,
+            "covered_weight": 89.2719,
+            "covered_weight_ratio": 0.892719,
             "missing_sample": [
               "079160.KS",
               "093050.KS",
@@ -1708,10 +1708,10 @@
               "051910.KS",
               "011790.KS",
               "000050.SZ",
-              "012510.KS",
               "170900.KS",
               "336260.KS",
-              "020150.KS"
+              "020150.KS",
+              "011170.KS"
             ]
           },
           "notes": [
@@ -1720,7 +1720,7 @@
           ]
         },
         "cost_of_equity": {
-          "value": 0.0974777,
+          "value": 0.0981977,
           "formula": "risk_free_rate + equity_risk_premium",
           "sources": [
             "observed.risk_free_rate",
@@ -1755,7 +1755,7 @@
                 ]
               },
               "eps_growth": {
-                "value": 3.451522,
+                "value": 3.540411,
                 "formula": "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -1763,15 +1763,14 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 3.451521683,
+                  "value": 3.540411197,
                   "covered_rows": 226,
-                  "total_rows": 945,
+                  "total_rows": 944,
                   "total_weight": 100,
-                  "covered_weight": 90.8087,
-                  "covered_weight_ratio": 0.908087,
+                  "covered_weight": 91.2042,
+                  "covered_weight_ratio": 0.912042,
                   "missing_sample": [
                     "093050.KS",
-                    "012510.KS",
                     "170900.KS",
                     "001820.KS",
                     "075580.KS",
@@ -1779,7 +1778,8 @@
                     "137310.KS",
                     "007310.KS",
                     "003690.KS",
-                    "008930.KS"
+                    "008930.KS",
+                    "180640.KS"
                   ]
                 },
                 "notes": [
@@ -1796,7 +1796,7 @@
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 4529.3524,
+                "value": 4531.0198,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1814,7 +1814,7 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.496469,
+                "value": 0.513196,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -1822,15 +1822,14 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.496469351,
+                  "value": 0.513196394,
                   "covered_rows": 225,
-                  "total_rows": 945,
+                  "total_rows": 944,
                   "total_weight": 100,
-                  "covered_weight": 90.7497,
-                  "covered_weight_ratio": 0.907497,
+                  "covered_weight": 91.1514,
+                  "covered_weight_ratio": 0.911514,
                   "missing_sample": [
                     "093050.KS",
-                    "012510.KS",
                     "170900.KS",
                     "001820.KS",
                     "075580.KS",
@@ -1838,12 +1837,13 @@
                     "137310.KS",
                     "007310.KS",
                     "003690.KS",
-                    "008930.KS"
+                    "008930.KS",
+                    "180640.KS"
                   ]
                 }
               },
               "payout_ratio": {
-                "value": 0.105263,
+                "value": 0.103816,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1851,7 +1851,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.894737,
+                "value": 0.896184,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1859,7 +1859,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01622486,
+                "value": 0.01600182,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1878,7 +1878,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.3166,
+                "value": 0.3169,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -1890,7 +1890,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 811.3048,
+                "value": 808.786,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1910,7 +1910,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 1603.5387,
+                "value": 1605.2846,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/emerging.json",
@@ -1923,7 +1923,7 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.391581,
+                "value": 0.393096,
                 "formula": "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -1931,23 +1931,23 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.391580856,
+                  "value": 0.39309603,
                   "covered_rows": 215,
-                  "total_rows": 945,
+                  "total_rows": 944,
                   "total_weight": 100,
-                  "covered_weight": 88.7871,
-                  "covered_weight_ratio": 0.887871,
+                  "covered_weight": 89.2853,
+                  "covered_weight_ratio": 0.892853,
                   "missing_sample": [
                     "079160.KS",
                     "093050.KS",
                     "373220.KS",
                     "051910.KS",
                     "011790.KS",
-                    "012510.KS",
                     "170900.KS",
                     "336260.KS",
                     "020150.KS",
-                    "011170.KS"
+                    "011170.KS",
+                    "001820.KS"
                   ]
                 },
                 "notes": [
@@ -1955,7 +1955,7 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 4529.3524,
+                "value": 4531.0198,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
                   "benchmarks/emerging.json",
@@ -1964,7 +1964,7 @@
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 5964.0978,
+                "value": 5969.6502,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1973,7 +1973,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.354033,
+                "value": 0.354288,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1982,7 +1982,7 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.385633,
+                "value": 0.396619,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy2) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -1990,15 +1990,14 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.385632909,
+                  "value": 0.396618782,
                   "covered_rows": 225,
-                  "total_rows": 945,
+                  "total_rows": 944,
                   "total_weight": 100,
-                  "covered_weight": 90.7497,
-                  "covered_weight_ratio": 0.907497,
+                  "covered_weight": 91.1514,
+                  "covered_weight_ratio": 0.911514,
                   "missing_sample": [
                     "093050.KS",
-                    "012510.KS",
                     "170900.KS",
                     "001820.KS",
                     "075580.KS",
@@ -2006,12 +2005,13 @@
                     "137310.KS",
                     "007310.KS",
                     "003690.KS",
-                    "008930.KS"
+                    "008930.KS",
+                    "180640.KS"
                   ]
                 }
               },
               "payout_ratio": {
-                "value": 0.105263,
+                "value": 0.103816,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -2019,7 +2019,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.894737,
+                "value": 0.896184,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -2027,7 +2027,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.0225782,
+                "value": 0.02229208,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -2037,7 +2037,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 4.6622,
+                "value": 4.6571,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -2058,7 +2058,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1162.0278,
+                "value": 1160.3489,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -2078,7 +2078,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 1741.4044,
+                "value": 1737.0414,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/emerging.json",
@@ -2091,7 +2091,7 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.085976,
+                "value": 0.082077,
                 "formula": "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -2099,23 +2099,23 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.085975937,
+                  "value": 0.082076875,
                   "covered_rows": 221,
-                  "total_rows": 945,
+                  "total_rows": 944,
                   "total_weight": 100,
-                  "covered_weight": 90.6694,
-                  "covered_weight_ratio": 0.906694,
+                  "covered_weight": 91.072,
+                  "covered_weight_ratio": 0.91072,
                   "missing_sample": [
                     "093050.KS",
                     "011790.KS",
                     "000050.SZ",
-                    "012510.KS",
                     "170900.KS",
                     "011170.KS",
                     "035150.KS",
                     "001820.KS",
                     "075580.KS",
-                    "403550.KS"
+                    "403550.KS",
+                    "002790.KS"
                   ]
                 },
                 "notes": [
@@ -2123,7 +2123,7 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 5964.0978,
+                "value": 5969.6502,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
                   "benchmarks/emerging.json",
@@ -2132,7 +2132,7 @@
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 7522.1968,
+                "value": 7526.3589,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2141,7 +2141,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.291981,
+                "value": 0.290979,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2150,7 +2150,7 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.273419,
+                "value": 0.279532,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy3) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -2158,15 +2158,14 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.273419469,
+                  "value": 0.279532064,
                   "covered_rows": 225,
-                  "total_rows": 945,
+                  "total_rows": 944,
                   "total_weight": 100,
-                  "covered_weight": 90.7497,
-                  "covered_weight_ratio": 0.907497,
+                  "covered_weight": 91.1514,
+                  "covered_weight_ratio": 0.911514,
                   "missing_sample": [
                     "093050.KS",
-                    "012510.KS",
                     "170900.KS",
                     "001820.KS",
                     "075580.KS",
@@ -2174,12 +2173,13 @@
                     "137310.KS",
                     "007310.KS",
                     "003690.KS",
-                    "008930.KS"
+                    "008930.KS",
+                    "180640.KS"
                   ]
                 }
               },
               "payout_ratio": {
-                "value": 0.105263,
+                "value": 0.103816,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -2187,7 +2187,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.894737,
+                "value": 0.896184,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -2195,7 +2195,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.02451939,
+                "value": 0.02412174,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -2205,7 +2205,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 4.2931,
+                "value": 4.3038,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -2214,7 +2214,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.2095,
+                "value": 0.2102,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -2226,7 +2226,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1160.0379,
+                "value": 1150.8354,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -2250,35 +2250,35 @@
               "source": "admin_private_path_redacted",
               "bridge_source": "admin/fenok-edge-korea-krx-daily-index.json",
               "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
-              "as_of": "2026-07-13",
+              "as_of": "2026-07-15",
               "raw_public": false,
               "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.",
-              "krx_rows": 945,
-              "total_market_cap": 5572485079774514,
+              "krx_rows": 944,
+              "total_market_cap": 5961100249061447,
               "denominator": {
                 "method": "issuer_level_market_cap_sum",
                 "label": "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
                 "unit": "KRW",
-                "value": 5572485079774514
+                "value": 5961100249061447
               },
               "freshness": {
                 "generated_at_date": "2026-07-16",
-                "calendar_age_days": 3,
-                "business_age_days": 3,
+                "calendar_age_days": 1,
+                "business_age_days": 1,
                 "freshness_unit": "business_days",
                 "freshness_calendar": "krx_market",
                 "max_input_freshness_days": 2,
                 "future_date_anomaly": false,
-                "status": "refresh_recommended"
+                "status": "fresh_enough_for_input_slice"
               },
-              "matched_stock_action_rows": 238,
-              "matched_weight_ratio": 0.912776,
-              "dividend_yield_rows": 238,
-              "dividend_yield_weight_ratio": 0.912776,
-              "weighted_dividend_yield": 0.0162248,
+              "matched_stock_action_rows": 237,
+              "matched_weight_ratio": 0.915616,
+              "dividend_yield_rows": 237,
+              "dividend_yield_weight_ratio": 0.915616,
+              "weighted_dividend_yield": 0.01600189,
               "forward_eps_fy1_fy3_rows": 212,
-              "forward_eps_fy1_fy3_weight_ratio": 0.887726,
-              "weighted_forward_eps_3y_cagr": 0.20495,
+              "forward_eps_fy1_fy3_weight_ratio": 0.892719,
+              "weighted_forward_eps_3y_cagr": 0.204743,
               "min_public_card_weight_ratio": 0.75,
               "public_status": "krx_exact_weights_financials_coverage_ready",
               "missing_sample": [
@@ -2311,12 +2311,7 @@
         }
       },
       "assumptions": {},
-      "blockers": [
-        {
-          "code": "krx_kospi_daily_refresh_recommended",
-          "severity": "freshness_blocker"
-        }
-      ]
+      "blockers": []
     },
     "SOX": {
       "id": "SOX",
@@ -3113,35 +3108,35 @@
           "source": "admin_private_path_redacted",
           "bridge_source": "admin/fenok-edge-korea-krx-daily-index.json",
           "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
-          "as_of": "2026-07-13",
+          "as_of": "2026-07-15",
           "raw_public": false,
           "license_or_terms_note": "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.",
-          "krx_rows": 945,
-          "total_market_cap": 5572485079774514,
+          "krx_rows": 944,
+          "total_market_cap": 5961100249061447,
           "denominator": {
             "method": "issuer_level_market_cap_sum",
             "label": "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
             "unit": "KRW",
-            "value": 5572485079774514
+            "value": 5961100249061447
           },
           "freshness": {
             "generated_at_date": "2026-07-16",
-            "calendar_age_days": 3,
-            "business_age_days": 3,
+            "calendar_age_days": 1,
+            "business_age_days": 1,
             "freshness_unit": "business_days",
             "freshness_calendar": "krx_market",
             "max_input_freshness_days": 2,
             "future_date_anomaly": false,
-            "status": "refresh_recommended"
+            "status": "fresh_enough_for_input_slice"
           },
-          "matched_stock_action_rows": 238,
-          "matched_weight_ratio": 0.912776,
-          "dividend_yield_rows": 238,
-          "dividend_yield_weight_ratio": 0.912776,
-          "weighted_dividend_yield": 0.0162248,
+          "matched_stock_action_rows": 237,
+          "matched_weight_ratio": 0.915616,
+          "dividend_yield_rows": 237,
+          "dividend_yield_weight_ratio": 0.915616,
+          "weighted_dividend_yield": 0.01600189,
           "forward_eps_fy1_fy3_rows": 212,
-          "forward_eps_fy1_fy3_weight_ratio": 0.887726,
-          "weighted_forward_eps_3y_cagr": 0.20495,
+          "forward_eps_fy1_fy3_weight_ratio": 0.892719,
+          "weighted_forward_eps_3y_cagr": 0.204743,
           "min_public_card_weight_ratio": 0.75,
           "public_status": "krx_exact_weights_financials_coverage_ready",
           "missing_sample": [
