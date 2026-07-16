@@ -697,10 +697,16 @@ export function projectRecoveryRetrySet(state, laneId) {
   return retrySet.map((key) => {
     const item = state.items[key];
     const failureRunId = item?.latest_failure?.run_id;
+    const failureRunAttempt = item?.latest_failure?.run_attempt;
+    const failureObservedAt = item?.latest_failure?.observed_at;
+    const failureReason = item?.latest_failure?.reason;
     const recoveredFromRunId = item?.recovered_from_run_id ?? null;
     if (!item || item.key !== key || item.retry !== true
       || !["lkg_primary", "unavailable"].includes(item.resolution_state)
       || typeof failureRunId !== "string" || failureRunId === ""
+      || !Number.isInteger(failureRunAttempt) || failureRunAttempt < 1
+      || !isDetectionSourceStamp(failureObservedAt)
+      || typeof failureReason !== "string" || failureReason === ""
       || (recoveredFromRunId !== null && (typeof recoveredFromRunId !== "string" || recoveredFromRunId === ""))) {
       throw new Error(`detection floor ${laneId} recovery item ${key} is malformed`);
     }
@@ -1505,7 +1511,11 @@ export function buildSlickChartsDeliveryLane(nowIso, { dataRoot = DATA_ROOT, ass
   });
 }
 
-export function buildRimLane(rimInputs) {
+export function buildRimLane(rimInputs, soxRecoveryState = null) {
+  const soxRecoveryStatePresent = soxRecoveryState?.schema_version === "data-supply-lkg-state/v1"
+    && soxRecoveryState?.lane_id === "nasdaq_giw_sox";
+  const recoveryRetrySet = projectRecoveryRetrySet(soxRecoveryState, "nasdaq_giw_sox");
+  const recoveryRecovered = projectRecoveryRecoveredSet(soxRecoveryState, "nasdaq_giw_sox");
   const indexRows = Object.entries(rimInputs?.indices || {}).map(([id, item]) => {
     const blockers = Array.isArray(item?.blockers) ? item.blockers : [];
     return {
@@ -1536,6 +1546,24 @@ export function buildRimLane(rimInputs) {
       public_status: ccmp.public_status,
     }));
   }
+  checks.push(
+    diagnosticCheck(
+      "sox_recovery_state_present",
+      "SOX recovery state",
+      soxRecoveryStatePresent,
+      soxRecoveryStatePresent ? "nasdaq_giw_sox state is present" : "nasdaq_giw_sox state is not yet observed",
+      { service_gate: false },
+    ),
+    diagnosticCheck(
+      "sox_retry_set_empty",
+      "SOX LKG retry set",
+      recoveryRetrySet.length === 0,
+      recoveryRetrySet.length === 0
+        ? "retry set is empty"
+        : recoveryRetrySet.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; "),
+      { service_gate: false },
+    ),
+  );
   return lane("rim_inputs", "RIM inputs", checks, {
     counts: {
       required_ready: checks.filter((item) => item.required !== false && item.status === "ready").length,
@@ -1546,6 +1574,8 @@ export function buildRimLane(rimInputs) {
       output_scope: rimInputs?.output_scope ?? null,
       no_public_single_target: rimInputs?.policy?.no_public_single_target === true,
       public_mirror_policy: rimInputs?.public_mirror_policy ?? null,
+      recovery_retry_set: recoveryRetrySet,
+      recovery_recovered: recoveryRecovered,
     },
     asOf: rimInputs?.generated_at ?? null,
   });
@@ -1840,6 +1870,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
   const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
   const stockanalysisRecovery = readJson("admin/stockanalysis-recovery/index.json");
+  const nasdaqGiwSoxRecovery = readOptionalJsonStrict("admin/nasdaq_giw_sox/index.json");
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const generalRecoveryStates = Object.fromEntries(
@@ -1859,7 +1890,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket),
     buildYahooBatchLane(yahooBatchState, nowIso),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
-    buildRimLane(rimInputs),
+    buildRimLane(rimInputs, nasdaqGiwSoxRecovery),
     buildProductSurfaceLane(productCoverage, stockanalysisRecovery),
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),

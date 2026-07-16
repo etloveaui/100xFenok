@@ -13,6 +13,7 @@
       "treasury_tga",
       "yahoo_ticker_macro",
       "sentiment",
+      "nasdaq_giw_sox",
       "slickcharts",
       "edgar_filings",
       "sec_13f",
@@ -29,6 +30,7 @@
       "treasury_tga",
       "yahoo_ticker_macro",
       "sentiment",
+      "nasdaq_giw_sox",
       "daily",
       "weekly",
       "monthly",
@@ -42,9 +44,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "f8a3d8fa2939d7bb306d6c44c8f0d1f04ab80e080092ba4508acc02eb1245bdb",
-  "logical_lane_count": 14,
-  "producer_member_count": 18,
+  "config_digest": "c2b17b2d693f077ac2ef226256fb5fd4214489250accbf158dc05f5d976048e8",
+  "logical_lane_count": 15,
+  "producer_member_count": 19,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -72,29 +74,36 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "01a3f4ae8ad8781ba08e2d0198cad33a4da2cfc280491e6f37277807ba307cb2",
+    "report_file_sha256": "b0bbf8d1fbca463d316de5800760913be296668e8373e7e90910cb0f24a385f3",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "f8a3d8fa2939d7bb306d6c44c8f0d1f04ab80e080092ba4508acc02eb1245bdb",
-      "logical_lane_count": 14,
-      "producer_member_count": 18,
+      "config_digest": "c2b17b2d693f077ac2ef226256fb5fd4214489250accbf158dc05f5d976048e8",
+      "logical_lane_count": 15,
+      "producer_member_count": 19,
       "counts": {
-        "ready": 11,
+        "ready": 12,
         "stale": 0,
         "drift": 0,
         "unavailable": 0,
         "unobserved": 3,
-        "producer_members_ready": 15,
+        "producer_members_ready": 16,
         "producer_members_stale": 0,
         "producer_members_drift": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3
       },
+      "monitoring_mode_counts": {
+        "post_fetch_artifact": 11,
+        "artifact_only": 3,
+        "composite": 1
+      },
       "lanes": [
         {
           "id": "fred_macro",
           "label": "FRED macro series",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -112,13 +121,13 @@
           },
           "affected_surface_ids": [
             "macro_fred"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "fred_banking",
           "label": "FRED banking series",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -137,13 +146,13 @@
           "affected_surface_ids": [
             "banking_liquidity",
             "rim_index_inputs"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "fred_yardeni",
           "label": "FRED Yardeni model",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -161,13 +170,13 @@
           },
           "affected_surface_ids": [
             "yardeni_model"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "fdic_tier1",
           "label": "FDIC Tier 1 capital",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -185,13 +194,13 @@
           },
           "affected_surface_ids": [
             "banking_tier1"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "treasury_tga",
           "label": "US Treasury TGA",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -209,13 +218,13 @@
           },
           "affected_surface_ids": [
             "macro_tga"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "yahoo_ticker_macro",
           "label": "Yahoo macro tickers",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -233,13 +242,13 @@
           },
           "affected_surface_ids": [
             "macro_tickers"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "sentiment",
           "label": "Market sentiment",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -257,13 +266,37 @@
           },
           "affected_surface_ids": [
             "sentiment_dashboard"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
+        },
+        {
+          "id": "nasdaq_giw_sox",
+          "label": "Nasdaq GIW SOX constituents",
+          "enforcement": "shadow",
+          "kpi_required": false,
+          "monitoring_mode": "post_fetch_artifact",
+          "status": "ready",
+          "reason": "ok",
+          "endpoint": {
+            "status": "ready",
+            "reason": "ok",
+            "observed_at": "2026-07-11T00:00:00Z"
+          },
+          "artifact": {
+            "status": "ready",
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "age": 0,
+            "unit": "business_days"
+          },
+          "affected_surface_ids": [
+            "rim_index_inputs"
+          ]
         },
         {
           "id": "slickcharts",
           "label": "SlickCharts composite",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "composite",
           "status": "ready",
           "reason": "ok",
@@ -369,13 +402,13 @@
                 "unit": "calendar_days"
               }
             }
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "edgar_filings",
           "label": "SEC EDGAR filings",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -393,13 +426,13 @@
           },
           "affected_surface_ids": [
             "edgar_timeline"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "sec_13f",
           "label": "SEC 13F derivatives",
+          "enforcement": "shadow",
+          "kpi_required": false,
           "monitoring_mode": "artifact_only",
           "status": "unobserved",
           "reason": "workflow_unobserved",
@@ -417,13 +450,13 @@
           },
           "affected_surface_ids": [
             "sec_13f_analytics"
-          ],
-          "enforcement": "shadow",
-          "kpi_required": false
+          ]
         },
         {
           "id": "finra_short_volume",
           "label": "FINRA short volume",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -441,13 +474,13 @@
           },
           "affected_surface_ids": [
             "fenok_flow_proxies"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "occ_options_volume",
           "label": "OCC options volume",
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -465,13 +498,13 @@
           },
           "affected_surface_ids": [
             "fenok_occ_options"
-          ],
-          "enforcement": "live",
-          "kpi_required": true
+          ]
         },
         {
           "id": "apewisdom_attention",
           "label": "ApeWisdom attention",
+          "enforcement": "shadow",
+          "kpi_required": false,
           "monitoring_mode": "artifact_only",
           "status": "unobserved",
           "reason": "workflow_unobserved",
@@ -489,13 +522,13 @@
           },
           "affected_surface_ids": [
             "fenok_social_attention"
-          ],
-          "enforcement": "shadow",
-          "kpi_required": false
+          ]
         },
         {
           "id": "gdelt_news_tone",
           "label": "GDELT news tone",
+          "enforcement": "shadow",
+          "kpi_required": false,
           "monitoring_mode": "artifact_only",
           "status": "unobserved",
           "reason": "workflow_unobserved",
@@ -513,16 +546,9 @@
           },
           "affected_surface_ids": [
             "fenok_news_tone"
-          ],
-          "enforcement": "shadow",
-          "kpi_required": false
+          ]
         }
-      ],
-      "monitoring_mode_counts": {
-        "post_fetch_artifact": 10,
-        "artifact_only": 3,
-        "composite": 1
-      }
+      ]
     }
   },
   "reason_cases": [
@@ -593,6 +619,11 @@
     {
       "layout_id": "root_empty_artifact",
       "lane_id": "sentiment",
+      "expected_reason": "empty_payload"
+    },
+    {
+      "layout_id": "sox_short_artifact",
+      "lane_id": "nasdaq_giw_sox",
       "expected_reason": "empty_payload"
     },
     {

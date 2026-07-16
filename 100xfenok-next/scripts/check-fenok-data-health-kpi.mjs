@@ -229,7 +229,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   }
 }
 
-function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
+export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
   const adminRoot = path.dirname(rootKpiPath);
   const lanesById = new Map((rootDoc?.lanes || []).map((lane) => [lane?.id, lane]));
   for (const laneId of ["fred_macro", "fred_banking", "fdic_tier1"]) {
@@ -261,6 +261,42 @@ function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
     const actual = lane?.details?.recovery;
     push(errors, JSON.stringify(actual) === JSON.stringify(expected),
       `${laneId}: KPI recovery evidence does not match its source index`);
+  }
+  try {
+    const state = readOptionalJson(path.join(adminRoot, "nasdaq_giw_sox", "index.json"));
+    const rimLane = lanesById.get("rim_inputs");
+    const hasKpiEvidence = Object.hasOwn(rimLane?.details ?? {}, "recovery_retry_set")
+      || Object.hasOwn(rimLane?.details ?? {}, "recovery_recovered");
+    if (state !== null || hasKpiEvidence) {
+      const expectedRetry = projectRecoveryRetrySet(state, "nasdaq_giw_sox");
+      const expectedRecovered = projectRecoveryRecoveredSet(state, "nasdaq_giw_sox");
+      push(errors, JSON.stringify(rimLane?.details?.recovery_retry_set) === JSON.stringify(expectedRetry),
+        "rim_inputs: SOX KPI recovery_retry_set does not match its source index");
+      push(errors, JSON.stringify(rimLane?.details?.recovery_recovered) === JSON.stringify(expectedRecovered),
+        "rim_inputs: SOX KPI recovery_recovered does not match its source index");
+      const soxChecks = (rimLane?.checks || []).filter((row) => String(row?.id ?? "").startsWith("sox_"));
+      push(errors, JSON.stringify(soxChecks.map((row) => row?.id)) === JSON.stringify([
+        "sox_recovery_state_present",
+        "sox_retry_set_empty",
+      ]), "rim_inputs: SOX named recovery checks are incomplete or out of order");
+      const stateCheck = soxChecks[0];
+      const retryCheck = soxChecks[1];
+      const expectedRetryDetail = expectedRetry.length === 0
+        ? "retry set is empty"
+        : expectedRetry.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; ");
+      push(errors, stateCheck?.status === (state === null ? "warning" : "ready"),
+        "rim_inputs: SOX recovery-state check contradicts its source index");
+      push(errors, retryCheck?.status === (expectedRetry.length === 0 ? "ready" : "warning"),
+        "rim_inputs: SOX retry check contradicts its source index");
+      push(errors, retryCheck?.detail === expectedRetryDetail,
+        "rim_inputs: SOX retry check detail contradicts its source index");
+      for (const check of soxChecks) {
+        push(errors, check?.required === false, `rim_inputs: ${check?.id ?? "SOX check"} must remain non-required`);
+        push(errors, check?.platform_blocking === false, `rim_inputs: ${check?.id ?? "SOX check"} must remain non-platform-blocking`);
+      }
+    }
+  } catch (error) {
+    errors.push(`rim_inputs: SOX recovery state source is invalid (${error.message})`);
   }
 }
 

@@ -46,6 +46,7 @@ import {
   checkSourceSla,
   checkPublicProjection,
   checkDetectionFloorLane,
+  checkRecoveryStateSources,
 } from "../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs";
 import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
@@ -85,6 +86,97 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const readyLane = buildRimLane(readyRim);
   assert.equal(readyLane.status, "ready");
   assert.equal(readyLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "ready");
+
+  const soxRetryState = {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "nasdaq_giw_sox",
+    updated_at: "2026-07-16T02:00:00.000Z",
+    retry_set: ["constituents"],
+    items: {
+      constituents: {
+        key: "constituents",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-15",
+        },
+        lkg: {
+          path: "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-15",
+        },
+        latest_failure: {
+          run_id: "sox-failure-run",
+          run_attempt: 1,
+          observed_at: "2026-07-16T02:00:00.000Z",
+          reason: "controlled_failure",
+        },
+      },
+    },
+  };
+  const retryLane = buildRimLane(readyRim, soxRetryState);
+  assert.equal(retryLane.status, "ready", "shadow SOX recovery evidence stays non-required");
+  assert.equal(retryLane.checks.find((row) => row.id === "sox_retry_set_empty")?.status, "warning");
+  assert.deepEqual(retryLane.details.recovery_retry_set, [{
+    key: "constituents",
+    resolution_state: "lkg_primary",
+    failure_run_id: "sox-failure-run",
+    recovered_from_run_id: null,
+  }]);
+  assert.deepEqual(retryLane.details.recovery_recovered, []);
+  const incompleteFailureState = structuredClone(soxRetryState);
+  delete incompleteFailureState.items.constituents.latest_failure.reason;
+  assert.throws(() => buildRimLane(readyRim, incompleteFailureState), /recovery item constituents is malformed/);
+
+  const naturalRecoveryState = {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "nasdaq_giw_sox",
+    updated_at: "2026-07-17T00:00:00.000Z",
+    retry_set: [],
+    items: {
+      constituents: {
+        key: "constituents",
+        resolution_state: "fresh_primary",
+        retry: false,
+        current: {
+          path: "data/indices/nasdaq-giw-sox-constituents.json",
+          payload_sha256: "b".repeat(64),
+          source_as_of: "2026-07-16",
+        },
+        lkg: {
+          path: "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-15",
+        },
+        recovered_from_run_id: "sox-failure-run",
+        recovered_at: "2026-07-17T00:00:00.000Z",
+        recovery_run_id: "sox-natural-run",
+        recovery_run_attempt: 1,
+        recovery_event_name: "schedule",
+        last_recovered_failure: {
+          run_id: "sox-failure-run",
+          run_attempt: 1,
+          observed_at: "2026-07-16T02:00:00.000Z",
+          reason: "controlled_failure",
+        },
+      },
+    },
+  };
+  const naturalRecoveryLane = buildRimLane(readyRim, naturalRecoveryState);
+  assert.equal(naturalRecoveryLane.details.recovery_recovered[0].recovery_event_name, "schedule");
+  assert.equal(naturalRecoveryLane.details.recovery_recovered[0].recovered_from_run_id, "sox-failure-run");
+  const publicNatural = projectPublicKpi({ lanes: [naturalRecoveryLane] }, "2026-07-17T00:05:00.000Z");
+  assert.deepEqual(publicNatural.lanes[0].details.recovery_recovered, naturalRecoveryLane.details.recovery_recovered);
+  assert.equal(JSON.stringify(publicNatural).includes("payload_sha256"), false);
+
+  const legacyDispatchRecovery = structuredClone(naturalRecoveryState);
+  delete legacyDispatchRecovery.items.constituents.recovery_run_id;
+  delete legacyDispatchRecovery.items.constituents.recovery_run_attempt;
+  delete legacyDispatchRecovery.items.constituents.recovery_event_name;
+  assert.deepEqual(buildRimLane(readyRim, legacyDispatchRecovery).details.recovery_recovered, [],
+    "dispatch-era recovery without natural schedule proof cannot prove SOX recovery");
 
   const staleRim = structuredClone(readyRim);
   staleRim.indices.KOSPI.public_status = "input_only_krx_exact_weights_with_caveats";
@@ -1143,6 +1235,68 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("sentiment retained-LKG retry source is named in private and public KPI evidence");
 }
 
+// SOX remains a shadow detection lane, but its bounded recovery evidence is
+// projected through rim_inputs and independently bound to the source index.
+{
+  const now = "2026-07-14T12:00:00.000Z";
+  const tmp = mkTmp("sox-natural-recovery-kpi");
+  const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  writeJson(path.join(tmp, "data", "admin", "nasdaq_giw_sox", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "nasdaq_giw_sox",
+    updated_at: now,
+    retry_set: [],
+    items: {
+      constituents: {
+        key: "constituents",
+        resolution_state: "fresh_primary",
+        retry: false,
+        current: {
+          path: "data/indices/nasdaq-giw-sox-constituents.json",
+          payload_sha256: "b".repeat(64),
+          source_as_of: "2026-07-10",
+        },
+        lkg: {
+          path: "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-09",
+        },
+        recovered_from_run_id: "sox-chaos-1",
+        recovered_at: now,
+        recovery_run_id: "sox-natural-2",
+        recovery_run_attempt: 1,
+        recovery_event_name: "schedule",
+        last_recovered_failure: {
+          run_id: "sox-chaos-1",
+          run_attempt: 1,
+          observed_at: "2026-07-13T12:00:00.000Z",
+          reason: "controlled_failure",
+        },
+      },
+    },
+  });
+  const { root, public: pub } = runBuilder(tmp, {}, now);
+  const rim = root.lanes.find((item) => item.id === "rim_inputs");
+  assert.equal(rim.checks.find((item) => item.id === "sox_recovery_state_present")?.status, "ready");
+  assert.equal(rim.checks.find((item) => item.id === "sox_retry_set_empty")?.status, "ready");
+  assert.equal(rim.details.recovery_recovered[0].recovery_run_id, "sox-natural-2");
+  assert.deepEqual(pub.lanes.find((item) => item.id === "rim_inputs")?.details?.recovery_recovered,
+    rim.details.recovery_recovered);
+  assert.equal(JSON.stringify(pub).includes("payload_sha256"), false);
+  const sourceErrors = [];
+  checkRecoveryStateSources(root, path.join(tmp, "data", KPI_REL), sourceErrors);
+  assert.deepEqual(sourceErrors, [], "checker accepts source-bound natural SOX recovery evidence");
+
+  const tamperedRoot = structuredClone(root);
+  tamperedRoot.lanes.find((item) => item.id === "rim_inputs").checks
+    .find((item) => item.id === "sox_retry_set_empty").status = "warning";
+  const tamperedErrors = [];
+  checkRecoveryStateSources(tamperedRoot, path.join(tmp, "data", KPI_REL), tamperedErrors);
+  assert.ok(tamperedErrors.some((error) => /SOX retry check contradicts its source index/.test(error)));
+  ok("SOX natural recovery survives public projection and checker rejects a laundered named check");
+}
+
 // 1. push build -> non-authoritative, producer null
 {
   const tmp = mkTmp("push");
@@ -1258,7 +1412,12 @@ console.log("# KPI v2 runtime self-proof fixtures");
           payload_sha256: "a".repeat(64),
           source_as_of: "2026-03-31",
         },
-        latest_failure: { run_id: "4001" },
+        latest_failure: {
+          run_id: "4001",
+          run_attempt: 1,
+          observed_at: "2026-07-10T02:00:00.000Z",
+          reason: "controlled_failure",
+        },
       },
     },
   });
@@ -1266,6 +1425,47 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(result.exit, 1);
   assert.match(result.stderr, /KPI recovery_retry_set does not match its source index/);
   ok("checker rejects KPI recovery evidence that omits a source-index retry key");
+}
+
+{
+  const tmp = mkTmp("checker-sox-recovery-source");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "sox-recovery-source" });
+  runtime.cadence.v2_activated_at = now;
+  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  writeJson(path.join(tmp, "data", "admin", "nasdaq_giw_sox", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "nasdaq_giw_sox",
+    updated_at: now,
+    retry_set: ["constituents"],
+    items: {
+      constituents: {
+        key: "constituents",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+          payload_sha256: "c".repeat(64),
+          source_as_of: "2026-07-09",
+        },
+        lkg: {
+          path: "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+          payload_sha256: "c".repeat(64),
+          source_as_of: "2026-07-09",
+        },
+        latest_failure: {
+          run_id: "sox-4001",
+          run_attempt: 1,
+          observed_at: "2026-07-10T02:00:00.000Z",
+          reason: "controlled_failure",
+        },
+      },
+    },
+  });
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /SOX KPI recovery_retry_set does not match its source index/);
+  ok("checker rejects rim_inputs SOX recovery evidence that omits a source-index retry key");
 }
 
 {

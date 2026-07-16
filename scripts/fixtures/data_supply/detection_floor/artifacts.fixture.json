@@ -148,6 +148,36 @@
       "content": []
     },
     {
+      "id": "nasdaq_giw_sox",
+      "encoding": "json",
+      "content": {
+        "schema_version": "nasdaq_giw_sox_constituents.v1",
+        "generated_at": "2026-07-11T00:00:00Z",
+        "source": "Nasdaq Global Index Watch",
+        "access_scope": "public_free_constituent_view_no_official_weight_columns",
+        "index_id": "SOX",
+        "as_of": "2026-07-10",
+        "row_count": 25,
+        "symbols": ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S25"],
+        "rows": [{"rank":1,"name":"Company 1","symbol":"S01"},{"rank":2,"name":"Company 2","symbol":"S02"},{"rank":3,"name":"Company 3","symbol":"S03"},{"rank":4,"name":"Company 4","symbol":"S04"},{"rank":5,"name":"Company 5","symbol":"S05"},{"rank":6,"name":"Company 6","symbol":"S06"},{"rank":7,"name":"Company 7","symbol":"S07"},{"rank":8,"name":"Company 8","symbol":"S08"},{"rank":9,"name":"Company 9","symbol":"S09"},{"rank":10,"name":"Company 10","symbol":"S10"},{"rank":11,"name":"Company 11","symbol":"S11"},{"rank":12,"name":"Company 12","symbol":"S12"},{"rank":13,"name":"Company 13","symbol":"S13"},{"rank":14,"name":"Company 14","symbol":"S14"},{"rank":15,"name":"Company 15","symbol":"S15"},{"rank":16,"name":"Company 16","symbol":"S16"},{"rank":17,"name":"Company 17","symbol":"S17"},{"rank":18,"name":"Company 18","symbol":"S18"},{"rank":19,"name":"Company 19","symbol":"S19"},{"rank":20,"name":"Company 20","symbol":"S20"},{"rank":21,"name":"Company 21","symbol":"S21"},{"rank":22,"name":"Company 22","symbol":"S22"},{"rank":23,"name":"Company 23","symbol":"S23"},{"rank":24,"name":"Company 24","symbol":"S24"},{"rank":25,"name":"Company 25","symbol":"S25"}]
+      }
+    },
+    {
+      "id": "nasdaq_giw_sox_short",
+      "encoding": "json",
+      "content": {
+        "schema_version": "nasdaq_giw_sox_constituents.v1",
+        "generated_at": "2026-07-11T00:00:00Z",
+        "source": "Nasdaq Global Index Watch",
+        "access_scope": "public_free_constituent_view_no_official_weight_columns",
+        "index_id": "SOX",
+        "as_of": "2026-07-10",
+        "row_count": 1,
+        "symbols": ["S01"],
+        "rows": [{"rank":1,"name":"Company 1","symbol":"S01"}]
+      }
+    },
+    {
       "id": "slick_daily",
       "encoding": "json",
       "content": { "updated": "2026-07-10T20:00:00+00:00", "source": "slickcharts", "history": [{ "date": "2026-07-10", "count": 1, "gainers": [{ "symbol": "AAA" }] }] }
@@ -266,6 +296,11 @@
           "path": "data/sentiment/vix.json",
           "node_type": "regular",
           "document_id": "vix"
+        },
+        {
+          "path": "data/indices/nasdaq-giw-sox-constituents.json",
+          "node_type": "regular",
+          "document_id": "nasdaq_giw_sox"
         },
         {
           "path": "data/slickcharts/gainers.json",
@@ -400,6 +435,16 @@
           "path": "data/sentiment/vix.json",
           "node_type": "regular",
           "document_id": "vix_empty"
+        }
+      ]
+    },
+    {
+      "id": "sox_short_artifact",
+      "nodes": [
+        {
+          "path": "data/indices/nasdaq-giw-sox-constituents.json",
+          "node_type": "regular",
+          "document_id": "nasdaq_giw_sox_short"
         }
       ]
     },

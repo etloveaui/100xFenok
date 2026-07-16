@@ -8,6 +8,7 @@ const LANE_IDS = Object.freeze([
   "treasury_tga",
   "yahoo_ticker_macro",
   "sentiment",
+  "nasdaq_giw_sox",
   "slickcharts",
   "edgar_filings",
   "sec_13f",
@@ -40,6 +41,7 @@ const MEMBER_IDS = Object.freeze([
   "treasury_tga",
   "yahoo_ticker_macro",
   "sentiment",
+  "nasdaq_giw_sox",
   "daily",
   "weekly",
   "monthly",
@@ -80,6 +82,8 @@ const ASSERTION_KINDS = new Set([
   "min_keys",
   "non_empty_series",
   "object_fields",
+  "object_array_fields",
+  "counted_identity_rows",
   "normalized_series_bundle",
 ]);
 const JSON_TYPES = new Set(["array", "boolean", "null", "number", "object", "string"]);
@@ -137,6 +141,25 @@ function typeAssertion(id, pointer, expected) {
 
 function objectFieldsAssertion(id, pointer, fields) {
   return { id, kind: "object_fields", pointer, fields };
+}
+
+function objectArrayFieldsAssertion(id, pointer, { fields, min, nonEmptyFields, uniqueBy }) {
+  return { id, kind: "object_array_fields", pointer, fields, min, non_empty_fields: nonEmptyFields, unique_by: uniqueBy };
+}
+
+function countedIdentityRowsAssertion(id, pointer, options) {
+  return {
+    id,
+    kind: "counted_identity_rows",
+    pointer,
+    count_field: options.countField,
+    identities_field: options.identitiesField,
+    rows_field: options.rowsField,
+    row_identity_field: options.rowIdentityField,
+    row_rank_field: options.rowRankField,
+    row_string_fields: options.rowStringFields,
+    min: options.min,
+  };
 }
 
 function normalizedSeriesBundleAssertion(id, pointer) {
@@ -243,8 +266,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 14,
-  producer_member_count: 18,
+  logical_lane_count: 15,
+  producer_member_count: 19,
   lanes: [
     lane({
       id: "fred_macro",
@@ -405,6 +428,46 @@ const config = {
       ),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["sentiment_dashboard"],
+    }),
+    lane({
+      id: "nasdaq_giw_sox",
+      label: "Nasdaq GIW SOX constituents",
+      ownerWorkflow: ".github/workflows/fetch-nasdaq-giw-sox.yml",
+      members: [member("nasdaq_giw_sox", ".github/workflows/fetch-nasdaq-giw-sox.yml", ["50 23 * * 1-5"], [
+        artifact("nasdaq_giw_sox_constituents", "data/indices/nasdaq-giw-sox-constituents.json", {
+          schemaVersion: schemaVersion("/schema_version", "nasdaq_giw_sox_constituents.v1"),
+          sourceSelector: pointerSource("/as_of", "date"),
+          assertions: [
+            exactAssertion("source_nasdaq_giw", "/source", "Nasdaq Global Index Watch"),
+            exactAssertion("index_sox", "/index_id", "SOX"),
+            typeAssertion("row_count_number", "/row_count", "number"),
+            typeAssertion("symbols_array", "/symbols", "array"),
+            minRowsAssertion("symbols_min_count", "/symbols", 25),
+            typeAssertion("rows_array", "/rows", "array"),
+            minRowsAssertion("rows_min_count", "/rows", 25),
+            countedIdentityRowsAssertion("constituent_identity_consistency", "", {
+              countField: "row_count",
+              identitiesField: "symbols",
+              rowsField: "rows",
+              rowIdentityField: "symbol",
+              rowRankField: "rank",
+              rowStringFields: ["name", "symbol"],
+              min: 25,
+            }),
+          ],
+        }),
+      ], "us_trading")],
+      endpointContract: endpointAssertion(
+        "nasdaq_giw_weighting",
+        objectArrayFieldsAssertion("weighting_rows_array", "/aaData", {
+          fields: { Name: "string", Symbol: "string" },
+          min: 25,
+          nonEmptyFields: ["Name", "Symbol"],
+          uniqueBy: "Symbol",
+        }),
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
+      affectedSurfaceIds: ["rim_index_inputs"],
     }),
     lane({
       id: "slickcharts",
@@ -650,6 +713,33 @@ function validateAssertion(assertion, context) {
       if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(field)) fail(`${context}.fields key is invalid`);
       if (!JSON_TYPES.has(expected)) fail(`${context}.fields.${field} is unknown`);
     });
+  } else if (assertion.kind === "object_array_fields") {
+    exactKeys(assertion, ["id", "kind", "pointer", "fields", "min", "non_empty_fields", "unique_by"], context);
+    if (!isPlainObject(assertion.fields) || Object.keys(assertion.fields).length === 0) fail(`${context}.fields must be a non-empty object`);
+    Object.entries(assertion.fields).forEach(([field, expected]) => {
+      if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(field)) fail(`${context}.fields key is invalid`);
+      if (!JSON_TYPES.has(expected)) fail(`${context}.fields.${field} is unknown`);
+    });
+    if (!Number.isSafeInteger(assertion.min) || assertion.min < 1) fail(`${context}.min must be a positive integer`);
+    requireUniqueStrings(assertion.non_empty_fields, `${context}.non_empty_fields`);
+    if (assertion.non_empty_fields.some((field) => assertion.fields[field] !== "string")) {
+      fail(`${context}.non_empty_fields must name string fields`);
+    }
+    requireString(assertion.unique_by, `${context}.unique_by`);
+    if (!Object.hasOwn(assertion.fields, assertion.unique_by)) fail(`${context}.unique_by must name a declared field`);
+  } else if (assertion.kind === "counted_identity_rows") {
+    exactKeys(assertion, [
+      "id", "kind", "pointer", "count_field", "identities_field", "rows_field",
+      "row_identity_field", "row_rank_field", "row_string_fields", "min",
+    ], context);
+    for (const field of [
+      "count_field", "identities_field", "rows_field", "row_identity_field", "row_rank_field",
+    ]) requireIdentifier(assertion[field], `${context}.${field}`);
+    requireUniqueStrings(assertion.row_string_fields, `${context}.row_string_fields`, { identifiers: true });
+    if (!assertion.row_string_fields.includes(assertion.row_identity_field)) {
+      fail(`${context}.row_string_fields must include row_identity_field`);
+    }
+    if (!Number.isSafeInteger(assertion.min) || assertion.min < 1) fail(`${context}.min must be a positive integer`);
   } else if (assertion.kind === "enum") {
     exactKeys(assertion, ["id", "kind", "pointer", "values"], context);
     if (!Array.isArray(assertion.values) || assertion.values.length === 0) fail(`${context}.values must be non-empty`);
@@ -895,8 +985,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 14 || configValue.producer_member_count !== 18) fail("denominator must be 14/18");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 14) fail("lanes must contain exactly 14 rows");
+  if (configValue.logical_lane_count !== 15 || configValue.producer_member_count !== 19) fail("denominator must be 15/19");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 15) fail("lanes must contain exactly 15 rows");
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
   if (canonicalJson(laneIds) !== canonicalJson(LANE_IDS)) fail("logical lane order or identity changed");
   configValue.lanes.forEach(validateLane);
@@ -910,7 +1000,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 18 || new Set(memberIds).size !== 18 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 19 || new Set(memberIds).size !== 19 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);

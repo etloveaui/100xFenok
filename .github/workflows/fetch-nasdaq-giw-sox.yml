@@ -9,6 +9,12 @@ on:
     # Weekday refresh after US close (KST Tue-Sat 08:50).
     - cron: '50 23 * * 1-5'
   workflow_dispatch:
+    inputs:
+      controlled_failure_key:
+        description: 'Dispatch-only chaos key (constituents)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -37,16 +43,42 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Test Nasdaq GIW SOX producer contracts
+        run: node scripts/test-fetch-nasdaq-giw-sox-constituents.mjs
+
       - name: Fetch Nasdaq GIW SOX constituents
+        id: fetch_sox
         # This lane owns constituent membership only. Yahoo quote/history stays
         # in the Yahoo lane; a new member is pending until its next natural run.
+        env:
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-nasdaq-giw-sox-constituents.mjs --no-public-mirror
 
       - name: Commit and push SOX daily data
+        if: ${{ always() }}
+        env:
+          FETCH_OUTCOME: ${{ steps.fetch_sox.outcome }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- data/indices/nasdaq-giw-sox-constituents.json
+          SHARD="data/admin/data-supply-state/detection-attempts/nasdaq_giw_sox.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ -f data/admin/nasdaq_giw_sox/index.json ]]; then
+            git add -- data/admin/nasdaq_giw_sox/index.json
+          fi
+          if [[ -f data/admin/nasdaq_giw_sox/lkg/constituents.json ]]; then
+            git add -- data/admin/nasdaq_giw_sox/lkg/constituents.json
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- data/indices/nasdaq-giw-sox-constituents.json
+          fi
+          if git diff --staged --quiet; then
+            echo "No SOX GIW changes to publish"
+            exit 0
+          fi
           git diff --staged --quiet || git commit -m "data: refresh SOX GIW RIM inputs"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then

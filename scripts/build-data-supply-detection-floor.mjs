@@ -328,6 +328,37 @@ function assertArtifact(document, assertion) {
   if (assertion.kind === "enum") return value !== undefined && assertion.values.some((entry) => canonicalJson(entry) === canonicalJson(value));
   if (assertion.kind === "min_rows") return Array.isArray(value) && value.length >= assertion.min;
   if (assertion.kind === "min_keys") return isPlainObject(value) && Object.keys(value).length >= assertion.min;
+  if (assertion.kind === "object_array_fields") {
+    if (!Array.isArray(value) || value.length < assertion.min) return false;
+    const unique = new Set();
+    for (const row of value) {
+      if (!isPlainObject(row)
+        || !Object.entries(assertion.fields).every(([field, expected]) => jsonType(row[field]) === expected)
+        || assertion.non_empty_fields.some((field) => row[field].trim() === "")) return false;
+      const identity = row[assertion.unique_by];
+      const normalizedIdentity = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
+      if (unique.has(normalizedIdentity)) return false;
+      unique.add(normalizedIdentity);
+    }
+    return true;
+  }
+  if (assertion.kind === "counted_identity_rows") {
+    const count = value?.[assertion.count_field];
+    const identities = value?.[assertion.identities_field];
+    const rows = value?.[assertion.rows_field];
+    if (!Number.isInteger(count) || count < assertion.min || !Array.isArray(identities) || !Array.isArray(rows)
+      || identities.length !== count || rows.length !== count) return false;
+    const unique = new Set();
+    return rows.every((row, index) => {
+      const identity = row?.[assertion.row_identity_field];
+      const normalizedIdentity = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
+      if (!isPlainObject(row) || row[assertion.row_rank_field] !== index + 1
+        || assertion.row_string_fields.some((field) => typeof row[field] !== "string" || row[field].trim() === "")
+        || identities[index] !== identity || unique.has(normalizedIdentity)) return false;
+      unique.add(normalizedIdentity);
+      return true;
+    });
+  }
   if (assertion.kind === "exact") return value !== undefined && canonicalJson(value) === canonicalJson(assertion.value);
   if (assertion.kind === "non_empty_series") {
     return isPlainObject(value) && Object.keys(value).length > 0
@@ -1081,15 +1112,16 @@ export function buildDetectionReport({
     producer_members_unavailable: memberCounts.unavailable,
     producer_members_unobserved: memberCounts.unobserved,
   };
-  if (lanes.length !== 14 || Object.values(memberCounts).reduce((sum, value) => sum + value, 0) !== 18) {
+  if (lanes.length !== config.logical_lane_count
+    || Object.values(memberCounts).reduce((sum, value) => sum + value, 0) !== config.producer_member_count) {
     fail("schema_error", "report denominator changed");
   }
   const report = {
     schema_version: REPORT_SCHEMA,
     generated_at: now,
     config_digest: digestConfig(config),
-    logical_lane_count: 14,
-    producer_member_count: 18,
+    logical_lane_count: config.logical_lane_count,
+    producer_member_count: config.producer_member_count,
     counts,
     monitoring_mode_counts: monitoringModeCounts,
     lanes,
@@ -1143,7 +1175,10 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
   ], "report");
   if (report.schema_version !== REPORT_SCHEMA || report.config_digest !== digestConfig(config)) fail("schema_error", "report schema/config digest is invalid");
   strictUtc(report.generated_at, "report.generated_at");
-  if (report.logical_lane_count !== 14 || report.producer_member_count !== 18 || !Array.isArray(report.lanes) || report.lanes.length !== 14) {
+  if (report.logical_lane_count !== config.logical_lane_count
+    || report.producer_member_count !== config.producer_member_count
+    || !Array.isArray(report.lanes)
+    || report.lanes.length !== config.logical_lane_count) {
     fail("schema_error", "report denominator is invalid");
   }
   const countKeys = [

@@ -249,6 +249,38 @@ function assertionPassed(assertion, document) {
     return value !== null && typeof value === "object" && !Array.isArray(value)
       && Object.entries(assertion.fields).every(([field, expected]) => typeMatches(value[field], expected));
   }
+  if (assertion.kind === "object_array_fields") {
+    if (!Array.isArray(value) || value.length < assertion.min) return false;
+    const unique = new Set();
+    for (const row of value) {
+      if (row === null || typeof row !== "object" || Array.isArray(row)
+        || !Object.entries(assertion.fields).every(([field, expected]) => typeMatches(row[field], expected))
+        || assertion.non_empty_fields.some((field) => row[field].trim() === "")) return false;
+      const identity = row[assertion.unique_by];
+      const normalizedIdentity = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
+      if (unique.has(normalizedIdentity)) return false;
+      unique.add(normalizedIdentity);
+    }
+    return true;
+  }
+  if (assertion.kind === "counted_identity_rows") {
+    const count = value?.[assertion.count_field];
+    const identities = value?.[assertion.identities_field];
+    const rows = value?.[assertion.rows_field];
+    if (!Number.isInteger(count) || count < assertion.min || !Array.isArray(identities) || !Array.isArray(rows)
+      || identities.length !== count || rows.length !== count) return false;
+    const unique = new Set();
+    return rows.every((row, index) => {
+      const identity = row?.[assertion.row_identity_field];
+      const normalizedIdentity = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
+      if (row === null || typeof row !== "object" || Array.isArray(row)
+        || row[assertion.row_rank_field] !== index + 1
+        || assertion.row_string_fields.some((field) => typeof row[field] !== "string" || row[field].trim() === "")
+        || identities[index] !== identity || unique.has(normalizedIdentity)) return false;
+      unique.add(normalizedIdentity);
+      return true;
+    });
+  }
   if (assertion.kind === "normalized_series_bundle") {
     return Array.isArray(value) && value.length > 0 && value.every((entry) => (
       entry !== null
