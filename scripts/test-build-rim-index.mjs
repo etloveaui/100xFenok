@@ -386,12 +386,25 @@ assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.resolve
 const kospi = payload.indices.KOSPI;
 assert.doesNotMatch(String(kospi.observed.risk_free_rate.source_field ?? ""), /DGS10/);
 if (kospi.role === "secondary_input_only") {
-  assert.equal(kospi.public_status, "ready_inputs_and_forecast_grid");
+  const liveKrxFreshness = payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.freshness;
+  assert.ok(
+    ["fresh_enough_for_input_slice", "refresh_recommended"].includes(liveKrxFreshness.status),
+    `unexpected live KRX freshness status: ${liveKrxFreshness.status}`,
+  );
+  if (liveKrxFreshness.status === "refresh_recommended") {
+    assert.equal(kospi.public_status, "input_only_krx_exact_weights_with_caveats");
+    assert.deepEqual(kospi.blockers, [{
+      code: "krx_kospi_daily_refresh_recommended",
+      severity: "freshness_blocker",
+    }]);
+  } else {
+    assert.equal(kospi.public_status, "ready_inputs_and_forecast_grid");
+    assert.equal(kospi.blockers.length, 0);
+  }
   assert.equal(kospi.observed.risk_free_rate.source_tier, "observed_source");
   assert.match(kospi.observed.risk_free_rate.source, /(kts_bydd_trd\/\d{8}\.json|derived_rim_inputs\.korea_10y)/);
   assert.ok(kospi.observed.risk_free_rate.value > 0.01);
   assert.ok(kospi.observed.risk_free_rate.value < 0.1);
-  assert.equal(kospi.blockers.length, 0);
   assert.ok(!kospi.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
   assert.ok(!kospi.blockers.some((blocker) => blocker.code === "country_risk_free_source_solved_not_wired"));
   assert.equal(kospi.derived.payout_ratio.source_tier, "derived_formula");
