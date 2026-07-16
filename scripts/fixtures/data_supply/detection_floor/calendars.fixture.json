@@ -54,6 +54,15 @@
   ],
   "schedules": [
     {
+      "id": "hourly_at_00",
+      "cron": "0 * * * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 2
+      }
+    },
+    {
       "id": "hourly_at_05",
       "cron": "5 * * * *",
       "calendar_id": "utc",

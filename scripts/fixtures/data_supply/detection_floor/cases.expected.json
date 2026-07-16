@@ -11,6 +11,7 @@
       "fred_yardeni",
       "fdic_tier1",
       "treasury_tga",
+      "defillama_stablecoins",
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
@@ -28,6 +29,7 @@
       "fred_yardeni",
       "fdic_tier1",
       "treasury_tga",
+      "defillama_stablecoins",
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
@@ -44,9 +46,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "c2b17b2d693f077ac2ef226256fb5fd4214489250accbf158dc05f5d976048e8",
-  "logical_lane_count": 15,
-  "producer_member_count": 19,
+  "config_digest": "8b0a3e62a996ce481b8b739cd71995b1dbe4dbb282f772854305a83a84147885",
+  "logical_lane_count": 16,
+  "producer_member_count": 20,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -74,27 +76,27 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "b0bbf8d1fbca463d316de5800760913be296668e8373e7e90910cb0f24a385f3",
+    "report_file_sha256": "ccc51a6475f5b13aabefd608fadea365c0510a68a81ebc5e4eaba793b02dbf4a",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "c2b17b2d693f077ac2ef226256fb5fd4214489250accbf158dc05f5d976048e8",
-      "logical_lane_count": 15,
-      "producer_member_count": 19,
+      "config_digest": "8b0a3e62a996ce481b8b739cd71995b1dbe4dbb282f772854305a83a84147885",
+      "logical_lane_count": 16,
+      "producer_member_count": 20,
       "counts": {
-        "ready": 12,
+        "ready": 13,
         "stale": 0,
         "drift": 0,
         "unavailable": 0,
         "unobserved": 3,
-        "producer_members_ready": 16,
+        "producer_members_ready": 17,
         "producer_members_stale": 0,
         "producer_members_drift": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3
       },
       "monitoring_mode_counts": {
-        "post_fetch_artifact": 11,
+        "post_fetch_artifact": 12,
         "artifact_only": 3,
         "composite": 1
       },
@@ -219,6 +221,30 @@
           "affected_surface_ids": [
             "macro_tga"
           ]
+        },
+        {
+          "id": "defillama_stablecoins",
+          "label": "DefiLlama stablecoins",
+          "monitoring_mode": "post_fetch_artifact",
+          "status": "ready",
+          "reason": "ok",
+          "endpoint": {
+            "status": "ready",
+            "reason": "ok",
+            "observed_at": "2026-07-11T00:00:00Z"
+          },
+          "artifact": {
+            "status": "ready",
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "age": 1,
+            "unit": "calendar_days"
+          },
+          "affected_surface_ids": [
+            "macro_stablecoins"
+          ],
+          "enforcement": "shadow",
+          "kpi_required": false
         },
         {
           "id": "yahoo_ticker_macro",

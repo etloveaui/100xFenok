@@ -6,6 +6,7 @@ const LANE_IDS = Object.freeze([
   "fred_yardeni",
   "fdic_tier1",
   "treasury_tga",
+  "defillama_stablecoins",
   "yahoo_ticker_macro",
   "sentiment",
   "nasdaq_giw_sox",
@@ -39,6 +40,7 @@ const MEMBER_IDS = Object.freeze([
   "fred_yardeni",
   "fdic_tier1",
   "treasury_tga",
+  "defillama_stablecoins",
   "yahoo_ticker_macro",
   "sentiment",
   "nasdaq_giw_sox",
@@ -221,6 +223,14 @@ function endpointAssertion(endpointFamily, assertion) {
   };
 }
 
+function endpointAssertions(endpointFamily, assertions) {
+  return {
+    endpoint_family: endpointFamily,
+    probe_mode: "injected_post_fetch",
+    assertions,
+  };
+}
+
 function freshness({ fold, unit, calendar, maxStaleness, duePolicy }) {
   const base = {
     observation_basis: "attempt_observed_at",
@@ -266,8 +276,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 15,
-  producer_member_count: 19,
+  logical_lane_count: 16,
+  producer_member_count: 20,
   lanes: [
     lane({
       id: "fred_macro",
@@ -388,6 +398,29 @@ const config = {
       endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_federal_business", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_tga"],
+    }),
+    lane({
+      id: "defillama_stablecoins",
+      label: "DefiLlama stablecoins",
+      ownerWorkflow: ".github/workflows/fetch-defillama.yml",
+      members: [member("defillama_stablecoins", ".github/workflows/fetch-defillama.yml", ["0 * * * *"], [
+        artifact("defillama_stablecoins", "data/macro/stablecoins.json", {
+          sourceSelector: maxArrayFieldSource("/series", "date", "date"),
+          assertions: [
+            exactAssertion("source_defillama", "/source", "DefiLlama"),
+            typeAssertion("series_array", "/series", "array"),
+            minRowsAssertion("series_non_empty", "/series"),
+            typeAssertion("pegged_assets_array", "/peggedAssets", "array"),
+            minRowsAssertion("pegged_assets_non_empty", "/peggedAssets"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertions("defillama_stablecoins_api", [
+        minRowsAssertion("chart_array", "/chart"),
+        minRowsAssertion("pegged_assets_array", "/stablecoins/peggedAssets"),
+      ]),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
+      affectedSurfaceIds: ["macro_stablecoins"],
     }),
     lane({
       id: "yahoo_ticker_macro",
@@ -985,8 +1018,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 15 || configValue.producer_member_count !== 19) fail("denominator must be 15/19");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 15) fail("lanes must contain exactly 15 rows");
+  if (configValue.logical_lane_count !== 16 || configValue.producer_member_count !== 20) fail("denominator must be 16/20");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 16) fail("lanes must contain exactly 16 rows");
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
   if (canonicalJson(laneIds) !== canonicalJson(LANE_IDS)) fail("logical lane order or identity changed");
   configValue.lanes.forEach(validateLane);
@@ -1000,7 +1033,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 19 || new Set(memberIds).size !== 19 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 20 || new Set(memberIds).size !== 20 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);

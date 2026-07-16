@@ -245,6 +245,7 @@ function assertionPassed(assertion, document) {
     return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === candidate;
   };
   if (assertion.kind === "type") return typeMatches(value, assertion.expected);
+  if (assertion.kind === "min_rows") return Array.isArray(value) && value.length >= assertion.min;
   if (assertion.kind === "object_fields") {
     return value !== null && typeof value === "object" && !Array.isArray(value)
       && Object.entries(assertion.fields).every(([field, expected]) => typeMatches(value[field], expected));
