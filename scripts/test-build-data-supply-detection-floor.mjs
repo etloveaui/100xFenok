@@ -450,6 +450,7 @@ function runConfigAndFixtureChecks() {
     "treasury_tga",
     "yahoo_ticker_macro",
     "sentiment",
+    "nasdaq_giw_sox",
     "slickcharts",
     "edgar_filings",
     "finra_short_volume",
@@ -460,8 +461,8 @@ function runConfigAndFixtureChecks() {
   assert.equal(fredYardeni.enforcement, "live");
   assert.equal(fredYardeni.kpi_required, true);
   const nasdaqGiwSox = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "nasdaq_giw_sox");
-  assert.equal(nasdaqGiwSox.enforcement, "shadow");
-  assert.equal(nasdaqGiwSox.kpi_required, false);
+  assert.equal(nasdaqGiwSox.enforcement, "live");
+  assert.equal(nasdaqGiwSox.kpi_required, true);
   assert.deepEqual(nasdaqGiwSox.producer_members[0].schedule, ["50 23 * * 1-5"]);
   assert.deepEqual(nasdaqGiwSox.endpoint_contract.assertions.map((item) => item.id), ["weighting_rows_array"]);
   assert.equal(nasdaqGiwSox.producer_members[0].artifact_contracts[0].assertions

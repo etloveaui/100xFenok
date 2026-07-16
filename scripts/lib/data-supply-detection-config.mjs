@@ -27,6 +27,7 @@ const LIVE_LANE_IDS = Object.freeze([
   "treasury_tga",
   "yahoo_ticker_macro",
   "sentiment",
+  "nasdaq_giw_sox",
   "slickcharts",
   "edgar_filings",
   "finra_short_volume",
