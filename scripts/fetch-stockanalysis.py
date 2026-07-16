@@ -63,6 +63,7 @@ DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
+UNIVERSE_RECOVERY_MAX_PAGES = 100
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
 MISSING_DETAIL_RECONCILE_REL_PATH = "backfill/missing_detail_reconcile_latest.json"
@@ -1955,6 +1956,49 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         "pages": pages,
         "records": records,
     }
+
+
+def fetch_etf_universe_with_recovery(
+    max_pages: int,
+    timeout: int,
+    sleep: float,
+    mirror_public: bool,
+    *,
+    recovery_store: StockAnalysisRecoveryStateStore | None,
+    recovery_run: dict | None,
+) -> dict | None:
+    entity = "etf_universe"
+    try:
+        payload = fetch_etf_universe(max_pages, timeout, sleep)
+        if recovery_store is not None and not recovery_store.recovery_candidate_advances(
+            "universe", entity, payload
+        ):
+            raise ValueError(
+                "source did not advance beyond the retained LKG for universe:etf_universe"
+            )
+        write_payload("etf_universe.json", payload, mirror_public)
+        if recovery_store is not None and recovery_run is not None:
+            recovery_store.record_success("universe", entity, payload, recovery_run)
+        return payload
+    except (
+        urllib.error.URLError,
+        TimeoutError,
+        OSError,
+        json.JSONDecodeError,
+        ValueError,
+        RuntimeError,
+    ) as exc:
+        if recovery_store is None or recovery_run is None:
+            raise
+        recovery_store.record_failure(
+            "universe", entity, f"{type(exc).__name__}: {exc}", recovery_run
+        )
+        print(
+            "[degraded] StockAnalysis ETF universe recovery deferred: "
+            f"{type(exc).__name__}: {exc}",
+            flush=True,
+        )
+        return None
 
 
 def load_etf_universe_symbols() -> list[str]:
@@ -4760,11 +4804,12 @@ def finalize_recovery_state(
             + "; ".join(assessment["reasons"]),
             flush=True,
         )
-    if index["recovered_tickers"] or index["recovered_surfaces"]:
+    if index["recovered_tickers"] or index["recovered_surfaces"] or index["recovered_universes"]:
         print(
             "[recovered] StockAnalysis self-recovery: "
             f"tickers={','.join(index['recovered_tickers']) or '-'} "
-            f"surfaces={','.join(index['recovered_surfaces']) or '-'}",
+            f"surfaces={','.join(index['recovered_surfaces']) or '-'} "
+            f"universes={','.join(index['recovered_universes']) or '-'}",
             flush=True,
         )
     return index, assessment
@@ -4931,7 +4976,7 @@ def main() -> None:
 
     recovery_store = None
     retry_financials: set[str] = set()
-    if stocks or surface_names:
+    if stocks or surface_names or args.discover_etf_universe or args.natural_run:
         recovery_store = StockAnalysisRecoveryStateStore(
             STOCKANALYSIS_RECOVERY_ROOT,
             OUT_DIR.parent.parent,
@@ -4947,15 +4992,27 @@ def main() -> None:
                 if name in SURFACE_DEFINITIONS
             ]
             surface_names = list(dict.fromkeys(retry_surfaces + surface_names))
+            if "etf_universe" in recovery_store.retry_entities("universe"):
+                args.discover_etf_universe = True
+                args.max_universe_pages = max(
+                    args.max_universe_pages, UNIVERSE_RECOVERY_MAX_PAGES
+                )
 
     universe_payload = None
     if args.discover_etf_universe:
-        universe_payload = fetch_etf_universe(args.max_universe_pages, args.timeout, args.sleep)
-        write_payload("etf_universe.json", universe_payload, mirror_public)
-        print(
-            f"[universe] ETFs={universe_payload['counts']['records']} pages={universe_payload['counts']['pages']}",
-            flush=True,
+        universe_payload = fetch_etf_universe_with_recovery(
+            args.max_universe_pages,
+            args.timeout,
+            args.sleep,
+            mirror_public,
+            recovery_store=recovery_store,
+            recovery_run=recovery_run,
         )
+        if universe_payload is not None:
+            print(
+                f"[universe] ETFs={universe_payload['counts']['records']} pages={universe_payload['counts']['pages']}",
+                flush=True,
+            )
 
     surface_summary = None
     if args.fetch_surfaces:
@@ -5266,8 +5323,10 @@ def main() -> None:
                 "counts": recovery_index.get("counts"),
                 "degraded_tickers": recovery_index.get("degraded_tickers"),
                 "degraded_surfaces": recovery_index.get("degraded_surfaces"),
+                "degraded_universes": recovery_index.get("degraded_universes"),
                 "recovered_tickers": recovery_index.get("recovered_tickers"),
                 "recovered_surfaces": recovery_index.get("recovered_surfaces"),
+                "recovered_universes": recovery_index.get("recovered_universes"),
                 "current_attempt": recovery_index.get("current_attempt"),
             }
             if recovery_index is not None

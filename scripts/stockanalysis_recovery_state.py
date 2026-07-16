@@ -15,7 +15,7 @@ from typing import Any
 STATE_SCHEMA = "stockanalysis-recovery-state/v1"
 INDEX_SCHEMA = "stockanalysis-recovery-index/v1"
 ATTEMPT_RETENTION = 14
-ARTIFACT_KINDS = ("stock", "financial", "surface")
+ARTIFACT_KINDS = ("stock", "financial", "surface", "universe")
 _ENTITY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _SURFACE_DATE_KEYS = {
@@ -100,6 +100,8 @@ def _validate_identity(kind: str, entity: str) -> None:
         raise ValueError(f"invalid StockAnalysis recovery entity: {entity!r}")
     if kind in {"stock", "financial"} and entity != entity.upper():
         raise ValueError("StockAnalysis recovery tickers must be uppercase")
+    if kind == "universe" and entity != "etf_universe":
+        raise ValueError("StockAnalysis universe recovery entity must be etf_universe")
 
 
 def _valid_payload(kind: str, entity: str, payload: dict | None) -> bool:
@@ -124,6 +126,26 @@ def _valid_payload(kind: str, entity: str, payload: dict | None) -> bool:
             and payload.get("asset_type") == "stock"
             and isinstance(payload.get("statements"), dict)
             and payload["statements"]
+        )
+    if kind == "universe":
+        records = payload.get("records")
+        counts = payload.get("counts") if isinstance(payload.get("counts"), dict) else {}
+        tickers = [
+            str(row.get("ticker") or "").strip().upper()
+            for row in records or []
+            if isinstance(row, dict)
+        ]
+        return bool(
+            entity == "etf_universe"
+            and payload.get("asset_type") == "etf"
+            and payload.get("endpoint") == "/etf/"
+            and isinstance(records, list)
+            and records
+            and all(tickers)
+            and tickers == sorted(set(tickers))
+            and counts.get("records") == len(records)
+            and isinstance(counts.get("pages"), int)
+            and counts["pages"] > 0
         )
     return bool(
         payload.get("surface") == entity
@@ -215,6 +237,8 @@ class StockAnalysisRecoveryStateStore:
 
     def canonical_path(self, kind: str, entity: str) -> Path:
         _validate_identity(kind, entity)
+        if kind == "universe":
+            return self.repo_root / "data" / "stockanalysis" / "etf_universe.json"
         directory = {"stock": "stocks", "financial": "financials", "surface": "surfaces"}[kind]
         return self.repo_root / "data" / "stockanalysis" / directory / f"{entity}.json"
 
@@ -290,9 +314,15 @@ class StockAnalysisRecoveryStateStore:
     def bootstrap_existing(self, run: dict) -> int:
         changed = 0
         for kind in ARTIFACT_KINDS:
-            directory = self.canonical_path(kind, "AAPL" if kind != "surface" else "fixture").parent
-            for path in sorted(directory.glob("*.json")):
-                entity = path.stem
+            if kind == "universe":
+                paths = [self.canonical_path(kind, "etf_universe")]
+            else:
+                directory = self.canonical_path(
+                    kind, "fixture" if kind == "surface" else "AAPL"
+                ).parent
+                paths = sorted(directory.glob("*.json"))
+            for path in paths:
+                entity = "etf_universe" if kind == "universe" else path.stem
                 if not _ENTITY_RE.fullmatch(entity):
                     continue
                 valid = self._valid_bytes(kind, entity, path)
@@ -341,8 +371,16 @@ class StockAnalysisRecoveryStateStore:
             return True
         prior = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
         candidate = payload_source_fields(kind, payload)
-        before = _iso_timestamp(prior.get("source_as_of"))
-        after = _iso_timestamp(candidate.get("source_as_of"))
+        before = _iso_timestamp(
+            prior.get("source_as_of") or prior.get("fetched_at")
+            if kind == "universe"
+            else prior.get("source_as_of")
+        )
+        after = _iso_timestamp(
+            candidate.get("source_as_of") or candidate.get("fetched_at")
+            if kind == "universe"
+            else candidate.get("source_as_of")
+        )
         if before is None or after is None:
             return True
         return after > before
@@ -532,8 +570,10 @@ class StockAnalysisRecoveryStateStore:
 
         degraded_tickers = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] in {"stock", "financial"}})
         degraded_surfaces = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] == "surface"})
+        degraded_universes = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] == "universe"})
         recovered_tickers = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] in {"stock", "financial"}})
         recovered_surfaces = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] == "surface"})
+        recovered_universes = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] == "universe"})
         index = {
             "schema_version": INDEX_SCHEMA,
             "generated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
@@ -543,9 +583,11 @@ class StockAnalysisRecoveryStateStore:
             "degraded_details": degraded_details,
             "degraded_tickers": degraded_tickers,
             "degraded_surfaces": degraded_surfaces,
+            "degraded_universes": degraded_universes,
             "recovered_details": recovered_details,
             "recovered_tickers": recovered_tickers,
             "recovered_surfaces": recovered_surfaces,
+            "recovered_universes": recovered_universes,
             "current_attempt": {
                 "run_id": run_id,
                 "run_attempt": run_attempt,

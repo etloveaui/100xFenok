@@ -85,6 +85,27 @@ def surface_payload(name: str, fetched_at: str, row: str, provider_date: str = "
     }
 
 
+def universe_payload(fetched_at: str, *tickers: str) -> dict:
+    records = [
+        {"ticker": ticker, "name": f"{ticker} ETF", "source_page": 1}
+        for ticker in sorted(tickers)
+    ]
+    return {
+        "schema_version": "stockanalysis/v1",
+        "source": "stockanalysis",
+        "asset_type": "etf",
+        "generated_at": fetched_at,
+        "source_as_of": None,
+        "source_as_of_reason": "provider publishes no aggregate source date",
+        "fetched_at": fetched_at,
+        "endpoint": "/etf/",
+        "counts": {"records": len(records), "pages": 1},
+        "warnings": [],
+        "pages": [{"page": 1, "path": "/etf/", "record_count": len(records)}],
+        "records": records,
+    }
+
+
 class StockAnalysisRecoveryStateTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = TemporaryDirectory()
@@ -254,6 +275,56 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertEqual(assessment["status"], "corrupt")
         self.assertEqual(assessment["exit_code"], 2)
         self.assertIn("authentication", assessment["reasons"][0])
+
+    def test_universe_failure_retains_exact_lkg_and_names_retry_then_recovers(self) -> None:
+        entity = "etf_universe"
+        canonical = self.data_root / "etf_universe.json"
+        expected_lkg = write_json(
+            canonical,
+            universe_payload("2026-07-15T07:00:00Z", "AAA", "BBB"),
+        )
+        self.assertEqual(self.store.bootstrap_existing(self.run_context("bootstrap")), 1)
+
+        state = self.store.record_failure(
+            "universe",
+            entity,
+            "TimeoutError: transient universe timeout",
+            self.run_context("universe-failed"),
+        )
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertTrue(state["retry"])
+        self.assertEqual(
+            (self.state_root / "lkg" / "universe" / f"{entity}.json").read_bytes(),
+            expected_lkg,
+        )
+        self.assertEqual(self.store.retry_entities("universe"), {entity})
+
+        failed_index = self.store.rebuild_index(self.run_context("universe-failed"))
+        self.assertIn(
+            {"artifact_kind": "universe", "entity": entity},
+            failed_index["retry_artifacts"],
+        )
+        self.assertEqual(failed_index["degraded_universes"], [entity])
+        self.assertEqual(
+            self.store.assess_current_attempt(failed_index),
+            {
+                "status": "degraded",
+                "exit_code": 0,
+                "artifacts": ["universe:etf_universe"],
+                "reasons": [],
+            },
+        )
+
+        advanced = universe_payload("2026-07-15T08:05:00Z", "AAA", "BBB", "CCC")
+        write_json(canonical, advanced)
+        recovered = self.store.record_success(
+            "universe", entity, advanced, self.run_context("universe-recovered")
+        )
+        self.assertEqual(recovered["resolution_state"], "fresh_primary")
+        self.assertFalse(recovered["retry"])
+        self.assertEqual(recovered["recovered_from_run_id"], "universe-failed")
+        recovered_index = self.store.rebuild_index(self.run_context("universe-recovered"))
+        self.assertEqual(recovered_index["recovered_universes"], [entity])
 
     def test_controlled_failure_scope_is_dispatch_only_and_explicit(self) -> None:
         validate_controlled_failure_scope(
