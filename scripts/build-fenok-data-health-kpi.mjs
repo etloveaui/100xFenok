@@ -25,7 +25,11 @@ import {
   PLATFORM_BLOCKING_CHECK_KEYS,
   SLICKCHARTS_DELIVERY_GROUPS,
   YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
+  PRODUCT_SURFACE_STAMP_VERSION,
+  PRODUCT_SURFACE_LEGACY_CLASSIFICATION,
+  PRODUCT_SURFACE_LEGACY_DISPOSITION,
 } from "./lib/kpi-contract-constants.mjs";
+import { classifyProductSurfaceV2, nextProductSurfaceLineageV2 } from "./lib/product-surface-stamp-v2.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const SCHEMA_VERSION = "fenok-data-health-kpi/v2";
@@ -1584,11 +1588,27 @@ export function buildRimLane(rimInputs, soxRecoveryState = null) {
 function buildProductSurfaceLane(productCoverage, stockanalysisRecovery) {
   const totals = productCoverage?.totals || {};
   const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["surface"]);
+  const stampRows = productCoverage?.source_stamp_version === PRODUCT_SURFACE_STAMP_VERSION
+    ? (Array.isArray(productCoverage?.surfaces) ? productCoverage.surfaces : [])
+      .filter((surface) => REQUIRED_SURFACE_IDS.includes(surface?.id))
+      .map((surface) => ({ id: surface.id, state: surface?.stamp_evidence?.state ?? "shape_error" }))
+    : [];
+  const nonStampedRows = stampRows.filter((row) => row.state !== "stamped");
   return lane("product_surface_freshness", "Product surface freshness", [
     check("surface_payload_present", "product-surface-coverage", Boolean(productCoverage), productCoverage?.generated_at || "missing"),
     check("no_stale_surfaces", "stale surfaces", number(totals.stale) === 0, `${number(totals.stale)} stale`),
     check("no_unavailable_surfaces", "unavailable surfaces", number(totals.unavailable) === 0, `${number(totals.unavailable)} unavailable`),
     check("no_error_surfaces", "error surfaces", number(totals.error) === 0, `${number(totals.error)} error`),
+    ...(productCoverage?.source_stamp_version === PRODUCT_SURFACE_STAMP_VERSION
+      ? [check(
+        "stamp_taxonomy_v2_ready",
+        "product surface true-date/collection taxonomy v2",
+        stampRows.length === REQUIRED_SURFACE_IDS.length && nonStampedRows.length === 0,
+        nonStampedRows.length
+          ? nonStampedRows.map((row) => `${row.id}:${row.state}`).join(", ")
+          : `${stampRows.length}/${REQUIRED_SURFACE_IDS.length} stamped`,
+      )]
+      : []),
     diagnosticCheck("stockanalysis_recovery_state_present", "StockAnalysis surface recovery state", recovery.state_present, recovery.generated_at || "missing", { service_gate: false }),
     diagnosticCheck("stockanalysis_retry_empty", "StockAnalysis surface retry set", recovery.degraded.length === 0, `${recovery.degraded.length} deferred: ${recovery.degraded_entities.join(", ") || "none"}`, { service_gate: false }),
   ], {
@@ -1600,8 +1620,10 @@ function buildProductSurfaceLane(productCoverage, stockanalysisRecovery) {
       stale: number(totals.stale),
       unavailable: number(totals.unavailable),
       error: number(totals.error),
+      stamp_v2_stamped: stampRows.filter((row) => row.state === "stamped").length,
+      stamp_v2_required: stampRows.length,
     },
-    details: { stockanalysis_recovery: recovery },
+    details: { stockanalysis_recovery: recovery, stamp_taxonomy_v2: stampRows },
     asOf: productCoverage?.generated_at ?? null,
   });
 }
@@ -1732,14 +1754,52 @@ function productSurfaceRequiredRows(productCoverage) {
   // ABSENT (bootstrap / structural) from EXACT null (rev5.5).
   return (Array.isArray(productCoverage?.surfaces) ? productCoverage.surfaces : [])
     .filter((s) => REQUIRED_SURFACE_IDS.includes(s?.id))
-    .map((s) => (hasOwn(s, "source_as_of") ? { id: s.id, source_as_of: s.source_as_of } : { id: s.id }));
+    .map((s) => {
+      const row = { id: s.id };
+      if (hasOwn(s, "source_as_of")) row.source_as_of = s.source_as_of;
+      if (hasOwn(s, "source_as_of_reason")) row.source_as_of_reason = s.source_as_of_reason;
+      if (hasOwn(s, "stamp_evidence")) row.stamp_evidence = s.stamp_evidence;
+      return row;
+    });
 }
 
 function buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending }) {
   const requiredRows = productSurfaceRequiredRows(productCoverage);
   const stampMarkerPresent = hasOwn(productCoverage, "source_stamp_version");
   const stampMarkerValue = stampMarkerPresent ? productCoverage.source_stamp_version : undefined;
-  const cls = classifyProductSurface(requiredRows, nowIso, { stampMarkerPresent, stampMarkerValue });
+  const isV2 = stampMarkerPresent && stampMarkerValue === PRODUCT_SURFACE_STAMP_VERSION;
+  if (!isV2 && priorPending?.v2) throw new Error("product_surface source_stamp_version downgrade from v2 is not allowed");
+  const cls = isV2
+    ? classifyProductSurfaceV2(requiredRows, nowIso, REQUIRED_SURFACE_IDS)
+    : classifyProductSurface(requiredRows, nowIso, { stampMarkerPresent, stampMarkerValue });
+  if (isV2) {
+    const v2RequiredRows = cls.normalized_rows ?? requiredRows;
+    const { lineage: stampLineage } = nextProductSurfaceLineageV2({
+      priorLineage: priorPending?.v2 && priorPending?.superseded_v1
+        ? { active_version: 2, v2: priorPending.v2, superseded_v1: priorPending.superseded_v1 }
+        : null,
+      legacyV1: priorPending,
+      kind: cls.kind,
+      nowIso,
+    });
+    const baseV2 = {
+      source_id: def.source_id,
+      freshness_basis: def.freshness_basis,
+      unit: def.unit,
+      calendar: def.calendar,
+      max_staleness: def.max_staleness,
+      required: def.required,
+      source_stamp_version: stampMarkerValue,
+      required_surface_rows: v2RequiredRows,
+      stamp_lineage: stampLineage,
+    };
+    if (cls.kind === "shape_error") return { ...baseV2, source_date: null, age: null, status: "error", shape_error: true, shape_errors: cls.shape_errors };
+    if (cls.kind === "future") return { ...baseV2, source_date: null, age: null, status: "future_date_anomaly", future_date_anomaly: true, shape_errors: cls.shape_errors ?? [] };
+    if (cls.kind === "pending_true_date") return { ...baseV2, source_date: null, age: null, status: "degraded_pending_true_date", pending_true_date: true };
+    if (cls.kind === "collection_stale") return { ...baseV2, source_date: null, age: null, status: "degraded_collection_stale", collection_stale: true };
+    const age = evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso });
+    return { ...baseV2, source_date: cls.source_date, age, status: slaStatusForAge(age, def.max_staleness) };
+  }
   const priorPendingSince = priorPending?.pending_since ?? null;
   const priorEverStamped = priorPending?.ever_stamped === true;
   // ever_stamped is MONOTONIC: true once fully-stamped is ever observed; no build path
@@ -2007,6 +2067,27 @@ function priorProductSurfacePendingOf(priorDoc) {
   if (!priorDoc) return { pending_since: null, ever_stamped: false }; // genuine bootstrap
   const entry = (Array.isArray(priorDoc.source_sla) ? priorDoc.source_sla : [])
     .find((s) => s?.source_id === "product_surface_coverage");
+  if (entry?.source_stamp_version === PRODUCT_SURFACE_STAMP_VERSION || hasOwn(entry, "stamp_lineage")) {
+    const lineage = entry?.stamp_lineage;
+    const exactKeys = (value, expected) => value && typeof value === "object" && !Array.isArray(value)
+      && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
+    if (!exactKeys(lineage, ["active_version", "v2", "superseded_v1"])
+      || lineage.active_version !== 2
+      || !exactKeys(lineage.v2, ["pending_since", "ever_stamped"])
+      || !exactKeys(lineage.superseded_v1, ["pending_since", "ever_stamped", "classification", "disposition"])) {
+      throw new Error("prior product_surface v2 stamp_lineage missing/malformed; downgrade or deletion is not allowed");
+    }
+    for (const [name, marker] of [["v2", lineage.v2], ["superseded_v1", lineage.superseded_v1]]) {
+      if (typeof marker.ever_stamped !== "boolean" || (marker.pending_since !== null && (typeof marker.pending_since !== "string" || !Number.isFinite(new Date(marker.pending_since).getTime())))) {
+        throw new Error(`prior product_surface stamp_lineage.${name} malformed: ${JSON.stringify(marker)}`);
+      }
+    }
+    if (lineage.superseded_v1.classification !== PRODUCT_SURFACE_LEGACY_CLASSIFICATION
+      || lineage.superseded_v1.disposition !== PRODUCT_SURFACE_LEGACY_DISPOSITION) {
+      throw new Error("prior product_surface superseded_v1 classification/disposition mutated");
+    }
+    return { v2: { ...lineage.v2 }, superseded_v1: { ...lineage.superseded_v1 } };
+  }
   const hasLineage = entry && (hasOwn(entry, "required_surface_rows") || hasOwn(entry, "source_stamp_version") || hasOwn(entry, "pending"));
   if (!entry || !hasLineage) return { pending_since: null, ever_stamped: false }; // pre-stamp-slice -> init
   const prior = entry.pending;

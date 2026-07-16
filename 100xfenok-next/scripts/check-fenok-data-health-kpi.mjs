@@ -23,7 +23,12 @@ import {
   PLATFORM_BLOCKING_CHECK_KEYS,
   SLICKCHARTS_DELIVERY_GROUPS,
   YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS,
+  REQUIRED_SURFACE_IDS,
+  PRODUCT_SURFACE_STAMP_VERSION,
+  PRODUCT_SURFACE_LEGACY_CLASSIFICATION,
+  PRODUCT_SURFACE_LEGACY_DISPOSITION,
 } from "../../scripts/lib/kpi-contract-constants.mjs";
+import { classifyProductSurfaceV2 } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 import {
   enumerateDueSlots,
   deriveMissedSlots,
@@ -815,6 +820,51 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
       const rows = entry.required_surface_rows;
       const hasLineage = Object.prototype.hasOwnProperty.call(entry, "required_surface_rows");
       push(errors, Array.isArray(rows), "product_surface_coverage: required_surface_rows evidence missing");
+      if (entry.source_stamp_version === PRODUCT_SURFACE_STAMP_VERSION) {
+        const cls = classifyProductSurfaceV2(Array.isArray(rows) ? rows : [], buildNow, REQUIRED_SURFACE_IDS);
+        const lineage = entry.stamp_lineage;
+        const exactKeys = (value, expected) => value && typeof value === "object" && !Array.isArray(value)
+          && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
+        push(errors, exactKeys(lineage, ["active_version", "v2", "superseded_v1"]) && lineage.active_version === 2, "product_surface_coverage v2: stamp_lineage shape/active_version must be exact v2");
+        push(errors, !Object.prototype.hasOwnProperty.call(entry, "pending"), "product_surface_coverage v2: legacy pending marker must be retired into superseded_v1");
+        const v2 = lineage?.v2;
+        const legacy = lineage?.superseded_v1;
+        push(errors, exactKeys(v2, ["pending_since", "ever_stamped"]) && typeof v2.ever_stamped === "boolean", "product_surface_coverage v2: stamp_lineage.v2 malformed");
+        push(errors, exactKeys(legacy, ["pending_since", "ever_stamped", "classification", "disposition"]) && typeof legacy.ever_stamped === "boolean", "product_surface_coverage v2: superseded_v1 snapshot missing/malformed");
+        push(errors, legacy?.classification === PRODUCT_SURFACE_LEGACY_CLASSIFICATION && legacy?.disposition === PRODUCT_SURFACE_LEGACY_DISPOSITION,
+          "product_surface_coverage v2: superseded_v1 must remain legacy-fabricated/superseded");
+        for (const [name, marker] of [["v2", v2], ["superseded_v1", legacy]]) {
+          push(errors, marker == null || marker.pending_since === null || typeof marker.pending_since === "string", `product_surface_coverage v2: ${name}.pending_since must be string or null`);
+          if (typeof marker?.pending_since === "string") push(errors, Number.isFinite(new Date(marker.pending_since).getTime()), `product_surface_coverage v2: ${name}.pending_since unparseable`);
+        }
+        if (cls.kind === "shape_error" || cls.kind === "future") {
+          for (const message of cls.shape_errors ?? []) errors.push(`product_surface_coverage v2 shape error: ${message}`);
+          push(errors, entry.status === (cls.kind === "future" ? "future_date_anomaly" : "error"), `product_surface_coverage v2 status mismatch for ${cls.kind}`);
+          continue;
+        }
+        const expectedStatus = cls.kind === "pending_true_date"
+          ? "degraded_pending_true_date"
+          : cls.kind === "collection_stale"
+            ? "degraded_collection_stale"
+            : slaStatusForAge(evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso: buildNow }), def.max_staleness);
+        push(errors, entry.status === expectedStatus, `product_surface_coverage v2 status mismatch: stored ${entry.status} vs re-derived ${expectedStatus}`);
+        if (cls.kind === "stamped") {
+          push(errors, v2?.ever_stamped === true, "product_surface_coverage v2 stamped entry must set v2.ever_stamped=true");
+          push(errors, v2?.pending_since === null, "product_surface_coverage v2 stamped entry must clear v2.pending_since");
+          push(errors, entry.source_date === cls.source_date, `product_surface_coverage v2 source_date mismatch: ${entry.source_date} vs ${cls.source_date}`);
+          const stampedAge = evaluateSlaAge({ sourceDate: cls.source_date, unit: def.unit, calendar: def.calendar, nowIso: buildNow });
+          push(errors, entry.age === stampedAge, `product_surface_coverage v2 age mismatch: ${entry.age} vs ${stampedAge}`);
+        } else {
+          push(errors, entry.source_date === null && entry.age === null, `product_surface_coverage v2 ${cls.kind} must keep source_date/age null`);
+          push(errors, cls.kind !== "pending_true_date" || entry.pending_true_date === true, "product_surface_coverage v2 pending_true_date flag missing");
+          push(errors, cls.kind !== "collection_stale" || entry.collection_stale === true, "product_surface_coverage v2 collection_stale flag missing");
+          push(errors, typeof v2?.pending_since === "string", `product_surface_coverage v2 ${cls.kind} must carry v2.pending_since`);
+          if (typeof v2?.pending_since === "string") push(errors, new Date(v2.pending_since).getTime() <= new Date(nowIso).getTime(), "product_surface_coverage v2 pending_since is in the future");
+          if (v2?.ever_stamped === true) warnings.push(`product_surface_coverage v2: regressed from stamped to ${cls.kind} — lane degraded`);
+          else warnings.push(`product_surface_coverage v2: ${cls.kind} — lane degraded`);
+        }
+        continue;
+      }
       // Re-derive the schema marker INDEPENDENTLY (own-property presence + exact value),
       // and re-classify with it. The exact-1 check lives in the shared classifier.
       const stampMarkerPresent = Object.prototype.hasOwnProperty.call(entry, "source_stamp_version");

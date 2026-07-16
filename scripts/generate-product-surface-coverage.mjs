@@ -11,6 +11,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
+import {
+  PRODUCT_SURFACE_DATELESS_REASON,
+  PRODUCT_SURFACE_STAMP_VERSION,
+} from "./lib/kpi-contract-constants.mjs";
+import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 
@@ -191,6 +196,44 @@ function sourceStamp(sourceAsOf, missingReason = SOURCE_FLOOR_UNAVAILABLE) {
   };
 }
 
+function dateMember(id, sourceAsOf) {
+  return { id, stamp_class: "date_bearing", source_as_of: sourceAsOf ?? null };
+}
+
+function datelessMembers(names) {
+  return names.map((name) => {
+    const payload = readJson(`stockanalysis/surfaces/${name}.json`);
+    if (!payload || !Object.prototype.hasOwnProperty.call(payload, "source_as_of")) {
+      throw new Error(`${name}: dateless_by_provider payload must carry source_as_of:null`);
+    }
+    if (payload?.source_as_of != null) {
+      throw new Error(`${name}: provider now publishes a date; reclassify surface to date_bearing`);
+    }
+    return {
+      id: `stockanalysis:${name}`,
+      stamp_class: "dateless_by_provider",
+      source_as_of: null,
+      source_as_of_reason: payload?.source_as_of_reason ?? null,
+      collected_at: payload?.fetched_at ?? null,
+      recency_label: PRODUCT_SURFACE_DATELESS_REASON,
+    };
+  });
+}
+
+function trueSourceDate(value) {
+  if (value == null) return null;
+  if (isRealCalendarDate(value)) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) && Number.isFinite(new Date(value).getTime())) {
+    const day = value.slice(0, 10);
+    if (isRealCalendarDate(day)) return day;
+  }
+  return value;
+}
+
+function stampEvidence(members) {
+  return deriveProductSurfaceStampEvidence(members, generatedAt);
+}
+
 function surfaceConsumerMap(consumers) {
   const map = new Map();
   const rows = Array.isArray(consumers?.surfaces) ? consumers.surfaces : [];
@@ -217,6 +260,14 @@ function surfaceRowsForRoute(surfaceIndex, consumers, routePrefix) {
     rowCount: matched.reduce((sum, row) => sum + number(row?.rows), 0),
     names: matched.map((row) => String(row?.surface || "")).filter(Boolean).sort(),
   };
+}
+
+function contractedSurfaceNamesForRoute(consumers, routePrefix) {
+  const names = [];
+  for (const [name, routes] of surfaceConsumerMap(consumers)) {
+    if (routes.some((route) => route === routePrefix || route.startsWith(`${routePrefix}/`))) names.push(name);
+  }
+  return names.sort();
 }
 
 const marketFactsIndex = readJson("computed/market_facts/index.json");
@@ -323,6 +374,9 @@ const marketValuationSourceAsOf = oldestSourceDate([rimSourceAsOf, yardeniSource
 const marketEventsSourceAsOf = null;
 const sectorsSourceAsOf = marketFactsCoreSourceAsOf;
 const etfCenterSourceAsOf = null;
+const etfDetailEntries = dataSupplyEtfIndex?.entries && typeof dataSupplyEtfIndex.entries === "object"
+  ? Object.values(dataSupplyEtfIndex.entries)
+  : [];
 
 function marketFactsCompletenessCheck(label = "가격 원천 완전성") {
   if (marketFactsCoreComplete) {
@@ -356,6 +410,32 @@ const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/mark
 const sectorSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/sectors");
 const stockSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/stock/[ticker]");
 const etfSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/etfs");
+const contractedEventSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsumers, "/market/events");
+const contractedSectorSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsumers, "/sectors");
+const contractedStockSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsumers, "/stock/[ticker]");
+const contractedEtfSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsumers, "/etfs");
+
+const productStampEvidence = {
+  stock_detail: stampEvidence([
+    dateMember("market_facts:core_surface", stockDetailSourceAsOf),
+    ...datelessMembers(contractedStockSurfaceNames),
+  ]),
+  market_valuation: stampEvidence([
+    dateMember("rim:KOSPI_SOX", rimSourceAsOf),
+    dateMember("yardeni:published", yardeniSourceAsOf),
+    dateMember("market_facts:core_surface", marketFactsCoreSourceAsOf),
+  ]),
+  market_events: stampEvidence(datelessMembers(contractedEventSurfaceNames)),
+  sectors: stampEvidence([
+    dateMember("market_facts:core_surface", sectorsSourceAsOf),
+    ...datelessMembers(contractedSectorSurfaceNames),
+  ]),
+  etf_center: stampEvidence([
+    ...etfDetailEntries.map((entry) => dateMember(`etf_detail:${entry?.ticker ?? "unknown"}`, trueSourceDate(entry?.source_as_of))),
+    ...datelessMembers(contractedEtfSurfaceNames),
+  ]),
+  screener: stampEvidence([dateMember("stocks_analyzer", screenerSourceAsOf)]),
+};
 
 function rimIndexReadyCheck(indexId, label) {
   const item = rimIndexInputs?.indices?.[indexId];
@@ -411,7 +491,7 @@ const surfaces = [
       freshness("공시 원천 기준일", null, 14, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
-    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), ...sourceStamp(stockDetailSourceAsOf) },
+    { as_of: latestDate(marketFactsAsOf, edgarAsOf, screenerAsOf), ...sourceStamp(productStampEvidence.stock_detail.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.stock_detail },
   ),
   surface(
     "market_valuation",
@@ -432,7 +512,7 @@ const surfaces = [
       freshness("시장 데이터 기준일", marketFactsCoreSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
-    { as_of: marketFactsAsOf, ...sourceStamp(marketValuationSourceAsOf) },
+    { as_of: marketFactsAsOf, ...sourceStamp(productStampEvidence.market_valuation.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.market_valuation },
   ),
   surface(
     "market_events",
@@ -448,7 +528,7 @@ const surfaces = [
       freshness("이벤트 표면 원천 기준일", marketEventsSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
-    { as_of: eventSurfaceAsOf, ...sourceStamp(marketEventsSourceAsOf, NO_AGGREGATE_SOURCE_DATE) },
+    { as_of: eventSurfaceAsOf, ...sourceStamp(null, NO_AGGREGATE_SOURCE_DATE), stamp_evidence: productStampEvidence.market_events },
   ),
   surface(
     "sectors",
@@ -464,7 +544,7 @@ const surfaces = [
       freshness("섹터 데이터 기준일", sectorsSourceAsOf, 14, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
-    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), ...sourceStamp(sectorsSourceAsOf) },
+    { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), ...sourceStamp(productStampEvidence.sectors.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.sectors },
   ),
   surface(
     "etf_center",
@@ -479,7 +559,7 @@ const surfaces = [
       freshness("ETF 집계 원천 기준일", etfCenterSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
-    { as_of: etfAsOf, ...sourceStamp(etfCenterSourceAsOf, NO_AGGREGATE_SOURCE_DATE) },
+    { as_of: etfAsOf, ...sourceStamp(productStampEvidence.etf_center.date_bearing.source_floor_as_of, NO_AGGREGATE_SOURCE_DATE), stamp_evidence: productStampEvidence.etf_center },
   ),
   surface(
     "screener",
@@ -493,7 +573,7 @@ const surfaces = [
       freshness("스크리너 기준일", screenerSourceAsOf, 7, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "스크리너는 종목 발견 화면이며 필드 사용 감사와 함께 미사용 데이터를 줄여간다.",
-    { as_of: screenerAsOf, ...sourceStamp(screenerSourceAsOf) },
+    { as_of: screenerAsOf, ...sourceStamp(productStampEvidence.screener.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.screener },
   ),
   surface(
     "admin_data_lab",
@@ -518,12 +598,12 @@ const summary = surfaces.reduce((acc, item) => {
 }, {});
 
 const payload = {
-  schema_version: "product-surface-coverage/v1",
+  schema_version: "product-surface-coverage/v2",
   // Deterministic source-stamp marker (KPI v2 rev5.6): its PRESENCE means this
   // artifact was produced by the stamp-aware generator, so EVERY surface carries an
   // own-property source_as_of. Its ABSENCE means a genuine pre-stamp-era artifact
   // (bootstrap pending). The KPI never guesses bootstrap from row absence alone.
-  source_stamp_version: 1,
+  source_stamp_version: PRODUCT_SURFACE_STAMP_VERSION,
   generated_at: generatedAt,
   source: "local DataPack coverage files",
   raw_policy: {

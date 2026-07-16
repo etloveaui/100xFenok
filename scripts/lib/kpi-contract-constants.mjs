@@ -33,6 +33,13 @@ export const REQUIRED_SURFACE_IDS = Object.freeze([
   "screener",
 ]);
 
+export const PRODUCT_SURFACE_STAMP_VERSION = 2;
+export const PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS = 50;
+export const PRODUCT_SURFACE_DATE_MAX_AGE_BUSINESS_DAYS = 10;
+export const PRODUCT_SURFACE_DATELESS_REASON = "provider publishes no date; recency = collection time";
+export const PRODUCT_SURFACE_LEGACY_CLASSIFICATION = "legacy-fabricated";
+export const PRODUCT_SURFACE_LEGACY_DISPOSITION = "superseded";
+
 // Cadence thresholds (definitional). v2_activated_at + calendar_version are
 // per-build state stamped onto the artifact cadence, NOT part of this canonical set.
 export const CADENCE = Object.freeze({
@@ -132,7 +139,7 @@ export const SOURCE_SLA_DEF = Object.freeze([
   Object.freeze({ source_id: "rim_index_inputs", freshness_basis: ".indices[SPX,NDX,KOSPI,SOX].observed.price.as_of (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: 10, required: true }),
   Object.freeze({ source_id: "etf_core_daily_basket_admin", freshness_basis: ".rows[].proof.quote_date (OLDEST)", unit: "calendar_days", calendar: "us_market", max_staleness: ETF_CORE_MAX_QUOTE_AGE_DAYS, required: true }),
   Object.freeze({ source_id: "fenok_edge_coverage_index", freshness_basis: ".source_as_of", unit: "business_days", calendar: "us_market", max_staleness: 3, required: true }),
-  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: ".surfaces[REQUIRED_SURFACE_IDS].source_as_of (OLDEST)", unit: "business_days", calendar: "us_market", max_staleness: 10, required: true }),
+  Object.freeze({ source_id: "product_surface_coverage", freshness_basis: "stamp_evidence v2: complete TRUE-date members + collection-fresh dateless members; source floor OLDEST", unit: "business_days", calendar: "us_market", max_staleness: PRODUCT_SURFACE_DATE_MAX_AGE_BUSINESS_DAYS, required: true }),
   Object.freeze({ source_id: "etf_daily1y_readiness_admin", freshness_basis: ".generated_at", unit: "hours", calendar: "wall_clock", max_staleness: 50, required: false }),
   ...SLICKCHARTS_DELIVERY_GROUPS.map((group) => Object.freeze({
     source_id: group.id,

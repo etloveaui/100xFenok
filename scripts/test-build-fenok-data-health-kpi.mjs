@@ -50,6 +50,7 @@ import {
 } from "../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs";
 import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
@@ -1023,6 +1024,20 @@ function seedProductCoverage(tmp, { defaultStamp = null, stampById = {}, absentI
   const doc = { schema_version: "product-surface-coverage/v1", generated_at: "2026-07-10T00:00:00.000Z", surfaces };
   if (!markerless) doc.source_stamp_version = stampMarkerValue; // stamp-aware generator marker (rev5.6)
   writeJson(path.join(tmp, "data", "admin", "product-surface-coverage.json"), doc);
+}
+
+function seedProductCoverageV2(tmp, { missingDateId = null, collectedAt = "2026-07-10T04:00:00Z" } = {}) {
+  const now = "2026-07-10T05:00:00Z";
+  const surfaces = REQUIRED_SURFACE_IDS.map((id) => {
+    const members = id === "market_events"
+      ? [{ id: "events", stamp_class: "dateless_by_provider", source_as_of: null, source_as_of_reason: "provider publishes no aggregate source date", recency_label: "provider publishes no date; recency = collection time", collected_at: collectedAt }]
+      : [{ id: `${id}:true-date`, stamp_class: "date_bearing", source_as_of: id === missingDateId ? null : "2026-07-09" }];
+    const stamp_evidence = deriveProductSurfaceStampEvidence(members, now);
+    return { id, source_as_of: stamp_evidence.date_bearing.source_floor_as_of, source_as_of_reason: stamp_evidence.date_bearing.source_floor_as_of ? null : "provider publishes no aggregate source date", stamp_evidence };
+  });
+  writeJson(path.join(tmp, "data", "admin", "product-surface-coverage.json"), {
+    schema_version: "product-surface-coverage/v2", source_stamp_version: 2, generated_at: now, surfaces,
+  });
 }
 
 function seedFinraOccLedger(tmp, { finra, occ }) {
@@ -2345,7 +2360,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
       { surface: "etf_fixture", consumers: [{ route: "/etfs" }] },
     ] });
     for (const name of ["event_fixture", "sector_fixture", "etf_fixture"]) {
-      w(["stockanalysis", "surfaces", `${name}.json`], { fetched_at: seed.surfaces });
+      w(["stockanalysis", "surfaces", `${name}.json`], { source_as_of: seed.datelessSourceAsOf ?? null, source_as_of_reason: "provider publishes no aggregate source date", fetched_at: seed.surfaces });
     }
     w(["stockanalysis", "surfaces", "index.json"], { source_as_of: domainStamps, results: [
       { surface: "event_fixture", status: "ok", path: "surfaces/event_fixture.json" },
@@ -2356,6 +2371,9 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     w(["stockanalysis", "index.json"], { source_as_of: { surfaces: domainStamps, etf_universe: universeDay } });
     execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"] });
     const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
+    assert.equal(out.schema_version, "product-surface-coverage/v2");
+    assert.equal(out.source_stamp_version, 2);
+    for (const id of REQUIRED_SURFACE_IDS) assert.equal(out.surfaces.find((s) => s.id === id)?.stamp_evidence?.policy_version, 2, `${id} carries v2 member evidence`);
     const getSurfaceStamp = (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
     getSurfaceStamp.diagnostics = out.source_stamp_diagnostics;
     return getSurfaceStamp;
@@ -2390,7 +2408,51 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(partial("sectors"), null, "no market_facts stamp -> sectors null (OLDEST-required fail-closed)");
   assert.equal(partial("market_events"), null, "market_events remains an honest aggregate null");
   assert.equal(partial("etf_center"), null, "no market_facts stamp -> ETF center null");
+  try {
+    runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z", datelessSourceAsOf: "2026-07-09" });
+    assert.fail("dateless provider date appearance must hard-fail the generator");
+  } catch (error) {
+    assert.match(String(error?.stderr ?? error), /provider now publishes a date; reclassify surface to date_bearing/);
+  }
   ok("#331: real generator uses upstream source dates and never promotes collection clocks");
+}
+
+// 27b. real v2 artifact -> builder -> checker integration and v2-only lineage.
+{
+  const now = "2026-07-10T05:00:00.000Z";
+  const tmp = mkTmp("product-v2-integration");
+  seedProductCoverageV2(tmp);
+  const env = { GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "pv2", GITHUB_RUN_ATTEMPT: "1" };
+  const firstRoot = runBuilder(tmp, env, now).root;
+  const first = firstRoot.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  assert.equal(first.source_stamp_version, 2);
+  assert.equal(first.status, "ready");
+  assert.equal(first.stamp_lineage.active_version, 2);
+  assert.equal(first.stamp_lineage.v2.ever_stamped, true);
+  assert.equal(first.stamp_lineage.superseded_v1.classification, "legacy-fabricated");
+  assert.ok(!Object.prototype.hasOwnProperty.call(first, "pending"), "v2 retires the legacy top-level pending marker");
+  assert.equal(firstRoot.lanes.find((lane) => lane.id === "product_surface_freshness").status, "ready");
+  const firstCheck = { errors: [], warnings: [] };
+  checkSourceSla({ generated_at: now, source_sla: [first] }, firstCheck, now);
+  assert.deepEqual(firstCheck.errors, [], "real builder/checker parity accepts v2 stamped evidence");
+
+  seedProductCoverageV2(tmp, { missingDateId: "etf_center" });
+  const secondRoot = runBuilder(tmp, env, now).root;
+  const second = secondRoot.source_sla.find((s) => s.source_id === "product_surface_coverage");
+  assert.equal(second.status, "degraded_pending_true_date");
+  assert.equal(second.stamp_lineage.v2.ever_stamped, true, "v2 ever_stamped remains monotonic");
+  assert.deepEqual(second.stamp_lineage.superseded_v1, first.stamp_lineage.superseded_v1, "superseded_v1 remains byte-equivalent across builds");
+  const secondCheck = { errors: [], warnings: [] };
+  checkSourceSla({ generated_at: now, source_sla: [second] }, secondCheck, now);
+  assert.deepEqual(secondCheck.errors, [], "v2 stamped->pending regression remains non-blocking at source-SLA gate");
+  assert.ok(secondCheck.warnings.some((message) => message.includes("regressed from stamped to pending_true_date")), "real v2 regression is named");
+  const productLane = secondRoot.lanes.find((lane) => lane.id === "product_surface_freshness");
+  assert.equal(productLane.status, "degraded");
+  assert.equal(productLane.deployment_blocking, false);
+  assert.ok(productLane.checks.find((check) => check.id === "stamp_taxonomy_v2_ready").detail.includes("etf_center:pending_true_date"));
+  seedProductCoverage(tmp, { defaultStamp: "2026-07-09" });
+  runBuilder(tmp, env, now, { expectExit: 1 });
+  ok("product surface v2 integrates generator-shaped evidence through builder/checker and preserves frozen lineage");
 }
 
 // 28. rev5.5 STRICT-BYPASS PROBES
@@ -3040,3 +3102,4 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 }
 
 console.log(`\n# ${passed} fixtures passed`);
+await import("./test-product-surface-stamp-v2.mjs");
