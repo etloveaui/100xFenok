@@ -50,6 +50,23 @@ function projectLaneRecoveryDetails(doc) {
       keys: Array.isArray(recovery.keys) ? recovery.keys : [],
       counts: recovery.counts ?? null,
       retry_keys: Array.isArray(recovery.retry_keys) ? recovery.retry_keys : [],
+      promotion_deferral_details: Array.isArray(recovery.promotion_deferral_details)
+        ? recovery.promotion_deferral_details.map((row) => ({
+            key: row?.key ?? null,
+            event_name: row?.event_name ?? null,
+            observed_at: row?.observed_at ?? null,
+            source_as_of: row?.source_as_of ?? null,
+            reason: row?.reason ?? null,
+          }))
+        : [],
+      current_attempt: recovery.current_attempt ? {
+        event_name: recovery.current_attempt.event_name ?? null,
+        observed_at: recovery.current_attempt.observed_at ?? null,
+        promotion_deferrals: recovery.current_attempt.promotion_deferrals ?? 0,
+        promotion_deferral_keys: Array.isArray(recovery.current_attempt.promotion_deferral_keys)
+          ? recovery.current_attempt.promotion_deferral_keys
+          : [],
+      } : null,
     };
   }
 }

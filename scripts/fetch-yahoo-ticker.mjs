@@ -95,6 +95,108 @@ function quoteBytes(quote) {
   return Buffer.from(`${JSON.stringify(quote, null, 2)}\n`);
 }
 
+function stageBytes(targetPath, bytes, token) {
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  const stagedPath = path.join(path.dirname(targetPath), `.${path.basename(targetPath)}.${token}.tmp`);
+  fs.writeFileSync(stagedPath, bytes, { mode: 0o600 });
+  return stagedPath;
+}
+
+function restoreBytes(targetPath, priorBytes, token) {
+  if (priorBytes === null) {
+    fs.rmSync(targetPath, { force: true });
+    return;
+  }
+  const stagedPath = stageBytes(targetPath, priorBytes, `${token}.rollback`);
+  fs.renameSync(stagedPath, targetPath);
+}
+
+function snapshotFiles(filePaths) {
+  return [...new Set(filePaths)].map((filePath) => ({
+    filePath,
+    bytes: fs.existsSync(filePath) ? fs.readFileSync(filePath) : null,
+  }));
+}
+
+function restoreSnapshots(snapshots) {
+  const token = `${process.pid}.${Date.now()}.transaction`;
+  for (const snapshot of snapshots) restoreBytes(snapshot.filePath, snapshot.bytes, token);
+}
+
+export function publishYahooOutputPairAtomic({
+  canonicalPath,
+  publicPath,
+  output,
+  replaceFile = fs.renameSync,
+}) {
+  const bytes = Buffer.from(`${JSON.stringify(output, null, 2)}\n`);
+  const token = `${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}`;
+  const priorCanonical = fs.existsSync(canonicalPath) ? fs.readFileSync(canonicalPath) : null;
+  const priorPublic = fs.existsSync(publicPath) ? fs.readFileSync(publicPath) : null;
+  const stagedCanonical = stageBytes(canonicalPath, bytes, `${token}.canonical`);
+  const stagedPublic = stageBytes(publicPath, bytes, `${token}.public`);
+  try {
+    replaceFile(stagedCanonical, canonicalPath);
+    replaceFile(stagedPublic, publicPath);
+  } catch (error) {
+    fs.rmSync(stagedCanonical, { force: true });
+    fs.rmSync(stagedPublic, { force: true });
+    try {
+      restoreBytes(canonicalPath, priorCanonical, token);
+      restoreBytes(publicPath, priorPublic, token);
+    } catch (rollbackError) {
+      throw new Error(`Yahoo output publish failed (${error.message}) and rollback failed (${rollbackError.message})`);
+    }
+    throw new Error(`Yahoo output publish failed and was rolled back: ${error.message}`);
+  }
+  return bytes;
+}
+
+function verifyPublishedYahooOutputs({ canonicalPath, publicPath, expectedBytes, plannedCandidates, store }) {
+  const canonicalBytes = fs.readFileSync(canonicalPath);
+  const publicBytes = fs.readFileSync(publicPath);
+  if (!canonicalBytes.equals(expectedBytes) || !publicBytes.equals(expectedBytes)) {
+    throw new Error("Yahoo canonical/public output bytes diverged from the accepted publication");
+  }
+  let output;
+  try {
+    output = JSON.parse(canonicalBytes.toString("utf8"));
+  } catch (error) {
+    throw new Error(`Yahoo published output decode failed: ${error.message}`);
+  }
+  for (const candidate of plannedCandidates) {
+    const symbol = candidate.key.replace(/\.json$/u, "");
+    const row = output?.tickers?.[symbol];
+    const publishedQuote = row ? quoteFromPayload(symbol, row) : null;
+    if (!publishedQuote) throw new Error(`Yahoo published output is missing valid ${symbol} quote`);
+    const inspected = store.inspectPayload(candidate.key, quoteBytes(publishedQuote));
+    if (!inspected.valid
+      || inspected.payload_sha256 !== candidate.inspected.payload_sha256
+      || inspected.source_as_of !== candidate.inspected.source_as_of) {
+      throw new Error(`Yahoo published ${symbol} quote is not bound to its accepted candidate`);
+    }
+  }
+}
+
+function verifyCommittedYahooStates({ store, keys, plannedCandidates }) {
+  const plannedByKey = new Map(plannedCandidates.map((candidate) => [candidate.key, candidate]));
+  for (const key of keys) {
+    const inspected = store.inspectState(key);
+    if (inspected.kind !== "valid" || inspected.state?.resolution_state === "unavailable") {
+      throw new Error(`Yahoo committed ${key} proof state is invalid: ${inspected.reason ?? inspected.state?.resolution_state ?? inspected.kind}`);
+    }
+    const retained = store.validRetainedLkg(key, inspected.state);
+    if (!retained.valid) {
+      throw new Error(`Yahoo committed ${key} LKG is invalid: ${retained.reason}`);
+    }
+    const candidate = plannedByKey.get(key);
+    if (candidate && (inspected.state.current?.payload_sha256 !== candidate.inspected.payload_sha256
+      || inspected.state.current?.source_as_of !== candidate.inspected.source_as_of)) {
+      throw new Error(`Yahoo committed ${key} state is not bound to its accepted candidate`);
+    }
+  }
+}
+
 function readCanonical(filePath) {
   try {
     const payload = JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -209,6 +311,8 @@ export async function runYahooTicker({
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-yahoo`,
   eventName = process.env.GITHUB_EVENT_NAME ?? null,
   controlledFailureTickers = [],
+  publishOutputPair = publishYahooOutputPairAtomic,
+  commitPlannedCandidate = (store, candidate) => store.commitCandidate(candidate),
 } = {}) {
   const results = [];
   const errors = [];
@@ -234,25 +338,67 @@ export async function runYahooTicker({
 
   const store = stateStore(stateRoot);
   const prior = readCanonical(canonicalPath);
+  const preRunRecoverySnapshots = snapshotFiles([
+    canonicalPath,
+    publicPath,
+    path.join(stateRoot, "index.json"),
+    ...TICKERS.flatMap((symbol) => {
+      const key = `${symbol}.json`;
+      return [store.statePath(key), store.lkgPath(key), store.promotionAnchorPath(key)];
+    }),
+  ]);
   const run = runContext(attemptId, eventName, observedAt);
   const degradedKeys = [];
   const failedKeys = [];
   const fatalKeys = [];
+  const plannedCandidates = [];
+  const promotionDeferralReasons = [];
   const outputQuotes = {};
   for (let index = 0; index < TICKERS.length; index += 1) {
     const symbol = TICKERS[index];
     const key = `${symbol}.json`;
     const result = results[index];
     if (result.quote) {
-      const candidate = store.recordCandidate({
+      const providerBytes = quoteBytes(result.quote);
+      let candidateBytes = providerBytes;
+      const priorState = store.loadState(key);
+      const priorBytes = priorQuoteBytes(prior, symbol);
+      if (priorState?.retry === true && priorBytes) {
+        const priorInspected = store.inspectPayload(key, priorBytes);
+        const providerInspected = store.inspectPayload(key, providerBytes);
+        const priorTime = Date.parse(priorInspected.source_as_of);
+        const providerTime = Date.parse(providerInspected.source_as_of);
+        if (priorTime > providerTime
+          || (priorTime === providerTime && priorInspected.payload_sha256 !== providerInspected.payload_sha256)) {
+          candidateBytes = priorBytes;
+        }
+      }
+      const candidateArgs = {
         key,
-        payloadBytes: quoteBytes(result.quote),
+        payloadBytes: candidateBytes,
+        providerObservation: store.buildProviderObservation({ key, payloadBytes: providerBytes, run }),
         canonicalRef: `data/macro/yahoo-ticker.json#/tickers/${symbol}`,
         run,
-      });
-      if (!candidate.accepted) {
+      };
+      const candidate = store.planCandidate(candidateArgs);
+      if (candidate.accepted) {
+        plannedCandidates.push(candidate);
+        const { symbol: _symbol, ...quote } = candidate.inspected.payload;
+        outputQuotes[symbol] = quote;
+      } else if (candidate.corrupt) {
+        store.recordCandidate(candidateArgs);
         degradedKeys.push(key);
-        if (!candidate.deferred) failedKeys.push(key);
+        failedKeys.push(key);
+        fatalKeys.push(key);
+      } else {
+        const deferredState = store.recordPromotionDeferral(candidate);
+        degradedKeys.push(key);
+        promotionDeferralReasons.push({ key, reason: candidate.reason });
+        const retained = store.validRetainedLkg(key, deferredState);
+        if (retained.valid) {
+          const { symbol: _symbol, ...quote } = retained.payload;
+          outputQuotes[symbol] = quote;
+        }
       }
     } else {
       const kind = result.controlled ? "controlled" : failureKind(result);
@@ -267,19 +413,21 @@ export async function runYahooTicker({
       degradedKeys.push(key);
       failedKeys.push(key);
       if (FATAL_FAILURE_KINDS.has(kind)) fatalKeys.push(key);
-    }
-    const retained = store.validRetainedLkg(key);
-    if (retained.valid) {
-      const { symbol: _symbol, ...quote } = retained.payload;
-      outputQuotes[symbol] = quote;
+      const retained = store.validRetainedLkg(key);
+      if (retained.valid) {
+        const { symbol: _symbol, ...quote } = retained.payload;
+        outputQuotes[symbol] = quote;
+      }
     }
   }
-  const index = store.buildIndex({ keys: TICKERS.map((symbol) => `${symbol}.json`), run });
+  let index = store.buildIndex({ keys: TICKERS.map((symbol) => `${symbol}.json`), run });
   const assessment = assessRecoveryExit({ store, index, failedKeys, fatalKeys });
   const complete = TICKERS.every((symbol) => outputQuotes[symbol]);
-  const exitCode = complete ? assessment.exit_code : 2;
-  const ok = complete && exitCode === 0;
-  if (ok) {
+  let exitCode = complete ? assessment.exit_code : 2;
+  let publishError = null;
+  const foreignWriterConflict = promotionDeferralReasons.some(({ reason }) => reason === "foreign_writer_conflict");
+  let updated = false;
+  if (complete && exitCode === 0 && !foreignWriterConflict) {
     const output = {
       updated: observedAt,
       source: "ticker-api-worker (yahoo-finance origin)",
@@ -287,19 +435,44 @@ export async function runYahooTicker({
       tickers: outputQuotes,
       ...(errors.length > 0 ? { errors } : {}),
     };
-    writeJsonAtomic(canonicalPath, output);
-    writeJsonAtomic(publicPath, output);
+    const expectedBytes = Buffer.from(`${JSON.stringify(output, null, 2)}\n`);
+    try {
+      publishOutputPair({ canonicalPath, publicPath, output });
+      verifyPublishedYahooOutputs({ canonicalPath, publicPath, expectedBytes, plannedCandidates, store });
+      for (const candidate of plannedCandidates) commitPlannedCandidate(store, candidate);
+      verifyCommittedYahooStates({
+        store,
+        keys: TICKERS.map((symbol) => `${symbol}.json`),
+        plannedCandidates,
+      });
+      index = store.buildIndex({ keys: TICKERS.map((symbol) => `${symbol}.json`), run });
+      verifyPublishedYahooOutputs({ canonicalPath, publicPath, expectedBytes, plannedCandidates, store });
+      updated = true;
+    } catch (error) {
+      try {
+        restoreSnapshots(preRunRecoverySnapshots);
+      } catch (rollbackError) {
+        publishError = new Error(`Yahoo publish/state transaction failed (${error.message}) and rollback failed (${rollbackError.message})`);
+      }
+      publishError ??= new Error(`Yahoo publish/state transaction failed and was rolled back: ${error.message}`);
+      exitCode = 2;
+    }
   }
+  const ok = complete && exitCode === 0;
   return {
     ok,
-    updated: ok,
+    updated,
     exitCode,
     reason: tupleStatus(tuple),
     row,
     shard,
     errors,
     degradedKeys: degradedKeys.map((key) => key.replace(/\.json$/u, "")),
-    reasons: assessment.reasons,
+    reasons: [
+      ...assessment.reasons,
+      ...promotionDeferralReasons.map(({ key, reason }) => `${key}: ${reason}`),
+      ...(publishError ? [`publish failure: ${publishError.message}`] : []),
+    ],
     index,
   };
 }

@@ -51,7 +51,7 @@ from data_supply_stock_detail import (
     validate_stock_detail_candidate,
     yahoo_provider_symbol,
 )
-from yahoo_batch_state import YahooBatchStateStore
+from yahoo_batch_state import PROMOTION_DEFERRAL_REASONS, YahooBatchStateStore
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -407,7 +407,7 @@ def validate_source_progression(existing_payload, candidate_payload):
     return candidate_payload
 
 
-def write_finance_payload(ticker, payload):
+def write_finance_payload(ticker, payload, *, record_stock_detail_state=True):
     """Write Yahoo canonical truth; publish state only for the frozen stock cohort."""
     out_path = OUT_DIR / f"{ticker}.json"
     payload_bytes = stable_json(payload, separators=(",", ":")).encode("utf-8")
@@ -416,7 +416,11 @@ def write_finance_payload(ticker, payload):
         return None
     observed_at = _observed_now()
     truth_root = DATA_SUPPLY_PROVIDER_TRUTH_ROOT
-    store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=truth_root)
+    store = DataSupplyStateStore(
+        DATA_SUPPLY_STATE_ROOT,
+        provider_truth_root=truth_root,
+        defer_maintenance=not record_stock_detail_state,
+    )
     try:
         candidate = validate_stock_detail_candidate(
             provider="yahoo_finance",
@@ -427,16 +431,17 @@ def write_finance_payload(ticker, payload):
             provider_truth_root=truth_root,
         )
     except StockDetailValidationError as exc:
-        record_stock_detail_failure(
-            store=store,
-            provider="yahoo_finance",
-            entity=ticker,
-            provider_path=f"data/yf/finance/{ticker}.json",
-            observed_at=observed_at,
-            reason_code=exc.reason_code,
-            failure_detail=exc.detail,
-            origin="manual",
-        )
+        if record_stock_detail_state:
+            record_stock_detail_failure(
+                store=store,
+                provider="yahoo_finance",
+                entity=ticker,
+                provider_path=f"data/yf/finance/{ticker}.json",
+                observed_at=observed_at,
+                reason_code=exc.reason_code,
+                failure_detail=exc.detail,
+                origin="manual",
+            )
         raise
     _atomic_write_bytes(out_path, payload_bytes)
     verified = validate_stock_detail_candidate(
@@ -448,12 +453,85 @@ def write_finance_payload(ticker, payload):
         expected_sha256=candidate.payload_sha256,
         provider_truth_root=truth_root,
     )
+    publication = {
+        "store": store,
+        "candidate": verified,
+        "observed_at": observed_at,
+    }
+    if not record_stock_detail_state:
+        return publication
     return record_stock_detail_success(
         store=store,
         candidate=verified,
         observed_at=observed_at,
         origin="manual",
     )
+
+
+def _rollback_stock_detail_publication(store, candidate, observed_at, snapshots, observation):
+    """Remove only this transaction's side effects while preserving concurrent writers."""
+    if isinstance(observation, dict) and isinstance(observation.get("event_id"), str):
+        day = str(observation.get("observed_at") or observed_at)[:10]
+        directory = store.root / "history" / "observations"
+        history = directory / f"{day}.jsonl"
+        with store._lock(directory / f".{day}.lock"):
+            if history.exists():
+                raw_history = history.read_bytes()
+                complete_history = raw_history
+                if complete_history and not complete_history.endswith(b"\n"):
+                    last_newline = complete_history.rfind(b"\n")
+                    complete_history = complete_history[: last_newline + 1] if last_newline >= 0 else b""
+                rows = complete_history.splitlines()
+                kept = []
+                removed = False
+                for raw in rows:
+                    parsed = json.loads(raw.decode("utf-8"))
+                    if parsed.get("event_id") == observation["event_id"]:
+                        removed = True
+                    else:
+                        kept.append(raw)
+                if removed or complete_history != raw_history:
+                    if kept:
+                        store._atomic_write_bytes(history, b"\n".join(kept) + b"\n")
+                    else:
+                        history.unlink(missing_ok=True)
+                        store._fsync_directory(directory)
+
+    if snapshots.get("captured") is not True or not isinstance(snapshots.get("preimages"), dict):
+        return
+    preimages = snapshots["preimages"]
+    provider_domain = store.root / "providers" / candidate.provider / "stock_detail"
+    object_path = (
+        provider_domain / "objects" / candidate.entity / f"{candidate.payload_sha256}.json"
+    )
+    pending_path = provider_domain / "pending" / f"{candidate.entity}.json"
+    object_relative = object_path.relative_to(store.root).as_posix()
+    prior_object = preimages.get(object_path)
+    prior_pending = preimages.get(pending_path)
+    with store._lock(store._domain_dir("stock_detail") / ".lock"):
+        with store._lock(provider_domain / ".locks" / f"{candidate.entity}.lock"):
+            current_pending = None
+            if pending_path.exists():
+                current_pending = json.loads(pending_path.read_text(encoding="utf-8"))
+            owns_pending = isinstance(current_pending, dict) and (
+                current_pending.get("path") == object_relative
+                and current_pending.get("sha256") == candidate.payload_sha256
+                and current_pending.get("observed_at") == observed_at
+            )
+            if owns_pending:
+                if prior_pending is None:
+                    pending_path.unlink(missing_ok=True)
+                    store._fsync_directory(pending_path.parent)
+                else:
+                    store._atomic_write_bytes(pending_path, prior_pending)
+                current_pending = (
+                    json.loads(prior_pending.decode("utf-8"))
+                    if prior_pending is not None else None
+                )
+            object_referenced = isinstance(current_pending, dict) and current_pending.get("path") == object_relative
+            if prior_object is None and object_path.exists() and not object_referenced:
+                object_path.unlink()
+                store._fsync_directory(object_path.parent)
 
 
 def record_finance_failure(ticker, error):
@@ -1143,6 +1221,11 @@ SYSTEMIC_FAILURE_MARKERS = {
         "jsondecodeerror", "json decode", "failed to decode", "decode error",
         "invalid json", "expecting value", "unterminated string", "malformed json",
     ),
+    "proof_contract": (
+        "provider observation proof", "promotion candidate payload is invalid",
+        "promotion candidate payload is not bound", "recovery promotion rejected",
+        "stock-detail state publication failed",
+    ),
 }
 
 TRANSIENT_PROVIDER_MISS_MARKERS = (
@@ -1277,6 +1360,12 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         for row in state_index.get("unavailable_details") or []
         if isinstance(row, dict) and row.get("symbol")
     )
+    for group_name in ("pending_details", "promotion_deferral_details"):
+        kpi_names.update(
+            str(row.get("symbol") or row.get("ticker"))
+            for row in state_index.get(group_name) or []
+            if isinstance(row, dict) and (row.get("symbol") or row.get("ticker"))
+        )
     retained_lkg_tickers = []
     deferred_without_lkg_tickers = []
 
@@ -1285,19 +1374,29 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         if not isinstance(state, dict) or state.get("retry") is not True or ticker not in retry_symbols:
             reasons.append(f"{ticker} did not join the retry set")
         latest_failure = state.get("latest_failure") if isinstance(state, dict) else None
-        if (
-            not isinstance(latest_failure, dict)
-            or str(latest_failure.get("run_id")) != str(current_attempt.get("run_id"))
-            or int(latest_failure.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
-        ):
-            reasons.append(f"{ticker} LKG evidence is not bound to the current attempt")
         row = next((item for item in errors if str(item.get("ticker") or "") == ticker), {})
         expected_kind = row.get("failure_kind") or yahoo_failure_kind(
             row,
             event_name=current_attempt.get("event_name"),
         )
-        if not isinstance(latest_failure, dict) or latest_failure.get("failure_kind") != expected_kind:
-            reasons.append(f"{ticker} failure classification is not bound to the current attempt")
+        if expected_kind in PROMOTION_DEFERRAL_REASONS:
+            deferral = state.get("latest_promotion_deferral") if isinstance(state, dict) else None
+            if (
+                not isinstance(deferral, dict)
+                or str(deferral.get("run_id")) != str(current_attempt.get("run_id"))
+                or int(deferral.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
+                or deferral.get("reason") != expected_kind
+            ):
+                reasons.append(f"{ticker} promotion deferral is not bound to the current attempt")
+        else:
+            if (
+                not isinstance(latest_failure, dict)
+                or str(latest_failure.get("run_id")) != str(current_attempt.get("run_id"))
+                or int(latest_failure.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
+            ):
+                reasons.append(f"{ticker} LKG evidence is not bound to the current attempt")
+            if not isinstance(latest_failure, dict) or latest_failure.get("failure_kind") != expected_kind:
+                reasons.append(f"{ticker} failure classification is not bound to the current attempt")
         valid_lkg = _valid_retained_lkg(state_store, ticker, state)
         deferred = (
             isinstance(latest_failure, dict)
@@ -1306,11 +1405,29 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
             and latest_failure.get("lkg_status") == "absent"
             and latest_failure.get("data_loss") is False
         )
+        promotion_hold_without_lkg = (
+            expected_kind in PROMOTION_DEFERRAL_REASONS
+            and isinstance(state, dict)
+            and (
+                (
+                    state.get("resolution_state") == "pending_history"
+                    and state_store.valid_current_canonical(ticker, state)
+                )
+                or (
+                    state.get("resolution_state") == "unavailable"
+                    and isinstance(latest_failure, dict)
+                    and latest_failure.get("data_loss") is False
+                    and latest_failure.get("lkg_status") == "absent"
+                    and latest_failure.get("deferred_acquisition") is True
+                )
+            )
+            and state.get("retry") is True
+        )
         if valid_lkg:
             retained_lkg_tickers.append(ticker)
-        elif deferred:
+        elif deferred or promotion_hold_without_lkg:
             deferred_without_lkg_tickers.append(ticker)
-        if not valid_lkg and not deferred:
+        if not valid_lkg and not deferred and not promotion_hold_without_lkg:
             if isinstance(latest_failure, dict) and latest_failure.get("data_loss") is True:
                 reasons.append(f"{ticker} lost previously advertised Yahoo data/LKG")
             else:
@@ -1674,6 +1791,8 @@ def main():
                 "failures": [] if error is None else [{"attempt": 1, "error": error}],
                 "latency_ms": latency_ms,
             }
+        promotion_deferral = None
+        provider_observation = None
         if error is None:
             fresh_data = data
             if args.merge_existing and existing:
@@ -1683,36 +1802,129 @@ def main():
             if existing:
                 data = preserve_history_coverage(existing, data)
             try:
+                fetched_at = _observed_now()
+                provider_payload = decorate_finance_payload(
+                    ticker=ticker,
+                    profile=args.profile,
+                    fetched_at=fetched_at,
+                    data=fresh_data,
+                )
                 payload = decorate_finance_payload(
                     ticker=ticker,
                     profile=args.profile,
-                    fetched_at=_observed_now(),
+                    fetched_at=fetched_at,
                     data=data,
                 )
-                if existing:
+                if state_store:
+                    provider_observation = state_store.build_provider_observation(
+                        ticker,
+                        provider_payload,
+                        run_context,
+                    )
+                    promotion_decision = state_store.evaluate_recovery_candidate(
+                        ticker,
+                        payload,
+                        provider_observation,
+                        run_context,
+                        canonical_payload=existing,
+                    )
+                    if not promotion_decision["eligible"]:
+                        promotion_deferral = promotion_decision["reason"]
+                        state_store.record_promotion_deferral(
+                            ticker,
+                            promotion_decision,
+                            run_context,
+                            universe_sources.get(ticker, []),
+                            evidence,
+                        )
+                        error = f"promotion deferred: {promotion_deferral}"
+                if error is None and existing:
                     validate_source_progression(existing, payload)
-                if state_store and not state_store.recovery_candidate_advances(ticker, payload):
-                    raise ValueError(f"source did not advance beyond the retained LKG for {ticker}")
             except ValueError as exc:
                 error = f"{type(exc).__name__}: {exc}"
+            prior_canonical_bytes = out_path.read_bytes() if out_path.exists() else None
+            prior_batch_state_bytes = (
+                state_store._state_path(ticker).read_bytes()
+                if state_store and state_store._state_path(ticker).exists()
+                else None
+            )
+            persisted_candidate = clean_value(payload) if error is None else None
+            expected_payload_sha256 = hashlib.sha256(
+                stable_json(payload, separators=(",", ":")).encode("utf-8")
+            ).hexdigest() if error is None else None
+            stock_detail_publication = None
             try:
                 if error is None:
-                    write_finance_payload(ticker, payload)
+                    stock_detail_publication = write_finance_payload(
+                        ticker,
+                        payload,
+                        record_stock_detail_state=state_store is None,
+                    )
             except StockDetailValidationError as exc:
+                if prior_canonical_bytes is None:
+                    out_path.unlink(missing_ok=True)
+                else:
+                    _atomic_write_bytes(out_path, prior_canonical_bytes)
                 error = f"{type(exc).__name__}: {exc}"
             if error is None:
                 if state_store:
-                    state_store.record_success(
-                        ticker,
-                        payload,
-                        run_context,
-                        universe_sources.get(ticker, []),
-                        evidence,
-                    )
-                size_kb = round(out_path.stat().st_size / 1024, 1)
-                print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
-            else:
-                if state_store:
+                    try:
+                        state_store.record_success(
+                            ticker,
+                            persisted_candidate,
+                            run_context,
+                            universe_sources.get(ticker, []),
+                            evidence,
+                            provider_observation=provider_observation,
+                            expected_payload_sha256=expected_payload_sha256,
+                        )
+                        if isinstance(stock_detail_publication, dict):
+                            publication_store = stock_detail_publication["store"]
+                            publication_candidate = stock_detail_publication["candidate"]
+                            publication_snapshots = {"captured": False, "preimages": {}}
+                            publication_observation = {}
+                            original_record_observation = publication_store.record_observation
+
+                            def tracked_record_observation(observation):
+                                publication_observation["row"] = dict(observation)
+                                return original_record_observation(observation)
+
+                            publication_store.record_observation = tracked_record_observation
+                            try:
+                                record_stock_detail_success(
+                                    store=publication_store,
+                                    candidate=publication_candidate,
+                                    observed_at=stock_detail_publication["observed_at"],
+                                    origin="manual",
+                                    rollback_context=publication_snapshots,
+                                )
+                            except Exception as exc:
+                                _rollback_stock_detail_publication(
+                                    publication_store,
+                                    publication_candidate,
+                                    stock_detail_publication["observed_at"],
+                                    publication_snapshots,
+                                    publication_observation.get("row"),
+                                )
+                                raise ValueError(f"stock-detail state publication failed: {exc}") from exc
+                            finally:
+                                publication_store.record_observation = original_record_observation
+                    except ValueError as exc:
+                        if prior_canonical_bytes is None:
+                            out_path.unlink(missing_ok=True)
+                        else:
+                            _atomic_write_bytes(out_path, prior_canonical_bytes)
+                        state_path = state_store._state_path(ticker)
+                        if prior_batch_state_bytes is None:
+                            state_path.unlink(missing_ok=True)
+                        else:
+                            _atomic_write_bytes(state_path, prior_batch_state_bytes)
+                        error = f"{type(exc).__name__}: {exc}"
+                if error is None:
+                    size_kb = round(out_path.stat().st_size / 1024, 1)
+                    print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
+            if error is not None:
+                if state_store and promotion_deferral is None:
                     failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
                     state_store.record_failure(
                         ticker,
@@ -1738,7 +1950,7 @@ def main():
             print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
         result = {"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False}
         if error is not None:
-            result["failure_kind"] = yahoo_failure_kind(
+            result["failure_kind"] = promotion_deferral or yahoo_failure_kind(
                 {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []},
                 event_name=args.event_name,
             )

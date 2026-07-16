@@ -38,6 +38,7 @@ import {
   buildRuntime,
   enumerateDueSlots,
   deriveMissedSlots,
+  validateProducerRecoveryAttempt,
 } from "./build-fenok-data-health-kpi.mjs";
 import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, SLICKCHARTS_DELIVERY_GROUPS, TRACKED_CRONS, CADENCE } from "./lib/kpi-contract-constants.mjs";
 import { ETF_CORE_DAILY_BASKET_CONFIG } from "./build-fenok-etf-core-daily-basket.mjs";
@@ -359,6 +360,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     pending_details: [],
     lkg_details: [],
     unavailable_details: [],
+    promotion_deferral_details: [],
   };
   const readyLane = buildYahooBatchLane(readyIndex);
   assert.equal(readyLane.status, "ready");
@@ -369,7 +371,10 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   const degradedIndex = structuredClone(readyIndex);
   degradedIndex.counts = { active: 4, untracked: 0, fresh: 0, lkg: 2, pending_history: 1, unavailable: 1, retry: 4, failed: 2, stale: 1 };
-  degradedIndex.current_attempt = { run_id: "101", attempted: 2, successes: 0, failed: 2, skipped: 0, fetch_attempts: 3, errors: [{ symbol: "AAPL" }, { symbol: "HOLX" }] };
+  degradedIndex.current_attempt = {
+    run_id: "101", run_attempt: 1, attempted: 2, successes: 0, failed: 2, skipped: 0, fetch_attempts: 3,
+    promotion_deferrals: 1, promotion_deferral_symbols: ["NEW"], errors: [{ symbol: "AAPL" }, { symbol: "HOLX" }],
+  };
   degradedIndex.lkg_details = [{ symbol: "AAPL", payload_sha256: "abc", source_as_of: "2026-07-10T00:00:00Z", failure_run_id: "101", raw_error: "must-not-publish" }];
   degradedIndex.stale_groups = [{
     source_as_of: "2026-06-26",
@@ -392,6 +397,17 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     raw_error: "must-not-publish",
     private_path: "/tmp/private",
   }];
+  degradedIndex.promotion_deferral_details = [{
+    ticker: "NEW",
+    reason: "recovery_requires_schedule",
+    run_id: "101",
+    run_attempt: 1,
+    event_name: "workflow_dispatch",
+    observed_at: "2026-07-13T01:59:00Z",
+    provider_quote_as_of: "2026-07-13T01:58:00Z",
+    provider_history_as_of: null,
+    payload_sha256: "must-not-publish",
+  }];
   const degradedLane = buildYahooBatchLane(degradedIndex);
   assert.equal(degradedLane.status, "degraded");
   assert.equal(degradedLane.deployment_blocking, false);
@@ -403,6 +419,61 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(degradedLane.details.lkg[0].raw_error, undefined);
   assert.deepEqual(degradedLane.details.stale_groups[0].symbols, ["FLEX", "GOOGL"]);
   assert.equal(degradedLane.details.pending_history[0].private_path, undefined);
+  assert.equal(degradedLane.details.latest_attempt.promotion_deferrals, 1);
+  assert.deepEqual(degradedLane.details.latest_attempt.promotion_deferral_symbols, ["NEW"]);
+  assert.deepEqual(degradedLane.details.promotion_deferrals, [{
+    symbol: "NEW",
+    reason: "recovery_requires_schedule",
+    attempt_ref: "101",
+    attempt_number: 1,
+    event_name: "workflow_dispatch",
+    observed_at: "2026-07-13T01:59:00Z",
+    provider_quote_as_of: "2026-07-13T01:58:00Z",
+    provider_history_as_of: null,
+  }]);
+  const sourceTmp = mkTmp("yahoo-deferral-source-binding");
+  const rootKpiPath = path.join(sourceTmp, "data", KPI_REL);
+  writeJson(path.join(sourceTmp, "data", "admin", "yahoo-batch-quote-history", "index.json"), degradedIndex);
+  const sourceErrors = [];
+  checkRecoveryStateSources({ lanes: [degradedLane] }, rootKpiPath, sourceErrors);
+  assert.deepEqual(sourceErrors.filter((entry) => entry.startsWith("yahoo_batch_quote_history")), [],
+    "Yahoo batch deferral KPI matches its raw source index");
+  const droppedDeferralLane = structuredClone(degradedLane);
+  droppedDeferralLane.details.promotion_deferrals = [];
+  const droppedErrors = [];
+  checkRecoveryStateSources({ lanes: [droppedDeferralLane] }, rootKpiPath, droppedErrors);
+  assert.ok(droppedErrors.some((entry) => /promotion deferrals do not match the source index/.test(entry)));
+
+  const manyDeferrals = structuredClone(degradedIndex);
+  const manySymbols = Array.from({ length: 21 }, (_value, index) => `D${String(index).padStart(2, "0")}`);
+  manyDeferrals.current_attempt = {
+    run_id: "many", run_attempt: 1, event_name: "schedule", attempted: 21, successes: 0, failed: 21,
+    skipped: 0, fetch_attempts: 21, promotion_deferrals: 21, promotion_deferral_symbols: manySymbols,
+    errors: manySymbols.map((ticker) => ({ ticker, error: "recovery_requires_schedule" })),
+  };
+  manyDeferrals.promotion_deferral_details = manySymbols.map((ticker) => ({
+    ticker, reason: "recovery_requires_schedule", run_id: "many", run_attempt: 1,
+    event_name: "schedule", observed_at: "2026-07-13T02:00:00Z",
+    provider_quote_as_of: "2026-07-13T01:58:00Z", provider_history_as_of: null,
+  }));
+  const manyLane = buildYahooBatchLane(manyDeferrals);
+  assert.equal(manyLane.details.promotion_deferrals.length, 20, "public KPI bounds detail rows");
+  assert.equal(manyLane.details.latest_attempt.promotion_deferrals, 21, "current-attempt denominator remains complete");
+  assert.deepEqual(manyLane.details.latest_attempt.promotion_deferral_symbols, manySymbols);
+  assert.deepEqual(manyLane.details.latest_attempt.failed_symbols, manySymbols);
+  writeJson(path.join(sourceTmp, "data", "admin", "yahoo-batch-quote-history", "index.json"), manyDeferrals);
+  const manySourceErrors = [];
+  checkRecoveryStateSources({ lanes: [manyLane] }, rootKpiPath, manySourceErrors);
+  assert.deepEqual(manySourceErrors.filter((entry) => entry.startsWith("yahoo_batch_quote_history")), [],
+    "21 deferrals keep a complete denominator while exposing only 20 source-bound detail rows");
+  const washedDenominatorLane = structuredClone(manyLane);
+  washedDenominatorLane.details.latest_attempt.attempted = 22;
+  washedDenominatorLane.details.latest_attempt.failed = 22;
+  washedDenominatorLane.details.latest_attempt.fetch_attempts = 22;
+  const washedErrors = [];
+  checkRecoveryStateSources({ lanes: [washedDenominatorLane] }, rootKpiPath, washedErrors);
+  assert.ok(washedErrors.some((entry) => /promotion deferral attempt does not match the source index/.test(entry)),
+    "coordinated KPI denominator inflation cannot launder the raw failed count");
   assert.deepEqual(degradedLane.details.unavailable, [{
     symbol: "HOLX",
     failure_attempt_ref: "101",
@@ -777,6 +848,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     current_attempt: {
       run_id: "300", run_attempt: 1, event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
       attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [],
+      promotion_deferrals: 0, promotion_deferral_keys: [],
     },
     ...overrides,
   });
@@ -792,6 +864,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     current_attempt: {
       run_id: "300", run_attempt: 1, event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
       attempted: 2, successes: 1, failed: 1, failed_keys: ["TQQQ.json"],
+      promotion_deferrals: 0, promotion_deferral_keys: [],
     },
   });
   const yahooDegraded = mapDetectionFloorRow(row("yahoo_ticker_macro"), yahooRecovery);
@@ -801,6 +874,32 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.deepEqual(yahooDegraded.details.recovery.retry_keys, ["TQQQ.json"]);
   assert.equal(yahooDegraded.checks.find((item) => item.id === "recovery_retry_set_empty")?.status, "blocked");
   assert.equal(yahooDegraded.deployment_blocking, false);
+  const yahooDeferralRecovery = recoveryIndex("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"], {
+    counts: { keys: 2, fresh: 1, lkg: 1, retry: 1, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: ["TQQQ.json"],
+    lkg_details: [{
+      key: "TQQQ.json", payload_sha256: "a".repeat(64), source_as_of: "2026-07-14T04:00:00.000Z",
+      failure_run_id: "299", failure_run_attempt: 1,
+    }],
+    promotion_deferral_details: [{
+      key: "TQQQ.json", run_id: "300", run_attempt: 1, event_name: "workflow_dispatch",
+      observed_at: "2026-07-15T01:00:00Z", source_as_of: "2026-07-15T00:59:00Z", reason: "recovery_requires_schedule",
+    }],
+    current_attempt: {
+      run_id: "300", run_attempt: 1, event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
+      attempted: 2, successes: 1, failed: 0, failed_keys: [], promotion_deferrals: 1, promotion_deferral_keys: ["TQQQ.json"],
+    },
+  });
+  const yahooDeferralLane = mapDetectionFloorRow(row("yahoo_ticker_macro"), yahooDeferralRecovery);
+  const publicYahooDeferral = projectPublicKpi({ lanes: [yahooDeferralLane] }, "2026-07-15T01:05:00Z");
+  assert.deepEqual(publicYahooDeferral.lanes[0].details.recovery.promotion_deferral_details, [{
+    key: "TQQQ.json", event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
+    source_as_of: "2026-07-15T00:59:00Z", reason: "recovery_requires_schedule",
+  }]);
+  assert.deepEqual(publicYahooDeferral.lanes[0].details.recovery.current_attempt, {
+    event_name: "workflow_dispatch", observed_at: "2026-07-15T01:00:00Z",
+    promotion_deferrals: 1, promotion_deferral_keys: ["TQQQ.json"],
+  });
 
   const recoveryAware = buildDetectionFloorLanes(report(), {
     yahoo_ticker_macro: yahooRecovery,
@@ -924,6 +1023,7 @@ function readyRecoveryIndex(laneId, keys, generatedAt = "2026-07-14T11:00:00Z") 
     current_attempt: {
       run_id: "ready", run_attempt: 1, event_name: "schedule", observed_at: generatedAt,
       attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [],
+      promotion_deferrals: 0, promotion_deferral_keys: [],
     },
   };
 }
@@ -971,9 +1071,13 @@ function readyCoreV2(now) {
         max_source_age_business_days: 6,
       },
       details: {
-        latest_attempt: { attempt_ref: "fixture", attempt_number: 1, attempted: 1, successes: 1, failed: 0, skipped: 0, fetch_attempts: 1 },
+        latest_attempt: {
+          attempt_ref: "fixture", attempt_number: 1, attempted: 1, successes: 1, failed: 0, skipped: 0,
+          fetch_attempts: 1, promotion_deferrals: 0, promotion_deferral_symbols: [],
+        },
         state_generated_at: now,
         stale_groups: [],
+        promotion_deferrals: [],
       },
     } : id === "slickcharts_delivery_freshness" ? {
       deployment_blocking: false,
@@ -1133,6 +1237,50 @@ function writeJson(absPath, payload) {
 
 function writeReadyRecoveryIndex(tmp, relPath, laneId, keys, generatedAt = "2026-07-14T11:00:00Z") {
   writeJson(path.join(tmp, "data", "admin", relPath, "index.json"), readyRecoveryIndex(laneId, keys, generatedAt));
+}
+
+function hourlyDeferralRecoveryIndex(generatedAt) {
+  return {
+    schema_version: "producer-lkg-index/v1",
+    lane_id: "yahoo_hourly_ticker",
+    generated_at: generatedAt,
+    keys: ["TQQQ.json", "SOXL.json"],
+    counts: { keys: 2, fresh: 1, lkg: 1, retry: 1, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: ["TQQQ.json"],
+    lkg_details: [{
+      key: "TQQQ.json", payload_sha256: "a".repeat(64), source_as_of: "2026-07-10T02:20:00.000Z",
+      failure_run_id: "hourly-failure", failure_run_attempt: 1,
+    }],
+    recovery_details: [],
+    promotion_deferral_details: [{
+      key: "TQQQ.json", run_id: "hourly-current", run_attempt: 1, event_name: "schedule",
+      observed_at: generatedAt, source_as_of: "2026-07-10T02:25:00.000Z", reason: "foreign_writer_conflict",
+    }],
+    current_attempt: {
+      run_id: "hourly-current", run_attempt: 1, event_name: "schedule", observed_at: generatedAt,
+      attempted: 1, successes: 0, failed: 0, failed_keys: [],
+      promotion_deferrals: 1, promotion_deferral_keys: ["TQQQ.json"],
+    },
+  };
+}
+
+function installHourlyRecoveryLane(root, index) {
+  const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === "yahoo_ticker_macro");
+  const mapped = mapDetectionFloorRow({
+    id: config.id,
+    label: config.label,
+    enforcement: "live",
+    kpi_required: true,
+    status: "ready",
+    reason: "ok",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-10" },
+  }, index);
+  root.lanes[root.lanes.findIndex((lane) => lane.id === "yahoo_ticker_macro")] = mapped;
+  root.status = "degraded";
+  root.totals.ready -= 1;
+  root.totals.degraded += 1;
+  root.totals.required_not_ready = 1;
+  return mapped;
 }
 
 function writeReadyTargetRecoveryIndexes(tmp, generatedAt) {
@@ -1322,8 +1470,11 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(root.source_artifacts.find((item) => item.id === "yahoo_hourly_ticker_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
   assert.equal(root.source_artifacts.find((item) => item.id === "slickcharts_daily_delivery_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
   const publicYahooRecovery = pub.lanes.find((item) => item.id === "yahoo_ticker_macro")?.details?.recovery;
-  assert.deepEqual(Object.keys(publicYahooRecovery).sort(), ["counts", "generated_at", "keys", "lane_id", "retry_keys"]);
-  assert.equal(JSON.stringify(publicYahooRecovery).includes("run_id"), false);
+  assert.deepEqual(Object.keys(publicYahooRecovery).sort(), [
+    "counts", "current_attempt", "generated_at", "keys", "lane_id", "promotion_deferral_details", "retry_keys",
+  ]);
+  assert.equal("run_id" in publicYahooRecovery.current_attempt, false);
+  assert.deepEqual(publicYahooRecovery.promotion_deferral_details, []);
   assert.equal(JSON.stringify(publicYahooRecovery).includes("payload_sha256"), false);
 
   const malformed = mkTmp("detection-floor-live-malformed-json");
@@ -1807,6 +1958,65 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("checker rejects Yahoo/Slick KPI recovery evidence that diverges from the per-file source index");
 }
 
+{
+  const tmp = mkTmp("checker-hourly-deferral-source-green");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "hourly-deferral-green" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const rawIndex = hourlyDeferralRecoveryIndex(now);
+  const lane = installHourlyRecoveryLane(root, rawIndex);
+  assert.equal(lane.status, "degraded");
+  assert.equal(lane.checks.find((row) => row.id === "recovery_current_attempt")?.status, "ready");
+  writeJson(path.join(tmp, "data", "admin", "yahoo-hourly-ticker", "index.json"), rawIndex);
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  assert.equal(runChecker(tmp, now).exit, 0,
+    "source-bound hourly deferral remains checker-green while the lane is honestly degraded");
+  ok("hourly promotion deferral is denominator-closed and source-bound end to end");
+}
+
+{
+  const tmp = mkTmp("checker-hourly-coordinated-malformed-raw");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "hourly-malformed-raw" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const rawIndex = hourlyDeferralRecoveryIndex(now);
+  rawIndex.current_attempt.successes = 2;
+  const lane = installHourlyRecoveryLane(root, rawIndex);
+  assert.equal(lane.checks.find((row) => row.id === "recovery_current_attempt")?.status, "blocked");
+  writeJson(path.join(tmp, "data", "admin", "yahoo-hourly-ticker", "index.json"), rawIndex);
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /raw recovery current attempt is internally inconsistent/);
+  ok("coordinated malformed hourly raw plus matching KPI cannot launder a broken denominator");
+}
+
+{
+  const missingRetry = readyRecoveryIndex("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  missingRetry.counts = { ...missingRetry.counts, fresh: 1, lkg: 1, failed: 1 };
+  missingRetry.current_attempt = {
+    ...missingRetry.current_attempt,
+    attempted: 2,
+    successes: 1,
+    failed: 1,
+    failed_keys: ["TQQQ.json"],
+  };
+  const missingRetryResult = validateProducerRecoveryAttempt(missingRetry);
+  assert.equal(missingRetryResult.valid, false);
+  assert.ok(missingRetryResult.reasons.includes("failed key is missing from retry_keys"));
+
+  const missingSource = hourlyDeferralRecoveryIndex("2026-07-10T02:35:00.000Z");
+  missingSource.promotion_deferral_details[0].source_as_of = null;
+  const missingSourceResult = validateProducerRecoveryAttempt(missingSource);
+  assert.equal(missingSourceResult.valid, false);
+  assert.ok(missingSourceResult.reasons.some((reason) => reason.includes("source_as_of is invalid")));
+  ok("hourly recovery validator rejects failed keys outside retry and source-less foreign conflicts");
+}
+
 // 4c. Yahoo lane count/attempt evidence is numeric and arithmetically closed.
 {
   const tmp = mkTmp("checker-yahoo-tamper");
@@ -1825,6 +2035,92 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(result.exit, 1, "checker rejects Yahoo numeric coercion and attempt arithmetic tamper");
   assert.match(result.stderr, /oldest source timestamp\/date is malformed/);
   ok("Yahoo lane checker rejects coercive counts and unreconciled current-attempt evidence");
+}
+
+{
+  const tmp = mkTmp("checker-yahoo-promotion-deferral");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "yahoo-deferral" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const yahoo = root.lanes.find((lane) => lane.id === "yahoo_batch_quote_history");
+  yahoo.details.promotion_deferrals = [{
+    symbol: "AAPL",
+    reason: "fabricated_green",
+    attempt_ref: "101",
+    attempt_number: 1,
+    event_name: "schedule",
+    observed_at: now,
+    provider_quote_as_of: now,
+    provider_history_as_of: "not-a-date",
+  }];
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /promotion deferral reason is invalid/);
+  assert.match(result.stderr, /provider_history_as_of is invalid/);
+  ok("Yahoo promotion deferral projection rejects fabricated reasons and malformed provider markers");
+}
+
+{
+  const tmp = mkTmp("checker-yahoo-promotion-deferral-deletion");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "yahoo-deferral-delete" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const yahoo = root.lanes.find((lane) => lane.id === "yahoo_batch_quote_history");
+  yahoo.details.latest_attempt.promotion_deferrals = 1;
+  yahoo.details.latest_attempt.promotion_deferral_symbols = ["AAPL"];
+  yahoo.details.promotion_deferrals = [];
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const result = runChecker(tmp, now);
+  assert.equal(result.exit, 1);
+  assert.match(result.stderr, /promotion deferral details do not match the bounded current-attempt evidence/);
+  ok("Yahoo promotion deferral deletion is rejected against current-attempt count and symbols");
+}
+
+{
+  const tmp = mkTmp("checker-yahoo-21-deferrals");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "yahoo-21-deferrals" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const symbols = Array.from({ length: 21 }, (_value, index) => `D${String(index).padStart(2, "0")}`);
+  const rawIndex = {
+    schema_version: "yahoo-batch-quote-history-index/v1",
+    generated_at: now,
+    lane_id: "yahoo_batch_quote_history",
+    counts: { active: 21, untracked: 0, fresh: 0, lkg: 21, pending_history: 0, unavailable: 0, retry: 21, failed: 21, stale: 0 },
+    oldest_source_as_of: "2026-07-10",
+    oldest_source_ticker: symbols[0],
+    retry_symbols: symbols,
+    pending_symbols: [], lkg_symbols: symbols, pending_details: [], lkg_details: [], unavailable_details: [], stale_groups: [],
+    promotion_deferral_details: symbols.map((ticker) => ({
+      ticker, reason: "recovery_requires_schedule", run_id: "many", run_attempt: 1,
+      event_name: "schedule", observed_at: now, provider_quote_as_of: now, provider_history_as_of: null,
+    })),
+    current_attempt: {
+      run_id: "many", run_attempt: 1, event_name: "schedule", schedule: "", natural: true,
+      attempted: 21, successes: 0, failed: 21, skipped: 0, fetch_attempts: 21,
+      promotion_deferrals: 21, promotion_deferral_symbols: symbols,
+      errors: symbols.map((ticker) => ({ ticker, error: "recovery_requires_schedule", failures: [] })),
+    },
+  };
+  const laneRow = buildYahooBatchLane(rawIndex, now);
+  assert.equal(laneRow.status, "degraded");
+  root.lanes[root.lanes.findIndex((lane) => lane.id === "yahoo_batch_quote_history")] = laneRow;
+  root.status = "degraded";
+  root.totals.ready -= 1;
+  root.totals.degraded += 1;
+  root.totals.required_not_ready = 1;
+  writeJson(path.join(tmp, "data", "admin", "yahoo-batch-quote-history", "index.json"), rawIndex);
+  writeJson(path.join(tmp, "data", KPI_REL), root);
+  writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  assert.equal(runChecker(tmp, now).exit, 0,
+    "21 deferrals are checker-green with full source-bound denominators and 20 public details");
+  ok("Yahoo 21-deferral bounded projection remains end-to-end checker green");
 }
 
 {

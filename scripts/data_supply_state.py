@@ -2265,6 +2265,7 @@ class DataSupplyStateStore:
         *,
         observation: Mapping[str, Any],
         payload: Any,
+        rollback_context: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         """Publish exact immutable candidate bytes and its one-per-entity pending pointer."""
 
@@ -2283,6 +2284,8 @@ class DataSupplyStateStore:
         payload_sha = hashlib.sha256(payload_bytes).hexdigest()
         if payload_sha != row["payload_sha256"]:
             raise SchemaError("provider object digest differs from observation")
+        if rollback_context is not None and not isinstance(rollback_context, dict):
+            raise SchemaError("rollback_context must be a dictionary")
 
         relative_path = (
             Path("providers")
@@ -2307,6 +2310,16 @@ class DataSupplyStateStore:
                 )
             with self._lock(provider_domain / ".locks" / f"{entity}.lock"):
                 object_path = self.root / relative_path
+                pending_path = self.root / pending_relative_path
+                if rollback_context is not None:
+                    rollback_context.clear()
+                    rollback_context.update({
+                        "captured": True,
+                        "preimages": {
+                            object_path: object_path.read_bytes() if object_path.exists() else None,
+                            pending_path: pending_path.read_bytes() if pending_path.exists() else None,
+                        },
+                    })
                 self._write_immutable_bytes(
                     object_path,
                     payload_bytes,
@@ -2330,7 +2343,7 @@ class DataSupplyStateStore:
                     "path": relative_path,
                 }
                 self._atomic_write_json(
-                    self.root / pending_relative_path,
+                    pending_path,
                     pointer,
                     failpoint_prefix="provider_pending",
                 )

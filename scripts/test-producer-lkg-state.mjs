@@ -45,6 +45,21 @@ const makeStore = (rootPath) => new ProducerLkgStateStore({
 });
 const store = makeStore(stateRoot);
 
+function v2Args(targetStore, sourceAsOf, value, currentRun, candidateBytes = null) {
+  const providerBytes = bytes(sourceAsOf, value);
+  return {
+    key: "alpha.json",
+    payloadBytes: candidateBytes ?? providerBytes,
+    providerObservation: targetStore.buildProviderObservation({
+      key: "alpha.json",
+      payloadBytes: providerBytes,
+      run: currentRun,
+    }),
+    canonicalRef: "data/source/alpha.json",
+    run: currentRun,
+  };
+}
+
 {
   const initial = store.recordCandidate({
     key: "alpha.json",
@@ -138,10 +153,11 @@ const store = makeStore(stateRoot);
   const tampered = JSON.parse(fs.readFileSync(statePath, "utf8"));
   tampered.current = { path: "data/wrong.json", payload_sha256: "0".repeat(64), source_as_of: tampered.lkg.source_as_of };
   fs.writeFileSync(statePath, `${JSON.stringify(tampered, null, 2)}\n`);
+  assert.match(pointerStore.inspectState("alpha.json").reason, /pointer binding/i);
   const index = pointerStore.buildIndex({ keys: ["alpha.json"], run: run("pointer-failure") });
   const assessment = assessRecoveryExit({ store: pointerStore, index, failedKeys: ["alpha.json"] });
   assert.equal(assessment.exit_code, 2);
-  assert.match(assessment.reasons.join("; "), /current payload pointer/i);
+  assert.match(assessment.reasons.join("; "), /valid retained LKG/i);
 
   const firstRepair = pointerStore.recordCandidate({ key: "alpha.json", payloadBytes: bytes("2026-07-15"), canonicalRef: "data/source/alpha.json", run: run("pointer-repair-1") });
   assert.equal(firstRepair.accepted, false, "a corrupt retained pointer is reported once instead of silently healed");
@@ -204,6 +220,137 @@ const store = makeStore(stateRoot);
   assert.equal(laterFresh.state.recovered_from_run_id, "chaos-run", "recovery provenance persists beyond the transition run");
   assert.equal(laterFresh.state.recovery_run_id, "natural-recovery");
   assert.equal(laterFresh.state.recovery_event_name, "schedule");
+}
+
+{
+  const v2Root = path.join(root, "provider-observation-v2");
+  const v2Store = makeStore(v2Root);
+  const retainedBytes = bytes("2026-07-14", 1);
+  v2Store.recordCandidate({ key: "alpha.json", payloadBytes: retainedBytes, canonicalRef: "data/source/alpha.json", run: run("v2-seed") });
+  v2Store.recordFailure({ key: "alpha.json", error: "controlled", failureKind: "controlled", fallbackBytes: retainedBytes, canonicalRef: "data/source/alpha.json", run: run("v2-chaos") });
+  const statePath = path.join(v2Root, "keys", "alpha.json");
+  const lkgPath = path.join(v2Root, "lkg", "alpha.json");
+
+  const same = v2Store.recordCandidate(v2Args(v2Store, "2026-07-14", 2, naturalRun("v2-same")));
+  assert.equal(same.accepted, false);
+  assert.equal(same.reason, "recovery_not_advanced_by_provider");
+  assert.equal(same.state.latest_failure.run_id, "v2-chaos", "a same-marker deferral preserves the LKG-entering failure");
+  assert.equal(same.state.latest_promotion_deferral.run_id, "v2-same");
+  assert.equal(same.state.latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
+  assert.deepEqual(fs.readFileSync(lkgPath), retainedBytes);
+
+  const advancedBytes = bytes("2026-07-15", 3);
+  const advanced = v2Store.recordCandidate(v2Args(v2Store, "2026-07-15", 3, naturalRun("v2-recovery")));
+  assert.equal(advanced.accepted, true);
+  assert.equal(advanced.state.recovered_from_run_id, "v2-chaos");
+  assert.equal(advanced.state.last_recovered_failure.run_id, "v2-chaos");
+  assert.equal(advanced.state.promotion_contract, "provider_observation/v2");
+  assert.equal(advanced.state.provider_observation.run_id, "v2-recovery");
+  assert.equal(advanced.state.provider_observation.payload_sha256, crypto.createHash("sha256").update(advancedBytes).digest("hex"));
+  assert.equal(advanced.state.current.payload_sha256, crypto.createHash("sha256").update(advancedBytes).digest("hex"));
+  assert.deepEqual(fs.readFileSync(lkgPath), retainedBytes, "promotion preserves the retained LKG bytes for attribution");
+
+  const validFreshState = fs.readFileSync(statePath);
+  const tamperedCurrent = JSON.parse(validFreshState.toString("utf8"));
+  tamperedCurrent.current.payload_sha256 = "0".repeat(64);
+  fs.writeFileSync(statePath, `${JSON.stringify(tamperedCurrent, null, 2)}\n`);
+  assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", "fresh current hash tampering is corruption");
+  fs.writeFileSync(statePath, validFreshState);
+  const tamperedProof = JSON.parse(validFreshState.toString("utf8"));
+  tamperedProof.provider_observation.run_id = "foreign-run";
+  fs.writeFileSync(statePath, `${JSON.stringify(tamperedProof, null, 2)}\n`);
+  assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", "persisted provider proof tampering is corruption");
+  fs.writeFileSync(statePath, validFreshState);
+  const downgraded = JSON.parse(validFreshState.toString("utf8"));
+  downgraded.promotion_contract = "legacy_source_marker/v1";
+  fs.writeFileSync(statePath, `${JSON.stringify(downgraded, null, 2)}\n`);
+  assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", "provider proof contract downgrade is corruption");
+  fs.writeFileSync(statePath, validFreshState);
+  const deletedProof = JSON.parse(validFreshState.toString("utf8"));
+  delete deletedProof.provider_observation;
+  delete deletedProof.promotion_proof_required;
+  deletedProof.promotion_contract = "legacy_source_marker/v1";
+  deletedProof.schema_version = "producer-lkg-key-state/v1";
+  fs.writeFileSync(statePath, `${JSON.stringify(deletedProof, null, 2)}\n`);
+  assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", "state schema and all proof markers cannot downgrade past the lane anchor");
+  fs.writeFileSync(statePath, validFreshState);
+  const reboundRecovery = JSON.parse(validFreshState.toString("utf8"));
+  delete reboundRecovery.last_recovered_failure;
+  reboundRecovery.recovery_run_id = "foreign-recovery";
+  fs.writeFileSync(statePath, `${JSON.stringify(reboundRecovery, null, 2)}\n`);
+  assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", "recovery evidence deletion plus attribution ID tampering is corruption");
+  fs.writeFileSync(statePath, validFreshState);
+  const deletedRecoveryProof = JSON.parse(validFreshState.toString("utf8"));
+  delete deletedRecoveryProof.recovery_observation;
+  fs.writeFileSync(statePath, `${JSON.stringify(deletedRecoveryProof, null, 2)}\n`);
+  assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", "persisted recovery observation deletion is corruption");
+  fs.writeFileSync(statePath, validFreshState);
+  for (const [field, value] of [["payload_sha256", "f".repeat(64)], ["source_as_of", "2099-01-01"]]) {
+    const tamperedRecoveryProof = JSON.parse(validFreshState.toString("utf8"));
+    tamperedRecoveryProof.recovery_observation[field] = value;
+    fs.writeFileSync(statePath, `${JSON.stringify(tamperedRecoveryProof, null, 2)}\n`);
+    assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", `recovery observation ${field} tampering is corruption`);
+  }
+  fs.writeFileSync(statePath, validFreshState);
+  for (const [field, value] of [["event_name", "workflow_dispatch"], ["observed_at", "2026-07-15T05:00:00Z"]]) {
+    const rebound = JSON.parse(validFreshState.toString("utf8"));
+    rebound.provider_observation[field] = value;
+    fs.writeFileSync(statePath, `${JSON.stringify(rebound, null, 2)}\n`);
+    assert.equal(v2Store.inspectState("alpha.json").kind, "corrupt", `provider proof ${field} tampering is corruption`);
+  }
+  fs.writeFileSync(statePath, validFreshState);
+
+  const laterBytes = bytes("2026-07-16", 4);
+  const laterFresh = v2Store.recordCandidate(v2Args(v2Store, "2026-07-16", 4, naturalRun("v2-later-fresh")));
+  assert.equal(laterFresh.accepted, true);
+  assert.equal(laterFresh.state.provider_observation.run_id, "v2-later-fresh");
+  assert.equal(laterFresh.state.recovery_observation.run_id, "v2-recovery");
+  assert.equal(laterFresh.state.recovered_from_run_id, "v2-chaos");
+  assert.equal(laterFresh.state.recovery_run_id, "v2-recovery");
+  assert.equal(v2Store.inspectState("alpha.json").kind, "valid", "a later fresh observation preserves historical recovery attribution");
+
+  const postRecoveryFailure = v2Store.recordFailure({
+    key: "alpha.json",
+    error: "later transport failure",
+    failureKind: "transport",
+    fallbackBytes: laterBytes,
+    canonicalRef: "data/source/alpha.json",
+    run: run("v2-later-failure"),
+  });
+  assert.equal(postRecoveryFailure.lkg.source_as_of, "2026-07-16");
+  assert.deepEqual(fs.readFileSync(lkgPath), laterBytes, "the next failure captures the exact published fresh primary as its new LKG");
+}
+
+{
+  const conflictRoot = path.join(root, "provider-observation-conflict");
+  const conflictStore = makeStore(conflictRoot);
+  const retainedBytes = bytes("2026-07-14", 1);
+  conflictStore.recordCandidate({ key: "alpha.json", payloadBytes: retainedBytes, canonicalRef: "data/source/alpha.json", run: run("conflict-seed") });
+  conflictStore.recordFailure({ key: "alpha.json", error: "controlled", failureKind: "controlled", fallbackBytes: retainedBytes, canonicalRef: "data/source/alpha.json", run: run("conflict-chaos") });
+  const statePath = path.join(conflictRoot, "keys", "alpha.json");
+  const lkgPath = path.join(conflictRoot, "lkg", "alpha.json");
+  const beforeState = fs.readFileSync(statePath);
+  const beforeLkg = fs.readFileSync(lkgPath);
+  const currentRun = naturalRun("conflict-natural");
+  const plan = conflictStore.planCandidate(v2Args(
+    conflictStore,
+    "2026-07-15",
+    2,
+    currentRun,
+    bytes("2026-07-16", 99),
+  ));
+  assert.equal(plan.accepted, false);
+  assert.equal(plan.reason, "foreign_writer_conflict");
+  assert.deepEqual(fs.readFileSync(statePath), beforeState, "candidate planning is pure");
+  assert.deepEqual(fs.readFileSync(lkgPath), beforeLkg, "candidate planning cannot mutate LKG bytes");
+  const deferred = conflictStore.recordPromotionDeferral(plan);
+  assert.equal(deferred.latest_failure.run_id, "conflict-chaos");
+  assert.equal(deferred.latest_promotion_deferral.reason, "foreign_writer_conflict");
+  assert.deepEqual(fs.readFileSync(lkgPath), beforeLkg);
+
+  const tampered = v2Args(conflictStore, "2026-07-15", 2, naturalRun("proof-tamper"));
+  tampered.providerObservation.payload_sha256 = "0".repeat(64);
+  assert.throws(() => conflictStore.planCandidate(tampered), /proof is not payload-bound/);
 }
 
 for (const [name, malformedState] of [

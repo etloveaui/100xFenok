@@ -327,6 +327,48 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertTrue(detail["retry"])
         self.assertEqual(detail["expected_resolution"], "next_natural_yahoo_run")
 
+    def test_data_loss_unavailable_cannot_be_laundered_by_promotion_deferral(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        run = {**self._run("data-loss-deferral"), "event_name": "workflow_dispatch", "natural": False}
+        failure = {
+            "run_id": "data-loss-origin",
+            "run_attempt": 1,
+            "event_name": "schedule",
+            "observed_at": "2026-07-10T01:00:00Z",
+            "failure_kind": "unexpected",
+            "lkg_status": "lost",
+            "data_loss": True,
+            "deferred_acquisition": False,
+            "error": "previously advertised data disappeared",
+        }
+        deferral = {
+            "run_id": run["run_id"],
+            "run_attempt": run["run_attempt"],
+            "event_name": run["event_name"],
+            "observed_at": run["observed_at"],
+            "reason": "recovery_requires_schedule",
+            "provider_quote_as_of": "2026-07-10T20:00:00Z",
+            "provider_history_as_of": "2026-07-10",
+        }
+        write_json(store._state_path("LOST"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": "LOST",
+            "resolution_state": "unavailable",
+            "retry": True,
+            "latest_failure": failure,
+            "latest_promotion_deferral": deferral,
+            "last_attempt": {**deferral, "outcome": "failed", "error": "recovery_requires_schedule", "attempts_used": 1, "failures": []},
+            "attempts": [{**deferral, "outcome": "failed", "error": "recovery_requires_schedule", "attempts_used": 1, "failures": []}],
+        })
+        index = store.rebuild_index({"LOST"}, run)
+        assessment = self.fetcher.yahoo_failure_exit_assessment(
+            [{"ticker": "LOST", "error": "promotion deferred: recovery_requires_schedule", "failure_kind": "recovery_requires_schedule"}],
+            store,
+            index,
+        )
+        self.assertEqual(assessment["exit_code"], 2)
+        self.assertTrue(any("lost previously advertised" in reason for reason in assessment["reasons"]))
+
     def test_korean_provider_gap_with_stale_lkg_remains_degraded_not_corrupt(self) -> None:
         ticker = "012510.KS"
         payload = self._daily_payload(ticker)
@@ -796,6 +838,513 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertFalse(lkg.exists(), "identity/hash-invalid LKG must not remain advertised")
         self.assertEqual(list(state_root.rglob(".*.tmp")), [])
 
+    def test_yahoo_batch_promotion_v2_fieldwise_proof_and_natural_gate(self) -> None:
+        state_root = self.root / "admin" / "yahoo-batch-promotion-v2"
+        store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
+        retained = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at="2026-07-10T21:15:00Z",
+            data={
+                "info": {"symbol": "AAPL", "quoteType": "EQUITY", "regularMarketTime": 1783713600, "currentPrice": 314},
+                "history_1y": [{"date": "2026-07-10", "Close": 314}],
+            },
+        )
+        canonical = self.fetcher.OUT_DIR / "AAPL.json"
+        write_json(canonical, retained)
+        store.record_success(
+            "AAPL", retained, self._run("seed"), ["global_scouter"],
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        store.record_failure(
+            "AAPL", "controlled failure", self._run("chaos"), ["global_scouter"],
+            {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss",
+        )
+        state_path = state_root / "tickers" / "AAPL.json"
+        lkg_path = state_root / "lkg" / "AAPL.json"
+        retained_lkg_bytes = lkg_path.read_bytes()
+
+        same_run = self._run("same-natural")
+        same_proof = store.build_provider_observation("AAPL", retained, same_run)
+        same_decision = store.evaluate_recovery_candidate("AAPL", retained, same_proof, same_run)
+        self.assertFalse(same_decision["eligible"])
+        self.assertEqual(same_decision["reason"], "recovery_not_advanced_by_provider")
+        same_state = store.record_promotion_deferral(
+            "AAPL", same_decision, same_run, ["global_scouter"],
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        self.assertEqual(same_state["latest_failure"]["run_id"], "chaos")
+        self.assertEqual(same_state["latest_promotion_deferral"]["run_id"], "same-natural")
+        self.assertEqual(lkg_path.read_bytes(), retained_lkg_bytes)
+
+        advanced_provider = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at="2026-07-11T21:15:00Z",
+            data={
+                "info": {"symbol": "AAPL", "quoteType": "EQUITY", "regularMarketTime": 1783800000, "currentPrice": 315},
+                "history_1y": None,
+            },
+        )
+        merged_data = self.fetcher.merge_existing_payload_data(retained, advanced_provider["data"])
+        merged_data = self.fetcher.preserve_history_coverage(retained, merged_data)
+        candidate = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at="2026-07-11T21:15:00Z", data=merged_data,
+        )
+
+        manual_run = {**self._run("manual"), "event_name": "workflow_dispatch", "natural": False}
+        manual_proof = store.build_provider_observation("AAPL", advanced_provider, manual_run)
+        self.assertEqual(
+            store.evaluate_recovery_candidate("AAPL", candidate, manual_proof, manual_run)["reason"],
+            "recovery_requires_schedule",
+        )
+        rerun = {**self._run("rerun", attempt=2), "natural": True}
+        rerun_proof = store.build_provider_observation("AAPL", advanced_provider, rerun)
+        self.assertEqual(
+            store.evaluate_recovery_candidate("AAPL", candidate, rerun_proof, rerun)["reason"],
+            "recovery_requires_schedule",
+        )
+
+        recovery_run = self._run("recovery")
+        proof = store.build_provider_observation("AAPL", advanced_provider, recovery_run)
+        decision = store.evaluate_recovery_candidate("AAPL", candidate, proof, recovery_run)
+        self.assertTrue(decision["eligible"], "fresh quote proof may advance while retained history is honestly merged")
+        foreign_history_data = json.loads(json.dumps(merged_data))
+        foreign_history_data["history_1y"] = [{"date": "2026-07-12", "Close": 999}]
+        foreign_history_candidate = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at="2026-07-12T21:15:00Z", data=foreign_history_data,
+        )
+        foreign_history_decision = store.evaluate_recovery_candidate(
+            "AAPL", foreign_history_candidate, proof, recovery_run,
+        )
+        self.assertFalse(foreign_history_decision["eligible"])
+        self.assertEqual(foreign_history_decision["reason"], "foreign_writer_conflict")
+        write_json(canonical, candidate)
+        recovered = store.record_success(
+            "AAPL", candidate, recovery_run, ["global_scouter"],
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+            provider_observation=proof,
+        )
+        self.assertEqual(recovered["resolution_state"], "fresh_primary")
+        self.assertFalse(recovered["retry"])
+        self.assertEqual(recovered["promotion_contract"], "provider_observation/v2")
+        self.assertEqual(recovered["provider_observation"]["run_id"], "recovery")
+        self.assertEqual(recovered["recovered_from_run_id"], "chaos")
+        self.assertEqual(recovered["recovery_run_id"], "recovery")
+        self.assertEqual(recovered["recovery_run_attempt"], 1)
+        self.assertEqual(recovered["recovery_event_name"], "schedule")
+        self.assertEqual(recovered["last_recovered_failure"]["run_id"], "chaos")
+        self.assertEqual(lkg_path.read_bytes(), retained_lkg_bytes, "promotion keeps the retained LKG byte-identical")
+
+    def test_yahoo_batch_promotion_v2_rejects_missing_provider_observation_and_tamper(self) -> None:
+        state_root = self.root / "admin" / "yahoo-batch-promotion-conflict"
+        store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
+        retained = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at="2026-07-10T21:15:00Z",
+            data={"info": {"symbol": "AAPL", "quoteType": "EQUITY", "regularMarketTime": 1783713600},
+                  "history_1y": [{"date": "2026-07-10", "Close": 314}]},
+        )
+        canonical = self.fetcher.OUT_DIR / "AAPL.json"
+        write_json(canonical, retained)
+        store.record_success("AAPL", retained, self._run("seed"), ["global_scouter"], {"attempts_used": 1, "failures": []})
+        store.record_failure("AAPL", "reset", self._run("chaos"), ["global_scouter"], {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss")
+        provider = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at="2026-07-11T21:15:00Z",
+            data={"info": {"symbol": "AAPL", "quoteType": "EQUITY", "regularMarketTime": 1783800000, "currentPrice": 315},
+                  "history_1y": [{"date": "2026-07-11", "Close": 315}]},
+        )
+        run = self._run("natural")
+        proof = store.build_provider_observation("AAPL", provider, run)
+        forged_canonical = json.loads(json.dumps(provider))
+        forged_canonical["data"]["info"]["currentPrice"] = 999
+        write_json(canonical, forged_canonical)
+        forged_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
+        with self.assertRaisesRegex(ValueError, "not bound to canonical bytes"):
+            store.record_success(
+                "AAPL", provider, run, ["global_scouter"], {"attempts_used": 1, "failures": []},
+                provider_observation=proof, expected_payload_sha256=forged_hash,
+            )
+        write_json(canonical, retained)
+        contaminated = json.loads(json.dumps(provider))
+        contaminated["data"]["info"]["currentPrice"] = 999
+        decision = store.evaluate_recovery_candidate("AAPL", contaminated, proof, run)
+        self.assertFalse(decision["eligible"])
+        self.assertEqual(decision["reason"], "foreign_writer_conflict")
+        before_lkg = (state_root / "lkg" / "AAPL.json").read_bytes()
+        deferred = store.record_promotion_deferral("AAPL", decision, run, ["global_scouter"], {"attempts_used": 1, "failures": []})
+        self.assertEqual(deferred["latest_failure"]["run_id"], "chaos")
+        self.assertEqual(deferred["latest_promotion_deferral"]["reason"], "foreign_writer_conflict")
+        self.assertEqual((state_root / "lkg" / "AAPL.json").read_bytes(), before_lkg)
+        index = store.rebuild_index({"AAPL"}, run)
+        assessment = self.fetcher.yahoo_failure_exit_assessment(
+            [{"ticker": "AAPL", "error": "promotion deferred: foreign_writer_conflict", "failure_kind": "foreign_writer_conflict"}],
+            store,
+            index,
+        )
+        self.assertEqual(assessment["exit_code"], 0)
+        self.assertEqual(assessment["retained_lkg_tickers"], ["AAPL"])
+        self.assertEqual(index["promotion_deferral_details"][0]["ticker"], "AAPL")
+
+        tampered = dict(proof)
+        tampered["payload_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "provider observation proof"):
+            store.evaluate_recovery_candidate("AAPL", provider, tampered, self._run("tamper"))
+
+        for source_field in ("quote_as_of", "history_as_of", "source_as_of"):
+            with self.subTest(source_field=source_field):
+                source_tampered = json.loads(json.dumps(provider))
+                source_tampered[source_field] = "2026-01-01"
+                with self.assertRaisesRegex(ValueError, "payload is invalid"):
+                    store.build_provider_observation("AAPL", source_tampered, self._run(f"tamper-{source_field}"))
+
+        proof_failure_run = self._run("proof-failure")
+        store.record_failure(
+            "AAPL", "provider observation proof is not payload-bound", proof_failure_run,
+            ["global_scouter"], {"attempts_used": 1, "failures": []}, failure_kind="systemic_proof_contract",
+        )
+        proof_index = store.rebuild_index({"AAPL"}, proof_failure_run)
+        proof_assessment = self.fetcher.yahoo_failure_exit_assessment(
+            [{"ticker": "AAPL", "error": "provider observation proof is not payload-bound", "failure_kind": "systemic_proof_contract"}],
+            store,
+            proof_index,
+        )
+        self.assertEqual(proof_assessment["exit_code"], 2, "our proof-contract violation is corruption even with LKG")
+
+    def test_yahoo_batch_main_natural_recovery_still_promotes_with_v2_attribution(self) -> None:
+        ticker = "AAPL"
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["global_scouter"]}
+        retained = self._daily_payload(ticker)
+        canonical = self.fetcher.OUT_DIR / f"{ticker}.json"
+        write_json(canonical, retained)
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        store.record_success(
+            ticker, retained, self._run("seed"), ["global_scouter"],
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        store.record_failure(
+            ticker, "controlled failure", self._run("chaos"), ["global_scouter"],
+            {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss",
+        )
+
+        advanced_data = {
+            "info": {
+                "symbol": ticker,
+                "quoteType": "EQUITY",
+                "regularMarketTime": 1784077200,
+                "currentPrice": 11,
+                "previousClose": 10,
+            },
+            "history_1y": [{"date": "2026-07-15", "Close": 11}],
+        }
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            advanced_data,
+            1,
+            None,
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        original_argv = sys.argv
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
+                "--run-id", "natural-recovery", "--run-attempt", "1", "--event-name", "schedule",
+                "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
+            ]
+            self.fetcher.main()
+        finally:
+            sys.argv = original_argv
+
+        state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
+        self.assertEqual(state["resolution_state"], "fresh_primary")
+        self.assertFalse(state["retry"])
+        self.assertEqual(state["recovered_from_run_id"], "chaos")
+        self.assertEqual(state["recovery_run_id"], "natural-recovery")
+        self.assertEqual(state["recovery_run_attempt"], 1)
+        self.assertEqual(state["recovery_event_name"], "schedule")
+        self.assertEqual(state["promotion_contract"], "provider_observation/v2")
+        self.assertEqual(state["provider_observation"]["run_id"], "natural-recovery")
+
+    def test_yahoo_batch_main_rejects_post_write_mutation_and_restores_canonical(self) -> None:
+        ticker = "AAPL"
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["global_scouter"]}
+        retained = self._daily_payload(ticker)
+        canonical = self.fetcher.OUT_DIR / f"{ticker}.json"
+        write_json(canonical, retained)
+        before = canonical.read_bytes()
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        store.record_success(ticker, retained, self._run("seed"), ["global_scouter"], {"attempts_used": 1, "failures": []})
+        store.record_failure(ticker, "controlled failure", self._run("chaos"), ["global_scouter"], {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss")
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            {
+                "info": {
+                    "symbol": ticker,
+                    "quoteType": "EQUITY",
+                    "regularMarketTime": 1784077200,
+                    "currentPrice": 11,
+                    "previousClose": 10,
+                },
+                "history_1y": [{"date": "2026-07-15", "Close": 11}],
+            },
+            1,
+            None,
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        original_writer = self.fetcher.write_finance_payload
+
+        def mutating_writer(symbol, payload, **kwargs):
+            publication = original_writer(symbol, payload, **kwargs)
+            mutated = json.loads(canonical.read_text())
+            mutated["data"]["info"]["currentPrice"] = 999
+            write_json(canonical, mutated)
+            return publication
+
+        self.fetcher.write_finance_payload = mutating_writer
+        original_argv = sys.argv
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
+                "--run-id", "mutated-natural", "--run-attempt", "1", "--event-name", "schedule",
+                "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
+            ]
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            self.fetcher.write_finance_payload = original_writer
+            sys.argv = original_argv
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(canonical.read_bytes(), before, "post-write proof failure restores the prior canonical bytes")
+        state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertNotEqual(state.get("recovery_run_id"), "mutated-natural")
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_proof_contract")
+        pending_pointer = self.fetcher.DATA_SUPPLY_STATE_ROOT / "providers" / "yahoo_finance" / "stock_detail" / "pending" / f"{ticker}.json"
+        self.assertFalse(pending_pointer.exists(), "batch proof must commit before stock-detail side state")
+        self.assertEqual(list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl")), [])
+
+    def test_yahoo_batch_rolls_back_partial_stock_detail_side_publication(self) -> None:
+        ticker = "AAPL"
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["global_scouter"]}
+        retained = self._daily_payload(ticker)
+        canonical = self.fetcher.OUT_DIR / f"{ticker}.json"
+        write_json(canonical, retained)
+        before = canonical.read_bytes()
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        store.record_success(ticker, retained, self._run("seed"), ["global_scouter"], {"attempts_used": 1, "failures": []})
+        store.record_failure(ticker, "controlled failure", self._run("chaos"), ["global_scouter"], {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss")
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            {
+                "info": {
+                    "symbol": ticker, "quoteType": "EQUITY", "regularMarketTime": 1784077200,
+                    "currentPrice": 11, "previousClose": 10,
+                },
+                "history_1y": [{"date": "2026-07-15", "Close": 11}],
+            },
+            1,
+            None,
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        original_writer = self.fetcher.write_finance_payload
+
+        def failing_side_writer(symbol, payload, **kwargs):
+            publication = original_writer(symbol, payload, **kwargs)
+            if isinstance(publication, dict) and "store" in publication:
+                original_record = publication["store"].record_observation
+
+                def fail_after_append(observation):
+                    original_record(observation)
+                    raise RuntimeError("injected observation history failure")
+
+                publication["store"].record_observation = fail_after_append
+            return publication
+
+        self.fetcher.write_finance_payload = failing_side_writer
+        original_argv = sys.argv
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
+                "--run-id", "side-state-failure", "--run-attempt", "1", "--event-name", "schedule",
+                "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
+            ]
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            self.fetcher.write_finance_payload = original_writer
+            sys.argv = original_argv
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(canonical.read_bytes(), before)
+        state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_proof_contract")
+        state_files = [
+            path for path in self.fetcher.DATA_SUPPLY_STATE_ROOT.rglob("*")
+            if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.fetcher.DATA_SUPPLY_STATE_ROOT).parts)
+        ]
+        self.assertEqual(state_files, [], "partial stock-detail object, pending pointer, and history append must roll back")
+
+    def test_yahoo_batch_rolls_back_short_jsonl_append_and_side_publication(self) -> None:
+        ticker = "AAPL"
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["global_scouter"]}
+        retained = self._daily_payload(ticker)
+        canonical = self.fetcher.OUT_DIR / f"{ticker}.json"
+        write_json(canonical, retained)
+        before = canonical.read_bytes()
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        store.record_success(ticker, retained, self._run("seed"), ["global_scouter"], {"attempts_used": 1, "failures": []})
+        store.record_failure(ticker, "controlled failure", self._run("chaos"), ["global_scouter"], {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss")
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            {
+                "info": {
+                    "symbol": ticker, "quoteType": "EQUITY", "regularMarketTime": 1784077200,
+                    "currentPrice": 11, "previousClose": 10,
+                },
+                "history_1y": [{"date": "2026-07-15", "Close": 11}],
+            },
+            1,
+            None,
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        state_module = sys.modules[self.fetcher.DataSupplyStateStore.__module__]
+        original_os_write = state_module.os.write
+        injected = {"done": False}
+
+        def short_observation_write(fd, payload):
+            if not injected["done"] and b'"schema_version":"data-supply-observation/v1"' in payload:
+                injected["done"] = True
+                partial = max(1, len(payload) // 2)
+                return original_os_write(fd, payload[:partial])
+            return original_os_write(fd, payload)
+
+        state_module.os.write = short_observation_write
+        original_argv = sys.argv
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
+                "--run-id", "short-jsonl", "--run-attempt", "1", "--event-name", "schedule",
+                "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
+            ]
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            state_module.os.write = original_os_write
+            sys.argv = original_argv
+
+        self.assertTrue(injected["done"])
+        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(canonical.read_bytes(), before)
+        state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
+        self.assertEqual(state["resolution_state"], "lkg_primary")
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_proof_contract")
+        state_files = [
+            path for path in self.fetcher.DATA_SUPPLY_STATE_ROOT.rglob("*")
+            if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.fetcher.DATA_SUPPLY_STATE_ROOT).parts)
+        ]
+        self.assertEqual(state_files, [], "short JSONL tail and stock-detail side publication must roll back")
+
+    def test_stock_detail_rollback_preserves_concurrent_observation(self) -> None:
+        ticker = "AAPL"
+        payload = {
+            "schema_version": "yf-finance/v2", "ticker": ticker,
+            "fetched_at": "2026-07-10T10:00:00Z", "profile": "daily",
+            "data": {
+                "info": {
+                    "symbol": ticker, "quoteType": "EQUITY", "regularMarketTime": 1783713600,
+                    "currentPrice": 10, "previousClose": 9,
+                },
+                "history_1y": [{"date": "2026-07-10", "Close": 10}],
+            },
+        }
+        publication = self.fetcher.write_finance_payload(
+            ticker, payload, record_stock_detail_state=False,
+        )
+        store = publication["store"]
+        candidate = publication["candidate"]
+        observed_at = publication["observed_at"]
+        object_path = store.root / "providers" / candidate.provider / "stock_detail" / "objects" / ticker / f"{candidate.payload_sha256}.json"
+        pending_path = store.root / "providers" / candidate.provider / "stock_detail" / "pending" / f"{ticker}.json"
+        foreign_payload = json.loads(json.dumps(payload))
+        foreign_payload["data"]["info"]["currentPrice"] = 11
+        foreign_payload["data"]["history_1y"][0]["Close"] = 11
+        foreign_row = self.fetcher.write_finance_payload(ticker, foreign_payload)
+        foreign_pending = pending_path.read_bytes()
+        foreign_object = store.root / json.loads(foreign_pending)["path"]
+        snapshots = {}
+        captured = {}
+        append_ours = store.record_observation
+
+        def append_then_foreign(observation):
+            append_ours(observation)
+            foreign_store = self.fetcher.DataSupplyStateStore(
+                self.fetcher.DATA_SUPPLY_STATE_ROOT,
+                provider_truth_root=self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT,
+                defer_maintenance=True,
+            )
+            self.fetcher.record_stock_detail_failure(
+                store=foreign_store,
+                provider="yahoo_finance",
+                entity="AMD",
+                provider_path="data/yf/finance/AMD.json",
+                observed_at=observed_at,
+                reason_code="fetch_failed",
+                failure_detail="concurrent writer evidence",
+                origin="manual",
+            )
+            raise RuntimeError("injected failure after concurrent append")
+
+        def tracked(observation):
+            captured["row"] = dict(observation)
+            return append_then_foreign(observation)
+
+        store.record_observation = tracked
+        with self.assertRaises(RuntimeError):
+            try:
+                self.fetcher.record_stock_detail_success(
+                    store=store, candidate=candidate, observed_at=observed_at, origin="manual",
+                    rollback_context=snapshots,
+                )
+            except RuntimeError:
+                self.fetcher._rollback_stock_detail_publication(
+                    store, candidate, observed_at, snapshots, captured.get("row"),
+                )
+                raise
+
+        history = store.root / "history" / "observations" / f"{observed_at[:10]}.jsonl"
+        rows = [json.loads(line) for line in history.read_text().splitlines()]
+        self.assertEqual([row["entity"] for row in rows], [foreign_row["entity"], "AMD"])
+        self.assertFalse(object_path.exists())
+        self.assertEqual(pending_path.read_bytes(), foreign_pending, "rollback restores the in-lock concurrent pending snapshot")
+        self.assertTrue(foreign_object.exists())
+
+    def test_stock_detail_rollback_without_in_lock_capture_preserves_preexisting_files(self) -> None:
+        ticker = "AAPL"
+        payload = {
+            "schema_version": "yf-finance/v2", "ticker": ticker,
+            "fetched_at": "2026-07-10T10:00:00Z", "profile": "daily",
+            "data": {
+                "info": {
+                    "symbol": ticker, "quoteType": "EQUITY", "regularMarketTime": 1783713600,
+                    "currentPrice": 10, "previousClose": 9,
+                },
+                "history_1y": [{"date": "2026-07-10", "Close": 10}],
+            },
+        }
+        publication = self.fetcher.write_finance_payload(ticker, payload, record_stock_detail_state=False)
+        store = publication["store"]
+        candidate = publication["candidate"]
+        object_path = store.root / "providers" / candidate.provider / "stock_detail" / "objects" / ticker / f"{candidate.payload_sha256}.json"
+        pending_path = store.root / "providers" / candidate.provider / "stock_detail" / "pending" / f"{ticker}.json"
+        object_path.parent.mkdir(parents=True, exist_ok=True)
+        pending_path.parent.mkdir(parents=True, exist_ok=True)
+        object_path.write_bytes(candidate.payload_bytes)
+        write_json(pending_path, {
+            "path": object_path.relative_to(store.root).as_posix(),
+            "sha256": candidate.payload_sha256,
+            "observed_at": publication["observed_at"],
+        })
+        before_object = object_path.read_bytes()
+        before_pending = pending_path.read_bytes()
+        self.fetcher._rollback_stock_detail_publication(
+            store, candidate, publication["observed_at"], {"captured": False, "preimages": {}}, None,
+        )
+        self.assertEqual(object_path.read_bytes(), before_object)
+        self.assertEqual(pending_path.read_bytes(), before_pending)
+
     def test_new_listing_without_history_is_pending_then_self_promotes(self) -> None:
         state_root = self.root / "admin" / "yahoo-batch-quote-history"
         store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
@@ -826,6 +1375,54 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(first["pending"]["expected_resolution"], "next_natural_yahoo_run")
         self.assertEqual(first["pending"]["reason"], "recent_listing")
 
+        manual_run = {**self._run("manual-pending"), "event_name": "workflow_dispatch", "natural": False}
+        manual_proof = store.build_provider_observation("NEW", pending, manual_run)
+        manual_decision = store.evaluate_recovery_candidate("NEW", pending, manual_proof, manual_run)
+        self.assertEqual(manual_decision["reason"], "recovery_requires_schedule")
+        store.record_promotion_deferral(
+            "NEW", manual_decision, manual_run, ["market_facts"],
+            {"attempts_used": 1, "failures": [], "latency_ms": 1},
+        )
+        manual_index = store.rebuild_index({"NEW"}, manual_run)
+        manual_assessment = self.fetcher.yahoo_failure_exit_assessment(
+            [{"ticker": "NEW", "error": "promotion deferred: recovery_requires_schedule", "failure_kind": "recovery_requires_schedule"}],
+            store,
+            manual_index,
+        )
+        self.assertEqual(manual_assessment["exit_code"], 0)
+        self.assertEqual(manual_assessment["deferred_without_lkg_tickers"], ["NEW"])
+        (self.fetcher.OUT_DIR / "NEW.json").unlink()
+        missing_current_assessment = self.fetcher.yahoo_failure_exit_assessment(
+            [{"ticker": "NEW", "error": "promotion deferred: recovery_requires_schedule", "failure_kind": "recovery_requires_schedule"}],
+            store,
+            manual_index,
+        )
+        self.assertEqual(missing_current_assessment["exit_code"], 2, "missing advertised pending canonical is corruption")
+        write_json(self.fetcher.OUT_DIR / "NEW.json", pending)
+
+        provider_without_history = self.fetcher.decorate_finance_payload(
+            ticker="NEW", profile="daily", fetched_at="2026-07-11T20:00:00Z",
+            data={
+                "info": {
+                    "symbol": "NEW", "quoteType": "EQUITY", "regularMarketTime": 1783800000,
+                    "firstTradeDateEpochUtc": 1783540800,
+                },
+                "history_1y": None,
+            },
+        )
+        foreign_data = json.loads(json.dumps(provider_without_history["data"]))
+        foreign_data["history_1y"] = [{"date": "2026-07-11", "Close": 999}]
+        foreign_history = self.fetcher.decorate_finance_payload(
+            ticker="NEW", profile="daily", fetched_at="2026-07-11T20:00:00Z", data=foreign_data,
+        )
+        foreign_run = self._run("pending-foreign-history")
+        foreign_proof = store.build_provider_observation("NEW", provider_without_history, foreign_run)
+        foreign_decision = store.evaluate_recovery_candidate(
+            "NEW", foreign_history, foreign_proof, foreign_run, canonical_payload=pending,
+        )
+        self.assertFalse(foreign_decision["eligible"])
+        self.assertEqual(foreign_decision["reason"], "foreign_writer_conflict")
+
         recovered = self.fetcher.decorate_finance_payload(
             ticker="NEW",
             profile="daily",
@@ -841,14 +1438,18 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             },
         )
         write_json(self.fetcher.OUT_DIR / "NEW.json", recovered)
+        recovery_run = self._run("natural-2")
+        recovery_proof = store.build_provider_observation("NEW", recovered, recovery_run)
         store.record_success(
-            "NEW", recovered, self._run("natural-2"), ["market_facts"],
+            "NEW", recovered, recovery_run, ["market_facts"],
             {"attempts_used": 1, "failures": [], "latency_ms": 2},
+            provider_observation=recovery_proof,
         )
         second = json.loads((state_root / "tickers" / "NEW.json").read_text())
         self.assertEqual(second["resolution_state"], "fresh_primary")
         self.assertFalse(second["retry"])
         self.assertEqual(second["recovered_from_run_id"], "natural-1")
+        self.assertEqual(second["recovery_run_id"], "natural-2")
 
         old = self.fetcher.decorate_finance_payload(
             ticker="OLD",
@@ -871,9 +1472,11 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(first_old_state["pending"]["reason"], "newly_discovered_no_history")
         late_run = self._run("natural-old-late")
         late_run["observed_at"] = "2026-08-20T22:00:00Z"
+        late_proof = store.build_provider_observation("OLD", old, late_run)
         old_state = store.record_success(
             "OLD", old, late_run, ["market_facts"],
             {"attempts_used": 1, "failures": [], "latency_ms": 2},
+            provider_observation=late_proof,
         )
         self.assertEqual(old_state["resolution_state"], "unavailable")
         self.assertNotIn("pending", old_state)
@@ -1148,6 +1751,29 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(truth.read_bytes(), sentinel)
         self.assertEqual(observation["validation_status"], "invalid")
         self.assertFalse((self.root / "state" / "providers").exists())
+
+    def test_deferred_enrolled_validation_failure_has_no_side_effect_before_batch_proof(self) -> None:
+        self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
+        truth = self.fetcher.OUT_DIR / "AAPL.json"
+        truth.parent.mkdir(parents=True)
+        sentinel = b'{"sentinel":true}'
+        truth.write_bytes(sentinel)
+        invalid = {
+            "schema_version": "yf-finance/v2", "ticker": "AAPL",
+            "fetched_at": "2026-07-10T10:00:00Z", "profile": "full",
+            "data": {
+                "info": {"symbol": "AAPL", "quoteType": "ETF", "currentPrice": 10, "previousClose": 9},
+                "history_1y": [{"date": "2026-07-10", "Close": 10}],
+            },
+        }
+        with self.assertRaises(ValueError):
+            self.fetcher.write_finance_payload("AAPL", invalid, record_stock_detail_state=False)
+        self.assertEqual(truth.read_bytes(), sentinel)
+        state_files = [
+            path for path in (self.root / "state").rglob("*")
+            if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.root / "state").parts)
+        ]
+        self.assertEqual(state_files, [], "deferred stock-detail validation cannot publish failure evidence before batch proof")
 
     def test_enrolled_merge_preserves_heavy_fields_but_never_fills_quote_from_old_payload(self) -> None:
         existing = {

@@ -12,6 +12,12 @@ from pathlib import Path
 ATTEMPT_RETENTION = 14
 NEW_LISTING_PENDING_DAYS = 31
 ERROR_TEXT_LIMIT = 1000
+PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2 = "provider_observation/v2"
+PROMOTION_DEFERRAL_REASONS = {
+    "foreign_writer_conflict",
+    "recovery_not_advanced_by_provider",
+    "recovery_requires_schedule",
+}
 
 
 def _json_bytes(payload: dict) -> bytes:
@@ -95,21 +101,60 @@ def _epoch_iso(value) -> str | None:
         return None
 
 
-def _payload_source_fields(payload: dict) -> dict:
+def _is_natural_promotion_run(run: dict) -> bool:
+    return (
+        run.get("natural") is True
+        and run.get("event_name") == "schedule"
+        and int(run.get("run_attempt") or 1) == 1
+    )
+
+
+def _valid_run_binding(run: dict) -> bool:
+    try:
+        run_attempt = int(run.get("run_attempt"))
+    except (AttributeError, TypeError, ValueError):
+        return False
+    return (
+        bool(str(run.get("run_id") or ""))
+        and run_attempt >= 1
+        and bool(str(run.get("event_name") or ""))
+        and _iso_ms(str(run.get("observed_at") or "")) is not None
+    )
+
+
+def _contains_provider_value(candidate, provider) -> bool:
+    if provider is None:
+        return True
+    if isinstance(provider, dict):
+        return isinstance(candidate, dict) and all(
+            key in candidate and _contains_provider_value(candidate[key], value)
+            for key, value in provider.items()
+            if value is not None
+        )
+    if isinstance(provider, list):
+        return isinstance(candidate, list) and all(item in candidate for item in provider)
+    return candidate == provider
+
+
+def _derived_payload_source_fields(payload: dict) -> dict:
     data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
     info = data.get("info") if isinstance(data.get("info"), dict) else {}
-    quote = payload.get("quote_as_of") or _epoch_iso(info.get("regularMarketTime"))
+    quote = _epoch_iso(info.get("regularMarketTime"))
     history = data.get("history_1y") if isinstance(data.get("history_1y"), list) else []
     dates = sorted({
         str(row.get("date"))[:10]
         for row in history
         if isinstance(row, dict) and _iso_ms(str(row.get("date") or "")[:10]) is not None
     })
-    history_as_of = payload.get("history_as_of") or (dates[-1] if dates else None)
-    source_as_of = payload.get("source_as_of") or (
+    history_as_of = dates[-1] if dates else None
+    source_as_of = (
         history_as_of if history_as_of and (not quote or history_as_of <= quote[:10]) else quote
     )
     return {"quote_as_of": quote, "history_as_of": history_as_of, "source_as_of": source_as_of}
+
+
+def _payload_source_fields(payload: dict) -> dict:
+    return _derived_payload_source_fields(payload)
 
 
 def _valid_canonical_payload(payload: dict | None, ticker: str) -> bool:
@@ -123,7 +168,12 @@ def _valid_canonical_payload(payload: dict | None, ticker: str) -> bool:
     data = payload.get("data")
     if not isinstance(data, dict) or not any(value is not None for value in data.values()):
         return False
-    source = _payload_source_fields(payload)
+    source = _derived_payload_source_fields(payload)
+    if any(
+        key in payload and payload.get(key) != source.get(key)
+        for key in ("quote_as_of", "history_as_of", "source_as_of")
+    ):
+        return False
     quote_ms = _iso_ms(source["quote_as_of"])
     history_ms = _iso_ms(source["history_as_of"])
     source_ms = _iso_ms(source["source_as_of"])
@@ -306,7 +356,143 @@ class YahooBatchStateStore:
         _write_json(self._state_path(ticker), state)
         return state
 
-    def recovery_candidate_advances(self, ticker: str, payload: dict) -> bool:
+    def build_provider_observation(self, ticker: str, payload: dict, run: dict) -> dict:
+        if not _valid_canonical_payload(payload, ticker):
+            raise ValueError(f"provider observation proof payload is invalid for {ticker}")
+        payload_bytes = _json_bytes(payload)
+        source = _payload_source_fields(payload)
+        if not source.get("quote_as_of") and not source.get("history_as_of"):
+            raise ValueError(f"provider observation proof markers are missing for {ticker}")
+        if not _valid_run_binding(run):
+            raise ValueError(f"provider observation proof run binding is invalid for {ticker}")
+        observed_at = str(run.get("observed_at"))
+        return {
+            "schema_version": PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+            "payload_bytes": payload_bytes,
+            "payload_sha256": _sha256(payload_bytes),
+            **source,
+            "run_id": str(run.get("run_id") or ""),
+            "run_attempt": int(run.get("run_attempt") or 1),
+            "event_name": str(run.get("event_name") or ""),
+            "observed_at": observed_at,
+        }
+
+    def _validated_provider_observation(self, ticker: str, provider_observation: dict, run: dict) -> tuple[dict, dict]:
+        if (
+            not isinstance(provider_observation, dict)
+            or provider_observation.get("schema_version") != PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2
+            or not isinstance(provider_observation.get("payload_bytes"), bytes)
+        ):
+            raise ValueError(f"provider observation proof contract is invalid for {ticker}")
+        payload_bytes = provider_observation["payload_bytes"]
+        try:
+            provider_payload = json.loads(payload_bytes)
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"provider observation proof payload decode failed for {ticker}: {exc}") from exc
+        if not _valid_canonical_payload(provider_payload, ticker):
+            raise ValueError(f"provider observation proof payload is invalid for {ticker}")
+        source = _payload_source_fields(provider_payload)
+        if (
+            provider_observation.get("payload_sha256") != _sha256(payload_bytes)
+            or any(provider_observation.get(key) != source.get(key) for key in ("quote_as_of", "history_as_of", "source_as_of"))
+        ):
+            raise ValueError(f"provider observation proof is not payload-bound for {ticker}")
+        if not _valid_run_binding(run) or (
+            provider_observation.get("run_id") != str(run.get("run_id") or "")
+            or int(provider_observation.get("run_attempt") or 1) != int(run.get("run_attempt") or 1)
+            or provider_observation.get("event_name") != str(run.get("event_name") or "")
+            or provider_observation.get("observed_at") != str(run.get("observed_at") or "")
+        ):
+            raise ValueError(f"provider observation proof is not bound to the current run for {ticker}")
+        return provider_payload, source
+
+    def evaluate_recovery_candidate(
+        self,
+        ticker: str,
+        payload: dict,
+        provider_observation: dict,
+        run: dict,
+        canonical_payload: dict | None = None,
+    ) -> dict:
+        if not _valid_canonical_payload(payload, ticker):
+            raise ValueError(f"promotion candidate payload is invalid for {ticker}")
+        provider_payload, provider_source = self._validated_provider_observation(ticker, provider_observation, run)
+        state = self._load_state(ticker)
+        base = {
+            "ticker": ticker,
+            "candidate_payload": payload,
+            "canonical_payload": canonical_payload,
+            "provider_observation": provider_observation,
+            "provider_source": provider_source,
+        }
+        if state.get("retry") is not True:
+            return {**base, "eligible": True, "reason": "ok"}
+        if not _is_natural_promotion_run(run):
+            return {**base, "eligible": False, "reason": "recovery_requires_schedule"}
+        candidate_data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        provider_data = provider_payload.get("data") if isinstance(provider_payload.get("data"), dict) else {}
+        if not _contains_provider_value(candidate_data, provider_data):
+            return {**base, "eligible": False, "reason": "foreign_writer_conflict"}
+        if isinstance(canonical_payload, dict):
+            canonical_source = _payload_source_fields(canonical_payload)
+            for key in ("quote_as_of", "history_as_of"):
+                canonical_marker = _iso_ms(canonical_source.get(key))
+                provider_marker = _iso_ms(provider_source.get(key))
+                if canonical_marker is not None and provider_marker is not None and canonical_marker > provider_marker:
+                    return {**base, "eligible": False, "reason": "foreign_writer_conflict"}
+        prior = (
+            state.get("lkg") if isinstance(state.get("lkg"), dict)
+            else state.get("current") if isinstance(state.get("current"), dict)
+            else {}
+        )
+        candidate_source = _payload_source_fields(payload)
+        comparable = 0
+        advanced = False
+        for key in ("quote_as_of", "history_as_of"):
+            before = _iso_ms(prior.get(key))
+            after = _iso_ms(provider_source.get(key))
+            candidate_after = _iso_ms(candidate_source.get(key))
+            candidate_advances = candidate_after is not None and (before is None or candidate_after > before)
+            if candidate_advances:
+                if after is None or candidate_after != after:
+                    return {**base, "eligible": False, "reason": "foreign_writer_conflict"}
+            if after is not None:
+                comparable += 1
+                advanced = advanced or before is None or after > before
+        if (
+            state.get("resolution_state") in {"pending_history", "unavailable"}
+            and candidate_source.get("history_as_of") is None
+        ):
+            return {**base, "eligible": True, "reason": "ok", "comparable_fields": comparable}
+        return {**base, "eligible": advanced, "reason": "ok" if advanced else "recovery_not_advanced_by_provider", "comparable_fields": comparable}
+
+    def valid_current_canonical(self, ticker: str, state: dict | None = None) -> bool:
+        state = state if isinstance(state, dict) else self._load_state(ticker)
+        current = state.get("current") if isinstance(state.get("current"), dict) else {}
+        if current.get("path") != f"data/yf/finance/{ticker}.json":
+            return False
+        path = self.finance_dir / f"{ticker}.json"
+        try:
+            payload_bytes = path.read_bytes()
+            payload = json.loads(payload_bytes)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return False
+        source = _payload_source_fields(payload) if isinstance(payload, dict) else {}
+        return (
+            _valid_canonical_payload(payload, ticker)
+            and current.get("payload_sha256") == _sha256(payload_bytes)
+            and all(current.get(key) == source.get(key) for key in ("quote_as_of", "history_as_of", "source_as_of"))
+        )
+
+    def recovery_candidate_advances(
+        self,
+        ticker: str,
+        payload: dict,
+        provider_observation: dict | None = None,
+        run: dict | None = None,
+    ) -> bool:
+        if provider_observation is not None and run is not None:
+            return self.evaluate_recovery_candidate(ticker, payload, provider_observation, run)["eligible"]
         state = self._load_state(ticker)
         if state.get("retry") is not True or state.get("resolution_state") != "lkg_primary":
             return True
@@ -319,7 +505,49 @@ class YahooBatchStateStore:
                 comparable += 1
                 if after > before:
                     return True
-        return comparable == 0
+        return False
+
+    def record_promotion_deferral(
+        self,
+        ticker: str,
+        decision: dict,
+        run: dict,
+        discovered_from: list[str],
+        evidence: dict,
+    ) -> dict:
+        reason = decision.get("reason") if isinstance(decision, dict) else None
+        if reason not in PROMOTION_DEFERRAL_REASONS:
+            raise ValueError(f"promotion deferral reason is invalid for {ticker}")
+        state = self._load_state(ticker)
+        if state.get("retry") is not True:
+            raise ValueError(f"promotion deferral requires an active retry for {ticker}")
+        verified = self.evaluate_recovery_candidate(
+            ticker,
+            decision.get("candidate_payload"),
+            decision.get("provider_observation"),
+            run,
+            canonical_payload=decision.get("canonical_payload"),
+        )
+        if verified.get("eligible") is True or verified.get("reason") != reason:
+            raise ValueError(f"promotion deferral proof is invalid for {ticker}")
+        attempt = _attempt(run, "failed", evidence, error=reason)
+        self._append_attempt(state, attempt)
+        state.update({
+            "discovered_from": sorted(set(discovered_from)),
+            "last_attempt": attempt,
+            "latest_promotion_deferral": {
+                "run_id": attempt["run_id"],
+                "run_attempt": attempt["run_attempt"],
+                "event_name": attempt["event_name"],
+                "observed_at": attempt["observed_at"],
+                "reason": reason,
+                "provider_quote_as_of": decision.get("provider_source", {}).get("quote_as_of"),
+                "provider_history_as_of": decision.get("provider_source", {}).get("history_as_of"),
+            },
+            "updated_at": attempt["observed_at"],
+        })
+        _write_json(self._state_path(ticker), state)
+        return state
 
     def record_success(
         self,
@@ -328,10 +556,28 @@ class YahooBatchStateStore:
         run: dict,
         discovered_from: list[str],
         evidence: dict,
+        *,
+        provider_observation: dict | None = None,
+        expected_payload_sha256: str | None = None,
     ) -> dict:
         path = self.finance_dir / f"{ticker}.json"
         payload_bytes = path.read_bytes()
         state = self._load_state(ticker)
+        canonical_payload = _read_json(path)
+        actual_sha256 = _sha256(payload_bytes)
+        if expected_payload_sha256 is not None and actual_sha256 != expected_payload_sha256:
+            raise ValueError(f"promotion candidate payload is not bound to canonical bytes for {ticker}")
+        if canonical_payload != payload:
+            raise ValueError(f"promotion candidate payload is not bound to canonical bytes for {ticker}")
+        if not _valid_canonical_payload(canonical_payload, ticker):
+            raise ValueError(f"promotion candidate canonical payload is invalid for {ticker}")
+        recovery_decision = None
+        if provider_observation is not None:
+            recovery_decision = self.evaluate_recovery_candidate(ticker, payload, provider_observation, run)
+            if not recovery_decision["eligible"]:
+                raise ValueError(f"recovery promotion rejected for {ticker}: {recovery_decision['reason']}")
+        elif state.get("retry") is True:
+            raise ValueError(f"provider observation proof is required for recovery promotion of {ticker}")
         previous_state = state.get("resolution_state")
         previous_run_id = None
         latest_failure = state.get("latest_failure")
@@ -356,11 +602,9 @@ class YahooBatchStateStore:
             "retry": not has_history,
             "current": {
                 "path": f"data/yf/finance/{ticker}.json",
-                "payload_sha256": _sha256(payload_bytes),
-                "fetched_at": payload.get("fetched_at"),
-                "quote_as_of": payload.get("quote_as_of"),
-                "history_as_of": payload.get("history_as_of"),
-                "source_as_of": payload.get("source_as_of"),
+                "payload_sha256": actual_sha256,
+                "fetched_at": canonical_payload.get("fetched_at"),
+                **_payload_source_fields(canonical_payload),
             },
             "discovered_from": sorted(set(discovered_from)),
             "last_attempt": attempt,
@@ -372,9 +616,20 @@ class YahooBatchStateStore:
             if previous_state in {"lkg_primary", "pending_history", "unavailable"} and previous_run_id:
                 state["recovered_from_run_id"] = previous_run_id
                 state["recovered_at"] = attempt["observed_at"]
+                state["recovery_run_id"] = attempt["run_id"]
+                state["recovery_run_attempt"] = attempt["run_attempt"]
+                state["recovery_event_name"] = attempt["event_name"]
                 if isinstance(latest_failure, dict):
                     state["last_recovered_failure"] = latest_failure
             state.pop("latest_failure", None)
+            state.pop("latest_promotion_deferral", None)
+            if provider_observation is not None:
+                state["promotion_contract"] = PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2
+                state["provider_observation"] = {
+                    key: value
+                    for key, value in provider_observation.items()
+                    if key != "payload_bytes"
+                }
         elif pending_reason:
             initial_run_id = (
                 pending.get("initial_run_id")
@@ -471,6 +726,7 @@ class YahooBatchStateStore:
             "latest_failure": failure,
             "updated_at": attempt["observed_at"],
         })
+        state.pop("latest_promotion_deferral", None)
         if lkg:
             state["lkg"] = lkg
             state["current"] = dict(lkg)
@@ -554,6 +810,7 @@ class YahooBatchStateStore:
         pending_details = []
         lkg_details = []
         unavailable_details = []
+        promotion_deferral_details = []
         failures = []
         source_rows = []
         current_attempts = []
@@ -638,6 +895,9 @@ class YahooBatchStateStore:
             latest_failure = state.get("latest_failure")
             if isinstance(latest_failure, dict):
                 failures.append({"ticker": ticker, **latest_failure})
+            latest_deferral = state.get("latest_promotion_deferral")
+            if isinstance(latest_deferral, dict):
+                promotion_deferral_details.append({"ticker": ticker, **latest_deferral})
             for attempt in state.get("attempts") or []:
                 if (
                     isinstance(attempt, dict)
@@ -663,6 +923,14 @@ class YahooBatchStateStore:
             unavailable_details,
             key=lambda row: (row.get("symbol") not in current_failure_symbols, row.get("symbol") or ""),
         )
+        current_promotion_deferrals = sorted(
+            (
+                row for row in promotion_deferral_details
+                if str(row.get("run_id")) == run_id
+                and int(row.get("run_attempt") or 1) == int(run.get("run_attempt") or 1)
+            ),
+            key=lambda row: row.get("ticker") or "",
+        )
         oldest = min(source_rows) if source_rows else (None, None)
         latest_failure = max(failures, key=lambda row: str(row.get("observed_at") or "")) if failures else None
         if batch_failure:
@@ -687,6 +955,11 @@ class YahooBatchStateStore:
             "pending_details": pending_details[:20],
             "lkg_details": prioritized_lkg_details[:20],
             "unavailable_details": prioritized_unavailable_details[:20],
+            "promotion_deferral_details": sorted(
+                promotion_deferral_details,
+                key=lambda row: (str(row.get("observed_at") or ""), row.get("ticker") or ""),
+                reverse=True,
+            ),
             "stale_groups": [
                 {
                     "source_as_of": key[0] or None,
@@ -708,6 +981,8 @@ class YahooBatchStateStore:
                 "successes": succeeded,
                 "failed": failed,
                 "skipped": skipped,
+                "promotion_deferrals": len(current_promotion_deferrals),
+                "promotion_deferral_symbols": [row["ticker"] for row in current_promotion_deferrals],
                 "fetch_attempts": sum(int(row.get("attempts_used") or 0) for row in current_attempts) + (1 if batch_failure else 0),
                 "errors": [
                     {"ticker": row["ticker"], "error": row.get("error"), "failures": row.get("failures") or []}

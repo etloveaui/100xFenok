@@ -840,6 +840,17 @@ export function compactRecoveryIndex(index) {
       recovered_at: row?.recovered_at ?? null,
       source_as_of: row?.source_as_of ?? null,
     })) : [],
+    promotion_deferral_details: Array.isArray(index.promotion_deferral_details)
+      ? index.promotion_deferral_details.map((row) => ({
+          key: row?.key ?? null,
+          run_id: row?.run_id ?? null,
+          run_attempt: row?.run_attempt ?? null,
+          event_name: row?.event_name ?? null,
+          observed_at: row?.observed_at ?? null,
+          source_as_of: row?.source_as_of ?? null,
+          reason: row?.reason ?? null,
+        }))
+      : [],
     current_attempt: index.current_attempt ? {
       run_id: index.current_attempt.run_id ?? null,
       run_attempt: index.current_attempt.run_attempt ?? null,
@@ -849,8 +860,64 @@ export function compactRecoveryIndex(index) {
       successes: index.current_attempt.successes ?? null,
       failed: index.current_attempt.failed ?? null,
       failed_keys: Array.isArray(index.current_attempt.failed_keys) ? index.current_attempt.failed_keys : [],
+      promotion_deferrals: index.current_attempt.promotion_deferrals ?? 0,
+      promotion_deferral_keys: Array.isArray(index.current_attempt.promotion_deferral_keys)
+        ? index.current_attempt.promotion_deferral_keys
+        : [],
     } : null,
   };
+}
+
+export function validateProducerRecoveryAttempt(index) {
+  const reasons = [];
+  const reject = (condition, reason) => {
+    if (!condition) reasons.push(reason);
+  };
+  const keys = Array.isArray(index?.keys) ? index.keys : [];
+  const current = index?.current_attempt;
+  const failedKeys = Array.isArray(current?.failed_keys) ? current.failed_keys : [];
+  const deferralKeys = Array.isArray(current?.promotion_deferral_keys) ? current.promotion_deferral_keys : [];
+  const details = Array.isArray(index?.promotion_deferral_details) ? index.promotion_deferral_details : [];
+  const integerFields = ["attempted", "successes", "failed", "promotion_deferrals"];
+  const orderedSubset = (values) => values.every((key) => typeof key === "string" && keys.includes(key))
+    && new Set(values).size === values.length
+    && JSON.stringify(values) === JSON.stringify(keys.filter((key) => values.includes(key)));
+
+  reject(current && typeof current === "object" && !Array.isArray(current), "current_attempt is missing or malformed");
+  reject(typeof current?.run_id === "string" && current.run_id !== "", "current attempt run_id is invalid");
+  reject(Number.isInteger(current?.run_attempt) && current.run_attempt >= 1, "current attempt run_attempt is invalid");
+  reject(["schedule", "workflow_dispatch"].includes(current?.event_name), "current attempt event_name is invalid");
+  reject(isDetectionSourceStamp(current?.observed_at), "current attempt observed_at is invalid");
+  for (const field of integerFields) {
+    reject(Number.isInteger(current?.[field]) && current[field] >= 0, `current attempt ${field} is invalid`);
+  }
+  reject(Number.isInteger(current?.attempted) && current.attempted >= 1 && current.attempted <= keys.length,
+    "current attempted denominator is outside the exact key-set bounds");
+  reject(current?.attempted === current?.successes + current?.failed + current?.promotion_deferrals,
+    "current attempt denominator does not reconcile");
+  reject(orderedSubset(failedKeys), "current failed_keys are not an ordered unique key subset");
+  reject(orderedSubset(deferralKeys), "current promotion_deferral_keys are not an ordered unique key subset");
+  reject(failedKeys.every((key) => !deferralKeys.includes(key)), "failed and promotion-deferral keys overlap");
+  reject(current?.failed === failedKeys.length, "failed count does not match failed_keys");
+  reject(current?.promotion_deferrals === deferralKeys.length, "promotion deferral count does not match its keys");
+  reject(Number(index?.counts?.failed) === current?.failed, "index failed count does not match the current attempt");
+  reject(failedKeys.every((key) => index?.retry_keys?.includes(key)), "failed key is missing from retry_keys");
+  reject(deferralKeys.every((key) => index?.retry_keys?.includes(key)), "promotion deferral key is missing from retry_keys");
+  reject(details.length === deferralKeys.length
+    && JSON.stringify(details.map((row) => row?.key)) === JSON.stringify(deferralKeys),
+  "promotion deferral details do not match current keys");
+  for (const detail of details) {
+    reject(detail?.run_id === current?.run_id
+      && detail?.run_attempt === current?.run_attempt
+      && detail?.event_name === current?.event_name
+      && detail?.observed_at === current?.observed_at,
+    `promotion deferral ${detail?.key ?? "<unknown>"} is not bound to the current run`);
+    reject(["recovery_requires_schedule", "foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(detail?.reason),
+      `promotion deferral ${detail?.key ?? "<unknown>"} reason is invalid`);
+    reject(isDetectionSourceStamp(detail?.source_as_of),
+      `promotion deferral ${detail?.key ?? "<unknown>"} source_as_of is invalid`);
+  }
+  return { valid: reasons.length === 0, reasons };
 }
 
 function recoveryChecks(laneId, index) {
@@ -864,14 +931,8 @@ function recoveryChecks(laneId, index) {
     && Array.isArray(index?.retry_keys)
     && Array.isArray(index?.lkg_details)
     && Array.isArray(index?.recovery_details);
-  const current = present
-    && typeof index?.current_attempt?.run_id === "string"
-    && Number.isInteger(index?.current_attempt?.run_attempt)
-    && index.current_attempt.run_attempt >= 1
-    && ["schedule", "workflow_dispatch"].includes(index?.current_attempt?.event_name)
-    && typeof index?.current_attempt?.observed_at === "string"
-    && Number.isInteger(index?.current_attempt?.attempted)
-    && Array.isArray(index?.current_attempt?.failed_keys);
+  const currentValidation = validateProducerRecoveryAttempt(index);
+  const current = present && currentValidation.valid;
   const retryEmpty = present
     && index.retry_keys.length === 0
     && Number(index.counts?.retry) === 0;
@@ -884,7 +945,7 @@ function recoveryChecks(laneId, index) {
   return {
     checks: [
       check("recovery_state_present", "Recovery state", present, present ? `${config.keys.length} exact per-file keys are named` : "recovery index is missing or malformed"),
-      check("recovery_current_attempt", "Recovery current attempt", current, current ? `run ${index.current_attempt.run_id}` : "current-attempt recovery evidence is missing"),
+      check("recovery_current_attempt", "Recovery current attempt", current, current ? `run ${index.current_attempt.run_id}` : currentValidation.reasons.join("; ") || "current-attempt recovery evidence is missing"),
       check("recovery_retry_set_empty", "Recovery retry set", retryEmpty, retryEmpty ? "retry set is empty" : `${index?.retry_keys?.length ?? 0} key(s) remain on retained LKG`),
       check("recovery_lkg_integrity", "Recovery LKG integrity", lkgIntegrity, lkgIntegrity ? "all retained LKG rows are sha256-bound" : "LKG binding is missing, malformed, or unavailable"),
     ],
@@ -1147,6 +1208,18 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       expected_resolution: item?.expected_resolution ?? null,
       reason: item?.reason ?? "newly_discovered_no_history",
     }));
+  const promotionDeferrals = (Array.isArray(state?.promotion_deferral_details) ? state.promotion_deferral_details : [])
+    .slice(0, 20)
+    .map((item) => ({
+      symbol: item?.ticker ?? item?.symbol ?? null,
+      reason: item?.reason ?? null,
+      attempt_ref: item?.run_id ?? null,
+      attempt_number: number(item?.run_attempt, 1),
+      event_name: item?.event_name ?? null,
+      observed_at: item?.observed_at ?? null,
+      provider_quote_as_of: item?.provider_quote_as_of ?? null,
+      provider_history_as_of: item?.provider_history_as_of ?? null,
+    }));
   const lkgDetails = (Array.isArray(state?.lkg_details) ? state.lkg_details : [])
     .filter((item) => typeof item?.failure_run_id === "string" && item.failure_run_id.length > 0)
     .slice(0, 20)
@@ -1237,8 +1310,15 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     attempted: number(currentAttempt.attempted),
     successes: number(currentAttempt.successes),
     failed: number(currentAttempt.failed),
+    failed_symbols: Array.isArray(currentAttempt.errors)
+      ? [...new Set(currentAttempt.errors.map((row) => row?.ticker ?? row?.symbol).filter((value) => typeof value === "string" && value !== ""))].sort()
+      : [],
     skipped: number(currentAttempt.skipped),
     fetch_attempts: number(currentAttempt.fetch_attempts),
+    promotion_deferrals: number(currentAttempt.promotion_deferrals),
+    promotion_deferral_symbols: Array.isArray(currentAttempt.promotion_deferral_symbols)
+      ? [...new Set(currentAttempt.promotion_deferral_symbols.filter((value) => typeof value === "string"))].sort()
+      : [],
   };
   const exclusiveCount = number(counts.fresh)
     + number(counts.lkg)
@@ -1319,6 +1399,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       stale_groups: staleGroups,
       pending_history: pendingDetails,
       unavailable: unavailableDetails,
+      promotion_deferrals: promotionDeferrals,
       recovery_policy: "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success.",
     },
     asOf: oldestSourceValid ? oldestSourceAsOf : null,

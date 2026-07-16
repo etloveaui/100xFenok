@@ -1,9 +1,13 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
 export const PRODUCER_LKG_STATE_SCHEMA = "producer-lkg-key-state/v1";
+export const PRODUCER_LKG_STATE_SCHEMA_V2 = "producer-lkg-key-state/v2";
 export const PRODUCER_LKG_INDEX_SCHEMA = "producer-lkg-index/v1";
+export const PRODUCER_PROMOTION_CONTRACT_V2 = "provider_observation/v2";
+export const PRODUCER_PROMOTION_ANCHOR_SCHEMA = "producer-promotion-anchor/v1";
 
 function assertKey(key) {
   if (typeof key !== "string" || key === "" || path.basename(key) !== key || key === "." || key === "..") {
@@ -68,17 +72,38 @@ function isNaturalRun(run) {
     && Number(run?.run_attempt ?? 1) === 1;
 }
 
+function validRun(run) {
+  return run
+    && String(run.run_id ?? "").length > 0
+    && Number.isInteger(Number(run.run_attempt ?? 1))
+    && Number(run.run_attempt ?? 1) >= 1
+    && String(run.event_name ?? "").length > 0
+    && typeof run.observed_at === "string"
+    && run.observed_at.endsWith("Z")
+    && Number.isFinite(Date.parse(run.observed_at));
+}
+
+function validSha256(value) {
+  return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);
+}
+
+function validSourceMarker(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
 export class ProducerLkgStateStore {
-  constructor({ root, laneId, publicRoot, validatePayload, progressMarker }) {
+  constructor({ root, laneId, publicRoot, validatePayload, progressMarker, candidateContainsObservation = isDeepStrictEqual }) {
     if (!root || !laneId || !publicRoot) throw new Error("root, laneId, and publicRoot are required");
-    if (typeof validatePayload !== "function" || typeof progressMarker !== "function") {
-      throw new Error("validatePayload and progressMarker are required");
+    if (typeof validatePayload !== "function" || typeof progressMarker !== "function"
+      || typeof candidateContainsObservation !== "function") {
+      throw new Error("validatePayload, progressMarker, and candidateContainsObservation are required");
     }
     this.root = root;
     this.laneId = laneId;
     this.publicRoot = String(publicRoot).replace(/\/$/u, "");
     this.validatePayload = validatePayload;
     this.progressMarker = progressMarker;
+    this.candidateContainsObservation = candidateContainsObservation;
   }
 
   statePath(key) {
@@ -89,6 +114,45 @@ export class ProducerLkgStateStore {
   lkgPath(key) {
     assertKey(key);
     return path.join(this.root, "lkg", key);
+  }
+
+  promotionAnchorPath(key) {
+    assertKey(key);
+    return path.join(this.root, "promotion-contracts", key);
+  }
+
+  #inspectPromotionAnchor(key) {
+    let anchor;
+    try {
+      anchor = JSON.parse(fs.readFileSync(this.promotionAnchorPath(key), "utf8"));
+    } catch (error) {
+      if (error?.code === "ENOENT") return { corrupt: false, required: false };
+      return { corrupt: true, required: false };
+    }
+    if (anchor?.schema_version !== PRODUCER_PROMOTION_ANCHOR_SCHEMA
+      || anchor?.lane_id !== this.laneId
+      || anchor?.key !== key
+      || anchor?.promotion_contract !== PRODUCER_PROMOTION_CONTRACT_V2
+      || !(anchor?.recovery_observation_sha256 === null || validSha256(anchor?.recovery_observation_sha256))) {
+      return { corrupt: true, required: false };
+    }
+    return { corrupt: false, required: true, recovery_observation_sha256: anchor.recovery_observation_sha256 };
+  }
+
+  #anchorProviderProofKey(key, recoveryObservation) {
+    const inspected = this.#inspectPromotionAnchor(key);
+    if (inspected.corrupt) throw new Error("provider promotion anchor is corrupt");
+    const recoveryObservationSha256 = recoveryObservation === null
+      ? null
+      : sha256(Buffer.from(JSON.stringify(recoveryObservation)));
+    if (inspected.required && inspected.recovery_observation_sha256 === recoveryObservationSha256) return;
+    writeJsonAtomic(this.promotionAnchorPath(key), {
+      schema_version: PRODUCER_PROMOTION_ANCHOR_SCHEMA,
+      lane_id: this.laneId,
+      key,
+      promotion_contract: PRODUCER_PROMOTION_CONTRACT_V2,
+      recovery_observation_sha256: recoveryObservationSha256,
+    });
   }
 
   loadState(key) {
@@ -112,8 +176,93 @@ export class ProducerLkgStateStore {
     } catch (error) {
       return { kind: "corrupt", state: null, reason: `state decode failed: ${error.message}` };
     }
-    if (state?.schema_version !== PRODUCER_LKG_STATE_SCHEMA || state?.lane_id !== this.laneId || state?.key !== key) {
+    const v2State = state?.schema_version === PRODUCER_LKG_STATE_SCHEMA_V2;
+    if (![PRODUCER_LKG_STATE_SCHEMA, PRODUCER_LKG_STATE_SCHEMA_V2].includes(state?.schema_version)
+      || state?.lane_id !== this.laneId || state?.key !== key) {
       return { kind: "corrupt", state: null, reason: "state identity/schema binding is invalid" };
+    }
+    const promotionAnchor = this.#inspectPromotionAnchor(key);
+    if (promotionAnchor.corrupt) {
+      return { kind: "corrupt", state: null, reason: "provider promotion anchor is invalid" };
+    }
+    if (state.resolution_state === "unavailable") {
+      if (state.current !== null || state.lkg !== null || state.retry !== true) {
+        return { kind: "corrupt", state: null, reason: "unavailable state pointers are invalid" };
+      }
+      return { kind: "valid", state, reason: null };
+    }
+    if (!["fresh_primary", "lkg_primary"].includes(state.resolution_state)
+      || typeof state.canonical_ref !== "string" || state.canonical_ref === ""
+      || !validSha256(state?.current?.payload_sha256)
+      || !validSourceMarker(state?.current?.source_as_of)
+      || !validSha256(state?.lkg?.payload_sha256)
+      || !validSourceMarker(state?.lkg?.source_as_of)
+      || state?.lkg?.path !== `${this.publicRoot}/lkg/${key}`) {
+      return { kind: "corrupt", state: null, reason: "state payload pointer binding is invalid" };
+    }
+    if (state.resolution_state === "fresh_primary" && (
+      state.retry !== false || state.current.path !== state.canonical_ref
+    )) {
+      return { kind: "corrupt", state: null, reason: "fresh current pointer binding is invalid" };
+    }
+    if (state.resolution_state === "lkg_primary" && (
+      state.retry !== true || state.current.path !== state.lkg.path
+      || state.current.payload_sha256 !== state.lkg.payload_sha256
+      || state.current.source_as_of !== state.lkg.source_as_of
+    )) {
+      return { kind: "corrupt", state: null, reason: "LKG current pointer binding is invalid" };
+    }
+    const requiresProviderProof = state.resolution_state === "fresh_primary" && (
+      promotionAnchor.required || v2State
+      || state.promotion_proof_required === true || Boolean(state.provider_observation)
+    );
+    if (requiresProviderProof && state.promotion_contract !== PRODUCER_PROMOTION_CONTRACT_V2) {
+      return { kind: "corrupt", state: null, reason: "provider observation contract downgrade is invalid" };
+    }
+    if (state.promotion_contract === PRODUCER_PROMOTION_CONTRACT_V2) {
+      const proof = state.provider_observation;
+      const proofRun = proof && {
+        run_id: proof.run_id,
+        run_attempt: proof.run_attempt,
+        event_name: proof.event_name,
+        observed_at: proof.observed_at,
+      };
+      const recoveryProof = state.recovery_observation;
+      const recoveryProofRun = recoveryProof && {
+        run_id: recoveryProof.run_id,
+        run_attempt: recoveryProof.run_attempt,
+        event_name: recoveryProof.event_name,
+        observed_at: recoveryProof.observed_at,
+      };
+      if (proof?.schema_version !== PRODUCER_PROMOTION_CONTRACT_V2
+        || !Object.hasOwn(proof, "recovered_from_run_id")
+        || !validSha256(proof.payload_sha256)
+        || !validSourceMarker(proof.source_as_of)
+        || !validRun(proofRun)
+        || proof.payload_sha256 !== state.current.payload_sha256
+        || proof.source_as_of !== state.current.source_as_of
+        || proof.run_id !== String(state.last_run_id)
+        || Number(proof.run_attempt ?? 1) !== Number(state.last_run_attempt ?? 1)
+        || proof.event_name !== state.last_event_name
+        || proof.observed_at !== state.updated_at
+        || proof.recovered_from_run_id !== (state.recovered_from_run_id ?? null)
+        || ((state.recovered_from_run_id ?? null) !== null && (
+          state.last_recovered_failure?.run_id !== state.recovered_from_run_id
+          || recoveryProof?.schema_version !== PRODUCER_PROMOTION_CONTRACT_V2
+          || promotionAnchor.recovery_observation_sha256 !== sha256(Buffer.from(JSON.stringify(recoveryProof)))
+          || !validSha256(recoveryProof?.payload_sha256)
+          || !validSourceMarker(recoveryProof?.source_as_of)
+          || !validRun(recoveryProofRun)
+          || recoveryProof.recovered_from_run_id !== state.recovered_from_run_id
+          || state.recovery_run_id !== recoveryProof.run_id
+          || state.recovery_run_attempt !== recoveryProof.run_attempt
+          || state.recovery_event_name !== recoveryProof.event_name
+          || state.recovered_at !== recoveryProof.observed_at
+        ))
+        || ((state.recovered_from_run_id ?? null) === null
+          && promotionAnchor.recovery_observation_sha256 !== null)) {
+        return { kind: "corrupt", state: null, reason: "provider observation proof binding is invalid" };
+      }
     }
     return { kind: "valid", state, reason: null };
   }
@@ -150,91 +299,137 @@ export class ProducerLkgStateStore {
     if (inspected.source_as_of !== state.lkg.source_as_of) {
       return { valid: false, reason: "LKG source marker does not match state" };
     }
-    const expectedCurrentPath = state.resolution_state === "lkg_primary"
-      ? state.lkg.path
-      : state.resolution_state === "fresh_primary"
-        ? state.canonical_ref
-        : null;
-    if (expectedCurrentPath === null || (
-      state?.current?.path !== expectedCurrentPath
-      || state?.current?.payload_sha256 !== state.lkg.payload_sha256
+    const expectedCurrentPath = state.resolution_state === "lkg_primary" ? state.lkg.path : state.canonical_ref;
+    const lkgPrimaryMismatch = state.resolution_state === "lkg_primary" && (
+      state?.current?.payload_sha256 !== state.lkg.payload_sha256
       || state?.current?.source_as_of !== state.lkg.source_as_of
-    )) {
+    );
+    if (!["lkg_primary", "fresh_primary"].includes(state.resolution_state)
+      || state?.current?.path !== expectedCurrentPath || lkgPrimaryMismatch) {
       return { valid: false, reason: "current payload pointer is not bound to retained LKG state" };
     }
     return { ...inspected, payloadBytes };
   }
 
-  recordCandidate({ key, payloadBytes, canonicalRef, run }) {
+  buildProviderObservation({ key, payloadBytes, run }) {
     assertKey(key);
+    if (!validRun(run)) throw new Error(`${key}: provider observation run binding is invalid`);
     const inspected = this.inspectPayload(key, payloadBytes);
     if (!inspected.valid) throw new Error(`${key}: ${inspected.reason}`);
+    return {
+      schema_version: PRODUCER_PROMOTION_CONTRACT_V2,
+      payloadBytes: Buffer.from(payloadBytes),
+      payload_sha256: inspected.payload_sha256,
+      source_as_of: inspected.source_as_of,
+      run_id: String(run.run_id),
+      run_attempt: Number(run.run_attempt ?? 1),
+      event_name: String(run.event_name),
+      observed_at: run.observed_at,
+    };
+  }
+
+  #inspectProviderObservation(key, providerObservation, run) {
+    if (!providerObservation || providerObservation.schema_version !== PRODUCER_PROMOTION_CONTRACT_V2
+      || !Buffer.isBuffer(providerObservation.payloadBytes)) {
+      throw new Error(`${key}: provider observation contract is invalid`);
+    }
+    const inspected = this.inspectPayload(key, providerObservation.payloadBytes);
+    if (!inspected.valid) throw new Error(`${key}: provider observation ${inspected.reason}`);
+    if (providerObservation.payload_sha256 !== inspected.payload_sha256
+      || providerObservation.source_as_of !== inspected.source_as_of) {
+      throw new Error(`${key}: provider observation proof is not payload-bound`);
+    }
+    if (!validRun(run)
+      || providerObservation.run_id !== String(run.run_id)
+      || providerObservation.run_attempt !== Number(run.run_attempt ?? 1)
+      || providerObservation.event_name !== String(run.event_name)
+      || providerObservation.observed_at !== run.observed_at) {
+      throw new Error(`${key}: provider observation proof is not bound to the current run`);
+    }
+    return inspected;
+  }
+
+  planCandidate({ key, payloadBytes, canonicalRef, run, providerObservation = null }) {
+    assertKey(key);
+    if (!validRun(run)) throw new Error(`${key}: run context is invalid`);
+    const inspected = this.inspectPayload(key, payloadBytes);
+    if (!inspected.valid) throw new Error(`${key}: ${inspected.reason}`);
+    const provider = providerObservation === null ? null : this.#inspectProviderObservation(key, providerObservation, run);
     const priorInspection = this.inspectState(key);
     if (priorInspection.kind === "corrupt") {
-      const state = this.#writeUnavailable({
-        key,
-        canonicalRef,
-        run,
-        failure: compactFailure(priorInspection.reason, "corrupt_state", run),
-        prior: null,
-      });
-      return { accepted: false, state };
+      return { accepted: false, deferred: false, corrupt: true, reason: "corrupt_state", error: priorInspection.reason,
+        key, payloadBytes, canonicalRef, run, providerObservation };
     }
     const prior = priorInspection.state;
     if (prior?.retry === true && !isNaturalRun(run)) {
       if (prior.resolution_state === "lkg_primary") {
         const retained = this.validRetainedLkg(key, prior);
         if (!retained.valid) {
-          const state = this.#writeUnavailable({
-            key,
-            canonicalRef,
-            run,
-            failure: compactFailure(`retained LKG is invalid: ${retained.reason}`, "corrupt_lkg", run),
-            prior,
-          });
-          return { accepted: false, deferred: false, state };
+          return { accepted: false, deferred: false, corrupt: true, reason: "corrupt_lkg",
+            error: `retained LKG is invalid: ${retained.reason}`, key, payloadBytes, canonicalRef, run, providerObservation };
         }
       }
-      const state = {
-        ...prior,
-        updated_at: run.observed_at,
-        last_run_id: String(run.run_id),
-        last_run_attempt: Number(run.run_attempt ?? 1),
-        deferred_observation: {
-          run_id: String(run.run_id),
-          run_attempt: Number(run.run_attempt ?? 1),
-          observed_at: run.observed_at,
-          source_as_of: inspected.source_as_of,
-          reason: "non_natural_recovery_candidate",
-        },
-      };
-      writeJsonAtomic(this.statePath(key), state);
-      return { accepted: false, deferred: true, state };
+      return { accepted: false, deferred: true, corrupt: false, reason: "recovery_requires_schedule",
+        key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
     }
     if (prior?.retry === true && prior?.resolution_state === "lkg_primary") {
       const retained = this.validRetainedLkg(key, prior);
       if (!retained.valid) {
-        const state = this.#writeUnavailable({
-          key,
-          canonicalRef,
-          run,
-          failure: compactFailure(`retained LKG is invalid: ${retained.reason}`, "corrupt_lkg", run),
-          prior,
-        });
-        return { accepted: false, deferred: false, state };
+        return { accepted: false, deferred: false, corrupt: true, reason: "corrupt_lkg",
+          error: `retained LKG is invalid: ${retained.reason}`, key, payloadBytes, canonicalRef, run, providerObservation };
       }
-      if (!markerAdvances(inspected.source_as_of, retained.source_as_of)) {
-        const state = this.recordFailure({
-          key,
-          error: `recovery candidate ${inspected.source_as_of} did not advance beyond retained LKG ${retained.source_as_of}`,
-          failureKind: "stale_recovery",
-          fallbackBytes: retained.payloadBytes,
-          canonicalRef,
-          run,
-        });
-        return { accepted: false, deferred: false, state };
+      if (provider !== null) {
+        if (inspected.source_as_of !== provider.source_as_of
+          || this.candidateContainsObservation(inspected.payload, provider.payload) !== true) {
+          return { accepted: false, deferred: true, corrupt: false, reason: "foreign_writer_conflict",
+            key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
+        }
+        if (!markerAdvances(provider.source_as_of, retained.source_as_of)) {
+          return { accepted: false, deferred: true, corrupt: false, reason: "recovery_not_advanced_by_provider",
+            key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
+        }
+      } else if (!markerAdvances(inspected.source_as_of, retained.source_as_of)) {
+        return { accepted: false, deferred: false, corrupt: false, reason: "stale_recovery",
+          key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
       }
     }
+
+    return { accepted: true, deferred: false, corrupt: false, reason: "ok",
+      key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
+  }
+
+  recordPromotionDeferral(plan) {
+    if (!plan?.deferred || !plan.prior?.retry) throw new Error("promotion deferral requires an active retry plan");
+    const state = {
+      ...plan.prior,
+      updated_at: plan.run.observed_at,
+      last_run_id: String(plan.run.run_id),
+      last_run_attempt: Number(plan.run.run_attempt ?? 1),
+      last_event_name: plan.run.event_name ?? null,
+      latest_promotion_deferral: {
+        run_id: String(plan.run.run_id),
+        run_attempt: Number(plan.run.run_attempt ?? 1),
+        event_name: plan.run.event_name ?? null,
+        observed_at: plan.run.observed_at,
+        source_as_of: plan.provider?.source_as_of ?? plan.inspected?.source_as_of ?? null,
+        reason: plan.reason,
+      },
+    };
+    writeJsonAtomic(this.statePath(plan.key), state);
+    return state;
+  }
+
+  commitCandidate(plan) {
+    if (!plan?.accepted) throw new Error("accepted candidate plan is required");
+    const verified = this.planCandidate({
+      key: plan.key,
+      payloadBytes: plan.payloadBytes,
+      canonicalRef: plan.canonicalRef,
+      run: plan.run,
+      providerObservation: plan.providerObservation,
+    });
+    if (!verified.accepted) throw new Error(`${plan.key}: candidate plan is no longer committable: ${verified.reason}`);
+    const { key, payloadBytes, canonicalRef, run, inspected, providerObservation, prior } = verified;
 
     const recoveredFromRunId = prior?.retry === true
       ? prior?.latest_failure?.run_id ?? null
@@ -251,9 +446,29 @@ export class ProducerLkgStateStore {
     const recoveredAt = prior?.retry === true && recoveredFromRunId
       ? run.observed_at
       : prior?.recovered_at ?? null;
-    writeBytesAtomic(this.lkgPath(key), payloadBytes);
+    const recoveryObservation = prior?.retry === true && recoveredFromRunId && providerObservation
+      ? {
+          schema_version: providerObservation.schema_version,
+          payload_sha256: providerObservation.payload_sha256,
+          source_as_of: providerObservation.source_as_of,
+          run_id: providerObservation.run_id,
+          run_attempt: providerObservation.run_attempt,
+          event_name: providerObservation.event_name,
+          observed_at: providerObservation.observed_at,
+          recovered_from_run_id: recoveredFromRunId,
+        }
+      : prior?.recovery_observation ?? null;
+    const preserveRetainedLkg = prior?.retry === true && prior?.resolution_state === "lkg_primary";
+    if (!preserveRetainedLkg) writeBytesAtomic(this.lkgPath(key), payloadBytes);
+    const lkg = preserveRetainedLkg
+      ? { ...prior.lkg }
+      : {
+          path: `${this.publicRoot}/lkg/${key}`,
+          payload_sha256: inspected.payload_sha256,
+          source_as_of: inspected.source_as_of,
+        };
     const state = {
-      schema_version: PRODUCER_LKG_STATE_SCHEMA,
+      schema_version: providerObservation ? PRODUCER_LKG_STATE_SCHEMA_V2 : PRODUCER_LKG_STATE_SCHEMA,
       lane_id: this.laneId,
       key,
       updated_at: run.observed_at,
@@ -265,11 +480,7 @@ export class ProducerLkgStateStore {
         source_as_of: inspected.source_as_of,
       },
       canonical_ref: canonicalRef,
-      lkg: {
-        path: `${this.publicRoot}/lkg/${key}`,
-        payload_sha256: inspected.payload_sha256,
-        source_as_of: inspected.source_as_of,
-      },
+      lkg,
       latest_failure: null,
       recovered_from_run_id: recoveredFromRunId,
       recovery_run_id: recoveryRunId,
@@ -278,9 +489,55 @@ export class ProducerLkgStateStore {
       recovered_at: recoveredAt,
       last_run_id: String(run.run_id),
       last_run_attempt: Number(run.run_attempt ?? 1),
+      last_event_name: run.event_name ?? null,
+      promotion_contract: providerObservation ? PRODUCER_PROMOTION_CONTRACT_V2 : "legacy_source_marker/v1",
     };
+    if (providerObservation) {
+      state.promotion_proof_required = true;
+      state.provider_observation = {
+        schema_version: providerObservation.schema_version,
+        payload_sha256: providerObservation.payload_sha256,
+        source_as_of: providerObservation.source_as_of,
+        run_id: providerObservation.run_id,
+        run_attempt: providerObservation.run_attempt,
+        event_name: providerObservation.event_name,
+        observed_at: providerObservation.observed_at,
+        recovered_from_run_id: recoveredFromRunId,
+      };
+    }
+    if (recoveryObservation) state.recovery_observation = recoveryObservation;
+    if (prior?.retry === true && prior?.latest_failure) state.last_recovered_failure = prior.latest_failure;
+    else if (prior?.last_recovered_failure) state.last_recovered_failure = prior.last_recovered_failure;
+    delete state.latest_promotion_deferral;
+    if (providerObservation) this.#anchorProviderProofKey(key, recoveryObservation);
     writeJsonAtomic(this.statePath(key), state);
     return { accepted: true, deferred: false, state };
+  }
+
+  recordCandidate(args) {
+    const plan = this.planCandidate(args);
+    if (plan.accepted) return this.commitCandidate(plan);
+    if (plan.corrupt) {
+      const state = this.#writeUnavailable({
+        key: plan.key,
+        canonicalRef: plan.canonicalRef,
+        run: plan.run,
+        failure: compactFailure(plan.error, plan.reason, plan.run),
+        prior: null,
+      });
+      return { accepted: false, deferred: false, state };
+    }
+    if (plan.deferred) return { accepted: false, deferred: true, reason: plan.reason, state: this.recordPromotionDeferral(plan) };
+    const retained = this.validRetainedLkg(plan.key, plan.prior);
+    const state = this.recordFailure({
+      key: plan.key,
+      error: `recovery candidate ${plan.inspected.source_as_of} did not advance beyond retained LKG ${retained.source_as_of}`,
+      failureKind: "stale_recovery",
+      fallbackBytes: retained.payloadBytes,
+      canonicalRef: plan.canonicalRef,
+      run: plan.run,
+    });
+    return { accepted: false, deferred: false, reason: plan.reason, state };
   }
 
   recordFailure({ key, error, failureKind, fallbackBytes, canonicalRef, run }) {
@@ -297,9 +554,12 @@ export class ProducerLkgStateStore {
     }
     const prior = priorInspection.state;
     let retained = prior?.lkg ? this.validRetainedLkg(key, prior) : { valid: false, reason: "no retained LKG state" };
-    if (!prior?.lkg && Buffer.isBuffer(fallbackBytes)) {
+    if (Buffer.isBuffer(fallbackBytes)) {
       const inspected = this.inspectPayload(key, fallbackBytes);
-      if (inspected.valid) {
+      const fallbackMatchesPublishedCurrent = prior?.resolution_state === "fresh_primary"
+        && prior?.current?.payload_sha256 === inspected.payload_sha256
+        && prior?.current?.source_as_of === inspected.source_as_of;
+      if (inspected.valid && (!prior?.lkg || fallbackMatchesPublishedCurrent)) {
         writeBytesAtomic(this.lkgPath(key), fallbackBytes);
         retained = { ...inspected, payloadBytes: fallbackBytes };
       }
@@ -334,6 +594,7 @@ export class ProducerLkgStateStore {
       recovered_at: prior?.recovered_at ?? null,
       last_run_id: String(run.run_id),
       last_run_attempt: Number(run.run_attempt ?? 1),
+      last_event_name: run.event_name ?? null,
     };
     writeJsonAtomic(this.statePath(key), state);
     return state;
@@ -372,6 +633,13 @@ export class ProducerLkgStateStore {
     const failedKeys = states
       .filter(({ state }) => sameAttempt(state?.latest_failure?.run_id, state?.latest_failure?.run_attempt, run))
       .map(({ key }) => key);
+    const promotionDeferralDetails = states
+      .filter(({ state }) => sameAttempt(
+        state?.latest_promotion_deferral?.run_id,
+        state?.latest_promotion_deferral?.run_attempt,
+        run,
+      ))
+      .map(({ key, state }) => ({ key, ...state.latest_promotion_deferral }));
     const lkgDetails = [];
     let unavailable = 0;
     for (const { key, state } of states) {
@@ -422,6 +690,7 @@ export class ProducerLkgStateStore {
       retry_keys: retryKeys,
       lkg_details: lkgDetails,
       recovery_details: recoveryDetails,
+      promotion_deferral_details: promotionDeferralDetails,
       current_attempt: {
         run_id: String(run.run_id),
         run_attempt: Number(run.run_attempt ?? 1),
@@ -429,9 +698,16 @@ export class ProducerLkgStateStore {
         observed_at: run.observed_at,
         attempted: states.filter(({ state }) => sameAttempt(state?.last_run_id, state?.last_run_attempt, run)).length,
         successes: states.filter(({ state }) => sameAttempt(state?.last_run_id, state?.last_run_attempt, run)
-          && !sameAttempt(state?.latest_failure?.run_id, state?.latest_failure?.run_attempt, run)).length,
+          && !sameAttempt(state?.latest_failure?.run_id, state?.latest_failure?.run_attempt, run)
+          && !sameAttempt(
+            state?.latest_promotion_deferral?.run_id,
+            state?.latest_promotion_deferral?.run_attempt,
+            run,
+          )).length,
         failed: failedKeys.length,
         failed_keys: failedKeys,
+        promotion_deferrals: promotionDeferralDetails.length,
+        promotion_deferral_keys: promotionDeferralDetails.map(({ key }) => key),
       },
     };
     writeJsonAtomic(path.join(this.root, "index.json"), index);

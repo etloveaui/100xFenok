@@ -349,6 +349,7 @@ def record_stock_detail_success(
     candidate: ValidatedStockDetail,
     observed_at: str,
     origin: str = "manual",
+    rollback_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     verified = validate_stock_detail_candidate(
         provider=candidate.provider,
@@ -378,7 +379,11 @@ def record_stock_detail_success(
         **extension,
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    store.store_provider_object(observation=row, payload=candidate.payload_bytes)
+    store.store_provider_object(
+        observation=row,
+        payload=candidate.payload_bytes,
+        rollback_context=rollback_context,
+    )
     store.record_observation(row)
     return row
 

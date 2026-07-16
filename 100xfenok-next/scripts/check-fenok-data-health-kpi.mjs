@@ -39,6 +39,7 @@ import {
   formatRecoveryRetryEvidence,
   projectRecoveryRecoveredSet,
   projectRecoveryRetrySet,
+  validateProducerRecoveryAttempt,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
 
@@ -163,7 +164,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
       && ["lkg_primary", "unavailable"].includes(item.resolution_state)
       && typeof item.failure_run_id === "string" && item.failure_run_id !== ""
       && (item.promotion_deferral_reason === null
-        || ["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(item.promotion_deferral_reason))
+        || ["foreign_writer_conflict", "recovery_not_advanced_by_provider", "recovery_requires_schedule"].includes(item.promotion_deferral_reason))
       && (item.promotion_deferral_run_id === null
         || (typeof item.promotion_deferral_run_id === "string" && item.promotion_deferral_run_id !== ""))
       && ((item.promotion_deferral_reason === null) === (item.promotion_deferral_run_id === null))
@@ -278,8 +279,56 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
     if (state === null && !Object.hasOwn(lane?.details ?? {}, "recovery")) continue;
     const expected = compactRecoveryIndex(state);
     const actual = lane?.details?.recovery;
+    const attemptValidation = validateProducerRecoveryAttempt(state);
+    push(errors, state === null || attemptValidation.valid,
+      `${laneId}: raw recovery current attempt is internally inconsistent (${attemptValidation.reasons.join("; ")})`);
     push(errors, JSON.stringify(actual) === JSON.stringify(expected),
       `${laneId}: KPI recovery evidence does not match its source index`);
+  }
+  {
+    const state = readOptionalJson(path.join(adminRoot, "yahoo-batch-quote-history", "index.json"));
+    const lane = lanesById.get("yahoo_batch_quote_history");
+    const actualDetails = lane?.details?.promotion_deferrals ?? [];
+    const actualAttempt = lane?.details?.latest_attempt ?? {};
+    const hasEvidence = actualDetails.length > 0 || Number(actualAttempt.promotion_deferrals) > 0;
+    if (state !== null || hasEvidence) {
+      const expectedDetails = (Array.isArray(state?.promotion_deferral_details) ? state.promotion_deferral_details : [])
+        .slice(0, 20)
+        .map((item) => ({
+          symbol: item?.ticker ?? item?.symbol ?? null,
+          reason: item?.reason ?? null,
+          attempt_ref: item?.run_id ?? null,
+          attempt_number: Number(item?.run_attempt ?? 1),
+          event_name: item?.event_name ?? null,
+          observed_at: item?.observed_at ?? null,
+          provider_quote_as_of: item?.provider_quote_as_of ?? null,
+          provider_history_as_of: item?.provider_history_as_of ?? null,
+        }));
+      const expectedCount = Number(state?.current_attempt?.promotion_deferrals ?? 0);
+      const expectedSymbols = Array.isArray(state?.current_attempt?.promotion_deferral_symbols)
+        ? state.current_attempt.promotion_deferral_symbols
+        : [];
+      const expectedFailedSymbols = Array.isArray(state?.current_attempt?.errors)
+        ? [...new Set(state.current_attempt.errors
+            .map((row) => row?.ticker ?? row?.symbol)
+            .filter((symbol) => typeof symbol === "string" && symbol !== ""))].sort()
+        : [];
+      const attemptFieldsMatch = actualAttempt.attempt_ref === (state?.current_attempt?.run_id ?? null)
+        && Number(actualAttempt.attempt_number) === Number(state?.current_attempt?.run_attempt ?? 1)
+        && actualAttempt.event_name === (state?.current_attempt?.event_name ?? null)
+        && ["attempted", "successes", "failed", "skipped", "fetch_attempts"].every(
+          (field) => Number(actualAttempt[field]) === Number(state?.current_attempt?.[field] ?? 0),
+        );
+      push(errors, expectedFailedSymbols.length <= Number(state?.current_attempt?.failed ?? 0),
+        "yahoo_batch_quote_history raw failed symbols exceed the raw failed denominator");
+      push(errors, JSON.stringify(actualDetails) === JSON.stringify(expectedDetails),
+        "yahoo_batch_quote_history KPI promotion deferrals do not match the source index");
+      push(errors, Number(actualAttempt.promotion_deferrals) === expectedCount
+        && JSON.stringify(actualAttempt.promotion_deferral_symbols ?? []) === JSON.stringify(expectedSymbols)
+        && JSON.stringify(actualAttempt.failed_symbols ?? []) === JSON.stringify(expectedFailedSymbols)
+        && attemptFieldsMatch,
+      "yahoo_batch_quote_history KPI promotion deferral attempt does not match the source index");
+    }
   }
   try {
     const state = readOptionalJson(path.join(adminRoot, "nasdaq_giw_sox", "index.json"));
@@ -439,8 +488,8 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
       `yahoo_batch_quote_history classified count mismatch: ${classified} vs active ${active}`);
     push(errors, Number(yahooCounts.retry) <= Number(yahooCounts.lkg) + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable),
       "yahoo_batch_quote_history retry count exceeds non-fresh states");
-    push(errors, Number(yahooCounts.failed) <= Number(yahooCounts.lkg) + Number(yahooCounts.unavailable),
-      "yahoo_batch_quote_history failed count exceeds LKG/unavailable states");
+    push(errors, Number(yahooCounts.failed) <= Number(yahooCounts.lkg) + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable),
+      "yahoo_batch_quote_history failed count exceeds retry-capable states");
     push(errors, Number(yahooCounts.stale) <= Number(yahooCounts.lkg),
       "yahoo_batch_quote_history stale count exceeds LKG states");
     const oldestDate = yahooCounts.oldest_source_date;
@@ -470,7 +519,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
     const latestAttempt = yahoo?.details?.latest_attempt;
     push(errors, latestAttempt && typeof latestAttempt === "object",
       "yahoo_batch_quote_history.details.latest_attempt is required");
-    for (const key of ["attempt_number", "attempted", "successes", "failed", "skipped", "fetch_attempts"]) {
+    for (const key of ["attempt_number", "attempted", "successes", "failed", "skipped", "fetch_attempts", "promotion_deferrals"]) {
       push(errors, typeof latestAttempt?.[key] === "number" && Number.isInteger(latestAttempt[key]) && latestAttempt[key] >= 0,
         `yahoo_batch_quote_history.details.latest_attempt.${key} must be a non-negative integer`);
     }
@@ -497,6 +546,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
       ["lkg", new Set(["symbol", "payload_sha256", "source_as_of", "failure_attempt_ref", "failure_observed_at"])],
       ["pending_history", new Set(["symbol", "discovered_from", "missing", "first_trade_date", "initial_attempt_ref", "expected_resolution", "reason"])],
       ["unavailable", new Set(["symbol", "failure_attempt_ref", "failure_observed_at", "failure_kind", "lkg_status", "data_loss", "deferred_acquisition", "retry", "expected_resolution"])],
+      ["promotion_deferrals", new Set(["symbol", "reason", "attempt_ref", "attempt_number", "event_name", "observed_at", "provider_quote_as_of", "provider_history_as_of"])],
     ];
     for (const [key, allowlist] of detailRules) {
       const rows = yahoo?.details?.[key] ?? [];
@@ -508,6 +558,53 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
           `yahoo_batch_quote_history.details.${key} contains non-public fields: ${extraKeys.join(", ")}`);
       }
     }
+    const promotionDeferrals = yahoo?.details?.promotion_deferrals ?? [];
+    const promotionReasons = new Set(["foreign_writer_conflict", "recovery_not_advanced_by_provider", "recovery_requires_schedule"]);
+    for (const row of Array.isArray(promotionDeferrals) ? promotionDeferrals : []) {
+      push(errors, typeof row?.symbol === "string" && row.symbol.length > 0,
+        "yahoo_batch_quote_history promotion deferral symbol is invalid");
+      push(errors, promotionReasons.has(row?.reason),
+        "yahoo_batch_quote_history promotion deferral reason is invalid");
+      push(errors, typeof row?.attempt_ref === "string" && row.attempt_ref.length > 0,
+        "yahoo_batch_quote_history promotion deferral attempt is invalid");
+      push(errors, Number.isInteger(row?.attempt_number) && row.attempt_number >= 1,
+        "yahoo_batch_quote_history promotion deferral attempt number is invalid");
+      push(errors, typeof row?.event_name === "string" && row.event_name.length > 0,
+        "yahoo_batch_quote_history promotion deferral event is invalid");
+      push(errors, typeof row?.observed_at === "string" && Number.isFinite(new Date(row.observed_at).getTime()),
+        "yahoo_batch_quote_history promotion deferral timestamp is invalid");
+      for (const field of ["provider_quote_as_of", "provider_history_as_of"]) {
+        push(errors, row?.[field] === null || isDetectionSourceStamp(row[field]),
+          `yahoo_batch_quote_history promotion deferral ${field} is invalid`);
+      }
+    }
+    const currentDeferralSymbols = Array.isArray(latestAttempt?.promotion_deferral_symbols)
+      ? latestAttempt.promotion_deferral_symbols
+      : [];
+    const projectedCurrentDeferralSymbols = (Array.isArray(promotionDeferrals) ? promotionDeferrals : [])
+      .filter((row) => row?.attempt_ref === latestAttempt?.attempt_ref
+        && row?.attempt_number === latestAttempt?.attempt_number)
+      .map((row) => row?.symbol)
+      .sort();
+    push(errors, currentDeferralSymbols.length === Number(latestAttempt?.promotion_deferrals)
+      && new Set(currentDeferralSymbols).size === currentDeferralSymbols.length
+      && currentDeferralSymbols.every((symbol, index) => typeof symbol === "string"
+        && symbol !== "" && (index === 0 || currentDeferralSymbols[index - 1].localeCompare(symbol) < 0)),
+    "yahoo_batch_quote_history current promotion deferral symbols are invalid");
+    const failedSymbols = Array.isArray(latestAttempt?.failed_symbols) ? latestAttempt.failed_symbols : [];
+    const currentErrorSymbols = new Set(failedSymbols);
+    push(errors, new Set(failedSymbols).size === failedSymbols.length
+      && failedSymbols.length <= Number(latestAttempt?.failed)
+      && failedSymbols.every((symbol, index) => typeof symbol === "string"
+        && symbol !== "" && (index === 0 || failedSymbols[index - 1].localeCompare(symbol) < 0)),
+    "yahoo_batch_quote_history failed symbols are invalid");
+    push(errors, Number(latestAttempt?.promotion_deferrals) <= Number(latestAttempt?.failed)
+      && currentDeferralSymbols.every((symbol) => currentErrorSymbols.has(symbol)),
+    "yahoo_batch_quote_history promotion deferrals are not a reconciled subset of failed attempts");
+    push(errors, projectedCurrentDeferralSymbols.length === Math.min(Number(latestAttempt?.promotion_deferrals), 20)
+      && new Set(projectedCurrentDeferralSymbols).size === projectedCurrentDeferralSymbols.length
+      && projectedCurrentDeferralSymbols.every((symbol) => currentDeferralSymbols.includes(symbol)),
+    "yahoo_batch_quote_history promotion deferral details do not match the bounded current-attempt evidence");
     const unavailableDetails = yahoo?.details?.unavailable ?? [];
     const unavailableSymbols = [];
     push(errors, Array.isArray(unavailableDetails)
