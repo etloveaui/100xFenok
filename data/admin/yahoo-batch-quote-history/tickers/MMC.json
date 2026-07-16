@@ -65,6 +65,26 @@
       "run_id": "29426647114",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for MMC",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError: 'exchangeTimezoneName'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1473,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "discovered_from": [
@@ -72,43 +92,45 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "controlled failure injection for MMC",
-    "event_name": "workflow_dispatch",
+    "error": "ValueError: provider source timestamp is unavailable for MMC",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
-        "error": "owner-approved controlled failure injection"
+        "error": "KeyError: 'exchangeTimezoneName'",
+        "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-15T15:30:28Z",
+    "latency_ms": 1473,
+    "natural": true,
+    "observed_at": "2026-07-16T00:13:37Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29426647114",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29460793523",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": true,
-    "error": "controlled failure injection for MMC",
+    "error": "ValueError: provider source timestamp is unavailable for MMC",
     "failure_kind": "transient_provider_miss",
     "failures": [
       {
         "attempt": 1,
-        "error": "owner-approved controlled failure injection"
+        "error": "KeyError: 'exchangeTimezoneName'",
+        "source": "provider_safe_call"
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-07-15T15:30:28Z",
+    "observed_at": "2026-07-16T00:13:37Z",
     "run_attempt": 1,
-    "run_id": "29426647114"
+    "run_id": "29460793523"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MMC",
-  "updated_at": "2026-07-15T15:30:28Z"
+  "updated_at": "2026-07-16T00:13:37Z"
 }

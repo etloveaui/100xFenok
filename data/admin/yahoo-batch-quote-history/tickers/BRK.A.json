@@ -40,6 +40,20 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo stock-detail quote identity mismatch",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 622,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -59,22 +73,26 @@
     "error": "StockDetailValidationError: Yahoo stock-detail quote identity mismatch",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 443,
+    "latency_ms": 622,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "observed_at": "2026-07-16T00:13:37Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
     "error": "StockDetailValidationError: Yahoo stock-detail quote identity mismatch",
+    "failure_kind": "unexpected",
     "failures": [],
-    "observed_at": "2026-07-15T00:10:40Z",
+    "lkg_status": "retained",
+    "observed_at": "2026-07-16T00:13:37Z",
     "run_attempt": 1,
-    "run_id": "29378156187"
+    "run_id": "29460793523"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:40:33Z",
@@ -88,5 +106,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "BRK.A",
-  "updated_at": "2026-07-15T00:10:40Z"
+  "updated_at": "2026-07-16T00:13:37Z"
 }

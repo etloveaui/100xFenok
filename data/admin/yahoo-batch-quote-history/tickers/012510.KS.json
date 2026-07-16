@@ -57,6 +57,20 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source did not advance beyond the retained LKG for 012510.KS",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 986,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -73,14 +87,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source did not advance beyond the retained LKG for 012510.KS",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 714,
+    "latency_ms": 986,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-16T00:13:37Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -96,6 +111,18 @@
     "observed_at": "2026-07-14T08:37:13Z",
     "run_attempt": 1,
     "run_id": "29318385532"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source did not advance beyond the retained LKG for 012510.KS",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-16T00:13:37Z",
+    "run_attempt": 1,
+    "run_id": "29460793523"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
@@ -121,5 +148,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-07-15T15:00:39Z"
+  "updated_at": "2026-07-16T00:13:37Z"
 }

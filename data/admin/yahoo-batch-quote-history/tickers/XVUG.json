@@ -38,32 +38,58 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 613,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-16T00:30:04Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:11:14Z",
-    "history_as_of": "2026-07-13",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XVUG.json",
-    "payload_sha256": "1167bcbb4b503621b1780e7bc2eebe6d93d3ef5ec8fdf505b5c2a0b24bb05fa0",
-    "quote_as_of": "2026-06-30T13:35:54Z",
-    "source_as_of": "2026-06-30T13:35:54Z"
+    "fetched_at": "2026-07-16T00:14:16Z",
+    "history_as_of": "2026-07-15",
+    "path": "data/yf/finance/XVUG.json",
+    "payload_sha256": "b3a68f6614b38e8143e234328320cf87397a6014ec6965d85296c1f4d510b77b",
+    "quote_as_of": "2026-07-15T16:27:38Z",
+    "source_as_of": "2026-07-15"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 492,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-16T00:30:04Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:11:14Z",
@@ -73,8 +99,8 @@
     "quote_as_of": "2026-06-30T13:35:54Z",
     "source_as_of": "2026-06-30T13:35:54Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -87,5 +113,5 @@
     "source_as_of": "2026-06-30T13:35:54Z"
   },
   "ticker": "XVUG",
-  "updated_at": "2026-07-15T15:00:39Z"
+  "updated_at": "2026-07-16T00:30:04Z"
 }

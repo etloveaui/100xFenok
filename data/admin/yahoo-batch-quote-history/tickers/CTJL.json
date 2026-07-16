@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-09T09:21:06Z",
     "history_as_of": "2026-07-08",
-    "path": "data/yf/finance/CTJL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
     "payload_sha256": "e4ef9b49e31a616bd5f4b42d30e93fee193152f61313c8a8d3d4e1273962ac81",
     "quote_as_of": "2026-07-07T16:57:57Z",
     "source_as_of": "2026-07-07T16:57:57Z"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-07-09T09:21:06Z",
+    "history_as_of": "2026-07-08",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
+    "payload_sha256": "e4ef9b49e31a616bd5f4b42d30e93fee193152f61313c8a8d3d4e1273962ac81",
+    "quote_as_of": "2026-07-07T16:57:57Z",
+    "source_as_of": "2026-07-07T16:57:57Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-16T00:13:37Z",
+    "classified_run_id": "29460793523",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CTJL holds LKG because Yahoo source date 2026-07-07T16:57:57Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-07T16:57:57Z"
+  },
   "ticker": "CTJL",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-16T00:13:37Z"
 }

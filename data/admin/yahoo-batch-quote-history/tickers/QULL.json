@@ -38,13 +38,26 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 807,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:11:05Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:14:05Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
-    "payload_sha256": "80a7a90abd396632031f1c7d796d4bb49dd950d4510675b1119813e37fc77ca7",
+    "payload_sha256": "77d157fe0f82deb6604bf1dc6ccde4ea51079a26dd92306312ea7ce98f7a610d",
     "quote_as_of": "2026-06-11T15:15:38Z",
     "source_as_of": "2026-06-11T15:15:38Z"
   },
@@ -56,20 +69,20 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 321,
+    "latency_ms": 807,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "observed_at": "2026-07-16T00:13:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-15T00:11:05Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:14:05Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
-    "payload_sha256": "80a7a90abd396632031f1c7d796d4bb49dd950d4510675b1119813e37fc77ca7",
+    "payload_sha256": "77d157fe0f82deb6604bf1dc6ccde4ea51079a26dd92306312ea7ce98f7a610d",
     "quote_as_of": "2026-06-11T15:15:38Z",
     "source_as_of": "2026-06-11T15:15:38Z"
   },
@@ -77,15 +90,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 22,
-    "classified_at": "2026-07-15T15:00:39Z",
-    "classified_run_id": "29424594863",
+    "age_business_days": 23,
+    "classified_at": "2026-07-16T00:19:31Z",
+    "classified_run_id": "29460793523",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "QULL holds LKG because Yahoo source date 2026-06-11T15:15:38Z is 22 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QULL holds LKG because Yahoo source date 2026-06-11T15:15:38Z is 23 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-11T15:15:38Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-07-15T15:00:39Z"
+  "updated_at": "2026-07-16T00:19:31Z"
 }

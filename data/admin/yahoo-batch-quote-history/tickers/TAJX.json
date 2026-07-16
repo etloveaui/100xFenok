@@ -38,13 +38,26 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 641,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:11:06Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:14:07Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TAJX.json",
-    "payload_sha256": "f77a661a15ce3e0f2f4baa1cb5d0ab3c91f93b6c6b669f29122cd85411c9bd93",
+    "payload_sha256": "0e474d7daf67e4d36d04902c90283a096b5510b1395ad51e1f9851ffc9e20f1d",
     "quote_as_of": "2026-06-29T19:00:29Z",
     "source_as_of": "2026-06-29T19:00:29Z"
   },
@@ -56,20 +69,20 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 311,
+    "latency_ms": 641,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "observed_at": "2026-07-16T00:13:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-15T00:11:06Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:14:07Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TAJX.json",
-    "payload_sha256": "f77a661a15ce3e0f2f4baa1cb5d0ab3c91f93b6c6b669f29122cd85411c9bd93",
+    "payload_sha256": "0e474d7daf67e4d36d04902c90283a096b5510b1395ad51e1f9851ffc9e20f1d",
     "quote_as_of": "2026-06-29T19:00:29Z",
     "source_as_of": "2026-06-29T19:00:29Z"
   },
@@ -77,15 +90,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 11,
-    "classified_at": "2026-07-15T15:00:39Z",
-    "classified_run_id": "29424594863",
+    "age_business_days": 12,
+    "classified_at": "2026-07-16T00:19:31Z",
+    "classified_run_id": "29460793523",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TAJX holds LKG because Yahoo source date 2026-06-29T19:00:29Z is 11 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TAJX holds LKG because Yahoo source date 2026-06-29T19:00:29Z is 12 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-29T19:00:29Z"
   },
   "ticker": "TAJX",
-  "updated_at": "2026-07-15T15:00:39Z"
+  "updated_at": "2026-07-16T00:19:31Z"
 }

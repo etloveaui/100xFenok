@@ -38,13 +38,26 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 684,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:11:02Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:13:59Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EMXX.json",
-    "payload_sha256": "99535418445b9f211ad238ffa6e6f99181923e4bcaf17342ae9e267c923ffd4b",
+    "payload_sha256": "6f6365028b082ba2158806d91d298db7415dc1a4889a03e853267dabedd6fe79",
     "quote_as_of": "2026-06-24T16:07:21Z",
     "source_as_of": "2026-06-24T16:07:21Z"
   },
@@ -56,20 +69,20 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 507,
+    "latency_ms": 684,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "observed_at": "2026-07-16T00:13:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-15T00:11:02Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:13:59Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EMXX.json",
-    "payload_sha256": "99535418445b9f211ad238ffa6e6f99181923e4bcaf17342ae9e267c923ffd4b",
+    "payload_sha256": "6f6365028b082ba2158806d91d298db7415dc1a4889a03e853267dabedd6fe79",
     "quote_as_of": "2026-06-24T16:07:21Z",
     "source_as_of": "2026-06-24T16:07:21Z"
   },
@@ -77,15 +90,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 14,
-    "classified_at": "2026-07-15T15:00:39Z",
-    "classified_run_id": "29424594863",
+    "age_business_days": 15,
+    "classified_at": "2026-07-16T00:19:31Z",
+    "classified_run_id": "29460793523",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EMXX holds LKG because Yahoo source date 2026-06-24T16:07:21Z is 14 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EMXX holds LKG because Yahoo source date 2026-06-24T16:07:21Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-24T16:07:21Z"
   },
   "ticker": "EMXX",
-  "updated_at": "2026-07-15T15:00:39Z"
+  "updated_at": "2026-07-16T00:19:31Z"
 }

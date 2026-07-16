@@ -38,12 +38,26 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 759,
+      "natural": true,
+      "observed_at": "2026-07-16T00:24:49Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-14T00:17:55Z",
     "history_as_of": "2026-07-13",
-    "path": "data/yf/finance/ABBV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ABBV.json",
     "payload_sha256": "13b0759f472b43f05401db0c6d5c82f0edd81fb4b597cde031ef30912a718745",
     "quote_as_of": "2026-07-13T20:01:42Z",
     "source_as_of": "2026-07-13"
@@ -53,21 +67,42 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 759,
     "natural": true,
-    "observed_at": "2026-07-14T00:29:46Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-07-16T00:24:49Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "2/5"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-16T00:24:49Z",
+    "run_attempt": 1,
+    "run_id": "29460793523"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-14T00:17:55Z",
+    "history_as_of": "2026-07-13",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ABBV.json",
+    "payload_sha256": "13b0759f472b43f05401db0c6d5c82f0edd81fb4b597cde031ef30912a718745",
+    "quote_as_of": "2026-07-13T20:01:42Z",
+    "source_as_of": "2026-07-13"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ABBV",
-  "updated_at": "2026-07-14T00:29:46Z"
+  "updated_at": "2026-07-16T00:24:49Z"
 }

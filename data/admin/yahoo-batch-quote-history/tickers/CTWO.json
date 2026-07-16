@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-08T22:42:19Z",
     "history_as_of": "2026-07-07",
-    "path": "data/yf/finance/CTWO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTWO.json",
     "payload_sha256": "cb17478745ea7f5383a0cd2aa96c43970baa62190f86a410a666da693f8c13c6",
     "quote_as_of": null,
     "source_as_of": "2026-07-07"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-07-08T22:42:19Z",
+    "history_as_of": "2026-07-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTWO.json",
+    "payload_sha256": "cb17478745ea7f5383a0cd2aa96c43970baa62190f86a410a666da693f8c13c6",
+    "quote_as_of": null,
+    "source_as_of": "2026-07-07"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-16T00:13:37Z",
+    "classified_run_id": "29460793523",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CTWO holds LKG because Yahoo source date 2026-07-07 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-07"
+  },
   "ticker": "CTWO",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-16T00:13:37Z"
 }

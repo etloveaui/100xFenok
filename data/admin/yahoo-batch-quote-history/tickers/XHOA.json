@@ -38,32 +38,58 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 734,
+      "natural": true,
+      "observed_at": "2026-07-16T00:13:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-16T00:30:04Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29460793523",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:11:10Z",
-    "history_as_of": "2026-07-13",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XHOA.json",
-    "payload_sha256": "a31c7eb71e631c7a40a95664ec081eea477905cbb1c4a6b61fbe1d21da664b7d",
-    "quote_as_of": "2026-06-03T16:59:52Z",
-    "source_as_of": "2026-06-03T16:59:52Z"
+    "fetched_at": "2026-07-16T00:14:11Z",
+    "history_as_of": "2026-07-15",
+    "path": "data/yf/finance/XHOA.json",
+    "payload_sha256": "6a3c0114c717416287883bd552db29ca6a72587485ca5cd047dd2e88d44b013e",
+    "quote_as_of": "2026-07-15T16:49:16Z",
+    "source_as_of": "2026-07-15"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 483,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-16T00:30:04Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29460793523",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:11:10Z",
@@ -73,8 +99,8 @@
     "quote_as_of": "2026-06-03T16:59:52Z",
     "source_as_of": "2026-06-03T16:59:52Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 28,
@@ -87,5 +113,5 @@
     "source_as_of": "2026-06-03T16:59:52Z"
   },
   "ticker": "XHOA",
-  "updated_at": "2026-07-15T15:00:39Z"
+  "updated_at": "2026-07-16T00:30:04Z"
 }
