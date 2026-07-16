@@ -1953,7 +1953,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const generalRecoveryStates = Object.fromEntries(
-    ["fred_macro", "fred_banking", "fdic_tier1", "sentiment"]
+    ["fred_macro", "fred_banking", "fdic_tier1", "sentiment", "treasury_tga"]
       .map((laneId) => [laneId, readOptionalJsonStrict(`admin/${laneId}/index.json`)]),
   );
   const detectionRecovery = {

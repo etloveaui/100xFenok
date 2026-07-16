@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch:
+    inputs:
+      controlled_failure_key:
+        description: "Dispatch-only chaos key (allowed: tga)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -32,6 +37,8 @@ jobs:
 
       - name: Fetch TGA JSON and persist attempt evidence
         id: fetch_tga
+        env:
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-treasury-tga.mjs
 
       - name: Verify output
@@ -55,6 +62,12 @@ jobs:
           SHARD="data/admin/data-supply-state/detection-attempts/treasury_tga.json"
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
+          fi
+          if [[ -f data/admin/treasury_tga/index.json ]]; then
+            git add -- data/admin/treasury_tga/index.json
+          fi
+          if [[ -f data/admin/treasury_tga/lkg/tga.json ]]; then
+            git add -- data/admin/treasury_tga/lkg/tga.json
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- data/macro/tga.json 100xfenok-next/public/data/macro/tga.json

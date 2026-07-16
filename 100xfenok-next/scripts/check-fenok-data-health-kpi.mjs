@@ -244,7 +244,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
 export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
   const adminRoot = path.dirname(rootKpiPath);
   const lanesById = new Map((rootDoc?.lanes || []).map((lane) => [lane?.id, lane]));
-  for (const laneId of ["fred_macro", "fred_banking", "fdic_tier1"]) {
+  for (const laneId of ["fred_macro", "fred_banking", "fdic_tier1", "treasury_tga"]) {
     let expectedRetry;
     let expectedRecovered;
     try {

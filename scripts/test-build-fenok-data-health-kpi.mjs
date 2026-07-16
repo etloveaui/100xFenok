@@ -550,6 +550,46 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   checkDetectionFloorLane(fdicRecoveryLane, fdicRecoveryCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
   assert.deepEqual(fdicRecoveryCheckerErrors, []);
 
+  const tgaRecovery = structuredClone(fdicRecovery);
+  tgaRecovery.lane_id = "treasury_tga";
+  tgaRecovery.retry_set = ["tga"];
+  tgaRecovery.items = {
+    tga: {
+      ...tgaRecovery.items.fdic_tier1,
+      key: "tga",
+      current: {
+        ...tgaRecovery.items.fdic_tier1.current,
+        path: "data/admin/treasury_tga/lkg/tga.json",
+        source_as_of: "2026-07-11",
+      },
+      lkg: {
+        ...tgaRecovery.items.fdic_tier1.lkg,
+        path: "data/admin/treasury_tga/lkg/tga.json",
+        source_as_of: "2026-07-11",
+      },
+      latest_failure: {
+        ...tgaRecovery.items.fdic_tier1.latest_failure,
+        run_id: "tga-chaos-4001",
+      },
+    },
+  };
+  const tgaRecoveryLane = buildDetectionFloorLanes(report(), { treasury_tga: tgaRecovery })
+    .find((item) => item.id === "treasury_tga");
+  assert.equal(tgaRecoveryLane.status, "degraded", "TGA remains named while its retained LKG is retrying");
+  assert.deepEqual(tgaRecoveryLane.details.recovery_retry_set, [{
+    key: "tga",
+    resolution_state: "lkg_primary",
+    failure_run_id: "tga-chaos-4001",
+    promotion_deferral_reason: null,
+    promotion_deferral_run_id: null,
+    recovered_from_run_id: null,
+  }]);
+  assert.match(tgaRecoveryLane.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail, /tga.*tga-chaos-4001/i);
+  assert.equal(JSON.stringify(tgaRecoveryLane).includes("payload_sha256"), false);
+  const tgaRecoveryCheckerErrors = [];
+  checkDetectionFloorLane(tgaRecoveryLane, tgaRecoveryCheckerErrors, liveConfigs.find((item) => item.id === "treasury_tga"));
+  assert.deepEqual(tgaRecoveryCheckerErrors, []);
+
   const fdicRecovered = structuredClone(fdicRecovery);
   fdicRecovered.updated_at = "2026-07-16T01:00:00.000Z";
   fdicRecovered.retry_set = [];
@@ -596,6 +636,45 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const recoveredCheckerErrors = [];
   checkDetectionFloorLane(fdicRecoveredLane, recoveredCheckerErrors, liveConfigs.find((item) => item.id === "fdic_tier1"));
   assert.deepEqual(recoveredCheckerErrors, []);
+
+  const tgaRecovered = structuredClone(tgaRecovery);
+  tgaRecovered.updated_at = "2026-07-16T01:00:00.000Z";
+  tgaRecovered.retry_set = [];
+  tgaRecovered.items.tga = {
+    ...tgaRecovered.items.tga,
+    resolution_state: "fresh_primary",
+    retry: false,
+    current: {
+      path: "data/macro/tga.json",
+      payload_sha256: "b".repeat(64),
+      source_as_of: "2026-07-12",
+    },
+    recovered_from_run_id: "tga-chaos-4001",
+    recovered_at: "2026-07-16T01:00:00.000Z",
+    recovery_run_id: "tga-natural-4002",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    last_recovered_failure: {
+      ...tgaRecovered.items.tga.latest_failure,
+      run_id: "tga-chaos-4001",
+    },
+  };
+  delete tgaRecovered.items.tga.latest_failure;
+  const tgaRecoveredLane = buildDetectionFloorLanes(report(), { treasury_tga: tgaRecovered })
+    .find((item) => item.id === "treasury_tga");
+  assert.equal(tgaRecoveredLane.status, "ready");
+  assert.deepEqual(tgaRecoveredLane.details.recovery_recovered, [{
+    key: "tga",
+    resolution_state: "fresh_primary",
+    retry: false,
+    recovered_from_run_id: "tga-chaos-4001",
+    recovery_run_id: "tga-natural-4002",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    recovered_at: "2026-07-16T01:00:00.000Z",
+    lkg_source_as_of: "2026-07-11",
+    source_as_of: "2026-07-12",
+  }]);
 
   const legacyDispatchRecovery = structuredClone(fdicRecovered);
   delete legacyDispatchRecovery.items.fdic_tier1.recovery_run_id;
@@ -1262,6 +1341,126 @@ console.log("# KPI v2 runtime self-proof fixtures");
     sentiment.details.recovery_retry_set);
   assert.equal(JSON.stringify(root).includes("a".repeat(64)), false, "private LKG digests stay out of KPI evidence");
   ok("sentiment retained-LKG retry source is named in private and public KPI evidence");
+}
+
+// Treasury TGA uses the generic sha-bound recovery state: the real CLI must
+// load it, name an active retry, and preserve the same bounded public proof.
+{
+  const now = "2026-07-16T02:10:00.000Z";
+  const tmp = mkTmp("treasury-tga-lkg-retry");
+  const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  writeJson(path.join(tmp, "data", "admin", "treasury_tga", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "treasury_tga",
+    updated_at: now,
+    retry_set: ["tga"],
+    items: {
+      tga: {
+        key: "tga",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/treasury_tga/lkg/tga.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-13",
+        },
+        lkg: {
+          path: "data/admin/treasury_tga/lkg/tga.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-13",
+        },
+        latest_failure: {
+          run_id: "tga-chaos-1",
+          run_attempt: 1,
+          observed_at: now,
+          reason: "controlled_failure",
+        },
+        updated_at: now,
+      },
+    },
+  });
+  const { root, public: pub } = runBuilder(tmp, {}, now);
+  const tgaLane = root.lanes.find((item) => item.id === "treasury_tga");
+  assert.equal(tgaLane.status, "degraded");
+  assert.match(tgaLane.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail, /tga.*tga-chaos-1/i);
+  assert.deepEqual(tgaLane.details.recovery_retry_set, [{
+    key: "tga",
+    resolution_state: "lkg_primary",
+    failure_run_id: "tga-chaos-1",
+    promotion_deferral_reason: null,
+    promotion_deferral_run_id: null,
+    recovered_from_run_id: null,
+  }]);
+  assert.deepEqual(pub.lanes.find((item) => item.id === "treasury_tga")?.details?.recovery_retry_set,
+    tgaLane.details.recovery_retry_set);
+  assert.equal(JSON.stringify(root).includes("a".repeat(64)), false);
+  const sourceErrors = [];
+  checkRecoveryStateSources(root, path.join(tmp, "data", KPI_REL), sourceErrors);
+  assert.deepEqual(sourceErrors, [], "checker accepts exact TGA source-bound retry evidence");
+  const tamperedRoot = structuredClone(root);
+  tamperedRoot.lanes.find((item) => item.id === "treasury_tga").details.recovery_retry_set = [];
+  const tamperedErrors = [];
+  checkRecoveryStateSources(tamperedRoot, path.join(tmp, "data", KPI_REL), tamperedErrors);
+  assert.ok(tamperedErrors.some((message) => /treasury_tga: KPI recovery_retry_set does not match its source index/.test(message)));
+  ok("Treasury TGA retained-LKG retry is loaded and source-bound in private/public KPI evidence");
+}
+
+{
+  const now = "2026-07-16T06:10:00.000Z";
+  const tmp = mkTmp("treasury-tga-natural-recovery");
+  const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  writeJson(path.join(tmp, "data", "admin", "treasury_tga", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "treasury_tga",
+    updated_at: now,
+    retry_set: [],
+    items: {
+      tga: {
+        key: "tga",
+        resolution_state: "fresh_primary",
+        retry: false,
+        current: { path: "data/macro/tga.json", payload_sha256: "b".repeat(64), source_as_of: "2026-07-14" },
+        lkg: {
+          path: "data/admin/treasury_tga/lkg/tga.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-13",
+        },
+        recovered_from_run_id: "tga-chaos-1",
+        recovered_at: now,
+        recovery_run_id: "tga-natural-2",
+        recovery_run_attempt: 1,
+        recovery_event_name: "schedule",
+        last_recovered_failure: {
+          run_id: "tga-chaos-1",
+          run_attempt: 1,
+          observed_at: "2026-07-16T02:10:00.000Z",
+          reason: "controlled_failure",
+        },
+        updated_at: now,
+      },
+    },
+  });
+  const { root, public: pub } = runBuilder(tmp, {}, now);
+  const recovered = root.lanes.find((item) => item.id === "treasury_tga")?.details?.recovery_recovered;
+  assert.deepEqual(recovered, [{
+    key: "tga",
+    resolution_state: "fresh_primary",
+    retry: false,
+    recovered_from_run_id: "tga-chaos-1",
+    recovery_run_id: "tga-natural-2",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    recovered_at: now,
+    lkg_source_as_of: "2026-07-13",
+    source_as_of: "2026-07-14",
+  }]);
+  assert.deepEqual(pub.lanes.find((item) => item.id === "treasury_tga")?.details?.recovery_recovered, recovered);
+  const sourceErrors = [];
+  checkRecoveryStateSources(root, path.join(tmp, "data", KPI_REL), sourceErrors);
+  assert.deepEqual(sourceErrors, []);
+  ok("Treasury TGA natural schedule recovery proof survives builder, public projection, and checker");
 }
 
 // SOX remains a shadow detection lane, but its bounded recovery evidence is
