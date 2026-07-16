@@ -250,7 +250,8 @@ jobs:
         run: |
           npm --prefix 100xfenok-next run build:fenok-data-health-kpi
           node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-          npm --prefix 100xfenok-next run qa:fenok-data-health-kpi
+          node scripts/test-build-fenok-data-health-kpi.mjs
+          node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
           npm --prefix 100xfenok-next run build:static-route-manifest
 
       - name: Check if manifest changed
@@ -319,6 +320,7 @@ jobs:
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
 
       - name: Commit and push manifest (with rebase retry)
+        id: commit
         if: steps.check.outputs.changed == 'true'
         env:
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
@@ -409,7 +411,8 @@ jobs:
             )
             npm --prefix 100xfenok-next run build:fenok-data-health-kpi
             node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-            npm --prefix 100xfenok-next run qa:fenok-data-health-kpi
+            node scripts/test-build-fenok-data-health-kpi.mjs
+            node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
             npm --prefix 100xfenok-next run build:static-route-manifest
 
             if git diff --quiet \
@@ -470,8 +473,9 @@ jobs:
                 100xfenok-next/public/data/admin/product-surface-coverage.json \
                 100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
                 100xfenok-next/public/data/manifest.json \
-                100xfenok-next/src/generated/static-route-manifest.ts; then
+              100xfenok-next/src/generated/static-route-manifest.ts; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
+              echo "pushed=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -538,6 +542,7 @@ jobs:
 
             if git push origin HEAD:main; then
               echo "Attempt $attempt: push succeeded"
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -552,8 +557,27 @@ jobs:
         if: steps.check.outputs.changed == 'false'
         run: echo "manifest.json already up to date — nothing to commit"
 
+      - name: Read publication gate after reconcile
+        id: publication
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const doc = JSON.parse(fs.readFileSync("data/admin/fenok-data-health-kpi.json", "utf8"));
+          const gate = doc?.runtime?.publication_gate;
+          if (!gate || typeof gate.publication_halted !== "boolean") {
+            throw new Error("KPI runtime.publication_gate.publication_halted is missing or invalid");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `halted=${gate.publication_halted}\n`);
+          console.log(`Publication dispatch gate: ${gate.status_message}`);
+          NODE
+
+      - name: Skip Worker deploy while publication is halted
+        if: steps.publication.outputs.halted == 'true'
+        run: |
+          node -e 'const doc=require("./data/admin/fenok-data-health-kpi.json"); console.log(`Worker deploy skipped: Publication halted: ${doc.runtime.publication_gate.blocking_unrecovered_missed_slot_keys.join(", ")}`)'
+
       - name: Dispatch Worker deploy for generated-data commit
-        if: steps.check.outputs.changed == 'true'
+        if: steps.commit.outputs.pushed == 'true' && steps.publication.outputs.halted == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy-worker.yml --ref main

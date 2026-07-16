@@ -16,10 +16,12 @@ import { fileURLToPath } from "node:url";
 
 import {
   projectPublicKpi,
+  projectRuntime,
   PUBLIC_RUNTIME_DENY_KEYS,
 } from "./lib/kpi-runtime-projection.mjs";
 import {
   classifyRuntimeSlots,
+  publicationGateForRuntime,
   validateCronDeferrals,
 } from "./lib/kpi-runtime-slots.mjs";
 import {
@@ -51,6 +53,7 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
 const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
+const UPDATE_MANIFEST_WORKFLOW = path.join(__dirname, "..", ".github", "workflows", "update-manifest.yml");
 const DETECTION_EXPECTED = path.join(__dirname, "fixtures", "data_supply", "detection_floor", "cases.expected.json");
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
@@ -799,6 +802,7 @@ function readyCoreV2(now) {
 // checker's status/lane gate is satisfied and only runtime/sla/projection is exercised.
 function seedReadyV2(tmp, { now, runtime, sla }) {
   writeReadyTargetRecoveryIndexes(tmp, now);
+  runtime.publication_gate = publicationGateForRuntime(runtime);
   const root = { ...readyCoreV2(now), runtime, source_sla: sla };
   const pub = projectPublicKpi(root, now);
   writeJson(path.join(tmp, "data", KPI_REL), root);
@@ -954,9 +958,10 @@ function runBuilder(tmp, env, nowIso, { expectExit = 0 } = {}) {
   };
 }
 
-function runChecker(tmp, nowIso, { strict = false } = {}) {
+function runChecker(tmp, nowIso, { strict = false, context = "deploy" } = {}) {
   const args = [CHECKER, "--data-root", tmp];
   if (strict) args.push("--strict");
+  args.push(`--context=${context}`);
   try {
     execFileSync("node", args, {
       env: { ...baseEnv(), KPI_FAKE_NOW: nowIso },
@@ -995,6 +1000,7 @@ function makeProducerRuntime({ builtAt, slotKey, runId }) {
 }
 
 function v2Doc(runtime, extra = {}) {
+  runtime.publication_gate = publicationGateForRuntime(runtime);
   return {
     schema_version: "fenok-data-health-kpi/v2",
     generated_at: runtime.producer_context?.built_at ?? "2026-07-10T00:00:00.000Z",
@@ -1776,7 +1782,14 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const checkerNow = "2026-07-12T02:35:00.000Z"; // ~48h later, producer never rebuilt
   const runtime = makeProducerRuntime({ builtAt: built, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "frozen" });
   runtime.cadence.v2_activated_at = built; // due/missed empty at build clock
-  seedReadyV2(tmp, { now: built, runtime, sla: readySla(built) });
+  const seeded = seedReadyV2(tmp, { now: built, runtime, sla: readySla(built) });
+  const staleProjection = projectRuntime(runtime, checkerNow);
+  assert.equal(seeded.root.runtime.publication_gate.publication_halted, false);
+  assert.equal(seeded.public.runtime.publication_halted, false,
+    "root/public publication_halted both mean an unrecovered full-snapshot miss");
+  assert.equal(staleProjection.verdict, "blocked", "hard-age failure remains visibly blocked");
+  assert.equal(staleProjection.publication_halted, false,
+    "hard-age verdict does not change the missed-slot publication flag's meaning");
   assert.equal(runChecker(tmp, checkerNow).exit, 0, "Phase A: frozen 48h producer is warn-only (exit 0)");
   assert.equal(runChecker(tmp, checkerNow, { strict: true }).exit, 1, "strict: 48h producer vs checker clock is a hard error (exit 1)");
   ok("FIX 3: frozen-green producer (48h stale vs checker clock) blocks under strict, warns in Phase A");
@@ -2527,12 +2540,35 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   runtime.successful_snapshot_history[0].status = "blocked";
   const blocked = projectPublicKpi(v2Doc(runtime), "2026-07-12T13:00:00.000Z");
   assert.equal(blocked.runtime.slot_status, "blocked", "non-ready execution cannot launder a missed slot");
+  assert.equal(blocked.runtime.publication_halted, true);
+  assert.equal(blocked.runtime.deployment_blocking, true);
+  assert.match(blocked.runtime.status_message, /Publication halted/);
   assert.equal(blocked.runtime.fresh, false);
   assert.equal(blocked.runtime.unrecovered_missed_slot_count, 1);
   const blockedErrors = [];
   checkV2Runtime(v2Doc(runtime), { errors: blockedErrors, warnings: [] }, "2026-07-12T13:00:00.000Z");
   assert.ok(blockedErrors.some((message) => /lack a later authoritative ready/.test(message)),
     "unrecovered miss hard-fails the checker");
+  const reconcileErrors = [];
+  const reconcileWarnings = [];
+  checkV2Runtime(v2Doc(runtime), { errors: reconcileErrors, warnings: reconcileWarnings },
+    "2026-07-12T13:00:00.000Z", { context: "reconcile" });
+  assert.deepEqual(reconcileErrors, [], "reconcile downgrades only the unrecovered full-snapshot publication block");
+  assert.ok(reconcileWarnings.some((message) => message.includes(miss)
+    && message.includes("Publication halted")
+    && message.includes("deployment_blocking:true")),
+    "reconcile warning names the miss and the honestly halted publication state");
+  const blockedTmp = mkTmp("reconcile-blocked-publication");
+  const blockedNow = "2026-07-12T10:51:19.151Z";
+  seedReadyV2(blockedTmp, {
+    now: blockedNow,
+    runtime: structuredClone(runtime),
+    sla: readySla(blockedNow),
+  });
+  assert.equal(runChecker(blockedTmp, "2026-07-12T13:00:00.000Z", { strict: true, context: "deploy" }).exit, 1,
+    "deploy CLI still refuses the blocked full-snapshot miss");
+  assert.equal(runChecker(blockedTmp, "2026-07-12T13:00:00.000Z", { strict: true, context: "reconcile" }).exit, 0,
+    "reconcile CLI permits committing the honestly blocked KPI");
   ok("satisfied key without a later ready snapshot remains BLOCKED");
 
   const incrementalMiss = "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-10T00:30Z";
@@ -2582,7 +2618,91 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const fakeRecoveryClassification = classifyRuntimeSlots(fakeRecoveryRuntime);
   assert.equal(fakeRecoveryClassification.status, "blocked", "non-canonical recovery slot cannot clear a full-snapshot miss");
   assert.deepEqual(fakeRecoveryClassification.recovered_missed_slot_keys, []);
+  fakeRecoveryRuntime.slots.satisfied_slot_keys = [recovery, fakeRecovery];
+  fakeRecoveryRuntime.publication_gate = publicationGateForRuntime(fakeRecoveryRuntime);
+  for (const context of ["deploy", "reconcile"]) {
+    const errors = [];
+    const warnings = [];
+    checkV2Runtime(v2Doc(fakeRecoveryRuntime), { errors, warnings }, "2026-07-12T13:00:00.000Z", { context });
+    assert.ok(errors.some((message) => message.includes("satisfied_slot_keys") && message.includes("canonical")),
+      `non-canonical forged recovery stays hard in ${context}`);
+  }
+  const forgedTmp = mkTmp("forged-recovery-hard-both");
+  const forgedNow = "2026-07-12T10:51:19.151Z";
+  seedReadyV2(forgedTmp, {
+    now: forgedNow,
+    runtime: structuredClone(fakeRecoveryRuntime),
+    sla: readySla(forgedNow),
+  });
+  for (const context of ["deploy", "reconcile"]) {
+    const result = runChecker(forgedTmp, "2026-07-12T13:00:00.000Z", { strict: true, context });
+    assert.equal(result.exit, 1, `forged recovery CLI hard-fails in ${context}`);
+    assert.match(result.stderr, /satisfied_slot_keys\[1\].*canonical/,
+      `forged recovery failure is independently attributed in ${context}`);
+  }
   ok("non-canonical satisfied/history key cannot forge full-snapshot recovery");
+
+  const mismatchedRuntime = makeProducerRuntime({ builtAt: "2026-07-12T10:51:19.151Z", slotKey: recovery, runId: "mismatch" });
+  mismatchedRuntime.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
+  mismatchedRuntime.slots.missed_slot_keys = [];
+  for (const context of ["deploy", "reconcile"]) {
+    const errors = [];
+    checkV2Runtime(v2Doc(mismatchedRuntime), { errors, warnings: [] }, "2026-07-12T13:00:00.000Z", { context });
+    assert.ok(errors.some((message) => /missed_slot_keys re-derivation mismatch/.test(message)),
+      `missed-slot equality mismatch stays hard in ${context}`);
+  }
+  const mismatchTmp = mkTmp("missed-slot-equality-hard-both");
+  const mismatchNow = "2026-07-12T10:51:19.151Z";
+  seedReadyV2(mismatchTmp, {
+    now: mismatchNow,
+    runtime: structuredClone(mismatchedRuntime),
+    sla: readySla(mismatchNow),
+  });
+  for (const context of ["deploy", "reconcile"]) {
+    const result = runChecker(mismatchTmp, "2026-07-12T13:00:00.000Z", { strict: true, context });
+    assert.equal(result.exit, 1, `missed-slot equality CLI hard-fails in ${context}`);
+    assert.match(result.stderr, /missed_slot_keys re-derivation mismatch/);
+  }
+  ok("reconcile exception does not weaken forged-recovery or missed-slot equality gates");
+
+  const futureRecovery = "update-manifest.yml:30 2 * * *@2026-07-13T02:30Z";
+  const futureRecoveryRuntime = makeProducerRuntime({ builtAt: "2026-07-12T10:51:19.151Z", slotKey: null, runId: "future-recovery" });
+  futureRecoveryRuntime.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
+  futureRecoveryRuntime.slots.missed_slot_keys = [miss];
+  futureRecoveryRuntime.slots.satisfied_slot_keys = [futureRecovery];
+  futureRecoveryRuntime.successful_snapshot_history = [{
+    built_at: "2026-07-13T02:40:00.000Z", slot_key: futureRecovery, run_id: "future-recovery",
+    run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
+  }];
+  assert.equal(classifyRuntimeSlots(futureRecoveryRuntime).status, "degraded",
+    "classifier behavior remains unchanged for a canonical-looking future recovery probe");
+  const futureTmp = mkTmp("future-recovery-hard-both");
+  const futureNow = "2026-07-12T10:51:19.151Z";
+  seedReadyV2(futureTmp, {
+    now: futureNow,
+    runtime: futureRecoveryRuntime,
+    sla: readySla(futureNow),
+  });
+  for (const context of ["deploy", "reconcile"]) {
+    const result = runChecker(futureTmp, "2026-07-12T13:00:00.000Z", { strict: true, context });
+    assert.equal(result.exit, 1, `future recovery evidence hard-fails in ${context}`);
+    assert.match(result.stderr, /future vs generated_at/,
+      `future recovery is independently attributed in ${context}`);
+  }
+  ok("canonical-looking future satisfied/history evidence cannot launder a missed slot");
+
+  const workflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW, "utf8");
+  assert.equal((workflow.match(/--context=reconcile/g) ?? []).length, 2,
+    "both initial and retry reconcile checks use the explicit checker context");
+  assert.match(workflow, /publication_gate\.publication_halted/,
+    "workflow reads the committed KPI publication gate before dispatch");
+  assert.match(workflow, /Worker deploy skipped: Publication halted/,
+    "workflow emits a plain skip reason while publication is halted");
+  assert.match(workflow, /steps\.publication\.outputs\.halted == 'false'/,
+    "Worker dispatch requires an open publication gate");
+  assert.match(workflow, /steps\.commit\.outputs\.pushed == 'true'/,
+    "Worker dispatch requires a generated-data push from the final retry state");
+  ok("Update Manifest commits honest blocked KPI but skips Worker dispatch while publication is halted");
 
   let retainedRecoveryRuntime = makeProducerRuntime({ builtAt: "2026-07-12T10:51:19.151Z", slotKey: recovery, runId: "retained-recovery" });
   retainedRecoveryRuntime.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
@@ -2663,6 +2783,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const now = "2026-07-12T13:00:00.000Z";
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 9 * * *@2026-07-12T09:30Z", runId: "lane-decouple" });
   runtime.cadence.v2_activated_at = now;
+  runtime.publication_gate = publicationGateForRuntime(runtime);
   const root = { ...readyCoreV2(now), runtime, source_sla: readySla(now) };
   const etfIndex = root.lanes.findIndex((item) => item.id === "etf_public_and_daily_gate");
   root.lanes[etfIndex] = {
@@ -2713,6 +2834,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   writeJson(path.join(blockedTmp, "public", "data", KPI_REL), projectPublicKpi(blockedRoot, now));
   assert.equal(runChecker(blockedTmp, now, { strict: true }).exit, 1,
     "canonical platform integrity failure still hard-stops strict verification");
+  assert.equal(runChecker(blockedTmp, now, { strict: true, context: "reconcile" }).exit, 1,
+    "reconcile context cannot downgrade an ordinary platform integrity failure");
   ok("global integrity failure remains BLOCKED and cannot be downgraded to a lane warning");
 }
 

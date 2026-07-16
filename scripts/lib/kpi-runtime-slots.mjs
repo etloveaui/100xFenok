@@ -60,6 +60,10 @@ function isCanonicalTrackedSlot(parsed) {
     && (!cron.dow || cron.dow.has(occurrence.getUTCDay()));
 }
 
+export function isCanonicalRuntimeSlotKey(slotKey) {
+  return isCanonicalTrackedSlot(parseRuntimeSlotKey(slotKey));
+}
+
 export function validateCronDeferrals(cronDeferrals, { satisfiedSlotKeys = [] } = {}) {
   const errors = [];
   if (!Array.isArray(cronDeferrals)) return ["cron_deferrals must be an array"];
@@ -155,5 +159,20 @@ export function classifyRuntimeSlots(runtime) {
     unrecovered_missed_slot_keys: unrecovered,
     blocking_unrecovered_missed_slot_keys: blockingUnrecovered,
     lane_local_unrecovered_missed_slot_keys: laneLocalUnrecovered,
+  };
+}
+
+export function publicationGateForRuntime(runtime) {
+  const classification = classifyRuntimeSlots(runtime);
+  const blocking = classification.blocking_unrecovered_missed_slot_keys;
+  const publicationHalted = blocking.length > 0;
+  return {
+    status: publicationHalted ? "halted" : "open",
+    publication_halted: publicationHalted,
+    deployment_blocking: publicationHalted,
+    blocking_unrecovered_missed_slot_keys: blocking,
+    status_message: publicationHalted
+      ? `Publication halted: unrecovered full-snapshot missed slot(s): ${blocking.join(", ")}`
+      : "Publication open: no unrecovered full-snapshot missed slots.",
   };
 }

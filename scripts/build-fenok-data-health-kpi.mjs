@@ -4,7 +4,7 @@ import path from "node:path";
 import { validateDetectionReport } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
-import { assertValidCronDeferrals } from "./lib/kpi-runtime-slots.mjs";
+import { assertValidCronDeferrals, publicationGateForRuntime } from "./lib/kpi-runtime-slots.mjs";
 import {
   calendar_version,
   businessDayAge,
@@ -1895,6 +1895,7 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
     priorRuntime,
     snapshotStatus: deploymentIntegrity.status,
   });
+  runtime.publication_gate = publicationGateForRuntime(runtime);
 
   return {
     schema_version: SCHEMA_VERSION,

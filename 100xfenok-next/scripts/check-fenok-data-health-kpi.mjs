@@ -4,6 +4,9 @@ import path from "node:path";
 import { projectPublicKpi, projectRuntime } from "../../scripts/lib/kpi-runtime-projection.mjs";
 import {
   classifyRuntimeSlots,
+  isCanonicalRuntimeSlotKey,
+  parseRuntimeSlotKey,
+  publicationGateForRuntime,
   validateCronDeferrals,
 } from "../../scripts/lib/kpi-runtime-slots.mjs";
 import { isFutureSource, isRealCalendarDate, yahooBusinessDayAge, calendar_version } from "../../scripts/lib/market-calendar.mjs";
@@ -595,10 +598,12 @@ function canonicalCadenceSubset() {
   };
 }
 
-export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
+export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context = "deploy" } = {}) {
   const runtime = rootDoc?.runtime;
   push(errors, runtime && typeof runtime === "object", "runtime block is required in v2");
   if (!runtime || typeof runtime !== "object") return;
+  push(errors, context === "deploy" || context === "reconcile",
+    `checker context must be deploy or reconcile, got ${JSON.stringify(context)}`);
 
   const producer = runtime.producer_context;
   const strictBucket = STRICT ? errors : warnings;
@@ -650,11 +655,44 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
       graceMinutes: CADENCE.slot_grace_minutes,
     });
     const satisfiedSlotKeys = runtime.slots?.satisfied_slot_keys ?? [];
+    push(errors, Array.isArray(satisfiedSlotKeys),
+      "runtime.slots.satisfied_slot_keys must be an array");
+    const canonicalSatisfiedSlotKeys = Array.isArray(satisfiedSlotKeys) ? satisfiedSlotKeys : [];
+    const buildNowMs = new Date(buildNow).getTime();
+    canonicalSatisfiedSlotKeys.forEach((slotKey, index) => {
+      const canonical = isCanonicalRuntimeSlotKey(slotKey);
+      push(errors, canonical,
+        `runtime.slots.satisfied_slot_keys[${index}] must be a canonical tracked cron occurrence: ${slotKey}`);
+      if (canonical) {
+        const occurrenceMs = parseRuntimeSlotKey(slotKey).occurrence_ms;
+        push(errors, Number.isFinite(buildNowMs) && occurrenceMs <= buildNowMs,
+          `runtime.slots.satisfied_slot_keys[${index}] is in the future vs generated_at: ${slotKey} > ${buildNow}`);
+      }
+    });
+    const successfulSnapshotHistory = runtime.successful_snapshot_history ?? [];
+    push(errors, Array.isArray(successfulSnapshotHistory),
+      "runtime.successful_snapshot_history must be an array");
+    (Array.isArray(successfulSnapshotHistory) ? successfulSnapshotHistory : []).forEach((entry, index) => {
+      if (entry?.slot_key == null) return;
+      const canonical = isCanonicalRuntimeSlotKey(entry.slot_key);
+      push(errors, canonical,
+        `runtime.successful_snapshot_history[${index}].slot_key must be a canonical tracked cron occurrence: ${entry.slot_key}`);
+      const builtAtMs = new Date(entry?.built_at).getTime();
+      push(errors, Number.isFinite(builtAtMs),
+        `runtime.successful_snapshot_history[${index}].built_at must be a parseable timestamp: ${entry?.built_at}`);
+      if (canonical && Number.isFinite(builtAtMs)) {
+        const occurrenceMs = parseRuntimeSlotKey(entry.slot_key).occurrence_ms;
+        push(errors, occurrenceMs <= builtAtMs,
+          `runtime.successful_snapshot_history[${index}].built_at precedes its slot occurrence: ${entry.built_at} < ${entry.slot_key}`);
+        push(errors, Number.isFinite(buildNowMs) && builtAtMs <= buildNowMs,
+          `runtime.successful_snapshot_history[${index}].built_at is in the future vs generated_at: ${entry.built_at} > ${buildNow}`);
+      }
+    });
     const cronDeferrals = runtime.slots?.cron_deferrals ?? [];
-    const deferralErrors = validateCronDeferrals(cronDeferrals, { satisfiedSlotKeys });
+    const deferralErrors = validateCronDeferrals(cronDeferrals, { satisfiedSlotKeys: canonicalSatisfiedSlotKeys });
     for (const error of deferralErrors) errors.push(`invalid cron deferral: ${error}`);
     if (deferralErrors.length === 0) {
-      const missed = deriveMissedSlots({ dueSlots: due, satisfiedSlotKeys, cronDeferrals });
+      const missed = deriveMissedSlots({ dueSlots: due, satisfiedSlotKeys: canonicalSatisfiedSlotKeys, cronDeferrals });
       const stored = [...(runtime.slots?.missed_slot_keys ?? [])].sort();
       push(errors, JSON.stringify(missed) === JSON.stringify(stored),
         `missed_slot_keys re-derivation mismatch: stored ${JSON.stringify(stored)} vs recomputed ${JSON.stringify(missed)}`);
@@ -662,8 +700,16 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
   }
 
   const slotClassification = classifyRuntimeSlots(runtime);
+  const expectedPublicationGate = publicationGateForRuntime(runtime);
+  push(errors, JSON.stringify(runtime.publication_gate) === JSON.stringify(expectedPublicationGate),
+    `runtime.publication_gate mismatch: stored ${JSON.stringify(runtime.publication_gate)} vs recomputed ${JSON.stringify(expectedPublicationGate)}`);
   if (slotClassification.status === "blocked") {
-    errors.push(`${slotClassification.blocking_unrecovered_missed_slot_keys.length} retained missed slot(s) lack a later authoritative ready full-snapshot recovery: ${slotClassification.blocking_unrecovered_missed_slot_keys.join(", ")}`);
+    const blockingMessage = `${slotClassification.blocking_unrecovered_missed_slot_keys.length} retained missed slot(s) lack a later authoritative ready full-snapshot recovery: ${slotClassification.blocking_unrecovered_missed_slot_keys.join(", ")}`;
+    if (context === "reconcile") {
+      warnings.push(`Publication halted; deployment_blocking:true; ${blockingMessage}`);
+    } else {
+      errors.push(blockingMessage);
+    }
   }
   if (slotClassification.lane_local_unrecovered_missed_slot_keys.length > 0) {
     warnings.push(`incremental/owner-gated missed slot(s) remain lane-local degraded; deployment_blocking:false: ${slotClassification.lane_local_unrecovered_missed_slot_keys.join(", ")}`);
@@ -910,14 +956,14 @@ export function freshnessReport(rootDoc, nowIso) {
   };
 }
 
-function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso }) {
+function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context }) {
   const errors = [];
   const warnings = [];
   validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings);
   // Public mirror keeps the same schema_version + lanes; only runtime is projected.
   validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
   scanForbiddenTokens(publicKpiPath, errors);
-  checkV2Runtime(rootDoc, { errors, warnings }, nowIso);
+  checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context });
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
   checkRecoveryStateSources(rootDoc, rootKpiPath, errors);
   checkPublicProjection(rootDoc, publicDoc, { errors, warnings });
@@ -930,10 +976,11 @@ function main() {
   const nowIso = resolveNow();
   const rootDoc = readJson(rootKpiPath);
   const publicDoc = readJson(publicKpiPath);
+  const context = getArg("--context") ?? "deploy";
 
   const version = rootDoc?.schema_version;
   const result = version === SCHEMA_VERSION_V2
-    ? validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso })
+    ? validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context })
     : validateV1({ rootDoc, publicDoc, publicKpiPath });
 
   for (const warning of result.warnings) console.warn(`::warning:: fenok KPI [warn-only] ${warning}`);

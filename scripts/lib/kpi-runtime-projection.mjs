@@ -85,6 +85,7 @@ export function projectRuntime(runtime, nowIso) {
   const slotStatus = slotClassification.status;
   const verdict = hardAgeOk ? slotStatus : "blocked";
   const fresh = hardAgeOk && slotStatus !== "blocked";
+  const publicationHalted = slotStatus === "blocked";
   const statusMessage = !hardAgeOk
     ? "Producer timestamp is missing or exceeds the hard-age limit."
     : slotStatus === "ready"
@@ -93,7 +94,7 @@ export function projectRuntime(runtime, nowIso) {
         ? laneLocalUnrecoveredMissedSlotCount > 0
           ? `${laneLocalUnrecoveredMissedSlotCount} retained missed slot(s) remain lane-local degradation for incremental/owner-gated workflow(s); deployment_blocking:false.${recoveredMissedSlotCount > 0 ? ` ${recoveredMissedSlotCount} other retained miss(es) recovered.` : ""}`
           : `${recoveredMissedSlotCount} retained missed slot(s) recovered by later authoritative ready full snapshot(s).`
-        : `${blockingUnrecoveredMissedSlotCount} retained full-snapshot missed slot(s) have no later authoritative ready recovery.`;
+        : `Publication halted: ${blockingUnrecoveredMissedSlotCount} retained full-snapshot missed slot(s) have no later authoritative ready recovery.`;
 
   return {
     projection: PUBLIC_PROJECTION_VERSION,
@@ -102,6 +103,8 @@ export function projectRuntime(runtime, nowIso) {
     verdict,
     slot_status: slotStatus,
     status_message: statusMessage,
+    publication_halted: publicationHalted,
+    deployment_blocking: publicationHalted,
     fresh,
     missed_slot_count: missedSlotCount,
     recovered_missed_slot_count: recoveredMissedSlotCount,
