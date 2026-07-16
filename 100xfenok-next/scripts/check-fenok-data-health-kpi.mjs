@@ -36,6 +36,7 @@ import {
   slaStatusForAge,
   classifyProductSurface,
   compactRecoveryIndex,
+  formatRecoveryRetryEvidence,
   projectRecoveryRecoveredSet,
   projectRecoveryRetrySet,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
@@ -152,11 +153,17 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const retrySetValid = targetRecovery ? true : Array.isArray(recoveryRetrySet) && recoveryRetrySet.every((item) => {
     const keys = item && typeof item === "object" && !Array.isArray(item) ? Object.keys(item).sort() : [];
     return JSON.stringify(keys) === JSON.stringify([
-      "failure_run_id", "key", "recovered_from_run_id", "resolution_state",
+      "failure_run_id", "key", "promotion_deferral_reason", "promotion_deferral_run_id",
+      "recovered_from_run_id", "resolution_state",
     ])
       && typeof item.key === "string" && item.key !== ""
       && ["lkg_primary", "unavailable"].includes(item.resolution_state)
       && typeof item.failure_run_id === "string" && item.failure_run_id !== ""
+      && (item.promotion_deferral_reason === null
+        || ["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(item.promotion_deferral_reason))
+      && (item.promotion_deferral_run_id === null
+        || (typeof item.promotion_deferral_run_id === "string" && item.promotion_deferral_run_id !== ""))
+      && ((item.promotion_deferral_reason === null) === (item.promotion_deferral_run_id === null))
       && (item.recovered_from_run_id === null
         || (typeof item.recovered_from_run_id === "string" && item.recovered_from_run_id !== ""));
   }) && new Set(recoveryRetrySet.map((item) => item.key)).size === recoveryRetrySet.length
@@ -288,7 +295,7 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
       const retryCheck = soxChecks[1];
       const expectedRetryDetail = expectedRetry.length === 0
         ? "retry set is empty"
-        : expectedRetry.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; ");
+        : formatRecoveryRetryEvidence(expectedRetry);
       push(errors, stateCheck?.status === (state === null ? "warning" : "ready"),
         "rim_inputs: SOX recovery-state check contradicts its source index");
       push(errors, retryCheck?.status === (expectedRetry.length === 0 ? "ready" : "warning"),

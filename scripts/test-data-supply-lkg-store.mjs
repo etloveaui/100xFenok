@@ -8,7 +8,10 @@ import path from "node:path";
 
 import {
   LaneLkgStore,
+  PROMOTION_CONTRACT_LEGACY_SOURCE_MARKER_V1,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
+  buildProviderObservationV2,
   classifyLkgFailure,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
@@ -71,11 +74,38 @@ function candidate(key, sourceAsOf, value = 2) {
   const document = { schema: "fixture/v1", source_as_of: sourceAsOf, rows: [{ value }] };
   return {
     key,
+    promotion_contract: PROMOTION_CONTRACT_LEGACY_SOURCE_MARKER_V1,
     currentRelativePath: `data/${key}.json`,
     payloadBytes: Buffer.from(`${JSON.stringify(document, null, 2)}\n`),
     sourceAsOf,
     validateDocument: validFixture,
     deriveSourceAsOf: (document) => document.source_as_of,
+  };
+}
+
+function providerCandidate(key, candidateSourceAsOf, providerSourceAsOf, run = RECOVERY_RUN, {
+  candidateValue = 2,
+  providerValue = candidateValue,
+  contains = true,
+} = {}) {
+  const next = candidate(key, candidateSourceAsOf, candidateValue);
+  const providerDocument = {
+    schema: "fixture/v1",
+    source_as_of: providerSourceAsOf,
+    rows: [{ value: providerValue }],
+  };
+  const providerBytes = Buffer.from(`${JSON.stringify(providerDocument, null, 2)}\n`);
+  return {
+    ...next,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: providerBytes,
+      sourceAsOf: providerSourceAsOf,
+      validateDocument: validFixture,
+      deriveSourceAsOf: (document) => document.source_as_of,
+      candidateContainsObservation: () => contains,
+      run,
+    }),
   };
 }
 
@@ -144,7 +174,7 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.equal(store.recoveryCandidateAdvances([
     candidate("daily", "2026-07-15"),
     candidate("quarterly", "2026-07-14"),
-  ]), false, "one advancing key must not launder another retained LKG");
+  ], RECOVERY_RUN), false, "one advancing key must not launder another retained LKG");
   assert.deepEqual(store.promotableCandidates([
     candidate("daily", "2026-07-15"),
     candidate("quarterly", "2026-07-14"),
@@ -152,7 +182,7 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.equal(store.recoveryCandidateAdvances([
     candidate("daily", "2026-07-15"),
     candidate("quarterly", "2026-07-15"),
-  ]), true);
+  ], RECOVERY_RUN), true);
 
   const corruptStatePath = path.join(repoRoot, "data", "admin", "fred_banking", "index.json");
   const corruptState = readJson(corruptStatePath);
@@ -187,7 +217,7 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.throws(() => store.promotableCandidates([{
     ...candidate("macro", "2026-07-15"),
     currentRelativePath: "../outside.json",
-  }]), /inside repoRoot/);
+  }], RECOVERY_RUN), /inside repoRoot/);
 }
 
 {
@@ -201,9 +231,9 @@ function candidate(key, sourceAsOf, value = 2) {
   const store = new LaneLkgStore({ repoRoot, laneId: "fred_macro" });
   store.recordFailure({ artifacts: [artifact], run: FAILURE_RUN, reason: "controlled_failure" });
 
-  assert.equal(store.recoveryCandidateAdvances([candidate("macro", "2026-07-14")]), false);
+  assert.equal(store.recoveryCandidateAdvances([candidate("macro", "2026-07-14")], RECOVERY_RUN), false);
   const advanced = candidate("macro", "2026-07-15");
-  assert.equal(store.recoveryCandidateAdvances([advanced]), true);
+  assert.equal(store.recoveryCandidateAdvances([advanced], RECOVERY_RUN), true);
   assert.deepEqual(store.promotableCandidates([advanced], MANUAL_RUN), [], "manual dispatch cannot promote an advancing recovery candidate");
   assert.throws(
     () => store.recordSuccess({ artifacts: [advanced], run: MANUAL_RUN }),
@@ -228,6 +258,72 @@ function candidate(key, sourceAsOf, value = 2) {
   assert.equal(recovered.state.items.macro.recovery_event_name, "schedule");
   assert.equal(recovered.state.items.macro.last_recovered_failure.run_id, FAILURE_RUN.runId);
   assert.equal(recovered.state.items.macro.latest_failure, undefined);
+}
+
+{
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "lane-lkg-provider-v2-"));
+  const macro = descriptor(repoRoot, "macro");
+  const banking = descriptor(repoRoot, "banking");
+  for (const artifact of [macro, banking]) {
+    writeJson(artifact.canonicalPath, {
+      schema: "fixture/v1",
+      source_as_of: "2026-07-14",
+      rows: [{ value: 1 }],
+    });
+  }
+  const store = new LaneLkgStore({ repoRoot, laneId: "provider_v2" });
+  store.recordFailure({ artifacts: [macro, banking], run: FAILURE_RUN, reason: "controlled_failure" });
+
+  assert.throws(
+    () => store.promotableCandidates([{ ...candidate("macro", "2026-07-15"), promotion_contract: undefined }], RECOVERY_RUN),
+    /promotion_contract/,
+    "candidate contract has no implicit default",
+  );
+
+  const genuine = providerCandidate("macro", "2026-07-15", "2026-07-15");
+  assert.deepEqual(store.evaluatePromotionCandidates([genuine], RECOVERY_RUN).map(({ key, reason }) => ({ key, reason })), [
+    { key: "macro", reason: "ok" },
+  ]);
+
+  const foreignAhead = providerCandidate("macro", "2026-07-16", "2026-07-14");
+  assert.deepEqual(store.evaluatePromotionCandidates([foreignAhead], RECOVERY_RUN).map(({ key, eligible, reason }) => ({ key, eligible, reason })), [
+    { key: "macro", eligible: false, reason: "foreign_writer_conflict" },
+  ], "canonical merge-max cannot claim provider recovery");
+  const deferred = store.recordPromotionDeferral({ artifacts: [foreignAhead], run: RECOVERY_RUN, reason: "foreign_writer_conflict" });
+  assert.equal(deferred.state.items.macro.resolution_state, "lkg_primary");
+  assert.equal(deferred.state.items.macro.latest_failure.run_id, FAILURE_RUN.runId, "original LKG-entering failure lineage is preserved");
+  assert.deepEqual(deferred.state.items.macro.latest_promotion_deferral, {
+    run_id: RECOVERY_RUN.runId,
+    run_attempt: 1,
+    observed_at: RECOVERY_RUN.observedAt,
+    reason: "foreign_writer_conflict",
+  });
+
+  const decisions = store.evaluatePromotionCandidates([
+    genuine,
+    providerCandidate("banking", "2026-07-14", "2026-07-14"),
+  ], RECOVERY_RUN);
+  assert.deepEqual(decisions.map(({ key, eligible }) => ({ key, eligible })), [
+    { key: "macro", eligible: true },
+    { key: "banking", eligible: false },
+  ], "one key's provider observation cannot promote another key");
+
+  const wrongRun = providerCandidate("macro", "2026-07-15", "2026-07-15", { ...RECOVERY_RUN, runId: "wrong-run" });
+  assert.throws(() => store.promotableCandidates([wrongRun], RECOVERY_RUN), /run_id.*current run/i);
+  const tamperedProof = providerCandidate("macro", "2026-07-15", "2026-07-15");
+  tamperedProof.provider_observation.payload_sha256 = "0".repeat(64);
+  assert.throws(() => store.promotableCandidates([tamperedProof], RECOVERY_RUN), /sha256.*payload/i);
+  assert.throws(
+    () => store.recordSuccess({ artifacts: [foreignAhead], run: RECOVERY_RUN }),
+    /foreign_writer_conflict/,
+    "recordSuccess independently rejects a promotion bypass",
+  );
+
+  const success = store.recordSuccess({ artifacts: [genuine], run: RECOVERY_RUN });
+  assert.equal(success.state.items.macro.promotion_contract, PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2);
+  assert.equal(success.state.items.macro.provider_observation.payload_sha256, genuine.provider_observation.payload_sha256);
+  assert.equal(success.state.items.macro.provider_observation.run_id, RECOVERY_RUN.runId);
+  assert.equal(success.state.items.macro.latest_promotion_deferral, undefined);
 }
 
 assert.deepEqual(classifyLkgFailure({ reason: "http_error", hasCompleteLkg: true }), {

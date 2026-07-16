@@ -124,6 +124,8 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     key: "constituents",
     resolution_state: "lkg_primary",
     failure_run_id: "sox-failure-run",
+    promotion_deferral_reason: null,
+    promotion_deferral_run_id: null,
     recovered_from_run_id: null,
   }]);
   assert.deepEqual(retryLane.details.recovery_recovered, []);
@@ -532,6 +534,8 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     key: "fdic_tier1",
     resolution_state: "lkg_primary",
     failure_run_id: "4001",
+    promotion_deferral_reason: null,
+    promotion_deferral_run_id: null,
     recovered_from_run_id: null,
   }]);
   assert.equal(JSON.stringify(fdicRecoveryLane).includes("payload_sha256"), false, "private digests stay out of KPI evidence");
@@ -1230,6 +1234,12 @@ console.log("# KPI v2 runtime self-proof fixtures");
           observed_at: now,
           reason: "controlled_failure",
         },
+        latest_promotion_deferral: {
+          run_id: "sentiment-natural-2",
+          run_attempt: 1,
+          observed_at: "2026-07-16T22:00:00.000Z",
+          reason: "foreign_writer_conflict",
+        },
         updated_at: now,
       },
     },
@@ -1238,10 +1248,14 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const sentiment = root.lanes.find((item) => item.id === "sentiment");
   assert.equal(sentiment.status, "degraded");
   assert.match(sentiment.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail, /vix.*lkg_primary.*sentiment-chaos-1/i);
+  assert.match(sentiment.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail,
+    /foreign_writer_conflict.*sentiment-natural-2/i);
   assert.deepEqual(sentiment.details.recovery_retry_set, [{
     key: "vix",
     resolution_state: "lkg_primary",
     failure_run_id: "sentiment-chaos-1",
+    promotion_deferral_reason: "foreign_writer_conflict",
+    promotion_deferral_run_id: "sentiment-natural-2",
     recovered_from_run_id: null,
   }]);
   assert.deepEqual(pub.lanes.find((item) => item.id === "sentiment")?.details?.recovery_retry_set,

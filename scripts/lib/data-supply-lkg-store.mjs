@@ -5,6 +5,8 @@ import path from "node:path";
 import { atomicWrite, writeJsonAtomic } from "./data-supply-attempt-shard.mjs";
 
 export const LKG_STATE_SCHEMA = "data-supply-lkg-state/v1";
+export const PROMOTION_CONTRACT_LEGACY_SOURCE_MARKER_V1 = "legacy_source_marker/v1";
+export const PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2 = "provider_observation/v2";
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_-]{0,95}$/;
 const SYSTEMIC_REASONS = new Set([
@@ -45,6 +47,38 @@ function validateRun(run) {
   if (!validUtc(run.observedAt)) throw new Error("observedAt must be RFC3339 UTC");
 }
 
+export function buildProviderObservationV2({
+  payloadBytes,
+  sourceAsOf,
+  validateDocument,
+  deriveSourceAsOf,
+  candidateContainsObservation,
+  run,
+}) {
+  validateRun(run);
+  if (!(payloadBytes instanceof Uint8Array)) throw new Error("provider observation payloadBytes are required");
+  if (typeof sourceAsOf !== "string" || !Number.isFinite(Date.parse(sourceAsOf))) {
+    throw new Error("provider observation sourceAsOf is invalid");
+  }
+  if (typeof validateDocument !== "function" || typeof deriveSourceAsOf !== "function"
+    || typeof candidateContainsObservation !== "function") {
+    throw new Error("provider observation validators are required");
+  }
+  const bytes = Buffer.from(payloadBytes);
+  return {
+    schema_version: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    payloadBytes: bytes,
+    payload_sha256: sha256(bytes),
+    source_as_of: sourceAsOf,
+    validateDocument,
+    deriveSourceAsOf,
+    candidateContainsObservation,
+    run_id: run.runId,
+    run_attempt: Number(run.runAttempt),
+    observed_at: run.observedAt,
+  };
+}
+
 export function isNaturalScheduleRun(run) {
   return run?.eventName === "schedule" && Number(run?.runAttempt ?? 1) === 1;
 }
@@ -61,7 +95,7 @@ function validateArtifactDescriptor(artifact) {
   }
 }
 
-function validateCandidate(candidate) {
+function validateCandidate(candidate, run = null) {
   if (!candidate || typeof candidate !== "object" || !IDENTIFIER_RE.test(candidate.key)) {
     throw new Error("candidate key is invalid");
   }
@@ -85,7 +119,49 @@ function validateCandidate(candidate) {
   if (candidate.deriveSourceAsOf(document) !== candidate.sourceAsOf) {
     throw new Error(`candidate sourceAsOf is not payload-bound for ${candidate.key}`);
   }
-  return document;
+  if (![PROMOTION_CONTRACT_LEGACY_SOURCE_MARKER_V1, PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2]
+    .includes(candidate.promotion_contract)) {
+    throw new Error(`promotion_contract is required for ${candidate.key}`);
+  }
+  if (candidate.promotion_contract === PROMOTION_CONTRACT_LEGACY_SOURCE_MARKER_V1) {
+    if (candidate.provider_observation !== undefined) {
+      throw new Error(`legacy promotion candidate must not carry provider_observation for ${candidate.key}`);
+    }
+    return { document, providerDocument: null };
+  }
+  const observation = candidate.provider_observation;
+  if (!observation || typeof observation !== "object" || Array.isArray(observation)
+    || observation.schema_version !== PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2
+    || !(observation.payloadBytes instanceof Uint8Array)
+    || typeof observation.validateDocument !== "function"
+    || typeof observation.deriveSourceAsOf !== "function"
+    || typeof observation.candidateContainsObservation !== "function") {
+    throw new Error(`provider_observation contract is invalid for ${candidate.key}`);
+  }
+  const observationBytes = Buffer.from(observation.payloadBytes);
+  if (!/^[0-9a-f]{64}$/.test(observation.payload_sha256 ?? "")
+    || sha256(observationBytes) !== observation.payload_sha256) {
+    throw new Error(`provider observation sha256 is not payload-bound for ${candidate.key}`);
+  }
+  const providerDocument = parseDocument(observationBytes);
+  if (!providerDocument || observation.validateDocument(providerDocument) !== true) {
+    throw new Error(`provider observation payload is invalid for ${candidate.key}`);
+  }
+  if (typeof observation.source_as_of !== "string" || !Number.isFinite(Date.parse(observation.source_as_of))
+    || observation.deriveSourceAsOf(providerDocument) !== observation.source_as_of) {
+    throw new Error(`provider observation source marker is not payload-bound for ${candidate.key}`);
+  }
+  if (typeof observation.run_id !== "string" || observation.run_id.length === 0
+    || !Number.isInteger(observation.run_attempt) || observation.run_attempt < 1
+    || !validUtc(observation.observed_at)) {
+    throw new Error(`provider observation run binding is invalid for ${candidate.key}`);
+  }
+  if (run !== null && (observation.run_id !== run.runId
+    || observation.run_attempt !== Number(run.runAttempt)
+    || observation.observed_at !== run.observedAt)) {
+    throw new Error(`provider observation run_id/run_attempt/observed_at does not match current run for ${candidate.key}`);
+  }
+  return { document, providerDocument };
 }
 
 export function systemicLkgFailureReason(reasons) {
@@ -156,6 +232,15 @@ export class LaneLkgStore {
       || retrySet.some((key, index) => index > 0 && retrySet[index - 1].localeCompare(key) >= 0)
       || JSON.stringify(retrySet) !== JSON.stringify(retryItems)) {
       throw new Error(`recovery retry_set is inconsistent for ${this.laneId}`);
+    }
+    for (const [key, item] of Object.entries(state.items)) {
+      const deferral = item?.latest_promotion_deferral;
+      if (deferral !== undefined && (typeof deferral?.run_id !== "string" || deferral.run_id.length === 0
+        || !Number.isInteger(deferral.run_attempt) || deferral.run_attempt < 1
+        || !validUtc(deferral.observed_at)
+        || !["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(deferral.reason))) {
+        throw new Error(`recovery promotion deferral is invalid for ${this.laneId}/${key}`);
+      }
     }
     return state;
   }
@@ -280,45 +365,84 @@ export class LaneLkgStore {
     return { hasCompleteLkg, retrySet: [...state.retry_set], state };
   }
 
-  recoveryCandidateAdvances(artifacts) {
+  evaluatePromotionCandidates(artifacts, run) {
     if (!Array.isArray(artifacts) || artifacts.length === 0) throw new Error("recovery candidates are required");
-    const candidates = new Map();
-    for (const artifact of artifacts) {
-      validateCandidate(artifact);
-      if (candidates.has(artifact.key)) throw new Error("recovery candidate keys must be unique");
-      candidates.set(artifact.key, artifact);
-    }
-    const state = this._loadState();
-    const retryItems = Object.values(state.items)
-      .filter((item) => candidates.has(item?.key) && item?.retry === true && item?.resolution_state === "lkg_primary");
-    if (retryItems.length === 0) return true;
-    for (const item of retryItems) {
-      const candidateValue = candidates.get(item.key);
-      const priorSource = item?.lkg?.source_as_of;
-      if (!candidateValue || typeof priorSource !== "string") return false;
-      const before = Date.parse(priorSource);
-      const after = Date.parse(candidateValue.sourceAsOf);
-      if (!Number.isFinite(before) || !Number.isFinite(after) || after <= before) return false;
-    }
-    return true;
-  }
-
-  promotableCandidates(artifacts, run = null) {
-    if (!Array.isArray(artifacts) || artifacts.length === 0) throw new Error("recovery candidates are required");
+    validateRun(run);
     const state = this._loadState();
     const seen = new Set();
-    return artifacts.filter((artifact) => {
-      validateCandidate(artifact);
+    return artifacts.map((artifact) => {
+      const inspected = validateCandidate(artifact, run);
       if (seen.has(artifact.key)) throw new Error("recovery candidate keys must be unique");
       seen.add(artifact.key);
       const item = state.items[artifact.key];
-      if (item?.retry !== true) return true;
-      if (!isNaturalScheduleRun(run)) return false;
-      if (item?.resolution_state !== "lkg_primary") return true;
-      const before = Date.parse(item?.lkg?.source_as_of);
+      if (item?.retry !== true) return { key: artifact.key, eligible: true, reason: "ok", artifact };
+      if (!isNaturalScheduleRun(run)) {
+        return { key: artifact.key, eligible: false, reason: "recovery_requires_schedule", artifact };
+      }
+      if (item?.resolution_state !== "lkg_primary") {
+        return { key: artifact.key, eligible: true, reason: "ok", artifact };
+      }
+      const retainedSource = item?.lkg?.source_as_of;
+      if (artifact.promotion_contract === PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2) {
+        const observation = artifact.provider_observation;
+        const containsObservation = observation.candidateContainsObservation(
+          inspected.document,
+          inspected.providerDocument,
+        ) === true;
+        if (artifact.sourceAsOf !== observation.source_as_of || !containsObservation) {
+          return { key: artifact.key, eligible: false, reason: "foreign_writer_conflict", artifact };
+        }
+        const before = Date.parse(retainedSource);
+        const after = Date.parse(observation.source_as_of);
+        return Number.isFinite(before) && Number.isFinite(after) && after > before
+          ? { key: artifact.key, eligible: true, reason: "ok", artifact }
+          : { key: artifact.key, eligible: false, reason: "recovery_not_advanced_by_provider", artifact };
+      }
+      const before = Date.parse(retainedSource);
       const after = Date.parse(artifact.sourceAsOf);
-      return Number.isFinite(before) && Number.isFinite(after) && after > before;
+      return Number.isFinite(before) && Number.isFinite(after) && after > before
+        ? { key: artifact.key, eligible: true, reason: "ok", artifact }
+        : { key: artifact.key, eligible: false, reason: "recovery_not_advanced", artifact };
     });
+  }
+
+  recoveryCandidateAdvances(artifacts, run) {
+    return this.evaluatePromotionCandidates(artifacts, run).every((decision) => decision.eligible);
+  }
+
+  promotableCandidates(artifacts, run) {
+    return this.evaluatePromotionCandidates(artifacts, run)
+      .filter((decision) => decision.eligible)
+      .map((decision) => decision.artifact);
+  }
+
+  recordPromotionDeferral({ artifacts, run, reason }) {
+    validateRun(run);
+    if (!Array.isArray(artifacts) || artifacts.length === 0) throw new Error("promotion deferral artifacts are required");
+    if (!["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
+      throw new Error("promotion deferral reason is invalid");
+    }
+    const keys = new Set();
+    for (const artifact of artifacts) {
+      validateCandidate(artifact, run);
+      if (keys.has(artifact.key)) throw new Error("promotion deferral artifact keys must be unique");
+      keys.add(artifact.key);
+    }
+    const state = this._loadState();
+    for (const key of keys) {
+      const item = state.items[key];
+      if (item?.retry !== true) throw new Error(`promotion deferral requires an active retry item for ${this.laneId}/${key}`);
+      item.latest_promotion_deferral = {
+        run_id: run.runId,
+        run_attempt: Number(run.runAttempt),
+        observed_at: run.observedAt,
+        reason,
+      };
+      item.updated_at = run.observedAt;
+    }
+    state.updated_at = run.observedAt;
+    writeJsonAtomic(this.statePath, state);
+    return { retrySet: [...state.retry_set], state };
   }
 
   recordSuccess({ artifacts, run }) {
@@ -328,12 +452,14 @@ export class LaneLkgStore {
     if (recovering && !isNaturalScheduleRun(run)) {
       throw new Error(`recovery promotion requires a natural schedule run for ${this.laneId}`);
     }
-    if (!this.recoveryCandidateAdvances(artifacts)) {
-      throw new Error(`recovery candidate does not advance beyond retained LKG for ${this.laneId}`);
+    const decisions = this.evaluatePromotionCandidates(artifacts, run);
+    const rejected = decisions.find((decision) => !decision.eligible);
+    if (rejected) {
+      throw new Error(`recovery promotion rejected for ${this.laneId}/${rejected.key}: ${rejected.reason}`);
     }
     const state = this._loadState();
     for (const artifact of artifacts) {
-      validateCandidate(artifact);
+      validateCandidate(artifact, run);
       const priorItem = state.items[artifact.key] ?? {};
       const latestFailure = priorItem.latest_failure;
       const current = {
@@ -348,7 +474,21 @@ export class LaneLkgStore {
         retry: false,
         current,
         updated_at: run.observedAt,
+        promotion_contract: artifact.promotion_contract,
       };
+      if (artifact.promotion_contract === PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2) {
+        const observation = artifact.provider_observation;
+        nextItem.provider_observation = {
+          schema_version: observation.schema_version,
+          payload_sha256: observation.payload_sha256,
+          source_as_of: observation.source_as_of,
+          run_id: observation.run_id,
+          run_attempt: observation.run_attempt,
+          observed_at: observation.observed_at,
+        };
+      } else {
+        delete nextItem.provider_observation;
+      }
       if (priorItem.resolution_state === "lkg_primary" && latestFailure?.run_id) {
         nextItem.recovered_from_run_id = latestFailure.run_id;
         nextItem.recovered_at = run.observedAt;
@@ -358,6 +498,7 @@ export class LaneLkgStore {
         nextItem.last_recovered_failure = latestFailure;
       }
       delete nextItem.latest_failure;
+      delete nextItem.latest_promotion_deferral;
       state.items[artifact.key] = nextItem;
     }
     state.updated_at = run.observedAt;

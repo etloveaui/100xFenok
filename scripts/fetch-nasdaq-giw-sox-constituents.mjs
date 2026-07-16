@@ -15,6 +15,8 @@ import {
 } from "./lib/data-supply-attempt-shard.mjs";
 import {
   LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
   classifyLkgFailure,
   isNaturalScheduleRun,
   systemicLkgFailureReason,
@@ -281,6 +283,15 @@ export async function runNasdaqGiwSox({
     sourceAsOf: soxSourceAsOf(payload),
     validateDocument: validSoxDocument,
     deriveSourceAsOf: soxSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: Buffer.from(serialized),
+      sourceAsOf: soxSourceAsOf(payload),
+      validateDocument: validSoxDocument,
+      deriveSourceAsOf: soxSourceAsOf,
+      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
+      run,
+    }),
   };
   if (!write) return { ok: true, reason: "ok", updated: false, attempt, payload, asOf: payload.as_of, rowCount: payload.row_count };
 
@@ -338,11 +349,16 @@ export async function runNasdaqGiwSox({
       };
     }
   }
-  const promotable = lkgStore.promotableCandidates([candidate], run);
+  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
+  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
+    const reason = decisions[0].reason;
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
+      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
+    }
     return {
       ok: false,
-      reason: "recovery_not_advanced",
+      reason,
       updated: false,
       attempt,
       retrySet: lkgStore.stateSnapshot().retry_set,

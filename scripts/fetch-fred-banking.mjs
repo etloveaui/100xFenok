@@ -17,7 +17,9 @@ import {
 } from "./lib/data-supply-attempt-shard.mjs";
 import {
   LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
+  buildProviderObservationV2,
   classifyLkgFailure,
   isNaturalScheduleRun,
   systemicLkgFailureReason,
@@ -279,13 +281,24 @@ export async function runFredBanking({
 
   const candidates = selectedGroups.map((group) => {
     const serialized = `${JSON.stringify(outputs[group.id], null, 2)}\n`;
+    const validateDocument = (document) => validBankingDocument(document, group);
+    const deriveSourceAsOf = (document) => bankingSourceAsOf(document, group);
     return {
       key: group.id,
       currentRelativePath: `data/macro/fred-banking-${group.id}.json`,
       payloadBytes: Buffer.from(serialized),
       sourceAsOf: outputs[group.id].source_as_of,
-      validateDocument: (document) => validBankingDocument(document, group),
-      deriveSourceAsOf: (document) => bankingSourceAsOf(document, group),
+      validateDocument,
+      deriveSourceAsOf,
+      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+      provider_observation: buildProviderObservationV2({
+        payloadBytes: Buffer.from(serialized),
+        sourceAsOf: outputs[group.id].source_as_of,
+        validateDocument,
+        deriveSourceAsOf,
+        candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
+        run,
+      }),
       serialized,
     };
   });
@@ -303,11 +316,17 @@ export async function runFredBanking({
       exitCode: 0,
     };
   }
-  const promotable = lkgStore.promotableCandidates(candidates, run);
+  const decisions = lkgStore.evaluatePromotionCandidates(candidates, run);
+  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
+  const rejected = decisions.filter((decision) => !decision.eligible);
+  for (const reason of ["foreign_writer_conflict", "recovery_not_advanced_by_provider"]) {
+    const artifacts = rejected.filter((decision) => decision.reason === reason).map((decision) => decision.artifact);
+    if (artifacts.length > 0) lkgStore.recordPromotionDeferral({ artifacts, run, reason });
+  }
   if (promotable.length === 0) {
     return {
       ok: false,
-      reason: "recovery_not_advanced",
+      reason: rejected.find((decision) => decision.reason === "foreign_writer_conflict")?.reason ?? rejected[0].reason,
       updated: false,
       attempt,
       retrySet: lkgStore.stateSnapshot().retry_set,
@@ -325,7 +344,9 @@ export async function runFredBanking({
   if (success.retrySet.length > 0) {
     return {
       ok: false,
-      reason: "recovery_not_advanced",
+      reason: rejected.find((decision) => decision.reason === "foreign_writer_conflict")?.reason
+        ?? rejected[0]?.reason
+        ?? "recovery_not_advanced_by_provider",
       updated: true,
       attempt,
       retrySet: success.retrySet,

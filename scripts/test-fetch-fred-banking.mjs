@@ -269,6 +269,7 @@ function assertValidShard(shard) {
   assert.deepEqual(recoveredState.retry_set, []);
   for (const key of failed.retrySet) {
     assert.equal(recoveredState.items[key].resolution_state, "fresh_primary");
+    assert.equal(recoveredState.items[key].promotion_contract, "provider_observation/v2");
     assert.equal(recoveredState.items[key].recovered_from_run_id, "controlled-failure-run");
   }
 

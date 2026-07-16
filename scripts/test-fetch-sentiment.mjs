@@ -35,7 +35,7 @@ assert.equal(SENTIMENT_LKG_SOURCE_FILES.cnn.length, 8);
 
 function resultRow(file, date, value) {
   const array = [{ date, value }];
-  return { file, array, action: "updated", before: 1, after: 1, sample: array[0] };
+  return { file, array, action: "updated", before: 1, after: 1, sample: array[0], providerRows: [array[0]] };
 }
 
 {
@@ -134,6 +134,7 @@ async function runCase(root, {
   for (const key of SENTIMENT_LKG_SOURCE_KEYS) {
     assert.equal(state.items[key].resolution_state, "fresh_primary");
     assert.equal(state.items[key].retry, false);
+    assert.equal(state.items[key].promotion_contract, "provider_observation/v2");
     assert.equal(fs.existsSync(path.join(root, "data", "admin", "sentiment", "current", `${key}.json`)), true);
   }
 }
@@ -181,7 +182,7 @@ async function runCase(root, {
     observedAt: "2026-07-16T00:00:00.000Z",
   });
   assert.equal(sameSource.ok, false);
-  assert.equal(sameSource.reason, "recovery_not_advanced");
+  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
   assert.equal(fs.readFileSync(canonicalVix, "utf8"), before);
 
   const recovered = await runCase(root, {
@@ -215,6 +216,83 @@ async function runCase(root, {
   assert.equal(failed.ok, false);
   assert.equal(failed.corrupt, true);
   assert.equal(failed.exitCode, 2, "controlled failure without retained source data is corruption");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-foreign-writer-"));
+  await runCase(root);
+  await runCase(root, {
+    date: "2026-07-15",
+    controlledFailureSource: "vix",
+    runId: "foreign-chaos-run",
+    observedAt: "2026-07-15T22:00:00.000Z",
+  });
+  const canonicalVix = path.join(root, "data", "sentiment", "vix.json");
+  const publicVix = path.join(root, "public", "data", "sentiment", "vix.json");
+  const foreignRows = [...readJson(canonicalVix), { date: "2026-07-16", value: 99 }];
+  const foreignBytes = `${JSON.stringify(foreignRows, null, 2)}\n`;
+  fs.writeFileSync(canonicalVix, foreignBytes);
+  fs.writeFileSync(publicVix, foreignBytes);
+
+  const conflict = await runCase(root, {
+    date: "2026-07-15",
+    eventName: "schedule",
+    runId: "foreign-schedule-run",
+    observedAt: "2026-07-16T22:00:00.000Z",
+    overrides: {
+      vix: async () => {
+        recordSentimentAttemptTuple(READY_TUPLE);
+        const providerRow = { date: "2026-07-15", value: 17 };
+        return [{
+          file: "vix.json",
+          array: [...foreignRows, providerRow].sort((a, b) => a.date.localeCompare(b.date)),
+          action: "appended",
+          before: foreignRows.length,
+          after: foreignRows.length + 1,
+          sample: providerRow,
+          providerRows: [providerRow],
+        }];
+      },
+    },
+  });
+  assert.equal(conflict.reason, "foreign_writer_conflict");
+  assert.equal(conflict.degraded, true);
+  assert.equal(conflict.corrupt, false);
+  assert.equal(conflict.exitCode, 0);
+  assert.deepEqual(conflict.retrySet, ["vix"]);
+  assert.equal(fs.readFileSync(canonicalVix, "utf8"), foreignBytes, "foreign canonical must not be overwritten");
+  assert.equal(fs.readFileSync(publicVix, "utf8"), foreignBytes);
+  const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
+  assert.equal(state.items.vix.resolution_state, "lkg_primary");
+  assert.equal(state.items.vix.latest_failure.run_id, "foreign-chaos-run", "deferral preserves failure lineage");
+  assert.equal(state.items.vix.latest_promotion_deferral.reason, "foreign_writer_conflict");
+  assert.equal(state.items.vix.latest_promotion_deferral.run_id, "foreign-schedule-run");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-cross-key-"));
+  await runCase(root);
+  await runCase(root, { controlledFailureSource: "cnn", runId: "chaos-cnn" });
+  await runCase(root, { controlledFailureSource: "cftc", runId: "chaos-cftc" });
+  const partial = await runCase(root, {
+    date: "2026-07-15",
+    eventName: "schedule",
+    runId: "cross-key-schedule",
+    observedAt: "2026-07-15T22:00:00.000Z",
+    overrides: {
+      cftc: async () => {
+        recordSentimentAttemptTuple(READY_TUPLE);
+        return [resultRow("cftc-sp500.json", "2026-07-14", 10)];
+      },
+    },
+  });
+  assert.equal(partial.degraded, true);
+  assert.deepEqual(partial.recoveredSources, ["cnn"], "one key may recover without laundering another key");
+  assert.deepEqual(partial.retrySet, ["cftc"]);
+  const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
+  assert.equal(state.items.cnn.resolution_state, "fresh_primary");
+  assert.equal(state.items.cnn.recovered_from_run_id, "chaos-cnn");
+  assert.equal(state.items.cftc.resolution_state, "lkg_primary");
 }
 
 {

@@ -17,7 +17,9 @@ import {
 } from "./lib/data-supply-attempt-shard.mjs";
 import {
   LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
+  buildProviderObservationV2,
   classifyLkgFailure,
   isNaturalScheduleRun,
   systemicLkgFailureReason,
@@ -202,6 +204,15 @@ export async function runFdicTier1({
     sourceAsOf: fdicSourceAsOf(output),
     validateDocument: validFdicDocument,
     deriveSourceAsOf: fdicSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: Buffer.from(serialized),
+      sourceAsOf: fdicSourceAsOf(output),
+      validateDocument: validFdicDocument,
+      deriveSourceAsOf: fdicSourceAsOf,
+      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
+      run,
+    }),
   };
   const recoveryState = lkgStore.stateSnapshot();
   if (recoveryState.items.fdic_tier1?.retry === true && !isNaturalScheduleRun(run)) {
@@ -216,11 +227,16 @@ export async function runFdicTier1({
       exitCode: 0,
     };
   }
-  const promotable = lkgStore.promotableCandidates([candidate], run);
+  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
+  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
+    const reason = decisions[0].reason;
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
+      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
+    }
     return {
       ok: false,
-      reason: "recovery_not_advanced",
+      reason,
       updated: false,
       attempt,
       retrySet: lkgStore.stateSnapshot().retry_set,

@@ -208,7 +208,7 @@ async function runCase(request) {
     runId: "same-source-run",
     sleep: async () => {},
   });
-  assert.equal(notAdvanced.reason, "recovery_not_advanced");
+  assert.equal(notAdvanced.reason, "recovery_not_advanced_by_provider");
   assert.equal(notAdvanced.degraded, true);
   assert.equal(readJson(statePath).items.fred_macro.resolution_state, "lkg_primary");
 
@@ -243,6 +243,7 @@ async function runCase(request) {
   const recoveredState = readJson(statePath);
   assert.deepEqual(recoveredState.retry_set, []);
   assert.equal(recoveredState.items.fred_macro.resolution_state, "fresh_primary");
+  assert.equal(recoveredState.items.fred_macro.promotion_contract, "provider_observation/v2");
   assert.equal(recoveredState.items.fred_macro.recovered_from_run_id, "controlled-failure-run");
 
   await assert.rejects(() => runFredMacro({

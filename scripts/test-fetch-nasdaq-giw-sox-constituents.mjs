@@ -308,7 +308,7 @@ for (const failureCase of [
     eventName: "schedule",
     publicMirror: false,
   });
-  assert.equal(sameSource.reason, "recovery_not_advanced");
+  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeRecovery);
 
   const recovered = await runNasdaqGiwSox({
@@ -327,6 +327,7 @@ for (const failureCase of [
   const state = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
   assert.deepEqual(state.retry_set, []);
   assert.equal(state.items.constituents.resolution_state, "fresh_primary");
+  assert.equal(state.items.constituents.promotion_contract, "provider_observation/v2");
   assert.equal(state.items.constituents.recovered_from_run_id, "sox-recovery-failure-run");
   assert.equal(state.items.constituents.recovery_run_id, "sox-natural-recovery-run");
   assert.equal(state.items.constituents.recovery_event_name, "schedule");

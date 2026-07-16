@@ -54,6 +54,8 @@ import {
 } from './lib/data-supply-attempt-shard.mjs';
 import {
   LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
   classifyLkgFailure,
   isNaturalScheduleRun,
 } from './lib/data-supply-lkg-store.mjs';
@@ -163,6 +165,14 @@ function round1(n) {
   return Math.round(n * 10) / 10;
 }
 
+function providerDate(value, label) {
+  const normalizedEpoch = typeof value === 'number'
+    ? (value < 1e12 ? value * 1000 : value)
+    : Date.parse(value);
+  if (!Number.isFinite(normalizedEpoch)) throw new Error(`${label}: missing provider timestamp`);
+  return new Date(normalizedEpoch).toISOString().slice(0, 10);
+}
+
 /**
  * Read the existing array from the FIRST output dir (the SSOT). Both mirrors
  * are kept identical, so the SSOT copy is authoritative for the merge base.
@@ -216,12 +226,13 @@ async function runCnn(readExistingFn = readExisting) {
   }
 
   const results = [];
+  const aggregateDate = providerDate(fg.timestamp, 'CNN fear_and_greed');
 
   // 1) cnn-fear-greed.json — {date, score: round1}
   {
-    const entry = { date: today, score: round1(fg.score) };
+    const entry = { date: aggregateDate, score: round1(fg.score) };
     const r = mergeByDate(readExistingFn('cnn-fear-greed.json'), entry);
-    results.push({ file: 'cnn-fear-greed.json', array: r.array, ...r, sample: entry });
+    results.push({ file: 'cnn-fear-greed.json', array: r.array, ...r, sample: entry, providerRows: [entry] });
   }
 
   // 2) cnn-components.json — 7 component scores (match existing shape)
@@ -241,7 +252,7 @@ async function runCnn(readExistingFn = readExisting) {
       }
     }
     const entry = {
-      date: today,
+      date: aggregateDate,
       market_momentum: round1(c.market_momentum.score),
       stock_strength: round1(c.stock_strength.score),
       stock_breadth: round1(c.stock_breadth.score),
@@ -251,7 +262,7 @@ async function runCnn(readExistingFn = readExisting) {
       junk_bond: round1(c.junk_bond.score),
     };
     const r = mergeByDate(readExistingFn('cnn-components.json'), entry);
-    results.push({ file: 'cnn-components.json', array: r.array, ...r, sample: entry });
+    results.push({ file: 'cnn-components.json', array: r.array, ...r, sample: entry, providerRows: [entry] });
   }
 
   // 3) cnn-put-call.json — {date, value, rating}
@@ -265,12 +276,12 @@ async function runCnn(readExistingFn = readExisting) {
       throw new Error('CNN proxy missing put_call_options.data tail');
     }
     const entry = {
-      date: today,
+      date: providerDate(last.x, 'CNN put_call_options tail'),
       value: Math.round(last.y * 100) / 100,
       rating: String(last.rating ?? pc.rating ?? '').toLowerCase(),
     };
     const r = mergeByDate(readExistingFn('cnn-put-call.json'), entry);
-    results.push({ file: 'cnn-put-call.json', array: r.array, ...r, sample: entry });
+    results.push({ file: 'cnn-put-call.json', array: r.array, ...r, sample: entry, providerRows: [entry] });
   }
 
   // 4) Individual CNN component files consumed by the legacy macro-monitor
@@ -283,12 +294,12 @@ async function runCnn(readExistingFn = readExisting) {
       throw new Error(`CNN proxy missing ${componentKey}.data tail`);
     }
     const entry = {
-      date: today,
+      date: providerDate(last.x, `CNN ${componentKey} tail`),
       value: Math.round(last.y * 100) / 100,
       rating: String(last.rating ?? component.rating ?? '').toLowerCase(),
     };
     const r = mergeByDate(readExistingFn(fileName), entry);
-    results.push({ file: fileName, array: r.array, ...r, sample: entry });
+    results.push({ file: fileName, array: r.array, ...r, sample: entry, providerRows: [entry] });
   }
 
   return results;
@@ -352,6 +363,7 @@ async function runYahooCloseSeries({ symbol, fileName, label, readExistingFn = r
     appended,
     updated,
     sample: lastSample,
+    providerRows: newPoints,
   }];
 }
 
@@ -389,7 +401,7 @@ async function runCftc(readExistingFn = readExisting) {
     openInterest,
   };
   const r = mergeByDate(readExistingFn('cftc-sp500.json'), entry);
-  return [{ file: 'cftc-sp500.json', array: r.array, ...r, sample: entry }];
+  return [{ file: 'cftc-sp500.json', array: r.array, ...r, sample: entry, providerRows: [entry] }];
 }
 
 async function runCrypto(readExistingFn = readExisting) {
@@ -410,7 +422,7 @@ async function runCrypto(readExistingFn = readExisting) {
     classification: String(row.value_classification ?? ''),
   };
   const r = mergeByDate(readExistingFn('crypto-fear-greed.json'), entry);
-  return [{ file: 'crypto-fear-greed.json', array: r.array, ...r, sample: entry }];
+  return [{ file: 'crypto-fear-greed.json', array: r.array, ...r, sample: entry, providerRows: [entry] }];
 }
 
 // ─── Orchestration ──────────────────────────────────────────────────────────────
@@ -458,6 +470,31 @@ function buildSourceBundle(key, fileNames, results) {
     source_as_of: sourceAsOf,
     files,
   };
+}
+
+function buildProviderBundle(key, fileNames, results) {
+  const byFile = new Map(results.map((result) => [result.file, result.providerRows]));
+  if (byFile.size !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(byFile.get(fileName)))) {
+    throw new Error(`${key}: incomplete or invalid current-run provider observation`);
+  }
+  const files = Object.fromEntries(fileNames.map((fileName) => [fileName, byFile.get(fileName)]));
+  const sourceAsOf = sourceAsOfFromFiles(files);
+  return {
+    schema_version: SENTIMENT_BUNDLE_SCHEMA,
+    source_key: key,
+    source_as_of: sourceAsOf,
+    files,
+  };
+}
+
+function sourceBundleContainsObservation(candidateDocument, providerDocument) {
+  if (candidateDocument?.source_key !== providerDocument?.source_key) return false;
+  return Object.entries(providerDocument.files ?? {}).every(([fileName, providerRows]) => {
+    const candidateRows = candidateDocument.files?.[fileName];
+    return Array.isArray(candidateRows) && providerRows.every((providerRow) => (
+      candidateRows.some((candidateRow) => JSON.stringify(candidateRow) === JSON.stringify(providerRow))
+    ));
+  });
 }
 
 function validSourceBundle(key, fileNames, document) {
@@ -524,14 +561,25 @@ function bundleArtifact(repoRoot, source) {
   };
 }
 
-function bundleCandidate(source, bundle, serialized) {
+function bundleCandidate(source, bundle, serialized, providerBundle, providerSerialized, run) {
+  const validateDocument = (document) => validSourceBundle(source.key, source.fileNames, document);
+  const deriveSourceAsOf = (document) => document?.source_as_of ?? null;
   return {
     key: source.key,
     currentRelativePath: currentBundleRelativePath(source.key),
     payloadBytes: Buffer.from(serialized),
     sourceAsOf: bundle.source_as_of,
-    validateDocument: (document) => validSourceBundle(source.key, source.fileNames, document),
-    deriveSourceAsOf: (document) => document?.source_as_of ?? null,
+    validateDocument,
+    deriveSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: Buffer.from(providerSerialized),
+      sourceAsOf: providerBundle.source_as_of,
+      validateDocument,
+      deriveSourceAsOf,
+      candidateContainsObservation: sourceBundleContainsObservation,
+      run,
+    }),
   };
 }
 
@@ -618,7 +666,9 @@ export async function runSentiment({
       if (source.lkg === true) {
         const bundle = buildSourceBundle(source.key, source.fileNames, results);
         const serialized = serializeBundle(bundle);
-        const candidate = bundleCandidate(source, bundle, serialized);
+        const providerBundle = buildProviderBundle(source.key, source.fileNames, results);
+        const providerSerialized = serializeBundle(providerBundle);
+        const candidate = bundleCandidate(source, bundle, serialized, providerBundle, providerSerialized, run);
         const before = lkgStore.stateSnapshot().items[source.key];
         if (before?.retry === true && !isNaturalScheduleRun(run)) {
           failedTracked.push({ source, reason: 'recovery_requires_schedule', requestFailed: false });
@@ -627,10 +677,15 @@ export async function runSentiment({
           failCount++;
           continue;
         }
-        if (lkgStore.promotableCandidates([candidate], run).length === 0) {
-          failedTracked.push({ source, reason: 'recovery_not_advanced', requestFailed: false });
+        const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
+        if (!decisions[0].eligible) {
+          const reason = decisions[0].reason;
+          if (['foreign_writer_conflict', 'recovery_not_advanced_by_provider'].includes(reason)) {
+            lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
+          }
+          failedTracked.push({ source, reason, requestFailed: false });
           classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
-          sourceOutcomes.push({ key: source.key, status: 'degraded', reason: 'recovery_not_advanced' });
+          sourceOutcomes.push({ key: source.key, status: 'degraded', reason });
           failCount++;
           continue;
         }

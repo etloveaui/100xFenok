@@ -18,7 +18,9 @@ import {
 } from "./lib/data-supply-attempt-shard.mjs";
 import {
   LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
+  buildProviderObservationV2,
   classifyLkgFailure,
   isNaturalScheduleRun,
   systemicLkgFailureReason,
@@ -210,6 +212,15 @@ export async function runDefillama({
     sourceAsOf: stablecoinsSourceAsOf(output),
     validateDocument: validStablecoinsDocument,
     deriveSourceAsOf: stablecoinsSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: Buffer.from(serialized),
+      sourceAsOf: stablecoinsSourceAsOf(output),
+      validateDocument: validStablecoinsDocument,
+      deriveSourceAsOf: stablecoinsSourceAsOf,
+      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
+      run,
+    }),
   };
   const state = lkgStore.stateSnapshot();
   if (state.items.stablecoins?.retry === true && !isNaturalScheduleRun(run)) {
@@ -224,11 +235,16 @@ export async function runDefillama({
       exitCode: 0,
     };
   }
-  const promotable = lkgStore.promotableCandidates([candidate], run);
+  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
+  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
+    const reason = decisions[0].reason;
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
+      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
+    }
     return {
       ok: false,
-      reason: "recovery_not_advanced",
+      reason,
       updated: false,
       attempt,
       retrySet: lkgStore.stateSnapshot().retry_set,

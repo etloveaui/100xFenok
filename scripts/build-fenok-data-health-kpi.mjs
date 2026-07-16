@@ -705,6 +705,7 @@ export function projectRecoveryRetrySet(state, laneId) {
     const failureObservedAt = item?.latest_failure?.observed_at;
     const failureReason = item?.latest_failure?.reason;
     const recoveredFromRunId = item?.recovered_from_run_id ?? null;
+    const deferral = item?.latest_promotion_deferral ?? null;
     if (!item || item.key !== key || item.retry !== true
       || !["lkg_primary", "unavailable"].includes(item.resolution_state)
       || typeof failureRunId !== "string" || failureRunId === ""
@@ -713,6 +714,13 @@ export function projectRecoveryRetrySet(state, laneId) {
       || typeof failureReason !== "string" || failureReason === ""
       || (recoveredFromRunId !== null && (typeof recoveredFromRunId !== "string" || recoveredFromRunId === ""))) {
       throw new Error(`detection floor ${laneId} recovery item ${key} is malformed`);
+    }
+    if (deferral !== null && (typeof deferral !== "object" || Array.isArray(deferral)
+      || !["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(deferral.reason)
+      || typeof deferral.run_id !== "string" || deferral.run_id === ""
+      || !Number.isInteger(deferral.run_attempt) || deferral.run_attempt < 1
+      || !isDetectionSourceStamp(deferral.observed_at))) {
+      throw new Error(`detection floor ${laneId} recovery deferral ${key} is malformed`);
     }
     if (item.resolution_state === "lkg_primary") {
       const current = item.current;
@@ -733,9 +741,20 @@ export function projectRecoveryRetrySet(state, laneId) {
       key,
       resolution_state: item.resolution_state,
       failure_run_id: failureRunId,
+      promotion_deferral_reason: deferral?.reason ?? null,
+      promotion_deferral_run_id: deferral?.run_id ?? null,
       recovered_from_run_id: recoveredFromRunId,
     };
   });
+}
+
+export function formatRecoveryRetryEvidence(items) {
+  return items.map((item) => {
+    const base = `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`;
+    return item.promotion_deferral_reason
+      ? `${base}; ${item.promotion_deferral_reason} at run ${item.promotion_deferral_run_id}`
+      : base;
+  }).join("; ");
 }
 
 export function projectRecoveryRecoveredSet(state, laneId) {
@@ -915,7 +934,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
         recoveryRetrySet.length === 0,
         recoveryRetrySet.length === 0
           ? "empty"
-          : recoveryRetrySet.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; "),
+          : formatRecoveryRetryEvidence(recoveryRetrySet),
       )]),
   ], {
     asOf: sourceAsOf,
@@ -1564,7 +1583,7 @@ export function buildRimLane(rimInputs, soxRecoveryState = null) {
       recoveryRetrySet.length === 0,
       recoveryRetrySet.length === 0
         ? "retry set is empty"
-        : recoveryRetrySet.map((item) => `${item.key} ${item.resolution_state} after run ${item.failure_run_id}`).join("; "),
+        : formatRecoveryRetryEvidence(recoveryRetrySet),
       { service_gate: false },
     ),
   );

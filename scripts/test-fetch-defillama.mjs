@@ -99,6 +99,7 @@ async function runCase(root, {
   const state = readJson(path.join(root, "data", "admin", DEFILLAMA_LANE_ID, "index.json"));
   assert.deepEqual(state.retry_set, []);
   assert.equal(state.items.stablecoins.resolution_state, "fresh_primary");
+  assert.equal(state.items.stablecoins.promotion_contract, "provider_observation/v2");
 }
 
 for (const failure of [
@@ -176,7 +177,7 @@ for (const failure of [
     runId: "same-source-run",
     observedAt: "2026-07-16T06:00:00.000Z",
   });
-  assert.equal(sameSource.reason, "recovery_not_advanced");
+  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
 
   const recovered = await runCase(root, {
     chartDate: "2026-07-16",
