@@ -12,6 +12,8 @@
       "fdic_tier1",
       "treasury_tga",
       "defillama_stablecoins",
+      "yahoo_etf_fallback",
+      "stockanalysis_etf_universe",
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
@@ -30,6 +32,8 @@
       "fdic_tier1",
       "treasury_tga",
       "defillama_stablecoins",
+      "yahoo_etf_fallback",
+      "stockanalysis_etf_universe",
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
@@ -46,9 +50,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "fa8d68dbb0e34ce88292c71435f642b8964b8800fbd34f891c96f32dc675ccc1",
-  "logical_lane_count": 16,
-  "producer_member_count": 20,
+  "config_digest": "e492fa016ebf0e6dc6b891f529a5cac04f214b9fb227d67dd7ebe3604d7f478b",
+  "logical_lane_count": 18,
+  "producer_member_count": 22,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -76,27 +80,27 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "69f5bbfb9e1b69abd89f88ddf4d9e4f158ae922be57e04dea46512932fc6534c",
+    "report_file_sha256": "52928cfc16dc4253bd3f6226067e79bc86463167f5e71a1756f23e2b91942f00",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "fa8d68dbb0e34ce88292c71435f642b8964b8800fbd34f891c96f32dc675ccc1",
-      "logical_lane_count": 16,
-      "producer_member_count": 20,
+      "config_digest": "e492fa016ebf0e6dc6b891f529a5cac04f214b9fb227d67dd7ebe3604d7f478b",
+      "logical_lane_count": 18,
+      "producer_member_count": 22,
       "counts": {
-        "ready": 13,
+        "ready": 15,
         "stale": 0,
         "drift": 0,
         "unavailable": 0,
         "unobserved": 3,
-        "producer_members_ready": 17,
+        "producer_members_ready": 19,
         "producer_members_stale": 0,
         "producer_members_drift": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3
       },
       "monitoring_mode_counts": {
-        "post_fetch_artifact": 12,
+        "post_fetch_artifact": 14,
         "artifact_only": 3,
         "composite": 1
       },
@@ -225,6 +229,8 @@
         {
           "id": "defillama_stablecoins",
           "label": "DefiLlama stablecoins",
+          "enforcement": "shadow",
+          "kpi_required": false,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -242,9 +248,55 @@
           },
           "affected_surface_ids": [
             "macro_stablecoins"
-          ],
+          ]
+        },
+        {
+          "id": "yahoo_etf_fallback",
+          "label": "Yahoo ETF fallback",
           "enforcement": "shadow",
-          "kpi_required": false
+          "kpi_required": false,
+          "monitoring_mode": "post_fetch_artifact",
+          "status": "ready",
+          "reason": "ok",
+          "endpoint": {
+            "status": "ready",
+            "reason": "ok",
+            "observed_at": "2026-07-11T00:00:00Z"
+          },
+          "artifact": {
+            "status": "ready",
+            "reason": "ok",
+            "source_as_of": null,
+            "age": null,
+            "unit": "calendar_days"
+          },
+          "affected_surface_ids": [
+            "stockanalysis_etf_detail_coverage"
+          ]
+        },
+        {
+          "id": "stockanalysis_etf_universe",
+          "label": "StockAnalysis ETF universe",
+          "enforcement": "shadow",
+          "kpi_required": false,
+          "monitoring_mode": "post_fetch_artifact",
+          "status": "ready",
+          "reason": "ok",
+          "endpoint": {
+            "status": "ready",
+            "reason": "ok",
+            "observed_at": "2026-07-11T00:00:00Z"
+          },
+          "artifact": {
+            "status": "ready",
+            "reason": "ok",
+            "source_as_of": null,
+            "age": null,
+            "unit": "calendar_days"
+          },
+          "affected_surface_ids": [
+            "stockanalysis_etf_universe"
+          ]
         },
         {
           "id": "yahoo_ticker_macro",

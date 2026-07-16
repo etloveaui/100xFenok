@@ -433,8 +433,8 @@ function runConfigAndFixtureChecks() {
   assert.doesNotMatch(fs.readFileSync(CONFIG_MODULE, "utf8"), networkPattern);
   assert.equal(validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG), true);
   assert.equal(Object.isFrozen(DATA_SUPPLY_DETECTION_CONFIG), true);
-  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, 16);
-  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 20);
+  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, 18);
+  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 22);
   assert.deepEqual(DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts").producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
   const treasuryTga = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "treasury_tga");
   const fredYardeni = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_yardeni");
@@ -519,6 +519,10 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].freshness.fold = "unknown"; },
     (value) => { value.lanes[0].freshness.unit = "unknown"; },
     (value) => { value.lanes[0].freshness.calendar = "unknown"; },
+    (value) => { value.lanes[0].freshness.source_basis = []; },
+    (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").freshness.source_basis = ["/collected_at"]; },
+    (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport = "http"; },
+    (value) => { value.lanes.find((item) => item.id === "yahoo_etf_fallback").endpoint_contract.transport = "unknown"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "../escape.json"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "data/**/*.json"; value.lanes[0].producer_members[0].artifact_contracts[0].selection = "all"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "data/bounded/*.json"; value.lanes[0].producer_members[0].artifact_contracts[0].selection = "single"; },
@@ -566,7 +570,7 @@ function runConfigAndFixtureChecks() {
     mutate(invalid);
     assert.throws(() => validateArtifactFixture(invalid));
   }
-  assert.equal(new Set(attemptsFixture.attempts.map((row) => `${row.lane_id}:${row.member_id ?? "_"}`)).size, 20);
+  assert.equal(new Set(attemptsFixture.attempts.map((row) => `${row.lane_id}:${row.member_id ?? "_"}`)).size, 22);
 }
 
 function shardDocument(laneId, source = attemptsFixture) {
@@ -588,7 +592,7 @@ function runAttemptShardChecks(artifactRoot) {
   const emptyMerged = loadAttemptShards({ shardRoot: empty.raw });
   assert.deepEqual(emptyMerged, { schema_version: ATTEMPT_SCHEMA, attempts: [] });
   const emptyReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: emptyMerged, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(emptyReport.lanes.filter((row) => row.endpoint.reason === "workflow_unobserved").length, 16, "empty private root keeps all lanes explicitly unobserved");
+  assert.equal(emptyReport.lanes.filter((row) => row.endpoint.reason === "workflow_unobserved").length, 18, "empty private root keeps all lanes explicitly unobserved");
 
   const root = makeOwnedRoot();
   writeShard(root, "treasury_tga");
@@ -771,8 +775,8 @@ function runAttemptChecks(artifactRoot) {
   missingScheduledRow.attempts = missingScheduledRow.attempts.filter((row) => row.lane_id !== "fred_macro");
   assert.equal(validateAttemptEvidence(missingScheduledRow), true);
   const missingScheduledReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: missingScheduledRow, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(missingScheduledReport.logical_lane_count, 16);
-  assert.equal(missingScheduledReport.producer_member_count, 20);
+  assert.equal(missingScheduledReport.logical_lane_count, 18);
+  assert.equal(missingScheduledReport.producer_member_count, 22);
   assert.equal(lane(missingScheduledReport, "fred_macro").endpoint.reason, "workflow_unobserved");
 
   const missingCompositeRow = clone(attemptsFixture);
@@ -780,8 +784,8 @@ function runAttemptChecks(artifactRoot) {
   assert.equal(validateAttemptEvidence(missingCompositeRow), true);
   const missingCompositeReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: missingCompositeRow, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   const missingWeekly = lane(missingCompositeReport, "slickcharts");
-  assert.equal(missingCompositeReport.logical_lane_count, 16);
-  assert.equal(missingCompositeReport.producer_member_count, 20);
+  assert.equal(missingCompositeReport.logical_lane_count, 18);
+  assert.equal(missingCompositeReport.producer_member_count, 22);
   assert.equal(missingWeekly.status, "unobserved");
   assert.equal(missingWeekly.reason, "workflow_unobserved");
   assert.equal(missingWeekly.members.find((member) => member.id === "weekly").endpoint.reason, "workflow_unobserved");
@@ -1207,8 +1211,8 @@ function runCliReproduction(artifactRoot) {
   assert.deepEqual(verifyDetectionReportFile({ reportPath }), {
     schema_version: expectedFixture.baseline.expected_report.schema_version,
     report_file_sha256: expectedFixture.baseline.report_file_sha256,
-    logical_lane_count: 16,
-    producer_member_count: 20,
+    logical_lane_count: 18,
+    producer_member_count: 22,
   });
   const verifyCli = spawnSync(process.execPath, [BUILDER, "--verify-report", reportPath], { cwd: REPO_ROOT, encoding: "utf8" });
   assert.equal(verifyCli.status, 0, verifyCli.stderr);
@@ -1279,6 +1283,10 @@ function runCliReproduction(artifactRoot) {
     const classifyAttempt = (row) => {
       if (!row || row.execution === "unobserved") return "workflow_unobserved";
       if (row.execution === "threw") return row.exception_kind === "transport" ? "transport_error" : "unexpected_error";
+      if (row.outcome === "no_fallback_candidates") return "ok";
+      if (row.outcome === "not_attempted") return "unexpected_error";
+      if (row.outcome === "error") return "unexpected_error";
+      if (row.outcome === "success") return row.assertions.some((assertion) => assertion.passed === false) ? "schema_drift" : "ok";
       if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) return "auth_error";
       if (row.http_status === 429) return "rate_limited";
       if (row.http_status < 200 || row.http_status >= 300) return "http_error";
@@ -1423,7 +1431,7 @@ function runCliReproduction(artifactRoot) {
     const logical = Object.fromEntries(statuses.map((status) => [status, 0]));
     const members = Object.fromEntries(statuses.map((status) => [status, 0]));
     const modes = { post_fetch_artifact: 0, artifact_only: 0, composite: 0 };
-    if (report.lanes.length !== 16) throw new Error("logical denominator mismatch");
+    if (report.lanes.length !== 18) throw new Error("logical denominator mismatch");
     for (const [laneIndex, lane] of report.lanes.entries()) {
       const laneConfig = config.lanes[laneIndex];
       if (lane.id !== laneConfig.id) throw new Error("lane/config identity mismatch");
@@ -1450,7 +1458,7 @@ function runCliReproduction(artifactRoot) {
       const derivedLane = derivedMembers.reduce((worst, row) => severity[row.status] > severity[worst.status] ? row : worst);
       if (lane.reason !== derivedLane.reason || lane.status !== derivedLane.status) throw new Error("independent lane fold mismatch for " + lane.id);
     }
-    if (Object.values(members).reduce((sum, value) => sum + value, 0) !== 20) throw new Error("member denominator mismatch");
+    if (Object.values(members).reduce((sum, value) => sum + value, 0) !== 22) throw new Error("member denominator mismatch");
     const counts = { ...logical, producer_members_ready: members.ready, producer_members_stale: members.stale, producer_members_drift: members.drift, producer_members_unavailable: members.unavailable, producer_members_unobserved: members.unobserved };
     if (canonical(counts) !== canonical(report.counts) || canonical(modes) !== canonical(report.monitoring_mode_counts)) throw new Error("aggregate mismatch");
     process.stdout.write(JSON.stringify({ config_digest: configDigest, report_file_sha256: reportDigest, logical_lanes: report.lanes.length, producer_members: Object.values(members).reduce((sum, value) => sum + value, 0) }) + "\n");
@@ -1464,8 +1472,8 @@ function runCliReproduction(artifactRoot) {
   assert.deepEqual(JSON.parse(verifier.stdout), {
     config_digest: expectedFixture.config_digest,
     report_file_sha256: expectedFixture.baseline.report_file_sha256,
-    logical_lanes: 16,
-    producer_members: 20,
+    logical_lanes: 18,
+    producer_members: 22,
   });
 
   const assertCliFailureBeforeOutput = (args, failureOutput) => {
@@ -1567,8 +1575,8 @@ function runCurrentRepositoryDryRun() {
     outputRoot: output.raw,
     tempToken: "0000000000000f00",
   });
-  assert.equal(result.report.logical_lane_count, 16);
-  assert.equal(result.report.producer_member_count, 20);
+  assert.equal(result.report.logical_lane_count, 18);
+  assert.equal(result.report.producer_member_count, 22);
   assert.deepEqual(result.report.lanes.map((row) => row.id), DATA_SUPPLY_DETECTION_CONFIG.lanes.map((row) => row.id));
   assert.equal(path.dirname(result.report_path), output.real);
   assert.deepEqual(fs.readdirSync(output.raw), [REPORT_BASENAME]);

@@ -310,6 +310,7 @@ jobs:
 
           python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
           python3 scripts/test_stockanalysis_recovery_state.py
+          node scripts/test-stockanalysis-attempt-emitter.mjs
           python3 -m unittest scripts/test_stockanalysis_surface_contract.py
           python3 scripts/test-stockanalysis-financials-fixtures.py
           python3 -m unittest scripts/test_audit_market_data.py
@@ -335,6 +336,12 @@ jobs:
             data/yf/etf-details \
             data/admin/data-supply-state/v1 \
             data/admin/stockanalysis-recovery
+          for SHARD in \
+            data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json \
+            data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json
+          do
+            if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
+          done
           git restore --staged --worktree -- \
             data/stockanalysis/backfill/history_gap_report_latest.json \
             data/yf/finance/_summary.json

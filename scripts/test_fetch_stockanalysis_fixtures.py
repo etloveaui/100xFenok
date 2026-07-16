@@ -59,6 +59,193 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
+    def test_attempt_tracker_emits_empty_yahoo_and_http_universe_with_distinct_ids(self) -> None:
+        original_run = self.fetcher.subprocess.run
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        self.fetcher.subprocess.run = fake_run
+        try:
+            tracker = self.fetcher.StockAnalysisAttemptTracker()
+            tracker.configure(active=True, yahoo_enabled=True, run_id="123", run_attempt=1)
+            tracker.start_universe()
+            tracker.record_universe_http(200, [{"ticker": "SPY", "name": "SPDR S&P 500 ETF Trust"}])
+            tracker.emit()
+        finally:
+            self.fetcher.subprocess.run = original_run
+
+        self.assertEqual(len(calls), 2)
+        by_lane = {
+            args[args.index("--lane") + 1]: (args, json.loads(kwargs["input"]))
+            for args, kwargs in calls
+        }
+        yahoo_args, yahoo = by_lane["yahoo_etf_fallback"]
+        universe_args, universe = by_lane["stockanalysis_etf_universe"]
+        self.assertEqual(yahoo["candidate_count"], 0)
+        self.assertEqual(yahoo["observations"], [])
+        self.assertEqual(universe["observations"][0]["status_code"], 200)
+        self.assertNotEqual(
+            yahoo_args[yahoo_args.index("--attempt-id") + 1],
+            universe_args[universe_args.index("--attempt-id") + 1],
+        )
+
+    def test_attempt_tracker_does_not_mislabel_disabled_gap_as_empty(self) -> None:
+        original_run = self.fetcher.subprocess.run
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        self.fetcher.subprocess.run = fake_run
+        try:
+            tracker = self.fetcher.StockAnalysisAttemptTracker()
+            tracker.configure(active=True, yahoo_enabled=False, run_id="124", run_attempt=1)
+            tracker.record_yahoo_candidate()
+            tracker.emit()
+        finally:
+            self.fetcher.subprocess.run = original_run
+
+        self.assertEqual(len(calls), 1)
+        envelope = json.loads(calls[0][1]["input"])
+        self.assertEqual(envelope["candidate_count"], 1)
+        self.assertFalse(envelope["fallback_enabled"])
+        self.assertEqual(envelope["observations"], [])
+
+    def test_attempt_tracker_emits_honest_empty_set_when_fallback_is_disabled(self) -> None:
+        original_run = self.fetcher.subprocess.run
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        self.fetcher.subprocess.run = fake_run
+        try:
+            tracker = self.fetcher.StockAnalysisAttemptTracker()
+            tracker.configure(active=True, yahoo_enabled=False, run_id="125", run_attempt=1)
+            tracker.emit()
+        finally:
+            self.fetcher.subprocess.run = original_run
+
+        self.assertEqual(len(calls), 1)
+        envelope = json.loads(calls[0][1]["input"])
+        self.assertEqual(envelope["candidate_count"], 0)
+        self.assertFalse(envelope["fallback_enabled"])
+        self.assertEqual(envelope["observations"], [])
+
+    def test_yahoo_normal_returned_error_preserves_execution_and_library_evidence(self) -> None:
+        original_loader = self.fetcher.load_yf_finance_module
+        original_tracker = self.fetcher.ATTEMPT_TRACKER
+
+        class ReturnedErrorYahooModule:
+            @staticmethod
+            def fetch_with_retry(*_args, **_kwargs):
+                return None, 17, "provider returned no data", {
+                    "attempts_used": 3,
+                    "latency_ms": 17,
+                    "failures": [],
+                }
+
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.configure(active=True, yahoo_enabled=True, run_id="126", run_attempt=1)
+        tracker.record_yahoo_candidate()
+        self.fetcher.ATTEMPT_TRACKER = tracker
+        self.fetcher.load_yf_finance_module = lambda: ReturnedErrorYahooModule
+        try:
+            with self.assertRaisesRegex(RuntimeError, "provider returned no data"):
+                self.fetcher.fetch_yahoo_etf_fallback("MISS", mirror_public=False)
+        finally:
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.ATTEMPT_TRACKER = original_tracker
+
+        self.assertEqual(tracker.yahoo_observations, [{
+            "execution": "returned",
+            "exception_kind": None,
+            "retry_count": 2,
+            "latency_ms": 17.0,
+            "outcome": "error",
+        }])
+
+    def test_universe_post_fetch_type_error_is_worst_folded(self) -> None:
+        original_fetch = self.fetcher.fetch_etf_universe
+        original_write = self.fetcher.write_payload
+        original_tracker = self.fetcher.ATTEMPT_TRACKER
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.configure(active=True, yahoo_enabled=False, run_id="127", run_attempt=1)
+        tracker.start_universe()
+        tracker.record_universe_http(200, [{"ticker": "SPY", "name": "SPY ETF"}])
+        self.fetcher.ATTEMPT_TRACKER = tracker
+        self.fetcher.fetch_etf_universe = lambda *_args, **_kwargs: {"records": []}
+        self.fetcher.write_payload = lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            TypeError("post-fetch write failed")
+        )
+        try:
+            with self.assertRaisesRegex(TypeError, "post-fetch write failed"):
+                self.fetcher.fetch_etf_universe_with_recovery(
+                    1,
+                    1,
+                    0,
+                    False,
+                    recovery_store=None,
+                    recovery_run=None,
+                )
+        finally:
+            self.fetcher.fetch_etf_universe = original_fetch
+            self.fetcher.write_payload = original_write
+            self.fetcher.ATTEMPT_TRACKER = original_tracker
+
+        self.assertEqual(tracker.universe_observations[-1], {
+            "execution": "threw",
+            "exception_kind": "unexpected",
+        })
+
+    def test_endpoint_canary_failure_emits_non_ready_r4_producer_failure(self) -> None:
+        original_canary = self.fetcher.run_endpoint_canary
+        original_write = self.fetcher.write_payload
+        original_run = self.fetcher.subprocess.run
+        original_argv = sys.argv
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        self.fetcher.run_endpoint_canary = lambda *_args, **_kwargs: {
+            "status": "blocked",
+            "counts": {"ready": 0, "probes": 1, "blocked": 1},
+        }
+        self.fetcher.write_payload = lambda *_args, **_kwargs: None
+        self.fetcher.subprocess.run = fake_run
+        sys.argv = [
+            "fetch-stockanalysis.py",
+            "--endpoint-canary",
+            "--stocks-only",
+            "--run-id",
+            "canary-test",
+        ]
+        try:
+            with self.assertRaises(SystemExit) as caught:
+                self.fetcher.main()
+        finally:
+            self.fetcher.run_endpoint_canary = original_canary
+            self.fetcher.write_payload = original_write
+            self.fetcher.subprocess.run = original_run
+            sys.argv = original_argv
+
+        self.assertEqual(caught.exception.code, 3)
+        self.assertEqual(len(calls), 1)
+        envelope = json.loads(calls[0][1]["input"])
+        self.assertEqual(envelope["candidate_count"], 0)
+        self.assertEqual(envelope["observations"], [])
+        self.assertEqual(envelope["producer_failure"], {
+            "execution": "threw",
+            "exception_kind": "unexpected",
+        })
+
     def test_svelte_devalue_surface_fixture(self) -> None:
         payload = json.loads((FIXTURE_DIR / "new_etfs__data.fixture.json").read_text(encoding="utf-8"))
         decoded = self.fetcher.extract_svelte_node(payload, ("data",))
@@ -2670,8 +2857,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         class FakeYahooModule:
             @staticmethod
-            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
-                return {
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
+                result = ({
                     "info": {
                         "symbol": "VYMI",
                         "quoteType": "ETF",
@@ -2681,7 +2868,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     },
                     "funds_data": {"top_holdings": []},
                     "history_1y": [],
-                }, 10, None
+                }, 10, None)
+                return (*result, {"attempts_used": 1, "latency_ms": 10, "failures": []}) if include_evidence else result
 
         try:
             for label, failure in (
@@ -2958,8 +3146,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         class FakeYahooModule:
             @staticmethod
-            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
-                return {
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
+                result = ({
                     "info": {
                         "symbol": "VYMI",
                         "quoteType": "ETF",
@@ -2969,7 +3157,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     },
                     "funds_data": {"top_holdings": []},
                     "history_1y": [],
-                }, 10, None
+                }, 10, None)
+                return (*result, {"attempts_used": 1, "latency_ms": 10, "failures": []}) if include_evidence else result
 
         try:
             with tempfile.TemporaryDirectory() as tmp:
@@ -3156,8 +3345,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         class FakeYahooModule:
             @staticmethod
-            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
-                return {"info": {"symbol": "ADIU", "quoteType": "EQUITY", "currentPrice": 14.5}}, 10, None
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
+                result = ({"info": {"symbol": "ADIU", "quoteType": "EQUITY", "currentPrice": 14.5}}, 10, None)
+                return (*result, {"attempts_used": 1, "latency_ms": 10, "failures": []}) if include_evidence else result
 
         self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
         try:
@@ -3195,11 +3385,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         class FakeYahooModule:
             @staticmethod
-            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
-                return {
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
+                result = ({
                     "info": {"symbol": "ADIU", "quoteType": "ETF", "currentPrice": 10},
                     "funds_data": {"asset_classes": ["malformed"]},
-                }, 10, None
+                }, 10, None)
+                return (*result, {"attempts_used": 1, "latency_ms": 10, "failures": []}) if include_evidence else result
 
         try:
             with tempfile.TemporaryDirectory() as tmp:
@@ -3234,8 +3425,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         class FakeYahooModule:
             @staticmethod
-            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
-                return {
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
+                result = ({
                     "info": {
                         "symbol": "ADIU",
                         "quoteType": "ETF",
@@ -3244,7 +3435,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     },
                     "funds_data": {"top_holdings": []},
                     "history_1y": [],
-                }, 10, None
+                }, 10, None)
+                return (*result, {"attempts_used": 1, "latency_ms": 10, "failures": []}) if include_evidence else result
 
         try:
             with tempfile.TemporaryDirectory() as tmp:

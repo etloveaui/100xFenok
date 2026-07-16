@@ -120,6 +120,43 @@
       ]
     },
     {
+      "lane_id": "yahoo_etf_fallback",
+      "member_id": null,
+      "attempt_id": "attempt-yahoo-etf-fallback",
+      "observed_at": "2026-07-11T00:00:00Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": null,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "not_attempted",
+      "payload": "empty",
+      "assertions": [],
+      "candidates": 0,
+      "retry_count": 0,
+      "latency_ms": 0,
+      "outcome": "no_fallback_candidates"
+    },
+    {
+      "lane_id": "stockanalysis_etf_universe",
+      "member_id": null,
+      "attempt_id": "attempt-stockanalysis-etf-universe",
+      "observed_at": "2026-07-11T00:00:00Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": 200,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "universe_rows",
+          "passed": true
+        }
+      ]
+    },
+    {
       "lane_id": "yahoo_ticker_macro",
       "member_id": null,
       "attempt_id": "attempt-yahoo-ticker",

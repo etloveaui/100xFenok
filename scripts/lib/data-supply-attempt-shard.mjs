@@ -64,6 +64,33 @@ export function returnedTuple({
   };
 }
 
+export function libraryTuple({
+  execution = "returned",
+  exceptionKind = null,
+  candidates,
+  retryCount,
+  latencyMs,
+  outcome,
+  decode = "not_attempted",
+  payload = "not_available",
+  assertions = [],
+}) {
+  return {
+    execution,
+    exception_kind: exceptionKind,
+    http_status: null,
+    auth: "not_applicable",
+    rate_limited: false,
+    decode,
+    payload,
+    assertions,
+    candidates,
+    retry_count: retryCount,
+    latency_ms: latencyMs,
+    outcome,
+  };
+}
+
 export function threwTuple(exceptionKind) {
   return {
     execution: "threw",
@@ -94,6 +121,12 @@ export function tupleStatus(tuple) {
   if (tuple?.execution === "unobserved") return "unobserved";
   if (tuple?.execution === "threw") return "unavailable";
   if (tuple?.execution !== "returned") throw new Error(`unknown tuple execution: ${tuple?.execution}`);
+  if (tuple.outcome === "no_fallback_candidates") return "ready";
+  if (tuple.outcome === "success") {
+    return tuple.assertions.some((assertion) => assertion.passed === false) ? "drift" : "ready";
+  }
+  if (tuple.outcome === "not_attempted") return "unavailable";
+  if (tuple.outcome === "error") return "unavailable";
   const status = tuple.http_status;
   if (status === 401 || status === 403 || status === 429 || status < 200 || status >= 300) return "unavailable";
   if (tuple.decode === "error") return "drift";
@@ -104,9 +137,14 @@ export function tupleStatus(tuple) {
 
 export function foldWorstTuples(tuples) {
   if (!Array.isArray(tuples) || tuples.length === 0) throw new Error("cannot fold an empty tuple list");
-  return tuples.reduce((worst, current) => (
-    STATUS_SEVERITY[tupleStatus(current)] > STATUS_SEVERITY[tupleStatus(worst)] ? current : worst
-  ));
+  return tuples.reduce((worst, current) => {
+    const currentSeverity = STATUS_SEVERITY[tupleStatus(current)];
+    const worstSeverity = STATUS_SEVERITY[tupleStatus(worst)];
+    if (currentSeverity > worstSeverity) return current;
+    if (currentSeverity < worstSeverity) return worst;
+    if (current.outcome && worst.outcome && current.candidates > worst.candidates) return current;
+    return worst;
+  });
 }
 
 export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, observedAt = null }) {
@@ -126,6 +164,12 @@ export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, obs
     payload: tuple.payload,
     assertions: tuple.assertions,
   };
+  if (Object.hasOwn(tuple, "outcome")) {
+    row.candidates = tuple.candidates;
+    row.retry_count = tuple.retry_count;
+    row.latency_ms = tuple.latency_ms;
+    row.outcome = tuple.outcome;
+  }
   validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] });
   return row;
 }
@@ -413,7 +457,7 @@ export function writeAttemptShard({ laneId, attemptShardPath, observedAt, attemp
 }
 
 function tupleFromAttemptRow(row) {
-  return {
+  const tuple = {
     execution: row.execution,
     exception_kind: row.exception_kind,
     http_status: row.http_status,
@@ -423,6 +467,13 @@ function tupleFromAttemptRow(row) {
     payload: row.payload,
     assertions: structuredClone(row.assertions),
   };
+  if (Object.hasOwn(row, "outcome")) {
+    tuple.candidates = row.candidates;
+    tuple.retry_count = row.retry_count;
+    tuple.latency_ms = row.latency_ms;
+    tuple.outcome = row.outcome;
+  }
+  return tuple;
 }
 
 export function writeMergedAttemptShard({

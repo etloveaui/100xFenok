@@ -72,6 +72,13 @@ const ATTEMPT_KEYS = Object.freeze([
   "payload",
   "assertions",
 ]);
+const LIBRARY_ATTEMPT_KEYS = Object.freeze([
+  ...ATTEMPT_KEYS,
+  "candidates",
+  "retry_count",
+  "latency_ms",
+  "outcome",
+]);
 const FAILPOINTS = new Set([
   "before_temp_open",
   "after_temp_open",
@@ -879,9 +886,10 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
   const seen = new Set();
   const attemptIds = new Set();
   for (const [index, row] of document.attempts.entries()) {
-    exactKeys(row, ATTEMPT_KEYS, `attempts[${index}]`);
     const lane = laneMap.get(row.lane_id);
     if (!lane) fail("schema_error", `unknown attempt lane ${row.lane_id}`);
+    const libraryTransport = lane.endpoint_contract.transport === "library";
+    exactKeys(row, libraryTransport ? LIBRARY_ATTEMPT_KEYS : ATTEMPT_KEYS, `attempts[${index}]`);
     const composite = lane.monitoring_mode === "composite";
     const memberIds = new Set(lane.producer_members.map((member) => member.id));
     if (composite ? !memberIds.has(row.member_id) : row.member_id !== null) fail("schema_error", `invalid attempt member for ${lane.id}`);
@@ -907,11 +915,56 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
       if (row.attempt_id !== null || row.observed_at !== null || row.exception_kind !== null || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
         fail("schema_error", `${key} unobserved tuple is contradictory`);
       }
+      if (libraryTransport && (row.candidates !== null || row.retry_count !== null || row.latency_ms !== null || row.outcome !== null)) {
+        fail("schema_error", `${key} unobserved library evidence is contradictory`);
+      }
     } else {
       if (typeof row.attempt_id !== "string" || !ATTEMPT_IDENTIFIER.test(row.attempt_id) || attemptIds.has(row.attempt_id)) fail("schema_error", `${key} attempt_id is invalid/duplicate`);
       attemptIds.add(row.attempt_id);
       strictUtc(row.observed_at, `${key}.observed_at`);
-      if (row.execution === "threw") {
+      if (libraryTransport) {
+        if (row.http_status !== null) fail("schema_error", `${key} library tuple fabricates an HTTP status`);
+        if (!Number.isSafeInteger(row.candidates) || row.candidates < 0
+          || !Number.isSafeInteger(row.retry_count) || row.retry_count < 0
+          || !Number.isFinite(row.latency_ms) || row.latency_ms < 0
+          || !new Set(["success", "no_fallback_candidates", "not_attempted", "error"]).has(row.outcome)) {
+          fail("schema_error", `${key} library evidence is invalid`);
+        }
+        if (row.execution === "threw") {
+          if (row.outcome !== "error"
+            || !new Set(["transport", "unexpected"]).has(row.exception_kind)
+            || row.auth !== "not_applicable" || row.rate_limited
+            || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
+            fail("schema_error", `${key} threw library tuple is contradictory`);
+          }
+        } else if (row.outcome === "no_fallback_candidates") {
+          if (row.candidates !== 0 || row.retry_count !== 0 || row.latency_ms !== 0
+            || row.exception_kind !== null || row.auth !== "not_applicable" || row.rate_limited
+            || row.decode !== "not_attempted" || row.payload !== "empty" || row.assertions.length) {
+            fail("schema_error", `${key} empty-candidate library tuple is contradictory`);
+          }
+        } else if (row.outcome === "success") {
+          if (row.candidates < 1 || row.exception_kind !== null
+            || row.auth !== "not_applicable" || row.rate_limited
+            || row.decode !== "ok" || row.payload !== "non_empty" || !hasExactAssertions) {
+            fail("schema_error", `${key} successful library tuple is contradictory`);
+          }
+        } else if (row.outcome === "not_attempted") {
+          if (row.candidates < 1 || row.retry_count !== 0 || row.latency_ms !== 0
+            || row.exception_kind !== null || row.auth !== "not_applicable" || row.rate_limited
+            || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
+            fail("schema_error", `${key} unattempted library tuple is contradictory`);
+          }
+        } else if (row.outcome === "error") {
+          if (row.candidates < 1 || row.exception_kind !== null
+            || row.auth !== "not_applicable" || row.rate_limited
+            || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
+            fail("schema_error", `${key} returned library error tuple is contradictory`);
+          }
+        } else {
+          fail("schema_error", `${key} returned library tuple has an unsupported outcome`);
+        }
+      } else if (row.execution === "threw") {
         if (!new Set(["transport", "unexpected"]).has(row.exception_kind) || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} threw tuple is contradictory`);
       } else {
         if (row.exception_kind !== null || !Number.isInteger(row.http_status) || row.http_status < 100 || row.http_status > 599) fail("schema_error", `${key} returned tuple is invalid`);
@@ -988,6 +1041,13 @@ export function loadAttemptShards({ shardRoot, config = DATA_SUPPLY_DETECTION_CO
 export function classifyAttempt(row) {
   if (!row || row.execution === "unobserved") return reasonResult("workflow_unobserved", { observed_at: null });
   if (row.execution === "threw") return reasonResult(row.exception_kind === "transport" ? "transport_error" : "unexpected_error", { observed_at: row.observed_at });
+  if (row.outcome === "no_fallback_candidates") return reasonResult("ok", { observed_at: row.observed_at });
+  if (row.outcome === "not_attempted") return reasonResult("unexpected_error", { observed_at: row.observed_at });
+  if (row.outcome === "error") return reasonResult("unexpected_error", { observed_at: row.observed_at });
+  if (row.outcome === "success") {
+    if (row.assertions.some((assertion) => assertion.passed === false)) return reasonResult("schema_drift", { observed_at: row.observed_at });
+    return reasonResult("ok", { observed_at: row.observed_at });
+  }
   if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) {
     return reasonResult("auth_error", { observed_at: row.observed_at });
   }

@@ -30,6 +30,7 @@ import math
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 import time
 import urllib.error
@@ -55,10 +56,137 @@ YF_PUBLIC_DIR = ROOT / "100xfenok-next" / "public" / "data" / "yf" / "finance"
 YF_ETF_DETAIL_OUT_DIR = ROOT / "data" / "yf" / "etf-details"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 STOCKANALYSIS_RECOVERY_ROOT = ROOT / "data" / "admin" / "stockanalysis-recovery"
+STOCKANALYSIS_ATTEMPT_EMITTER = SCRIPT_DIR / "emit-stockanalysis-attempt.mjs"
 SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
+
+
+class StockAnalysisAttemptTracker:
+    def __init__(self) -> None:
+        self.active = False
+        self.yahoo_enabled = False
+        self.run_id = "local"
+        self.run_attempt = 1
+        self.yahoo_candidates = 0
+        self.yahoo_observations: list[dict] = []
+        self.yahoo_producer_failure: dict | None = None
+        self.universe_started = False
+        self.universe_observations: list[dict] = []
+
+    def configure(self, *, active: bool, yahoo_enabled: bool, run_id: str, run_attempt: int) -> None:
+        self.active = active
+        self.yahoo_enabled = yahoo_enabled
+        self.run_id = str(run_id)
+        self.run_attempt = int(run_attempt)
+
+    def record_yahoo_candidate(self) -> None:
+        if self.active:
+            self.yahoo_candidates += 1
+
+    def record_yahoo_success(self, document: dict, *, retry_count: int, latency_ms: float) -> None:
+        if self.active:
+            self.yahoo_observations.append({
+                "execution": "returned",
+                "retry_count": retry_count,
+                "latency_ms": latency_ms,
+                "outcome": "success",
+                "document": document,
+            })
+
+    def record_yahoo_error(self, *, exception_kind: str, retry_count: int, latency_ms: float) -> None:
+        if self.active:
+            self.yahoo_observations.append({
+                "execution": "threw",
+                "exception_kind": exception_kind,
+                "retry_count": retry_count,
+                "latency_ms": latency_ms,
+                "outcome": "error",
+            })
+
+    def record_yahoo_returned_error(self, *, retry_count: int, latency_ms: float) -> None:
+        if self.active:
+            self.yahoo_observations.append({
+                "execution": "returned",
+                "exception_kind": None,
+                "retry_count": retry_count,
+                "latency_ms": latency_ms,
+                "outcome": "error",
+            })
+
+    def record_yahoo_producer_failure(self, exception_kind: str) -> None:
+        if self.active and self.yahoo_candidates == 0 and not self.yahoo_observations:
+            self.yahoo_producer_failure = {
+                "execution": "threw",
+                "exception_kind": exception_kind,
+            }
+
+    def start_universe(self) -> None:
+        if self.active:
+            self.universe_started = True
+
+    def record_universe_http(self, status_code: int, rows: list[dict] | None = None) -> None:
+        if self.active:
+            self.universe_observations.append({
+                "status_code": int(status_code),
+                "document": {"rows": rows or []},
+            })
+
+    def record_universe_error(self, exception_kind: str) -> None:
+        if self.active:
+            self.universe_observations.append({
+                "execution": "threw",
+                "exception_kind": exception_kind,
+            })
+
+    def _emit(self, lane_id: str, envelope: dict, prefix: str) -> None:
+        attempt_id = f"stockanalysis-{prefix}-{self.run_id}-{self.run_attempt}".lower()
+        subprocess.run(
+            [
+                "node",
+                str(STOCKANALYSIS_ATTEMPT_EMITTER),
+                "--lane",
+                lane_id,
+                "--attempt-id",
+                attempt_id,
+                "--observed-at",
+                now_iso(),
+                "--shard-root",
+                str(DATA_SUPPLY_STATE_ROOT.parent / "detection-attempts"),
+            ],
+            input=json.dumps(envelope, separators=(",", ":")),
+            text=True,
+            check=True,
+        )
+
+    def emit(self) -> None:
+        if not self.active:
+            return
+        yahoo_envelope = {
+            "transport": "library",
+            "candidate_count": self.yahoo_candidates,
+            "fallback_enabled": self.yahoo_enabled,
+            "observations": self.yahoo_observations,
+        }
+        if self.yahoo_producer_failure is not None:
+            yahoo_envelope["producer_failure"] = self.yahoo_producer_failure
+        self._emit(
+            "yahoo_etf_fallback",
+            yahoo_envelope,
+            "yahoo",
+        )
+        if self.universe_started:
+            if not self.universe_observations:
+                self.record_universe_error("unexpected")
+            self._emit(
+                "stockanalysis_etf_universe",
+                {"transport": "http", "observations": self.universe_observations},
+                "universe",
+            )
+
+
+ATTEMPT_TRACKER = StockAnalysisAttemptTracker()
 DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
@@ -956,11 +1084,17 @@ def fetch_history_periods(asset_prefix: str, ticker: str, timeout: int) -> tuple
     return paths, {key: pick_data(fetch_json(path, timeout)) for key, path in paths.items()}
 
 
-def fetch_text(rel_path: str, timeout: int) -> str:
+def fetch_text_response(rel_path: str, timeout: int) -> tuple[str, int]:
     url = f"{BASE_URL}{rel_path}"
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return response.read().decode("utf-8", errors="replace")
+        status = response.status if isinstance(getattr(response, "status", None), int) else response.getcode()
+        return response.read().decode("utf-8", errors="replace"), int(status)
+
+
+def fetch_text(rel_path: str, timeout: int) -> str:
+    body, _status = fetch_text_response(rel_path, timeout)
+    return body
 
 
 def pick_data(payload: dict) -> dict | list | None:
@@ -1892,6 +2026,7 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
     warnings = []
     path = "/etf/"
     next_path = None
+    ATTEMPT_TRACKER.start_universe()
 
     for page_idx in range(1, max_pages + 1):
         page = 1
@@ -1900,8 +2035,20 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
             page = int(match.group(1))
 
         start = time.perf_counter()
-        html = fetch_text(path, timeout)
-        rows = parse_etf_universe_page(html, page)
+        try:
+            html, status_code = fetch_text_response(path, timeout)
+        except urllib.error.HTTPError as exc:
+            ATTEMPT_TRACKER.record_universe_http(exc.code)
+            raise
+        except (urllib.error.URLError, TimeoutError, OSError):
+            ATTEMPT_TRACKER.record_universe_error("transport")
+            raise
+        try:
+            rows = parse_etf_universe_page(html, page)
+        except Exception:
+            ATTEMPT_TRACKER.record_universe_http(status_code, [])
+            raise
+        ATTEMPT_TRACKER.record_universe_http(status_code, rows)
         next_path = next_etf_page_path(html)
         if not rows:
             raise RuntimeError(f"No ETF rows parsed from {path}")
@@ -1927,6 +2074,7 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         time.sleep(sleep)
 
     if next_path:
+        ATTEMPT_TRACKER.record_universe_error("unexpected")
         raise RuntimeError(
             f"ETF universe pagination exceeded max_pages={max_pages}; "
             "refusing to publish a truncated discovery"
@@ -1968,6 +2116,7 @@ def fetch_etf_universe_with_recovery(
     recovery_run: dict | None,
 ) -> dict | None:
     entity = "etf_universe"
+    payload = None
     try:
         payload = fetch_etf_universe(max_pages, timeout, sleep)
         if recovery_store is not None and not recovery_store.recovery_candidate_advances(
@@ -1980,14 +2129,17 @@ def fetch_etf_universe_with_recovery(
         if recovery_store is not None and recovery_run is not None:
             recovery_store.record_success("universe", entity, payload, recovery_run)
         return payload
-    except (
-        urllib.error.URLError,
-        TimeoutError,
-        OSError,
-        json.JSONDecodeError,
-        ValueError,
-        RuntimeError,
-    ) as exc:
+    except Exception as exc:
+        ATTEMPT_TRACKER.record_universe_error("unexpected")
+        if not isinstance(exc, (
+            urllib.error.URLError,
+            TimeoutError,
+            OSError,
+            json.JSONDecodeError,
+            ValueError,
+            RuntimeError,
+        )):
+            raise
         if recovery_store is None or recovery_run is None:
             raise
         recovery_store.record_failure(
@@ -4313,46 +4465,81 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
 
 
 def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
-    module = load_yf_finance_module()
-    data, _latency_ms, error = module.fetch_with_retry(ticker, profile="etf", retries=0, backoffs=())
-    if error is not None or data is None:
-        raise RuntimeError(error or "Yahoo fallback returned no data")
-    fetched_at = now_iso()
-    yf_payload = build_yf_payload(ticker, data, fetched_at)
-    raw_payload = write_yf_payload(ticker, data, mirror_public, fetched_at)
+    retry_count = 0
+    library_latency_ms = 0
+    returned_error_recorded = False
     try:
+        module = load_yf_finance_module()
+        data, _latency_ms, error, evidence = module.fetch_with_retry(
+            ticker,
+            profile="etf",
+            retries=0,
+            backoffs=(),
+            include_evidence=True,
+        )
+        retry_count = max(0, int((evidence or {}).get("attempts_used") or 1) - 1)
+        library_latency_ms = max(
+            0,
+            float((evidence or {}).get("latency_ms") or _latency_ms or 0),
+        )
+        if error is not None or data is None:
+            ATTEMPT_TRACKER.record_yahoo_returned_error(
+                retry_count=retry_count,
+                latency_ms=library_latency_ms,
+            )
+            returned_error_recorded = True
+            raise RuntimeError(error or "Yahoo fallback returned no data")
+        fetched_at = now_iso()
+        yf_payload = build_yf_payload(ticker, data, fetched_at)
+        raw_payload = write_yf_payload(ticker, data, mirror_public, fetched_at)
         etf_payload = yahoo_etf_payload(ticker, yf_payload)
         candidate_path = write_yf_etf_detail_payload(ticker, etf_payload)
-    except ValueError as exc:
-        record_etf_detail_failure_observation(
+        record_etf_detail_observation(
             provider="yahoo_finance",
             endpoint_family="yahoo_etf_detail",
             ticker=ticker,
-            provider_path=f"data/yf/finance/{ticker}.json",
-            provider_schema=raw_payload["schema_version"],
-            reason_code=(
-                "source_date_unavailable"
-                if "source date is unavailable" in str(exc)
-                else "source_date_mismatch"
-                if "disagrees with provider evidence" in str(exc)
-                else "normalization_invalid"
-            ),
-            failure_detail=f"{type(exc).__name__}: {exc}",
+            provider_path=f"data/yf/etf-details/{ticker}.json",
+            payload_path=candidate_path,
+            provider_schema=etf_payload["schema_version"],
+            source_as_of=etf_payload["source_as_of"],
+            observed_at=fetched_at,
+            validation_status="valid",
+            reason_code="contract_valid",
         )
+        ATTEMPT_TRACKER.record_yahoo_success(
+            data,
+            retry_count=retry_count,
+            latency_ms=library_latency_ms,
+        )
+        return etf_payload
+    except Exception as exc:
+        if not returned_error_recorded:
+            ATTEMPT_TRACKER.record_yahoo_error(
+                exception_kind=(
+                    "transport"
+                    if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
+                    else "unexpected"
+                ),
+                retry_count=retry_count,
+                latency_ms=library_latency_ms,
+            )
+        if isinstance(exc, ValueError):
+            record_etf_detail_failure_observation(
+                provider="yahoo_finance",
+                endpoint_family="yahoo_etf_detail",
+                ticker=ticker,
+                provider_path=f"data/yf/finance/{ticker}.json",
+                provider_schema="yf-finance/v2",
+                reason_code=(
+                    "source_date_unavailable"
+                    if "source date is unavailable" in str(exc)
+                    else "source_date_mismatch"
+                    if "disagrees with provider evidence" in str(exc)
+                    else "normalization_invalid"
+                ),
+                failure_detail=f"{type(exc).__name__}: {exc}",
+            )
         raise
-    record_etf_detail_observation(
-        provider="yahoo_finance",
-        endpoint_family="yahoo_etf_detail",
-        ticker=ticker,
-        provider_path=f"data/yf/etf-details/{ticker}.json",
-        payload_path=candidate_path,
-        provider_schema=etf_payload["schema_version"],
-        source_as_of=etf_payload["source_as_of"],
-        observed_at=fetched_at,
-        validation_status="valid",
-        reason_code="contract_valid",
-    )
-    return etf_payload
 
 
 def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | None:
@@ -4449,6 +4636,7 @@ def run_one(
             except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
                 stockanalysis_error = f"{type(exc).__name__}: {exc}"
                 provider_gap = is_expected_missing_error(stockanalysis_error)
+                ATTEMPT_TRACKER.record_yahoo_candidate()
                 failure_reason = (
                     "endpoint_missing"
                     if provider_gap
@@ -4815,7 +5003,7 @@ def finalize_recovery_state(
     return index, assessment
 
 
-def main() -> None:
+def _main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--etfs", default="", help="comma-separated ETF override; default focus ETF list")
     parser.add_argument("--stocks", default="", help="comma-separated stock symbols")
@@ -4922,27 +5110,10 @@ def main() -> None:
         "natural": args.natural_run,
         "observed_at": now_iso(),
     }
-    if args.endpoint_canary:
-        canary = run_endpoint_canary(args.timeout)
-        write_payload(ENDPOINT_CANARY_REL_PATH, canary, mirror_public)
-        print(
-            "[endpoint-canary] "
-            f"ready={canary['counts']['ready']}/{canary['counts']['probes']} "
-            f"blocked={canary['counts']['blocked']} status={canary['status']}",
-            flush=True,
-        )
-        if canary["status"] != "ready":
-            raise SystemExit(3)
-    required_history_periods = (
-        parse_history_periods(args.required_history_periods)
-        if args.required_history_periods
-        else DEFAULT_HISTORY_GAP_PERIODS
-        if args.history_gaps_only
-        else ()
-    )
     classify_catalogs_requested = args.classify_etf_catalogs
     no_other_work = not any(
         (
+            args.endpoint_canary,
             args.discover_etf_universe,
             args.fetch_surfaces,
             args.universe_backfill,
@@ -4954,6 +5125,41 @@ def main() -> None:
             args.stocks,
             args.fetch_financials,
         )
+    )
+    ATTEMPT_TRACKER.configure(
+        active=not args.plan_only and not args.coverage_only and not (
+            classify_catalogs_requested and no_other_work
+        ),
+        yahoo_enabled=args.yf_etf_fallback,
+        run_id=args.run_id,
+        run_attempt=args.run_attempt,
+    )
+    if args.endpoint_canary:
+        try:
+            canary = run_endpoint_canary(args.timeout)
+            write_payload(ENDPOINT_CANARY_REL_PATH, canary, mirror_public)
+            print(
+                "[endpoint-canary] "
+                f"ready={canary['counts']['ready']}/{canary['counts']['probes']} "
+                f"blocked={canary['counts']['blocked']} status={canary['status']}",
+                flush=True,
+            )
+        except Exception as exc:
+            ATTEMPT_TRACKER.record_yahoo_producer_failure(
+                "transport"
+                if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
+                else "unexpected"
+            )
+            raise
+        if canary["status"] != "ready":
+            ATTEMPT_TRACKER.record_yahoo_producer_failure("unexpected")
+            raise SystemExit(3)
+    required_history_periods = (
+        parse_history_periods(args.required_history_periods)
+        if args.required_history_periods
+        else DEFAULT_HISTORY_GAP_PERIODS
+        if args.history_gaps_only
+        else ()
     )
     if classify_catalogs_requested and no_other_work:
         classification_summary = classify_existing_etf_catalogs(mirror_public)
@@ -5352,6 +5558,14 @@ def main() -> None:
         raise SystemExit(recovery_assessment["exit_code"])
     if args.fail_on_error and summary["counts"]["failed"]:
         raise SystemExit(1)
+
+
+def main() -> None:
+    ATTEMPT_TRACKER.__init__()
+    try:
+        _main()
+    finally:
+        ATTEMPT_TRACKER.emit()
 
 
 if __name__ == "__main__":

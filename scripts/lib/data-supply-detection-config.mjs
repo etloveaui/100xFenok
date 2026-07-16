@@ -7,6 +7,8 @@ const LANE_IDS = Object.freeze([
   "fdic_tier1",
   "treasury_tga",
   "defillama_stablecoins",
+  "yahoo_etf_fallback",
+  "stockanalysis_etf_universe",
   "yahoo_ticker_macro",
   "sentiment",
   "nasdaq_giw_sox",
@@ -42,6 +44,8 @@ const MEMBER_IDS = Object.freeze([
   "fdic_tier1",
   "treasury_tga",
   "defillama_stablecoins",
+  "yahoo_etf_fallback",
+  "stockanalysis_etf_universe",
   "yahoo_ticker_macro",
   "sentiment",
   "nasdaq_giw_sox",
@@ -216,12 +220,14 @@ function endpoint(endpointFamily, assertionId = null, pointer = null, expected =
   };
 }
 
-function endpointAssertion(endpointFamily, assertion) {
-  return {
+function endpointAssertion(endpointFamily, assertion, transport = null) {
+  const contract = {
     endpoint_family: endpointFamily,
     probe_mode: "injected_post_fetch",
     assertions: [assertion],
   };
+  if (transport !== null) contract.transport = transport;
+  return contract;
 }
 
 function endpointAssertions(endpointFamily, assertions) {
@@ -277,8 +283,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 16,
-  producer_member_count: 20,
+  logical_lane_count: 18,
+  producer_member_count: 22,
   lanes: [
     lane({
       id: "fred_macro",
@@ -422,6 +428,64 @@ const config = {
       ]),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_stablecoins"],
+    }),
+    lane({
+      id: "yahoo_etf_fallback",
+      label: "Yahoo ETF fallback",
+      ownerWorkflow: ".github/workflows/fetch-stockanalysis.yml",
+      members: [member("yahoo_etf_fallback", ".github/workflows/fetch-stockanalysis.yml", [
+        "50 22 * * 1-5",
+        "50 23 * * 1-5",
+        "20 23 * * 0",
+      ], [
+        artifact("yahoo_etf_fallback_coverage", "data/stockanalysis/coverage/etf_detail.json", {
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis/v1"),
+          sourceSelector: notApplicableSource(),
+          assertions: [
+            exactAssertion("source_stockanalysis", "/source", "stockanalysis"),
+            exactAssertion("asset_type_etf_detail_coverage", "/asset_type", "etf_detail_coverage"),
+            typeAssertion("counts_object", "/counts", "object"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertion(
+        "yfinance_etf_library",
+        objectFieldsAssertion("yahoo_etf_identity", "/info", {
+          symbol: "string",
+          quoteType: "string",
+        }),
+        "library",
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
+      affectedSurfaceIds: ["stockanalysis_etf_detail_coverage"],
+    }),
+    lane({
+      id: "stockanalysis_etf_universe",
+      label: "StockAnalysis ETF universe",
+      ownerWorkflow: ".github/workflows/fetch-stockanalysis.yml",
+      members: [member("stockanalysis_etf_universe", ".github/workflows/fetch-stockanalysis.yml", ["20 23 * * 0"], [
+        artifact("stockanalysis_etf_universe", "data/stockanalysis/etf_universe.json", {
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis/v1"),
+          sourceSelector: notApplicableSource(),
+          assertions: [
+            exactAssertion("source_stockanalysis", "/source", "stockanalysis"),
+            exactAssertion("asset_type_etf", "/asset_type", "etf"),
+            typeAssertion("records_array", "/records", "array"),
+            minRowsAssertion("records_non_empty", "/records"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertion(
+        "stockanalysis_etf_list_html",
+        objectArrayFieldsAssertion("universe_rows", "/rows", {
+          fields: { ticker: "string", name: "string" },
+          min: 1,
+          nonEmptyFields: ["ticker", "name"],
+          uniqueBy: "ticker",
+        }),
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
+      affectedSurfaceIds: ["stockanalysis_etf_universe"],
     }),
     lane({
       id: "yahoo_ticker_macro",
@@ -902,9 +966,13 @@ function validateMember(memberValue, context) {
 }
 
 function validateEndpointContract(endpointValue, context, artifactOnly) {
-  exactKeys(endpointValue, ["endpoint_family", "probe_mode", "assertions"], context);
+  const library = endpointValue?.transport === "library";
+  exactKeys(endpointValue, library
+    ? ["endpoint_family", "probe_mode", "transport", "assertions"]
+    : ["endpoint_family", "probe_mode", "assertions"], context);
   requireIdentifier(endpointValue.endpoint_family, `${context}.endpoint_family`);
   if (!new Set(["injected_post_fetch", "artifact_only"]).has(endpointValue.probe_mode)) fail(`${context}.probe_mode is invalid`);
+  if (library && artifactOnly) fail(`${context}.transport library is invalid for artifact-only lanes`);
   if (artifactOnly !== (endpointValue.probe_mode === "artifact_only")) fail(`${context}.probe_mode contradicts monitoring mode`);
   validateAssertions(endpointValue.assertions, `${context}.assertions`, { allowEmpty: artifactOnly });
   if (artifactOnly && endpointValue.assertions.length !== 0) fail(`${context}.assertions must be empty for artifact-only lanes`);
@@ -918,7 +986,7 @@ function validateFreshness(freshnessValue, context) {
     exactKeys(freshnessValue, ["observation_basis", "source_basis", "fold", "unit", "calendar", "max_staleness"], context);
   }
   if (freshnessValue.observation_basis !== "attempt_observed_at") fail(`${context}.observation_basis is invalid`);
-  if (!Array.isArray(freshnessValue.source_basis) || freshnessValue.source_basis.length === 0) fail(`${context}.source_basis must be non-empty`);
+  if (!Array.isArray(freshnessValue.source_basis)) fail(`${context}.source_basis must be an array`);
   const sourcePointers = new Set();
   freshnessValue.source_basis.forEach((pointer, index) => {
     requirePointer(pointer, `${context}.source_basis[${index}]`);
@@ -987,6 +1055,11 @@ function validateLane(laneValue, index) {
   const artifactOnly = laneValue.monitoring_mode === "artifact_only";
   validateEndpointContract(laneValue.endpoint_contract, `${context}.endpoint_contract`, artifactOnly);
   validateFreshness(laneValue.freshness, `${context}.freshness`);
+  const hasSourceSelector = laneValue.producer_members.some((memberValue) => memberValue.artifact_contracts
+    .some((contract) => contract.source_selector.kind !== "not_applicable"));
+  if (hasSourceSelector !== (laneValue.freshness.source_basis.length > 0)) {
+    fail(`${context}.freshness.source_basis contradicts artifact source selectors`);
+  }
   requireUniqueStrings(laneValue.affected_surface_ids, `${context}.affected_surface_ids`, { identifiers: true });
   if (!VISIBILITIES.has(laneValue.visibility)) fail(`${context}.visibility is invalid`);
   const expectedEnforcement = LIVE_LANE_ID_SET.has(laneValue.id) ? "live" : "shadow";
@@ -1019,8 +1092,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 16 || configValue.producer_member_count !== 20) fail("denominator must be 16/20");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 16) fail("lanes must contain exactly 16 rows");
+  if (configValue.logical_lane_count !== 18 || configValue.producer_member_count !== 22) fail("denominator must be 18/22");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 18) fail("lanes must contain exactly 18 rows");
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
   if (canonicalJson(laneIds) !== canonicalJson(LANE_IDS)) fail("logical lane order or identity changed");
   configValue.lanes.forEach(validateLane);
@@ -1034,7 +1107,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 20 || new Set(memberIds).size !== 20 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 22 || new Set(memberIds).size !== 22 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);
