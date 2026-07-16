@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "surface",
   "entity": "etf_screener",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29463472988",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-16T01:12:03Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/surfaces/etf_screener.json",
-    "payload_sha256": "b799788993b9f2572e4d4a7dd21c402c00b222c20fdbeb0bbd31945fa8312309",
+    "payload_sha256": "eb9bbf59e52ee377547a8511dbbaf282aa76270ce794cdbbf80ec9dfd84934e4",
     "source_as_of": null,
-    "fetched_at": "2026-07-10T13:28:53Z"
+    "fetched_at": "2026-07-16T01:12:18Z"
   },
-  "updated_at": "2026-07-15T13:24:13Z"
+  "updated_at": "2026-07-16T01:12:03Z",
+  "last_attempt": {
+    "run_id": "29463472988",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-16T01:12:03Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

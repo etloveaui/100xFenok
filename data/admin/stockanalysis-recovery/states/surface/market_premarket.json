@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "surface",
   "entity": "market_premarket",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29463472988",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-16T01:12:03Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/surfaces/market_premarket.json",
-    "payload_sha256": "27f5f14be136aa91d255c7367a9443961bd7c8f7f19f4ec6efa613f7c6c54ec1",
+    "payload_sha256": "ae23bee20a812e19046560120c89217b07871b4553d3f3d641df171c3130cf2d",
     "source_as_of": null,
-    "fetched_at": "2026-07-10T13:29:00Z"
+    "fetched_at": "2026-07-16T01:12:29Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-16T01:12:03Z",
+  "last_attempt": {
+    "run_id": "29463472988",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-16T01:12:03Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

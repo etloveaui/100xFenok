@@ -13,6 +13,17 @@
       "outcome": "failed",
       "controlled": true,
       "error": "RuntimeError: controlled failure injection for financial:AAPL"
+    },
+    {
+      "run_id": "29463472988",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-16T01:12:03Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: source did not advance beyond the retained LKG for financial:AAPL"
     }
   ],
   "resolution_state": "lkg_primary",
@@ -23,24 +34,24 @@
     "source_as_of": "2026-03-28",
     "fetched_at": "2026-07-08T22:45:24Z"
   },
-  "updated_at": "2026-07-15T13:24:13Z",
+  "updated_at": "2026-07-16T01:12:03Z",
   "last_attempt": {
-    "run_id": "29418957357",
+    "run_id": "29463472988",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "observed_at": "2026-07-15T13:24:13Z",
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-16T01:12:03Z",
     "outcome": "failed",
-    "controlled": true,
-    "error": "RuntimeError: controlled failure injection for financial:AAPL"
+    "controlled": false,
+    "error": "ValueError: source did not advance beyond the retained LKG for financial:AAPL"
   },
   "latest_failure": {
-    "run_id": "29418957357",
+    "run_id": "29463472988",
     "run_attempt": 1,
-    "observed_at": "2026-07-15T13:24:13Z",
-    "error": "RuntimeError: controlled failure injection for financial:AAPL",
-    "controlled": true,
+    "observed_at": "2026-07-16T01:12:03Z",
+    "error": "ValueError: source did not advance beyond the retained LKG for financial:AAPL",
+    "controlled": false,
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
     "data_loss": false

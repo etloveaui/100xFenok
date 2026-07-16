@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "surface",
   "entity": "new_etfs",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29463472988",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-16T01:12:03Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/surfaces/new_etfs.json",
-    "payload_sha256": "86beec364c0662bfed7be922665e727e6500eb47659377731e11e5e66ff75b38",
+    "payload_sha256": "b23f544f1f5e0576aa48144bd8061e7afc7ca4829ded36cdb9744af6e23a5b14",
     "source_as_of": null,
-    "fetched_at": "2026-07-10T13:28:41Z"
+    "fetched_at": "2026-07-16T01:12:06Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-16T01:12:03Z",
+  "last_attempt": {
+    "run_id": "29463472988",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-16T01:12:03Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

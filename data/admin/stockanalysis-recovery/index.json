@@ -1,14 +1,14 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-15T13:24:13Z",
+  "generated_at": "2026-07-16T01:12:03Z",
   "counts": {
     "tracked": 117,
-    "fresh": 114,
-    "lkg": 3,
+    "fresh": 115,
+    "lkg": 2,
     "unavailable": 0,
-    "retry": 3,
+    "retry": 2,
     "failed": 2,
-    "recovered": 0
+    "recovered": 1
   },
   "counts_by_kind": {
     "stock": {
@@ -27,10 +27,10 @@
     },
     "surface": {
       "tracked": 25,
-      "fresh": 24,
-      "lkg": 1,
+      "fresh": 25,
+      "lkg": 0,
       "unavailable": 0,
-      "retry": 1
+      "retry": 0
     }
   },
   "retry_artifacts": [
@@ -41,10 +41,6 @@
     {
       "artifact_kind": "financial",
       "entity": "AAPL"
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "actions_recent"
     }
   ],
   "degraded_details": [
@@ -54,8 +50,8 @@
       "resolution_state": "lkg_primary",
       "payload_sha256": "25cb07334425ff3c20edea88f9a1d4127c3b90dcf207e5ad18b91677b4195b37",
       "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29418957357",
-      "failure_observed_at": "2026-07-15T13:24:13Z",
+      "failure_run_id": "29463472988",
+      "failure_observed_at": "2026-07-16T01:12:03Z",
       "data_loss": false
     },
     {
@@ -64,56 +60,181 @@
       "resolution_state": "lkg_primary",
       "payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
       "source_as_of": "2026-03-28",
-      "failure_run_id": "29418957357",
-      "failure_observed_at": "2026-07-15T13:24:13Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "actions_recent",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "2b230a10ba967d11a2ee03994c72025214db54970235abe67d94f1aea81723f6",
-      "source_as_of": "2026-07-10T00:00:00Z",
-      "failure_run_id": "29408382764",
-      "failure_observed_at": "2026-07-15T10:41:17Z",
+      "failure_run_id": "29463472988",
+      "failure_observed_at": "2026-07-16T01:12:03Z",
       "data_loss": false
     }
   ],
   "degraded_tickers": [
     "AAPL"
   ],
-  "degraded_surfaces": [
+  "degraded_surfaces": [],
+  "recovered_details": [
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_recent",
+      "payload_sha256": "3a187a2912cbd2ec5ff11212c04a587f9f0e7f6cf5a47d9b4e16fb820b62c060",
+      "source_as_of": "2026-07-16T00:00:00Z",
+      "recovered_from_run_id": "29408382764",
+      "recovered_at": "2026-07-16T01:12:03Z"
+    }
+  ],
+  "recovered_tickers": [],
+  "recovered_surfaces": [
     "actions_recent"
   ],
-  "recovered_details": [],
-  "recovered_tickers": [],
-  "recovered_surfaces": [],
   "current_attempt": {
-    "run_id": "29418957357",
+    "run_id": "29463472988",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "attempted": 2,
-    "successes": 0,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "attempted": 27,
+    "successes": 25,
     "failed": 2,
-    "recovered": 0,
+    "recovered": 1,
     "errors": [
       {
         "artifact_kind": "stock",
         "entity": "AAPL",
-        "error": "RuntimeError: controlled failure injection for stock:AAPL",
-        "controlled": true,
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "controlled": false,
         "data_loss": false
       },
       {
         "artifact_kind": "financial",
         "entity": "AAPL",
-        "error": "RuntimeError: controlled failure injection for financial:AAPL",
-        "controlled": true,
+        "error": "ValueError: source did not advance beyond the retained LKG for financial:AAPL",
+        "controlled": false,
         "data_loss": false
       }
     ],
-    "success_rows": []
+    "success_rows": [
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "earnings_calendar",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_provider_blackrock",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_provider_proshares",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_screener",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industries",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industries_all",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industry_semiconductors",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_calendar",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_filings",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_recent",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_statistics",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_withdrawn",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "list_bitcoin_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_active",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_afterhours",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_month",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_week",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers_ytd",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_premarket",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "new_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "sector_technology",
+        "outcome": "fresh"
+      }
+    ]
   }
 }

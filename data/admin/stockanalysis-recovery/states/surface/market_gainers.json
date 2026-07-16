@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "surface",
   "entity": "market_gainers",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29463472988",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-16T01:12:03Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/surfaces/market_gainers.json",
-    "payload_sha256": "667ef49fd71d4f55db8c182ca18ff68d2b05d52152064ea36036795cd7208274",
+    "payload_sha256": "b474a0981122194fc8e147ac6333c22baf5208f1f59c81eecd93926b844757dd",
     "source_as_of": null,
-    "fetched_at": "2026-07-10T13:28:58Z"
+    "fetched_at": "2026-07-16T01:12:27Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-16T01:12:03Z",
+  "last_attempt": {
+    "run_id": "29463472988",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-16T01:12:03Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

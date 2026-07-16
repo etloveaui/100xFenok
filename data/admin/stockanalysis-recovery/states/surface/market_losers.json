@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "surface",
   "entity": "market_losers",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29463472988",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-16T01:12:03Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/surfaces/market_losers.json",
-    "payload_sha256": "4c2813dca46554bbbbcf34d2affe64db9e14d90c9730a41484e6e2adbb0b0b60",
+    "payload_sha256": "66e6922fb19c824747ff86f50d67d93d86fe3e7b2685b4c960476eb35d7c0d4b",
     "source_as_of": null,
-    "fetched_at": "2026-07-10T13:28:59Z"
+    "fetched_at": "2026-07-16T01:12:27Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-16T01:12:03Z",
+  "last_attempt": {
+    "run_id": "29463472988",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-16T01:12:03Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }
