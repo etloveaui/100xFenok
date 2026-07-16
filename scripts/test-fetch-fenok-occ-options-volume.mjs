@@ -21,9 +21,11 @@ import {
   mergeOccCurrentAttempt,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
+  OCC_PERSISTENCE_POLICY,
   parseOccCsv,
   parseArgs,
   reduceOccEndpointResults,
+  retainLatestTickerSourceDates,
   scoreOptionsVolume,
   summarizeDateAttempt,
   summarizeTickerAvailability,
@@ -243,6 +245,45 @@ assert.equal(mergedOutput.coverage.row_count, 2);
 assert.equal(mergedOutput.batch_coverage.row_count, 2);
 assert.equal(mergedOutput.upsert_policy.replaced_rows, 1);
 assert.equal(mergedOutput.rows.find((item) => item.ticker === "AAPL").options_activity_proxy.score_0_100, 60);
+assert.deepEqual(mergedOutput.persistence_policy, OCC_PERSISTENCE_POLICY);
+
+function ymdAtOffset(offset) {
+  const value = new Date(Date.UTC(2026, 0, 1 + offset));
+  return `${value.getUTCFullYear()}${String(value.getUTCMonth() + 1).padStart(2, "0")}${String(value.getUTCDate()).padStart(2, "0")}`;
+}
+
+const tickerADates = Array.from({ length: 101 }, (_, index) => ymdAtOffset(index));
+const tickerBDates = [ymdAtOffset(0), ymdAtOffset(1)];
+const retentionInput = {
+  rows: [
+    ...tickerADates.map((sourceDate) => ({ ticker: "A", source_date: sourceDate })),
+    ...tickerBDates.map((sourceDate) => ({ ticker: "B", source_date: sourceDate })),
+  ],
+  side_attempts: [
+    ...tickerADates.flatMap((sourceDate) => ([
+      { ticker: "A", source_date: sourceDate, side: "C", attempted_form: "A" },
+      { ticker: "A", source_date: sourceDate, side: "P", attempted_form: "A" },
+    ])),
+    ...tickerBDates.flatMap((sourceDate) => ([
+      { ticker: "B", source_date: sourceDate, side: "C", attempted_form: "B" },
+      { ticker: "B", source_date: sourceDate, side: "P", attempted_form: "B" },
+    ])),
+  ],
+};
+const retained = retainLatestTickerSourceDates(retentionInput);
+assert.equal(retained.collections.rows.filter((item) => item.ticker === "A").length, 100);
+assert.equal(retained.collections.rows.filter((item) => item.ticker === "B").length, 2,
+  "one ticker advancing cannot evict an untouched ticker");
+assert.equal(retained.collections.rows.some((item) => item.ticker === "A" && item.source_date === tickerADates[0]), false);
+assert.equal(retained.collections.side_attempts.filter((item) => item.ticker === "A").length, 200,
+  "the C/P evidence cohort is retained together for each ticker/date");
+assert.equal(retained.stats.collections.rows.pruned, 1);
+assert.equal(retained.stats.collections.side_attempts.pruned, 2);
+const retainedAgain = retainLatestTickerSourceDates(retained.collections);
+assert.deepEqual(retainedAgain.collections, retained.collections, "bounded persistence is idempotent");
+assert.equal(retainedAgain.stats.collections.rows.pruned, 0);
+assert.throws(() => retainLatestTickerSourceDates({ rows: [{ ticker: "A", source_date: "20260231" }] }),
+  /invalid source_date/);
 
 const allEligiblePlan = await build(parseArgs(["--all-eligible", "--plan-only"]));
 assert.equal(allEligiblePlan.collection_mode, "all_eligible_batched");
@@ -391,6 +432,7 @@ const mergedAvailability = mergeAvailabilitySnapshot(
 );
 assert.equal(mergedAvailability.rows.length, 1);
 assert.equal(mergedAvailability.side_attempts.length, 2);
+assert.deepEqual(mergedAvailability.persistence_policy, OCC_PERSISTENCE_POLICY);
 
 const dateFailureAttempts = [
   { ticker: "A", status: "failed" },

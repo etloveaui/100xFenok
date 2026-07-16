@@ -37,6 +37,13 @@ const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
 const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 100;
 const DEFAULT_ALL_ELIGIBLE_FAIL_THRESHOLD = 5;
 const OCC_ENDPOINT = "https://marketdata.theocc.com/volume-query";
+const OCC_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "occ-bounded-persistence/v1",
+  basis: "source_date",
+  scope: "per_ticker",
+  max_distinct_source_dates_per_ticker: 100,
+  eviction: "oldest_source_date_first",
+});
 const OCC_AVAILABILITY_POLICY = {
   source_id: "occ_volume_query",
   availability_status: "not_verified",
@@ -130,6 +137,83 @@ function ymdFromDate(date) {
 
 function isoFromYmd(ymd) {
   return `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`;
+}
+
+function assertValidSourceDate(sourceDate) {
+  const normalized = String(sourceDate ?? "");
+  if (!/^\d{8}$/.test(normalized)) {
+    throw new Error(`invalid source_date: ${normalized || "<empty>"}`);
+  }
+  const parsed = new Date(Date.UTC(
+    Number(normalized.slice(0, 4)),
+    Number(normalized.slice(4, 6)) - 1,
+    Number(normalized.slice(6, 8)),
+  ));
+  if (ymdFromDate(parsed) !== normalized) {
+    throw new Error(`invalid source_date: ${normalized}`);
+  }
+  return normalized;
+}
+
+function retainLatestTickerSourceDates(collections, policy = OCC_PERSISTENCE_POLICY) {
+  const maxDates = Number(policy?.max_distinct_source_dates_per_ticker);
+  if (!Number.isInteger(maxDates) || maxDates <= 0) {
+    throw new Error("invalid OCC persistence max_distinct_source_dates_per_ticker");
+  }
+
+  const datesByTicker = new Map();
+  for (const [name, rows] of Object.entries(collections ?? {})) {
+    if (!Array.isArray(rows)) throw new Error(`invalid persistence collection: ${name}`);
+    for (const row of rows) {
+      const ticker = normalizeTicker(row?.ticker);
+      if (!ticker) throw new Error(`invalid persistence ticker in ${name}`);
+      const sourceDate = assertValidSourceDate(row?.source_date);
+      if (!datesByTicker.has(ticker)) datesByTicker.set(ticker, new Set());
+      datesByTicker.get(ticker).add(sourceDate);
+    }
+  }
+
+  const retainedDatesByTicker = new Map();
+  for (const [ticker, dates] of datesByTicker) {
+    retainedDatesByTicker.set(ticker, new Set([...dates].sort().reverse().slice(0, maxDates)));
+  }
+
+  const retainedCollections = {};
+  const collectionStats = {};
+  for (const [name, rows] of Object.entries(collections ?? {})) {
+    const retainedRows = rows.filter((row) => (
+      retainedDatesByTicker.get(normalizeTicker(row.ticker))?.has(String(row.source_date))
+    ));
+    retainedCollections[name] = retainedRows;
+    collectionStats[name] = {
+      before: rows.length,
+      retained: retainedRows.length,
+      pruned: rows.length - retainedRows.length,
+    };
+  }
+
+  return {
+    collections: retainedCollections,
+    stats: {
+      retained_tickers: retainedDatesByTicker.size,
+      collections: collectionStats,
+    },
+  };
+}
+
+function persistenceMetadata(previous, stats) {
+  const lastMergePrunedRows = Object.values(stats.collections)
+    .reduce((sum, collection) => sum + collection.pruned, 0);
+  const previousTotal = Number(previous?.persistence_state?.total_pruned_rows);
+  return {
+    persistence_policy: OCC_PERSISTENCE_POLICY,
+    persistence_state: {
+      retained_tickers: stats.retained_tickers,
+      collections: stats.collections,
+      last_merge_pruned_rows: lastMergePrunedRows,
+      total_pruned_rows: (Number.isFinite(previousTotal) ? previousTotal : 0) + lastMergePrunedRows,
+    },
+  };
 }
 
 function candidateDates({ requestedDate, maxWalkbackDays }) {
@@ -1005,11 +1089,22 @@ function mergeAvailabilitySnapshot(previous, snapshot) {
   const existingSideAttempts = Array.isArray(previous?.side_attempts) ? previous.side_attempts : [];
   const incomingSideKeys = new Set(snapshot.side_attempts.map((row) => `${row.ticker}|${row.source_date}|${row.side}|${row.attempted_form}`));
   const keptSideAttempts = existingSideAttempts.filter((row) => !incomingSideKeys.has(`${row.ticker}|${row.source_date}|${row.side}|${row.attempted_form}`));
-  const rows = [...keptRows, ...snapshot.rows].sort((a, b) => (
+  const mergedRows = [...keptRows, ...snapshot.rows].sort((a, b) => (
     String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
   ));
+  const mergedSideAttempts = [...keptSideAttempts, ...snapshot.side_attempts].sort((a, b) => (
+    String(a.ticker).localeCompare(String(b.ticker))
+    || String(a.source_date).localeCompare(String(b.source_date))
+    || String(a.side).localeCompare(String(b.side))
+  ));
+  const retained = retainLatestTickerSourceDates({
+    rows: mergedRows,
+    side_attempts: mergedSideAttempts,
+  });
+  const rows = retained.collections.rows;
   return {
     ...snapshot,
+    ...persistenceMetadata(previous, retained.stats),
     current_attempt: snapshot.current_attempt ?? previous?.current_attempt ?? null,
     previous_generated_at: previous?.generated_at ?? null,
     upsert_policy: {
@@ -1018,25 +1113,23 @@ function mergeAvailabilitySnapshot(previous, snapshot) {
       added_rows: snapshot.rows.length,
       cumulative_rows: rows.length,
     },
-    side_attempts: [...keptSideAttempts, ...snapshot.side_attempts].sort((a, b) => (
-      String(a.ticker).localeCompare(String(b.ticker))
-      || String(a.source_date).localeCompare(String(b.source_date))
-      || String(a.side).localeCompare(String(b.side))
-    )),
+    side_attempts: retained.collections.side_attempts,
     rows,
   };
 }
 
 function mergeOutputSnapshot(previous, snapshot) {
   const existingRows = Array.isArray(previous?.rows) ? previous.rows : [];
-  if (existingRows.length === 0) return snapshot;
   const incomingKeys = new Set(snapshot.rows.map((row) => `${row.ticker}|${row.source_date}`));
   const kept = existingRows.filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}`));
-  const rows = [...kept, ...snapshot.rows].sort((a, b) => (
+  const mergedRows = [...kept, ...snapshot.rows].sort((a, b) => (
     String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
   ));
+  const retained = retainLatestTickerSourceDates({ rows: mergedRows });
+  const rows = retained.collections.rows;
   return {
     ...snapshot,
+    ...persistenceMetadata(previous, retained.stats),
     batch_coverage: snapshot.coverage,
     previous_output_generated_at: previous?.generated_at ?? null,
     upsert_policy: {
@@ -1072,17 +1165,20 @@ function mergeHistory(snapshot) {
   }));
   const incomingKeys = new Set(incoming.map((row) => `${row.ticker}|${row.source_date}`));
   const kept = rows.filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}`));
+  const mergedRows = [...kept, ...incoming].sort((a, b) => (
+    String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
+  ));
+  const retained = retainLatestTickerSourceDates({ rows: mergedRows });
   return {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
     generated_at: snapshot.generated_at,
+    ...persistenceMetadata(history, retained.stats),
     raw_policy: {
       third_party_raw_public: false,
       rows_are_derived_only: true,
     },
-    rows: [...kept, ...incoming].sort((a, b) => (
-      String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
-    )),
+    rows: retained.collections.rows,
   };
 }
 
@@ -1317,9 +1413,11 @@ export {
   mergeOccCurrentAttempt,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
+  OCC_PERSISTENCE_POLICY,
   parseOccCsv,
   parseArgs,
   reduceOccEndpointResults,
+  retainLatestTickerSourceDates,
   scoreOptionsVolume,
   summarizeTickerAvailability,
   summarizeDateAttempt,
