@@ -14,6 +14,7 @@ on:
           - all
           - daily
           - weekly
+          - monthly
           - quarterly
       controlled_failure_key:
         description: 'Dispatch-only chaos key (one configured FRED series id)'
@@ -78,6 +79,7 @@ jobs:
           for LKG_FILE in \
             data/admin/fred_banking/lkg/daily.json \
             data/admin/fred_banking/lkg/weekly.json \
+            data/admin/fred_banking/lkg/monthly.json \
             data/admin/fred_banking/lkg/quarterly.json; do
             if [[ -f "$LKG_FILE" ]]; then
               git add -- "$LKG_FILE"
@@ -87,9 +89,11 @@ jobs:
             for CANONICAL_FILE in \
               data/macro/fred-banking-daily.json \
               data/macro/fred-banking-weekly.json \
+              data/macro/fred-banking-monthly.json \
               data/macro/fred-banking-quarterly.json \
               100xfenok-next/public/data/macro/fred-banking-daily.json \
               100xfenok-next/public/data/macro/fred-banking-weekly.json \
+              100xfenok-next/public/data/macro/fred-banking-monthly.json \
               100xfenok-next/public/data/macro/fred-banking-quarterly.json; do
               if [[ -f "$CANONICAL_FILE" ]]; then
                 git add -- "$CANONICAL_FILE"

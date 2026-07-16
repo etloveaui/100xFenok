@@ -58,6 +58,18 @@ function assertValidShard(shard) {
 }
 
 {
+  assert.deepEqual(FRED_BANKING_GROUPS.map((group) => group.id), ["daily", "weekly", "monthly", "quarterly"]);
+  assert.deepEqual(FRED_BANKING_GROUPS.find((group) => group.id === "daily").series.map((row) => row.id), [
+    "DGS10",
+    "BAMLH0A0HYM2",
+    "IRLTLT01KRM156N",
+  ]);
+  assert.deepEqual(FRED_BANKING_GROUPS.find((group) => group.id === "monthly").series.map((row) => row.id), [
+    "IRLTLT01KRM156N",
+  ]);
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-test-"));
   const paths = makePaths(root);
   const calls = [];
@@ -81,7 +93,7 @@ function assertValidShard(shard) {
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   assert.equal(shard.lane_id, "fred_banking");
-  assert.equal(shard.attempts.length, 1, "three artifacts still emit one member attempt");
+  assert.equal(shard.attempts.length, 1, "four cadence artifacts still emit one lane attempt");
   const row = shard.attempts[0];
   assert.equal(row.member_id, null);
   assert.equal(row.http_status, 200);
@@ -186,6 +198,7 @@ function assertValidShard(shard) {
   assert.equal(failed.exitCode, 0);
   assert.deepEqual(failed.retrySet, [
     "daily",
+    "monthly",
     "quarterly",
     "weekly",
   ]);
@@ -211,9 +224,10 @@ function assertValidShard(shard) {
   assert.equal(partial.degraded, true);
   assert.equal(partial.updated, false);
   assert.equal(partial.reason, "recovery_requires_schedule");
-  assert.deepEqual(partial.retrySet, ["daily", "quarterly", "weekly"]);
+  assert.deepEqual(partial.retrySet, ["daily", "monthly", "quarterly", "weekly"]);
   const partialState = readJson(statePath);
   assert.equal(partialState.items.daily.resolution_state, "lkg_primary");
+  assert.equal(partialState.items.monthly.resolution_state, "lkg_primary");
   assert.equal(partialState.items.weekly.resolution_state, "lkg_primary");
   assert.equal(partialState.items.quarterly.resolution_state, "lkg_primary");
   assert.equal(readJson(paths.canonicalPaths.daily).source_as_of, "2026-07-11", "manual recovery candidate must not overwrite canonical payload");
@@ -236,6 +250,8 @@ function assertValidShard(shard) {
   const scheduledPartialState = readJson(statePath);
   assert.equal(scheduledPartialState.items.daily.resolution_state, "fresh_primary");
   assert.equal(scheduledPartialState.items.daily.recovered_from_run_id, "controlled-failure-run");
+  assert.equal(scheduledPartialState.items.monthly.resolution_state, "fresh_primary");
+  assert.equal(scheduledPartialState.items.monthly.recovered_from_run_id, "controlled-failure-run");
 
   const recovered = await runFredBanking({
     ...paths,
@@ -281,7 +297,10 @@ function assertValidShard(shard) {
   assert.match(workflow, /data\/admin\/fred_banking\/index\.json/);
   assert.match(workflow, /data\/admin\/fred_banking\/lkg\/daily\.json/);
   assert.match(workflow, /data\/admin\/fred_banking\/lkg\/weekly\.json/);
+  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/monthly\.json/);
   assert.match(workflow, /data\/admin\/fred_banking\/lkg\/quarterly\.json/);
+  assert.match(workflow, /data\/macro\/fred-banking-monthly\.json/);
+  assert.match(workflow, /100xfenok-next\/public\/data\/macro\/fred-banking-monthly\.json/);
   assert.match(workflow, /- name: Commit and push owned FRED banking data\n\s+if: \$\{\{ always\(\) \}\}/);
 }
 
