@@ -61,6 +61,14 @@ def _fail(reason_code: str, detail: str):
     raise StockDetailValidationError(reason_code, detail)
 
 
+def yahoo_provider_symbol(entity: str) -> str:
+    """Return Yahoo's alias only for single-letter class-share suffixes."""
+    head, separator, tail = entity.rpartition(".")
+    if separator and head and tail.isalpha() and len(tail) == 1 and not head[-1].isdigit():
+        return f"{head}-{tail}"
+    return entity
+
+
 def _strict_json_bytes(payload_bytes: bytes) -> dict[str, Any]:
     if not isinstance(payload_bytes, bytes):
         _fail("payload_invalid", "stock-detail payload must be exact bytes")
@@ -260,7 +268,7 @@ def _validate_yahoo(entity: str, payload: dict[str, Any]) -> None:
     history = data.get("history_1y") if isinstance(data, dict) else None
     if not isinstance(info, dict) or info.get("quoteType") != "EQUITY":
         _fail("asset_type_invalid", "Yahoo stock-detail quoteType must be EQUITY")
-    if info.get("symbol") is not None and info.get("symbol") != entity:
+    if info.get("symbol") is not None and info.get("symbol") not in {entity, yahoo_provider_symbol(entity)}:
         _fail("identity_mismatch", "Yahoo stock-detail quote identity mismatch")
     current = info.get("currentPrice", info.get("regularMarketPrice"))
     previous = info.get("previousClose", info.get("regularMarketPreviousClose"))

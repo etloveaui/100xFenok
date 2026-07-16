@@ -57,6 +57,12 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
+    def test_yahoo_symbol_delegates_to_stock_detail_alias_contract(self) -> None:
+        self.assertEqual(self.fetcher.yahoo_symbol("BRK.A"), "BRK-A")
+        self.assertEqual(self.fetcher.yahoo_symbol("BRK.B"), "BRK-B")
+        self.assertEqual(self.fetcher.yahoo_symbol("005930.KS"), "005930.KS")
+        self.assertEqual(self.fetcher.yahoo_symbol("BMW.DE"), "BMW.DE")
+
     def _daily_payload(self, ticker: str) -> dict:
         return self.fetcher.decorate_finance_payload(
             ticker=ticker,

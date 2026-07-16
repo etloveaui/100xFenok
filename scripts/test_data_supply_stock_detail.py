@@ -18,6 +18,7 @@ from data_supply_stock_detail import (
     record_stock_detail_failure,
     record_stock_detail_success,
     validate_stock_detail_candidate,
+    yahoo_provider_symbol,
 )
 
 
@@ -60,6 +61,26 @@ class StockDetailValidationTests(unittest.TestCase):
         candidate = self.validate("yahoo_finance", "BRK.A", "yahoo_equity_valid.fixture.json")
         self.assertEqual(candidate.payload_bytes, self.fixture("yahoo_equity_valid.fixture.json"))
         self.assertEqual(candidate.provider_schema, "yf-finance/v2")
+
+    def test_yahoo_class_share_provider_aliases_are_valid(self):
+        for entity, fixture in (
+            ("BRK.A", "yahoo_class_share_brk_a.fixture.json"),
+            ("BRK.B", "yahoo_class_share_brk_b.fixture.json"),
+        ):
+            with self.subTest(entity=entity):
+                candidate = self.validate("yahoo_finance", entity, fixture)
+                self.assertEqual(candidate.entity, entity)
+
+    def test_yahoo_provider_symbol_only_normalizes_single_letter_class_shares(self):
+        self.assertEqual(yahoo_provider_symbol("BRK.A"), "BRK-A")
+        self.assertEqual(yahoo_provider_symbol("BRK.B"), "BRK-B")
+        self.assertEqual(yahoo_provider_symbol("005930.KS"), "005930.KS")
+        self.assertEqual(yahoo_provider_symbol("BMW.DE"), "BMW.DE")
+
+    def test_yahoo_true_quote_identity_mismatch_is_rejected(self):
+        with self.assertRaises(StockDetailValidationError) as caught:
+            self.validate("yahoo_finance", "BRK.A", "yahoo_quote_identity_mismatch.fixture.json")
+        self.assertEqual(caught.exception.reason_code, "identity_mismatch")
 
     def test_schema_identity_and_non_equity_fail_closed(self):
         cases = (

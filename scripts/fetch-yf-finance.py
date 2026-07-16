@@ -49,6 +49,7 @@ from data_supply_stock_detail import (
     record_stock_detail_failure,
     record_stock_detail_success,
     validate_stock_detail_candidate,
+    yahoo_provider_symbol,
 )
 from yahoo_batch_state import YahooBatchStateStore
 
@@ -701,10 +702,7 @@ def yahoo_symbol(ticker):
     Exchange suffixes keep their dot: numeric heads (005930.KS, 7203.T)
     and 2+ letter suffixes (BMW.DE, MC.PA) — verified working as-is in
     the 2026-06-11 full batch; only single-letter class shares failed."""
-    head, _, tail = ticker.rpartition(".")
-    if head and tail.isalpha() and len(tail) == 1 and not head[-1].isdigit():
-        return f"{head}-{tail}"
-    return ticker
+    return yahoo_provider_symbol(ticker)
 
 
 def fetch_ticker(ticker, profile="full", include_options=False, include_shares_full=False):
