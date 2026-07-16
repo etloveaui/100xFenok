@@ -269,13 +269,43 @@ function classifyAuthoritative({ github, origin, jobStartedAtIso, nowIso, eventS
   return { authoritative: false, reason: "non_authoritative_context", slot_key: null };
 }
 
-function appendHistory(priorHistory, entry, cap) {
+function appendHistory(priorHistory, entry, nowIso, retentionDays) {
   const key = (h) => `${h?.workflow || ""}|${h?.run_id || ""}|${h?.run_attempt ?? ""}`;
   const combined = [...(Array.isArray(priorHistory) ? priorHistory : [])];
   const idx = combined.findIndex((h) => key(h) === key(entry));
   if (idx >= 0) combined.splice(idx, 1);
   combined.push(entry);
-  return combined.slice(-cap);
+  const floor = new Date(nowIso).getTime() - Number(retentionDays) * 86400000;
+  return combined.filter((historyEntry) => {
+    const slotMs = slotTimestampMs(historyEntry?.slot_key);
+    const builtAtMs = new Date(historyEntry?.built_at).getTime();
+    const evidenceMs = Number.isFinite(slotMs) ? slotMs : builtAtMs;
+    return !Number.isFinite(evidenceMs) || evidenceMs >= floor;
+  });
+}
+
+function deriveRuntimeSlotLedger({ priorRuntime, slotKey, nowIso, v2ActivatedAt }) {
+  const priorSatisfied = priorRuntime?.slots?.satisfied_slot_keys ?? [];
+  const cronDeferrals = priorRuntime?.slots?.cron_deferrals ?? [];
+  const satisfied = trimByRetention(
+    [...priorSatisfied, ...(slotKey ? [slotKey] : [])],
+    nowIso,
+    CADENCE.slot_retention_days,
+  );
+  const dueSlots = enumerateDueSlots({
+    trackedCrons: TRACKED_CRONS,
+    watermarkIso: v2ActivatedAt,
+    nowIso,
+    retentionDays: CADENCE.slot_retention_days,
+    graceMinutes: CADENCE.slot_grace_minutes,
+  });
+  const missed = deriveMissedSlots({ dueSlots, satisfiedSlotKeys: satisfied, cronDeferrals });
+  return {
+    satisfied_slot_keys: satisfied,
+    last_satisfied_slot_key: slotKey ?? (priorRuntime?.slots?.last_satisfied_slot_key ?? null),
+    missed_slot_keys: missed,
+    cron_deferrals: cronDeferrals,
+  };
 }
 
 export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
@@ -297,25 +327,33 @@ export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
     sha: github.sha,
   };
   const priorV2ActivatedAt = priorRuntime?.cadence?.v2_activated_at ?? null;
+  const v2ActivatedAt = priorV2ActivatedAt ?? nowIso;
+  const slotKey = auth.slot_key;
 
   // cadence is DEFINITIONAL — re-emitted canonical every build (never preserved),
   // so a prior malformed/tampered cadence cannot survive a rebuild. Only
   // v2_activated_at (watermark) is preserved state.
-  const canonicalCadence = { ...CADENCE, v2_activated_at: priorV2ActivatedAt ?? nowIso, calendar_version };
+  const canonicalCadence = { ...CADENCE, v2_activated_at: v2ActivatedAt, calendar_version };
   const priorSlots = priorRuntime?.slots;
   assertValidCronDeferrals(priorSlots?.cron_deferrals ?? [], {
     satisfiedSlotKeys: priorSlots?.satisfied_slot_keys ?? [],
   });
+  // Misses are clock-derived facts, not producer-success claims. Reconcile them on
+  // every rebuild against this document's generated_at, even when the context is
+  // non-authoritative. Producer identity, success history, and slot satisfaction
+  // remain authority-gated below.
+  const slots = deriveRuntimeSlotLedger({ priorRuntime, slotKey, nowIso, v2ActivatedAt });
 
   if (!auth.authoritative) {
-    // Non-authoritative: preserve producer/slots/history verbatim; only rebuild ctx
-    // + the definitional cadence update.
+    // Non-authoritative: preserve producer/history and never claim a satisfied slot.
+    // The derived missed-slot ledger still advances with generated_at so the builder
+    // and checker evaluate the same canonical clock.
     if (priorRuntime && typeof priorRuntime === "object") {
       return {
         producer_context: priorRuntime.producer_context ?? null,
         last_rebuild_context: lastRebuildContext,
         cadence: canonicalCadence,
-        slots: priorRuntime.slots ?? { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] },
+        slots,
         successful_snapshot_history: priorRuntime.successful_snapshot_history ?? [],
         authoritative_context: { authoritative: false, reason: auth.reason },
       };
@@ -324,14 +362,12 @@ export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
       producer_context: null, // honest bootstrap; warn-only in Phase A
       last_rebuild_context: lastRebuildContext,
       cadence: canonicalCadence,
-      slots: { satisfied_slot_keys: [], last_satisfied_slot_key: null, missed_slot_keys: [], cron_deferrals: [] },
+      slots,
       successful_snapshot_history: [],
       authoritative_context: { authoritative: false, reason: auth.reason },
     };
   }
 
-  const v2ActivatedAt = priorV2ActivatedAt ?? nowIso;
-  const slotKey = auth.slot_key;
   const durationMs = Date.now() - SCRIPT_START_MS;
   const producerContext = {
     built_at: nowIso,
@@ -344,21 +380,6 @@ export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
     slot_key: slotKey,
     origin: origin ?? null,
   };
-  const priorSatisfied = priorRuntime?.slots?.satisfied_slot_keys ?? [];
-  const cronDeferrals = priorRuntime?.slots?.cron_deferrals ?? [];
-  const satisfied = trimByRetention(
-    [...priorSatisfied, ...(slotKey ? [slotKey] : [])],
-    nowIso,
-    CADENCE.slot_retention_days,
-  );
-  const dueSlots = enumerateDueSlots({
-    trackedCrons: TRACKED_CRONS,
-    watermarkIso: v2ActivatedAt,
-    nowIso,
-    retentionDays: CADENCE.slot_retention_days,
-    graceMinutes: CADENCE.slot_grace_minutes,
-  });
-  const missed = deriveMissedSlots({ dueSlots, satisfiedSlotKeys: satisfied, cronDeferrals });
   const historyEntry = {
     built_at: nowIso,
     slot_key: slotKey,
@@ -372,13 +393,13 @@ export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
     producer_context: producerContext,
     last_rebuild_context: lastRebuildContext,
     cadence: canonicalCadence,
-    slots: {
-      satisfied_slot_keys: satisfied,
-      last_satisfied_slot_key: slotKey ?? (priorRuntime?.slots?.last_satisfied_slot_key ?? null),
-      missed_slot_keys: missed,
-      cron_deferrals: cronDeferrals,
-    },
-    successful_snapshot_history: appendHistory(priorRuntime?.successful_snapshot_history, historyEntry, 14),
+    slots,
+    successful_snapshot_history: appendHistory(
+      priorRuntime?.successful_snapshot_history,
+      historyEntry,
+      nowIso,
+      CADENCE.slot_retention_days,
+    ),
     authoritative_context: { authoritative: true, reason: auth.reason },
   };
 }

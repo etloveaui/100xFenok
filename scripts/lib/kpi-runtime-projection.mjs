@@ -74,6 +74,8 @@ export function projectRuntime(runtime, nowIso) {
   const missedSlotCount = slotClassification.missed_slot_keys.length;
   const recoveredMissedSlotCount = slotClassification.recovered_missed_slot_keys.length;
   const unrecoveredMissedSlotCount = slotClassification.unrecovered_missed_slot_keys.length;
+  const blockingUnrecoveredMissedSlotCount = slotClassification.blocking_unrecovered_missed_slot_keys.length;
+  const laneLocalUnrecoveredMissedSlotCount = slotClassification.lane_local_unrecovered_missed_slot_keys.length;
 
   let hardAgeOk = false;
   if (builtAt && Number.isFinite(hardMaxAgeHours)) {
@@ -88,8 +90,10 @@ export function projectRuntime(runtime, nowIso) {
     : slotStatus === "ready"
       ? "No retained missed slots; the current producer snapshot is fresh."
       : slotStatus === "degraded"
-        ? `${recoveredMissedSlotCount} retained missed slot(s) recovered by later authoritative ready full snapshot(s).`
-        : `${unrecoveredMissedSlotCount} retained missed slot(s) have no later authoritative ready full-snapshot recovery.`;
+        ? laneLocalUnrecoveredMissedSlotCount > 0
+          ? `${laneLocalUnrecoveredMissedSlotCount} retained missed slot(s) remain lane-local degradation for incremental/owner-gated workflow(s); deployment_blocking:false.${recoveredMissedSlotCount > 0 ? ` ${recoveredMissedSlotCount} other retained miss(es) recovered.` : ""}`
+          : `${recoveredMissedSlotCount} retained missed slot(s) recovered by later authoritative ready full snapshot(s).`
+        : `${blockingUnrecoveredMissedSlotCount} retained full-snapshot missed slot(s) have no later authoritative ready recovery.`;
 
   return {
     projection: PUBLIC_PROJECTION_VERSION,
@@ -102,6 +106,8 @@ export function projectRuntime(runtime, nowIso) {
     missed_slot_count: missedSlotCount,
     recovered_missed_slot_count: recoveredMissedSlotCount,
     unrecovered_missed_slot_count: unrecoveredMissedSlotCount,
+    blocking_unrecovered_missed_slot_count: blockingUnrecoveredMissedSlotCount,
+    lane_local_unrecovered_missed_slot_count: laneLocalUnrecoveredMissedSlotCount,
     hard_age_ok: hardAgeOk,
   };
 }

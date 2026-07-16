@@ -33,6 +33,7 @@ import {
   buildDetectionFloorLanes,
   mapDetectionFloorRow,
   buildRimLane,
+  buildRuntime,
   enumerateDueSlots,
   deriveMissedSlots,
 } from "./build-fenok-data-health-kpi.mjs";
@@ -1477,11 +1478,11 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     GITHUB_RUN_ID: "deploy-9", GITHUB_RUN_ATTEMPT: "1", GITHUB_ACTOR: "github-actions[bot]", GITHUB_REF: "refs/heads/main",
   }, now);
   assert.deepEqual(root.runtime.producer_context, prior.producer_context, "producer_context preserved verbatim");
-  assert.deepEqual(root.runtime.slots, prior.slots, "slots preserved verbatim");
+  assert.deepEqual(root.runtime.slots, prior.slots, "same-clock slot ledger remains byte-equivalent");
   assert.deepEqual(root.runtime.successful_snapshot_history, prior.successful_snapshot_history, "history preserved verbatim");
   assert.equal(root.runtime.last_rebuild_context.run_id, "deploy-9", "only last_rebuild_context updates");
   assert.equal(pub.runtime.built_at, prior.producer_context.built_at, "public built_at reflects preserved producer");
-  ok("non-authoritative rebuild preserves producer/slots/history; only last_rebuild_context changes");
+  ok("non-authoritative rebuild preserves producer/history and reconciles the same-clock slot ledger");
 
   // 8b. post-copy override write path — the ACTUAL sync-static-overrides function,
   // run against a temp root (not the in-memory projector).
@@ -1502,6 +1503,80 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(overridden.runtime.evaluated_at, now, "override used injected clock");
   assert.ok(!fs.existsSync(`${clobberedPublicPath}.tmp`), "atomic write left no .tmp");
   ok("real sync-static override path re-projects the clobbered public mirror on a temp root (atomic, recursive-clean)");
+}
+
+// 8c. A non-authoritative rebuild may not claim a producer slot, but it MUST advance
+// the derived missed-slot ledger to its own generated_at clock. This is the exact
+// 2026-07-15 failure: the 09:30Z Update Manifest run genuinely failed, then a later
+// manual rebuild crossed the 360-minute grace boundary while preserving missed=[].
+{
+  const tmp = mkTmp("non-auth-missed-ledger");
+  const missedSlot = "update-manifest.yml:30 9 * * *@2026-07-15T09:30Z";
+  const priorSlot = "update-manifest.yml:30 2 * * *@2026-07-15T02:30Z";
+  const prior = makeProducerRuntime({
+    builtAt: "2026-07-15T05:18:13.940Z",
+    slotKey: priorSlot,
+    runId: "29390832379",
+  });
+  prior.cadence.v2_activated_at = "2026-07-15T01:00:00.000Z";
+  prior.slots = {
+    satisfied_slot_keys: [priorSlot],
+    last_satisfied_slot_key: priorSlot,
+    missed_slot_keys: [],
+    cron_deferrals: [],
+  };
+  seedPrior(tmp, v2Doc(prior));
+
+  const buildAt = "2026-07-15T15:50:06.000Z";
+  const { root: rebuilt } = runBuilder(tmp, {
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_WORKFLOW_REF: "o/r/.github/workflows/update-manifest.yml@refs/heads/main",
+    GITHUB_RUN_ID: "29429461165", GITHUB_RUN_ATTEMPT: "1",
+    GITHUB_ACTOR: "owner", GITHUB_REF: "refs/heads/main",
+  }, buildAt);
+  assert.equal(rebuilt.runtime.authoritative_context.authoritative, false, "bare manual rebuild stays non-authoritative");
+  assert.ok(rebuilt.runtime.slots.missed_slot_keys.includes(missedSlot),
+    "non-authoritative rebuild records a genuinely missed slot once its own build clock crosses grace");
+
+  // Keep the real miss blocking until a later authoritative full snapshot recovers it,
+  // but prove the builder/checker equality invariant itself is no longer divergent.
+  seedReadyV2(tmp, { now: buildAt, runtime: rebuilt.runtime, sla: readySla(buildAt) });
+  const blocked = runChecker(tmp, buildAt, { strict: true });
+  assert.equal(blocked.exit, 1, "the genuine unrecovered miss remains a strict blocker");
+  assert.doesNotMatch(blocked.stderr, /missed_slot_keys re-derivation mismatch/,
+    "builder and checker agree on the same canonical cron, retention, and build clock");
+  assert.match(blocked.stderr, /retained missed slot\(s\) lack a later authoritative ready full-snapshot recovery/,
+    "the real miss is preserved instead of papered over");
+
+  // The next successful scheduled full snapshot retains the fact and supplies the
+  // recovery evidence, changing BLOCKED -> DEGRADED without deleting the miss. The
+  // unrelated 10:30Z KRX producer is marked satisfied so this fixture isolates the
+  // failed 09:30Z Update Manifest occurrence.
+  rebuilt.runtime.slots.satisfied_slot_keys.push("fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-15T10:30Z");
+  const recoveryAt = "2026-07-16T02:40:00.000Z";
+  const recoveredRuntime = buildRuntime({
+    nowIso: recoveryAt,
+    priorRuntime: rebuilt.runtime,
+    snapshotStatus: "ready",
+    env: {
+      GITHUB_EVENT_NAME: "schedule",
+      GITHUB_WORKFLOW: "Update Manifest",
+      GITHUB_WORKFLOW_REF: "o/r/.github/workflows/update-manifest.yml@refs/heads/main",
+      GITHUB_RUN_ID: "next-schedule", GITHUB_RUN_ATTEMPT: "1",
+      GITHUB_ACTOR: "github-actions[bot]", GITHUB_REF: "refs/heads/main",
+      KPI_EVENT_SCHEDULE: "30 2 * * *",
+      KPI_JOB_STARTED_AT: "2026-07-16T02:35:00.000Z",
+    },
+  });
+  assert.ok(recoveredRuntime.slots.missed_slot_keys.includes(missedSlot), "recovery retains the historical miss");
+  assert.equal(classifyRuntimeSlots(recoveredRuntime).status, "degraded", "later ready full snapshot recovers the miss");
+  const runtimeErrors = [];
+  const runtimeWarnings = [];
+  checkV2Runtime(v2Doc(recoveredRuntime), { errors: runtimeErrors, warnings: runtimeWarnings }, recoveryAt);
+  assert.deepEqual(runtimeErrors, [], "recovered historical miss has no runtime hard error");
+  assert.ok(runtimeWarnings.some((message) => /recovered by later authoritative ready full snapshot/.test(message)),
+    "recovered historical miss remains visible as a DEC-264 warning");
+  ok("non-authoritative rebuild records genuine missed slots; later authoritative snapshot recovers without erasing history");
 }
 
 // 9. checker functions on an in-memory authoritative doc (projection equality + sla + runtime)
@@ -2409,16 +2484,81 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 
   const incrementalMiss = "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-10T00:30Z";
   const incrementalLater = "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-11T00:30Z";
-  const incrementalRuntime = structuredClone(runtime);
+  const incrementalBuildAt = "2026-07-10T06:31:00.000Z";
+  const incrementalRuntime = makeProducerRuntime({ builtAt: incrementalBuildAt, slotKey: null, runId: "incremental-miss" });
+  incrementalRuntime.cadence.v2_activated_at = "2026-07-10T00:00:00.000Z";
   incrementalRuntime.slots.missed_slot_keys = [incrementalMiss];
+  incrementalRuntime.slots.satisfied_slot_keys = [];
+  incrementalRuntime.successful_snapshot_history = [];
+  const incrementalUnrecovered = classifyRuntimeSlots(incrementalRuntime);
+  assert.equal(incrementalUnrecovered.status, "degraded",
+    "unrecovered incremental/owner-gated miss is lane-local degradation, not a platform block");
+  assert.deepEqual(incrementalUnrecovered.blocking_unrecovered_missed_slot_keys, []);
+  assert.deepEqual(incrementalUnrecovered.lane_local_unrecovered_missed_slot_keys, [incrementalMiss]);
+  const incrementalPub = projectPublicKpi(v2Doc(incrementalRuntime), "2026-07-10T07:00:00.000Z");
+  assert.equal(incrementalPub.runtime.slot_status, "degraded");
+  assert.equal(incrementalPub.runtime.fresh, true);
+  assert.equal(incrementalPub.runtime.blocking_unrecovered_missed_slot_count, 0);
+  assert.equal(incrementalPub.runtime.lane_local_unrecovered_missed_slot_count, 1);
+  assert.match(incrementalPub.runtime.status_message, /incremental\/owner-gated/i);
+  const incrementalErrors = [];
+  const incrementalWarnings = [];
+  checkV2Runtime(v2Doc(incrementalRuntime), { errors: incrementalErrors, warnings: incrementalWarnings }, "2026-07-10T07:00:00.000Z");
+  assert.deepEqual(incrementalErrors, [], "incremental miss does not hard-fail the checker");
+  assert.ok(incrementalWarnings.some((message) => message.includes(incrementalMiss)
+    && message.includes("deployment_blocking:false")), "checker names the lane-local miss and its non-blocking policy");
+
   incrementalRuntime.slots.satisfied_slot_keys = [incrementalLater];
   incrementalRuntime.successful_snapshot_history = [{
     built_at: "2026-07-11T01:00:00.000Z", slot_key: incrementalLater, run_id: "edge-later",
     run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
   }];
-  assert.equal(classifyRuntimeSlots(incrementalRuntime).status, "blocked",
-    "non-snapshot workflow does not auto-recover without explicit backfill proof");
-  ok("incremental/mixed workflow misses never inherit full-snapshot auto-recovery");
+  const incrementalRecovered = classifyRuntimeSlots(incrementalRuntime);
+  assert.equal(incrementalRecovered.status, "degraded", "the lane's next successful slot recovers its prior miss");
+  assert.deepEqual(incrementalRecovered.recovered_missed_slot_keys, [incrementalMiss]);
+  assert.deepEqual(incrementalRecovered.lane_local_unrecovered_missed_slot_keys, []);
+  ok("incremental/owner-gated miss degrades locally and recovers on that lane's next successful slot");
+
+  const fakeRecovery = "update-manifest.yml:99 99 * * *@2026-07-13T09:30Z";
+  const fakeRecoveryRuntime = structuredClone(runtime);
+  fakeRecoveryRuntime.slots.satisfied_slot_keys = [fakeRecovery];
+  fakeRecoveryRuntime.successful_snapshot_history = [{
+    built_at: "2026-07-13T10:00:00.000Z", slot_key: fakeRecovery, run_id: "fake-recovery",
+    run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
+  }];
+  const fakeRecoveryClassification = classifyRuntimeSlots(fakeRecoveryRuntime);
+  assert.equal(fakeRecoveryClassification.status, "blocked", "non-canonical recovery slot cannot clear a full-snapshot miss");
+  assert.deepEqual(fakeRecoveryClassification.recovered_missed_slot_keys, []);
+  ok("non-canonical satisfied/history key cannot forge full-snapshot recovery");
+
+  let retainedRecoveryRuntime = makeProducerRuntime({ builtAt: "2026-07-12T10:51:19.151Z", slotKey: recovery, runId: "retained-recovery" });
+  retainedRecoveryRuntime.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
+  retainedRecoveryRuntime.slots.missed_slot_keys = [miss];
+  for (let day = 13; day <= 22; day += 1) {
+    for (const [hour, cron] of [[2, "30 2 * * *"], [9, "30 9 * * *"]]) {
+      const nowIso = `2026-07-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:31:00.000Z`;
+      retainedRecoveryRuntime = buildRuntime({
+        nowIso,
+        env: {
+          GITHUB_EVENT_NAME: "schedule",
+          GITHUB_WORKFLOW_REF: "o/r/.github/workflows/update-manifest.yml@refs/heads/main",
+          GITHUB_RUN_ID: `history-${day}-${hour}`,
+          GITHUB_RUN_ATTEMPT: "1",
+          GITHUB_WORKFLOW: "Update Manifest",
+          GITHUB_SHA: "deadbeef",
+          KPI_EVENT_SCHEDULE: cron,
+          KPI_JOB_STARTED_AT: nowIso,
+        },
+        priorRuntime: retainedRecoveryRuntime,
+        snapshotStatus: "ready",
+      });
+    }
+  }
+  assert.ok(retainedRecoveryRuntime.successful_snapshot_history.some((entry) => entry.run_id === "retained-recovery"),
+    "recovery evidence remains for the same 14-day window as its missed slot");
+  assert.ok(classifyRuntimeSlots(retainedRecoveryRuntime).recovered_missed_slot_keys.includes(miss),
+    "history churn cannot re-block a recovered retained miss");
+  ok("successful history uses the missed-slot retention window, not a 14-row cap");
 }
 
 // 35. CRON DEFERRAL GUARD — a valid predeclared exception is accepted; post-hoc

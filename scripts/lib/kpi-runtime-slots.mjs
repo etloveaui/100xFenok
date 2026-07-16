@@ -8,12 +8,15 @@ const DEFERRAL_KEYS = Object.freeze([
   "slot_key",
 ]);
 
-// Automatic recovery is intentionally narrow. Update Manifest rewrites the same
-// complete KPI/manifest snapshot on both daily schedules. Incremental and mixed
-// source lanes must provide explicit backfill evidence before joining this list.
+// Only an unrecovered miss in one of these full-snapshot workflows is a platform
+// integrity block. Other tracked workflows are incremental/owner-gated lanes:
+// their miss stays named as lane-local degradation until that same workflow_file
+// later produces a satisfied slot and a ready authoritative KPI snapshot.
 export const FULL_SNAPSHOT_RECOVERY_WORKFLOWS = Object.freeze({
   "update-manifest.yml": "Update Manifest",
 });
+
+const KPI_SNAPSHOT_WORKFLOW = "Update Manifest";
 
 function parseDow(dow) {
   if (dow === "*") return null;
@@ -107,17 +110,17 @@ export function assertValidCronDeferrals(cronDeferrals, options) {
 
 function recoveryForMiss(miss, history, satisfied) {
   const parsedMiss = parseRuntimeSlotKey(miss);
-  if (!parsedMiss || !FULL_SNAPSHOT_RECOVERY_WORKFLOWS[parsedMiss.workflow_file]) return null;
-  const expectedWorkflow = FULL_SNAPSHOT_RECOVERY_WORKFLOWS[parsedMiss.workflow_file];
+  if (!parsedMiss) return null;
   return history.find((entry) => {
     const parsedRecovery = parseRuntimeSlotKey(entry?.slot_key);
     const builtAtMs = new Date(entry?.built_at).getTime();
-    return parsedRecovery?.workflow_file === parsedMiss.workflow_file
+    return isCanonicalTrackedSlot(parsedRecovery)
+      && parsedRecovery.workflow_file === parsedMiss.workflow_file
       && parsedRecovery.occurrence_ms > parsedMiss.occurrence_ms
       && satisfied.has(entry.slot_key)
       && Number.isFinite(builtAtMs)
       && builtAtMs > parsedMiss.occurrence_ms
-      && entry?.workflow === expectedWorkflow
+      && entry?.workflow === KPI_SNAPSHOT_WORKFLOW
       && entry?.status === "ready"
       && Number(entry?.run_attempt) === 1;
   }) ?? null;
@@ -139,10 +142,18 @@ export function classifyRuntimeSlots(runtime) {
     if (recoveryForMiss(miss, history, satisfied)) recovered.push(miss);
     else unrecovered.push(miss);
   }
+  const blockingUnrecovered = unrecovered.filter((miss) => {
+    const parsed = parseRuntimeSlotKey(miss);
+    return Boolean(parsed && FULL_SNAPSHOT_RECOVERY_WORKFLOWS[parsed.workflow_file]);
+  });
+  const blockingSet = new Set(blockingUnrecovered);
+  const laneLocalUnrecovered = unrecovered.filter((miss) => !blockingSet.has(miss));
   return {
-    status: missed.length === 0 ? "ready" : unrecovered.length === 0 ? "degraded" : "blocked",
+    status: missed.length === 0 ? "ready" : blockingUnrecovered.length > 0 ? "blocked" : "degraded",
     missed_slot_keys: missed,
     recovered_missed_slot_keys: recovered,
     unrecovered_missed_slot_keys: unrecovered,
+    blocking_unrecovered_missed_slot_keys: blockingUnrecovered,
+    lane_local_unrecovered_missed_slot_keys: laneLocalUnrecovered,
   };
 }

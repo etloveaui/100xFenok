@@ -663,8 +663,12 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso) {
 
   const slotClassification = classifyRuntimeSlots(runtime);
   if (slotClassification.status === "blocked") {
-    errors.push(`${slotClassification.unrecovered_missed_slot_keys.length} retained missed slot(s) lack a later authoritative ready full-snapshot recovery`);
-  } else if (slotClassification.status === "degraded") {
+    errors.push(`${slotClassification.blocking_unrecovered_missed_slot_keys.length} retained missed slot(s) lack a later authoritative ready full-snapshot recovery: ${slotClassification.blocking_unrecovered_missed_slot_keys.join(", ")}`);
+  }
+  if (slotClassification.lane_local_unrecovered_missed_slot_keys.length > 0) {
+    warnings.push(`incremental/owner-gated missed slot(s) remain lane-local degraded; deployment_blocking:false: ${slotClassification.lane_local_unrecovered_missed_slot_keys.join(", ")}`);
+  }
+  if (slotClassification.recovered_missed_slot_keys.length > 0) {
     warnings.push(`${slotClassification.recovered_missed_slot_keys.length} retained missed slot(s) recovered by later authoritative ready full snapshot(s)`);
   }
 
