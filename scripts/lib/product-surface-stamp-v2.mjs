@@ -3,6 +3,9 @@ import {
   PRODUCT_SURFACE_DATELESS_REASON,
   PRODUCT_SURFACE_LEGACY_CLASSIFICATION,
   PRODUCT_SURFACE_LEGACY_DISPOSITION,
+  PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
+  PRODUCT_SURFACE_STAMP_VERSION,
+  REQUIRED_SURFACE_IDS,
 } from "./kpi-contract-constants.mjs";
 import { isRealCalendarDate } from "./market-calendar.mjs";
 
@@ -189,4 +192,52 @@ export function classifyProductSurfaceV2(requiredRows, nowIso, requiredIds) {
   if (evidenceById.some(({ evidence }) => evidence.state === "collection_stale")) return { kind: "collection_stale", source_date: null, normalized_rows: normalizedRows };
   const floors = evidenceById.map(({ evidence }) => evidence.date_bearing.source_floor_as_of).filter(Boolean);
   return { kind: "stamped", source_date: floors.length ? [...floors].sort()[0] : null, normalized_rows: normalizedRows };
+}
+
+export function validateProductSurfaceCoverageV2Artifact(payload) {
+  const errors = [];
+  if (payload?.schema_version !== PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION) {
+    errors.push(`schema_version must be exactly ${PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION}`);
+  }
+  if (payload?.source_stamp_version !== PRODUCT_SURFACE_STAMP_VERSION) {
+    errors.push(`source_stamp_version must be exactly numeric ${PRODUCT_SURFACE_STAMP_VERSION}`);
+  }
+  const generatedAt = payload?.generated_at;
+  if (!validTimestamp(generatedAt)) errors.push("generated_at must be a valid timestamp");
+  const surfaces = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
+  if (!Array.isArray(payload?.surfaces)) errors.push("surfaces must be an array");
+  const counts = new Map();
+  for (const surface of surfaces) counts.set(surface?.id, (counts.get(surface?.id) || 0) + 1);
+  for (const id of REQUIRED_SURFACE_IDS) {
+    const count = counts.get(id) || 0;
+    if (count === 0) errors.push(`missing required v2 surface ${id}`);
+    else if (count > 1) errors.push(`duplicate required v2 surface ${id}`);
+  }
+  if (!validTimestamp(generatedAt)) return errors;
+  for (const id of REQUIRED_SURFACE_IDS) {
+    const surface = surfaces.find((item) => item?.id === id);
+    if (!surface || (counts.get(id) || 0) !== 1) continue;
+    if (!own(surface, "source_as_of")) errors.push(`${id}: source_as_of own-property is required`);
+    if (!own(surface, "stamp_evidence")) {
+      errors.push(`${id}: stamp_evidence is required for v2`);
+      continue;
+    }
+    const evidence = surface.stamp_evidence;
+    const derived = deriveProductSurfaceStampEvidence(evidence?.members, generatedAt);
+    if (JSON.stringify(evidence) !== JSON.stringify(derived)) errors.push(`${id}: stamp_evidence must exactly re-derive at generated_at`);
+    if (surface.source_as_of !== derived.date_bearing.source_floor_as_of) {
+      errors.push(`${id}: source_as_of must equal the TRUE-date subset floor`);
+    }
+    if (derived.state === "shape_error" || derived.state === "future_anomaly") {
+      errors.push(`${id}: stamp_evidence state ${derived.state} is deployment-blocking`);
+    }
+    if (surface.source_as_of === null) {
+      if (typeof surface.source_as_of_reason !== "string" || !surface.source_as_of_reason.trim()) {
+        errors.push(`${id}: null source_as_of requires a reason`);
+      }
+    } else if (surface.source_as_of_reason !== null && surface.source_as_of_reason !== undefined) {
+      errors.push(`${id}: dated source_as_of must not carry a missing-date reason`);
+    }
+  }
+  return errors;
 }

@@ -34,6 +34,7 @@ export const REQUIRED_SURFACE_IDS = Object.freeze([
 ]);
 
 export const PRODUCT_SURFACE_STAMP_VERSION = 2;
+export const PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION = "product-surface-coverage/v2";
 export const PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS = 50;
 export const PRODUCT_SURFACE_DATE_MAX_AGE_BUSINESS_DAYS = 10;
 export const PRODUCT_SURFACE_DATELESS_REASON = "provider publishes no date; recency = collection time";

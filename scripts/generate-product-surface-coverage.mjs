@@ -13,6 +13,7 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config
 import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
 import {
   PRODUCT_SURFACE_DATELESS_REASON,
+  PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
   PRODUCT_SURFACE_STAMP_VERSION,
 } from "./lib/kpi-contract-constants.mjs";
 import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
@@ -598,7 +599,7 @@ const summary = surfaces.reduce((acc, item) => {
 }, {});
 
 const payload = {
-  schema_version: "product-surface-coverage/v2",
+  schema_version: PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
   // Deterministic source-stamp marker (KPI v2 rev5.6): its PRESENCE means this
   // artifact was produced by the stamp-aware generator, so EVERY surface carries an
   // own-property source_as_of. Its ABSENCE means a genuine pre-stamp-era artifact

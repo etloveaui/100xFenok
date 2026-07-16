@@ -2,6 +2,7 @@
 
 import { pathToFileURL } from "node:url";
 import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
+import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
@@ -26,7 +27,6 @@ const REQUIRED_SURFACE_IDS = new Set([
 ]);
 const REQUIRED_NULL_SOURCE_REASONS = new Map([
   ["market_events", "provider publishes no aggregate source date"],
-  ["etf_center", "provider publishes no aggregate source date"],
   ["admin_data_lab", "internal artifact uses generation time; no upstream source date"],
 ]);
 
@@ -48,6 +48,11 @@ function fail(message) {
 
 function assert(condition, message) {
   if (!condition) fail(message);
+}
+
+export function assertProductSurfaceCoverageV2Contract(payload) {
+  const errors = validateProductSurfaceCoverageV2Artifact(payload);
+  assert(errors.length === 0, `Product surface coverage contract failed: ${errors.join("; ")}`);
 }
 
 export function recordDegradation(condition, message, warnings = degradations) {
@@ -344,7 +349,9 @@ function checkSurfaceSourceContract(surface, producerEvidence) {
     `Product surface ${id} source_as_of key is required`,
   );
   const requiredNullReason = REQUIRED_NULL_SOURCE_REASONS.get(id);
-  const expectedProducerDay = producerEvidence.get(id) ?? null;
+  const expectedProducerDay = id === "etf_center"
+    ? sourceDay(surface?.stamp_evidence?.date_bearing?.source_floor_as_of)
+    : producerEvidence.get(id) ?? null;
   const actualSourceDay = sourceDay(surface?.source_as_of);
 
   if (surface?.source_as_of === null) {
@@ -399,8 +406,7 @@ export async function checkProductSurfaceFreshness(root) {
     readPublicJson(PRODUCER_SOURCE_PATHS.yardeni),
     readPublicJson(PRODUCER_SOURCE_PATHS.stocksAnalyzer),
   ]);
-  assert(coverage?.schema_version === "product-surface-coverage/v1", "Product surface coverage schema_version mismatch");
-  assert(coverage?.source_stamp_version === 1, "Product surface coverage source_stamp_version must be 1");
+  assertProductSurfaceCoverageV2Contract(coverage);
   const surfaces = requiredArray(coverage?.surfaces, "Product surface coverage surfaces");
   const producerEvidence = buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer });
   const seenIds = new Set();

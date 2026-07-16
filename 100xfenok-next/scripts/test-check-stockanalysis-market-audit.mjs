@@ -16,6 +16,9 @@ import {
   assertProductSurfaceCoverageContract,
   renderMarketAuditHtml,
 } from "./check-stockanalysis-market-audit.mjs";
+import { deriveProductSurfaceStampEvidence } from "../../scripts/lib/product-surface-stamp-v2.mjs";
+import { validateCoverage } from "./check-data-freshness.mjs";
+import { assertProductSurfaceCoverageV2Contract } from "./smoke-stockanalysis-routes.mjs";
 import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
 
 let passed = 0;
@@ -174,20 +177,42 @@ function surfaceFixture(overrides = {}) {
 
 function coverageFixture(surfaces) {
   const statuses = ["ready", "partial", "pending", "stale", "unavailable", "error"];
+  const generatedAt = "2026-07-13T00:00:00.000Z";
+  const requiredRoutes = new Map([
+    ["stock_detail", "/stock/AAPL"],
+    ["market_valuation", "/market-valuation"],
+    ["market_events", "/market/events"],
+    ["sectors", "/sectors"],
+    ["etf_center", "/etfs"],
+    ["screener", "/screener"],
+  ]);
+  const expanded = [...surfaces];
+  const present = new Set(expanded.map((surface) => surface.id));
+  for (const [id, route] of requiredRoutes) {
+    if (!present.has(id)) expanded.push(surfaceFixture({ id, route }));
+  }
+  const stampedSurfaces = expanded.map((surface) => {
+    const stamp_evidence = deriveProductSurfaceStampEvidence([{
+      id: `${surface.id}:fixture`,
+      stamp_class: "date_bearing",
+      source_as_of: surface.source_as_of,
+    }], generatedAt);
+    return { ...surface, stamp_evidence };
+  });
   return {
-    schema_version: "product-surface-coverage/v1",
-    source_stamp_version: 1,
-    generated_at: "2026-07-13T00:00:00.000Z",
+    schema_version: "product-surface-coverage/v2",
+    source_stamp_version: 2,
+    generated_at: generatedAt,
     raw_policy: {
       public_mirror_allowed: true,
       raw_rows_included: false,
       private_artifact_paths_included: false,
     },
     totals: {
-      surfaces: surfaces.length,
-      ...Object.fromEntries(statuses.map((status) => [status, surfaces.filter((surface) => surface.status === status).length])),
+      surfaces: stampedSurfaces.length,
+      ...Object.fromEntries(statuses.map((status) => [status, stampedSurfaces.filter((surface) => surface.status === status).length])),
     },
-    surfaces,
+    surfaces: stampedSurfaces,
   };
 }
 
@@ -197,8 +222,30 @@ function coverageFixture(surfaces) {
   const warnings = [];
   assertProductSurfaceCoverageContract(coverageFixture([surfaceFixture()]), errors, warnings);
   assert.deepEqual(errors, [], `honest null must pass structural validation: ${errors.join("; ")}`);
+  const freshnessErrors = [];
+  validateCoverage(coverageFixture([surfaceFixture()]), new Map(), freshnessErrors, []);
+  assert.deepEqual(freshnessErrors, [], `v2 freshness consumer must pass: ${freshnessErrors.join("; ")}`);
+  assert.doesNotThrow(() => assertProductSurfaceCoverageV2Contract(coverageFixture([surfaceFixture()])), "v2 smoke consumer must pass");
   assert.ok(warnings.some((warning) => /stock_detail is unavailable/.test(warning)), "unavailable lane must be named as degraded");
   ok("(g) source_as_of:null + explicit reason -> accepted, stale lane named DEGRADED");
+}
+
+// (g2) The completed migration is v2-only: a legacy v1 artifact is a hard downgrade.
+{
+  const errors = [];
+  const warnings = [];
+  const legacy = coverageFixture([surfaceFixture()]);
+  legacy.schema_version = "product-surface-coverage/v1";
+  legacy.source_stamp_version = 1;
+  for (const surface of legacy.surfaces) delete surface.stamp_evidence;
+  assertProductSurfaceCoverageContract(legacy, errors, warnings);
+  assert.ok(errors.some((error) => /schema_version must be exactly product-surface-coverage\/v2/.test(error)), "v1 schema must fail");
+  assert.ok(errors.some((error) => /source_stamp_version must be exactly numeric 2/.test(error)), "v1 stamp marker must fail");
+  const freshnessErrors = [];
+  validateCoverage(legacy, new Map(), freshnessErrors, []);
+  assert.ok(freshnessErrors.some((error) => /schema_version must be exactly product-surface-coverage\/v2/.test(error)), "v1 freshness consumer must fail");
+  assert.throws(() => assertProductSurfaceCoverageV2Contract(legacy), /schema_version must be exactly product-surface-coverage\/v2/, "v1 smoke consumer must fail");
+  ok("(g2) legacy v1 product-surface artifact -> hard downgrade failure");
 }
 
 // (h) A null with no provenance reason is still dishonest and must fail.

@@ -3,7 +3,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
+import { pathToFileURL } from "node:url";
 import { businessDayAge } from "../../scripts/lib/market-calendar.mjs";
+import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
@@ -20,7 +22,6 @@ const SOURCE_FLOOR_UNAVAILABLE = "producer has not emitted a complete source-dat
 const INTERNAL_ARTIFACT_CLOCK = "internal artifact uses generation time; no upstream source date";
 const REQUIRED_NULL_SOURCE_REASONS = new Map([
   ["market_events", NO_AGGREGATE_SOURCE_DATE],
-  ["etf_center", NO_AGGREGATE_SOURCE_DATE],
   ["admin_data_lab", INTERNAL_ARTIFACT_CLOCK],
 ]);
 
@@ -169,7 +170,7 @@ function buildProducerEvidence(errors, warnings) {
     }],
     ["market_events", { expected: null, intentionalNull: true }],
     ["sectors", { expected: marketFactsDay, intentionalNull: false, verifiable: Boolean(marketFacts) }],
-    ["etf_center", { expected: null, intentionalNull: true }],
+    ["etf_center", { expected: null, intentionalNull: false, verifiable: true }],
     ["screener", { expected: screenerDay, intentionalNull: false, verifiable: Boolean(stocksAnalyzer) }],
     ["admin_data_lab", { expected: null, intentionalNull: true }],
   ]);
@@ -206,9 +207,8 @@ function expectedAgeDays(value, calendar, errors, context) {
   return Math.max(0, Math.floor((now.getTime() - parsed.getTime()) / (24 * 60 * 60 * 1000)));
 }
 
-function validateCoverage(payload, producerEvidence, errors, warnings) {
-  assert(payload?.schema_version === "product-surface-coverage/v1", "schema_version must be product-surface-coverage/v1", errors);
-  assert(payload?.source_stamp_version === 1, "source_stamp_version must be exactly numeric 1", errors);
+export function validateCoverage(payload, producerEvidence, errors, warnings) {
+  errors.push(...validateProductSurfaceCoverageV2Artifact(payload));
   assert(nonEmptyString(payload?.generated_at) && Number.isFinite(new Date(payload.generated_at).getTime()), "generated_at must be a valid timestamp", errors);
   assert(Array.isArray(payload?.surfaces) && payload.surfaces.length > 0, "surfaces are required", errors);
   assert(payload?.raw_policy?.public_mirror_allowed === true, "raw_policy must allow the public mirror", errors);
@@ -249,7 +249,13 @@ function validateCoverage(payload, producerEvidence, errors, warnings) {
       warnings.push(`${id}: source_as_of is unavailable (${sourceReason.trim()})`);
     }
 
-    const evidence = producerEvidence.get(id);
+    const evidence = id === "etf_center"
+      ? {
+          expected: sourceDay(surface?.stamp_evidence?.date_bearing?.source_floor_as_of),
+          intentionalNull: false,
+          verifiable: true,
+        }
+      : producerEvidence.get(id);
     if (evidence?.intentionalNull) {
       assert(sourceAsOf === null, `${id}: source_as_of is unsupported by producer evidence`, errors);
     } else if (evidence) {
@@ -322,50 +328,51 @@ function validateCoverage(payload, producerEvidence, errors, warnings) {
   assert(payload?.totals?.error === 0, "totals.error must be zero for deploy", errors);
 }
 
-const errors = [];
-const warnings = [];
-const coveragePair = readProducedPair(
-  "product-surface coverage",
-  ROOT_COVERAGE_PATH,
-  PUBLIC_COVERAGE_PATH,
-  errors,
-  warnings,
-);
-const rootCoverage = coveragePair?.root ?? null;
-const producerEvidence = buildProducerEvidence(errors, warnings);
+function main() {
+  const errors = [];
+  const warnings = [];
+  const coveragePair = readProducedPair(
+    "product-surface coverage",
+    ROOT_COVERAGE_PATH,
+    PUBLIC_COVERAGE_PATH,
+    errors,
+    warnings,
+  );
+  const rootCoverage = coveragePair?.root ?? null;
+  const producerEvidence = buildProducerEvidence(errors, warnings);
 
-if (rootCoverage) {
-  validateCoverage(rootCoverage, producerEvidence, errors, warnings);
+  if (rootCoverage) validateCoverage(rootCoverage, producerEvidence, errors, warnings);
+  if (errors.length) {
+    console.error("data freshness check failed");
+    for (const error of errors) console.error(`- ${error}`);
+    process.exit(1);
+  }
+
+  const degradedSurfaces = (rootCoverage?.surfaces || []).filter(
+    (surface) => surface.status !== "ready" || surface.source_as_of === null,
+  );
+  for (const surface of (rootCoverage?.surfaces || []).filter((item) => item.status !== "ready")) {
+    warnings.push(`product surface ${surface.id} is ${surface.status}: ${surface.summary}`);
+  }
+  for (const warning of [...new Set(warnings)]) console.warn(`::warning:: data freshness degraded: ${warning}`);
+
+  console.log(JSON.stringify({
+    ok: true,
+    status: warnings.length > 0 || degradedSurfaces.length > 0 ? "degraded" : "ready",
+    warnings: [...new Set(warnings)],
+    generated_at: rootCoverage?.generated_at ?? null,
+    surfaces: rootCoverage?.surfaces?.length ?? 0,
+    statuses: (rootCoverage?.surfaces || []).reduce((acc, surface) => {
+      acc[surface.status] = (acc[surface.status] || 0) + 1;
+      return acc;
+    }, {}),
+    degraded_surfaces: degradedSurfaces.map((surface) => ({
+      id: surface.id,
+      status: surface.status,
+      source_as_of: surface.source_as_of,
+      source_as_of_reason: surface.source_as_of_reason ?? null,
+    })),
+  }, null, 2));
 }
 
-if (errors.length) {
-  console.error("data freshness check failed");
-  for (const error of errors) console.error(`- ${error}`);
-  process.exit(1);
-}
-
-const degradedSurfaces = (rootCoverage?.surfaces || []).filter(
-  (surface) => surface.status !== "ready" || surface.source_as_of === null,
-);
-for (const surface of (rootCoverage?.surfaces || []).filter((item) => item.status !== "ready")) {
-  warnings.push(`product surface ${surface.id} is ${surface.status}: ${surface.summary}`);
-}
-for (const warning of [...new Set(warnings)]) console.warn(`::warning:: data freshness degraded: ${warning}`);
-
-console.log(JSON.stringify({
-  ok: true,
-  status: warnings.length > 0 || degradedSurfaces.length > 0 ? "degraded" : "ready",
-  warnings: [...new Set(warnings)],
-  generated_at: rootCoverage?.generated_at ?? null,
-  surfaces: rootCoverage?.surfaces?.length ?? 0,
-  statuses: (rootCoverage?.surfaces || []).reduce((acc, surface) => {
-    acc[surface.status] = (acc[surface.status] || 0) + 1;
-    return acc;
-  }, {}),
-  degraded_surfaces: degradedSurfaces.map((surface) => ({
-    id: surface.id,
-    status: surface.status,
-    source_as_of: surface.source_as_of,
-    source_as_of_reason: surface.source_as_of_reason ?? null,
-  })),
-}, null, 2));
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

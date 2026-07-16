@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 
 import { DISPATCH_STATUS, DISPATCH_STATUS_VALUES } from "./stockanalysis-dispatch-status.mjs";
 import { isProfileConsistent } from "./history-gap-profile.mjs";
+import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 
 const ROOT = process.cwd();
 
@@ -495,8 +496,9 @@ export function assertProductSurfaceCoverageContract(payload, errors, warnings =
   const surfaces = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
   const seenIds = new Set();
   const actualTotals = Object.fromEntries([...ALLOWED_SURFACE_STATUSES].map((status) => [status, 0]));
-  assert(payload?.schema_version === "product-surface-coverage/v1", "Product surface coverage: schema_version is required", errors);
-  assert(payload?.source_stamp_version === 1, "Product surface coverage: source_stamp_version must be 1", errors);
+  for (const message of validateProductSurfaceCoverageV2Artifact(payload)) {
+    errors.push(`Product surface coverage: ${message}`);
+  }
   assert(typeof payload?.generated_at === "string" && Number.isFinite(new Date(payload.generated_at).getTime()), "Product surface coverage: generated_at must be a valid timestamp", errors);
   assert(payload?.raw_policy?.public_mirror_allowed === true, "Product surface coverage: public mirror must be allowed", errors);
   assert(payload?.raw_policy?.raw_rows_included === false, "Product surface coverage: raw rows must not be included", errors);
