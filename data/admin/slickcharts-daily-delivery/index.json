@@ -1,7 +1,7 @@
 {
   "schema_version": "producer-lkg-index/v1",
   "lane_id": "slickcharts_daily_delivery",
-  "generated_at": "2026-07-15T13:10:25.804Z",
+  "generated_at": "2026-07-16T08:20:53.303Z",
   "keys": [
     "gainers.json",
     "losers.json",
@@ -11,72 +11,70 @@
   ],
   "counts": {
     "keys": 5,
-    "fresh": 0,
-    "lkg": 5,
-    "retry": 5,
+    "fresh": 5,
+    "lkg": 0,
+    "retry": 0,
     "unavailable": 0,
-    "failed": 5,
-    "recovered": 0
+    "failed": 0,
+    "recovered": 5
   },
-  "retry_keys": [
-    "gainers.json",
-    "losers.json",
-    "treasury.json",
-    "currency.json",
-    "mortgage.json"
-  ],
-  "lkg_details": [
+  "retry_keys": [],
+  "lkg_details": [],
+  "recovery_details": [
     {
       "key": "gainers.json",
-      "payload_sha256": "0a176b1ec8049b787b03b2a414a499bd147b0265efcd216aebc645bddc4fd058",
-      "source_as_of": "2026-07-15",
-      "failure_run_id": "29417722033",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417722033",
+      "recovery_run_id": "29483031623",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-16T08:20:53.303Z",
+      "source_as_of": "2026-07-16"
     },
     {
       "key": "losers.json",
-      "payload_sha256": "b5a81ba29d5f4a0e15ac626d9629867ad88f57c52305b6c00031ca866eb85b21",
-      "source_as_of": "2026-07-15",
-      "failure_run_id": "29417722033",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417722033",
+      "recovery_run_id": "29483031623",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-16T08:20:53.303Z",
+      "source_as_of": "2026-07-16"
     },
     {
       "key": "treasury.json",
-      "payload_sha256": "4b49621d4a5b37dcb2af64472d4bdbab41c5727de30b5c7dcc9a024f5bd36f65",
-      "source_as_of": "2026-07-15",
-      "failure_run_id": "29417722033",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417722033",
+      "recovery_run_id": "29483031623",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-16T08:20:53.303Z",
+      "source_as_of": "2026-07-16"
     },
     {
       "key": "currency.json",
-      "payload_sha256": "435af04bd219e86385d53c14fa36fcfbb52d87553b65ac887816d077c6f5921a",
-      "source_as_of": "2026-07-15",
-      "failure_run_id": "29417722033",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417722033",
+      "recovery_run_id": "29483031623",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-16T08:20:53.303Z",
+      "source_as_of": "2026-07-16"
     },
     {
       "key": "mortgage.json",
-      "payload_sha256": "8296544b627e28007d3024211288524f9cb1ffd2e058ecbaf2aa875356aab090",
-      "source_as_of": "2026-07-15",
-      "failure_run_id": "29417722033",
-      "failure_run_attempt": 1
+      "recovered_from_run_id": "29417722033",
+      "recovery_run_id": "29483031623",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-16T08:20:53.303Z",
+      "source_as_of": "2026-07-16"
     }
   ],
-  "recovery_details": [],
   "current_attempt": {
-    "run_id": "29417722033",
+    "run_id": "29483031623",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-15T13:10:25.804Z",
+    "event_name": "schedule",
+    "observed_at": "2026-07-16T08:20:53.303Z",
     "attempted": 5,
-    "successes": 0,
-    "failed": 5,
-    "failed_keys": [
-      "gainers.json",
-      "losers.json",
-      "treasury.json",
-      "currency.json",
-      "mortgage.json"
-    ]
+    "successes": 5,
+    "failed": 0,
+    "failed_keys": []
   }
 }
