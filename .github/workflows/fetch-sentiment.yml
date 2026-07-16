@@ -11,6 +11,11 @@ on:
     # put/call and VIX settle for the session by then; crypto updates daily.
     - cron: '0 22 * * 1-5'
   workflow_dispatch:
+    inputs:
+      controlled_failure_source:
+        description: 'Dispatch-only LKG chaos source (cnn, cftc, vix, move)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -39,6 +44,8 @@ jobs:
 
       - name: Fetch sentiment series
         id: fetch_sentiment
+        env:
+          INPUT_CONTROLLED_FAILURE_SOURCE: ${{ github.event.inputs.controlled_failure_source || '' }}
         run: node scripts/fetch-sentiment.mjs
 
       - name: Verify output
@@ -62,6 +69,15 @@ jobs:
           SHARD="data/admin/data-supply-state/detection-attempts/sentiment.json"
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
+          fi
+          if [[ -f data/admin/sentiment/index.json ]]; then
+            git add -- data/admin/sentiment/index.json
+          fi
+          if compgen -G 'data/admin/sentiment/current/*.json' >/dev/null; then
+            git add -- data/admin/sentiment/current/*.json
+          fi
+          if compgen -G 'data/admin/sentiment/lkg/*.json' >/dev/null; then
+            git add -- data/admin/sentiment/lkg/*.json
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- data/sentiment/*.json 100xfenok-next/public/data/sentiment/*.json

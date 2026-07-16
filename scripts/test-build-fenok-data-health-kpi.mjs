@@ -1084,6 +1084,59 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("all installed live detection-floor rows map into KPI; malformed report fails closed");
 }
 
+// Sentiment LKG retry evidence is loaded by the real CLI and names the failed
+// source group without exposing its private payload digest.
+{
+  const now = "2026-07-15T22:10:00.000Z";
+  const tmp = mkTmp("sentiment-lkg-retry");
+  const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  writeJson(path.join(tmp, "data", "admin", "sentiment", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "sentiment",
+    updated_at: now,
+    retry_set: ["vix"],
+    items: {
+      vix: {
+        key: "vix",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/sentiment/lkg/vix.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-14",
+        },
+        lkg: {
+          path: "data/admin/sentiment/lkg/vix.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-14",
+        },
+        latest_failure: {
+          run_id: "sentiment-chaos-1",
+          run_attempt: 1,
+          observed_at: now,
+          reason: "controlled_failure",
+        },
+        updated_at: now,
+      },
+    },
+  });
+  const { root, public: pub } = runBuilder(tmp, {}, now);
+  const sentiment = root.lanes.find((item) => item.id === "sentiment");
+  assert.equal(sentiment.status, "degraded");
+  assert.match(sentiment.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail, /vix.*lkg_primary.*sentiment-chaos-1/i);
+  assert.deepEqual(sentiment.details.recovery_retry_set, [{
+    key: "vix",
+    resolution_state: "lkg_primary",
+    failure_run_id: "sentiment-chaos-1",
+    recovered_from_run_id: null,
+  }]);
+  assert.deepEqual(pub.lanes.find((item) => item.id === "sentiment")?.details?.recovery_retry_set,
+    sentiment.details.recovery_retry_set);
+  assert.equal(JSON.stringify(root).includes("a".repeat(64)), false, "private LKG digests stay out of KPI evidence");
+  ok("sentiment retained-LKG retry source is named in private and public KPI evidence");
+}
+
 // 1. push build -> non-authoritative, producer null
 {
   const tmp = mkTmp("push");

@@ -26,10 +26,10 @@
  * Deferred:
  *   aaii.json (still spreadsheet/import based; no robust free JSON source)
  *
- * Resilience: each source is independent. A 429 / network failure / shape
- * change for one source logs an error and is skipped; other sources still
- * commit. Process exits non-zero ONLY if every source failed (so the workflow
- * surfaces a total outage but tolerates a partial one).
+ * Resilience: each source is independent. Transport/HTTP failures retain a
+ * sha256-bound LKG and join the retry set with exit 0. Missing LKG, systemic
+ * outage, or auth/decode/schema corruption exits non-zero. Recovery promotion
+ * requires an attempt-1 natural schedule run whose source date advances.
  *
  * Usage:
  *   node scripts/fetch-sentiment.mjs
@@ -41,15 +41,21 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  atomicWrite,
   buildAttemptRow,
   buildSingleLaneShard,
-  classifyEndpointResponse,
+  classifyHttpResponse,
   foldWorstTuples,
   threwTuple,
   transportError,
   tupleStatus,
   writeJsonAtomic,
 } from './lib/data-supply-attempt-shard.mjs';
+import {
+  LaneLkgStore,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from './lib/data-supply-lkg-store.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -58,10 +64,28 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 // `/data/sentiment/*` from public/data (see useDashboardData.ts / data-loader.ts),
 // while data/sentiment/ is the source of truth the GAS scripts historically
 // wrote. fetch-fred-banking.yml established the dual-write pattern; we follow it.
-const OUTPUT_DIRS = [
+const DEFAULT_OUTPUT_DIRS = [
   path.join(REPO_ROOT, 'data', 'sentiment'),
   path.join(REPO_ROOT, '100xfenok-next', 'public', 'data', 'sentiment'),
 ];
+
+export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({
+  cnn: Object.freeze([
+    'cnn-fear-greed.json',
+    'cnn-components.json',
+    'cnn-put-call.json',
+    'cnn-momentum.json',
+    'cnn-strength.json',
+    'cnn-breadth.json',
+    'cnn-junk-bond.json',
+    'cnn-safe-haven.json',
+  ]),
+  cftc: Object.freeze(['cftc-sp500.json']),
+  vix: Object.freeze(['vix.json']),
+  move: Object.freeze(['move.json']),
+});
+export const SENTIMENT_LKG_SOURCE_KEYS = Object.freeze(Object.keys(SENTIMENT_LKG_SOURCE_FILES));
+const SENTIMENT_BUNDLE_SCHEMA = 'sentiment-source-bundle/v1';
 
 const CNN_PROXY_URL = 'https://fed-proxy.etloveaui.workers.dev/cnn';
 const CRYPTO_FNG_URL = 'https://api.alternative.me/fng/?limit=1';
@@ -115,7 +139,7 @@ async function fetchJson(url, { headers = {}, timeoutMs = 30000 } = {}) {
           req.destroy(Object.assign(new Error(`timeout after ${timeoutMs}ms`), { code: 'ETIMEDOUT' }));
         });
       });
-      const classified = classifyEndpointResponse(response, { laneId: 'sentiment' });
+      const classified = classifyHttpResponse(response);
       if (classified.attempt.execution === 'returned' && classified.attempt.decode === 'ok') {
         recordSentimentAttemptTuple(classified.attempt);
         return classified.document;
@@ -142,8 +166,8 @@ function round1(n) {
  * Read the existing array from the FIRST output dir (the SSOT). Both mirrors
  * are kept identical, so the SSOT copy is authoritative for the merge base.
  */
-function readExisting(fileName) {
-  const ssotPath = path.join(OUTPUT_DIRS[0], fileName);
+function readExisting(fileName, outputDirs = DEFAULT_OUTPUT_DIRS) {
+  const ssotPath = path.join(outputDirs[0], fileName);
   try {
     const parsed = JSON.parse(fs.readFileSync(ssotPath, 'utf-8'));
     return Array.isArray(parsed) ? parsed : [];
@@ -173,17 +197,17 @@ function mergeByDate(existing, entry) {
   return { array: arr, action, before, after: arr.length };
 }
 
-function writeAll(fileName, array) {
+function writeAll(fileName, array, outputDirs = DEFAULT_OUTPUT_DIRS) {
   const json = JSON.stringify(array, null, 2) + '\n';
-  for (const dir of OUTPUT_DIRS) {
+  for (const dir of outputDirs) {
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, fileName), json);
+    atomicWrite(path.join(dir, fileName), json);
   }
 }
 
 // ─── Source handlers ────────────────────────────────────────────────────────────
 
-async function runCnn() {
+async function runCnn(readExistingFn = readExisting) {
   const data = await fetchJson(CNN_PROXY_URL);
   const fg = data.fear_and_greed;
   if (!fg || typeof fg.score !== 'number') {
@@ -195,9 +219,8 @@ async function runCnn() {
   // 1) cnn-fear-greed.json — {date, score: round1}
   {
     const entry = { date: today, score: round1(fg.score) };
-    const r = mergeByDate(readExisting('cnn-fear-greed.json'), entry);
-    writeAll('cnn-fear-greed.json', r.array);
-    results.push({ file: 'cnn-fear-greed.json', ...r, sample: entry });
+    const r = mergeByDate(readExistingFn('cnn-fear-greed.json'), entry);
+    results.push({ file: 'cnn-fear-greed.json', array: r.array, ...r, sample: entry });
   }
 
   // 2) cnn-components.json — 7 component scores (match existing shape)
@@ -226,9 +249,8 @@ async function runCnn() {
       safe_haven: round1(c.safe_haven.score),
       junk_bond: round1(c.junk_bond.score),
     };
-    const r = mergeByDate(readExisting('cnn-components.json'), entry);
-    writeAll('cnn-components.json', r.array);
-    results.push({ file: 'cnn-components.json', ...r, sample: entry });
+    const r = mergeByDate(readExistingFn('cnn-components.json'), entry);
+    results.push({ file: 'cnn-components.json', array: r.array, ...r, sample: entry });
   }
 
   // 3) cnn-put-call.json — {date, value, rating}
@@ -246,9 +268,8 @@ async function runCnn() {
       value: Math.round(last.y * 100) / 100,
       rating: String(last.rating ?? pc.rating ?? '').toLowerCase(),
     };
-    const r = mergeByDate(readExisting('cnn-put-call.json'), entry);
-    writeAll('cnn-put-call.json', r.array);
-    results.push({ file: 'cnn-put-call.json', ...r, sample: entry });
+    const r = mergeByDate(readExistingFn('cnn-put-call.json'), entry);
+    results.push({ file: 'cnn-put-call.json', array: r.array, ...r, sample: entry });
   }
 
   // 4) Individual CNN component files consumed by the legacy macro-monitor
@@ -265,15 +286,14 @@ async function runCnn() {
       value: Math.round(last.y * 100) / 100,
       rating: String(last.rating ?? component.rating ?? '').toLowerCase(),
     };
-    const r = mergeByDate(readExisting(fileName), entry);
-    writeAll(fileName, r.array);
-    results.push({ file: fileName, ...r, sample: entry });
+    const r = mergeByDate(readExistingFn(fileName), entry);
+    results.push({ file: fileName, array: r.array, ...r, sample: entry });
   }
 
   return results;
 }
 
-async function runYahooCloseSeries({ symbol, fileName, label }) {
+async function runYahooCloseSeries({ symbol, fileName, label, readExistingFn = readExisting }) {
   const now = Math.floor(Date.now() / 1000);
   const start = now - 15 * 24 * 60 * 60; // 15-day window, like vix.gs / move.gs
   const encodedSymbol = encodeURIComponent(symbol);
@@ -312,7 +332,7 @@ async function runYahooCloseSeries({ symbol, fileName, label }) {
   }
   if (newPoints.length === 0) throw new Error(`${label}: no non-null closes`);
 
-  let arr = readExisting(fileName);
+  let arr = readExistingFn(fileName);
   let appended = 0;
   let updated = 0;
   let lastSample = null;
@@ -322,9 +342,9 @@ async function runYahooCloseSeries({ symbol, fileName, label }) {
     if (r.action === 'appended') appended++; else updated++;
     lastSample = p;
   }
-  writeAll(fileName, arr);
   return [{
     file: fileName,
+    array: arr,
     action: appended ? 'appended' : 'updated',
     before: arr.length - appended,
     after: arr.length,
@@ -334,15 +354,15 @@ async function runYahooCloseSeries({ symbol, fileName, label }) {
   }];
 }
 
-async function runVix() {
-  return runYahooCloseSeries({ symbol: YAHOO_VIX_SYMBOL, fileName: 'vix.json', label: 'Yahoo VIX' });
+async function runVix(readExistingFn = readExisting) {
+  return runYahooCloseSeries({ symbol: YAHOO_VIX_SYMBOL, fileName: 'vix.json', label: 'Yahoo VIX', readExistingFn });
 }
 
-async function runMove() {
-  return runYahooCloseSeries({ symbol: YAHOO_MOVE_SYMBOL, fileName: 'move.json', label: 'Yahoo MOVE' });
+async function runMove(readExistingFn = readExisting) {
+  return runYahooCloseSeries({ symbol: YAHOO_MOVE_SYMBOL, fileName: 'move.json', label: 'Yahoo MOVE', readExistingFn });
 }
 
-async function runCftc() {
+async function runCftc(readExistingFn = readExisting) {
   const data = await fetchJson(CFTC_COT_URL);
   const latest = Array.isArray(data) ? data[0] : null;
   if (!latest) {
@@ -367,12 +387,11 @@ async function runCftc() {
     net: long - short,
     openInterest,
   };
-  const r = mergeByDate(readExisting('cftc-sp500.json'), entry);
-  writeAll('cftc-sp500.json', r.array);
-  return [{ file: 'cftc-sp500.json', ...r, sample: entry }];
+  const r = mergeByDate(readExistingFn('cftc-sp500.json'), entry);
+  return [{ file: 'cftc-sp500.json', array: r.array, ...r, sample: entry }];
 }
 
-async function runCrypto() {
+async function runCrypto(readExistingFn = readExisting) {
   const data = await fetchJson(CRYPTO_FNG_URL);
   const row = Array.isArray(data?.data) ? data.data[0] : null;
   if (!row || row.value == null) {
@@ -389,50 +408,219 @@ async function runCrypto() {
     value: Number(row.value),
     classification: String(row.value_classification ?? ''),
   };
-  const r = mergeByDate(readExisting('crypto-fear-greed.json'), entry);
-  writeAll('crypto-fear-greed.json', r.array);
-  return [{ file: 'crypto-fear-greed.json', ...r, sample: entry }];
+  const r = mergeByDate(readExistingFn('crypto-fear-greed.json'), entry);
+  return [{ file: 'crypto-fear-greed.json', array: r.array, ...r, sample: entry }];
 }
 
 // ─── Orchestration ──────────────────────────────────────────────────────────────
 
+function validSeriesArray(value) {
+  return Array.isArray(value) && value.length > 0 && value.every((row) => (
+    row && typeof row === 'object' && /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+  ));
+}
+
+function sourceAsOfFromFiles(files) {
+  const dates = Object.values(files)
+    .flatMap((rows) => rows.map((row) => row.date))
+    .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date));
+  return dates.length > 0 ? dates.sort().at(-1) : null;
+}
+
+function buildSourceBundle(key, fileNames, results) {
+  const byFile = new Map(results.map((result) => [result.file, result.array]));
+  if (byFile.size !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(byFile.get(fileName)))) {
+    throw new Error(`${key}: incomplete or invalid normalized source bundle`);
+  }
+  const files = Object.fromEntries(fileNames.map((fileName) => [fileName, byFile.get(fileName)]));
+  const sourceAsOf = sourceAsOfFromFiles(files);
+  if (!sourceAsOf) throw new Error(`${key}: source bundle has no valid source date`);
+  return {
+    schema_version: SENTIMENT_BUNDLE_SCHEMA,
+    source_key: key,
+    source_as_of: sourceAsOf,
+    files,
+  };
+}
+
+function validSourceBundle(key, fileNames, document) {
+  if (document?.schema_version !== SENTIMENT_BUNDLE_SCHEMA || document?.source_key !== key
+    || !document.files || typeof document.files !== 'object' || Array.isArray(document.files)) return false;
+  const actualNames = Object.keys(document.files);
+  if (actualNames.length !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(document.files[fileName]))) {
+    return false;
+  }
+  return sourceAsOfFromFiles(document.files) === document.source_as_of;
+}
+
+function serializeBundle(bundle) {
+  return `${JSON.stringify(bundle, null, 2)}\n`;
+}
+
+function tupleReason(tuple) {
+  if (tuple?.execution === 'threw') {
+    return tuple.exception_kind === 'transport' ? 'transport_error' : 'unexpected_error';
+  }
+  if (tuple?.execution !== 'returned') return 'unexpected_error';
+  if (tuple.http_status === 401 || tuple.http_status === 403) return 'auth_error';
+  if (tuple.http_status === 429 || tuple.rate_limited === true) return 'rate_limited';
+  if (tuple.http_status < 200 || tuple.http_status >= 300) return 'http_error';
+  if (tuple.decode === 'error') return 'decode_error';
+  if (tuple.payload === 'empty') return 'empty_payload';
+  if (tuple.assertions?.some((assertion) => assertion.passed === false)) return 'schema_drift';
+  return tupleStatus(tuple) === 'ready' ? 'ok' : 'unexpected_error';
+}
+
+function validateControlledFailureSource(value, eventName, sources) {
+  if (!value) return null;
+  if (eventName !== 'workflow_dispatch') throw new Error('controlled failure requires workflow_dispatch');
+  if (!sources.some((source) => source.lkg === true && source.key === value)) {
+    throw new Error(`unknown controlled sentiment source: ${value}`);
+  }
+  return value;
+}
+
+function defaultSources() {
+  return [
+    { key: 'cnn', label: 'CNN (proxy)', fileNames: SENTIMENT_LKG_SOURCE_FILES.cnn, lkg: true, run: runCnn },
+    { key: 'cftc', label: 'CFTC COT', fileNames: SENTIMENT_LKG_SOURCE_FILES.cftc, lkg: true, run: runCftc },
+    { key: 'vix', label: 'VIX (Yahoo)', fileNames: SENTIMENT_LKG_SOURCE_FILES.vix, lkg: true, run: runVix },
+    { key: 'move', label: 'MOVE (Yahoo)', fileNames: SENTIMENT_LKG_SOURCE_FILES.move, lkg: true, run: runMove },
+    { key: 'crypto', label: 'Crypto (alternative.me)', fileNames: ['crypto-fear-greed.json'], lkg: false, run: runCrypto },
+  ];
+}
+
+function currentBundlePath(repoRoot, key) {
+  return path.join(repoRoot, 'data', 'admin', 'sentiment', 'current', `${key}.json`);
+}
+
+function currentBundleRelativePath(key) {
+  return `data/admin/sentiment/current/${key}.json`;
+}
+
+function bundleArtifact(repoRoot, source) {
+  return {
+    key: source.key,
+    canonicalPath: currentBundlePath(repoRoot, source.key),
+    validateDocument: (document) => validSourceBundle(source.key, source.fileNames, document),
+    sourceAsOf: (document) => document?.source_as_of ?? null,
+  };
+}
+
+function bundleCandidate(source, bundle, serialized) {
+  return {
+    key: source.key,
+    currentRelativePath: currentBundleRelativePath(source.key),
+    payloadBytes: Buffer.from(serialized),
+    sourceAsOf: bundle.source_as_of,
+    validateDocument: (document) => validSourceBundle(source.key, source.fileNames, document),
+    deriveSourceAsOf: (document) => document?.source_as_of ?? null,
+  };
+}
+
+function publishSourceResults(results, outputDirs) {
+  for (const result of results) writeAll(result.file, result.array, outputDirs);
+}
+
+function bootstrapCurrentBundle(repoRoot, source, outputDirs) {
+  const files = Object.fromEntries(source.fileNames.map((fileName) => [fileName, readExisting(fileName, outputDirs)]));
+  if (source.fileNames.some((fileName) => !validSeriesArray(files[fileName]))) return false;
+  const bundle = {
+    schema_version: SENTIMENT_BUNDLE_SCHEMA,
+    source_key: source.key,
+    source_as_of: sourceAsOfFromFiles(files),
+    files,
+  };
+  if (!validSourceBundle(source.key, source.fileNames, bundle)) return false;
+  atomicWrite(currentBundlePath(repoRoot, source.key), serializeBundle(bundle));
+  return true;
+}
+
 export async function runSentiment({
-  sources = [
-    ['CNN (proxy)', runCnn],
-    ['VIX (Yahoo)', runVix],
-    ['MOVE (Yahoo)', runMove],
-    ['CFTC COT', runCftc],
-    ['Crypto (alternative.me)', runCrypto],
+  repoRoot = REPO_ROOT,
+  outputDirs = [
+    path.join(repoRoot, 'data', 'sentiment'),
+    path.join(repoRoot, '100xfenok-next', 'public', 'data', 'sentiment'),
   ],
-  attemptShardPath = path.join(REPO_ROOT, 'data', 'admin', 'data-supply-state', 'detection-attempts', 'sentiment.json'),
+  sources = defaultSources(),
+  attemptShardPath = path.join(repoRoot, 'data', 'admin', 'data-supply-state', 'detection-attempts', 'sentiment.json'),
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-sentiment`,
+  runId = process.env.GITHUB_RUN_ID || 'local',
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || 'local',
+  controlledFailureSource = process.env.INPUT_CONTROLLED_FAILURE_SOURCE || '',
   quiet = false,
 } = {}) {
   sentimentAttemptTuples = [];
+  const injectedSource = validateControlledFailureSource(controlledFailureSource.trim(), eventName, sources);
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  const lkgStore = new LaneLkgStore({ repoRoot, laneId: 'sentiment' });
+  const trackedSources = sources.filter((source) => source.lkg === true);
   if (!quiet) {
     console.log('='.repeat(60));
     console.log('fetch-sentiment.mjs');
     console.log(`  date    : ${today}`);
-    console.log(`  outputs : ${OUTPUT_DIRS.map((d) => path.relative(REPO_ROOT, d)).join(', ')}`);
+    console.log(`  outputs : ${outputDirs.map((d) => path.relative(repoRoot, d)).join(', ')}`);
     console.log('='.repeat(60));
   }
 
   let okCount = 0;
   let failCount = 0;
+  const failedTracked = [];
+  const recoveredSources = [];
+  const classifications = [];
+  const sourceOutcomes = [];
 
-  for (const [label, fn] of sources) {
+  for (const source of sources) {
     const tupleCountBefore = sentimentAttemptTuples.length;
     try {
-      const results = await fn();
-      if (sentimentAttemptTuples.length === tupleCountBefore) recordSentimentAttemptTuple(threwTuple('unexpected'));
+      if (source.key === injectedSource) {
+        recordSentimentAttemptTuple(threwTuple('transport'));
+        throw new Error('controlled failure');
+      }
+      const readExistingFn = (fileName) => readExisting(fileName, outputDirs);
+      const results = await source.run(readExistingFn);
+      const sourceTuples = sentimentAttemptTuples.slice(tupleCountBefore);
+      if (sourceTuples.length === 0) throw new Error('source returned without current-attempt evidence');
+      if (sourceTuples.some((tuple) => tupleStatus(tuple) !== 'ready')) {
+        throw new Error(tupleReason(foldWorstTuples(sourceTuples)));
+      }
+
+      if (source.lkg === true) {
+        const bundle = buildSourceBundle(source.key, source.fileNames, results);
+        const serialized = serializeBundle(bundle);
+        const candidate = bundleCandidate(source, bundle, serialized);
+        const before = lkgStore.stateSnapshot().items[source.key];
+        if (before?.retry === true && !isNaturalScheduleRun(run)) {
+          failedTracked.push({ source, reason: 'recovery_requires_schedule', requestFailed: false });
+          classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
+          sourceOutcomes.push({ key: source.key, status: 'degraded', reason: 'recovery_requires_schedule' });
+          failCount++;
+          continue;
+        }
+        if (lkgStore.promotableCandidates([candidate], run).length === 0) {
+          failedTracked.push({ source, reason: 'recovery_not_advanced', requestFailed: false });
+          classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
+          sourceOutcomes.push({ key: source.key, status: 'degraded', reason: 'recovery_not_advanced' });
+          failCount++;
+          continue;
+        }
+        publishSourceResults(results, outputDirs);
+        atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
+        const success = lkgStore.recordSuccess({ artifacts: [candidate], run });
+        if (success.state.items[source.key]?.recovered_at === observedAt) recoveredSources.push(source.key);
+      } else {
+        publishSourceResults(results, outputDirs);
+      }
       okCount++;
+      sourceOutcomes.push({ key: source.key, status: 'ready', reason: 'ok' });
       for (const r of results) {
         const counts = r.appended != null
           ? `appended ${r.appended}, updated ${r.updated}`
           : `${r.action} (len ${r.before}→${r.after})`;
         if (!quiet) {
-          console.log(`✅ ${label} → ${r.file}: ${counts}`);
+          console.log(`✅ ${source.label} → ${r.file}: ${counts}`);
           console.log(`   sample: ${JSON.stringify(r.sample)}`);
         }
       }
@@ -442,30 +630,69 @@ export async function runSentiment({
         recordSentimentAttemptTuple(threwTuple('unexpected'));
       }
       failCount++;
-      if (!quiet) console.error(`⚠️  ${label} FAILED (skipped, others continue): ${e.message}`);
+      const failureTuple = foldWorstTuples(sentimentAttemptTuples.slice(tupleCountBefore));
+      const reason = source.key === injectedSource ? 'controlled_failure' : tupleReason(failureTuple);
+      sourceOutcomes.push({ key: source.key, status: 'failed', reason });
+      if (source.lkg === true) {
+        bootstrapCurrentBundle(repoRoot, source, outputDirs);
+        const failure = lkgStore.recordFailure({ artifacts: [bundleArtifact(repoRoot, source)], run, reason });
+        const classification = classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg });
+        failedTracked.push({ source, reason, requestFailed: source.key !== injectedSource });
+        classifications.push(classification);
+      }
+      if (!quiet) console.error(`⚠️  ${source.label} FAILED (retained, others continue): ${e.message}`);
     }
   }
 
   if (sentimentAttemptTuples.length === 0) recordSentimentAttemptTuple(threwTuple('unexpected'));
-  const tuple = foldWorstTuples(sentimentAttemptTuples);
+  let tuple = foldWorstTuples(sentimentAttemptTuples);
+  if (tupleStatus(tuple) === 'ready') {
+    tuple = { ...tuple, assertions: [{ id: 'series_array', passed: true }] };
+  }
   const row = buildAttemptRow({ laneId: 'sentiment', memberId: null, observedAt, attemptId, tuple });
   const shard = buildSingleLaneShard({ laneId: 'sentiment', row });
   writeJsonAtomic(attemptShardPath, shard);
+
+  const naturalTracked = trackedSources.filter((source) => source.key !== injectedSource);
+  const naturalFailures = failedTracked.filter((failure) => failure.requestFailed).map((failure) => failure.source.key);
+  const systemicOutage = naturalTracked.length > 0 && naturalTracked.every((source) => naturalFailures.includes(source.key));
+  const corrupt = systemicOutage || classifications.some((classification) => classification.corrupt);
+  const trackedOk = failedTracked.length === 0;
+  const retrySet = lkgStore.stateSnapshot().retry_set;
+  const reason = failedTracked[0]?.reason ?? 'ok';
 
   if (!quiet) {
     console.log('─'.repeat(60));
     console.log(`Done: ${okCount} source group(s) ok, ${failCount} failed.`);
     console.log(JSON.stringify({ attempt: row }));
   }
-  return { ok: okCount > 0, okCount, failCount, row, shard };
+  return {
+    ok: trackedOk,
+    reason,
+    okCount,
+    failCount,
+    row,
+    shard,
+    retrySet,
+    recoveredSources,
+    sourceOutcomes,
+    degraded: !trackedOk && !corrupt,
+    corrupt: !trackedOk && corrupt,
+    exitCode: trackedOk ? 0 : (corrupt ? 2 : 0),
+  };
 }
 
 async function main() {
   const result = await runSentiment();
   if (!result.ok) {
-    console.error('❌ All sources failed — exiting non-zero.');
-    process.exitCode = 1;
+    const prefix = result.degraded ? '[degraded]' : '[corrupt]';
+    const message = `${prefix} sentiment ${result.reason}; retry set: ${result.retrySet.join(', ') || 'none'}`;
+    if (result.degraded) console.log(message);
+    else console.error(message);
+    process.exitCode = result.exitCode;
+    return;
   }
+  console.log(`Saved ${result.okCount} sentiment source group(s) and current-attempt evidence${result.recoveredSources.length ? `; recovered from LKG: ${result.recoveredSources.join(', ')}` : ''}`);
 }
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
