@@ -51,7 +51,8 @@ function toFiniteNumber(value) {
   return null;
 }
 
-function quoteFromPayload(symbol, payload) {
+function quoteFromPayload(symbol, payload, { requireSymbol = false } = {}) {
+  if (requireSymbol && payload?.symbol !== symbol) return null;
   const price = toFiniteNumber(payload?.price);
   if (price === null || price <= 0) return null;
   const regularMarketTime = toFiniteNumber(payload.regularMarketTime);
@@ -162,9 +163,19 @@ export function validateYahooControlledFailureTickers(value, eventName) {
 
 function classifyResponse(response, symbol) {
   const classified = classifyEndpointResponse(response, { laneId: "yahoo_ticker_macro" });
-  const quote = quoteFromPayload(symbol, classified.document);
+  const measuredQuote = quoteFromPayload(symbol, classified.document, { requireSymbol: true });
+  const tuple = classified.status === "ready" && measuredQuote === null
+    ? {
+        ...classified.attempt,
+        assertions: classified.attempt.assertions.map((assertion) => ({
+          ...assertion,
+          passed: assertion.passed && measuredQuote !== null,
+        })),
+      }
+    : classified.attempt;
+  const quote = classified.status === "ready" ? measuredQuote : null;
   return {
-    tuple: classified.attempt,
+    tuple,
     quote,
     message: quote ? null : (classified.reason === "ok" ? `Worker payload for ${symbol} has no valid price` : classified.reason),
   };

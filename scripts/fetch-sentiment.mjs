@@ -45,6 +45,7 @@ import {
   buildAttemptRow,
   buildSingleLaneShard,
   classifyHttpResponse,
+  evaluateEndpointAssertions,
   foldWorstTuples,
   threwTuple,
   transportError,
@@ -420,6 +421,22 @@ function validSeriesArray(value) {
   ));
 }
 
+export function buildSentimentDetectionDocument(sourceGroups) {
+  if (!Array.isArray(sourceGroups)) return { series: null };
+  return {
+    series: sourceGroups.flatMap((group) => {
+      if (!Array.isArray(group?.results)) {
+        return [{ source_key: group?.sourceKey ?? null, file: null, series: null }];
+      }
+      return group.results.map((result) => ({
+        source_key: group?.sourceKey ?? null,
+        file: result?.file ?? null,
+        series: result?.array ?? null,
+      }));
+    }),
+  };
+}
+
 function sourceAsOfFromFiles(files) {
   const dates = Object.values(files)
     .flatMap((rows) => rows.map((row) => row.date))
@@ -571,6 +588,7 @@ export async function runSentiment({
   const recoveredSources = [];
   const classifications = [];
   const sourceOutcomes = [];
+  const measuredSourceGroups = [];
 
   for (const source of sources) {
     const tupleCountBefore = sentimentAttemptTuples.length;
@@ -586,6 +604,16 @@ export async function runSentiment({
       if (sourceTuples.some((tuple) => tupleStatus(tuple) !== 'ready')) {
         throw new Error(tupleReason(foldWorstTuples(sourceTuples)));
       }
+      const measuredGroup = { sourceKey: source.key, results };
+      const measuredAssertions = evaluateEndpointAssertions(
+        'sentiment',
+        buildSentimentDetectionDocument([measuredGroup]),
+      );
+      if (measuredAssertions.some((assertion) => !assertion.passed)) {
+        recordSentimentAttemptTuple({ ...foldWorstTuples(sourceTuples), assertions: measuredAssertions });
+        throw new Error('schema_drift');
+      }
+      measuredSourceGroups.push(measuredGroup);
 
       if (source.lkg === true) {
         const bundle = buildSourceBundle(source.key, source.fileNames, results);
@@ -647,7 +675,13 @@ export async function runSentiment({
   if (sentimentAttemptTuples.length === 0) recordSentimentAttemptTuple(threwTuple('unexpected'));
   let tuple = foldWorstTuples(sentimentAttemptTuples);
   if (tupleStatus(tuple) === 'ready') {
-    tuple = { ...tuple, assertions: [{ id: 'series_array', passed: true }] };
+    tuple = {
+      ...tuple,
+      assertions: evaluateEndpointAssertions(
+        'sentiment',
+        buildSentimentDetectionDocument(measuredSourceGroups),
+      ),
+    };
   }
   const row = buildAttemptRow({ laneId: 'sentiment', memberId: null, observedAt, attemptId, tuple });
   const shard = buildSingleLaneShard({ laneId: 'sentiment', row });

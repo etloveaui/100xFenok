@@ -79,6 +79,8 @@ const ASSERTION_KINDS = new Set([
   "exact",
   "min_keys",
   "non_empty_series",
+  "object_fields",
+  "normalized_series_bundle",
 ]);
 const JSON_TYPES = new Set(["array", "boolean", "null", "number", "object", "string"]);
 const FOLDS = new Set(["oldest", "latest", "member_worst"]);
@@ -133,6 +135,14 @@ function typeAssertion(id, pointer, expected) {
   return { id, kind: "type", pointer, expected };
 }
 
+function objectFieldsAssertion(id, pointer, fields) {
+  return { id, kind: "object_fields", pointer, fields };
+}
+
+function normalizedSeriesBundleAssertion(id, pointer) {
+  return { id, kind: "normalized_series_bundle", pointer };
+}
+
 function requiredAssertion(id, pointer) {
   return { id, kind: "required_pointer", pointer };
 }
@@ -177,6 +187,14 @@ function endpoint(endpointFamily, assertionId = null, pointer = null, expected =
     endpoint_family: endpointFamily,
     probe_mode: artifactOnly ? "artifact_only" : "injected_post_fetch",
     assertions: artifactOnly ? [] : [{ id: assertionId, kind: "type", pointer, expected }],
+  };
+}
+
+function endpointAssertion(endpointFamily, assertion) {
+  return {
+    endpoint_family: endpointFamily,
+    probe_mode: "injected_post_fetch",
+    assertions: [assertion],
   };
 }
 
@@ -363,7 +381,11 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("yahoo_chart", "chart_result_array", "/chart/result", "array"),
+      endpointContract: endpointAssertion("ticker_api_worker", objectFieldsAssertion("chart_result_array", "", {
+        symbol: "string",
+        price: "number",
+        regularMarketTime: "number",
+      })),
       freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 3 }),
       affectedSurfaceIds: ["macro_tickers"],
     }),
@@ -377,7 +399,10 @@ const config = {
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("vix_non_empty", "")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("sentiment_sources", "series_array", "/series", "array"),
+      endpointContract: endpointAssertion(
+        "sentiment_normalized_sources",
+        normalizedSeriesBundleAssertion("series_array", "/series"),
+      ),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["sentiment_dashboard"],
     }),
@@ -618,6 +643,13 @@ function validateAssertion(assertion, context) {
   if (assertion.kind === "type") {
     exactKeys(assertion, ["id", "kind", "pointer", "expected"], context);
     if (!JSON_TYPES.has(assertion.expected)) fail(`${context}.expected is unknown`);
+  } else if (assertion.kind === "object_fields") {
+    exactKeys(assertion, ["id", "kind", "pointer", "fields"], context);
+    if (!isPlainObject(assertion.fields) || Object.keys(assertion.fields).length === 0) fail(`${context}.fields must be a non-empty object`);
+    Object.entries(assertion.fields).forEach(([field, expected]) => {
+      if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(field)) fail(`${context}.fields key is invalid`);
+      if (!JSON_TYPES.has(expected)) fail(`${context}.fields.${field} is unknown`);
+    });
   } else if (assertion.kind === "enum") {
     exactKeys(assertion, ["id", "kind", "pointer", "values"], context);
     if (!Array.isArray(assertion.values) || assertion.values.length === 0) fail(`${context}.values must be non-empty`);

@@ -9,12 +9,13 @@ import { fileURLToPath } from "node:url";
 
 import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
+  buildSentimentDetectionDocument,
   SENTIMENT_LKG_SOURCE_FILES,
   SENTIMENT_LKG_SOURCE_KEYS,
   recordSentimentAttemptTuple,
   runSentiment,
 } from "./fetch-sentiment.mjs";
-import { returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
+import { evaluateEndpointAssertions, returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const READY_TUPLE = {
@@ -35,6 +36,26 @@ assert.equal(SENTIMENT_LKG_SOURCE_FILES.cnn.length, 8);
 function resultRow(file, date, value) {
   const array = [{ date, value }];
   return { file, array, action: "updated", before: 1, after: 1, sample: array[0] };
+}
+
+{
+  const valid = buildSentimentDetectionDocument([
+    { sourceKey: "vix", results: [resultRow("vix.json", "2026-07-14", 16.5)] },
+  ]);
+  assert.deepEqual(evaluateEndpointAssertions("sentiment", valid), [{ id: "series_array", passed: true }]);
+
+  for (const broken of [
+    [],
+    [{ sourceKey: "vix", results: [] }],
+    [{ sourceKey: "vix", results: [{ ...resultRow("vix.json", "2026-07-14", 16.5), array: [] }] }],
+    [{ sourceKey: "vix", results: [{ ...resultRow("vix.json", "2026-07-14", 16.5), array: [{ value: 16.5 }] }] }],
+    [{ sourceKey: "vix", results: [{ ...resultRow("vix.json", "2026-07-14", 16.5), array: [{ date: "2026-07-14" }] }] }],
+    [{ sourceKey: "vix", results: [{ ...resultRow("vix.json", "2026-07-14", 16.5), array: [{ date: "2026-07-14", value: null }] }] }],
+  ]) {
+    assert.deepEqual(evaluateEndpointAssertions("sentiment", buildSentimentDetectionDocument(broken)), [
+      { id: "series_array", passed: false },
+    ]);
+  }
 }
 
 function sourceDescriptors(date, overrides = {}) {

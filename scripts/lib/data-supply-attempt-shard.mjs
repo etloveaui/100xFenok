@@ -234,10 +234,49 @@ function pointerValue(document, pointer) {
 
 function assertionPassed(assertion, document) {
   const value = pointerValue(document, assertion.pointer);
-  if (assertion.kind !== "type") throw new Error(`unsupported endpoint assertion kind: ${assertion.kind}`);
-  if (assertion.expected === "array") return Array.isArray(value);
-  if (assertion.expected === "null") return value === null;
-  return typeof value === assertion.expected && !Array.isArray(value);
+  const typeMatches = (candidate, expected) => {
+    if (expected === "array") return Array.isArray(candidate);
+    if (expected === "null") return candidate === null;
+    return typeof candidate === expected && !Array.isArray(candidate);
+  };
+  const validDate = (candidate) => {
+    if (typeof candidate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return false;
+    const parsed = new Date(`${candidate}T00:00:00.000Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === candidate;
+  };
+  if (assertion.kind === "type") return typeMatches(value, assertion.expected);
+  if (assertion.kind === "object_fields") {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+      && Object.entries(assertion.fields).every(([field, expected]) => typeMatches(value[field], expected));
+  }
+  if (assertion.kind === "normalized_series_bundle") {
+    return Array.isArray(value) && value.length > 0 && value.every((entry) => (
+      entry !== null
+      && typeof entry === "object"
+      && !Array.isArray(entry)
+      && typeof entry.source_key === "string"
+      && entry.source_key.length > 0
+      && typeof entry.file === "string"
+      && entry.file.length > 0
+      && Array.isArray(entry.series)
+      && entry.series.length > 0
+      && entry.series.every((row) => (
+        row !== null
+        && typeof row === "object"
+        && !Array.isArray(row)
+        && validDate(row.date)
+        && Object.entries(row).some(([field, measurement]) => (
+          field !== "date"
+          && (
+            (typeof measurement === "number" && Number.isFinite(measurement))
+            || (typeof measurement === "string" && measurement.length > 0)
+            || typeof measurement === "boolean"
+          )
+        ))
+      ))
+    ));
+  }
+  throw new Error(`unsupported endpoint assertion kind: ${assertion.kind}`);
 }
 
 export function evaluateEndpointAssertions(laneId, document) {

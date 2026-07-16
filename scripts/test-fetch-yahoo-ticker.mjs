@@ -88,12 +88,36 @@ assert.throws(() => validateYahooControlledFailureTickers("AAPL", "workflow_disp
   const { result, shard, paths } = await runCase(async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 50 : 40)));
   assert.equal(result.ok, true);
   assert.equal(result.exitCode, 0);
-  assert.equal(result.reason, "drift", "the live worker shape does not satisfy the configured Yahoo chart endpoint");
+  assert.equal(result.reason, "ready", "the measured flat Worker payload satisfies its endpoint contract");
   assert.equal(shard.attempts[0].assertions[0].id, "chart_result_array");
-  assert.equal(shard.attempts[0].assertions[0].passed, false, "the flat worker response exposes the configured /chart/result mismatch");
+  assert.equal(shard.attempts[0].assertions[0].passed, true);
   const output = JSON.parse(fs.readFileSync(paths.canonicalPath, "utf8"));
   assert.deepEqual(Object.keys(output.tickers), ["TQQQ", "SOXL"]);
   assert.deepEqual(JSON.parse(fs.readFileSync(paths.publicPath, "utf8")), output);
+}
+
+for (const missingField of ["symbol", "price", "regularMarketTime"]) {
+  const { result, shard } = await runCase(async (_url, symbol) => {
+    const payload = quote(symbol, symbol === "TQQQ" ? 50 : 40);
+    if (symbol === "TQQQ") delete payload[missingField];
+    return response(200, payload);
+  });
+  assert.equal(result.exitCode, 2, `missing ${missingField} must be corrupt without LKG`);
+  assert.deepEqual(shard.attempts[0].assertions, [{ id: "chart_result_array", passed: false }]);
+}
+
+for (const mutate of [
+  (payload) => { payload.symbol = "WRONG"; },
+  (payload) => { payload.price = 0; },
+  (payload) => { payload.regularMarketTime = 0; },
+]) {
+  const { result, shard } = await runCase(async (_url, symbol) => {
+    const payload = quote(symbol, symbol === "TQQQ" ? 50 : 40);
+    if (symbol === "TQQQ") mutate(payload);
+    return response(200, payload);
+  });
+  assert.equal(result.exitCode, 2, "semantically invalid Worker payload must be corrupt without LKG");
+  assert.deepEqual(shard.attempts[0].assertions, [{ id: "chart_result_array", passed: false }]);
 }
 
 {
@@ -117,12 +141,6 @@ assert.throws(() => validateYahooControlledFailureTickers("AAPL", "workflow_disp
   assert.deepEqual(index.keys, ["TQQQ.json", "SOXL.json"]);
   assert.deepEqual(index.retry_keys, ["TQQQ.json"]);
   assert.deepEqual(index.current_attempt.failed_keys, ["TQQQ.json"]);
-}
-
-{
-  const { result, shard } = await runCase(async (_url, symbol) => response(200, symbol === "TQQQ" ? { price: null } : quote(symbol, 40)));
-  assert.equal(result.exitCode, 2, "schema-invalid response without LKG is corrupt");
-  assert.equal(shard.attempts[0].assertions[0].passed, false);
 }
 
 {
