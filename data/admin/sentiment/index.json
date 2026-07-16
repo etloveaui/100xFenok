@@ -1,35 +1,46 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "sentiment",
-  "updated_at": "2026-07-16T02:49:18.719Z",
+  "updated_at": "2026-07-16T22:56:18.302Z",
   "retry_set": [
-    "cftc",
-    "cnn",
-    "move",
-    "vix"
+    "cftc"
   ],
   "items": {
     "cnn": {
       "key": "cnn",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/sentiment/lkg/cnn.json",
-        "payload_sha256": "09b40bc7579a77c4703d4bb5f14e380b976b87e9e55730c3cfa4578e1409a247",
-        "source_as_of": "2026-07-15"
+        "path": "data/admin/sentiment/current/cnn.json",
+        "payload_sha256": "cecce69215ee116d7e4d4a275b2dca2373de7e4b31810d6823b48dbca67ea0c9",
+        "source_as_of": "2026-07-16"
       },
       "lkg": {
         "path": "data/admin/sentiment/lkg/cnn.json",
         "payload_sha256": "09b40bc7579a77c4703d4bb5f14e380b976b87e9e55730c3cfa4578e1409a247",
         "source_as_of": "2026-07-15"
       },
-      "latest_failure": {
+      "updated_at": "2026-07-16T22:56:18.302Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "330a86bafe3779cfb73a05b8fdb4a01320107c2c909bc1861b0734c2437bb750",
+        "source_as_of": "2026-07-16",
+        "run_id": "29540525975",
+        "run_attempt": 1,
+        "observed_at": "2026-07-16T22:56:18.302Z"
+      },
+      "recovered_from_run_id": "29466697911",
+      "recovered_at": "2026-07-16T22:56:18.302Z",
+      "recovery_run_id": "29540525975",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29466697911",
         "run_attempt": 1,
         "observed_at": "2026-07-16T02:34:03.796Z",
         "reason": "controlled_failure"
-      },
-      "updated_at": "2026-07-16T02:34:03.796Z"
+      }
     },
     "cftc": {
       "key": "cftc",
@@ -40,7 +51,7 @@
         "payload_sha256": "e3a5dd453618d71b0dea3d946a04ad171e92c70570906c62f1cb2a4ebe699f94",
         "source_as_of": "2026-07-07"
       },
-      "updated_at": "2026-07-16T02:38:57.995Z",
+      "updated_at": "2026-07-16T22:56:18.302Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/cftc.json",
         "payload_sha256": "e3a5dd453618d71b0dea3d946a04ad171e92c70570906c62f1cb2a4ebe699f94",
@@ -51,24 +62,44 @@
         "run_attempt": 1,
         "observed_at": "2026-07-16T02:38:57.995Z",
         "reason": "controlled_failure"
+      },
+      "latest_promotion_deferral": {
+        "run_id": "29540525975",
+        "run_attempt": 1,
+        "observed_at": "2026-07-16T22:56:18.302Z",
+        "reason": "recovery_not_advanced_by_provider"
       }
     },
     "vix": {
       "key": "vix",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/sentiment/lkg/vix.json",
-        "payload_sha256": "ee270df56219e53141ef5424f9dc7ef8d6b114e1b4905b991fc6f301fbcb5a89",
-        "source_as_of": "2026-07-15"
+        "path": "data/admin/sentiment/current/vix.json",
+        "payload_sha256": "3f98519c0aa4e28b3837eca90535e74fe26713b3ee105c3ef49ae6d9018de5f9",
+        "source_as_of": "2026-07-16"
       },
-      "updated_at": "2026-07-16T02:44:09.273Z",
+      "updated_at": "2026-07-16T22:56:18.302Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/vix.json",
         "payload_sha256": "ee270df56219e53141ef5424f9dc7ef8d6b114e1b4905b991fc6f301fbcb5a89",
         "source_as_of": "2026-07-15"
       },
-      "latest_failure": {
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "f935e1380172f3a5ac9c164b70453df2205b3efaf2e48f8a116c8635be1fb612",
+        "source_as_of": "2026-07-16",
+        "run_id": "29540525975",
+        "run_attempt": 1,
+        "observed_at": "2026-07-16T22:56:18.302Z"
+      },
+      "recovered_from_run_id": "29467122930",
+      "recovered_at": "2026-07-16T22:56:18.302Z",
+      "recovery_run_id": "29540525975",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29467122930",
         "run_attempt": 1,
         "observed_at": "2026-07-16T02:44:09.273Z",
@@ -77,20 +108,34 @@
     },
     "move": {
       "key": "move",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/sentiment/lkg/move.json",
-        "payload_sha256": "1b2585748a95621a7f53db1a4ff072e63f7fb9e4ea210301905cb6a7399b38f5",
-        "source_as_of": "2026-07-15"
+        "path": "data/admin/sentiment/current/move.json",
+        "payload_sha256": "8738d95704d85991c58ac1653cae28dddbf22d0ffa39e34477f94213e5b2afd9",
+        "source_as_of": "2026-07-16"
       },
-      "updated_at": "2026-07-16T02:49:18.719Z",
+      "updated_at": "2026-07-16T22:56:18.302Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/move.json",
         "payload_sha256": "1b2585748a95621a7f53db1a4ff072e63f7fb9e4ea210301905cb6a7399b38f5",
         "source_as_of": "2026-07-15"
       },
-      "latest_failure": {
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "9eb9debe1aba952122fdf4fcb0a6e6d98e0a082cdb4d370ba00080f0337d3b41",
+        "source_as_of": "2026-07-16",
+        "run_id": "29540525975",
+        "run_attempt": 1,
+        "observed_at": "2026-07-16T22:56:18.302Z"
+      },
+      "recovered_from_run_id": "29467331258",
+      "recovered_at": "2026-07-16T22:56:18.302Z",
+      "recovery_run_id": "29540525975",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29467331258",
         "run_attempt": 1,
         "observed_at": "2026-07-16T02:49:18.719Z",
