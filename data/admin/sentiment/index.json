@@ -1,10 +1,11 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "sentiment",
-  "updated_at": "2026-07-16T02:38:57.995Z",
+  "updated_at": "2026-07-16T02:44:09.273Z",
   "retry_set": [
     "cftc",
-    "cnn"
+    "cnn",
+    "vix"
   ],
   "items": {
     "cnn": {
@@ -53,14 +54,25 @@
     },
     "vix": {
       "key": "vix",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/sentiment/current/vix.json",
+        "path": "data/admin/sentiment/lkg/vix.json",
         "payload_sha256": "ee270df56219e53141ef5424f9dc7ef8d6b114e1b4905b991fc6f301fbcb5a89",
         "source_as_of": "2026-07-15"
       },
-      "updated_at": "2026-07-16T02:38:57.995Z"
+      "updated_at": "2026-07-16T02:44:09.273Z",
+      "lkg": {
+        "path": "data/admin/sentiment/lkg/vix.json",
+        "payload_sha256": "ee270df56219e53141ef5424f9dc7ef8d6b114e1b4905b991fc6f301fbcb5a89",
+        "source_as_of": "2026-07-15"
+      },
+      "latest_failure": {
+        "run_id": "29467122930",
+        "run_attempt": 1,
+        "observed_at": "2026-07-16T02:44:09.273Z",
+        "reason": "controlled_failure"
+      }
     },
     "move": {
       "key": "move",
@@ -71,7 +83,7 @@
         "payload_sha256": "1b2585748a95621a7f53db1a4ff072e63f7fb9e4ea210301905cb6a7399b38f5",
         "source_as_of": "2026-07-15"
       },
-      "updated_at": "2026-07-16T02:38:57.995Z"
+      "updated_at": "2026-07-16T02:44:09.273Z"
     }
   }
 }
