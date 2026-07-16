@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-16T02:01:28Z",
+  "generated_at": "2026-07-16T09:37:49Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,55 +17,53 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5532,
+    "candidate_total": 5525,
     "source_breakdown": {
-      "etf_universe": 5423,
+      "etf_universe": 5467,
       "etf_screener": 5525,
       "new_etfs": 100
     },
     "detail_files": 4888,
-    "covered_detail_files": 4866,
-    "missing_detail_files": 666,
-    "extra_detail_files": 22,
+    "covered_detail_files": 4860,
+    "missing_detail_files": 665,
+    "extra_detail_files": 28,
     "stockanalysis_detail_files": 4888,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
     "coverage_pct": 87.96,
     "primary_stockanalysis_pct": 87.96,
     "missing_by_source": {
-      "etf_universe": 598,
+      "etf_universe": 632,
       "etf_screener": 665,
       "new_etfs": 36
     },
     "missing_status_breakdown": {
-      "retry_cooldown": 36,
-      "retry_pending": 19,
-      "untracked": 611
+      "retry_pending": 55,
+      "untracked": 610
     },
     "missing_failure_breakdown": {
       "external_quote_type_mismatch": 55,
-      "untracked": 611
+      "untracked": 610
     },
     "missing_availability_breakdown": {
-      "unprobed": 611,
+      "unprobed": 610,
       "unresolved": 55
     },
     "pending_tracked": 91,
-    "pending_cooldown": 63,
+    "pending_cooldown": 27,
     "pending_tracked_missing": 55,
     "provider_coverage_gaps": 0
   },
   "missing_reason_summary": {
     "external_quote_type_mismatch": 55,
-    "untracked": 611
+    "untracked": 610
   },
   "missing_status_summary": {
-    "retry_cooldown": 36,
-    "retry_pending": 19,
-    "untracked": 611
+    "retry_pending": 55,
+    "untracked": 610
   },
   "missing_availability_summary": {
-    "unprobed": 611,
+    "unprobed": 610,
     "unresolved": 55
   },
   "missing_reason_samples": {
@@ -99,20 +97,6 @@
     ]
   },
   "missing_status_samples": {
-    "retry_cooldown": [
-      "FECM",
-      "FESC",
-      "NISM",
-      "PCEB",
-      "PHYS",
-      "PQV",
-      "PQXX",
-      "PSLV",
-      "RAAR",
-      "RAAY",
-      "RCLR",
-      "RCLY"
-    ],
     "retry_pending": [
       "BSOL",
       "CLNK",
@@ -123,9 +107,9 @@
       "EDGQ",
       "EDGX",
       "ESUM",
-      "FSOL",
-      "GISC",
-      "IBIM"
+      "FECM",
+      "FESC",
+      "FSOL"
     ],
     "untracked": [
       "ALA",
@@ -243,7 +227,6 @@
     "CRMX",
     "CSEX",
     "CTWO",
-    "CUSD",
     "CUST",
     "CXRN",
     "DDSQ",
@@ -845,6 +828,8 @@
   "invalid_detail_tickers": [],
   "extra_detail_tickers": [
     "AAUM",
+    "AEMS",
+    "BITK",
     "BTYB",
     "BULX",
     "COIO",
@@ -854,12 +839,16 @@
     "GAID",
     "GAUD",
     "GLDY",
+    "MAGO",
     "MARB",
     "MSDD",
     "MSOO",
     "NVDO",
+    "PAAU",
     "PLOO",
+    "QHDG",
     "RNWZ",
+    "RPHS",
     "RSHO",
     "SATG",
     "SCLS",
@@ -920,20 +909,6 @@
       "CPNX",
       "CPRA"
     ],
-    "missing_retry_cooldown": [
-      "FECM",
-      "FESC",
-      "NISM",
-      "PCEB",
-      "PHYS",
-      "PQV",
-      "PQXX",
-      "PSLV",
-      "RAAR",
-      "RAAY",
-      "RCLR",
-      "RCLY"
-    ],
     "missing_retry_pending": [
       "BSOL",
       "CLNK",
@@ -944,9 +919,9 @@
       "EDGQ",
       "EDGX",
       "ESUM",
-      "FSOL",
-      "GISC",
-      "IBIM"
+      "FECM",
+      "FESC",
+      "FSOL"
     ],
     "missing_untracked": [
       "ALA",
@@ -979,6 +954,8 @@
     "yahoo_fallback": [],
     "extra": [
       "AAUM",
+      "AEMS",
+      "BITK",
       "BTYB",
       "BULX",
       "COIO",
@@ -988,12 +965,16 @@
       "GAID",
       "GAUD",
       "GLDY",
+      "MAGO",
       "MARB",
       "MSDD",
       "MSOO",
       "NVDO",
+      "PAAU",
       "PLOO",
+      "QHDG",
       "RNWZ",
+      "RPHS",
       "RSHO",
       "SATG",
       "SCLS",

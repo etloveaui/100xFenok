@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-07-16T09:31:52.938Z",
+  "generated_at": "2026-07-16T09:45:03.486Z",
   "source_as_of": {
     "stocks_analyzer": "2026-07-10",
     "stock_action_index": "2026-07-10",
@@ -27,8 +27,8 @@
   },
   "totals": {
     "stocks": 1065,
-    "with_single_stock_etfs": 92,
-    "single_stock_etfs": 179
+    "with_single_stock_etfs": 93,
+    "single_stock_etfs": 183
   },
   "stocks": {
     "AAL": {
@@ -103,9 +103,9 @@
           "etf_key": "etf:AAPE",
           "target_key": "ticker:AAPL",
           "ticker": "AAPE",
-          "label": "Themes ETF Trust - Leverage Shares 2X Long AAPL Daily ETF",
+          "label": "Leverage Shares 2X Long AAPL Daily ETF",
           "route": "/etfs/AAPE",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "AAPL",
@@ -586,9 +586,9 @@
           "etf_key": "etf:AMZG",
           "target_key": "ticker:AMZN",
           "ticker": "AMZG",
-          "label": "Themes ETF Trust - Leverage Shares 2X Long AMZN Daily ETF",
+          "label": "Leverage Shares 2X Long AMZN Daily ETF",
           "route": "/etfs/AMZG",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "AMZN",
@@ -991,9 +991,9 @@
           "etf_key": "etf:AVGC",
           "target_key": "ticker:AVGO",
           "ticker": "AVGC",
-          "label": "Corgi ETF Trust I - Corgi AVGO 2x Daily ETF",
+          "label": "Corgi AVGO 2x Daily ETF",
           "route": "/etfs/AVGC",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "AVGO",
@@ -1332,9 +1332,9 @@
           "etf_key": "etf:CIEX",
           "target_key": "ticker:CIEN",
           "ticker": "CIEX",
-          "label": "Investment Managers Series Trust II - Tradr 2X Long CIEN Daily ETF",
+          "label": "Tradr 2X Long CIEN Daily ETF",
           "route": "/etfs/CIEX",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "CIEN",
@@ -1933,9 +1933,9 @@
           "etf_key": "etf:METG",
           "target_key": "ticker:META",
           "ticker": "METG",
-          "label": "Themes ETF Trust - Leverage Shares 2X Long META Daily ETF",
+          "label": "Leverage Shares 2X Long META Daily ETF",
           "route": "/etfs/METG",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "META",
@@ -2181,9 +2181,9 @@
           "etf_key": "etf:GOOL",
           "target_key": "ticker:GOOGL",
           "ticker": "GOOL",
-          "label": "Themes ETF Trust - Leverage Shares 2X Long GOOGL Daily ETF",
+          "label": "Leverage Shares 2X Long GOOGL Daily ETF",
           "route": "/etfs/GOOL",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "GOOGL",
@@ -2264,6 +2264,32 @@
           "as_of": {
             "etf_universe": null,
             "market_facts": "2026-06-18"
+          }
+        },
+        {
+          "etf_key": "etf:HOOC",
+          "target_key": "ticker:HOOD",
+          "ticker": "HOOC",
+          "label": "Corgi HOOD 2x Daily ETF",
+          "route": "/etfs/HOOC",
+          "category": "Equity",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "HOOD",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
           }
         },
         {
@@ -2483,6 +2509,32 @@
       "route": "/stock/INTC",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:INT",
+          "target_key": "ticker:INTC",
+          "ticker": "INT",
+          "label": "Corgi INTC 2x Daily ETF",
+          "route": "/etfs/INT",
+          "category": "Equity",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "INTC",
+          "canonical_underlying_ticker": "INTC",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "INTC",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
+          }
+        },
+        {
           "etf_key": "etf:INTW",
           "target_key": "ticker:INTC",
           "ticker": "INTW",
@@ -2586,9 +2638,9 @@
           "etf_key": "etf:JBLG",
           "target_key": "ticker:JBL",
           "ticker": "JBLG",
-          "label": "Themes ETF Trust - Leverage Shares 2X Long JBL Daily ETF",
+          "label": "Leverage Shares 2X Long JBL Daily ETF",
           "route": "/etfs/JBLG",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "JBL",
@@ -3416,7 +3468,7 @@
           "ticker": "NFX",
           "label": "Corgi ETF Trust I - Corgi NFLX 2x Daily ETF",
           "route": "/etfs/NFX",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "NFLX",
@@ -3503,6 +3555,43 @@
       "as_of": {
         "etf_universe": null,
         "market_facts": "2026-07-08"
+      }
+    },
+    "NTAP": {
+      "target_key": "ticker:NTAP",
+      "ticker": "NTAP",
+      "route": "/stock/NTAP",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:NTAL",
+          "target_key": "ticker:NTAP",
+          "ticker": "NTAL",
+          "label": "GraniteShares 2x Long NTAP Daily ETF",
+          "route": "/etfs/NTAL",
+          "category": "-",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "NTAP",
+          "canonical_underlying_ticker": "NTAP",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "NTAP",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": null,
+        "market_facts": "2026-07-15"
       }
     },
     "NVDA": {
@@ -3924,9 +4013,9 @@
           "etf_key": "etf:ORAC",
           "target_key": "ticker:ORCL",
           "ticker": "ORAC",
-          "label": "Corgi ETF Trust I - Corgi ORCL 2x Daily ETF",
+          "label": "Corgi ORCL 2x Daily ETF",
           "route": "/etfs/ORAC",
-          "category": "-",
+          "category": "Equity",
           "confidence": "medium",
           "classification_source": "stockanalysis.etf_list.name",
           "raw_underlying": "ORCL",
@@ -3996,6 +4085,33 @@
           "as_of": {
             "etf_universe": null,
             "market_facts": "2026-07-08"
+          }
+        },
+        {
+          "etf_key": "etf:ORCZ",
+          "target_key": "ticker:ORCL",
+          "ticker": "ORCZ",
+          "label": "Investment Managers Series Trust II - Tradr 2X Short ORCL Daily ETF",
+          "route": "/etfs/ORCZ",
+          "category": "-",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "ORCL",
+          "canonical_underlying_ticker": "ORCL",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "ORCL",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "inverse",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
           }
         }
       ],
@@ -5475,7 +5591,7 @@
           "ticker": "UN",
           "label": "Corgi ETF Trust I - Corgi UNH 2x Daily ETF",
           "route": "/etfs/UN",
-          "category": "-",
+          "category": "Equity",
           "confidence": "medium",
           "classification_source": "stockanalysis.etf_list.name",
           "raw_underlying": "UNH",

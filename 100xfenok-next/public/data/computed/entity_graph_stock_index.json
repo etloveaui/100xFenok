@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-index/v1",
-  "generated_at": "2026-07-16T09:31:52.938Z",
+  "generated_at": "2026-07-16T09:45:03.486Z",
   "source_as_of": {
     "stocks_analyzer": "2026-07-10",
     "stock_action_index": "2026-07-10",
@@ -31,7 +31,7 @@
     "with_filings": 201,
     "with_sec_13f": 456,
     "with_index_membership": 415,
-    "with_single_stock_etfs": 92
+    "with_single_stock_etfs": 93
   },
   "stocks": {
     "NVDA": {
@@ -1247,7 +1247,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 2,
+      "service_count": 3,
       "as_of": {
         "profile": "2026-07-10",
         "action_index": "2026-07-10",
@@ -1267,6 +1267,10 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:INTC"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:INT"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -1679,7 +1683,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 3,
+      "service_count": 4,
       "as_of": {
         "profile": "2026-07-10",
         "action_index": "2026-07-10",
@@ -1711,6 +1715,10 @@
         {
           "type": "referenced_by_single_stock_etf",
           "target": "etf:ORCX"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:ORCZ"
         }
       ]
     },
@@ -7161,7 +7169,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 6,
+      "service_count": 7,
       "as_of": {
         "profile": "2026-07-10",
         "action_index": "2026-07-10",
@@ -7185,6 +7193,10 @@
         {
           "type": "referenced_by_single_stock_etf",
           "target": "etf:HODU"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:HOOC"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -17172,10 +17184,10 @@
         "filings": false,
         "sec_13f": true,
         "index_membership": true,
-        "single_stock_etfs": false
+        "single_stock_etfs": true
       },
       "connection_count": 3,
-      "service_count": 0,
+      "service_count": 1,
       "as_of": {
         "profile": "2026-07-10",
         "action_index": "2026-07-10",
@@ -17191,6 +17203,10 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:NTAP"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:NTAL"
         }
       ]
     },
