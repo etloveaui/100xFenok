@@ -3,10 +3,11 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "WDE",
-  "fetched_at": "2026-07-09T09:25:40Z",
+  "source_as_of": "2026-07-15T20:00:00Z",
+  "fetched_at": "2026-07-15T23:45:54Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/WDE/holdings",
-    "overview": "/api/symbol/e/WDE/overview",
+    "holdings": "/etf/wde/holdings/__data.json",
+    "overview": "/etf/wde/__data.json",
     "quote": "/api/quotes/e/WDE",
     "history_periods": {
       "daily_1y": "/api/symbol/e/WDE/history?range=1Y&period=Daily",
@@ -17,31 +18,51 @@
       "monthly_5y": "/api/symbol/e/WDE/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "B.0 07.14.26",
         "name": "United States Treasury Bills 0%",
-        "weight_pct": 6.15,
+        "weight_pct": 6.34,
         "shares": 1500000,
         "raw": {
           "no": 1,
           "n": "United States Treasury Bills 0%",
           "s": "B.0 07.14.26",
-          "as": "6.15%",
+          "as": "6.34%",
           "sh": "1,500,000"
         }
       },
       {
         "rank": 2,
         "name": "2 Year Treasury Note Future Sept 26",
-        "weight_pct": 5.07,
+        "weight_pct": 5.22,
         "shares": 1200000,
         "raw": {
           "no": 2,
           "n": "2 Year Treasury Note Future Sept 26",
-          "as": "5.07%",
+          "as": "5.22%",
           "sh": "1,200,000"
         }
       },
@@ -49,69 +70,69 @@
         "rank": 3,
         "symbol": "MSWF.2023-1 A5",
         "name": "MSWF COML MTG TR 2023-1 5.752%",
-        "weight_pct": 4.26,
+        "weight_pct": 4.37,
         "shares": 1000000,
         "raw": {
           "no": 3,
           "n": "MSWF COML MTG TR 2023-1 5.752%",
           "s": "MSWF.2023-1 A5",
-          "as": "4.26%",
+          "as": "4.37%",
           "sh": "1,000,000"
         }
       },
       {
         "rank": 4,
-        "symbol": "PCG.5.256 01.15.38 A-2",
-        "name": "PG&E Recovery Funding LLC 5.256%",
-        "weight_pct": 4.15,
+        "symbol": "HAROT.2024-1 A4",
+        "name": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
+        "weight_pct": 4.26,
         "shares": 1000000,
         "raw": {
           "no": 4,
-          "n": "PG&E Recovery Funding LLC 5.256%",
-          "s": "PCG.5.256 01.15.38 A-2",
-          "as": "4.15%",
+          "n": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
+          "s": "HAROT.2024-1 A4",
+          "as": "4.26%",
           "sh": "1,000,000"
         }
       },
       {
         "rank": 5,
-        "symbol": "HAROT.2024-1 A4",
-        "name": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
-        "weight_pct": 4.14,
+        "symbol": "PCG.5.256 01.15.38 A-2",
+        "name": "PG&E Recovery Funding LLC 5.256%",
+        "weight_pct": 4.23,
         "shares": 1000000,
         "raw": {
           "no": 5,
-          "n": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
-          "s": "HAROT.2024-1 A4",
-          "as": "4.14%",
+          "n": "PG&E Recovery Funding LLC 5.256%",
+          "s": "PCG.5.256 01.15.38 A-2",
+          "as": "4.23%",
           "sh": "1,000,000"
         }
       },
       {
         "rank": 6,
-        "symbol": "GGP.2026-SSP A",
-        "name": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
-        "weight_pct": 4.11,
+        "symbol": "GALC.2025-1 A3",
+        "name": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
+        "weight_pct": 4.23,
         "shares": 1000000,
         "raw": {
           "no": 6,
-          "n": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
-          "s": "GGP.2026-SSP A",
-          "as": "4.11%",
+          "n": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
+          "s": "GALC.2025-1 A3",
+          "as": "4.23%",
           "sh": "1,000,000"
         }
       },
       {
         "rank": 7,
-        "symbol": "GALC.2025-1 A3",
-        "name": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
-        "weight_pct": 4.11,
+        "symbol": "GGP.2026-SSP A",
+        "name": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
+        "weight_pct": 4.22,
         "shares": 1000000,
         "raw": {
           "no": 7,
-          "n": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
-          "s": "GALC.2025-1 A3",
-          "as": "4.11%",
+          "n": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
+          "s": "GGP.2026-SSP A",
+          "as": "4.22%",
           "sh": "1,000,000"
         }
       },
@@ -119,13 +140,13 @@
         "rank": 8,
         "symbol": "CONE.2026-DFW3 A",
         "name": "CONE 2026-DFW3 5.75063%",
-        "weight_pct": 4.09,
+        "weight_pct": 4.2,
         "shares": 1000000,
         "raw": {
           "no": 8,
           "n": "CONE 2026-DFW3 5.75063%",
           "s": "CONE.2026-DFW3 A",
-          "as": "4.09%",
+          "as": "4.20%",
           "sh": "1,000,000"
         }
       },
@@ -133,13 +154,13 @@
         "rank": 9,
         "symbol": "EFF.2025-4 A3",
         "name": "ENTERPRISE FLEET FINANCING 2025-4 LLC 4.11%",
-        "weight_pct": 4.06,
+        "weight_pct": 4.18,
         "shares": 1000000,
         "raw": {
           "no": 9,
           "n": "ENTERPRISE FLEET FINANCING 2025-4 LLC 4.11%",
           "s": "EFF.2025-4 A3",
-          "as": "4.06%",
+          "as": "4.18%",
           "sh": "1,000,000"
         }
       },
@@ -147,39 +168,37 @@
         "rank": 10,
         "symbol": "GSAR.2026-1A A2",
         "name": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-1 4.05%",
-        "weight_pct": 3.87,
+        "weight_pct": 3.98,
         "shares": 947296,
         "raw": {
           "no": 10,
           "n": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-1 4.05%",
           "s": "GSAR.2026-1A A2",
-          "as": "3.87%",
+          "as": "3.98%",
           "sh": "947,296"
         }
       },
       {
         "rank": 11,
-        "symbol": "MSC.2016-UBS9 AS",
         "name": "Ms Cap I Tr 2016-Ubs9 3.903%",
-        "weight_pct": 3.23,
+        "weight_pct": 3.33,
         "shares": 793887,
         "raw": {
           "no": 11,
           "n": "Ms Cap I Tr 2016-Ubs9 3.903%",
-          "s": "MSC.2016-UBS9 AS",
-          "as": "3.23%",
+          "as": "3.33%",
           "sh": "793,887"
         }
       },
       {
         "rank": 12,
         "name": "Us 10yr Note (Cbt)sep26 Xcbt 20260921",
-        "weight_pct": 3.15,
+        "weight_pct": 3.23,
         "shares": 700000,
         "raw": {
           "no": 12,
           "n": "Us 10yr Note (Cbt)sep26 Xcbt 20260921",
-          "as": "3.15%",
+          "as": "3.23%",
           "sh": "700,000"
         }
       },
@@ -187,13 +206,13 @@
         "rank": 13,
         "symbol": "BFLD.2025-5MW A",
         "name": "BFLD COMMERCIAL MORTGAGE TRUST 2025-5MW 4.82999%",
-        "weight_pct": 3.04,
+        "weight_pct": 3.12,
         "shares": 750000,
         "raw": {
           "no": 13,
           "n": "BFLD COMMERCIAL MORTGAGE TRUST 2025-5MW 4.82999%",
           "s": "BFLD.2025-5MW A",
-          "as": "3.04%",
+          "as": "3.12%",
           "sh": "750,000"
         }
       },
@@ -201,13 +220,13 @@
         "rank": 14,
         "symbol": "VWALT.2025-B A3",
         "name": "VOLKSWAGEN AUTO LEASE TRUST 2025-B 4.01%",
-        "weight_pct": 2.99,
+        "weight_pct": 3.08,
         "shares": 732000,
         "raw": {
           "no": 14,
           "n": "VOLKSWAGEN AUTO LEASE TRUST 2025-B 4.01%",
           "s": "VWALT.2025-B A3",
-          "as": "2.99%",
+          "as": "3.08%",
           "sh": "732,000"
         }
       },
@@ -215,152 +234,148 @@
         "rank": 15,
         "symbol": "GSMS.2020-GC47 XA",
         "name": "GS MORTGAGE SEC TR 2020-GC47 1.23552%",
-        "weight_pct": 2.82,
+        "weight_pct": 2.88,
         "shares": 19376352,
         "raw": {
           "no": 15,
           "n": "GS MORTGAGE SEC TR 2020-GC47 1.23552%",
           "s": "GSMS.2020-GC47 XA",
-          "as": "2.82%",
+          "as": "2.88%",
           "sh": "19,376,352"
         }
       },
       {
         "rank": 16,
-        "symbol": "T.3.875 03.31.31",
-        "name": "United States Treasury Notes 3.875%",
-        "weight_pct": 2.43,
-        "shares": 600000,
+        "symbol": "BANK.2026-BNK52 XA",
+        "name": "BANK 2026-BNK52 0.92097%",
+        "weight_pct": 2.13,
+        "shares": 9000000,
         "raw": {
           "no": 16,
-          "n": "United States Treasury Notes 3.875%",
-          "s": "T.3.875 03.31.31",
-          "as": "2.43%",
-          "sh": "600,000"
+          "n": "BANK 2026-BNK52 0.92097%",
+          "s": "BANK.2026-BNK52 XA",
+          "as": "2.13%",
+          "sh": "9,000,000"
         }
       },
       {
         "rank": 17,
-        "symbol": "BANK.2026-BNK52 XA",
-        "name": "BANK 2026-BNK52 0.921%",
-        "weight_pct": 2.07,
-        "shares": 9000000,
+        "symbol": "G2SF.5.5 8.11",
+        "name": "Government National Mortgage Association 5.5%",
+        "weight_pct": 2.12,
+        "shares": 500000,
         "raw": {
           "no": 17,
-          "n": "BANK 2026-BNK52 0.921%",
-          "s": "BANK.2026-BNK52 XA",
-          "as": "2.07%",
-          "sh": "9,000,000"
+          "n": "Government National Mortgage Association 5.5%",
+          "s": "G2SF.5.5 8.11",
+          "as": "2.12%",
+          "sh": "500,000"
         }
       },
       {
         "rank": 18,
         "symbol": "G2SF.5 7.11",
         "name": "Government National Mortgage Association 5%",
-        "weight_pct": 2.06,
+        "weight_pct": 2.11,
         "shares": 510000,
         "raw": {
           "no": 18,
           "n": "Government National Mortgage Association 5%",
           "s": "G2SF.5 7.11",
-          "as": "2.06%",
+          "as": "2.11%",
           "sh": "510,000"
         }
       },
       {
         "rank": 19,
-        "symbol": "G2SF.5.5 7.11",
-        "name": "Government National Mortgage Association 5.5%",
-        "weight_pct": 2.06,
-        "shares": 500000,
+        "name": "Bbcms Mortgage Trust 2024-C30 4.902%",
+        "weight_pct": 2.09,
+        "shares": 494555,
         "raw": {
           "no": 19,
-          "n": "Government National Mortgage Association 5.5%",
-          "s": "G2SF.5.5 7.11",
-          "as": "2.06%",
-          "sh": "500,000"
+          "n": "Bbcms Mortgage Trust 2024-C30 4.902%",
+          "as": "2.09%",
+          "sh": "494,555"
         }
       },
       {
         "rank": 20,
         "symbol": "NYC.2026-7W34 A",
-        "name": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.20572%",
-        "weight_pct": 2.03,
+        "name": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.0378%",
+        "weight_pct": 2.08,
         "shares": 500000,
         "raw": {
           "no": 20,
-          "n": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.20572%",
+          "n": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.0378%",
           "s": "NYC.2026-7W34 A",
-          "as": "2.03%",
+          "as": "2.08%",
           "sh": "500,000"
         }
       },
       {
         "rank": 21,
-        "symbol": "BBCMS.2024-C30 A1",
-        "name": "Bbcms Mortgage Trust 2024-C30 4.902%",
-        "weight_pct": 2.03,
-        "shares": 494555,
-        "raw": {
-          "no": 21,
-          "n": "Bbcms Mortgage Trust 2024-C30 4.902%",
-          "s": "BBCMS.2024-C30 A1",
-          "as": "2.03%",
-          "sh": "494,555"
-        }
-      },
-      {
-        "rank": 22,
         "symbol": "BANK.2021-BN35 XB",
         "name": "BANK 2021-BNK35 0.70472%",
-        "weight_pct": 2.03,
+        "weight_pct": 2.08,
         "shares": 18100000,
         "raw": {
-          "no": 22,
+          "no": 21,
           "n": "BANK 2021-BNK35 0.70472%",
           "s": "BANK.2021-BN35 XB",
-          "as": "2.03%",
+          "as": "2.08%",
           "sh": "18,100,000"
         }
       },
       {
-        "rank": 23,
-        "symbol": "!MUTF/GVMXX",
-        "name": "State Street U.S. Government Money Market Portfolio",
-        "weight_pct": 1.99,
-        "shares": 485938,
-        "raw": {
-          "no": 23,
-          "n": "State Street U.S. Government Money Market Portfolio",
-          "s": "!mutf/GVMXX",
-          "as": "1.99%",
-          "sh": "485,938"
-        }
-      },
-      {
-        "rank": 24,
+        "rank": 22,
         "symbol": "BX.2026-VLT10 A",
         "name": "BX COMMERCIAL MORTGAGE TRUST 2026-VLT10 5.35795%",
-        "weight_pct": 1.99,
+        "weight_pct": 2.04,
         "shares": 500000,
         "raw": {
-          "no": 24,
+          "no": 22,
           "n": "BX COMMERCIAL MORTGAGE TRUST 2026-VLT10 5.35795%",
           "s": "BX.2026-VLT10 A",
-          "as": "1.99%",
+          "as": "2.04%",
           "sh": "500,000"
         }
       },
       {
-        "rank": 25,
+        "rank": 23,
         "name": "Us 5yr Note (Cbt) Sep26 Xcbt 20260930",
-        "weight_pct": 1.75,
+        "weight_pct": 1.8,
         "shares": 400000,
         "raw": {
-          "no": 25,
+          "no": 23,
           "n": "Us 5yr Note (Cbt) Sep26 Xcbt 20260930",
-          "as": "1.75%",
+          "as": "1.80%",
           "sh": "400,000"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "FN.MA4465",
+        "name": "Federal National Mortgage Association 2%",
+        "weight_pct": 1.58,
+        "shares": 470974,
+        "raw": {
+          "no": 24,
+          "n": "Federal National Mortgage Association 2%",
+          "s": "FN.MA4465",
+          "as": "1.58%",
+          "sh": "470,974"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "Federal Home Loan Mortgage Corp. 4%",
+        "weight_pct": 1.57,
+        "shares": 398191,
+        "raw": {
+          "no": 25,
+          "n": "Federal Home Loan Mortgage Corp. 4%",
+          "as": "1.57%",
+          "sh": "398,191"
         }
       }
     ],
@@ -368,7 +383,7 @@
     "sectors": null,
     "countries": null,
     "holding_count": 45,
-    "holdings_updated": "Jul 3, 2026",
+    "holdings_updated": "Jul 14, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -387,39 +402,44 @@
       "etf_website": "https://www.principalam.com/us/fund/wde/"
     },
     "performance": {
-      "tr1m": 0.7515
+      "tr1m": 0.1738,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
     },
     "quote": {
-      "p": 25.2099,
-      "pd": 25.21,
-      "c": -0.03,
-      "cp": -0.12,
-      "cl": 25.24,
-      "cdr": -1,
-      "o": 25.21,
-      "h": 25.21,
-      "l": 25.21,
-      "v": 7.078,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "p": 25.2298,
+      "pd": 25.23,
+      "c": 0.05,
+      "cp": 0.2,
+      "cl": 25.18,
+      "cdr": 1,
+      "o": 25.23,
+      "h": 25.23,
+      "l": 25.23,
+      "v": 6,
+      "ts": 1784145600000,
+      "u": "Jul 15, 2026, 4:00 PM EDT",
+      "td": "2026-07-15",
       "h52": 25.44,
       "l52": 25.09,
       "ex": "BATS",
       "ms": "closed",
-      "fms": "pre",
-      "e": false,
-      "ep": null,
-      "epd": 0,
+      "fms": "post",
+      "e": true,
+      "ep": 25.2298,
+      "epd": 25.23,
       "ec": 0,
       "ecp": 0,
-      "eu": null,
+      "eu": "Jul 15, 2026, 6:30 PM EDT",
       "es": "After-hours",
-      "ets": 1783555209445.1116,
-      "etd": null,
+      "ets": 1784154607564.2642,
+      "etd": "2026-07-15",
       "epv": null,
       "days": 0,
-      "exp": 1783589146557,
+      "exp": 1784159158104,
       "symbol": "WDE",
       "uid": "WDE"
     },
@@ -428,11 +448,11 @@
         "t": "2026-07-01",
         "o": 25.25,
         "h": 25.295,
-        "l": 25.24,
-        "c": 25.24,
-        "a": 25.2398,
-        "v": 27,
-        "ch": -0.18
+        "l": 25.16,
+        "c": 25.18,
+        "a": 25.18,
+        "v": 55,
+        "ch": -0.42
       },
       {
         "t": "2026-06-01",
@@ -447,6 +467,56 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-14",
+          "o": 25.18,
+          "h": 25.18,
+          "l": 25.18,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 6,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-07-13",
+          "o": 25.16,
+          "h": 25.16,
+          "l": 25.16,
+          "c": 25.16,
+          "a": 25.16,
+          "v": 3,
+          "ch": -0.2
+        },
+        {
+          "t": "2026-07-10",
+          "o": 25.21,
+          "h": 25.21,
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.21,
+          "v": 6,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-07-09",
+          "o": 25.22,
+          "h": 25.22,
+          "l": 25.22,
+          "c": 25.22,
+          "a": 25.2198,
+          "v": 6,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-07-08",
+          "o": 25.21,
+          "h": 25.21,
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.2099,
+          "v": 7,
+          "ch": -0.12
+        },
         {
           "t": "2026-07-07",
           "o": 25.24,
@@ -750,14 +820,24 @@
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-13",
+          "o": 25.16,
+          "h": 25.18,
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 9,
+          "ch": -0.12
+        },
+        {
           "t": "2026-07-06",
           "o": 25.295,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 14,
-          "ch": -0.12
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.21,
+          "v": 33,
+          "ch": -0.24
         },
         {
           "t": "2026-06-29",
@@ -825,11 +905,11 @@
           "t": "2026-07-01",
           "o": 25.25,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 27,
-          "ch": -0.18
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 55,
+          "ch": -0.42
         },
         {
           "t": "2026-06-01",
@@ -844,14 +924,24 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-07-13",
+          "o": 25.16,
+          "h": 25.18,
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 9,
+          "ch": -0.12
+        },
+        {
           "t": "2026-07-06",
           "o": 25.295,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 14,
-          "ch": -0.12
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.21,
+          "v": 33,
+          "ch": -0.24
         },
         {
           "t": "2026-06-29",
@@ -919,11 +1009,11 @@
           "t": "2026-07-01",
           "o": 25.25,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 27,
-          "ch": -0.18
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 55,
+          "ch": -0.42
         },
         {
           "t": "2026-06-01",
@@ -941,11 +1031,11 @@
           "t": "2026-07-01",
           "o": 25.25,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 27,
-          "ch": -0.18
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 55,
+          "ch": -0.42
         },
         {
           "t": "2026-06-01",
@@ -961,208 +1051,56 @@
     }
   },
   "raw": {
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 07.14.26",
-          "as": "6.15%",
-          "sh": "1,500,000"
-        },
-        {
-          "no": 2,
-          "n": "2 Year Treasury Note Future Sept 26",
-          "as": "5.07%",
-          "sh": "1,200,000"
-        },
-        {
-          "no": 3,
-          "n": "MSWF COML MTG TR 2023-1 5.752%",
-          "s": "MSWF.2023-1 A5",
-          "as": "4.26%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 4,
-          "n": "PG&E Recovery Funding LLC 5.256%",
-          "s": "PCG.5.256 01.15.38 A-2",
-          "as": "4.15%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 5,
-          "n": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
-          "s": "HAROT.2024-1 A4",
-          "as": "4.14%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 6,
-          "n": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
-          "s": "GGP.2026-SSP A",
-          "as": "4.11%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 7,
-          "n": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
-          "s": "GALC.2025-1 A3",
-          "as": "4.11%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 8,
-          "n": "CONE 2026-DFW3 5.75063%",
-          "s": "CONE.2026-DFW3 A",
-          "as": "4.09%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 9,
-          "n": "ENTERPRISE FLEET FINANCING 2025-4 LLC 4.11%",
-          "s": "EFF.2025-4 A3",
-          "as": "4.06%",
-          "sh": "1,000,000"
-        },
-        {
-          "no": 10,
-          "n": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-1 4.05%",
-          "s": "GSAR.2026-1A A2",
-          "as": "3.87%",
-          "sh": "947,296"
-        },
-        {
-          "no": 11,
-          "n": "Ms Cap I Tr 2016-Ubs9 3.903%",
-          "s": "MSC.2016-UBS9 AS",
-          "as": "3.23%",
-          "sh": "793,887"
-        },
-        {
-          "no": 12,
-          "n": "Us 10yr Note (Cbt)sep26 Xcbt 20260921",
-          "as": "3.15%",
-          "sh": "700,000"
-        },
-        {
-          "no": 13,
-          "n": "BFLD COMMERCIAL MORTGAGE TRUST 2025-5MW 4.82999%",
-          "s": "BFLD.2025-5MW A",
-          "as": "3.04%",
-          "sh": "750,000"
-        },
-        {
-          "no": 14,
-          "n": "VOLKSWAGEN AUTO LEASE TRUST 2025-B 4.01%",
-          "s": "VWALT.2025-B A3",
-          "as": "2.99%",
-          "sh": "732,000"
-        },
-        {
-          "no": 15,
-          "n": "GS MORTGAGE SEC TR 2020-GC47 1.23552%",
-          "s": "GSMS.2020-GC47 XA",
-          "as": "2.82%",
-          "sh": "19,376,352"
-        },
-        {
-          "no": 16,
-          "n": "United States Treasury Notes 3.875%",
-          "s": "T.3.875 03.31.31",
-          "as": "2.43%",
-          "sh": "600,000"
-        },
-        {
-          "no": 17,
-          "n": "BANK 2026-BNK52 0.921%",
-          "s": "BANK.2026-BNK52 XA",
-          "as": "2.07%",
-          "sh": "9,000,000"
-        },
-        {
-          "no": 18,
-          "n": "Government National Mortgage Association 5%",
-          "s": "G2SF.5 7.11",
-          "as": "2.06%",
-          "sh": "510,000"
-        },
-        {
-          "no": 19,
-          "n": "Government National Mortgage Association 5.5%",
-          "s": "G2SF.5.5 7.11",
-          "as": "2.06%",
-          "sh": "500,000"
-        },
-        {
-          "no": 20,
-          "n": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.20572%",
-          "s": "NYC.2026-7W34 A",
-          "as": "2.03%",
-          "sh": "500,000"
-        },
-        {
-          "no": 21,
-          "n": "Bbcms Mortgage Trust 2024-C30 4.902%",
-          "s": "BBCMS.2024-C30 A1",
-          "as": "2.03%",
-          "sh": "494,555"
-        },
-        {
-          "no": 22,
-          "n": "BANK 2021-BNK35 0.70472%",
-          "s": "BANK.2021-BN35 XB",
-          "as": "2.03%",
-          "sh": "18,100,000"
-        },
-        {
-          "no": 23,
-          "n": "State Street U.S. Government Money Market Portfolio",
-          "s": "!mutf/GVMXX",
-          "as": "1.99%",
-          "sh": "485,938"
-        },
-        {
-          "no": 24,
-          "n": "BX COMMERCIAL MORTGAGE TRUST 2026-VLT10 5.35795%",
-          "s": "BX.2026-VLT10 A",
-          "as": "1.99%",
-          "sh": "500,000"
-        },
-        {
-          "no": 25,
-          "n": "Us 5yr Note (Cbt) Sep26 Xcbt 20260930",
-          "as": "1.75%",
-          "sh": "400,000"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": null,
-      "countries": null,
-      "news": [
-        {
-          "t": "Principal Asset Management® Launches Fixed Income ETF Suite",
-          "u": "https://www.businesswire.com/news/home/20260615233888/en/Principal-Asset-Management%C2%AE-Launches-Fixed-Income-ETF-Suite/",
-          "n": "Business Wire",
-          "d": "23 days ago"
-        }
-      ],
-      "date": "Jul 3, 2026",
-      "count": 45
-    },
     "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "WDE",
+        "lastChecked": 1784155569537,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
       "type": "etf",
       "aum": "$20.14M",
+      "nav": null,
       "expenseRatio": "0.19%",
+      "peRatio": null,
       "sharesOut": "800,001",
       "dps": "$0.10",
       "dividendYield": "0.39%",
+      "payoutRatio": null,
       "exDivDate": "Jul 1, 2026",
       "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
       "holdings": 45,
+      "inception": null,
       "chart": {
         "expiration": null,
-        "data": []
+        "data": null
       },
       "description": "The Principal Securitized Debt ETF (WDE) is an exchange-traded fund that mostly invests in investment grade fixed income. The fund is an actively managed ETF investing across the securitized debt sectors. It uses fundamental, technical, and valuation methods to select securities.",
       "infoTable": [
@@ -1198,7 +1136,7 @@
         }
       ],
       "news": {
-        "exp": "1783540662370",
+        "exp": "1784172616362",
         "data": [
           {
             "url": "https://www.businesswire.com/news/home/20260615233888/en/Principal-Asset-Management%C2%AE-Launches-Fixed-Income-ETF-Suite/",
@@ -1213,53 +1151,274 @@
               "#UUPP"
             ],
             "time": "Jun 15, 2026, 9:00 AM EDT",
-            "ago": "23 days ago"
+            "ago": "4 weeks ago"
           }
         ]
       },
       "config": {
-        "no1d": false
+        "no1d": true
       },
       "changes": {
-        "price1w": 25.385,
-        "price1m": 25.15,
+        "price1w": 25.21,
+        "price1m": 25.285,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
         "priceMAX": 25.095
       },
       "performance": {
-        "tr1m": 0.7515
+        "tr1m": 0.1738,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 07.14.26",
+          "as": "6.34%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 2,
+          "n": "2 Year Treasury Note Future Sept 26",
+          "as": "5.22%",
+          "sh": "1,200,000"
+        },
+        {
+          "no": 3,
+          "n": "MSWF COML MTG TR 2023-1 5.752%",
+          "s": "MSWF.2023-1 A5",
+          "as": "4.37%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 4,
+          "n": "Honda Auto Receivables 2024-1 Owner Trust 5.17%",
+          "s": "HAROT.2024-1 A4",
+          "as": "4.26%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 5,
+          "n": "PG&E Recovery Funding LLC 5.256%",
+          "s": "PCG.5.256 01.15.38 A-2",
+          "as": "4.23%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 6,
+          "n": "GreatAmerica Leasing Receivables Funding LLC 4.49%",
+          "s": "GALC.2025-1 A3",
+          "as": "4.23%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 7,
+          "n": "GGP COMMERCIAL MORTGAGE TRUST 2026-SSP 5.11514%",
+          "s": "GGP.2026-SSP A",
+          "as": "4.22%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 8,
+          "n": "CONE 2026-DFW3 5.75063%",
+          "s": "CONE.2026-DFW3 A",
+          "as": "4.20%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 9,
+          "n": "ENTERPRISE FLEET FINANCING 2025-4 LLC 4.11%",
+          "s": "EFF.2025-4 A3",
+          "as": "4.18%",
+          "sh": "1,000,000"
+        },
+        {
+          "no": 10,
+          "n": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-1 4.05%",
+          "s": "GSAR.2026-1A A2",
+          "as": "3.98%",
+          "sh": "947,296"
+        },
+        {
+          "no": 11,
+          "n": "Ms Cap I Tr 2016-Ubs9 3.903%",
+          "as": "3.33%",
+          "sh": "793,887"
+        },
+        {
+          "no": 12,
+          "n": "Us 10yr Note (Cbt)sep26 Xcbt 20260921",
+          "as": "3.23%",
+          "sh": "700,000"
+        },
+        {
+          "no": 13,
+          "n": "BFLD COMMERCIAL MORTGAGE TRUST 2025-5MW 4.82999%",
+          "s": "BFLD.2025-5MW A",
+          "as": "3.12%",
+          "sh": "750,000"
+        },
+        {
+          "no": 14,
+          "n": "VOLKSWAGEN AUTO LEASE TRUST 2025-B 4.01%",
+          "s": "VWALT.2025-B A3",
+          "as": "3.08%",
+          "sh": "732,000"
+        },
+        {
+          "no": 15,
+          "n": "GS MORTGAGE SEC TR 2020-GC47 1.23552%",
+          "s": "GSMS.2020-GC47 XA",
+          "as": "2.88%",
+          "sh": "19,376,352"
+        },
+        {
+          "no": 16,
+          "n": "BANK 2026-BNK52 0.92097%",
+          "s": "BANK.2026-BNK52 XA",
+          "as": "2.13%",
+          "sh": "9,000,000"
+        },
+        {
+          "no": 17,
+          "n": "Government National Mortgage Association 5.5%",
+          "s": "G2SF.5.5 8.11",
+          "as": "2.12%",
+          "sh": "500,000"
+        },
+        {
+          "no": 18,
+          "n": "Government National Mortgage Association 5%",
+          "s": "G2SF.5 7.11",
+          "as": "2.11%",
+          "sh": "510,000"
+        },
+        {
+          "no": 19,
+          "n": "Bbcms Mortgage Trust 2024-C30 4.902%",
+          "as": "2.09%",
+          "sh": "494,555"
+        },
+        {
+          "no": 20,
+          "n": "NYC COMMERCIAL MORTGAGE TRUST 2026-7W34 5.0378%",
+          "s": "NYC.2026-7W34 A",
+          "as": "2.08%",
+          "sh": "500,000"
+        },
+        {
+          "no": 21,
+          "n": "BANK 2021-BNK35 0.70472%",
+          "s": "BANK.2021-BN35 XB",
+          "as": "2.08%",
+          "sh": "18,100,000"
+        },
+        {
+          "no": 22,
+          "n": "BX COMMERCIAL MORTGAGE TRUST 2026-VLT10 5.35795%",
+          "s": "BX.2026-VLT10 A",
+          "as": "2.04%",
+          "sh": "500,000"
+        },
+        {
+          "no": 23,
+          "n": "Us 5yr Note (Cbt) Sep26 Xcbt 20260930",
+          "as": "1.80%",
+          "sh": "400,000"
+        },
+        {
+          "no": 24,
+          "n": "Federal National Mortgage Association 2%",
+          "s": "FN.MA4465",
+          "as": "1.58%",
+          "sh": "470,974"
+        },
+        {
+          "no": 25,
+          "n": "Federal Home Loan Mortgage Corp. 4%",
+          "as": "1.57%",
+          "sh": "398,191"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "Principal Asset Management® Launches Fixed Income ETF Suite",
+          "u": "https://www.businesswire.com/news/home/20260615233888/en/Principal-Asset-Management%C2%AE-Launches-Fixed-Income-ETF-Suite/",
+          "n": "Business Wire",
+          "d": "4 weeks ago"
+        }
+      ],
+      "date": "Jul 14, 2026",
+      "count": 45,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 14, 2026",
+        "lastChecked": 1784136543813,
+        "topic": "holdings",
+        "ticker": "WDE",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 25.2099,
-      "pd": 25.21,
-      "c": -0.03,
-      "cp": -0.12,
-      "cl": 25.24,
-      "cdr": -1,
-      "o": 25.21,
-      "h": 25.21,
-      "l": 25.21,
-      "v": 7.078,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "p": 25.2298,
+      "pd": 25.23,
+      "c": 0.05,
+      "cp": 0.2,
+      "cl": 25.18,
+      "cdr": 1,
+      "o": 25.23,
+      "h": 25.23,
+      "l": 25.23,
+      "v": 6,
+      "ts": 1784145600000,
+      "u": "Jul 15, 2026, 4:00 PM EDT",
+      "td": "2026-07-15",
       "h52": 25.44,
       "l52": 25.09,
       "ex": "BATS",
       "ms": "closed",
-      "fms": "pre",
-      "e": false,
-      "ep": null,
-      "epd": 0,
+      "fms": "post",
+      "e": true,
+      "ep": 25.2298,
+      "epd": 25.23,
       "ec": 0,
       "ecp": 0,
-      "eu": null,
+      "eu": "Jul 15, 2026, 6:30 PM EDT",
       "es": "After-hours",
-      "ets": 1783555209445.1116,
-      "etd": null,
+      "ets": 1784154607564.2642,
+      "etd": "2026-07-15",
       "epv": null,
       "days": 0,
-      "exp": 1783589146557,
+      "exp": 1784159158104,
       "symbol": "WDE",
       "uid": "WDE"
     },
@@ -1268,11 +1427,11 @@
         "t": "2026-07-01",
         "o": 25.25,
         "h": 25.295,
-        "l": 25.24,
-        "c": 25.24,
-        "a": 25.2398,
-        "v": 27,
-        "ch": -0.18
+        "l": 25.16,
+        "c": 25.18,
+        "a": 25.18,
+        "v": 55,
+        "ch": -0.42
       },
       {
         "t": "2026-06-01",
@@ -1287,6 +1446,56 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-14",
+          "o": 25.18,
+          "h": 25.18,
+          "l": 25.18,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 6,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-07-13",
+          "o": 25.16,
+          "h": 25.16,
+          "l": 25.16,
+          "c": 25.16,
+          "a": 25.16,
+          "v": 3,
+          "ch": -0.2
+        },
+        {
+          "t": "2026-07-10",
+          "o": 25.21,
+          "h": 25.21,
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.21,
+          "v": 6,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-07-09",
+          "o": 25.22,
+          "h": 25.22,
+          "l": 25.22,
+          "c": 25.22,
+          "a": 25.2198,
+          "v": 6,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-07-08",
+          "o": 25.21,
+          "h": 25.21,
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.2099,
+          "v": 7,
+          "ch": -0.12
+        },
         {
           "t": "2026-07-07",
           "o": 25.24,
@@ -1590,14 +1799,24 @@
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-13",
+          "o": 25.16,
+          "h": 25.18,
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 9,
+          "ch": -0.12
+        },
+        {
           "t": "2026-07-06",
           "o": 25.295,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 14,
-          "ch": -0.12
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.21,
+          "v": 33,
+          "ch": -0.24
         },
         {
           "t": "2026-06-29",
@@ -1665,11 +1884,11 @@
           "t": "2026-07-01",
           "o": 25.25,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 27,
-          "ch": -0.18
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 55,
+          "ch": -0.42
         },
         {
           "t": "2026-06-01",
@@ -1684,14 +1903,24 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-07-13",
+          "o": 25.16,
+          "h": 25.18,
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 9,
+          "ch": -0.12
+        },
+        {
           "t": "2026-07-06",
           "o": 25.295,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 14,
-          "ch": -0.12
+          "l": 25.21,
+          "c": 25.21,
+          "a": 25.21,
+          "v": 33,
+          "ch": -0.24
         },
         {
           "t": "2026-06-29",
@@ -1759,11 +1988,11 @@
           "t": "2026-07-01",
           "o": 25.25,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 27,
-          "ch": -0.18
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 55,
+          "ch": -0.42
         },
         {
           "t": "2026-06-01",
@@ -1781,11 +2010,11 @@
           "t": "2026-07-01",
           "o": 25.25,
           "h": 25.295,
-          "l": 25.24,
-          "c": 25.24,
-          "a": 25.2398,
-          "v": 27,
-          "ch": -0.18
+          "l": 25.16,
+          "c": 25.18,
+          "a": 25.18,
+          "v": 55,
+          "ch": -0.42
         },
         {
           "t": "2026-06-01",
@@ -1799,5 +2028,9 @@
         }
       ]
     }
-  }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ]
 }

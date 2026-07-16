@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-occ-options-availability/v0.1",
-  "generated_at": "2026-07-15T03:53:28.864Z",
+  "generated_at": "2026-07-15T15:38:27.550Z",
   "formula_version": "fenok-occ-options-volume-v0.1",
   "purpose": "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
   "raw_policy": {
@@ -10,11 +10,11 @@
   },
   "source_date": "20260714",
   "collection_mode": "all_eligible_batched",
-  "selected_tickers": 189,
+  "selected_tickers": 1,
   "eligible_count": 689,
   "request_budget": {
-    "estimated_max_live_requests": 1134,
-    "max_requests": 1500
+    "estimated_max_live_requests": 6,
+    "max_requests": 6
   },
   "side_attempts": [
     {
@@ -170,7 +170,7 @@
       "no_fetch": false,
       "status": "failed",
       "error_class": "failed",
-      "error": "Unexpected OCC CSV header, missing quantity: Report date cannot be greater than 07/14/2026"
+      "error": "decode_error"
     },
     {
       "ticker": "A",
@@ -181,7 +181,7 @@
       "no_fetch": false,
       "status": "failed",
       "error_class": "failed",
-      "error": "Unexpected OCC CSV header, missing quantity: Report date cannot be greater than 07/14/2026"
+      "error": "decode_error"
     },
     {
       "ticker": "AA",
@@ -124322,110 +124322,42 @@
     }
   ],
   "current_attempt": {
-    "attempt_ref": "29387238845",
+    "attempt_ref": "29428638865",
     "attempt_number": 1,
-    "observed_at": "2026-07-15T03:53:28.894Z",
+    "observed_at": "2026-07-15T15:38:27.578Z",
     "target_source_date": "2026-07-15",
     "served_source_date": "2026-07-14",
     "status": "degraded_walkback",
     "fallback_active": true,
-    "selected_tickers": 689,
-    "message": "OCC target 2026-07-15 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-14. Current run remains degraded across 3 non-empty batch(es).",
+    "selected_tickers": 1,
+    "message": "OCC target 2026-07-15 was unavailable (0 usable rows; 1 hard failures); serving fallback dated 2026-07-14. Current run remains degraded across 1 non-empty batch(es).",
     "batch_retention_limit": 100,
     "batches": [
       {
         "batch_index": 0,
-        "selected_tickers": 250,
+        "selected_tickers": 1,
         "target_source_date": "2026-07-15",
         "served_source_date": "2026-07-14",
         "status": "degraded_walkback",
         "fallback_active": true,
-        "message": "OCC target 2026-07-15 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-14.",
+        "message": "OCC target 2026-07-15 was unavailable (0 usable rows; 1 hard failures); serving fallback dated 2026-07-14.",
         "date_attempts": [
           {
             "source_date": "2026-07-15",
             "accepted_rows": 0,
             "usable_rows": 0,
             "status_counts": {
-              "failed": 25
+              "failed": 1
             },
-            "hard_failure_count": 25,
-            "stopped_fail_threshold": true
-          },
-          {
-            "source_date": "2026-07-14",
-            "accepted_rows": 247,
-            "usable_rows": 247,
-            "status_counts": {
-              "options_activity_available": 243,
-              "partial_no_record_or_form_gap": 4,
-              "no_record": 3
-            },
-            "hard_failure_count": 0,
+            "hard_failure_count": 1,
             "stopped_fail_threshold": false
-          }
-        ]
-      },
-      {
-        "batch_index": 1,
-        "selected_tickers": 250,
-        "target_source_date": "2026-07-15",
-        "served_source_date": "2026-07-14",
-        "status": "degraded_walkback",
-        "fallback_active": true,
-        "message": "OCC target 2026-07-15 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-14.",
-        "date_attempts": [
-          {
-            "source_date": "2026-07-15",
-            "accepted_rows": 0,
-            "usable_rows": 0,
-            "status_counts": {
-              "failed": 25
-            },
-            "hard_failure_count": 25,
-            "stopped_fail_threshold": true
           },
           {
             "source_date": "2026-07-14",
-            "accepted_rows": 248,
-            "usable_rows": 248,
+            "accepted_rows": 1,
+            "usable_rows": 1,
             "status_counts": {
-              "options_activity_available": 241,
-              "partial_no_record_or_form_gap": 7,
-              "no_record": 2
-            },
-            "hard_failure_count": 0,
-            "stopped_fail_threshold": false
-          }
-        ]
-      },
-      {
-        "batch_index": 2,
-        "selected_tickers": 189,
-        "target_source_date": "2026-07-15",
-        "served_source_date": "2026-07-14",
-        "status": "degraded_walkback",
-        "fallback_active": true,
-        "message": "OCC target 2026-07-15 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-14.",
-        "date_attempts": [
-          {
-            "source_date": "2026-07-15",
-            "accepted_rows": 0,
-            "usable_rows": 0,
-            "status_counts": {
-              "failed": 25
-            },
-            "hard_failure_count": 25,
-            "stopped_fail_threshold": true
-          },
-          {
-            "source_date": "2026-07-14",
-            "accepted_rows": 186,
-            "usable_rows": 186,
-            "status_counts": {
-              "options_activity_available": 178,
-              "no_record": 3,
-              "partial_no_record_or_form_gap": 8
+              "options_activity_available": 1
             },
             "hard_failure_count": 0,
             "stopped_fail_threshold": false
@@ -124434,15 +124366,15 @@
       }
     ]
   },
-  "previous_generated_at": "2026-07-15T03:51:15.976Z",
+  "previous_generated_at": "2026-07-15T15:38:27.300Z",
   "upsert_policy": {
     "key": [
       "ticker",
       "source_date",
       "attempted_forms"
     ],
-    "replaced_rows": 25,
-    "added_rows": 189,
+    "replaced_rows": 1,
+    "added_rows": 1,
     "cumulative_rows": 3295
   }
 }

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "AAPX",
-  "asset_type": "stock",
-  "generated_at": "2026-07-14T04:12:01Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-16T03:38:48Z",
   "source_as_of": null,
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": "selected price fact has no provider source date",
@@ -15,21 +15,132 @@
     "fund_family": null,
     "category": null
   },
-  "facts": {},
-  "etf": null,
+  "facts": {
+    "return_1m": {
+      "value": 14.72,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-16T01:12:18Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 14.72,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-16T01:12:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 22.031,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-16T01:12:18Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 22.031,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-16T01:12:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 87.678,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-16T01:12:18Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 87.678,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-16T01:12:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_max_avg": {
+      "value": 27.538,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-16T01:12:18Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 27.538,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-16T01:12:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
+  "etf": {
+    "holdings_count": null,
+    "holdings_updated": null,
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": null,
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": null,
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

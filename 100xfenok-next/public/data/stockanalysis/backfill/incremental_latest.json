@@ -2,48 +2,655 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-07-14T23:47:40Z",
+  "generated_at": "2026-07-16T01:12:45Z",
   "policy": {
-    "limit": 120,
-    "offset": 0,
-    "max_age_hours": null,
+    "limit": 40,
+    "max_age_hours": 168.0,
     "cooldown_days": 7,
     "cooldown_failure_threshold": 3,
-    "required_history_periods": [
-      "daily_1y"
-    ],
-    "history_gaps_only": true,
-    "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
-    "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "min_daily_1y_rows": 200
+    "required_history_periods": [],
+    "history_gaps_only": false,
+    "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
   },
   "counts": {
-    "candidates": 0,
-    "selected": 0,
-    "missing": 0,
+    "candidates": 5186,
+    "selected": 40,
+    "missing": 670,
     "fallback_retry": 0,
     "history_gap": 0,
     "inception_limited_history_gap": 0,
+    "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "stale": 0,
-    "cooldown_skipped": 0,
-    "prior_failed_candidates": 0,
-    "daily_1y_missing_file": 0,
-    "daily_1y_short_rows": 0,
-    "offset_skipped": 0,
-    "scheduled_plan_rows": 0,
-    "ledger_tracked": 92,
-    "ledger_cooldown": 80
+    "stale": 4516,
+    "cooldown_skipped": 36,
+    "prior_failed_candidates": 21,
+    "ledger_tracked": 91,
+    "ledger_cooldown": 63
   },
-  "selected": [],
-  "cooldown": [],
+  "selected": [
+    {
+      "ticker": "AAOZ",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BTDL",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BWQG",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CIEX",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CIR",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CJUL",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "COHC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CRD",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CRWX",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CTJL",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "EMJL",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "FINA",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "FSPC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "GOOL",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "HIMC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "HJLY",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "HYNX",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "IDJL",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "IREC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "JBLG",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "JPRF",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "JULC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "JULI",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "KMEM",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "LCTO",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "LGDS",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "LRCC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "METG",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "MIC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "MPWC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "MRVX",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "MWHS",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NBIC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NFX",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NOWX",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NSIG",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NSIV",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NVOC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "NVTC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "OKLC",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    }
+  ],
+  "cooldown": [
+    {
+      "ticker": "SFYI",
+      "source": "new_etfs",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "FECM",
+      "source": "new_etfs",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "FESC",
+      "source": "new_etfs",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "PQV",
+      "source": "new_etfs",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "PQXX",
+      "source": "new_etfs",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "NISM",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "PCEB",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "PHYS",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "PSLV",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RAAR",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RAAY",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RCLR",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RCLY",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RMHY",
+      "source": "etf_universe",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RNMN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RWEM",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RWLC",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "SFGV",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "SLWS",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "SPPP",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "STXF",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "TOT",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "TPUT",
+      "source": "etf_universe",
+      "consecutive_failures": 8,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "UXRP",
+      "source": "etf_universe",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "WTIB",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLBI",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLCI",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLEI",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLFI",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLII",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLRI",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLSI",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLVI",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLYI",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XRP",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XRPZ",
+      "source": "etf_universe",
+      "consecutive_failures": 7,
+      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    }
+  ],
   "inception_limited": [],
+  "terminal_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-07-14T23:47:40Z",
+    "generated_at": "2026-07-16T02:01:21Z",
     "counts": {
-      "tracked": 92,
-      "cooldown": 80,
+      "tracked": 91,
+      "cooldown": 63,
       "provider_coverage_gaps": 0,
       "updated": 0,
       "cleared": 0
