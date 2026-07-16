@@ -50,7 +50,7 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "e492fa016ebf0e6dc6b891f529a5cac04f214b9fb227d67dd7ebe3604d7f478b",
+  "config_digest": "5ccc6c47ca66647033b041856c3bb41bb109decf0b1ac8818c50f8311c21d285",
   "logical_lane_count": 18,
   "producer_member_count": 22,
   "slickcharts_member_ids": [
@@ -80,11 +80,11 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "52928cfc16dc4253bd3f6226067e79bc86463167f5e71a1756f23e2b91942f00",
+    "report_file_sha256": "da313d401987e15dc522408b32571aa500b0a299e9eb0ac1a519742ed90c0b66",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "e492fa016ebf0e6dc6b891f529a5cac04f214b9fb227d67dd7ebe3604d7f478b",
+      "config_digest": "5ccc6c47ca66647033b041856c3bb41bb109decf0b1ac8818c50f8311c21d285",
       "logical_lane_count": 18,
       "producer_member_count": 22,
       "counts": {
@@ -229,8 +229,8 @@
         {
           "id": "defillama_stablecoins",
           "label": "DefiLlama stablecoins",
-          "enforcement": "shadow",
-          "kpi_required": false,
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -253,8 +253,8 @@
         {
           "id": "yahoo_etf_fallback",
           "label": "Yahoo ETF fallback",
-          "enforcement": "shadow",
-          "kpi_required": false,
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
@@ -277,8 +277,8 @@
         {
           "id": "stockanalysis_etf_universe",
           "label": "StockAnalysis ETF universe",
-          "enforcement": "shadow",
-          "kpi_required": false,
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",

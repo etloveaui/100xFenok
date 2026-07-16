@@ -462,6 +462,9 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "fred_yardeni",
     "fdic_tier1",
     "treasury_tga",
+    "defillama_stablecoins",
+    "yahoo_etf_fallback",
+    "stockanalysis_etf_universe",
     "yahoo_ticker_macro",
     "sentiment",
     "nasdaq_giw_sox",
@@ -494,9 +497,56 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   for (const ready of readyLanes) {
     assert.equal(ready.status, "ready");
     assert.equal(ready.reason, "ok");
-    assert.notEqual(ready.artifact.source_as_of, null);
+    const config = liveConfigs.find((item) => item.id === ready.id);
+    if (config.freshness.source_basis.length === 0) {
+      assert.equal(ready.artifact.source_as_of, null, `${ready.id} remains provider-dateless`);
+      assert.equal(ready.artifact.source_as_of_reason, "dateless_by_provider");
+    } else {
+      assert.notEqual(ready.artifact.source_as_of, null);
+    }
     assert.equal(ready.deployment_blocking, false);
   }
+
+  const declaredDateless = readyLanes.find((item) => item.id === "yahoo_etf_fallback");
+  assert.equal(declaredDateless.artifact.source_as_of, null);
+  assert.equal(declaredDateless.artifact.source_as_of_reason, "dateless_by_provider");
+  const declaredDatelessErrors = [];
+  checkDetectionFloorLane(
+    declaredDateless,
+    declaredDatelessErrors,
+    liveConfigs.find((item) => item.id === declaredDateless.id),
+  );
+  assert.deepEqual(declaredDatelessErrors, [], "declared provider-dateless null passes builder and checker");
+
+  assert.throws(() => mapDetectionFloorRow(row("defillama_stablecoins", {
+    artifact: { status: "ready", reason: "ok", source_as_of: null },
+  })), /contradicts null source_as_of/);
+  const undeclaredNull = structuredClone(readyLanes.find((item) => item.id === "defillama_stablecoins"));
+  undeclaredNull.artifact.source_as_of = null;
+  undeclaredNull.as_of = null;
+  const undeclaredNullErrors = [];
+  checkDetectionFloorLane(
+    undeclaredNull,
+    undeclaredNullErrors,
+    liveConfigs.find((item) => item.id === undeclaredNull.id),
+  );
+  assert.ok(undeclaredNullErrors.some((message) => /contradicts null source_as_of/.test(message)),
+    "undeclared null remains a checker hard error");
+
+  assert.throws(() => mapDetectionFloorRow(row("yahoo_etf_fallback", {
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-10" },
+  })), /fabricated source_as_of/);
+  const fabricatedDatelessDate = structuredClone(declaredDateless);
+  fabricatedDatelessDate.artifact.source_as_of = "2026-07-10";
+  fabricatedDatelessDate.as_of = "2026-07-10";
+  const fabricatedDatelessErrors = [];
+  checkDetectionFloorLane(
+    fabricatedDatelessDate,
+    fabricatedDatelessErrors,
+    liveConfigs.find((item) => item.id === fabricatedDatelessDate.id),
+  );
+  assert.ok(fabricatedDatelessErrors.some((message) => /fabricated source_as_of/.test(message)),
+    "declared provider-dateless date remains a checker hard error");
 
   const fdicRecovery = {
     schema_version: "data-supply-lkg-state/v1",
@@ -881,6 +931,7 @@ function readyRecoveryIndex(laneId, keys, generatedAt = "2026-07-14T11:00:00Z") 
 function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
+  const providerDateless = config.freshness.source_basis.length === 0;
   const row = {
     id,
     label: config.label,
@@ -888,7 +939,7 @@ function readyDetectionProjection(id, now) {
     kpi_required: true,
     status: "ready",
     reason: "ok",
-    artifact: { status: "ready", reason: "ok", source_as_of: "2026-07-10" },
+    artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : "2026-07-10" },
   };
   const recovery = TARGET_RECOVERY_FIXTURES[id];
   return mapDetectionFloorRow(row, recovery ? readyRecoveryIndex(recovery.laneId, recovery.keys, now) : undefined);
@@ -1252,7 +1303,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
     "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
   ]);
   const { root, public: pub } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 22);
+  assert.equal(root.totals.lanes, 25);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);

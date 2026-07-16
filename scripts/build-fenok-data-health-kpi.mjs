@@ -908,10 +908,15 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
     throw new Error(`detection floor ${laneId} status is better than its artifact status`);
   }
   const sourceAsOf = row.artifact.source_as_of;
+  const providerDateless = Array.isArray(laneConfig.freshness?.source_basis)
+    && laneConfig.freshness.source_basis.length === 0;
   if (sourceAsOf !== null && !isDetectionSourceStamp(sourceAsOf)) {
     throw new Error(`detection floor ${laneId} artifact.source_as_of is malformed`);
   }
-  if ((row.artifact.status === "ready" || row.artifact.status === "stale") && sourceAsOf === null) {
+  if (providerDateless && sourceAsOf !== null) {
+    throw new Error(`detection floor ${laneId} provider-dateless artifact carries fabricated source_as_of`);
+  }
+  if (!providerDateless && (row.artifact.status === "ready" || row.artifact.status === "stale") && sourceAsOf === null) {
     throw new Error(`detection floor ${laneId} artifact status contradicts null source_as_of`);
   }
 
@@ -945,7 +950,9 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
   return {
     ...result,
     reason: targetRecovery && row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
-    artifact: { source_as_of: sourceAsOf },
+    artifact: providerDateless
+      ? { source_as_of: sourceAsOf, source_as_of_reason: "dateless_by_provider" }
+      : { source_as_of: sourceAsOf },
   };
 }
 

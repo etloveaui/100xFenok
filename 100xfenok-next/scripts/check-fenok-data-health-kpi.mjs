@@ -143,6 +143,9 @@ function isDetectionSourceStamp(value) {
 export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
+  const sourceAsOfReason = lane?.artifact?.source_as_of_reason;
+  const providerDateless = Array.isArray(expectedConfig?.freshness?.source_basis)
+    && expectedConfig.freshness.source_basis.length === 0;
   const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
   const recoveryChecks = (lane?.checks || []).filter((item) => String(item?.id ?? "").startsWith("recovery_"));
   const targetRecovery = TARGET_RECOVERY_LANE_IDS.has(laneId);
@@ -208,7 +211,11 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   push(errors, lane?.deployment_blocking === false, `${laneId}: must remain lane-local and non-deployment-blocking`);
   push(errors, sourceAsOf === null || isDetectionSourceStamp(sourceAsOf),
     `${laneId}: artifact.source_as_of is malformed`);
-  push(errors, !["ok", "stale"].includes(detectionReason) || sourceAsOf !== null,
+  push(errors, !providerDateless || sourceAsOf === null,
+    `${laneId}: provider-dateless lane carries fabricated source_as_of`);
+  push(errors, !providerDateless || sourceAsOfReason === "dateless_by_provider",
+    `${laneId}: provider-dateless lane must name source_as_of_reason dateless_by_provider`);
+  push(errors, providerDateless || !["ok", "stale"].includes(detectionReason) || sourceAsOf !== null,
     `${laneId}: ready/stale reason contradicts null source_as_of`);
   push(errors, lane?.as_of === sourceAsOf, `${laneId}: as_of must preserve artifact.source_as_of`);
   push(errors, statusCheck?.status === expectedDetectionStatus,
