@@ -72,9 +72,9 @@ async function runCase(root, {
 {
   assert.deepEqual(DEFILLAMA_ENDPOINTS.map((row) => row.key), ["chart", "stablecoins"]);
   const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === DEFILLAMA_LANE_ID);
-  assert.ok(lane, "DefiLlama must be shadow-registered before its emitter lands");
-  assert.equal(lane.enforcement, "shadow", "K remains unflipped until a real committed attempt shard exists");
-  assert.equal(lane.kpi_required, false);
+  assert.ok(lane, "DefiLlama must be registered in the detection config");
+  assert.equal(lane.enforcement, "live", "K flipped live by 844dfab743 on a real committed attempt shard; reverting to shadow must be an equally conscious edit here");
+  assert.equal(lane.kpi_required, true);
   assert.deepEqual(lane.endpoint_contract.assertions.map((row) => row.id), ["chart_array", "pegged_assets_array"]);
 }
 
