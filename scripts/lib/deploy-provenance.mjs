@@ -207,6 +207,47 @@ export function filterRunsByHeadBranch(runs, branch) {
   return runs.filter((run) => run && run.head_branch === branch);
 }
 
+// Evaluate one post-deploy observation of the live surface against this run.
+// Cloudflare edges roll over gradually, so right after a deploy the /BUILD_ID
+// asset and the provenance asset can disagree for seconds (first-live proof
+// 2026-07-17: identity match on one edge, stale BUILD_ID + fresh provenance
+// on another ~1s later — run 29559387354). The caller POLLS this evaluation
+// until match or deadline; each non-match kind maps to one terminal error.
+export function evaluatePostObservation({ currentRunId, expectedBuildId, liveBuildId, liveProvenance }) {
+  if (typeof expectedBuildId !== "string" || expectedBuildId.length === 0) {
+    throw new Error("evaluatePostObservation requires expectedBuildId");
+  }
+  if (!isDeployProvenance(liveProvenance)) {
+    return {
+      match: false,
+      kind: "missing",
+      detail:
+        `post-deploy provenance missing or invalid at ${DEPLOY_PROVENANCE_PUBLIC_PATH}; `
+        + "the bundle live now does not declare which run shipped it",
+    };
+  }
+  if (liveBuildId !== expectedBuildId || liveProvenance.build_id !== expectedBuildId) {
+    return {
+      match: false,
+      kind: "build-mismatch",
+      detail:
+        `post-deploy provenance build mismatch: live BUILD_ID=${liveBuildId} `
+        + `provenance.build_id=${liveProvenance.build_id} expected=${expectedBuildId}`,
+    };
+  }
+  if (liveProvenance.run_id !== currentRunId) {
+    return {
+      match: false,
+      kind: "run-mismatch",
+      detail:
+        `post-deploy provenance run mismatch: live bundle was shipped by run `
+        + `${liveProvenance.run_id}, expected this run ${currentRunId} — the serving `
+        + "surface moved under this deploy between upload and verification",
+    };
+  }
+  return { match: true, kind: "match", detail: "live bundle declared by this run" };
+}
+
 export function selectNewerActiveRun({ currentRunId, currentRunNumber, runs }) {
   if (!Number.isFinite(currentRunNumber)) {
     throw new Error("selectNewerActiveRun requires a numeric currentRunNumber");

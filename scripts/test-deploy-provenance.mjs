@@ -9,6 +9,7 @@ import {
   DEPLOY_PROVENANCE_SCHEMA,
   buildDeployProvenance,
   classifyLiveProvenance,
+  evaluatePostObservation,
   filterRunsByHeadBranch,
   isDeployProvenance,
   selectNewerActiveRun,
@@ -229,6 +230,66 @@ assert.equal(
 );
 assert.throws(() => filterRunsByHeadBranch(null, "main"), /array/);
 assert.throws(() => filterRunsByHeadBranch([], ""), /branch name/);
+
+// --- evaluatePostObservation (propagation-window poll unit) -----------------
+
+const postBase = {
+  currentRunId: "29559387354",
+  expectedBuildId: "MLayS3KhXW-r7PaVSvQjx",
+};
+
+// the incident shape: stale BUILD_ID edge + fresh provenance edge (transient)
+const flipFlop = evaluatePostObservation({
+  ...postBase,
+  liveBuildId: "PbtOUxIacY3cj1VRFyq_5",
+  liveProvenance: { ...provenance, build_id: "MLayS3KhXW-r7PaVSvQjx", run_id: "29559387354" },
+});
+assert.equal(flipFlop.match, false);
+assert.equal(flipFlop.kind, "build-mismatch");
+
+// consistent new bundle -> match
+const postMatch = evaluatePostObservation({
+  ...postBase,
+  liveBuildId: "MLayS3KhXW-r7PaVSvQjx",
+  liveProvenance: { ...provenance, build_id: "MLayS3KhXW-r7PaVSvQjx", run_id: "29559387354" },
+});
+assert.equal(postMatch.match, true);
+assert.equal(postMatch.kind, "match");
+
+// provenance not yet propagated (404/old edge) -> missing (poll again)
+assert.equal(
+  evaluatePostObservation({ ...postBase, liveBuildId: "MLayS3KhXW-r7PaVSvQjx", liveProvenance: null }).kind,
+  "missing",
+);
+assert.equal(
+  evaluatePostObservation({ ...postBase, liveBuildId: "MLayS3KhXW-r7PaVSvQjx", liveProvenance: { bad: 1 } }).kind,
+  "missing",
+);
+
+// provenance says a different build than live -> build-mismatch
+assert.equal(
+  evaluatePostObservation({
+    ...postBase,
+    liveBuildId: "MLayS3KhXW-r7PaVSvQjx",
+    liveProvenance: { ...provenance, build_id: "other-build", run_id: "29559387354" },
+  }).kind,
+  "build-mismatch",
+);
+
+// fully propagated but shipped by another run -> run-mismatch (the real anomaly)
+const foreign = evaluatePostObservation({
+  ...postBase,
+  liveBuildId: "MLayS3KhXW-r7PaVSvQjx",
+  liveProvenance: { ...provenance, build_id: "MLayS3KhXW-r7PaVSvQjx", run_id: "11111111111" },
+});
+assert.equal(foreign.match, false);
+assert.equal(foreign.kind, "run-mismatch");
+assert.match(foreign.detail, /11111111111/);
+
+assert.throws(
+  () => evaluatePostObservation({ ...postBase, expectedBuildId: "", liveBuildId: "x", liveProvenance: null }),
+  /expectedBuildId/,
+);
 
 // --- writeDeployProvenance (filesystem round-trip) --------------------------
 

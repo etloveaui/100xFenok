@@ -18,6 +18,7 @@
 import {
   DEPLOY_PROVENANCE_PUBLIC_PATH,
   classifyLiveProvenance,
+  evaluatePostObservation,
   isDeployProvenance,
 } from "./lib/deploy-provenance.mjs";
 
@@ -155,44 +156,55 @@ async function runPost(env) {
   const baseUrl = env.BASE_URL ?? DEFAULT_BASE_URL;
   const currentRunId = env.GITHUB_RUN_ID ?? "";
   const expectedBuildId = env.EXPECTED_BUILD_ID ?? "";
-  const cacheBust = `provenance-post-${currentRunId}-${env.GITHUB_RUN_ATTEMPT ?? "1"}-${Date.now()}`;
-
-  const { liveBuildId, liveProvenance } = await fetchLiveBundleIdentity(baseUrl, cacheBust);
 
   if (!expectedBuildId) {
     emit("error", "Deploy provenance post-check requires EXPECTED_BUILD_ID.");
     process.exit(1);
   }
-  if (!isDeployProvenance(liveProvenance)) {
+
+  // Cloudflare edges roll over gradually: /BUILD_ID and the provenance asset
+  // can disagree for seconds right after a deploy (run 29559387354 failed its
+  // first --post on exactly that flip-flop). Poll like the sibling smokes do;
+  // only a state that persists past the window is a real anomaly.
+  const timeoutSeconds = Number.parseInt(env.POST_PROVENANCE_TIMEOUT_SECONDS ?? "60", 10);
+  const intervalSeconds = Number.parseInt(env.POST_PROVENANCE_INTERVAL_SECONDS ?? "5", 10);
+  const deadline = Date.now() + Math.max(1, timeoutSeconds) * 1000;
+  const intervalMs = Math.max(1, intervalSeconds) * 1000;
+
+  let attempt = 0;
+  let lastEvaluation = null;
+  for (;;) {
+    attempt += 1;
+    const cacheBust = `provenance-post-${currentRunId}-${env.GITHUB_RUN_ATTEMPT ?? "1"}-${attempt}-${Date.now()}`;
+    const { liveBuildId, liveProvenance } = await fetchLiveBundleIdentity(baseUrl, cacheBust);
+    lastEvaluation = evaluatePostObservation({
+      currentRunId,
+      expectedBuildId,
+      liveBuildId,
+      liveProvenance,
+    });
+
+    if (lastEvaluation.match) {
+      emit(
+        "notice",
+        `DEPLOY PROVENANCE MATCH: live bundle declared by this run (run_id=${currentRunId}, `
+        + `build_id=${expectedBuildId}, provenance run_attempt=${liveProvenance.run_attempt}) attempts=${attempt}`,
+      );
+      return;
+    }
+
+    if (Date.now() + intervalMs > deadline) {
+      break;
+    }
     emit(
-      "error",
-      `Post-deploy provenance missing or invalid at ${DEPLOY_PROVENANCE_PUBLIC_PATH}; `
-      + "the bundle live now does not declare which run shipped it.",
+      "warning",
+      `Provenance propagation attempt ${attempt} not yet consistent: ${lastEvaluation.detail}`,
     );
-    process.exit(1);
+    await sleep(intervalMs);
   }
-  if (liveBuildId !== expectedBuildId || liveProvenance.build_id !== expectedBuildId) {
-    emit(
-      "error",
-      `Post-deploy provenance build mismatch: live BUILD_ID=${liveBuildId} `
-      + `provenance.build_id=${liveProvenance.build_id} expected=${expectedBuildId}`,
-    );
-    process.exit(1);
-  }
-  if (liveProvenance.run_id !== currentRunId) {
-    emit(
-      "error",
-      `Post-deploy provenance run mismatch: live bundle was shipped by run `
-      + `${liveProvenance.run_id}, expected this run ${currentRunId} — the serving `
-      + "surface moved under this deploy between upload and verification.",
-    );
-    process.exit(1);
-  }
-  emit(
-    "notice",
-    `DEPLOY PROVENANCE MATCH: live bundle declared by this run (run_id=${currentRunId}, `
-    + `build_id=${expectedBuildId}, provenance run_attempt=${liveProvenance.run_attempt})`,
-  );
+
+  emit("error", `${lastEvaluation.detail} (still unresolved after ${timeoutSeconds}s, attempts=${attempt})`);
+  process.exit(1);
 }
 
 const mode = parseMode(process.argv);
