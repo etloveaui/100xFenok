@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-17T02:04:55Z",
+  "generated_at": "2026-07-17T07:23:21Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -23,48 +23,50 @@
       "etf_screener": 5532,
       "new_etfs": 100
     },
-    "detail_files": 4928,
-    "covered_detail_files": 4899,
-    "missing_detail_files": 635,
+    "detail_files": 4949,
+    "covered_detail_files": 4920,
+    "missing_detail_files": 614,
     "extra_detail_files": 29,
-    "stockanalysis_detail_files": 4928,
+    "stockanalysis_detail_files": 4949,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 88.53,
-    "primary_stockanalysis_pct": 88.53,
+    "coverage_pct": 88.9,
+    "primary_stockanalysis_pct": 88.9,
     "missing_by_source": {
-      "etf_universe": 596,
-      "etf_screener": 635,
-      "new_etfs": 10
+      "etf_universe": 577,
+      "etf_screener": 614,
+      "new_etfs": 1
     },
     "missing_status_breakdown": {
-      "retry_pending": 55,
-      "untracked": 580
+      "retry_pending": 155,
+      "untracked": 459
     },
     "missing_failure_breakdown": {
       "external_quote_type_mismatch": 55,
-      "untracked": 580
+      "other_error": 100,
+      "untracked": 459
     },
     "missing_availability_breakdown": {
-      "unprobed": 580,
-      "unresolved": 55
+      "unprobed": 459,
+      "unresolved": 155
     },
-    "pending_tracked": 91,
+    "pending_tracked": 193,
     "pending_cooldown": 25,
-    "pending_tracked_missing": 55,
+    "pending_tracked_missing": 155,
     "provider_coverage_gaps": 0
   },
   "missing_reason_summary": {
     "external_quote_type_mismatch": 55,
-    "untracked": 580
+    "other_error": 100,
+    "untracked": 459
   },
   "missing_status_summary": {
-    "retry_pending": 55,
-    "untracked": 580
+    "retry_pending": 155,
+    "untracked": 459
   },
   "missing_availability_summary": {
-    "unprobed": 580,
-    "unresolved": 55
+    "unprobed": 459,
+    "unresolved": 155
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
@@ -81,8 +83,7 @@
       "FESC",
       "FSOL"
     ],
-    "untracked": [
-      "BRZX",
+    "other_error": [
       "BSEP",
       "BSTP",
       "BTC",
@@ -91,29 +92,30 @@
       "BTRN",
       "BUCK",
       "BWOW",
-      "CBIL",
       "CBOJ",
-      "CBOO"
+      "CBOO",
+      "CBOX",
+      "CBOY"
+    ],
+    "untracked": [
+      "CEFD",
+      "CRWC",
+      "DGP",
+      "DGZ",
+      "DJP",
+      "DULL",
+      "DZZ",
+      "FEBU",
+      "FETH",
+      "FGDL",
+      "FLAO",
+      "FLJJ"
     ]
   },
   "missing_status_samples": {
     "retry_pending": [
-      "BSOL",
-      "CLNK",
-      "CLOO",
-      "CRIB",
-      "DISK",
-      "ECHX",
-      "EDGQ",
-      "EDGX",
-      "ESUM",
-      "FECM",
-      "FESC",
-      "FSOL"
-    ],
-    "untracked": [
-      "BRZX",
       "BSEP",
+      "BSOL",
       "BSTP",
       "BTC",
       "BTCO",
@@ -121,15 +123,43 @@
       "BTRN",
       "BUCK",
       "BWOW",
-      "CBIL",
       "CBOJ",
-      "CBOO"
+      "CBOO",
+      "CBOX"
+    ],
+    "untracked": [
+      "CEFD",
+      "CRWC",
+      "DGP",
+      "DGZ",
+      "DJP",
+      "DULL",
+      "DZZ",
+      "FEBU",
+      "FETH",
+      "FGDL",
+      "FLAO",
+      "FLJJ"
     ]
   },
   "missing_availability_samples": {
     "unprobed": [
-      "BRZX",
+      "CEFD",
+      "CRWC",
+      "DGP",
+      "DGZ",
+      "DJP",
+      "DULL",
+      "DZZ",
+      "FEBU",
+      "FETH",
+      "FGDL",
+      "FLAO",
+      "FLJJ"
+    ],
+    "unresolved": [
       "BSEP",
+      "BSOL",
       "BSTP",
       "BTC",
       "BTCO",
@@ -137,27 +167,12 @@
       "BTRN",
       "BUCK",
       "BWOW",
-      "CBIL",
       "CBOJ",
-      "CBOO"
-    ],
-    "unresolved": [
-      "BSOL",
-      "CLNK",
-      "CLOO",
-      "CRIB",
-      "DISK",
-      "ECHX",
-      "EDGQ",
-      "EDGX",
-      "ESUM",
-      "FECM",
-      "FESC",
-      "FSOL"
+      "CBOO",
+      "CBOX"
     ]
   },
   "missing_tickers": [
-    "BRZX",
     "BSEP",
     "BSOL",
     "BSTP",
@@ -167,7 +182,6 @@
     "BTRN",
     "BUCK",
     "BWOW",
-    "CBIL",
     "CBOJ",
     "CBOO",
     "CBOX",
@@ -179,14 +193,12 @@
     "CBTY",
     "CBXO",
     "CBXY",
-    "CCPX",
     "CEFD",
     "CEGX",
     "CERY",
     "CEW",
     "CHNL",
     "CHNU",
-    "CIFC",
     "CLNK",
     "CLOO",
     "COHX",
@@ -223,11 +235,8 @@
     "CRMX",
     "CRWC",
     "CSEX",
-    "CTWO",
-    "CUST",
     "CXRN",
     "DDSQ",
-    "DDX",
     "DECU",
     "DEFI",
     "DGP",
@@ -235,9 +244,7 @@
     "DHSB",
     "DISK",
     "DJP",
-    "DLMY",
     "DOJE",
-    "DQJN",
     "DRUP",
     "DULL",
     "DVIN",
@@ -265,8 +272,6 @@
     "EHCC",
     "EJAN",
     "EMCS",
-    "EMXX",
-    "EO",
     "EOCT",
     "ESUM",
     "ETH",
@@ -278,7 +283,6 @@
     "ETHV",
     "ETHW",
     "EUO",
-    "EUVX",
     "EVMT",
     "EWV",
     "EZBC",
@@ -675,14 +679,12 @@
     "UMAL",
     "UMAY",
     "UMCX",
-    "UN",
     "UNHW",
     "UNOV",
     "UNX",
     "UOCT",
     "UPAL",
     "UPLT",
-    "UPSC",
     "USAX",
     "USDU",
     "USE",
@@ -698,7 +700,6 @@
     "UTRE",
     "UTWO",
     "UTWY",
-    "UUUC",
     "UVXY",
     "UX",
     "UXRP",
@@ -709,25 +710,21 @@
     "VDG",
     "VDV",
     "VELL",
-    "VIAG",
     "VIXM",
     "VIXY",
     "VOOX",
     "VOXP",
     "VPFF",
-    "VRC",
     "VSOL",
     "VXX",
     "VXZ",
     "VYLD",
     "WAGN",
     "WAMA",
-    "WDCC",
     "WDCX",
     "WDIG",
     "WDRN",
     "WEBX",
-    "WSPC",
     "WTIB",
     "WTPI",
     "WULX",
@@ -778,9 +775,7 @@
     "XVO",
     "XVUG",
     "XW",
-    "YSAG",
     "YSAU",
-    "YSPC",
     "ZAUG",
     "ZFEB",
     "ZHOG",
@@ -829,7 +824,6 @@
   ],
   "samples": {
     "missing": [
-      "BRZX",
       "BSEP",
       "BSOL",
       "BSTP",
@@ -839,7 +833,6 @@
       "BTRN",
       "BUCK",
       "BWOW",
-      "CBIL",
       "CBOJ",
       "CBOO",
       "CBOX",
@@ -851,14 +844,12 @@
       "CBTY",
       "CBXO",
       "CBXY",
-      "CCPX",
       "CEFD",
       "CEGX",
       "CERY",
       "CEW",
       "CHNL",
       "CHNU",
-      "CIFC",
       "CLNK",
       "CLOO",
       "COHX",
@@ -878,25 +869,15 @@
       "CPRJ",
       "CPRO",
       "CPRY",
-      "CPSA"
+      "CPSA",
+      "CPSD",
+      "CPSF",
+      "CPSJ",
+      "CPSM"
     ],
     "missing_retry_pending": [
-      "BSOL",
-      "CLNK",
-      "CLOO",
-      "CRIB",
-      "DISK",
-      "ECHX",
-      "EDGQ",
-      "EDGX",
-      "ESUM",
-      "FECM",
-      "FESC",
-      "FSOL"
-    ],
-    "missing_untracked": [
-      "BRZX",
       "BSEP",
+      "BSOL",
       "BSTP",
       "BTC",
       "BTCO",
@@ -904,9 +885,23 @@
       "BTRN",
       "BUCK",
       "BWOW",
-      "CBIL",
       "CBOJ",
-      "CBOO"
+      "CBOO",
+      "CBOX"
+    ],
+    "missing_untracked": [
+      "CEFD",
+      "CRWC",
+      "DGP",
+      "DGZ",
+      "DJP",
+      "DULL",
+      "DZZ",
+      "FEBU",
+      "FETH",
+      "FGDL",
+      "FLAO",
+      "FLJJ"
     ],
     "missing_external_quote_type_mismatch": [
       "BSOL",
@@ -921,6 +916,20 @@
       "FECM",
       "FESC",
       "FSOL"
+    ],
+    "missing_other_error": [
+      "BSEP",
+      "BSTP",
+      "BTC",
+      "BTCO",
+      "BTCW",
+      "BTRN",
+      "BUCK",
+      "BWOW",
+      "CBOJ",
+      "CBOO",
+      "CBOX",
+      "CBOY"
     ],
     "yahoo_fallback": [],
     "extra": [
