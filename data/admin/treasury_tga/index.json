@@ -1,47 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "treasury_tga",
-  "updated_at": "2026-07-16T18:57:31.892Z",
-  "retry_set": [
-    "tga"
-  ],
+  "updated_at": "2026-07-17T02:14:18.112Z",
+  "retry_set": [],
   "items": {
     "tga": {
       "key": "tga",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/treasury_tga/lkg/tga.json",
-        "payload_sha256": "24391bf95e6e6ec3f56c0f1e7417b3276bf6784dcb3a135a9fed5658f9b5c361",
-        "source_as_of": "2026-07-14"
+        "path": "data/macro/tga.json",
+        "payload_sha256": "12c41f465909fa9bb2f795c950f8d091eadb20a76b0e830b3a05024b4aeda599",
+        "source_as_of": "2026-07-15"
       },
       "lkg": {
         "path": "data/admin/treasury_tga/lkg/tga.json",
         "payload_sha256": "24391bf95e6e6ec3f56c0f1e7417b3276bf6784dcb3a135a9fed5658f9b5c361",
         "source_as_of": "2026-07-14"
       },
-      "updated_at": "2026-07-16T18:57:31.892Z",
+      "updated_at": "2026-07-17T02:14:18.112Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "24391bf95e6e6ec3f56c0f1e7417b3276bf6784dcb3a135a9fed5658f9b5c361",
-        "source_as_of": "2026-07-14",
-        "run_id": "29481663870",
+        "payload_sha256": "12c41f465909fa9bb2f795c950f8d091eadb20a76b0e830b3a05024b4aeda599",
+        "source_as_of": "2026-07-15",
+        "run_id": "29548505665",
         "run_attempt": 1,
-        "observed_at": "2026-07-16T08:03:36.016Z"
+        "observed_at": "2026-07-17T02:14:18.112Z"
       },
       "last_recovered_failure": {
-        "run_id": "29480119135",
-        "run_attempt": 1,
-        "observed_at": "2026-07-16T07:48:34.537Z",
-        "reason": "controlled_failure"
-      },
-      "latest_failure": {
         "run_id": "29526024663",
         "run_attempt": 1,
         "observed_at": "2026-07-16T18:57:31.892Z",
         "reason": "transport_error"
-      }
+      },
+      "recovered_from_run_id": "29526024663",
+      "recovered_at": "2026-07-17T02:14:18.112Z",
+      "recovery_run_id": "29548505665",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }
