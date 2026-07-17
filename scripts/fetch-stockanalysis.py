@@ -1761,6 +1761,32 @@ def parse_surface_names(value: str, surface_set: str) -> list[str]:
     return out
 
 
+# GitHub caps workflow_dispatch at 25 inputs, so the ETF universe recovery chaos
+# cannot have its own input. It piggybacks on controlled_failure_surfaces via this
+# reserved token, which is split out to controlled_universe BEFORE surface-name
+# validation (parse_surface_names would otherwise reject it as an unknown surface).
+UNIVERSE_CONTROLLED_FAILURE_TOKEN = "etf_universe"
+
+
+def split_controlled_failure_surfaces(value: str, surface_set: str) -> tuple[set[str], bool]:
+    controlled_universe = False
+    surface_tokens: list[str] = []
+    for item in (value or "").split(","):
+        token = item.strip()
+        if not token:
+            continue
+        if token.lower() == UNIVERSE_CONTROLLED_FAILURE_TOKEN:
+            controlled_universe = True
+            continue
+        surface_tokens.append(token)
+    surfaces = set(
+        parse_surface_names(",".join(surface_tokens), surface_set)
+        if surface_tokens
+        else []
+    )
+    return surfaces, controlled_universe
+
+
 def surface_stamp_membership(consumers: dict | None) -> dict[str, set[str]] | None:
     """Derive stamp-domain membership from the surface-consumer ownership SSOT."""
     rows = consumers.get("surfaces") if isinstance(consumers, dict) else None
@@ -5040,8 +5066,8 @@ def _main() -> None:
     parser.add_argument("--surfaces", default="", help="comma-separated surface override; default = --surface-set")
     parser.add_argument("--surfaces-only", action="store_true", help="only refresh surfaces; do not deep-fetch ETF/stock payloads")
     parser.add_argument("--controlled-failure-tickers", default="", help="workflow_dispatch-only stock recovery chaos targets; must be explicit --stocks")
-    parser.add_argument("--controlled-failure-surfaces", default="", help="workflow_dispatch-only surface recovery chaos targets; must be explicit --surfaces")
-    parser.add_argument("--controlled-failure-universe", action="store_true", help="workflow_dispatch-only ETF universe recovery chaos target; requires --discover-etf-universe")
+    parser.add_argument("--controlled-failure-surfaces", default="", help="workflow_dispatch-only surface recovery chaos targets; must be explicit --surfaces. Reserved token 'etf_universe' routes the universe chaos here (GitHub caps dispatch inputs at 25)")
+    parser.add_argument("--controlled-failure-universe", action="store_true", help="workflow_dispatch-only ETF universe recovery chaos target; requires --discover-etf-universe (also selectable via the 'etf_universe' token in --controlled-failure-surfaces)")
     parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID", "local"))
     parser.add_argument("--run-attempt", type=int, default=int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")))
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
@@ -5097,12 +5123,12 @@ def _main() -> None:
         parse_surface_names(args.surfaces, args.surface_set) if args.fetch_surfaces else []
     )
     controlled_failure_tickers = set(parse_symbols(args.controlled_failure_tickers))
-    controlled_failure_surfaces = set(
-        parse_surface_names(args.controlled_failure_surfaces, args.surface_set)
-        if args.controlled_failure_surfaces
-        else []
+    controlled_failure_surfaces, controlled_failure_universe_token = (
+        split_controlled_failure_surfaces(args.controlled_failure_surfaces, args.surface_set)
     )
-    controlled_failure_universe = args.controlled_failure_universe
+    controlled_failure_universe = (
+        args.controlled_failure_universe or controlled_failure_universe_token
+    )
     try:
         validate_controlled_failure_scope(
             controlled_failure_tickers,

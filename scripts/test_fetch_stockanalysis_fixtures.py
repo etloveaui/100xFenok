@@ -836,6 +836,68 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "universe-chaos")
 
+    def test_controlled_failure_surfaces_token_routes_universe_chaos(self) -> None:
+        surfaces, universe = self.fetcher.split_controlled_failure_surfaces(
+            "etf_universe,actions_recent", "core"
+        )
+        self.assertEqual(surfaces, {"actions_recent"})
+        self.assertTrue(universe)
+
+        surfaces_only, universe_only = self.fetcher.split_controlled_failure_surfaces(
+            "etf_universe", "core"
+        )
+        self.assertEqual(surfaces_only, set())
+        self.assertTrue(universe_only)
+
+        real_surfaces, no_universe = self.fetcher.split_controlled_failure_surfaces(
+            "actions_recent", "core"
+        )
+        self.assertEqual(real_surfaces, {"actions_recent"})
+        self.assertFalse(no_universe)
+
+        empty_surfaces, empty_universe = self.fetcher.split_controlled_failure_surfaces(
+            "", "core"
+        )
+        self.assertEqual(empty_surfaces, set())
+        self.assertFalse(empty_universe)
+
+        # The token still passes through the same dispatch-only scope gate.
+        _, token_universe = self.fetcher.split_controlled_failure_surfaces(
+            "etf_universe", "core"
+        )
+        with self.assertRaisesRegex(ValueError, "workflow_dispatch"):
+            self.fetcher.validate_controlled_failure_scope(
+                set(),
+                set(),
+                set(),
+                set(),
+                event_name="schedule",
+                controlled_universe=token_universe,
+                selected_universe=True,
+            )
+
+    def test_workflow_dispatch_inputs_stay_within_github_limit(self) -> None:
+        workflow = (
+            ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml"
+        ).read_text(encoding="utf-8")
+        lines = workflow.splitlines()
+        start = next(i for i, ln in enumerate(lines) if ln.strip() == "inputs:")
+        inputs: list[str] = []
+        for ln in lines[start + 1:]:
+            if not ln.strip():
+                continue
+            indent = len(ln) - len(ln.lstrip(" "))
+            if indent <= 4:
+                break
+            if indent == 6 and ln.rstrip().endswith(":"):
+                inputs.append(ln.strip().rstrip(":"))
+        self.assertLessEqual(
+            len(inputs),
+            25,
+            f"workflow_dispatch defines {len(inputs)} inputs; GitHub hard-limits to 25: {inputs}",
+        )
+        self.assertNotIn("controlled_failure_universe", inputs)
+
     def test_weekly_workflow_uses_fixed_complete_discovery_ceiling(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
         self.assertIn("20 23 * * 0", workflow)
