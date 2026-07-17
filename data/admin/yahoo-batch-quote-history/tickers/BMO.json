@@ -51,36 +51,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 458,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:21:09Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:21:48Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:18:38Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/BMO.json",
-    "payload_sha256": "3e0c2784cfac0f456093eccb49fc463bb2a5b95a4492d2f5375e548421d66c4c",
-    "quote_as_of": "2026-07-15T20:00:02Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "dcc58442bc2a1b62e5f3153203ddfe92fbcf37603d1b075b1752c84120bd34c1",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 805,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:21:09Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "753cdd3784b1a280b5a98de9c7b09f39e1907298f5afa54cacd491bd2b45b24f",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "BMO",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

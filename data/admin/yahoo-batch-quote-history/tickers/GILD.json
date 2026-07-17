@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 442,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:28:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:17:22Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:19:16Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/GILD.json",
-    "payload_sha256": "e7d942d9fe07dbdb87652e4356feda08933c3d3ee3ac6dc9f03a80a62c08f238",
-    "quote_as_of": "2026-07-15T20:00:01Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "e4f253f7ce649fabfccb65d35af952ced6bfdc1c9d15f1f2ea98347ba0a9d0c2",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 697,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:28:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "2c701ffb3c10398e8b132f95be97ad29a728c4e88ddb799e3fdb88898c3d0c10",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GILD",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-17T00:28:16Z"
 }

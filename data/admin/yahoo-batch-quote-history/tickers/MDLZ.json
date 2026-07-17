@@ -12,15 +12,54 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 427,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T02:49:51Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-17T00:16:19Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/MDLZ.json",
-    "payload_sha256": "6e06ac6b239ea4d8a4dc38e6b21155ea2db1e00eca681c9678a96481ad40a20f",
-    "quote_as_of": "2026-07-08T20:00:01Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "0689fc968a9023efcce1bdc5fe36f7cd4ac42e96b5cd3f4fa205df61d9a1eabc",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -28,20 +67,50 @@
   ],
   "last_attempt": {
     "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
+    "natural": true,
+    "observed_at": "2026-07-17T00:31:14Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29544227703",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-09T02:49:51Z",
+    "history_as_of": "2026-07-08",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MDLZ.json",
+    "payload_sha256": "6e06ac6b239ea4d8a4dc38e6b21155ea2db1e00eca681c9678a96481ad40a20f",
+    "quote_as_of": "2026-07-08T20:00:01Z",
+    "source_as_of": "2026-07-08"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "c7502705583e81e984344d32ddcdc79fdd9cc5e37de081c1ab474dd206ddb170",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-17T00:15:36Z",
+    "classified_run_id": "29544227703",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "MDLZ holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-08"
+  },
   "ticker": "MDLZ",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

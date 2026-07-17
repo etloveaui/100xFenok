@@ -54,6 +54,20 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 320,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -69,15 +83,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source did not advance beyond the retained LKG for 230360.KQ",
+    "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 642,
+    "latency_ms": 320,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -85,13 +99,13 @@
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: source did not advance beyond the retained LKG for 230360.KQ",
-    "failure_kind": "unexpected",
+    "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+    "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "run_attempt": 1,
-    "run_id": "29460793523"
+    "run_id": "29544227703"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:17Z",
@@ -115,5 +129,5 @@
     "source_as_of": "2026-06-10T06:30:30Z"
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-17T00:15:36Z"
 }

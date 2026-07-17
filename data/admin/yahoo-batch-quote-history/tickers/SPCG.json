@@ -25,32 +25,58 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 371,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:14:20Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:27:03Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/SPCG.json",
-    "payload_sha256": "8af7e4133e4a931b196bbcbada9850cc9b7d9992b4d242f70e4edf0dfe6c2f53",
-    "quote_as_of": "2026-07-13T20:00:00Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "a3c250f3c2b7e34f39d32759b93df911768bb1ce8cae42a620ef2567621d5d19",
+    "quote_as_of": "2026-07-16T19:59:58Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 420,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-26T04:42:42Z",
@@ -59,6 +85,18 @@
     "payload_sha256": "c94c7225f0711b8057a6bdaaedc63ba82592642db41d84b84ecb90f96e70bf55",
     "quote_as_of": null,
     "source_as_of": "2026-06-25"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "d322659abe6274c001895f12af69f5a55b59872465ae07e19d70433639ee7c31",
+    "quote_as_of": "2026-07-16T19:59:58Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -74,5 +112,5 @@
     "source_as_of": "2026-06-25"
   },
   "ticker": "SPCG",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

@@ -51,15 +51,41 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 399,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:28:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:17:20Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:19:15Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/GFS.json",
-    "payload_sha256": "4a70da1f49927503639c85f84f6de9bca2c920ac1db8ae5350eaa0f1008fb9b1",
-    "quote_as_of": "2026-07-15T20:00:01Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "e6eebd0dc8b33abf6ace46a9ba41f5c88b9905f1a9044d6dc8097f98735a566d",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -67,21 +93,33 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 803,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:28:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "0d0525f35e543f05528b66eccfd3c1e0ea13d8294a1f60458f41f486dd83ed7e",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GFS",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-17T00:28:16Z"
 }

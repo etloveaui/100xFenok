@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-09T09:22:40Z",
     "history_as_of": "2026-07-08",
-    "path": "data/yf/finance/LTCC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LTCC.json",
     "payload_sha256": "2fcf0b1db1f27fb9d9e38bdf2a19c142259694301f2f485c82d0eeb6b4d742d7",
     "quote_as_of": "2026-07-08T20:00:00Z",
     "source_as_of": "2026-07-08"
@@ -38,9 +38,27 @@
     "schedule": "",
     "shard": ""
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-07-09T09:22:40Z",
+    "history_as_of": "2026-07-08",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LTCC.json",
+    "payload_sha256": "2fcf0b1db1f27fb9d9e38bdf2a19c142259694301f2f485c82d0eeb6b4d742d7",
+    "quote_as_of": "2026-07-08T20:00:00Z",
+    "source_as_of": "2026-07-08"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-17T00:15:36Z",
+    "classified_run_id": "29544227703",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "LTCC holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-08"
+  },
   "ticker": "LTCC",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-17T00:15:36Z"
 }

@@ -25,32 +25,58 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 378,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:13:22Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:26:50Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/IREZ.json",
-    "payload_sha256": "09657fb559da4d18d15a9b7bbb12bca0b945f8e0730c18130fa8e0edd606ae0a",
-    "quote_as_of": "2026-07-13T20:00:00Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "e82fb69fe8299fc1b13c466ecb69bdb54f580fda7d3b8813f25f60f841dd33da",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1230,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T12:40:06Z",
@@ -59,6 +85,18 @@
     "payload_sha256": "287caad3b89c7f932a5c6adf89a726520cd9b996636a2daa451ee6ec8127b441",
     "quote_as_of": null,
     "source_as_of": "2026-06-17"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "b874b5cb38917d4da69cf8dfa027adade39475b73f7c0a58701e6c7f581351b4",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -74,5 +112,5 @@
     "source_as_of": "2026-06-17"
   },
   "ticker": "IREZ",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

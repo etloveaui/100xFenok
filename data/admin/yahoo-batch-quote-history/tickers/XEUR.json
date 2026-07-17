@@ -51,13 +51,26 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 344,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:14:10Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:17:01Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XEUR.json",
-    "payload_sha256": "afbcfb91473fa2a9215ad2d3e1b6431280466864547018a76e652fe86347e22e",
+    "payload_sha256": "25bd220d09998b5c632f052298d6b3de4e36b5c0b17364e8b69caf10f5e2f503",
     "quote_as_of": "2026-06-09T17:45:38Z",
     "source_as_of": "2026-06-09T17:45:38Z"
   },
@@ -69,36 +82,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 725,
+    "latency_ms": 344,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-16T00:14:10Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:17:01Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XEUR.json",
-    "payload_sha256": "afbcfb91473fa2a9215ad2d3e1b6431280466864547018a76e652fe86347e22e",
+    "payload_sha256": "25bd220d09998b5c632f052298d6b3de4e36b5c0b17364e8b69caf10f5e2f503",
     "quote_as_of": "2026-06-09T17:45:38Z",
+    "source_as_of": "2026-06-09T17:45:38Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-15",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "73b9d6d7a5b540a39b1988d948efcede6cad7c78832a8b6966a21e345dfc65c3",
+    "quote_as_of": "2026-06-09T17:45:38Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-09T17:45:38Z"
   },
   "resolution_state": "lkg_primary",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 25,
-    "classified_at": "2026-07-16T00:19:31Z",
-    "classified_run_id": "29460793523",
+    "age_business_days": 26,
+    "classified_at": "2026-07-17T00:21:09Z",
+    "classified_run_id": "29544227703",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XEUR holds LKG because Yahoo source date 2026-06-09T17:45:38Z is 25 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XEUR holds LKG because Yahoo source date 2026-06-09T17:45:38Z is 26 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-09T17:45:38Z"
   },
   "ticker": "XEUR",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

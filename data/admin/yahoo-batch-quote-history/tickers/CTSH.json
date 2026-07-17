@@ -51,36 +51,74 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 398,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:28:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:13:30Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:18:54Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/CTSH.json",
-    "payload_sha256": "f72d2b5c72a2e8b779d09f6fd38965e1c2567f735861e9e9d91aabde756c7438",
-    "quote_as_of": "2026-07-14T20:00:01Z",
-    "source_as_of": "2026-07-14"
+    "payload_sha256": "2b51a8136b442416c4c2be866e854b8e9337ef04f16f0037dbe4e9786351151e",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 687,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:28:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "a0f8ecb9df8465906ac1f696b5a2c9d90cbfd6a456b01cbdffa07d5fc5dc8452",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CTSH",
-  "updated_at": "2026-07-15T00:10:40Z"
+  "updated_at": "2026-07-17T00:28:16Z"
 }

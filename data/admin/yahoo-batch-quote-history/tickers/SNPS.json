@@ -25,36 +25,74 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 353,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:19:42Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:27:02Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/SNPS.json",
-    "payload_sha256": "84c06b6d8d6713969fdeffd401297f1abd5820b2bcf3560b7f66690e52c0c941",
-    "quote_as_of": "2026-07-13T20:00:00Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "38189bf404ad592b4bf64f503202412fc578700f1f990a9cabe186576fa7b665",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 424,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "556c5899cc541ea84e91438374b656b3054c3e05d354238b9ec3bf7dd63cd214",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SNPS",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

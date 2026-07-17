@@ -25,15 +25,41 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 415,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:19:25Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:26:55Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/NXPI.json",
-    "payload_sha256": "cf500c78042f42963ad0c1c27990a5eb6e3ec19951e46ca05a02f43e52741650",
-    "quote_as_of": "2026-07-13T20:00:00Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "9c00fb21ab63ab86e04f8fec6a7740013a3401cdffdbf0512f4432f8429664db",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -41,21 +67,33 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 417,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "63fffe293f33de9334305a73fc845c6580c05f032a7fd179c65a13d809effec7",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NXPI",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

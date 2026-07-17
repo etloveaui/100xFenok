@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 476,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:28:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:16:59Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:18:59Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/DPZ.json",
-    "payload_sha256": "47c01d5f4ac753a3bc69226032d3966e882372056c05002ec6e3842b9bf014a6",
-    "quote_as_of": "2026-07-15T20:00:01Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "6e665daa65c2c90f67bc9afd20366e914696939cf35e210efd6787d5b7558a99",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 800,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:28:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "bf4f76208216a1a98573bdbdf07fb7bd9cb3790d8c0d8277ba110193ef755fc7",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DPZ",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-17T00:28:16Z"
 }

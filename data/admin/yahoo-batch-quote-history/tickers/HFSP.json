@@ -38,32 +38,58 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 397,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:33:21Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:26:45Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/HFSP.json",
-    "payload_sha256": "7cede569fd124356d071c49eb414bc7ca17d5332313444b128bb5f494868213c",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "c0746a7129c6cb775be1ed254928778bcd68f52b3ff5b4547e37ae65d2d516e8",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 795,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T12:38:50Z",
@@ -72,6 +98,18 @@
     "payload_sha256": "39491e76db248bd504288dd7419d81f740561fbb32cdf2fc9984b71822427c9f",
     "quote_as_of": null,
     "source_as_of": "2026-06-17"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "f4ca4c0fc2e66b90cd1dda32225277b3b3d56afc0a222354789847da8fc3d1ab",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -87,5 +125,5 @@
     "source_as_of": "2026-06-17"
   },
   "ticker": "HFSP",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

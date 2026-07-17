@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 586,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:28:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:33:54Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:20:07Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/MGA.json",
-    "payload_sha256": "be5f2dd0218212b95c43aebf769bd5708d0599c38afaf11b8275d23690675d16",
-    "quote_as_of": "2026-07-15T20:00:02Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "07946a586439c73863ac6ec146a03457e85ccec86377c57e17d0e5c0cbeb2ae8",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 665,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:28:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "d533a80548b3b93cdbbe47a46556079229f0255be53517a6da5b0bb45060ede3",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MGA",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-17T00:28:16Z"
 }

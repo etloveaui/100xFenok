@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 493,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:32:04Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:25:56Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/AMP.json",
-    "payload_sha256": "8ff75bd86dd310297e5dae639bd0ccd7b046baed002d27f1488b9cd5794fd393",
-    "quote_as_of": "2026-07-15T20:03:11Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "4800edfe1fc3ccf01b64f7c5171222795772fde48a09a797adf50487e66af164",
+    "quote_as_of": "2026-07-16T20:03:05Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 906,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "e4bafe954c8af194673cb2a24858cfcd101465020fd743fae22b34915ff4acd3",
+    "quote_as_of": "2026-07-16T20:03:05Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMP",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

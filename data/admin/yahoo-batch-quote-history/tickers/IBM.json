@@ -25,36 +25,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 495,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:33:25Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-17T00:26:48Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/IBM.json",
-    "payload_sha256": "cb4100f32aeb997ea849c6e4e041bf881905ecb37650e2e8c1f2e2555d1eea41",
-    "quote_as_of": "2026-07-15T20:00:03Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "af0ef92aa8f62ca9843ad763025775a009f437040c18d006cd4b23be37d4552d",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 832,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "297965d4fa71c16a1cd436a9475ca58ed582ee34057cbae0899d06c8ea54a8a6",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "IBM",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

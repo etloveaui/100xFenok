@@ -64,12 +64,56 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-16T00:14:11Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/XHOA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XHOA.json",
     "payload_sha256": "6a3c0114c717416287883bd552db29ca6a72587485ca5cd047dd2e88d44b013e",
     "quote_as_of": "2026-07-15T16:49:16Z",
     "source_as_of": "2026-07-15"
@@ -79,28 +123,101 @@
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 2,
+    "error": "empty payload",
     "event_name": "schedule",
-    "failures": [],
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
+  },
+  "latest_failure": {
+    "attempts_used": 2,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "empty payload",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "run_attempt": 1,
+    "run_id": "29544227703"
   },
   "lkg": {
-    "fetched_at": "2026-07-15T00:11:10Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-16T00:14:11Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XHOA.json",
-    "payload_sha256": "a31c7eb71e631c7a40a95664ec081eea477905cbb1c4a6b61fbe1d21da664b7d",
-    "quote_as_of": "2026-06-03T16:59:52Z",
-    "source_as_of": "2026-06-03T16:59:52Z"
+    "payload_sha256": "6a3c0114c717416287883bd552db29ca6a72587485ca5cd047dd2e88d44b013e",
+    "quote_as_of": "2026-07-15T16:49:16Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 28,
@@ -113,5 +230,5 @@
     "source_as_of": "2026-06-03T16:59:52Z"
   },
   "ticker": "XHOA",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-17T00:24:27Z"
 }

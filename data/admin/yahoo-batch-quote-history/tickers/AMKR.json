@@ -38,36 +38,74 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 399,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:21:09Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:12:58Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:18:30Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/AMKR.json",
-    "payload_sha256": "3510f665737368653bfcfaf9a17d3af6b88d6f14f30bb8a7fe2dad4fb20b91f6",
-    "quote_as_of": "2026-07-14T20:00:01Z",
-    "source_as_of": "2026-07-14"
+    "payload_sha256": "eb78c9ec3ad49c7aca3e459c3fa876dab44a5f96aa2417c335b8c9222cfc032f",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 579,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:21:09Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "1/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "3ccad8a5eb97f995f4854656a83e0f85d7ee895d41e2ba4a479781d53691a9e3",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMKR",
-  "updated_at": "2026-07-15T00:10:40Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

@@ -38,32 +38,71 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 324,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:14:02Z",
-    "history_as_of": "2026-07-14",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IFED.json",
-    "payload_sha256": "38e7269ee1d7538ff0a6600fff5de0307d0ed0a583b17b9a553fbcc36ad8f5d5",
-    "quote_as_of": "2026-07-07T17:33:10Z",
-    "source_as_of": "2026-07-07T17:33:10Z"
+    "fetched_at": "2026-07-17T00:16:08Z",
+    "history_as_of": "2026-07-16",
+    "path": "data/yf/finance/IFED.json",
+    "payload_sha256": "ed2653dc2e3faed0f6af4add82d2fd699906f3838f810dd0fb9c54f4a2bd3f35",
+    "quote_as_of": "2026-07-16T14:22:00Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 723,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:14:02Z",
@@ -73,8 +112,20 @@
     "quote_as_of": "2026-07-07T17:33:10Z",
     "source_as_of": "2026-07-07T17:33:10Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "714e421dc01fa098df55f28f88723dd954eed5d28bdd64e47015a69791fcc325",
+    "quote_as_of": "2026-07-16T14:22:00Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -87,5 +138,5 @@
     "source_as_of": "2026-07-07T17:33:10Z"
   },
   "ticker": "IFED",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

@@ -25,32 +25,58 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 396,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:14:13Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:27:01Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/SLVO.json",
-    "payload_sha256": "7bd930cd01a09466b226d1149f83e568ce1aee0f098f61d9ce4bca2fb49b4949",
-    "quote_as_of": "2026-07-13T20:00:00Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "32ae94ffd21e3c9ff7c1eead37d6c9764d4b7574375c6c47edabf0f8f24ae85e",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 496,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T20:22:26Z",
@@ -59,6 +85,18 @@
     "payload_sha256": "cb3ace43b832169025e557d3bd4d3d715cc0f8c336703297ac6b8d51f0fba67c",
     "quote_as_of": null,
     "source_as_of": "2026-06-18"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "db4961ac260ed575e1305651132b2236dc28c981566d617cc699f21049b5f7ab",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -74,5 +112,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "SLVO",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

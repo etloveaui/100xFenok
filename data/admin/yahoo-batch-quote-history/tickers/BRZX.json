@@ -51,13 +51,26 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 428,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:13:50Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:15:51Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRZX.json",
-    "payload_sha256": "83600bd68f246da5bb5caea74c27a3dc90cb9929707635782b61f088e920fb88",
+    "payload_sha256": "b883ca9091badd5f1c2f57e77f92371e110e0474e4aa347ab98d1db321a5caeb",
     "quote_as_of": "2026-06-15T14:35:42Z",
     "source_as_of": "2026-06-15T14:35:42Z"
   },
@@ -69,36 +82,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 838,
+    "latency_ms": 428,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-16T00:13:50Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:15:51Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRZX.json",
-    "payload_sha256": "83600bd68f246da5bb5caea74c27a3dc90cb9929707635782b61f088e920fb88",
+    "payload_sha256": "b883ca9091badd5f1c2f57e77f92371e110e0474e4aa347ab98d1db321a5caeb",
     "quote_as_of": "2026-06-15T14:35:42Z",
+    "source_as_of": "2026-06-15T14:35:42Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-15",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "7fb1a268186b31223e0a1f89fbe4fe41a5ed3aaae1d4d5883656aae0d3ff9c5e",
+    "quote_as_of": "2026-06-15T14:35:42Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-15T14:35:42Z"
   },
   "resolution_state": "lkg_primary",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 21,
-    "classified_at": "2026-07-16T00:19:31Z",
-    "classified_run_id": "29460793523",
+    "age_business_days": 22,
+    "classified_at": "2026-07-17T00:21:09Z",
+    "classified_run_id": "29544227703",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRZX holds LKG because Yahoo source date 2026-06-15T14:35:42Z is 21 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRZX holds LKG because Yahoo source date 2026-06-15T14:35:42Z is 22 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-15T14:35:42Z"
   },
   "ticker": "BRZX",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

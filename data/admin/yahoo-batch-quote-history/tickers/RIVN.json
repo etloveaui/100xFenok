@@ -25,32 +25,58 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 391,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:14:01Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:27:00Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/RIVN.json",
-    "payload_sha256": "b45f843892f999f5c8844865f636d260ce672a4043a3e00601dabe6f6cbde89e",
-    "quote_as_of": "2026-07-13T20:00:01Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "c03dff4569fe485bf61823cc382a1c28316b2e0d2c1a1e162c10442242d0ed04",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 428,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:11:20Z",
@@ -59,6 +85,18 @@
     "payload_sha256": "7dcea8baa4266f8b3d7592eeae429af370ea0ef1321c64cc8e95c237c32689a9",
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "fa7d7f0d0c50575729e4513462513f355d7f1617f472b54584bca2162c526847",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -74,5 +112,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "RIVN",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

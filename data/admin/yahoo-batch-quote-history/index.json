@@ -1,52 +1,137 @@
 {
   "counts": {
-    "active": 6665,
-    "failed": 12,
-    "fresh": 1490,
-    "lkg": 588,
+    "active": 6710,
+    "failed": 23,
+    "fresh": 1359,
+    "lkg": 718,
     "pending_history": 0,
-    "retry": 591,
-    "stale": 585,
+    "retry": 721,
+    "stale": 710,
     "unavailable": 3,
-    "untracked": 4584
+    "untracked": 4630
   },
   "current_attempt": {
-    "attempted": 1393,
+    "attempted": 1420,
     "errors": [
       {
-        "error": "ValueError: source did not advance beyond the retained LKG for 012510.KS",
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "0001.HK"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "000240.KS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 000651.SZ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "000651.SZ"
+      },
+      {
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "012510.KS"
       },
       {
-        "error": "ValueError: source did not advance beyond the retained LKG for 230360.KQ",
+        "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
         "failures": [],
         "ticker": "230360.KQ"
       },
       {
-        "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-        "failures": [],
-        "ticker": "ABBV"
-      },
-      {
-        "error": "ValueError: quote_as_of is unavailable for BK despite available history",
+        "error": "ValueError: provider source timestamp is unavailable for BK",
         "failures": [],
         "ticker": "BK"
       },
       {
-        "error": "ValueError: source did not advance beyond the retained LKG for BLD",
+        "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
         "failures": [],
         "ticker": "BLD"
-      },
-      {
-        "error": "StockDetailValidationError: Yahoo stock-detail quote identity mismatch",
-        "failures": [],
-        "ticker": "BRK.A"
-      },
-      {
-        "error": "StockDetailValidationError: Yahoo stock-detail quote identity mismatch",
-        "failures": [],
-        "ticker": "BRK.B"
       },
       {
         "error": "empty payload",
@@ -119,37 +204,489 @@
         "ticker": "MMC"
       },
       {
-        "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
+        "error": "ValueError: provider source timestamp is unavailable for SATS",
         "failures": [],
         "ticker": "SATS"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WFC"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WMG"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WSO"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WXET"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XBIX"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XHOA"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XLEI"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XLPX"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XOM"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XVUG"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "Z"
       }
     ],
     "event_name": "schedule",
-    "failed": 12,
-    "fetch_attempts": 1212,
+    "failed": 23,
+    "fetch_attempts": 997,
     "natural": true,
+    "promotion_deferral_symbols": [
+      "012510.KS"
+    ],
+    "promotion_deferrals": 1,
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "skipped": 183,
-    "successes": 1198
+    "skipped": 439,
+    "successes": 958
   },
-  "generated_at": "2026-07-16T00:35:28Z",
+  "generated_at": "2026-07-17T00:31:14Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo stock-detail quote identity mismatch",
-    "failure_kind": "unexpected",
-    "failures": [],
+    "error": "empty payload",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
     "lkg_status": "retained",
-    "observed_at": "2026-07-16T00:30:04Z",
+    "observed_at": "2026-07-17T00:28:16Z",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "ticker": "BRK.B"
+    "run_id": "29544227703",
+    "ticker": "0001.HK"
   },
   "lkg_details": [
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:28:16Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "7e5a9343273253c60227823a4a6bf57d7194da87439750b90afba021d7146a3d",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "0001.HK"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:28:16Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "56ae9844d650904d78c45f38bf3bea5ecbd580528b0bf566d96b26dd02a68672",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-16",
+      "state_reason": null,
+      "symbol": "000240.KS"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:28:16Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "37064280354acbb96285c5c00d5711167f219bb56dbf22f28a17938966203b80",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "000651.SZ"
+    },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "failure_observed_at": "2026-07-16T00:13:37Z",
@@ -163,8 +700,8 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
       "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
       "source_age_business_days": 23,
@@ -173,20 +710,9 @@
       "symbol": "230360.KQ"
     },
     {
-      "expected_resolution": null,
-      "failure_observed_at": "2026-07-16T00:24:49Z",
-      "failure_run_id": "29460793523",
-      "max_source_age_business_days": null,
-      "payload_sha256": "13b0759f472b43f05401db0c6d5c82f0edd81fb4b597cde031ef30912a718745",
-      "source_age_business_days": null,
-      "source_as_of": "2026-07-13",
-      "state_reason": null,
-      "symbol": "ABBV"
-    },
-    {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
       "payload_sha256": "9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c",
       "source_age_business_days": 7,
@@ -196,8 +722,8 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
       "payload_sha256": "bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644",
       "source_age_business_days": 8,
@@ -206,31 +732,9 @@
       "symbol": "BLD"
     },
     {
-      "expected_resolution": null,
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
-      "max_source_age_business_days": null,
-      "payload_sha256": "245dd9eac827ffae496e5c513b00f2f4180bb664f55db695c1184464e227da67",
-      "source_age_business_days": null,
-      "source_as_of": "2026-07-08",
-      "state_reason": null,
-      "symbol": "BRK.A"
-    },
-    {
-      "expected_resolution": null,
-      "failure_observed_at": "2026-07-16T00:30:04Z",
-      "failure_run_id": "29460793523",
-      "max_source_age_business_days": null,
-      "payload_sha256": "743da25d61fe8a160f954ec651b19d04e0eeb82503a943c608ba3d07bd5570bc",
-      "source_age_business_days": null,
-      "source_as_of": "2026-07-08",
-      "state_reason": null,
-      "symbol": "BRK.B"
-    },
-    {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
       "payload_sha256": "c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27",
       "source_age_business_days": 45,
@@ -240,8 +744,8 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
       "payload_sha256": "75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2",
       "source_age_business_days": 10,
@@ -250,137 +754,140 @@
       "symbol": "SATS"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "d3c3b3d841e2fec443ab4343e2b3bb7b2524fc3a37dc2144ff8762cfc81fa7ff",
-      "source_age_business_days": 11,
-      "source_as_of": "2026-06-26",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "379800.KS"
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "dd394f214a0e97434b5e19e4e00922a55822c024aa734af54011c51338088e69",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "WFC"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "9a6f4d8bbda42926db5b6f60eb54c1ac40f285624da93dfc35c0e76f37037ece",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "WMG"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "b3f7efb4a79028b5664441b2fc9b0e55dc4b1455baec813f6d3aa52296c75271",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "WSO"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
-      "payload_sha256": "051e65094ee6b91c7ebdfad6bb6eca538ae7f0e534e4b95b49e97fe3019b391c",
-      "source_age_business_days": 11,
-      "source_as_of": "2026-06-26",
+      "payload_sha256": "f69667b2697198d3fff51530d81b6e49a9da4c0c9ce32b491d50d4e1627e84fe",
+      "source_age_business_days": 15,
+      "source_as_of": "2026-07-15",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "379810.KS"
+      "symbol": "WXET"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
-      "payload_sha256": "50b3ff9781d625c0eecebc8148f86ef6a9444456f7ae1743a9b377166e7f6231",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-06-30",
+      "payload_sha256": "f652141366f9f273c7214cc6cc99a25c55a89166c5550a50d72c18947412e0dc",
+      "source_age_business_days": 15,
+      "source_as_of": "2026-07-15",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AAAP"
+      "symbol": "XBIX"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
-      "payload_sha256": "db1403cbcb86c929462d6fa61ce246f4cfdda5e149819760be71ccc2fa68511a",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
+      "payload_sha256": "6a3c0114c717416287883bd552db29ca6a72587485ca5cd047dd2e88d44b013e",
+      "source_age_business_days": 28,
+      "source_as_of": "2026-07-15",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AAAU"
+      "symbol": "XHOA"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
-      "payload_sha256": "5e288f1b16579f613d94484e5c1d48ac61dcaa77f3a2612d89dba4d1fd2b8270",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
+      "payload_sha256": "66300830822f14a76c2c1f82edc755cc0a4ebf7056b30459fd476781af87c2b1",
+      "source_age_business_days": 15,
+      "source_as_of": "2026-07-15",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AAPR"
+      "symbol": "XLEI"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
-      "payload_sha256": "48b24953bdfc1c0e8879059a6fa19f289617583fcbdff527205afe1ab1cf1310",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
+      "payload_sha256": "f15f5013fa6aa6fcf914ecbac3cb843f6f872075ff33a0a02b3206f50fb41b90",
+      "source_age_business_days": 15,
+      "source_as_of": "2026-07-14",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AAPW"
+      "symbol": "XLPX"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "538deec2ccd8718d1bd099d1a4649a0bbad986f8393b304c28ce0155e501122e",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "XOM"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
       "max_source_age_business_days": 6,
-      "payload_sha256": "8d2225a6f9fd3d4e799e834831d0a1947b563b803e0f2ecc9cc6d9d0b1d077d4",
+      "payload_sha256": "b3a68f6614b38e8143e234328320cf87397a6014ec6965d85296c1f4d510b77b",
       "source_age_business_days": 10,
-      "source_as_of": "2026-06-26",
+      "source_as_of": "2026-07-15",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ABXB"
+      "symbol": "XVUG"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "dd084ed56bd75de1db9d41fc6ee87278f50e0b7da19918b00fac406e18c425d1",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ACGO"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "fba039f6d0ab000981b5d2b8813ee0838f45467a21561369ea32ff6e7dd73c96",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ACGR"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "073ff3ada90e1e7920e56ef92e45b3a91737755b5c1b094c31574d585b0c8896",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-07-07",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ACHX"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "74a19256ac91e568c6964de7f7ddc38202955702ddb47c48a534c554b180c38f",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ACLC"
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-17T00:24:27Z",
+      "failure_run_id": "29544227703",
+      "max_source_age_business_days": null,
+      "payload_sha256": "4b99e784951130206f61f591735addf3b4c5eea57a127089d56563dcf9cbc83f",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-15",
+      "state_reason": null,
+      "symbol": "Z"
     }
   ],
   "lkg_symbols": [
+    "0001.HK",
+    "000240.KS",
+    "000651.SZ",
     "012510.KS",
     "230360.KQ",
     "379800.KS",
     "379810.KS",
     "AAAP",
     "AAAU",
+    "AAPE",
     "AAPR",
     "AAPW",
-    "ABBV",
     "ABXB",
     "ACGO",
     "ACGR",
@@ -388,26 +895,38 @@
     "ACLC",
     "ACLZ",
     "ACMM",
-    "ACVU",
-    "ADIU",
-    "AEHG",
-    "AETH"
+    "ACVU"
   ],
-  "message": "Yahoo quote/history: fresh=1490, lkg=588, pending_history=0, unavailable=3, retry=591, failed=12, source_stale=585. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=1359, lkg=718, pending_history=0, unavailable=3, retry=721, failed=23, source_stale=710. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-05-06",
   "oldest_source_ticker": "CTRA",
   "pending_details": [],
   "pending_symbols": [],
+  "promotion_deferral_details": [
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-07-17T00:15:36Z",
+      "provider_history_as_of": "2026-07-14",
+      "provider_quote_as_of": "2026-06-25T06:30:30Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "ticker": "012510.KS"
+    }
+  ],
   "retry_symbols": [
+    "0001.HK",
+    "000240.KS",
+    "000651.SZ",
     "012510.KS",
     "230360.KQ",
     "379800.KS",
     "379810.KS",
     "AAAP",
     "AAAU",
+    "AAPE",
     "AAPR",
     "AAPW",
-    "ABBV",
     "ABXB",
     "ACGO",
     "ACGR",
@@ -430,41 +949,57 @@
     "AMEI",
     "AMEM",
     "AMGR",
+    "AMKX",
+    "AMZG",
     "AMZW",
+    "APDB",
     "APHG",
     "APOC",
     "APPC",
+    "APPX",
     "APRH",
     "APRJ",
     "APRT",
     "APRW",
     "AQLG",
     "ARKB",
+    "ARKE",
     "ARLI",
     "ARLU",
+    "ARMA",
+    "ARMW",
+    "ARMY",
     "ASD",
     "ASEC",
     "ASTG",
     "ASTT",
     "AUGU",
+    "AVGC",
     "AVGG",
     "AVGW",
     "AVGX",
     "AVNV",
+    "AXTC",
     "AXTL",
+    "BABW",
     "BALT",
     "BAPR",
     "BAR",
     "BAUG",
     "BBB",
+    "BBUL",
     "BCCC",
+    "BCEM",
     "BDEC",
+    "BEC",
     "BEG",
     "BETE",
     "BETH",
     "BFEB",
     "BGCG",
+    "BGEG",
     "BGGG",
+    "BGIA",
     "BGLD",
     "BIL",
     "BILS",
@@ -487,9 +1022,11 @@
     "BNDY",
     "BNOV",
     "BOCT",
-    "BRK.A",
-    "BRK.B",
+    "BRCE",
+    "BREE",
+    "BRIE",
     "BRKW",
+    "BROL",
     "BRRR",
     "BRZX",
     "BSCA",
@@ -515,6 +1052,7 @@
     "CBOO",
     "CBOY",
     "CBTJ",
+    "CBTO",
     "CBTY",
     "CBXO",
     "CBXY",
@@ -526,13 +1064,18 @@
     "CHNL",
     "CHYG",
     "CIEI",
+    "CIEX",
     "CIFC",
+    "CIR",
     "CIVG",
     "CJUL",
     "CJUN",
+    "COHC",
     "COIW",
     "COIX",
     "COM",
+    "COMD",
+    "COSW",
     "CPAG",
     "CPHY",
     "CPNJ",
@@ -555,18 +1098,21 @@
     "CPST",
     "CPSU",
     "CPSY",
+    "CRDD",
     "CRUC",
     "CRWL",
+    "CRWX",
     "CSEN",
     "CTJL",
     "CTJN",
     "CTRA",
     "CTWO",
-    "CUSD",
+    "CUST",
     "CWVX",
     "DAY",
     "DDFZ",
     "DDM",
+    "DDSQ",
     "DDTZ",
     "DDX",
     "DECU",
@@ -575,6 +1121,9 @@
     "DFEN",
     "DHSB",
     "DIA",
+    "DLMY",
+    "DOJE",
+    "DQJN",
     "DRAL",
     "DRMP",
     "DRUP",
@@ -596,23 +1145,29 @@
     "EAPR",
     "EBUF",
     "EETH",
+    "EHCC",
     "EJAN",
     "ELIL",
     "EMCS",
     "EMEM",
+    "EMJL",
     "EMJN",
     "EMSC",
     "EMXX",
     "ENTL",
+    "EO",
     "EOCT",
     "ETH",
     "ETHA",
+    "ETHB",
     "ETHE",
+    "ETHT",
     "ETHV",
     "ETHW",
     "EVMT",
     "EZBC",
     "EZET",
+    "EZMO",
     "FBTC",
     "FBX",
     "FEBU",
@@ -626,6 +1181,7 @@
     "FNGU",
     "FOMG",
     "FOTO",
+    "FPAA",
     "FPSX",
     "FREI",
     "FSTB",
@@ -637,30 +1193,40 @@
     "FXF",
     "FXY",
     "GASZ",
+    "GAVA",
     "GBTC",
     "GCC",
     "GDLC",
+    "GDOG",
+    "GDT",
+    "GDXW",
     "GEQ",
     "GFSG",
     "GLD",
     "GLDM",
+    "GLDW",
     "GLNK",
     "GLTR",
     "GMEC",
     "GMMA",
+    "GOOL",
     "GOOW",
     "GOP",
     "GPT",
     "GSOL",
+    "GSUI",
     "GTOH",
     "HBMX",
+    "HBR",
     "HIGH",
+    "HJLY",
     "HJUN",
     "HODL",
     "HOLX",
     "HOOW",
     "HPEL",
     "HULL",
+    "HYPG",
     "HYSA",
     "HYTI",
     "HYTR",
@@ -668,6 +1234,7 @@
     "IAU",
     "IAUG",
     "IAUM",
+    "IBGM",
     "IBIC",
     "IBIH",
     "IBIJ",
@@ -678,9 +1245,9 @@
     "IDEC",
     "IDJL",
     "IDJN",
+    "IDMY",
     "IEF",
     "IFEB",
-    "IFED",
     "IGLD",
     "IGPT",
     "IGV",
@@ -690,7 +1257,9 @@
     "IMAR",
     "IMAY",
     "INOV",
+    "INYY",
     "IOCT",
+    "IONC",
     "IOSX",
     "ISEP",
     "ITB",
@@ -704,10 +1273,13 @@
     "JANU",
     "JANW",
     "JBLG",
+    "JELM",
     "JNEU",
     "JOJO",
+    "JUDB",
     "JULC",
     "JULH",
+    "JULI",
     "JULJ",
     "JULT",
     "JULU",
@@ -725,6 +1297,7 @@
     "KJUN",
     "KMAR",
     "KMAY",
+    "KMEM",
     "KNOV",
     "KOCT",
     "KORU",
@@ -734,13 +1307,17 @@
     "LADM",
     "LAPR",
     "LASC",
+    "LCTO",
     "LFEQ",
     "LGCF",
     "LJUL",
     "LOFF",
     "LQTI",
+    "LRCC",
     "LRNX",
+    "LTCC",
     "LTTI",
+    "LVIG",
     "MAGY",
     "MARU",
     "MAUG",
@@ -748,8 +1325,10 @@
     "MBCE",
     "MCHG",
     "MDCR",
+    "METG",
     "METW",
     "MFEB",
+    "MIC",
     "MIGO",
     "MJUN",
     "MLPD",
@@ -759,7 +1338,9 @@
     "MMID",
     "MNSX",
     "MNVR",
+    "MPWC",
     "MRA",
+    "MSBT",
     "MSEP",
     "MSFW",
     "MSIX",
@@ -770,11 +1351,13 @@
     "MSTW",
     "MTSG",
     "MUU",
+    "MWHS",
     "NAPR",
     "NAUG",
     "NDEC",
     "NFEB",
     "NFLW",
+    "NFX",
     "NJAN",
     "NJUL",
     "NJUN",
@@ -783,20 +1366,26 @@
     "NNOV",
     "NOCT",
     "NSEP",
+    "NUIF",
     "NVBU",
     "NVC",
     "NVDG",
     "NVDL",
     "NVDW",
     "NVPS",
+    "NVTC",
+    "OCDB",
     "OCTT",
     "OCTU",
     "OCTW",
     "OILK",
+    "OKLC",
     "OKLL",
+    "ONDC",
     "ONTX",
     "OPER",
     "OPPJ",
+    "ORAC",
     "ORCX",
     "ORO",
     "OUNZ",
@@ -805,6 +1394,7 @@
     "PAPR",
     "PAUG",
     "PBSC",
+    "PCLC",
     "PCPP",
     "PCSG",
     "PDBA",
@@ -824,11 +1414,13 @@
     "PNOV",
     "POCT",
     "PPLT",
+    "PQX",
     "PQXV",
     "PRXI",
     "PSEP",
     "PSTP",
     "PTIR",
+    "PUL",
     "PWRD",
     "QBF",
     "QBUF",
@@ -836,21 +1428,27 @@
     "QJL",
     "QJN",
     "QLD",
+    "QNTU",
     "QQJL",
     "QQJN",
     "QQQ",
+    "QSOL",
     "QTAP",
     "QTJA",
     "QTOC",
     "QTUP",
     "QULL",
     "RACK",
+    "RAM",
     "RBUF",
     "RDTE",
     "RIZE",
+    "RKX",
     "RMBC",
+    "RMBX",
     "ROM",
     "ROMO",
+    "RONB",
     "RSJN",
     "RYLG",
     "SATS",
@@ -864,29 +1462,39 @@
     "SHY",
     "SIMX",
     "SIVR",
+    "SLON",
     "SLV",
     "SMH",
     "SMHC",
     "SMTG",
     "SNDC",
     "SNK",
+    "SOEZ",
+    "SOLC",
     "SOXL",
     "SOXX",
     "SPAL",
     "SPAX",
     "SPBC",
     "SPCH",
+    "SPCM",
+    "SPDF",
     "SPUC",
     "SPY",
     "SSO",
     "SSPC",
+    "SUIS",
     "TAGS",
     "TAJX",
     "TBIL",
     "TBJL",
     "TBLL",
     "TCAI",
+    "TCAN",
+    "TDOG",
+    "TDOT",
     "TELG",
+    "TERC",
     "TESC",
     "TETH",
     "TFJL",
@@ -894,34 +1502,48 @@
     "THY",
     "THYP",
     "TILC",
+    "TISC",
     "TJAN",
     "TJUL",
+    "TLDR",
     "TLT",
     "TMF",
     "TNA",
     "TNGY",
+    "TOCT",
+    "TOXR",
+    "TPAY",
     "TPLX",
     "TQQQ",
     "TRUI",
     "TRUO",
     "TSEG",
+    "TSEU",
     "TSLL",
     "TSLW",
     "TSMG",
+    "TSOL",
     "TSPY",
+    "TSUI",
+    "TSYW",
+    "TTMX",
     "TWSC",
     "TYA",
+    "UBEW",
     "UCTX",
     "UFIV",
+    "UFOX",
     "UMAL",
     "UMCX",
     "UN",
+    "UNHW",
     "UPRO",
     "USD",
     "USDU",
     "USE",
     "USFR",
     "USG",
+    "USML",
     "USVN",
     "UTEN",
     "UTHY",
@@ -930,7 +1552,12 @@
     "UUPP",
     "UWM",
     "UX",
+    "VAVX",
+    "VBNB",
+    "VCHY",
+    "VDG",
     "VDI",
+    "VDV",
     "VIAG",
     "VIXM",
     "VIXY",
@@ -938,42 +1565,61 @@
     "VOO",
     "VOX",
     "VOXP",
+    "VSOL",
     "VTI",
     "VUS",
+    "WAGN",
+    "WAMA",
     "WDE",
+    "WDIG",
+    "WDRN",
     "WEBX",
+    "WFC",
+    "WMG",
     "WRTH",
+    "WSO",
     "WTPI",
     "WX",
+    "WXET",
     "XBIL",
+    "XBIX",
     "XDIV",
     "XDQQ",
     "XDSQ",
     "XEUR",
     "XHB",
+    "XHOA",
     "XIGV",
     "XLB",
     "XLC",
     "XLE",
+    "XLEI",
     "XLF",
     "XLI",
     "XLK",
     "XLP",
+    "XLPX",
     "XLRE",
     "XLU",
     "XLV",
     "XLY",
     "XLYX",
+    "XOM",
     "XPAV",
+    "XQTM",
+    "XRPC",
     "XRPI",
+    "XRPR",
     "XSHP",
     "XSPC",
     "XTJA",
     "XTJL",
     "XTOC",
     "XVO",
+    "XVUG",
     "YBTC",
     "YETH",
+    "Z",
     "ZALT",
     "ZAPR",
     "ZAUG",
@@ -1005,7 +1651,16 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 29,
+      "source_age_business_days": 28,
+      "source_as_of": "2026-06-03T16:59:52Z",
+      "symbols": [
+        "XHOA"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 30,
       "source_as_of": "2026-06-03T16:59:52Z",
       "symbols": [
         "XVO"
@@ -1023,7 +1678,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 25,
+      "source_age_business_days": 26,
       "source_as_of": "2026-06-09T17:45:38Z",
       "symbols": [
         "XEUR"
@@ -1041,7 +1696,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 23,
+      "source_age_business_days": 24,
       "source_as_of": "2026-06-11T15:15:38Z",
       "symbols": [
         "QULL"
@@ -1050,7 +1705,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 21,
+      "source_age_business_days": 22,
       "source_as_of": "2026-06-15T14:35:42Z",
       "symbols": [
         "BRZX"
@@ -1059,7 +1714,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 21,
+      "source_age_business_days": 22,
       "source_as_of": "2026-06-15T18:55:51Z",
       "symbols": [
         "XPAV"
@@ -1079,7 +1734,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 19,
+      "source_age_business_days": 20,
       "source_as_of": "2026-06-17T19:43:29Z",
       "symbols": [
         "WEBX"
@@ -1093,13 +1748,17 @@
       "symbols": [
         "FITZ",
         "MIGO",
-        "THIR"
+        "THIR",
+        "WXET",
+        "XBIX",
+        "XLEI",
+        "XLPX"
       ]
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 15,
+      "source_age_business_days": 16,
       "source_as_of": "2026-06-24T16:07:21Z",
       "symbols": [
         "EMXX"
@@ -1133,7 +1792,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 14,
+      "source_age_business_days": 15,
       "source_as_of": "2026-06-25T18:37:24Z",
       "symbols": [
         "WX"
@@ -1142,7 +1801,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 14,
+      "source_age_business_days": 15,
       "source_as_of": "2026-06-25T19:36:25Z",
       "symbols": [
         "CCPX"
@@ -1353,7 +2012,6 @@
         "CPSY",
         "CSEN",
         "CTJN",
-        "CUSD",
         "DDX",
         "DECU",
         "DHSB",
@@ -1609,7 +2267,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 12,
+      "source_age_business_days": 13,
       "source_as_of": "2026-06-29T19:00:29Z",
       "symbols": [
         "TAJX"
@@ -1693,6 +2351,15 @@
         "VDI",
         "VUS",
         "WDE"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 10,
+      "source_as_of": "2026-06-30T13:35:54Z",
+      "symbols": [
+        "XVUG"
       ]
     },
     {
@@ -1799,7 +2466,7 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
+      "source_age_business_days": 10,
       "source_as_of": "2026-07-02T17:16:39Z",
       "symbols": [
         "XLYX"
@@ -1888,15 +2555,6 @@
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
       "source_age_business_days": 7,
-      "source_as_of": "2026-07-07T17:33:10Z",
-      "symbols": [
-        "IFED"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
       "source_as_of": "2026-07-07T18:47:56Z",
       "symbols": [
         "QJL"
@@ -1937,6 +2595,151 @@
       "symbols": [
         "JANI"
       ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-08",
+      "symbols": [
+        "AAPE",
+        "AMKX",
+        "AMZG",
+        "APDB",
+        "APPX",
+        "ARKE",
+        "ARMA",
+        "ARMW",
+        "ARMY",
+        "AVGC",
+        "AXTC",
+        "BABW",
+        "BBUL",
+        "BCEM",
+        "BEC",
+        "BGEG",
+        "BGIA",
+        "BRCE",
+        "BREE",
+        "BRIE",
+        "BROL",
+        "CBTO",
+        "CIEX",
+        "CIR",
+        "COHC",
+        "COMD",
+        "COSW",
+        "CRDD",
+        "CRWX",
+        "DDSQ",
+        "DLMY",
+        "DOJE",
+        "DQJN",
+        "EHCC",
+        "EMJL",
+        "EO",
+        "ETHB",
+        "ETHT",
+        "EZMO",
+        "FPAA",
+        "GAVA",
+        "GDOG",
+        "GDT",
+        "GDXW",
+        "GLDW",
+        "GOOL",
+        "GSUI",
+        "HBR",
+        "HJLY",
+        "HYPG",
+        "IBGM",
+        "IDMY",
+        "INYY",
+        "IONC",
+        "JELM",
+        "JUDB",
+        "JULI",
+        "KMEM",
+        "LCTO",
+        "LRCC",
+        "LTCC",
+        "LVIG",
+        "METG",
+        "MIC",
+        "MPWC",
+        "MSBT",
+        "MWHS",
+        "NFX",
+        "NUIF",
+        "NVTC",
+        "OCDB",
+        "OKLC",
+        "ONDC",
+        "ORAC",
+        "PCLC",
+        "PQX",
+        "PUL",
+        "QNTU",
+        "QSOL",
+        "RAM",
+        "RKX",
+        "RMBX",
+        "RONB",
+        "SLON",
+        "SOEZ",
+        "SOLC",
+        "SPCM",
+        "SPDF",
+        "SUIS",
+        "TCAN",
+        "TDOG",
+        "TDOT",
+        "TERC",
+        "TISC",
+        "TLDR",
+        "TOCT",
+        "TOXR",
+        "TPAY",
+        "TSEU",
+        "TSOL",
+        "TSUI",
+        "TSYW",
+        "TTMX",
+        "UBEW",
+        "UFOX",
+        "UNHW",
+        "VAVX",
+        "VBNB",
+        "VCHY",
+        "VDG",
+        "VDV",
+        "VSOL",
+        "WAGN",
+        "WAMA",
+        "WDIG",
+        "WDRN",
+        "XQTM",
+        "XRPC",
+        "XRPR"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-08T13:40:44Z",
+      "symbols": [
+        "CUST"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-08T19:46:24Z",
+      "symbols": [
+        "USML"
+      ]
     }
   ],
   "unavailable_details": [
@@ -1945,8 +2748,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-07-16T00:30:04Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "DAY"
@@ -1956,8 +2759,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "HOLX"
@@ -1967,8 +2770,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-07-16T00:13:37Z",
-      "failure_run_id": "29460793523",
+      "failure_observed_at": "2026-07-17T00:15:36Z",
+      "failure_run_id": "29544227703",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "MMC"

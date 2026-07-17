@@ -51,13 +51,26 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 446,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:35:07Z",
-    "history_as_of": "2026-07-14",
-    "path": "data/yf/finance/USML.json",
-    "payload_sha256": "e5e796d4c95743244bddcd57fdbe65942d662e50090ba4883d5d924d72b83ecb",
+    "fetched_at": "2026-07-17T00:16:54Z",
+    "history_as_of": "2026-07-15",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USML.json",
+    "payload_sha256": "f8814ba564f878cdf613ff7af608082277becf09c847b7099f29d39e985aa870",
     "quote_as_of": "2026-07-08T19:46:24Z",
     "source_as_of": "2026-07-08T19:46:24Z"
   },
@@ -69,36 +82,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 624,
+    "latency_ms": 446,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T20:22:33Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-17T00:16:54Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USML.json",
-    "payload_sha256": "900f712334a087e27a9cb21fcda8f10e4430dfbbaf4b3fdf35dbcb538f56277a",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "f8814ba564f878cdf613ff7af608082277becf09c847b7099f29d39e985aa870",
+    "quote_as_of": "2026-07-08T19:46:24Z",
+    "source_as_of": "2026-07-08T19:46:24Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-15",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "6a40d20f554061b5c3f83d38da10f69ccee0bf9837ec203478040714f8b61ae0",
+    "quote_as_of": "2026-07-08T19:46:24Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-08T19:46:24Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-17T00:21:09Z",
+    "classified_run_id": "29544227703",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "USML holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "USML holds LKG because Yahoo source date 2026-07-08T19:46:24Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-08T19:46:24Z"
   },
   "ticker": "USML",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

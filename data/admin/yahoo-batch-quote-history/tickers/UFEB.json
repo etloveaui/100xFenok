@@ -25,32 +25,58 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 369,
+      "natural": true,
+      "observed_at": "2026-07-17T00:24:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-17T00:31:14Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:14:43Z",
-    "history_as_of": "2026-07-13",
+    "fetched_at": "2026-07-17T00:27:08Z",
+    "history_as_of": "2026-07-16",
     "path": "data/yf/finance/UFEB.json",
-    "payload_sha256": "7e94938707a283ebf92f27330eefb642bd8f3e893e601fddd5ff5fa0ef5acb6b",
-    "quote_as_of": "2026-07-13T19:43:33Z",
-    "source_as_of": "2026-07-13"
+    "payload_sha256": "803178b7110608e5221c1f9c19d99fabe009544607a80ef2c0647c8c8ec9c102",
+    "quote_as_of": "2026-07-16T19:41:40Z",
+    "source_as_of": "2026-07-16"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 383,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-17T00:31:14Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-18T16:17:15Z",
@@ -59,6 +85,18 @@
     "payload_sha256": "e4238cc72a162028fc99ad5cd11c51ebba7c18a8ab00e996ef2eba7234e612dc",
     "quote_as_of": null,
     "source_as_of": "2026-06-18"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-17T00:24:27Z",
+    "payload_sha256": "9b58f209882b1376300fd154cf42179a493e3b6f611f187b35647dc8f8b0ef83",
+    "quote_as_of": "2026-07-16T19:41:40Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -74,5 +112,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "UFEB",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-17T00:31:14Z"
 }

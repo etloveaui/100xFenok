@@ -51,13 +51,26 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 335,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:14:13Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:17:02Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XLYX.json",
-    "payload_sha256": "d7a5609787e78a85b89f60b16cd92f789e8130a889b084c7ab5a4c8018a99898",
+    "payload_sha256": "1afe613625a549c9579de90bf8e1333129f5f5775c374385cbe56d6281e8351f",
     "quote_as_of": "2026-07-02T17:16:39Z",
     "source_as_of": "2026-07-02T17:16:39Z"
   },
@@ -69,36 +82,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 594,
+    "latency_ms": 335,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-16T00:14:13Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:17:02Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XLYX.json",
-    "payload_sha256": "d7a5609787e78a85b89f60b16cd92f789e8130a889b084c7ab5a4c8018a99898",
+    "payload_sha256": "1afe613625a549c9579de90bf8e1333129f5f5775c374385cbe56d6281e8351f",
     "quote_as_of": "2026-07-02T17:16:39Z",
+    "source_as_of": "2026-07-02T17:16:39Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-15",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "b79750eb4979cf7bb7121a374e792550bfcd034f8885e0b45ce03f9b75979755",
+    "quote_as_of": "2026-07-02T17:16:39Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-02T17:16:39Z"
   },
   "resolution_state": "lkg_primary",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-16T00:19:31Z",
-    "classified_run_id": "29460793523",
+    "age_business_days": 10,
+    "classified_at": "2026-07-17T00:21:09Z",
+    "classified_run_id": "29544227703",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XLYX holds LKG because Yahoo source date 2026-07-02T17:16:39Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XLYX holds LKG because Yahoo source date 2026-07-02T17:16:39Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-07-02T17:16:39Z"
   },
   "ticker": "XLYX",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

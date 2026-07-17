@@ -51,13 +51,26 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 355,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:14:14Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:17:03Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XPAV.json",
-    "payload_sha256": "603d6284d6bdd0afafca221fc2b665dec31b2042851e3eac8b9b9ac94d02171e",
+    "payload_sha256": "f642595ea21f4ef4a42bc49e21a7c9638714a7fe9b3fc692840bcba81d470a5c",
     "quote_as_of": "2026-06-15T18:55:51Z",
     "source_as_of": "2026-06-15T18:55:51Z"
   },
@@ -69,36 +82,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 824,
+    "latency_ms": 355,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-07-16T00:14:14Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-17T00:17:03Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XPAV.json",
-    "payload_sha256": "603d6284d6bdd0afafca221fc2b665dec31b2042851e3eac8b9b9ac94d02171e",
+    "payload_sha256": "f642595ea21f4ef4a42bc49e21a7c9638714a7fe9b3fc692840bcba81d470a5c",
     "quote_as_of": "2026-06-15T18:55:51Z",
+    "source_as_of": "2026-06-15T18:55:51Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-15",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "payload_sha256": "e86929b960aceb868b4a506b9263f7b148afb389fe3c74ea008692c38077663b",
+    "quote_as_of": "2026-06-15T18:55:51Z",
+    "run_attempt": 1,
+    "run_id": "29544227703",
+    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-15T18:55:51Z"
   },
   "resolution_state": "lkg_primary",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 21,
-    "classified_at": "2026-07-16T00:19:31Z",
-    "classified_run_id": "29460793523",
+    "age_business_days": 22,
+    "classified_at": "2026-07-17T00:21:09Z",
+    "classified_run_id": "29544227703",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XPAV holds LKG because Yahoo source date 2026-06-15T18:55:51Z is 21 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XPAV holds LKG because Yahoo source date 2026-06-15T18:55:51Z is 22 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-15T18:55:51Z"
   },
   "ticker": "XPAV",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-17T00:21:09Z"
 }

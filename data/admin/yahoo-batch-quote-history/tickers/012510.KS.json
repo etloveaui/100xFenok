@@ -71,6 +71,20 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 573,
+      "natural": true,
+      "observed_at": "2026-07-17T00:15:36Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29544227703",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -87,15 +101,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source did not advance beyond the retained LKG for 012510.KS",
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 986,
+    "latency_ms": 573,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "observed_at": "2026-07-17T00:15:36Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29544227703",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -124,6 +138,15 @@
     "run_attempt": 1,
     "run_id": "29460793523"
   },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-07-17T00:15:36Z",
+    "provider_history_as_of": "2026-07-14",
+    "provider_quote_as_of": "2026-06-25T06:30:30Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "29544227703"
+  },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
     "history_as_of": "2026-07-14",
@@ -148,5 +171,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-17T00:15:36Z"
 }
