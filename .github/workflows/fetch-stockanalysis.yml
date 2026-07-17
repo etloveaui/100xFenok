@@ -97,6 +97,10 @@ on:
         description: 'Dispatch-only recovery chaos targets; subset of explicit surfaces'
         required: false
         default: ''
+      controlled_failure_universe:
+        description: 'Dispatch-only recovery chaos target; fails the ETF universe fetch on purpose (etf_universe / true)'
+        required: false
+        default: ''
       offset:
         description: 'ETF offset for universe backfill chunking'
         required: false
@@ -170,6 +174,7 @@ jobs:
           INPUT_SURFACES: ${{ github.event.inputs.surfaces }}
           INPUT_CONTROLLED_FAILURE_TICKERS: ${{ github.event.inputs.controlled_failure_tickers }}
           INPUT_CONTROLLED_FAILURE_SURFACES: ${{ github.event.inputs.controlled_failure_surfaces }}
+          INPUT_CONTROLLED_FAILURE_UNIVERSE: ${{ github.event.inputs.controlled_failure_universe }}
           INPUT_OFFSET: ${{ github.event.inputs.offset }}
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
@@ -268,6 +273,7 @@ jobs:
             if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then ARGS="$ARGS --fetch-financials"; fi
             if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi
             if [ -n "$INPUT_CONTROLLED_FAILURE_SURFACES" ]; then ARGS="$ARGS --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES"; fi
+            if [ -n "$INPUT_CONTROLLED_FAILURE_UNIVERSE" ] && [ "$INPUT_CONTROLLED_FAILURE_UNIVERSE" != "false" ]; then ARGS="$ARGS --controlled-failure-universe"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi

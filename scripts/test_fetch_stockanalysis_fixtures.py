@@ -705,6 +705,137 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "universe-failed")
 
+    def test_universe_controlled_failure_retains_lkg_before_fetch_then_recovers(self) -> None:
+        original_fetch = self.fetcher.fetch_etf_universe
+        original_dirs = (
+            self.fetcher.OUT_DIR,
+            self.fetcher.PUBLIC_DIR,
+            self.fetcher.STOCKANALYSIS_RECOVERY_ROOT,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.STOCKANALYSIS_RECOVERY_ROOT = (
+                root / "data" / "admin" / "stockanalysis-recovery"
+            )
+            canonical = self.fetcher.OUT_DIR / "etf_universe.json"
+            lkg_payload = {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "generated_at": "2026-07-16T07:00:00Z",
+                "source_as_of": None,
+                "source_as_of_reason": "provider publishes no aggregate source date",
+                "fetched_at": "2026-07-16T07:00:00Z",
+                "endpoint": "/etf/",
+                "counts": {"records": 1, "pages": 1},
+                "warnings": [],
+                "pages": [{"page": 1, "path": "/etf/", "record_count": 1}],
+                "records": [{"ticker": "AAA", "name": "AAA ETF", "source_page": 1}],
+            }
+            self.fetcher.write_json(canonical, lkg_payload)
+            expected_lkg = canonical.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                self.fetcher.STOCKANALYSIS_RECOVERY_ROOT, root
+            )
+            bootstrap = {
+                "run_id": "bootstrap",
+                "run_attempt": 1,
+                "event_name": "local",
+                "observed_at": "2026-07-16T07:00:00Z",
+            }
+            chaos_run = {
+                "run_id": "universe-chaos",
+                "run_attempt": 1,
+                "event_name": "workflow_dispatch",
+                "natural": False,
+                "observed_at": "2026-07-16T08:00:00Z",
+            }
+            recovered_run = {
+                "run_id": "universe-recovered",
+                "run_attempt": 1,
+                "event_name": "schedule",
+                "natural": True,
+                "observed_at": "2026-07-16T08:05:00Z",
+            }
+            store.bootstrap_existing(bootstrap)
+            try:
+                def _fail_if_called(*_args, **_kwargs):
+                    raise AssertionError(
+                        "controlled failure must raise before fetch_etf_universe runs"
+                    )
+
+                self.fetcher.fetch_etf_universe = _fail_if_called
+                failed = self.fetcher.fetch_etf_universe_with_recovery(
+                    100,
+                    1,
+                    0,
+                    False,
+                    recovery_store=store,
+                    recovery_run=chaos_run,
+                    controlled_failure=True,
+                )
+                self.assertIsNone(failed)
+                # LKG retained; the on-disk canonical payload was never overwritten.
+                self.assertEqual(canonical.read_bytes(), expected_lkg)
+                self.assertEqual(
+                    (
+                        store.root / "lkg" / "universe" / "etf_universe.json"
+                    ).read_bytes(),
+                    expected_lkg,
+                )
+                chaos_state = json.loads(
+                    (store.root / "states" / "universe" / "etf_universe.json").read_text()
+                )
+                self.assertEqual(chaos_state["resolution_state"], "lkg_primary")
+                self.assertTrue(chaos_state["retry"])
+                self.assertTrue(chaos_state["latest_failure"]["controlled"])
+                self.assertIn(
+                    "controlled failure injection for universe:etf_universe",
+                    chaos_state["latest_failure"]["error"],
+                )
+                failed_index = store.rebuild_index(chaos_run)
+                self.assertEqual(
+                    store.assess_current_attempt(failed_index)["status"], "degraded"
+                )
+
+                advanced = {
+                    **lkg_payload,
+                    "generated_at": "2026-07-16T08:05:00Z",
+                    "fetched_at": "2026-07-16T08:05:00Z",
+                    "counts": {"records": 2, "pages": 1},
+                    "pages": [{"page": 1, "path": "/etf/", "record_count": 2}],
+                    "records": [
+                        {"ticker": "AAA", "name": "AAA ETF", "source_page": 1},
+                        {"ticker": "BBB", "name": "BBB ETF", "source_page": 1},
+                    ],
+                }
+                self.fetcher.fetch_etf_universe = lambda *_args, **_kwargs: advanced
+                recovered = self.fetcher.fetch_etf_universe_with_recovery(
+                    100,
+                    1,
+                    0,
+                    False,
+                    recovery_store=store,
+                    recovery_run=recovered_run,
+                )
+            finally:
+                self.fetcher.fetch_etf_universe = original_fetch
+                (
+                    self.fetcher.OUT_DIR,
+                    self.fetcher.PUBLIC_DIR,
+                    self.fetcher.STOCKANALYSIS_RECOVERY_ROOT,
+                ) = original_dirs
+
+            self.assertEqual(recovered, advanced)
+            state = json.loads(
+                (store.root / "states" / "universe" / "etf_universe.json").read_text()
+            )
+            self.assertEqual(state["resolution_state"], "fresh_primary")
+            self.assertFalse(state["retry"])
+            self.assertEqual(state["recovered_from_run_id"], "universe-chaos")
+
     def test_weekly_workflow_uses_fixed_complete_discovery_ceiling(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
         self.assertIn("20 23 * * 0", workflow)

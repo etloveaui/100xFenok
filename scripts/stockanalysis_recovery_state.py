@@ -217,8 +217,10 @@ def validate_controlled_failure_scope(
     selected_surfaces: set[str],
     *,
     event_name: str,
+    controlled_universe: bool = False,
+    selected_universe: bool = False,
 ) -> None:
-    if not controlled_tickers and not controlled_surfaces:
+    if not controlled_tickers and not controlled_surfaces and not controlled_universe:
         return
     if event_name != "workflow_dispatch":
         raise ValueError("controlled StockAnalysis failures are restricted to workflow_dispatch")
@@ -226,6 +228,8 @@ def validate_controlled_failure_scope(
         raise ValueError("controlled_failure_tickers must be a subset of explicit --stocks")
     if not controlled_surfaces.issubset(selected_surfaces):
         raise ValueError("controlled_failure_surfaces must be a subset of explicit --surfaces")
+    if controlled_universe and not selected_universe:
+        raise ValueError("controlled_failure_universe requires --discover-etf-universe")
 
 
 class StockAnalysisRecoveryStateStore:

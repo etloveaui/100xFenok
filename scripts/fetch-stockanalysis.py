@@ -2114,10 +2114,15 @@ def fetch_etf_universe_with_recovery(
     *,
     recovery_store: StockAnalysisRecoveryStateStore | None,
     recovery_run: dict | None,
+    controlled_failure: bool = False,
 ) -> dict | None:
     entity = "etf_universe"
     payload = None
     try:
+        if controlled_failure:
+            raise RuntimeError(
+                "controlled failure injection for universe:etf_universe"
+            )
         payload = fetch_etf_universe(max_pages, timeout, sleep)
         if recovery_store is not None and not recovery_store.recovery_candidate_advances(
             "universe", entity, payload
@@ -2143,7 +2148,11 @@ def fetch_etf_universe_with_recovery(
         if recovery_store is None or recovery_run is None:
             raise
         recovery_store.record_failure(
-            "universe", entity, f"{type(exc).__name__}: {exc}", recovery_run
+            "universe",
+            entity,
+            f"{type(exc).__name__}: {exc}",
+            recovery_run,
+            controlled=controlled_failure,
         )
         print(
             "[degraded] StockAnalysis ETF universe recovery deferred: "
@@ -5032,6 +5041,7 @@ def _main() -> None:
     parser.add_argument("--surfaces-only", action="store_true", help="only refresh surfaces; do not deep-fetch ETF/stock payloads")
     parser.add_argument("--controlled-failure-tickers", default="", help="workflow_dispatch-only stock recovery chaos targets; must be explicit --stocks")
     parser.add_argument("--controlled-failure-surfaces", default="", help="workflow_dispatch-only surface recovery chaos targets; must be explicit --surfaces")
+    parser.add_argument("--controlled-failure-universe", action="store_true", help="workflow_dispatch-only ETF universe recovery chaos target; requires --discover-etf-universe")
     parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID", "local"))
     parser.add_argument("--run-attempt", type=int, default=int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")))
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
@@ -5092,6 +5102,7 @@ def _main() -> None:
         if args.controlled_failure_surfaces
         else []
     )
+    controlled_failure_universe = args.controlled_failure_universe
     try:
         validate_controlled_failure_scope(
             controlled_failure_tickers,
@@ -5099,6 +5110,8 @@ def _main() -> None:
             controlled_failure_surfaces,
             set(explicit_surfaces) if args.fetch_surfaces else set(),
             event_name=args.event_name,
+            controlled_universe=controlled_failure_universe,
+            selected_universe=args.discover_etf_universe,
         )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
@@ -5213,6 +5226,7 @@ def _main() -> None:
             mirror_public,
             recovery_store=recovery_store,
             recovery_run=recovery_run,
+            controlled_failure=controlled_failure_universe,
         )
         if universe_payload is not None:
             print(

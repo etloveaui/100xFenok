@@ -342,6 +342,28 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                     tickers, selected, surfaces, selected_surfaces, event_name=event_name
                 )
 
+    def test_controlled_failure_scope_universe_is_dispatch_only_and_needs_discovery(self) -> None:
+        validate_controlled_failure_scope(
+            set(), set(), set(), set(),
+            event_name="workflow_dispatch",
+            controlled_universe=True,
+            selected_universe=True,
+        )
+        with self.assertRaisesRegex(ValueError, "workflow_dispatch"):
+            validate_controlled_failure_scope(
+                set(), set(), set(), set(),
+                event_name="schedule",
+                controlled_universe=True,
+                selected_universe=True,
+            )
+        with self.assertRaisesRegex(ValueError, "--discover-etf-universe"):
+            validate_controlled_failure_scope(
+                set(), set(), set(), set(),
+                event_name="workflow_dispatch",
+                controlled_universe=True,
+                selected_universe=False,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
