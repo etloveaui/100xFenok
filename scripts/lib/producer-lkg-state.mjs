@@ -6,8 +6,10 @@ import { isDeepStrictEqual } from "node:util";
 export const PRODUCER_LKG_STATE_SCHEMA = "producer-lkg-key-state/v1";
 export const PRODUCER_LKG_STATE_SCHEMA_V2 = "producer-lkg-key-state/v2";
 export const PRODUCER_LKG_INDEX_SCHEMA = "producer-lkg-index/v1";
+export const PRODUCER_LKG_INDEX_SCHEMA_V2 = "producer-lkg-index/v2";
 export const PRODUCER_PROMOTION_CONTRACT_V2 = "provider_observation/v2";
 export const PRODUCER_PROMOTION_ANCHOR_SCHEMA = "producer-promotion-anchor/v1";
+export const LEGACY_RECOVERY_PROVENANCE_CONTRACT = "legacy_source_marker/v1";
 
 function assertKey(key) {
   if (typeof key !== "string" || key === "" || path.basename(key) !== key || key === "." || key === "..") {
@@ -219,6 +221,19 @@ export class ProducerLkgStateStore {
     if (requiresProviderProof && state.promotion_contract !== PRODUCER_PROMOTION_CONTRACT_V2) {
       return { kind: "corrupt", state: null, reason: "provider observation contract downgrade is invalid" };
     }
+    // Pre-contract states recovered before provider-observation binding existed; their
+    // lineage is provable only as a declared exception (DEC-266), never inferred at read time.
+    const declaredLegacyProvenance = Object.hasOwn(state, "recovery_provenance_contract");
+    if (declaredLegacyProvenance && (
+      state.recovery_provenance_contract !== LEGACY_RECOVERY_PROVENANCE_CONTRACT
+      || state.promotion_contract !== PRODUCER_PROMOTION_CONTRACT_V2
+      || (state.recovered_from_run_id ?? null) === null
+      || Object.hasOwn(state, "recovery_observation")
+      || Object.hasOwn(state, "last_recovered_failure")
+      || promotionAnchor.recovery_observation_sha256 !== null
+    )) {
+      return { kind: "corrupt", state: null, reason: "legacy recovery provenance declaration is invalid" };
+    }
     if (state.promotion_contract === PRODUCER_PROMOTION_CONTRACT_V2) {
       const proof = state.provider_observation;
       const proofRun = proof && {
@@ -246,7 +261,7 @@ export class ProducerLkgStateStore {
         || proof.event_name !== state.last_event_name
         || proof.observed_at !== state.updated_at
         || proof.recovered_from_run_id !== (state.recovered_from_run_id ?? null)
-        || ((state.recovered_from_run_id ?? null) !== null && (
+        || ((state.recovered_from_run_id ?? null) !== null && !declaredLegacyProvenance && (
           state.last_recovered_failure?.run_id !== state.recovered_from_run_id
           || recoveryProof?.schema_version !== PRODUCER_PROMOTION_CONTRACT_V2
           || promotionAnchor.recovery_observation_sha256 !== sha256(Buffer.from(JSON.stringify(recoveryProof)))
@@ -508,6 +523,20 @@ export class ProducerLkgStateStore {
     if (recoveryObservation) state.recovery_observation = recoveryObservation;
     if (prior?.retry === true && prior?.latest_failure) state.last_recovered_failure = prior.latest_failure;
     else if (prior?.last_recovered_failure) state.last_recovered_failure = prior.last_recovered_failure;
+    // Lineage inherited from a pre-contract prior cannot carry a recovery observation;
+    // declare that exception explicitly (DEC-266) instead of leaving the state unprovable.
+    // The declaration only carries forward an existing pre-contract lineage — a new
+    // recovery in this commit always builds a full recoveryObservation above.
+    const inheritsLegacyLineage = Boolean(providerObservation)
+      && recoveredFromRunId !== null
+      && recoveryObservation === null
+      && !state.last_recovered_failure
+      && (prior?.recovered_from_run_id ?? null) === recoveredFromRunId
+      && !prior?.recovery_observation
+      && (!Object.hasOwn(prior ?? {}, "promotion_contract")
+        || prior?.promotion_contract === LEGACY_RECOVERY_PROVENANCE_CONTRACT
+        || prior?.recovery_provenance_contract === LEGACY_RECOVERY_PROVENANCE_CONTRACT);
+    if (inheritsLegacyLineage) state.recovery_provenance_contract = LEGACY_RECOVERY_PROVENANCE_CONTRACT;
     delete state.latest_promotion_deferral;
     if (providerObservation) this.#anchorProviderProofKey(key, recoveryObservation);
     writeJsonAtomic(this.statePath(key), state);
@@ -674,7 +703,7 @@ export class ProducerLkgStateStore {
         source_as_of: state.current?.source_as_of ?? null,
       }));
     const index = {
-      schema_version: PRODUCER_LKG_INDEX_SCHEMA,
+      schema_version: PRODUCER_LKG_INDEX_SCHEMA_V2,
       lane_id: this.laneId,
       generated_at: run.observed_at,
       keys: uniqueKeys,

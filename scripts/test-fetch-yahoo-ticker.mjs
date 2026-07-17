@@ -575,6 +575,71 @@ for (const mutate of [
 }
 
 {
+  // Live 07-16 deadlock repro: committed pre-contract v1 states carrying 07-15 recovery
+  // lineage (recovered_from_run_id without recovery_observation) made every hourly run
+  // fetch fine, fail verifyCommittedYahooStates, roll back, and exit 2 — forever.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-yahoo-legacy-lineage-"));
+  const paths = pathsFor(root);
+  const seedTime = 1783990000;
+  seedOutput(paths, seedTime);
+  fs.mkdirSync(path.join(paths.stateRoot, "keys"), { recursive: true });
+  fs.mkdirSync(path.join(paths.stateRoot, "lkg"), { recursive: true });
+  for (const [symbol, price] of [["TQQQ", 49], ["SOXL", 39]]) {
+    const retainedBytes = quotePayloadBytes(symbol, price, seedTime);
+    const sha = crypto.createHash("sha256").update(retainedBytes).digest("hex");
+    const sourceAsOf = new Date(seedTime * 1000).toISOString();
+    fs.writeFileSync(path.join(paths.stateRoot, "lkg", `${symbol}.json`), retainedBytes);
+    fs.writeFileSync(path.join(paths.stateRoot, "keys", `${symbol}.json`), `${JSON.stringify({
+      schema_version: "producer-lkg-key-state/v1",
+      lane_id: "yahoo_hourly_ticker",
+      key: `${symbol}.json`,
+      updated_at: "2026-07-16T11:51:09.839Z",
+      resolution_state: "fresh_primary",
+      retry: false,
+      current: { path: `data/macro/yahoo-ticker.json#/tickers/${symbol}`, payload_sha256: sha, source_as_of: sourceAsOf },
+      canonical_ref: `data/macro/yahoo-ticker.json#/tickers/${symbol}`,
+      lkg: { path: `data/admin/yahoo-hourly-ticker/lkg/${symbol}.json`, payload_sha256: sha, source_as_of: sourceAsOf },
+      latest_failure: null,
+      recovered_from_run_id: "29417720099",
+      recovery_run_id: "29421917838",
+      recovery_run_attempt: 1,
+      recovery_event_name: "schedule",
+      recovered_at: "2026-07-15T14:04:52.506Z",
+      last_run_id: "29495869517",
+      last_run_attempt: 1,
+    }, null, 2)}\n`);
+  }
+  const healed = await runYahooTicker({
+    ...paths,
+    request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 50 : 40, 1784000001)),
+    sleep: async () => {}, maxRetries: 0, observedAt: "2026-07-16T12:00:00Z", attemptId: "gh-400-1-yahoo", eventName: "schedule",
+  });
+  assert.equal(healed.exitCode, 0, `legacy-lineage states must publish, not roll back: ${healed.reasons.join("; ")}`);
+  assert.equal(healed.updated, true);
+  assert.deepEqual(healed.degradedKeys, []);
+  const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
+  assert.equal(state.schema_version, "producer-lkg-key-state/v2");
+  assert.equal(state.recovery_provenance_contract, "legacy_source_marker/v1");
+  assert.equal(state.recovered_from_run_id, "29417720099", "the v1-era lineage survives the contract upgrade");
+  assert.equal(state.recovery_observation, undefined);
+  const index = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "index.json"), "utf8"));
+  assert.equal(index.schema_version, "producer-lkg-index/v2", "healing also rewrites the index onto the v2 contract");
+  const published = JSON.parse(fs.readFileSync(paths.canonicalPath, "utf8"));
+  assert.equal(published.tickers.TQQQ.regularMarketTime, 1784000001);
+
+  const nextHour = await runYahooTicker({
+    ...paths,
+    request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 51 : 41, 1784003601)),
+    sleep: async () => {}, maxRetries: 0, observedAt: "2026-07-16T13:00:00Z", attemptId: "gh-401-1-yahoo", eventName: "schedule",
+  });
+  assert.equal(nextHour.exitCode, 0, "the declared lineage stays committable on the following hourly run");
+  assert.equal(nextHour.updated, true);
+  const nextState = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
+  assert.equal(nextState.recovery_provenance_contract, "legacy_source_marker/v1");
+  assert.equal(nextState.recovered_from_run_id, "29417720099");
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-yahoo-ticker.yml"), "utf8");
   assert.match(workflow, /node scripts\/fetch-yahoo-ticker\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);

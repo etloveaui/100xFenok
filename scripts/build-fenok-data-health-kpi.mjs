@@ -873,12 +873,23 @@ export function validateProducerRecoveryAttempt(index) {
   const reject = (condition, reason) => {
     if (!condition) reasons.push(reason);
   };
+  // v1 indexes predate promotion-deferral evidence; they are validated against the
+  // contract they were written under, never against fields they could not have produced.
+  const legacyIndex = index?.schema_version === "producer-lkg-index/v1";
+  if (!legacyIndex && index?.schema_version !== "producer-lkg-index/v2") {
+    return {
+      valid: false,
+      reasons: [`index schema_version "${index?.schema_version ?? "<missing>"}" is not a supported producer-lkg-index contract`],
+    };
+  }
   const keys = Array.isArray(index?.keys) ? index.keys : [];
   const current = index?.current_attempt;
   const failedKeys = Array.isArray(current?.failed_keys) ? current.failed_keys : [];
-  const deferralKeys = Array.isArray(current?.promotion_deferral_keys) ? current.promotion_deferral_keys : [];
-  const details = Array.isArray(index?.promotion_deferral_details) ? index.promotion_deferral_details : [];
-  const integerFields = ["attempted", "successes", "failed", "promotion_deferrals"];
+  const deferralKeys = !legacyIndex && Array.isArray(current?.promotion_deferral_keys) ? current.promotion_deferral_keys : [];
+  const details = !legacyIndex && Array.isArray(index?.promotion_deferral_details) ? index.promotion_deferral_details : [];
+  const integerFields = legacyIndex
+    ? ["attempted", "successes", "failed"]
+    : ["attempted", "successes", "failed", "promotion_deferrals"];
   const orderedSubset = (values) => values.every((key) => typeof key === "string" && keys.includes(key))
     && new Set(values).size === values.length
     && JSON.stringify(values) === JSON.stringify(keys.filter((key) => values.includes(key)));
@@ -893,15 +904,24 @@ export function validateProducerRecoveryAttempt(index) {
   }
   reject(Number.isInteger(current?.attempted) && current.attempted >= 1 && current.attempted <= keys.length,
     "current attempted denominator is outside the exact key-set bounds");
-  reject(current?.attempted === current?.successes + current?.failed + current?.promotion_deferrals,
-    "current attempt denominator does not reconcile");
   reject(orderedSubset(failedKeys), "current failed_keys are not an ordered unique key subset");
-  reject(orderedSubset(deferralKeys), "current promotion_deferral_keys are not an ordered unique key subset");
-  reject(failedKeys.every((key) => !deferralKeys.includes(key)), "failed and promotion-deferral keys overlap");
   reject(current?.failed === failedKeys.length, "failed count does not match failed_keys");
-  reject(current?.promotion_deferrals === deferralKeys.length, "promotion deferral count does not match its keys");
   reject(Number(index?.counts?.failed) === current?.failed, "index failed count does not match the current attempt");
   reject(failedKeys.every((key) => index?.retry_keys?.includes(key)), "failed key is missing from retry_keys");
+  if (legacyIndex) {
+    reject(current?.attempted === current?.successes + current?.failed,
+      "current attempt denominator does not reconcile");
+    reject(!Object.hasOwn(current ?? {}, "promotion_deferrals")
+      && !Object.hasOwn(current ?? {}, "promotion_deferral_keys")
+      && !Object.hasOwn(index ?? {}, "promotion_deferral_details"),
+    "legacy v1 index carries promotion evidence it cannot have produced");
+    return { valid: reasons.length === 0, reasons };
+  }
+  reject(current?.attempted === current?.successes + current?.failed + current?.promotion_deferrals,
+    "current attempt denominator does not reconcile");
+  reject(orderedSubset(deferralKeys), "current promotion_deferral_keys are not an ordered unique key subset");
+  reject(failedKeys.every((key) => !deferralKeys.includes(key)), "failed and promotion-deferral keys overlap");
+  reject(current?.promotion_deferrals === deferralKeys.length, "promotion deferral count does not match its keys");
   reject(deferralKeys.every((key) => index?.retry_keys?.includes(key)), "promotion deferral key is missing from retry_keys");
   reject(details.length === deferralKeys.length
     && JSON.stringify(details.map((row) => row?.key)) === JSON.stringify(deferralKeys),
@@ -923,7 +943,7 @@ export function validateProducerRecoveryAttempt(index) {
 function recoveryChecks(laneId, index) {
   const config = DETECTION_RECOVERY_CONFIG[laneId];
   if (!config) return { checks: [], details: null };
-  const present = index?.schema_version === "producer-lkg-index/v1"
+  const present = ["producer-lkg-index/v1", "producer-lkg-index/v2"].includes(index?.schema_version)
     && index?.lane_id === config.lane_id
     && Number(index?.counts?.keys) === config.keys.length
     && Array.isArray(index?.keys)

@@ -353,6 +353,183 @@ function v2Args(targetStore, sourceAsOf, value, currentRun, candidateBytes = nul
   assert.throws(() => conflictStore.planCandidate(tampered), /proof is not payload-bound/);
 }
 
+{
+  // Exact deadlock repro (root commit 67e3df35cc): a pre-contract v1 state with inherited
+  // recovery lineage (mirrors data/admin/yahoo-hourly-ticker/keys/TQQQ.json@e4eba9d906)
+  // must stay committable under v2 provider proof via the declared legacy exception.
+  const legacyRoot = path.join(root, "legacy-recovery-provenance");
+  const legacyStore = makeStore(legacyRoot);
+  const retainedBytes = bytes("2026-07-14", 1);
+  const retainedSha = crypto.createHash("sha256").update(retainedBytes).digest("hex");
+  const legacyState = {
+    schema_version: "producer-lkg-key-state/v1",
+    lane_id: "fixture_lane",
+    key: "alpha.json",
+    updated_at: "2026-07-16T11:51:09.839Z",
+    resolution_state: "fresh_primary",
+    retry: false,
+    current: { path: "data/source/alpha.json", payload_sha256: retainedSha, source_as_of: "2026-07-14" },
+    canonical_ref: "data/source/alpha.json",
+    lkg: { path: "data/admin/fixture-lane/lkg/alpha.json", payload_sha256: retainedSha, source_as_of: "2026-07-14" },
+    latest_failure: null,
+    recovered_from_run_id: "29417720099",
+    recovery_run_id: "29421917838",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    recovered_at: "2026-07-15T14:04:52.506Z",
+    last_run_id: "29495869517",
+    last_run_attempt: 1,
+  };
+  const statePath = path.join(legacyRoot, "keys", "alpha.json");
+  fs.mkdirSync(path.join(legacyRoot, "keys"), { recursive: true });
+  fs.mkdirSync(path.join(legacyRoot, "lkg"), { recursive: true });
+  fs.writeFileSync(statePath, `${JSON.stringify(legacyState, null, 2)}\n`);
+  fs.writeFileSync(path.join(legacyRoot, "lkg", "alpha.json"), retainedBytes);
+  assert.equal(legacyStore.inspectState("alpha.json").kind, "valid", "the pre-contract legacy state itself reads as valid");
+
+  const committed = legacyStore.recordCandidate(v2Args(legacyStore, "2026-07-15", 2, naturalRun("legacy-natural", "2026-07-16T12:00:00Z")));
+  assert.equal(committed.accepted, true, "a v2 provider-proof commit over legacy lineage must not deadlock");
+  assert.equal(committed.state.schema_version, "producer-lkg-key-state/v2");
+  assert.equal(committed.state.recovery_provenance_contract, "legacy_source_marker/v1");
+  assert.equal(committed.state.recovered_from_run_id, "29417720099", "inherited lineage is preserved, not laundered");
+  assert.equal(committed.state.recovery_observation, undefined);
+  assert.equal(legacyStore.inspectState("alpha.json").kind, "valid",
+    "the committed state is provable via its declared exception (pre-fix: provider observation proof binding is invalid)");
+  const anchor = JSON.parse(fs.readFileSync(path.join(legacyRoot, "promotion-contracts", "alpha.json"), "utf8"));
+  assert.equal(anchor.recovery_observation_sha256, null, "the anchor honestly records that no recovery observation exists");
+
+  const later = legacyStore.recordCandidate(v2Args(legacyStore, "2026-07-16", 3, naturalRun("legacy-later", "2026-07-16T13:00:00Z")));
+  assert.equal(later.accepted, true);
+  assert.equal(later.state.recovery_provenance_contract, "legacy_source_marker/v1",
+    "the declaration propagates across later v2 commits while the lineage persists");
+  assert.equal(legacyStore.inspectState("alpha.json").kind, "valid");
+
+  const declaredBytes = fs.readFileSync(statePath);
+  const undeclared = JSON.parse(declaredBytes.toString("utf8"));
+  delete undeclared.recovery_provenance_contract;
+  fs.writeFileSync(statePath, `${JSON.stringify(undeclared, null, 2)}\n`);
+  const undeclaredInspection = legacyStore.inspectState("alpha.json");
+  assert.equal(undeclaredInspection.kind, "corrupt", "the same state without the declaration stays unprovable");
+  assert.match(undeclaredInspection.reason, /provider observation proof binding is invalid/);
+  fs.writeFileSync(statePath, declaredBytes);
+  const fabricated = JSON.parse(declaredBytes.toString("utf8"));
+  fabricated.recovery_observation = { ...fabricated.provider_observation };
+  fs.writeFileSync(statePath, `${JSON.stringify(fabricated, null, 2)}\n`);
+  const fabricatedInspection = legacyStore.inspectState("alpha.json");
+  assert.equal(fabricatedInspection.kind, "corrupt", "the declaration plus fabricated v2 proof fields is corruption");
+  assert.match(fabricatedInspection.reason, /legacy recovery provenance declaration is invalid/);
+  fs.writeFileSync(statePath, declaredBytes);
+  const unknownDeclaration = JSON.parse(declaredBytes.toString("utf8"));
+  unknownDeclaration.recovery_provenance_contract = "legacy_source_marker/v2";
+  fs.writeFileSync(statePath, `${JSON.stringify(unknownDeclaration, null, 2)}\n`);
+  assert.equal(legacyStore.inspectState("alpha.json").kind, "corrupt", "an unknown provenance declaration is corruption");
+  fs.writeFileSync(statePath, declaredBytes);
+  assert.equal(legacyStore.inspectState("alpha.json").kind, "valid");
+}
+
+{
+  // A prior committed under the legacy PROMOTION contract (promotion_contract:
+  // legacy_source_marker/v1, written by a non-provider commit) with inherited lineage
+  // must also carry the declaration forward once the producer migrates to
+  // providerObservation — otherwise the same deadlock re-arms on migration day.
+  const legacyContractRoot = path.join(root, "legacy-promotion-contract-prior");
+  const legacyContractStore = makeStore(legacyContractRoot);
+  const retainedBytes = bytes("2026-07-14", 1);
+  const retainedSha = crypto.createHash("sha256").update(retainedBytes).digest("hex");
+  const priorState = {
+    schema_version: "producer-lkg-key-state/v1",
+    lane_id: "fixture_lane",
+    key: "alpha.json",
+    updated_at: "2026-07-16T11:51:09.839Z",
+    resolution_state: "fresh_primary",
+    retry: false,
+    current: { path: "data/source/alpha.json", payload_sha256: retainedSha, source_as_of: "2026-07-14" },
+    canonical_ref: "data/source/alpha.json",
+    lkg: { path: "data/admin/fixture-lane/lkg/alpha.json", payload_sha256: retainedSha, source_as_of: "2026-07-14" },
+    latest_failure: null,
+    recovered_from_run_id: "29417720099",
+    recovery_run_id: "29421917838",
+    recovery_run_attempt: 1,
+    recovery_event_name: "schedule",
+    recovered_at: "2026-07-15T14:04:52.506Z",
+    last_run_id: "29495869517",
+    last_run_attempt: 1,
+    last_event_name: "schedule",
+    promotion_contract: "legacy_source_marker/v1",
+  };
+  const statePath = path.join(legacyContractRoot, "keys", "alpha.json");
+  fs.mkdirSync(path.join(legacyContractRoot, "keys"), { recursive: true });
+  fs.mkdirSync(path.join(legacyContractRoot, "lkg"), { recursive: true });
+  fs.writeFileSync(statePath, `${JSON.stringify(priorState, null, 2)}\n`);
+  fs.writeFileSync(path.join(legacyContractRoot, "lkg", "alpha.json"), retainedBytes);
+  assert.equal(legacyContractStore.inspectState("alpha.json").kind, "valid");
+  const migrated = legacyContractStore.recordCandidate(v2Args(legacyContractStore, "2026-07-15", 2, naturalRun("contract-migration", "2026-07-16T12:00:00Z")));
+  assert.equal(migrated.accepted, true, "migrating a legacy-promotion-contract prior to provider proof must not deadlock");
+  assert.equal(migrated.state.recovery_provenance_contract, "legacy_source_marker/v1");
+  assert.equal(migrated.state.recovered_from_run_id, "29417720099");
+  assert.equal(legacyContractStore.inspectState("alpha.json").kind, "valid");
+
+  // Abuse direction: the same prior that already carries a recovery_observation gets NO
+  // declaration — the observation is real proof and must stay bound, not be waived.
+  const observedRoot = path.join(root, "legacy-contract-with-observation");
+  const observedStore = makeStore(observedRoot);
+  const observedPrior = {
+    ...priorState,
+    recovery_observation: {
+      schema_version: "provider_observation/v2",
+      payload_sha256: retainedSha,
+      source_as_of: "2026-07-14",
+      run_id: "29421917838",
+      run_attempt: 1,
+      event_name: "schedule",
+      observed_at: "2026-07-15T14:04:52.506Z",
+      recovered_from_run_id: "29417720099",
+    },
+  };
+  fs.mkdirSync(path.join(observedRoot, "keys"), { recursive: true });
+  fs.mkdirSync(path.join(observedRoot, "lkg"), { recursive: true });
+  fs.writeFileSync(path.join(observedRoot, "keys", "alpha.json"), `${JSON.stringify(observedPrior, null, 2)}\n`);
+  fs.writeFileSync(path.join(observedRoot, "lkg", "alpha.json"), retainedBytes);
+  const observedCommit = observedStore.recordCandidate(v2Args(observedStore, "2026-07-15", 2, naturalRun("observed-migration", "2026-07-16T12:00:00Z")));
+  assert.equal(observedCommit.state.recovery_provenance_contract, undefined,
+    "a prior carrying a recovery_observation cannot be re-declared legacy");
+  assert.equal(observedCommit.state.recovery_observation.run_id, "29421917838", "the real observation stays bound instead");
+}
+
+{
+  // The declaration cannot dodge v2 proof: neither on fresh lineage-less states nor on
+  // states whose recovery really happened under the v2 contract.
+  const dodgeRoot = path.join(root, "legacy-declaration-dodge");
+  const dodgeStore = makeStore(dodgeRoot);
+  const statePath = path.join(dodgeRoot, "keys", "alpha.json");
+  dodgeStore.recordCandidate(v2Args(dodgeStore, "2026-07-14", 1, naturalRun("dodge-seed")));
+  const freshTamper = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  assert.equal(freshTamper.recovered_from_run_id, null);
+  freshTamper.recovery_provenance_contract = "legacy_source_marker/v1";
+  fs.writeFileSync(statePath, `${JSON.stringify(freshTamper, null, 2)}\n`);
+  const freshInspection = dodgeStore.inspectState("alpha.json");
+  assert.equal(freshInspection.kind, "corrupt", "a lineage-less fresh state cannot carry the legacy declaration");
+  assert.match(freshInspection.reason, /legacy recovery provenance declaration is invalid/);
+
+  const provenRoot = path.join(root, "legacy-declaration-dodge-proven");
+  const provenStore = makeStore(provenRoot);
+  const provenStatePath = path.join(provenRoot, "keys", "alpha.json");
+  provenStore.recordCandidate({ key: "alpha.json", payloadBytes: bytes("2026-07-14", 1), canonicalRef: "data/source/alpha.json", run: run("proven-seed") });
+  provenStore.recordFailure({ key: "alpha.json", error: "controlled", failureKind: "controlled", fallbackBytes: bytes("2026-07-14", 1), canonicalRef: "data/source/alpha.json", run: run("proven-chaos") });
+  const provenRecovery = provenStore.recordCandidate(v2Args(provenStore, "2026-07-15", 2, naturalRun("proven-recovery")));
+  assert.equal(provenRecovery.accepted, true);
+  assert.equal(provenRecovery.state.recovery_observation.run_id, "proven-recovery");
+  const dodged = JSON.parse(fs.readFileSync(provenStatePath, "utf8"));
+  delete dodged.recovery_observation;
+  delete dodged.last_recovered_failure;
+  dodged.recovery_provenance_contract = "legacy_source_marker/v1";
+  fs.writeFileSync(provenStatePath, `${JSON.stringify(dodged, null, 2)}\n`);
+  const dodgedInspection = provenStore.inspectState("alpha.json");
+  assert.equal(dodgedInspection.kind, "corrupt",
+    "a real v2 recovery cannot shed its proof by re-declaring itself legacy — the anchor sha contradicts it");
+  assert.match(dodgedInspection.reason, /legacy recovery provenance declaration is invalid/);
+}
+
 for (const [name, malformedState] of [
   ["decode", "{broken\n"],
   ["schema", `${JSON.stringify({ schema_version: "wrong/v1", lane_id: "fixture_lane", key: "alpha.json" })}\n`],

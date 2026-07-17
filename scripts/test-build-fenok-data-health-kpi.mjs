@@ -52,6 +52,7 @@ import {
 import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
+import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
@@ -837,7 +838,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "public projection preserves named recovery proof through an explicit allowlist");
 
   const recoveryIndex = (laneId, keys, overrides = {}) => ({
-    schema_version: "producer-lkg-index/v1",
+    schema_version: "producer-lkg-index/v2",
     lane_id: laneId,
     generated_at: "2026-07-15T01:00:00Z",
     keys,
@@ -1012,7 +1013,7 @@ const TARGET_RECOVERY_FIXTURES = Object.freeze({
 
 function readyRecoveryIndex(laneId, keys, generatedAt = "2026-07-14T11:00:00Z") {
   return {
-    schema_version: "producer-lkg-index/v1",
+    schema_version: "producer-lkg-index/v2",
     lane_id: laneId,
     generated_at: generatedAt,
     keys,
@@ -1241,7 +1242,7 @@ function writeReadyRecoveryIndex(tmp, relPath, laneId, keys, generatedAt = "2026
 
 function hourlyDeferralRecoveryIndex(generatedAt) {
   return {
-    schema_version: "producer-lkg-index/v1",
+    schema_version: "producer-lkg-index/v2",
     lane_id: "yahoo_hourly_ticker",
     generated_at: generatedAt,
     keys: ["TQQQ.json", "SOXL.json"],
@@ -2015,6 +2016,111 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(missingSourceResult.valid, false);
   assert.ok(missingSourceResult.reasons.some((reason) => reason.includes("source_as_of is invalid")));
   ok("hourly recovery validator rejects failed keys outside retry and source-less foreign conflicts");
+}
+
+// 4b-2. Producer index contract versioning: legacy v1 indexes are validated against
+// the contract they were written under; promotion evidence belongs to v2 only.
+{
+  const liveShapeV1 = (laneId, keys) => ({
+    schema_version: "producer-lkg-index/v1",
+    lane_id: laneId,
+    generated_at: "2026-07-16T11:51:09.839Z",
+    keys,
+    counts: { keys: keys.length, fresh: keys.length, lkg: 0, retry: 0, unavailable: 0, failed: 0, recovered: 0 },
+    retry_keys: [],
+    lkg_details: [],
+    recovery_details: [],
+    current_attempt: {
+      run_id: "29495869517", run_attempt: 1, event_name: "schedule", observed_at: "2026-07-16T11:51:09.839Z",
+      attempted: keys.length, successes: keys.length, failed: 0, failed_keys: [],
+    },
+  });
+  const liveV1 = liveShapeV1("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  assert.deepEqual(validateProducerRecoveryAttempt(liveV1), { valid: true, reasons: [] },
+    "the exact committed live v1 index shape is accepted as legacy");
+  assert.deepEqual(
+    validateProducerRecoveryAttempt(liveShapeV1("slickcharts_daily_delivery",
+      ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"])),
+    { valid: true, reasons: [] },
+  );
+
+  const v1BrokenSum = liveShapeV1("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  v1BrokenSum.current_attempt.successes = 1;
+  const v1BrokenSumResult = validateProducerRecoveryAttempt(v1BrokenSum);
+  assert.equal(v1BrokenSumResult.valid, false);
+  assert.ok(v1BrokenSumResult.reasons.includes("current attempt denominator does not reconcile"),
+    "legacy indexes still reconcile attempted = successes + failed");
+
+  for (const fabricate of [
+    (index) => { index.current_attempt.promotion_deferrals = 0; },
+    (index) => { index.current_attempt.promotion_deferral_keys = []; },
+    (index) => { index.promotion_deferral_details = []; },
+  ]) {
+    const fabricated = liveShapeV1("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+    fabricate(fabricated);
+    const result = validateProducerRecoveryAttempt(fabricated);
+    assert.equal(result.valid, false, "a v1 index carrying promotion evidence is a fabrication");
+    assert.ok(result.reasons.includes("legacy v1 index carries promotion evidence it cannot have produced"));
+  }
+
+  for (const version of [undefined, null, "", "producer-lkg-index/v3", "wrong/v1"]) {
+    const unknown = liveShapeV1("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+    if (version === undefined) delete unknown.schema_version;
+    else unknown.schema_version = version;
+    const result = validateProducerRecoveryAttempt(unknown);
+    assert.equal(result.valid, false, `schema_version ${String(version)} must hard-fail`);
+    assert.ok(result.reasons.some((reason) => reason.includes("not a supported producer-lkg-index contract")));
+  }
+
+  const fullV2 = readyRecoveryIndex("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  assert.deepEqual(validateProducerRecoveryAttempt(fullV2), { valid: true, reasons: [] },
+    "a complete v2 index passes the full current invariants");
+  const v2MissingPromotion = readyRecoveryIndex("yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  delete v2MissingPromotion.current_attempt.promotion_deferrals;
+  assert.equal(validateProducerRecoveryAttempt(v2MissingPromotion).valid, false,
+    "a v2 index cannot drop its promotion accounting");
+  ok("producer index contract branches by declared schema version and hard-fails unknown versions");
+}
+
+// 4b-3. ROUND-TRIP: the object the real store's buildIndex writes must pass the real
+// validator — the structural gap that let producer and checker diverge silently.
+{
+  const tmp = mkTmp("producer-index-roundtrip");
+  const stateRoot = path.join(tmp, "data", "admin", "fixture-lane");
+  const store = new ProducerLkgStateStore({
+    root: stateRoot,
+    laneId: "fixture_lane",
+    publicRoot: "data/admin/fixture-lane",
+    validatePayload: (key, payload) => payload?.schema_version === "fixture/v1" && payload?.key === key,
+    progressMarker: (_key, payload) => payload?.source_as_of ?? null,
+  });
+  const payload = (key, sourceAsOf, value) => Buffer.from(`${JSON.stringify({
+    schema_version: "fixture/v1", key, source_as_of: sourceAsOf, value,
+  }, null, 2)}\n`);
+  const run = (runId, eventName, observedAt, natural = eventName === "schedule") => ({
+    run_id: runId, run_attempt: 1, event_name: eventName, natural, observed_at: observedAt,
+  });
+  const seedRun = run("rt-seed", "schedule", "2026-07-15T01:00:00Z");
+  for (const key of ["alpha.json", "beta.json", "gamma.json"]) {
+    store.recordCandidate({ key, payloadBytes: payload(key, "2026-07-14", 1), canonicalRef: `data/source/${key}`, run: seedRun });
+  }
+  // beta enters retained-LKG retry; gamma records a promotion deferral in the current attempt.
+  const failRun = run("rt-fail", "schedule", "2026-07-15T02:00:00Z");
+  store.recordFailure({ key: "beta.json", error: "transport reset", failureKind: "transport", fallbackBytes: payload("beta.json", "2026-07-14", 1), canonicalRef: "data/source/beta.json", run: failRun });
+  store.recordFailure({ key: "gamma.json", error: "transport reset", failureKind: "transport", fallbackBytes: payload("gamma.json", "2026-07-14", 1), canonicalRef: "data/source/gamma.json", run: failRun });
+  const currentRun = run("rt-current", "workflow_dispatch", "2026-07-15T03:00:00Z", false);
+  store.recordCandidate({ key: "alpha.json", payloadBytes: payload("alpha.json", "2026-07-15", 2), canonicalRef: "data/source/alpha.json", run: currentRun });
+  store.recordFailure({ key: "beta.json", error: "transport reset", failureKind: "transport", fallbackBytes: null, canonicalRef: "data/source/beta.json", run: currentRun });
+  store.recordCandidate({ key: "gamma.json", payloadBytes: payload("gamma.json", "2026-07-15", 2), canonicalRef: "data/source/gamma.json", run: currentRun });
+  const index = store.buildIndex({ keys: ["alpha.json", "beta.json", "gamma.json"], run: currentRun });
+  assert.equal(index.schema_version, "producer-lkg-index/v2", "the store now writes the v2 index contract");
+  assert.deepEqual(index.current_attempt.promotion_deferral_keys, ["gamma.json"]);
+  assert.deepEqual(validateProducerRecoveryAttempt(index), { valid: true, reasons: [] },
+    "buildIndex output must round-trip through validateProducerRecoveryAttempt");
+  const persisted = JSON.parse(fs.readFileSync(path.join(stateRoot, "index.json"), "utf8"));
+  assert.deepEqual(validateProducerRecoveryAttempt(persisted), { valid: true, reasons: [] },
+    "the persisted index bytes round-trip too");
+  ok("real buildIndex output round-trips through the real recovery-attempt validator");
 }
 
 // 4c. Yahoo lane count/attempt evidence is numeric and arithmetically closed.
