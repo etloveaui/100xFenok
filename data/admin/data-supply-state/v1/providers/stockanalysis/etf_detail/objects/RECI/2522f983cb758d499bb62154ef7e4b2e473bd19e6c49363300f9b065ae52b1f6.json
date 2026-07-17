@@ -1,0 +1,2117 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "RECI",
+  "source_as_of": "2026-07-16T20:00:00Z",
+  "fetched_at": "2026-07-17T01:58:07Z",
+  "endpoints": {
+    "holdings": "/etf/reci/holdings/__data.json",
+    "overview": "/etf/reci/__data.json",
+    "quote": "/api/quotes/e/RECI",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/RECI/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/RECI/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/RECI/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/RECI/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/RECI/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/RECI/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "COLUMBIA SHORT TERM CASH FUND",
+        "weight_pct": 20.22,
+        "shares": 1016511,
+        "raw": {
+          "no": 1,
+          "n": "COLUMBIA SHORT TERM CASH FUND",
+          "as": "20.22%",
+          "sh": "1,016,511"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 9.61,
+        "shares": 2280,
+        "raw": {
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "9.61%",
+          "sh": "2,280"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 9.37,
+        "shares": 1495,
+        "raw": {
+          "no": 3,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "9.37%",
+          "sh": "1,495"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 4.21,
+        "shares": 320,
+        "raw": {
+          "no": 4,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "4.21%",
+          "sh": "320"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 1.86,
+        "shares": 95,
+        "raw": {
+          "no": 5,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "1.86%",
+          "sh": "95"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "MA",
+        "name": "Mastercard Incorporated",
+        "weight_pct": 1.82,
+        "shares": 170,
+        "raw": {
+          "no": 6,
+          "n": "Mastercard Incorporated",
+          "s": "$MA",
+          "as": "1.82%",
+          "sh": "170"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "BAC",
+        "name": "Bank of America Corporation",
+        "weight_pct": 1.63,
+        "shares": 1350,
+        "raw": {
+          "no": 7,
+          "n": "Bank of America Corporation",
+          "s": "$BAC",
+          "as": "1.63%",
+          "sh": "1,350"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "#VOX",
+        "name": "Vanguard Communication Services ETF",
+        "weight_pct": 1.29,
+        "shares": 340,
+        "raw": {
+          "no": 8,
+          "n": "Vanguard Communication Services ETF",
+          "s": "#VOX",
+          "as": "1.29%",
+          "sh": "340"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "TJX",
+        "name": "The TJX Companies, Inc.",
+        "weight_pct": 1.23,
+        "shares": 410,
+        "raw": {
+          "no": 9,
+          "n": "The TJX Companies, Inc.",
+          "s": "$TJX",
+          "as": "1.23%",
+          "sh": "410"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "CVX",
+        "name": "Chevron Corporation",
+        "weight_pct": 1.12,
+        "shares": 310,
+        "raw": {
+          "no": 10,
+          "n": "Chevron Corporation",
+          "s": "$CVX",
+          "as": "1.12%",
+          "sh": "310"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "#XLC",
+        "name": "State Street Communication Services Select Sector SPDR ETF",
+        "weight_pct": 1.12,
+        "shares": 505,
+        "raw": {
+          "no": 11,
+          "n": "State Street Communication Services Select Sector SPDR ETF",
+          "s": "#XLC",
+          "as": "1.12%",
+          "sh": "505"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "MO",
+        "name": "Altria Group, Inc.",
+        "weight_pct": 1.03,
+        "shares": 735,
+        "raw": {
+          "no": 12,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "1.03%",
+          "sh": "735"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "C",
+        "name": "Citigroup Inc.",
+        "weight_pct": 0.92,
+        "shares": 345,
+        "raw": {
+          "no": 13,
+          "n": "Citigroup Inc.",
+          "s": "$C",
+          "as": "0.92%",
+          "sh": "345"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 0.91,
+        "shares": 390,
+        "raw": {
+          "no": 14,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "0.91%",
+          "sh": "390"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "CVS",
+        "name": "CVS Health Corporation",
+        "weight_pct": 0.89,
+        "shares": 420,
+        "raw": {
+          "no": 15,
+          "n": "CVS Health Corporation",
+          "s": "$CVS",
+          "as": "0.89%",
+          "sh": "420"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SBUX",
+        "name": "Starbucks Corporation",
+        "weight_pct": 0.87,
+        "shares": 410,
+        "raw": {
+          "no": 16,
+          "n": "Starbucks Corporation",
+          "s": "$SBUX",
+          "as": "0.87%",
+          "sh": "410"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "BMY",
+        "name": "Bristol-Myers Squibb Company",
+        "weight_pct": 0.8,
+        "shares": 710,
+        "raw": {
+          "no": 17,
+          "n": "Bristol-Myers Squibb Company",
+          "s": "$BMY",
+          "as": "0.80%",
+          "sh": "710"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight_pct": 0.71,
+        "shares": 60,
+        "raw": {
+          "no": 18,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "0.71%",
+          "sh": "60"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 0.69,
+        "shares": 100,
+        "raw": {
+          "no": 19,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "0.69%",
+          "sh": "100"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "SCHW",
+        "name": "The Charles Schwab Corporation",
+        "weight_pct": 0.68,
+        "shares": 340,
+        "raw": {
+          "no": 20,
+          "n": "The Charles Schwab Corporation",
+          "s": "$SCHW",
+          "as": "0.68%",
+          "sh": "340"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "ELV",
+        "name": "Elevance Health, Inc.",
+        "weight_pct": 0.68,
+        "shares": 80,
+        "raw": {
+          "no": 21,
+          "n": "Elevance Health, Inc.",
+          "s": "$ELV",
+          "as": "0.68%",
+          "sh": "80"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "#FCOM",
+        "name": "Fidelity MSCI Communication Services Index ETF",
+        "weight_pct": 0.67,
+        "shares": 470,
+        "raw": {
+          "no": 22,
+          "n": "Fidelity MSCI Communication Services Index ETF",
+          "s": "#FCOM",
+          "as": "0.67%",
+          "sh": "470"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "PH",
+        "name": "Parker-Hannifin Corporation",
+        "weight_pct": 0.67,
+        "shares": 35,
+        "raw": {
+          "no": 23,
+          "n": "Parker-Hannifin Corporation",
+          "s": "$PH",
+          "as": "0.67%",
+          "sh": "35"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "CL",
+        "name": "Colgate-Palmolive Company",
+        "weight_pct": 0.63,
+        "shares": 345,
+        "raw": {
+          "no": 24,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "0.63%",
+          "sh": "345"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "ADP",
+        "name": "Automatic Data Processing, Inc.",
+        "weight_pct": 0.61,
+        "shares": 125,
+        "raw": {
+          "no": 25,
+          "n": "Automatic Data Processing, Inc.",
+          "s": "$ADP",
+          "as": "0.61%",
+          "sh": "125"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 352,
+    "holdings_updated": "Jul 14, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$5.00M",
+      "expenseRatio": "0.30%",
+      "sharesOut": "250,050",
+      "inception": "Jul 14, 2026",
+      "provider_page": "columbia-threadneedle",
+      "etf_website": "https://www.columbiathreadneedleus.com/investment-products/exchange-traded-funds/Columbia-Research-Enhanced-Core-Premium-Income-ETF/Class-ETF/details/?cusip=19761L730"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "c": 0.05,
+      "e": false,
+      "h": 20.21,
+      "l": 20.21,
+      "o": 20.21,
+      "p": 20.2052,
+      "u": "Jul 16, 2026, 4:00 PM EDT",
+      "v": 2,
+      "cl": 20.16,
+      "cp": 0.22,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 20.21,
+      "td": "2026-07-16",
+      "ts": 1784232000000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1784246400026.0432,
+      "exp": 1784276100000,
+      "fms": "closed",
+      "h52": 20.2052,
+      "l52": 20.12,
+      "uid": "RECI",
+      "days": 0,
+      "symbol": "RECI"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-15",
+          "o": 20.161,
+          "h": 20.161,
+          "l": 20.161,
+          "c": 20.161,
+          "a": 20.1609,
+          "v": 11,
+          "ch": 0.17
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "RECI",
+        "lastChecked": 1784248888387,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$5.00M",
+      "nav": null,
+      "expenseRatio": "0.30%",
+      "peRatio": null,
+      "sharesOut": "250,050",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 352,
+      "inception": "Jul 14, 2026",
+      "chart": {
+        "expiration": 1784249320712,
+        "data": [
+          {
+            "t": 1784194200
+          },
+          {
+            "t": 1784194260
+          },
+          {
+            "t": 1784194320
+          },
+          {
+            "t": 1784194380
+          },
+          {
+            "t": 1784194440
+          },
+          {
+            "t": 1784194500
+          },
+          {
+            "t": 1784194560
+          },
+          {
+            "t": 1784194620
+          },
+          {
+            "t": 1784194680
+          },
+          {
+            "t": 1784194740
+          },
+          {
+            "t": 1784194800
+          },
+          {
+            "t": 1784194860
+          },
+          {
+            "t": 1784194920
+          },
+          {
+            "t": 1784194980
+          },
+          {
+            "t": 1784195040
+          },
+          {
+            "t": 1784195100
+          },
+          {
+            "c": 20.161,
+            "o": 20.161,
+            "t": 1784195160
+          },
+          {
+            "t": 1784195219
+          },
+          {
+            "t": 1784195279
+          },
+          {
+            "t": 1784195339
+          },
+          {
+            "t": 1784195399
+          },
+          {
+            "t": 1784195459
+          },
+          {
+            "t": 1784195519
+          },
+          {
+            "t": 1784195579
+          },
+          {
+            "t": 1784195639
+          },
+          {
+            "t": 1784195699
+          },
+          {
+            "t": 1784195759
+          },
+          {
+            "t": 1784195819
+          },
+          {
+            "t": 1784195879
+          },
+          {
+            "t": 1784195939
+          },
+          {
+            "t": 1784195999
+          },
+          {
+            "t": 1784196059
+          },
+          {
+            "t": 1784196119
+          },
+          {
+            "t": 1784196179
+          },
+          {
+            "t": 1784196239
+          },
+          {
+            "t": 1784196299
+          },
+          {
+            "t": 1784196359
+          },
+          {
+            "t": 1784196419
+          },
+          {
+            "t": 1784196479
+          },
+          {
+            "t": 1784196539
+          },
+          {
+            "t": 1784196599
+          },
+          {
+            "t": 1784196659
+          },
+          {
+            "t": 1784196719
+          },
+          {
+            "t": 1784196779
+          },
+          {
+            "t": 1784196839
+          },
+          {
+            "t": 1784196899
+          },
+          {
+            "t": 1784196959
+          },
+          {
+            "t": 1784197019
+          },
+          {
+            "t": 1784197079
+          },
+          {
+            "t": 1784197139
+          },
+          {
+            "t": 1784197199
+          },
+          {
+            "t": 1784197259
+          },
+          {
+            "t": 1784197319
+          },
+          {
+            "t": 1784197379
+          },
+          {
+            "t": 1784197439
+          },
+          {
+            "t": 1784197499
+          },
+          {
+            "t": 1784197559
+          },
+          {
+            "t": 1784197619
+          },
+          {
+            "t": 1784197679
+          },
+          {
+            "t": 1784197739
+          },
+          {
+            "t": 1784197799
+          },
+          {
+            "t": 1784197859
+          },
+          {
+            "t": 1784197919
+          },
+          {
+            "t": 1784197979
+          },
+          {
+            "t": 1784198039
+          },
+          {
+            "t": 1784198099
+          },
+          {
+            "t": 1784198159
+          },
+          {
+            "t": 1784198219
+          },
+          {
+            "t": 1784198279
+          },
+          {
+            "t": 1784198339
+          },
+          {
+            "t": 1784198399
+          },
+          {
+            "t": 1784198459
+          },
+          {
+            "t": 1784198519
+          },
+          {
+            "t": 1784198579
+          },
+          {
+            "t": 1784198639
+          },
+          {
+            "t": 1784198699
+          },
+          {
+            "t": 1784198759
+          },
+          {
+            "t": 1784198819
+          },
+          {
+            "t": 1784198879
+          },
+          {
+            "t": 1784198939
+          },
+          {
+            "t": 1784198999
+          },
+          {
+            "t": 1784199059
+          },
+          {
+            "t": 1784199119
+          },
+          {
+            "t": 1784199179
+          },
+          {
+            "t": 1784199239
+          },
+          {
+            "t": 1784199299
+          },
+          {
+            "t": 1784199359
+          },
+          {
+            "t": 1784199419
+          },
+          {
+            "t": 1784199479
+          },
+          {
+            "t": 1784199539
+          },
+          {
+            "t": 1784199599
+          },
+          {
+            "t": 1784199659
+          },
+          {
+            "t": 1784199719
+          },
+          {
+            "t": 1784199779
+          },
+          {
+            "t": 1784199839
+          },
+          {
+            "t": 1784199899
+          },
+          {
+            "t": 1784199959
+          },
+          {
+            "t": 1784200019
+          },
+          {
+            "t": 1784200079
+          },
+          {
+            "t": 1784200139
+          },
+          {
+            "t": 1784200199
+          },
+          {
+            "t": 1784200259
+          },
+          {
+            "t": 1784200319
+          },
+          {
+            "t": 1784200379
+          },
+          {
+            "t": 1784200439
+          },
+          {
+            "t": 1784200499
+          },
+          {
+            "t": 1784200559
+          },
+          {
+            "t": 1784200619
+          },
+          {
+            "t": 1784200679
+          },
+          {
+            "t": 1784200739
+          },
+          {
+            "t": 1784200799
+          },
+          {
+            "t": 1784200859
+          },
+          {
+            "t": 1784200919
+          },
+          {
+            "t": 1784200979
+          },
+          {
+            "t": 1784201039
+          },
+          {
+            "t": 1784201099
+          },
+          {
+            "t": 1784201159
+          },
+          {
+            "t": 1784201219
+          },
+          {
+            "t": 1784201279
+          },
+          {
+            "t": 1784201339
+          },
+          {
+            "t": 1784201399
+          },
+          {
+            "t": 1784201459
+          },
+          {
+            "t": 1784201519
+          },
+          {
+            "t": 1784201579
+          },
+          {
+            "t": 1784201639
+          },
+          {
+            "t": 1784201699
+          },
+          {
+            "t": 1784201759
+          },
+          {
+            "t": 1784201819
+          },
+          {
+            "t": 1784201879
+          },
+          {
+            "t": 1784201939
+          },
+          {
+            "t": 1784201999
+          },
+          {
+            "t": 1784202059
+          },
+          {
+            "t": 1784202119
+          },
+          {
+            "t": 1784202179
+          },
+          {
+            "t": 1784202239
+          },
+          {
+            "t": 1784202299
+          },
+          {
+            "t": 1784202359
+          },
+          {
+            "t": 1784202419
+          },
+          {
+            "t": 1784202479
+          },
+          {
+            "t": 1784202539
+          },
+          {
+            "t": 1784202599
+          },
+          {
+            "t": 1784202659
+          },
+          {
+            "t": 1784202719
+          },
+          {
+            "t": 1784202779
+          },
+          {
+            "t": 1784202839
+          },
+          {
+            "t": 1784202899
+          },
+          {
+            "t": 1784202959
+          },
+          {
+            "t": 1784203019
+          },
+          {
+            "t": 1784203079
+          },
+          {
+            "t": 1784203139
+          },
+          {
+            "t": 1784203199
+          },
+          {
+            "t": 1784203259
+          },
+          {
+            "t": 1784203319
+          },
+          {
+            "t": 1784203379
+          },
+          {
+            "t": 1784203439
+          },
+          {
+            "t": 1784203499
+          },
+          {
+            "t": 1784203559
+          },
+          {
+            "t": 1784203619
+          },
+          {
+            "t": 1784203679
+          },
+          {
+            "t": 1784203739
+          },
+          {
+            "t": 1784203799
+          },
+          {
+            "t": 1784203859
+          },
+          {
+            "t": 1784203919
+          },
+          {
+            "t": 1784203979
+          },
+          {
+            "t": 1784204039
+          },
+          {
+            "t": 1784204099
+          },
+          {
+            "t": 1784204159
+          },
+          {
+            "t": 1784204219
+          },
+          {
+            "t": 1784204279
+          },
+          {
+            "t": 1784204339
+          },
+          {
+            "t": 1784204399
+          },
+          {
+            "t": 1784204459
+          },
+          {
+            "t": 1784204519
+          },
+          {
+            "t": 1784204579
+          },
+          {
+            "t": 1784204639
+          },
+          {
+            "t": 1784204699
+          },
+          {
+            "t": 1784204759
+          },
+          {
+            "t": 1784204819
+          },
+          {
+            "t": 1784204879
+          },
+          {
+            "t": 1784204939
+          },
+          {
+            "t": 1784204999
+          },
+          {
+            "t": 1784205059
+          },
+          {
+            "t": 1784205119
+          },
+          {
+            "t": 1784205179
+          },
+          {
+            "t": 1784205239
+          },
+          {
+            "t": 1784205299
+          },
+          {
+            "t": 1784205359
+          },
+          {
+            "t": 1784205419
+          },
+          {
+            "t": 1784205479
+          },
+          {
+            "t": 1784205539
+          },
+          {
+            "t": 1784205599
+          },
+          {
+            "t": 1784205659
+          },
+          {
+            "t": 1784205719
+          },
+          {
+            "t": 1784205779
+          },
+          {
+            "t": 1784205839
+          },
+          {
+            "t": 1784205899
+          },
+          {
+            "t": 1784205959
+          },
+          {
+            "t": 1784206019
+          },
+          {
+            "t": 1784206079
+          },
+          {
+            "t": 1784206139
+          },
+          {
+            "t": 1784206199
+          },
+          {
+            "t": 1784206259
+          },
+          {
+            "t": 1784206319
+          },
+          {
+            "t": 1784206379
+          },
+          {
+            "t": 1784206439
+          },
+          {
+            "t": 1784206499
+          },
+          {
+            "t": 1784206559
+          },
+          {
+            "t": 1784206619
+          },
+          {
+            "t": 1784206679
+          },
+          {
+            "t": 1784206739
+          },
+          {
+            "t": 1784206799
+          },
+          {
+            "t": 1784206859
+          },
+          {
+            "t": 1784206919
+          },
+          {
+            "t": 1784206979
+          },
+          {
+            "t": 1784207039
+          },
+          {
+            "t": 1784207099
+          },
+          {
+            "t": 1784207159
+          },
+          {
+            "t": 1784207219
+          },
+          {
+            "t": 1784207279
+          },
+          {
+            "t": 1784207339
+          },
+          {
+            "t": 1784207399
+          },
+          {
+            "t": 1784207459
+          },
+          {
+            "t": 1784207519
+          },
+          {
+            "t": 1784207579
+          },
+          {
+            "t": 1784207639
+          },
+          {
+            "t": 1784207699
+          },
+          {
+            "t": 1784207759
+          },
+          {
+            "t": 1784207819
+          },
+          {
+            "t": 1784207879
+          },
+          {
+            "t": 1784207939
+          },
+          {
+            "t": 1784207999
+          },
+          {
+            "t": 1784208059
+          },
+          {
+            "t": 1784208119
+          },
+          {
+            "t": 1784208179
+          },
+          {
+            "t": 1784208239
+          },
+          {
+            "t": 1784208299
+          },
+          {
+            "t": 1784208359
+          },
+          {
+            "t": 1784208419
+          },
+          {
+            "t": 1784208479
+          },
+          {
+            "t": 1784208539
+          },
+          {
+            "t": 1784208599
+          },
+          {
+            "t": 1784208659
+          },
+          {
+            "t": 1784208719
+          },
+          {
+            "t": 1784208779
+          },
+          {
+            "t": 1784208839
+          },
+          {
+            "t": 1784208899
+          },
+          {
+            "t": 1784208959
+          },
+          {
+            "t": 1784209019
+          },
+          {
+            "t": 1784209079
+          },
+          {
+            "t": 1784209139
+          },
+          {
+            "t": 1784209199
+          },
+          {
+            "t": 1784209259
+          },
+          {
+            "t": 1784209319
+          },
+          {
+            "t": 1784209379
+          },
+          {
+            "t": 1784209439
+          },
+          {
+            "t": 1784209499
+          },
+          {
+            "t": 1784209559
+          },
+          {
+            "t": 1784209619
+          },
+          {
+            "t": 1784209679
+          },
+          {
+            "t": 1784209739
+          },
+          {
+            "t": 1784209799
+          },
+          {
+            "t": 1784209859
+          },
+          {
+            "t": 1784209919
+          },
+          {
+            "t": 1784209979
+          },
+          {
+            "t": 1784210039
+          },
+          {
+            "t": 1784210099
+          },
+          {
+            "t": 1784210159
+          },
+          {
+            "t": 1784210219
+          },
+          {
+            "t": 1784210279
+          },
+          {
+            "t": 1784210339
+          },
+          {
+            "t": 1784210399
+          },
+          {
+            "t": 1784210459
+          },
+          {
+            "t": 1784210519
+          },
+          {
+            "t": 1784210579
+          },
+          {
+            "t": 1784210639
+          },
+          {
+            "t": 1784210699
+          },
+          {
+            "t": 1784210759
+          },
+          {
+            "t": 1784210819
+          },
+          {
+            "t": 1784210879
+          },
+          {
+            "t": 1784210939
+          },
+          {
+            "t": 1784210999
+          },
+          {
+            "t": 1784211059
+          },
+          {
+            "t": 1784211119
+          },
+          {
+            "t": 1784211179
+          },
+          {
+            "t": 1784211239
+          },
+          {
+            "t": 1784211299
+          },
+          {
+            "t": 1784211359
+          },
+          {
+            "t": 1784211419
+          },
+          {
+            "t": 1784211479
+          },
+          {
+            "t": 1784211539
+          },
+          {
+            "t": 1784211599
+          },
+          {
+            "t": 1784211659
+          },
+          {
+            "t": 1784211719
+          },
+          {
+            "t": 1784211779
+          },
+          {
+            "t": 1784211839
+          },
+          {
+            "t": 1784211899
+          },
+          {
+            "t": 1784211959
+          },
+          {
+            "t": 1784212019
+          },
+          {
+            "t": 1784212079
+          },
+          {
+            "t": 1784212139
+          },
+          {
+            "t": 1784212199
+          },
+          {
+            "t": 1784212259
+          },
+          {
+            "t": 1784212319
+          },
+          {
+            "t": 1784212379
+          },
+          {
+            "t": 1784212439
+          },
+          {
+            "t": 1784212499
+          },
+          {
+            "t": 1784212559
+          },
+          {
+            "t": 1784212619
+          },
+          {
+            "t": 1784212679
+          },
+          {
+            "t": 1784212739
+          },
+          {
+            "t": 1784212799
+          },
+          {
+            "t": 1784212859
+          },
+          {
+            "t": 1784212919
+          },
+          {
+            "t": 1784212979
+          },
+          {
+            "t": 1784213039
+          },
+          {
+            "t": 1784213099
+          },
+          {
+            "t": 1784213159
+          },
+          {
+            "t": 1784213219
+          },
+          {
+            "t": 1784213279
+          },
+          {
+            "t": 1784213339
+          },
+          {
+            "t": 1784213399
+          },
+          {
+            "t": 1784213459
+          },
+          {
+            "t": 1784213519
+          },
+          {
+            "t": 1784213579
+          },
+          {
+            "t": 1784213639
+          },
+          {
+            "t": 1784213699
+          },
+          {
+            "t": 1784213759
+          },
+          {
+            "t": 1784213819
+          },
+          {
+            "t": 1784213879
+          },
+          {
+            "t": 1784213939
+          },
+          {
+            "t": 1784213999
+          },
+          {
+            "t": 1784214059
+          },
+          {
+            "t": 1784214119
+          },
+          {
+            "t": 1784214179
+          },
+          {
+            "t": 1784214239
+          },
+          {
+            "t": 1784214299
+          },
+          {
+            "t": 1784214359
+          },
+          {
+            "t": 1784214419
+          },
+          {
+            "t": 1784214479
+          },
+          {
+            "t": 1784214539
+          },
+          {
+            "t": 1784214599
+          },
+          {
+            "t": 1784214659
+          },
+          {
+            "t": 1784214719
+          },
+          {
+            "t": 1784214779
+          },
+          {
+            "t": 1784214839
+          },
+          {
+            "t": 1784214899
+          },
+          {
+            "t": 1784214959
+          },
+          {
+            "t": 1784215019
+          },
+          {
+            "t": 1784215079
+          },
+          {
+            "t": 1784215139
+          },
+          {
+            "t": 1784215199
+          },
+          {
+            "t": 1784215259
+          },
+          {
+            "t": 1784215319
+          },
+          {
+            "t": 1784215379
+          },
+          {
+            "t": 1784215439
+          },
+          {
+            "t": 1784215499
+          },
+          {
+            "t": 1784215559
+          },
+          {
+            "t": 1784215619
+          },
+          {
+            "t": 1784215679
+          },
+          {
+            "t": 1784215739
+          },
+          {
+            "t": 1784215799
+          },
+          {
+            "t": 1784215859
+          },
+          {
+            "t": 1784215919
+          },
+          {
+            "t": 1784215979
+          },
+          {
+            "t": 1784216039
+          },
+          {
+            "t": 1784216099
+          },
+          {
+            "t": 1784216159
+          },
+          {
+            "t": 1784216219
+          },
+          {
+            "t": 1784216279
+          },
+          {
+            "t": 1784216339
+          },
+          {
+            "t": 1784216399
+          },
+          {
+            "t": 1784216459
+          },
+          {
+            "t": 1784216519
+          },
+          {
+            "t": 1784216579
+          },
+          {
+            "t": 1784216639
+          },
+          {
+            "t": 1784216699
+          },
+          {
+            "t": 1784216759
+          },
+          {
+            "t": 1784216819
+          },
+          {
+            "t": 1784216879
+          },
+          {
+            "t": 1784216939
+          },
+          {
+            "t": 1784216999
+          },
+          {
+            "t": 1784217059
+          },
+          {
+            "t": 1784217119
+          },
+          {
+            "t": 1784217179
+          },
+          {
+            "t": 1784217239
+          },
+          {
+            "t": 1784217299
+          },
+          {
+            "t": 1784217359
+          },
+          {
+            "t": 1784217419
+          },
+          {
+            "t": 1784217479
+          },
+          {
+            "t": 1784217539
+          },
+          {
+            "t": 1784217599
+          },
+          {
+            "t": 1784217600
+          }
+        ]
+      },
+      "description": "The Columbia Research Enhanced Core Premium Income ETF (RECI) is an exchange-traded fund that mostly invests in total market equity. Columbia Research Enhanced Core Premium Income ETF (the Fund) seeks high income, with a secondary objective of capital appreciation. RECI was launched on Jul 14, 2026 and is issued by Columbia Threadneedle.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "RECI"
+        ],
+        [
+          "Provider",
+          "Columbia Threadneedle"
+        ]
+      ],
+      "etf_website": "https://www.columbiathreadneedleus.com/investment-products/exchange-traded-funds/Columbia-Research-Enhanced-Core-Premium-Income-ETF/Class-ETF/details/?cusip=19761L730",
+      "provider_page": "columbia-threadneedle",
+      "holdingsTable": {
+        "count": 352,
+        "updated": "Jul 14, 2026",
+        "top10": 52.36,
+        "holdings": [
+          {
+            "n": "COLUMBIA SHORT TERM CASH FUND",
+            "as": "20.22%",
+            "sh": "1,016,511"
+          },
+          {
+            "n": "NVIDIA Corporation",
+            "s": "$NVDA",
+            "as": "9.61%",
+            "sh": "2,280"
+          },
+          {
+            "n": "Apple Inc.",
+            "s": "$AAPL",
+            "as": "9.37%",
+            "sh": "1,495"
+          },
+          {
+            "n": "Meta Platforms, Inc.",
+            "s": "$META",
+            "as": "4.21%",
+            "sh": "320"
+          },
+          {
+            "n": "Micron Technology, Inc.",
+            "s": "$MU",
+            "as": "1.86%",
+            "sh": "95"
+          },
+          {
+            "n": "Mastercard Incorporated",
+            "s": "$MA",
+            "as": "1.82%",
+            "sh": "170"
+          },
+          {
+            "n": "Bank of America Corporation",
+            "s": "$BAC",
+            "as": "1.63%",
+            "sh": "1,350"
+          },
+          {
+            "n": "Vanguard Communication Services ETF",
+            "s": "#VOX",
+            "as": "1.29%",
+            "sh": "340"
+          },
+          {
+            "n": "The TJX Companies, Inc.",
+            "s": "$TJX",
+            "as": "1.23%",
+            "sh": "410"
+          },
+          {
+            "n": "Chevron Corporation",
+            "s": "$CVX",
+            "as": "1.12%",
+            "sh": "310"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784265623710",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260714686310/en/Columbia-Threadneedle-Investments-Launches-Two-New-Premium-Income-ETFs/",
+            "img": "https://cdn.snapi.dev/images/v1/t/l/t/press7-3800434.jpg",
+            "title": "Columbia Threadneedle Investments Launches Two New Premium Income ETFs",
+            "text": "BOSTON--(BUSINESS WIRE)--Columbia Threadneedle Investments today announced the launch of two new actively managed exchange traded funds (ETFs) that seek high income while maintaining equity market exp...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "#CDPI"
+            ],
+            "time": "Jul 14, 2026, 9:20 AM EDT",
+            "ago": "2 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": null,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 20.127
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "COLUMBIA SHORT TERM CASH FUND",
+          "as": "20.22%",
+          "sh": "1,016,511"
+        },
+        {
+          "no": 2,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "9.61%",
+          "sh": "2,280"
+        },
+        {
+          "no": 3,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "9.37%",
+          "sh": "1,495"
+        },
+        {
+          "no": 4,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "4.21%",
+          "sh": "320"
+        },
+        {
+          "no": 5,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "1.86%",
+          "sh": "95"
+        },
+        {
+          "no": 6,
+          "n": "Mastercard Incorporated",
+          "s": "$MA",
+          "as": "1.82%",
+          "sh": "170"
+        },
+        {
+          "no": 7,
+          "n": "Bank of America Corporation",
+          "s": "$BAC",
+          "as": "1.63%",
+          "sh": "1,350"
+        },
+        {
+          "no": 8,
+          "n": "Vanguard Communication Services ETF",
+          "s": "#VOX",
+          "as": "1.29%",
+          "sh": "340"
+        },
+        {
+          "no": 9,
+          "n": "The TJX Companies, Inc.",
+          "s": "$TJX",
+          "as": "1.23%",
+          "sh": "410"
+        },
+        {
+          "no": 10,
+          "n": "Chevron Corporation",
+          "s": "$CVX",
+          "as": "1.12%",
+          "sh": "310"
+        },
+        {
+          "no": 11,
+          "n": "State Street Communication Services Select Sector SPDR ETF",
+          "s": "#XLC",
+          "as": "1.12%",
+          "sh": "505"
+        },
+        {
+          "no": 12,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "1.03%",
+          "sh": "735"
+        },
+        {
+          "no": 13,
+          "n": "Citigroup Inc.",
+          "s": "$C",
+          "as": "0.92%",
+          "sh": "345"
+        },
+        {
+          "no": 14,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "0.91%",
+          "sh": "390"
+        },
+        {
+          "no": 15,
+          "n": "CVS Health Corporation",
+          "s": "$CVS",
+          "as": "0.89%",
+          "sh": "420"
+        },
+        {
+          "no": 16,
+          "n": "Starbucks Corporation",
+          "s": "$SBUX",
+          "as": "0.87%",
+          "sh": "410"
+        },
+        {
+          "no": 17,
+          "n": "Bristol-Myers Squibb Company",
+          "s": "$BMY",
+          "as": "0.80%",
+          "sh": "710"
+        },
+        {
+          "no": 18,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "0.71%",
+          "sh": "60"
+        },
+        {
+          "no": 19,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "0.69%",
+          "sh": "100"
+        },
+        {
+          "no": 20,
+          "n": "The Charles Schwab Corporation",
+          "s": "$SCHW",
+          "as": "0.68%",
+          "sh": "340"
+        },
+        {
+          "no": 21,
+          "n": "Elevance Health, Inc.",
+          "s": "$ELV",
+          "as": "0.68%",
+          "sh": "80"
+        },
+        {
+          "no": 22,
+          "n": "Fidelity MSCI Communication Services Index ETF",
+          "s": "#FCOM",
+          "as": "0.67%",
+          "sh": "470"
+        },
+        {
+          "no": 23,
+          "n": "Parker-Hannifin Corporation",
+          "s": "$PH",
+          "as": "0.67%",
+          "sh": "35"
+        },
+        {
+          "no": 24,
+          "n": "Colgate-Palmolive Company",
+          "s": "$CL",
+          "as": "0.63%",
+          "sh": "345"
+        },
+        {
+          "no": 25,
+          "n": "Automatic Data Processing, Inc.",
+          "s": "$ADP",
+          "as": "0.61%",
+          "sh": "125"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "Columbia Threadneedle Investments Launches Two New Premium Income ETFs",
+          "u": "https://www.businesswire.com/news/home/20260714686310/en/Columbia-Threadneedle-Investments-Launches-Two-New-Premium-Income-ETFs/",
+          "n": "Business Wire",
+          "d": "2 days ago"
+        }
+      ],
+      "infoBox": "RECI is an equity ETF with a total of 352 individual holdings. The top holdings are COLUMBIA SHORT TERM CASH FUND stock at 20.22%, NVIDIA at 9.61%, Apple at 9.37%, Meta Platforms at 4.21%, and Micron Technology at 1.86%.",
+      "infoTable": {
+        "count": 352,
+        "top10": 52.36,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 5003600.5,
+        "peRatio": null
+      },
+      "date": "Jul 14, 2026",
+      "count": 352,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 14, 2026",
+        "lastChecked": 1784243947411,
+        "topic": "holdings",
+        "ticker": "RECI",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "c": 0.05,
+      "e": false,
+      "h": 20.21,
+      "l": 20.21,
+      "o": 20.21,
+      "p": 20.2052,
+      "u": "Jul 16, 2026, 4:00 PM EDT",
+      "v": 2,
+      "cl": 20.16,
+      "cp": 0.22,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 20.21,
+      "td": "2026-07-16",
+      "ts": 1784232000000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1784246400026.0432,
+      "exp": 1784276100000,
+      "fms": "closed",
+      "h52": 20.2052,
+      "l52": 20.12,
+      "uid": "RECI",
+      "days": 0,
+      "symbol": "RECI"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-15",
+          "o": 20.161,
+          "h": 20.161,
+          "l": 20.161,
+          "c": 20.161,
+          "a": 20.1609,
+          "v": 11,
+          "ch": 0.17
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ]
+}
