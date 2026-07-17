@@ -1,39 +1,46 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "fred_banking",
-  "updated_at": "2026-07-16T09:09:56.875Z",
+  "updated_at": "2026-07-17T09:05:21.396Z",
   "retry_set": [
-    "daily",
     "quarterly",
     "weekly"
   ],
   "items": {
     "daily": {
       "key": "daily",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/fred_banking/lkg/daily.json",
-        "payload_sha256": "70583c780245f63b51f838f9d767a0d11b0a3e229e726c5f6f1824718b9f4c06",
-        "source_as_of": "2026-05-01"
+        "path": "data/macro/fred-banking-daily.json",
+        "payload_sha256": "dede93c1be1d7944e35cdd5311c989e9b65ac5317a19b01ebf47074d23925486",
+        "source_as_of": "2026-06-01"
       },
       "lkg": {
         "path": "data/admin/fred_banking/lkg/daily.json",
         "payload_sha256": "70583c780245f63b51f838f9d767a0d11b0a3e229e726c5f6f1824718b9f4c06",
         "source_as_of": "2026-05-01"
       },
-      "latest_failure": {
+      "updated_at": "2026-07-17T09:05:21.396Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "dede93c1be1d7944e35cdd5311c989e9b65ac5317a19b01ebf47074d23925486",
+        "source_as_of": "2026-06-01",
+        "run_id": "29568660557",
+        "run_attempt": 1,
+        "observed_at": "2026-07-17T09:05:21.396Z"
+      },
+      "recovered_from_run_id": "29406166955",
+      "recovered_at": "2026-07-17T09:05:21.396Z",
+      "recovery_run_id": "29568660557",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29406166955",
         "run_attempt": 1,
         "observed_at": "2026-07-15T09:58:31.570Z",
         "reason": "controlled_failure"
-      },
-      "updated_at": "2026-07-16T09:09:56.875Z",
-      "latest_promotion_deferral": {
-        "run_id": "29486066533",
-        "run_attempt": 1,
-        "observed_at": "2026-07-16T09:09:56.875Z",
-        "reason": "recovery_not_advanced_by_provider"
       }
     },
     "weekly": {
@@ -56,11 +63,11 @@
         "observed_at": "2026-07-15T09:58:31.570Z",
         "reason": "controlled_failure"
       },
-      "updated_at": "2026-07-16T09:09:56.875Z",
+      "updated_at": "2026-07-17T09:05:21.396Z",
       "latest_promotion_deferral": {
-        "run_id": "29486066533",
+        "run_id": "29568660557",
         "run_attempt": 1,
-        "observed_at": "2026-07-16T09:09:56.875Z",
+        "observed_at": "2026-07-17T09:05:21.396Z",
         "reason": "recovery_not_advanced_by_provider"
       }
     },
@@ -84,11 +91,11 @@
         "observed_at": "2026-07-15T09:58:31.570Z",
         "reason": "controlled_failure"
       },
-      "updated_at": "2026-07-16T09:09:56.875Z",
+      "updated_at": "2026-07-17T09:05:21.396Z",
       "latest_promotion_deferral": {
-        "run_id": "29486066533",
+        "run_id": "29568660557",
         "run_attempt": 1,
-        "observed_at": "2026-07-16T09:09:56.875Z",
+        "observed_at": "2026-07-17T09:05:21.396Z",
         "reason": "recovery_not_advanced_by_provider"
       }
     },
@@ -98,18 +105,18 @@
       "retry": false,
       "current": {
         "path": "data/macro/fred-banking-monthly.json",
-        "payload_sha256": "41a7ceded3d6c7e9653ca5663c6f2378bbc2cca36b90c1290d25a50f741efd98",
-        "source_as_of": "2026-05-01"
+        "payload_sha256": "2d29182bf716a2c0de73df64ec4b9102822d531d7f7ca7223bb61a0bf9cb752c",
+        "source_as_of": "2026-06-01"
       },
-      "updated_at": "2026-07-16T09:09:56.875Z",
+      "updated_at": "2026-07-17T09:05:21.396Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "41a7ceded3d6c7e9653ca5663c6f2378bbc2cca36b90c1290d25a50f741efd98",
-        "source_as_of": "2026-05-01",
-        "run_id": "29486066533",
+        "payload_sha256": "2d29182bf716a2c0de73df64ec4b9102822d531d7f7ca7223bb61a0bf9cb752c",
+        "source_as_of": "2026-06-01",
+        "run_id": "29568660557",
         "run_attempt": 1,
-        "observed_at": "2026-07-16T09:09:56.875Z"
+        "observed_at": "2026-07-17T09:05:21.396Z"
       }
     }
   }
