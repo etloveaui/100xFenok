@@ -6,6 +6,22 @@
 #     re-included so Worker bundles do not lag behind Pages)
 #   - daily schedule -> picks up bot-authored data refreshes into the bundle
 #   - workflow_dispatch -> manual deploy
+#
+# Cancellation safety (BACKLOG #361, incident 2026-07-16: cancelled run
+# 29502469123 uploaded its bundle and was superseded before its smokes ran —
+# the live Worker served an UNVERIFIED bundle for ~15h while CI recorded no
+# green):
+#   - build-verify is supersession-friendly (cancel-in-progress: true): a newer
+#     push cancels a stale build cheaply, before anything can ship.
+#   - deploy is cancellation-atomic (cancel-in-progress: false): once a run
+#     reaches upload, it always finishes its smokes. Newer runs queue, and a
+#     queued deploy skips itself BEFORE upload if a newer run is already active
+#     (scripts/check-deploy-supersession.mjs) — skipping never happens after
+#     an upload, so a deploy is never interrupted mid-flight.
+#   - every bundle carries data/admin/deploy-provenance.json declaring the run
+#     that shipped it; the deploy job asserts the CURRENT live bundle's
+#     provenance before (loud, non-blocking) and after (blocking) upload
+#     (scripts/check-live-deploy-provenance.mjs).
 name: Deploy Worker (Cloudflare)
 
 on:
@@ -26,16 +42,12 @@ on:
     - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
   workflow_dispatch:
 
-concurrency:
-  group: workers-100xfenok-main
-  cancel-in-progress: true
-
 jobs:
-  deploy:
+  build-verify:
     runs-on: ubuntu-latest
-    environment: production
-    env:
-      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
+    concurrency:
+      group: workers-100xfenok-main-build
+      cancel-in-progress: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -123,7 +135,71 @@ jobs:
       - name: Verify build manifest routes presence
         run: node scripts/check-source-paths.mjs
 
+      - name: Stamp deploy provenance
+        run: node scripts/write-deploy-provenance.mjs --assets-dir 100xfenok-next/.open-next/assets
+
+      - name: Upload built bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-next-bundle-${{ github.run_id }}
+          path: 100xfenok-next/.open-next
+          include-hidden-files: true
+          overwrite: true
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy:
+    needs: build-verify
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 35
+    concurrency:
+      group: workers-100xfenok-main-deploy
+      cancel-in-progress: false
+    env:
+      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
+      GITHUB_WORKFLOW_FILE_NAME: deploy-worker.yml
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: 100xfenok-next
+        run: npm ci
+
+      - name: Download built bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: open-next-bundle-${{ github.run_id }}
+          path: 100xfenok-next/.open-next
+
+      - name: Resolve expected bundle identity
+        working-directory: 100xfenok-next
+        run: |
+          set -euo pipefail
+          expected_build_id_path=".open-next/assets/BUILD_ID"
+          expected_kpi_path=".open-next/assets/data/admin/fenok-data-health-kpi.json"
+          if [ ! -s "$expected_build_id_path" ] || [ ! -f "$expected_kpi_path" ]; then
+            echo "::error::Cannot establish deploy identity from the downloaded artifact."
+            exit 1
+          fi
+          {
+            echo "EXPECTED_BUILD_ID=$(tr -d '\r\n' < "$expected_build_id_path")"
+            echo "EXPECTED_KPI_SHA256=$(sha256sum "$expected_kpi_path" | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Skip deploy if superseded by a newer run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-deploy-supersession.mjs
+
       - name: Verify Cloudflare token presence
+        if: ${{ env.SUPERSEDED != 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -132,7 +208,14 @@ jobs:
             exit 1
           fi
 
+      - name: Check live deploy provenance (pre-deploy)
+        if: ${{ env.SUPERSEDED != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-live-deploy-provenance.mjs --pre
+
       - name: Deploy to Cloudflare Workers
+        if: ${{ env.SUPERSEDED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
@@ -206,6 +289,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Smoke data health KPI
+        if: ${{ env.SUPERSEDED != 'true' }}
         run: |
           set -euo pipefail
 
@@ -267,7 +351,10 @@ jobs:
           echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 live_kpi_sha256=$observed_kpi_sha256 attempts=$attempt"
           node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; const topStatusOk = p.status === "ready" || p.status === "degraded"; const integrity = p.deployment_integrity || {}; if (!okSchema || !topStatusOk || (p.schema_version === "fenok-data-health-kpi/v2" && integrity.status !== "ready")) { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status,deployment_integrity:integrity.status,integrity_blockers:integrity.blocker_count})); process.exit(1); } if (p.schema_version === "fenok-data-health-kpi/v2") { const r = p.runtime || {}; const cadenceOk = r.verdict === "ready" || r.verdict === "degraded"; if (!r.built_at || !cadenceOk || r.fresh !== true || r.hard_age_ok !== true) { console.error("KPI v2 producer freshness (strict, Phase B): " + JSON.stringify({built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count})); process.exit(1); } if (p.status === "degraded") console.warn("::warning:: KPI v2 degraded lanes: " + p.status_message); if (r.verdict === "degraded") console.warn("::warning:: KPI v2 recovered cadence miss: " + r.status_message); console.log(JSON.stringify({ok:true, schema:p.schema_version, status:p.status, status_message:p.status_message, deployment_integrity:integrity.status, degraded_lanes:(p.lanes||[]).filter(l=>l.status==="degraded").map(l=>({id:l.id,message:l.status_message})), built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, runtime_status_message:r.status_message, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count}, null, 2)); } else { console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2)); }' < "$live_kpi_path"
 
+          node scripts/check-live-deploy-provenance.mjs --post
+
       - name: Smoke StockAnalysis routes
+        if: ${{ env.SUPERSEDED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
@@ -294,6 +381,7 @@ jobs:
           QA_STOCKANALYSIS_RETRY_DELAY_MS: 10000
 
       - name: Smoke route iframe public contract
+        if: ${{ env.SUPERSEDED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
@@ -320,7 +408,7 @@ jobs:
           QA_ROUTE_IFRAME_SCOPE: public
 
       - name: Smoke route iframe admin contract
-        if: ${{ env.QA_ADMIN_SMOKE_AVAILABLE == 'true' }}
+        if: ${{ env.QA_ADMIN_SMOKE_AVAILABLE == 'true' && env.SUPERSEDED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
