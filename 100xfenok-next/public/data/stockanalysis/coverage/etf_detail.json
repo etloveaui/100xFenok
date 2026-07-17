@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-16T09:37:49Z",
+  "generated_at": "2026-07-17T02:04:55Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,53 +17,53 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5525,
+    "candidate_total": 5534,
     "source_breakdown": {
       "etf_universe": 5467,
-      "etf_screener": 5525,
+      "etf_screener": 5532,
       "new_etfs": 100
     },
-    "detail_files": 4888,
-    "covered_detail_files": 4860,
-    "missing_detail_files": 665,
-    "extra_detail_files": 28,
-    "stockanalysis_detail_files": 4888,
+    "detail_files": 4928,
+    "covered_detail_files": 4899,
+    "missing_detail_files": 635,
+    "extra_detail_files": 29,
+    "stockanalysis_detail_files": 4928,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 87.96,
-    "primary_stockanalysis_pct": 87.96,
+    "coverage_pct": 88.53,
+    "primary_stockanalysis_pct": 88.53,
     "missing_by_source": {
-      "etf_universe": 632,
-      "etf_screener": 665,
-      "new_etfs": 36
+      "etf_universe": 596,
+      "etf_screener": 635,
+      "new_etfs": 10
     },
     "missing_status_breakdown": {
       "retry_pending": 55,
-      "untracked": 610
+      "untracked": 580
     },
     "missing_failure_breakdown": {
       "external_quote_type_mismatch": 55,
-      "untracked": 610
+      "untracked": 580
     },
     "missing_availability_breakdown": {
-      "unprobed": 610,
+      "unprobed": 580,
       "unresolved": 55
     },
     "pending_tracked": 91,
-    "pending_cooldown": 27,
+    "pending_cooldown": 25,
     "pending_tracked_missing": 55,
     "provider_coverage_gaps": 0
   },
   "missing_reason_summary": {
     "external_quote_type_mismatch": 55,
-    "untracked": 610
+    "untracked": 580
   },
   "missing_status_summary": {
     "retry_pending": 55,
-    "untracked": 610
+    "untracked": 580
   },
   "missing_availability_summary": {
-    "unprobed": 610,
+    "unprobed": 580,
     "unresolved": 55
   },
   "missing_reason_samples": {
@@ -82,9 +82,6 @@
       "FSOL"
     ],
     "untracked": [
-      "ALA",
-      "BABC",
-      "BNMC",
       "BRZX",
       "BSEP",
       "BSTP",
@@ -93,7 +90,10 @@
       "BTCW",
       "BTRN",
       "BUCK",
-      "BWOW"
+      "BWOW",
+      "CBIL",
+      "CBOJ",
+      "CBOO"
     ]
   },
   "missing_status_samples": {
@@ -112,9 +112,6 @@
       "FSOL"
     ],
     "untracked": [
-      "ALA",
-      "BABC",
-      "BNMC",
       "BRZX",
       "BSEP",
       "BSTP",
@@ -123,14 +120,14 @@
       "BTCW",
       "BTRN",
       "BUCK",
-      "BWOW"
+      "BWOW",
+      "CBIL",
+      "CBOJ",
+      "CBOO"
     ]
   },
   "missing_availability_samples": {
     "unprobed": [
-      "ALA",
-      "BABC",
-      "BNMC",
       "BRZX",
       "BSEP",
       "BSTP",
@@ -139,7 +136,10 @@
       "BTCW",
       "BTRN",
       "BUCK",
-      "BWOW"
+      "BWOW",
+      "CBIL",
+      "CBOJ",
+      "CBOO"
     ],
     "unresolved": [
       "BSOL",
@@ -157,9 +157,6 @@
     ]
   },
   "missing_tickers": [
-    "ALA",
-    "BABC",
-    "BNMC",
     "BRZX",
     "BSEP",
     "BSOL",
@@ -183,7 +180,6 @@
     "CBXO",
     "CBXY",
     "CCPX",
-    "CDPI",
     "CEFD",
     "CEGX",
     "CERY",
@@ -225,6 +221,7 @@
     "CRDD",
     "CRIB",
     "CRMX",
+    "CRWC",
     "CSEX",
     "CTWO",
     "CUST",
@@ -316,7 +313,6 @@
     "GDXD",
     "GDXU",
     "GDXW",
-    "GEVC",
     "GEVX",
     "GFSG",
     "GISC",
@@ -344,7 +340,6 @@
     "HFSP",
     "HIGH",
     "HODL",
-    "HOOC",
     "HOOW",
     "HPEL",
     "HYGW",
@@ -378,7 +373,6 @@
     "IMAY",
     "INFH",
     "INOV",
-    "INT",
     "INYY",
     "IOCT",
     "IONC",
@@ -399,7 +393,6 @@
     "JANW",
     "JELM",
     "JNEU",
-    "JOBC",
     "JOJO",
     "JPO",
     "JUDB",
@@ -441,7 +434,6 @@
     "LEUX",
     "LFEQ",
     "LGCF",
-    "LITC",
     "LITU",
     "LITX",
     "LJUL",
@@ -494,7 +486,6 @@
     "NNOV",
     "NOCT",
     "NSEP",
-    "NTAL",
     "NUIF",
     "NVBU",
     "NVDB",
@@ -507,7 +498,6 @@
     "OCTU",
     "OCTW",
     "OILK",
-    "ONDC",
     "ONDU",
     "ONG",
     "ONTX",
@@ -515,10 +505,10 @@
     "OPER",
     "OPPJ",
     "ORAC",
-    "ORCZ",
     "ORO",
     "OSSL",
     "OUNZ",
+    "OUSL",
     "PALL",
     "PAPR",
     "PATX",
@@ -551,24 +541,18 @@
     "PSEP",
     "PSLV",
     "PSTP",
-    "PUL",
-    "PUR",
     "PWRD",
     "QBF",
     "QBTX",
     "QBUF",
     "QETH",
-    "QFF",
-    "QJL",
     "QNTU",
     "QQDN",
-    "QQJL",
     "QSOL",
     "QTAC",
     "QTAP",
     "QTJA",
     "QTOC",
-    "QUA",
     "QULL",
     "RAAR",
     "RAAY",
@@ -577,12 +561,8 @@
     "RBUF",
     "RCLR",
     "RCLY",
-    "RDDC",
     "RDTE",
-    "RECI",
-    "RGTC",
     "RGTU",
-    "RIVC",
     "RKX",
     "RMBC",
     "RMBX",
@@ -595,12 +575,10 @@
     "RWLC",
     "RYLG",
     "SCDL",
-    "SCJL",
     "SCO",
     "SDD",
     "SEPU",
     "SETH",
-    "SEUS",
     "SFGV",
     "SFYI",
     "SGOL",
@@ -608,19 +586,12 @@
     "SHNY",
     "SIMX",
     "SIVR",
-    "SK",
-    "SKDD",
-    "SKHU",
-    "SKHZ",
     "SKRE",
-    "SKUU",
     "SLON",
     "SLV",
     "SLVO",
-    "SLVY",
     "SLWS",
     "SMHB",
-    "SMRX",
     "SMTG",
     "SMU",
     "SMZ",
@@ -628,7 +599,6 @@
     "SNK",
     "SNXX",
     "SOEZ",
-    "SOFC",
     "SOLC",
     "SPAX",
     "SPBC",
@@ -655,12 +625,9 @@
     "TCAI",
     "TCAN",
     "TDAQ",
-    "TDCL",
     "TDOG",
     "TDOT",
-    "TEMC",
     "TEMT",
-    "TERC",
     "TETH",
     "TEUP",
     "TFJL",
@@ -672,7 +639,6 @@
     "TJUL",
     "TLDR",
     "TLTW",
-    "TMGN",
     "TNGY",
     "TOCT",
     "TOT",
@@ -748,6 +714,7 @@
     "VIXY",
     "VOOX",
     "VOXP",
+    "VPFF",
     "VRC",
     "VSOL",
     "VXX",
@@ -811,6 +778,9 @@
     "XVO",
     "XVUG",
     "XW",
+    "YSAG",
+    "YSAU",
+    "YSPC",
     "ZAUG",
     "ZFEB",
     "ZHOG",
@@ -830,6 +800,7 @@
     "AAUM",
     "AEMS",
     "BITK",
+    "BLCN",
     "BTYB",
     "BULX",
     "COIO",
@@ -858,9 +829,6 @@
   ],
   "samples": {
     "missing": [
-      "ALA",
-      "BABC",
-      "BNMC",
       "BRZX",
       "BSEP",
       "BSOL",
@@ -884,7 +852,6 @@
       "CBXO",
       "CBXY",
       "CCPX",
-      "CDPI",
       "CEFD",
       "CEGX",
       "CERY",
@@ -907,7 +874,11 @@
       "CPNQ",
       "CPNS",
       "CPNX",
-      "CPRA"
+      "CPRA",
+      "CPRJ",
+      "CPRO",
+      "CPRY",
+      "CPSA"
     ],
     "missing_retry_pending": [
       "BSOL",
@@ -924,9 +895,6 @@
       "FSOL"
     ],
     "missing_untracked": [
-      "ALA",
-      "BABC",
-      "BNMC",
       "BRZX",
       "BSEP",
       "BSTP",
@@ -935,7 +903,10 @@
       "BTCW",
       "BTRN",
       "BUCK",
-      "BWOW"
+      "BWOW",
+      "CBIL",
+      "CBOJ",
+      "CBOO"
     ],
     "missing_external_quote_type_mismatch": [
       "BSOL",
@@ -956,6 +927,7 @@
       "AAUM",
       "AEMS",
       "BITK",
+      "BLCN",
       "BTYB",
       "BULX",
       "COIO",
