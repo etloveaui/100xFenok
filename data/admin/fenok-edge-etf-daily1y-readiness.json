@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-17T05:30:43.967Z",
-  "classification_as_of": "2026-07-17T05:30:08.556Z",
+  "generated_at": "2026-07-17T07:30:37.105Z",
+  "classification_as_of": "2026-07-17T07:30:01.068Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -24,16 +24,15 @@
     "fetchable_plan_output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
   },
   "daily_1y_readiness": {
-    "denominator": 4518,
+    "denominator": 4517,
     "daily_1y_complete": 3681,
-    "daily_1y_missing": 837,
-    "daily_1y_fetchable": 49,
+    "daily_1y_missing": 836,
+    "daily_1y_fetchable": 48,
     "inception_limited_daily_1y_gap": 747,
     "terminal_limited_daily_1y_gap": 41,
     "fetchable_breakdown": {
       "counts": {
         "missing_external_quote_type_mismatch": 42,
-        "missing_untracked": 1,
         "stockanalysis_short_rows": 6
       },
       "samples": {
@@ -48,9 +47,6 @@
           "FECM",
           "FESC",
           "GISC"
-        ],
-        "missing_untracked": [
-          "WSPC"
         ],
         "stockanalysis_short_rows": [
           "FREI",
@@ -68,7 +64,7 @@
       "stockanalysis_recent_short_rows": 4,
       "successful_short_history_cooldown": 1
     },
-    "etf_no_fetchable_daily_1y_gap": 49,
+    "etf_no_fetchable_daily_1y_gap": 48,
     "count_equation": "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap + terminal_limited_daily_1y_gap == denominator",
     "count_equation_ok": true,
     "no_fetchable_daily_1y_gap": false,
@@ -83,19 +79,19 @@
     "caveat": "Only immediately fetchable daily 1Y gaps block the full scored-ETF diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves."
   },
   "generated_count_checks": {
-    "summary_rows": 4518,
+    "summary_rows": 4517,
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 49,
+    "coverage_index_fetchable_daily_1y_gap": 48,
     "coverage_index_inception_limited_daily_1y_gap": 747,
     "coverage_index_terminal_limited_daily_1y_gap": 41,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
-    "history_gap_report_scored_etf_count": 4518,
-    "history_gap_report_fetchable_daily_1y_gap": 49,
+    "history_gap_report_scored_etf_count": 4517,
+    "history_gap_report_fetchable_daily_1y_gap": 48,
     "history_gap_report_inception_limited_daily_1y_gap": 747,
     "history_gap_report_terminal_limited_daily_1y_gap": 41
   },
@@ -391,12 +387,12 @@
   },
   "exact_fetchable_plan": {
     "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "fetchable_count": 49,
-    "ticker_count": 49,
+    "fetchable_count": 48,
+    "ticker_count": 48,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 1,
     "default_batch_size": 120,
-    "yf_local_crosscheck_gap_count": 4152,
+    "yf_local_crosscheck_gap_count": 4151,
     "yf_local_crosscheck_matches": false,
     "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },

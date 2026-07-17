@@ -3,10 +3,11 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "SMH",
-  "fetched_at": "2026-07-08T22:40:47Z",
+  "source_as_of": "2026-07-16T20:00:00Z",
+  "fetched_at": "2026-07-17T06:27:01Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/SMH/holdings",
-    "overview": "/api/symbol/e/SMH/overview",
+    "holdings": "/etf/smh/holdings/__data.json",
+    "overview": "/etf/smh/__data.json",
     "quote": "/api/quotes/e/SMH",
     "history_periods": {
       "daily_1y": "/api/symbol/e/SMH/history?range=1Y&period=Daily",
@@ -17,356 +18,376 @@
       "monthly_5y": "/api/symbol/e/SMH/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "symbol": "NVDA",
         "name": "NVIDIA Corporation",
-        "weight_pct": 19.01,
-        "shares": 67132346,
+        "weight_pct": 19.86,
+        "shares": 69292978,
         "raw": {
           "no": 1,
           "n": "NVIDIA Corporation",
           "s": "$NVDA",
-          "as": "19.01%",
-          "sh": "67,132,346"
+          "as": "19.86%",
+          "sh": "69,292,978"
         }
       },
       {
         "rank": 2,
         "symbol": "TSM",
         "name": "Taiwan Semiconductor Manufacturing Company Limited",
-        "weight_pct": 9.4,
-        "shares": 14889948,
+        "weight_pct": 9.08,
+        "shares": 15404259,
         "raw": {
           "no": 2,
           "n": "Taiwan Semiconductor Manufacturing Company Limited",
           "s": "$TSM",
-          "as": "9.40%",
-          "sh": "14,889,948"
+          "as": "9.08%",
+          "sh": "15,404,259"
         }
       },
       {
         "rank": 3,
         "symbol": "AVGO",
         "name": "Broadcom Inc.",
-        "weight_pct": 5.61,
-        "shares": 10700777,
+        "weight_pct": 6.0,
+        "shares": 11033880,
         "raw": {
           "no": 3,
           "n": "Broadcom Inc.",
           "s": "$AVGO",
-          "as": "5.61%",
-          "sh": "10,700,777"
+          "as": "6.00%",
+          "sh": "11,033,880"
         }
       },
       {
         "rank": 4,
         "symbol": "AMD",
         "name": "Advanced Micro Devices, Inc.",
-        "weight_pct": 5.58,
-        "shares": 7418187,
+        "weight_pct": 5.82,
+        "shares": 7674458,
         "raw": {
           "no": 4,
           "n": "Advanced Micro Devices, Inc.",
           "s": "$AMD",
-          "as": "5.58%",
-          "sh": "7,418,187"
+          "as": "5.82%",
+          "sh": "7,674,458"
         }
       },
       {
         "rank": 5,
         "symbol": "MU",
         "name": "Micron Technology, Inc.",
-        "weight_pct": 5.34,
-        "shares": 3762838,
+        "weight_pct": 5.18,
+        "shares": 3892816,
         "raw": {
           "no": 5,
           "n": "Micron Technology, Inc.",
           "s": "$MU",
-          "as": "5.34%",
-          "sh": "3,762,838"
+          "as": "5.18%",
+          "sh": "3,892,816"
         }
       },
       {
         "rank": 6,
         "symbol": "AMAT",
         "name": "Applied Materials, Inc.",
-        "weight_pct": 5.33,
-        "shares": 6077118,
+        "weight_pct": 5.15,
+        "shares": 6287058,
         "raw": {
           "no": 6,
           "n": "Applied Materials, Inc.",
           "s": "$AMAT",
-          "as": "5.33%",
-          "sh": "6,077,118"
+          "as": "5.15%",
+          "sh": "6,287,058"
         }
       },
       {
         "rank": 7,
         "symbol": "ASML",
         "name": "ASML Holding N.V.",
-        "weight_pct": 4.99,
-        "shares": 1939606,
+        "weight_pct": 4.89,
+        "shares": 2002047,
         "raw": {
           "no": 7,
           "n": "ASML Holding N.V.",
           "s": "$ASML",
-          "as": "4.99%",
-          "sh": "1,939,606"
+          "as": "4.89%",
+          "sh": "2,002,047"
         }
       },
       {
         "rank": 8,
-        "symbol": "INTC",
-        "name": "Intel Corporation",
-        "weight_pct": 4.88,
-        "shares": 27912003,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 4.69,
+        "shares": 11080217,
         "raw": {
           "no": 8,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "4.88%",
-          "sh": "27,912,003"
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "4.69%",
+          "sh": "11,080,217"
         }
       },
       {
         "rank": 9,
-        "symbol": "KLAC",
-        "name": "KLA Corporation",
-        "weight_pct": 4.73,
-        "shares": 13802186,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 4.62,
+        "shares": 9708259,
         "raw": {
           "no": 9,
-          "n": "KLA Corporation",
-          "s": "$KLAC",
-          "as": "4.73%",
-          "sh": "13,802,186"
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "4.62%",
+          "sh": "9,708,259"
         }
       },
       {
         "rank": 10,
-        "symbol": "LRCX",
-        "name": "Lam Research Corporation",
-        "weight_pct": 4.68,
-        "shares": 9159847,
+        "symbol": "KLAC",
+        "name": "KLA Corporation",
+        "weight_pct": 4.6,
+        "shares": 14628472,
         "raw": {
           "no": 10,
-          "n": "Lam Research Corporation",
-          "s": "$LRCX",
-          "as": "4.68%",
-          "sh": "9,159,847"
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "4.60%",
+          "sh": "14,628,472"
         }
       },
       {
         "rank": 11,
-        "symbol": "TXN",
-        "name": "Texas Instruments Incorporated",
-        "weight_pct": 4.56,
-        "shares": 10710296,
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "weight_pct": 4.36,
+        "shares": 29189878,
         "raw": {
           "no": 11,
-          "n": "Texas Instruments Incorporated",
-          "s": "$TXN",
-          "as": "4.56%",
-          "sh": "10,710,296"
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "4.36%",
+          "sh": "29,189,878"
         }
       },
       {
         "rank": 12,
-        "symbol": "MRVL",
-        "name": "Marvell Technology, Inc.",
-        "weight_pct": 4.27,
-        "shares": 11985054,
+        "symbol": "ADI",
+        "name": "Analog Devices, Inc.",
+        "weight_pct": 4.28,
+        "shares": 7957659,
         "raw": {
           "no": 12,
-          "n": "Marvell Technology, Inc.",
-          "s": "$MRVL",
-          "as": "4.27%",
-          "sh": "11,985,054"
+          "n": "Analog Devices, Inc.",
+          "s": "$ADI",
+          "as": "4.28%",
+          "sh": "7,957,659"
         }
       },
       {
         "rank": 13,
-        "symbol": "ADI",
-        "name": "Analog Devices, Inc.",
-        "weight_pct": 4.23,
-        "shares": 7709527,
+        "symbol": "QCOM",
+        "name": "QUALCOMM Incorporated",
+        "weight_pct": 4.12,
+        "shares": 16018675,
         "raw": {
           "no": 13,
-          "n": "Analog Devices, Inc.",
-          "s": "$ADI",
-          "as": "4.23%",
-          "sh": "7,709,527"
+          "n": "QUALCOMM Incorporated",
+          "s": "$QCOM",
+          "as": "4.12%",
+          "sh": "16,018,675"
         }
       },
       {
         "rank": 14,
-        "symbol": "QCOM",
-        "name": "QUALCOMM Incorporated",
-        "weight_pct": 3.97,
-        "shares": 15483836,
+        "symbol": "MRVL",
+        "name": "Marvell Technology, Inc.",
+        "weight_pct": 3.96,
+        "shares": 12370778,
         "raw": {
           "no": 14,
-          "n": "QUALCOMM Incorporated",
-          "s": "$QCOM",
-          "as": "3.97%",
-          "sh": "15,483,836"
+          "n": "Marvell Technology, Inc.",
+          "s": "$MRVL",
+          "as": "3.96%",
+          "sh": "12,370,778"
         }
       },
       {
         "rank": 15,
         "symbol": "CDNS",
         "name": "Cadence Design Systems, Inc.",
-        "weight_pct": 2.38,
-        "shares": 4386021,
+        "weight_pct": 2.36,
+        "shares": 4527186,
         "raw": {
           "no": 15,
           "n": "Cadence Design Systems, Inc.",
           "s": "$CDNS",
-          "as": "2.38%",
-          "sh": "4,386,021"
+          "as": "2.36%",
+          "sh": "4,527,186"
         }
       },
       {
         "rank": 16,
         "symbol": "SNPS",
         "name": "Synopsys, Inc.",
-        "weight_pct": 1.95,
-        "shares": 3075477,
+        "weight_pct": 1.93,
+        "shares": 3181706,
         "raw": {
           "no": 16,
           "n": "Synopsys, Inc.",
           "s": "$SNPS",
-          "as": "1.95%",
-          "sh": "3,075,477"
+          "as": "1.93%",
+          "sh": "3,181,706"
         }
       },
       {
         "rank": 17,
         "symbol": "STM",
         "name": "STMicroelectronics N.V.",
-        "weight_pct": 1.28,
-        "shares": 12881054,
+        "weight_pct": 1.29,
+        "shares": 13295661,
         "raw": {
           "no": 17,
           "n": "STMicroelectronics N.V.",
           "s": "$STM",
-          "as": "1.28%",
-          "sh": "12,881,054"
+          "as": "1.29%",
+          "sh": "13,295,661"
         }
       },
       {
         "rank": 18,
-        "symbol": "TER",
-        "name": "Teradyne, Inc.",
-        "weight_pct": 1.27,
-        "shares": 2366409,
+        "symbol": "MPWR",
+        "name": "Monolithic Power Systems, Inc.",
+        "weight_pct": 1.28,
+        "shares": 696892,
         "raw": {
           "no": 18,
-          "n": "Teradyne, Inc.",
-          "s": "$TER",
-          "as": "1.27%",
-          "sh": "2,366,409"
+          "n": "Monolithic Power Systems, Inc.",
+          "s": "$MPWR",
+          "as": "1.28%",
+          "sh": "696,892"
         }
       },
       {
         "rank": 19,
-        "symbol": "MPWR",
-        "name": "Monolithic Power Systems, Inc.",
-        "weight_pct": 1.26,
-        "shares": 675162,
+        "symbol": "NXPI",
+        "name": "NXP Semiconductors N.V.",
+        "weight_pct": 1.28,
+        "shares": 3223120,
         "raw": {
           "no": 19,
-          "n": "Monolithic Power Systems, Inc.",
-          "s": "$MPWR",
-          "as": "1.26%",
-          "sh": "675,162"
+          "n": "NXP Semiconductors N.V.",
+          "s": "$NXPI",
+          "as": "1.28%",
+          "sh": "3,223,120"
         }
       },
       {
         "rank": 20,
-        "symbol": "NXPI",
-        "name": "NXP Semiconductors N.V.",
-        "weight_pct": 1.24,
-        "shares": 3122625,
+        "symbol": "TER",
+        "name": "Teradyne, Inc.",
+        "weight_pct": 1.19,
+        "shares": 2442562,
         "raw": {
           "no": 20,
-          "n": "NXP Semiconductors N.V.",
-          "s": "$NXPI",
-          "as": "1.24%",
-          "sh": "3,122,625"
+          "n": "Teradyne, Inc.",
+          "s": "$TER",
+          "as": "1.19%",
+          "sh": "2,442,562"
         }
       },
       {
         "rank": 21,
         "symbol": "ALAB",
         "name": "Astera Labs, Inc.",
-        "weight_pct": 1.19,
-        "shares": 2019050,
+        "weight_pct": 1.17,
+        "shares": 2084043,
         "raw": {
           "no": 21,
           "n": "Astera Labs, Inc.",
           "s": "$ALAB",
-          "as": "1.19%",
-          "sh": "2,019,050"
+          "as": "1.17%",
+          "sh": "2,084,043"
         }
       },
       {
         "rank": 22,
         "symbol": "ARM",
         "name": "Arm Holdings plc",
-        "weight_pct": 1.15,
-        "shares": 2516244,
+        "weight_pct": 1.14,
+        "shares": 2597232,
         "raw": {
           "no": 22,
           "n": "Arm Holdings plc",
           "s": "$ARM",
-          "as": "1.15%",
-          "sh": "2,516,244"
+          "as": "1.14%",
+          "sh": "2,597,232"
         }
       },
       {
         "rank": 23,
         "symbol": "MCHP",
         "name": "Microchip Technology Incorporated",
-        "weight_pct": 0.93,
-        "shares": 7538747,
+        "weight_pct": 0.94,
+        "shares": 7799124,
         "raw": {
           "no": 23,
           "n": "Microchip Technology Incorporated",
           "s": "$MCHP",
-          "as": "0.93%",
-          "sh": "7,538,747"
+          "as": "0.94%",
+          "sh": "7,799,124"
         }
       },
       {
         "rank": 24,
         "symbol": "ON",
         "name": "ON Semiconductor Corporation",
-        "weight_pct": 0.62,
-        "shares": 4682555,
+        "weight_pct": 0.63,
+        "shares": 4844318,
         "raw": {
           "no": 24,
           "n": "ON Semiconductor Corporation",
           "s": "$ON",
-          "as": "0.62%",
-          "sh": "4,682,555"
+          "as": "0.63%",
+          "sh": "4,844,318"
         }
       },
       {
         "rank": 25,
         "symbol": "SWKS",
         "name": "Skyworks Solutions, Inc.",
-        "weight_pct": 0.16,
-        "shares": 1797082,
+        "weight_pct": 0.15,
+        "shares": 1859166,
         "raw": {
           "no": 25,
           "n": "Skyworks Solutions, Inc.",
           "s": "$SWKS",
-          "as": "0.16%",
-          "sh": "1,797,082"
+          "as": "0.15%",
+          "sh": "1,859,166"
         }
       }
     ],
@@ -404,7 +425,7 @@
       }
     ],
     "holding_count": 26,
-    "holdings_updated": "Jul 3, 2026",
+    "holdings_updated": "Jul 11, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -418,8 +439,8 @@
       "aum": "$65.06B",
       "nav": "$202.80",
       "expenseRatio": "0.35%",
-      "peRatio": "52.06",
-      "sharesOut": "119.19M",
+      "peRatio": "49.72",
+      "sharesOut": "119.94M",
       "dividendYield": "0.19%",
       "beta": "1.71",
       "inception": "Dec 20, 2011",
@@ -427,57 +448,56 @@
       "etf_website": "https://www.vaneck.com/us/en/investments/semiconductor-etf-smh/"
     },
     "performance": {
-      "tr1m": 4.092,
-      "trYTD": 64.663,
-      "tr1y": 112.627,
-      "cagr5y": 36.7,
-      "cagr10y": 36.883,
-      "cagrMAX": 29.399
+      "tr1m": -12.081594807603162,
+      "trYTD": 57.976,
+      "tr1y": 96.248,
+      "cagr5y": 35.998,
+      "cagr10y": 35.543,
+      "cagrMAX": 28.976
     },
     "quote": {
-      "p": 593,
-      "pd": 593,
-      "c": 11.55,
-      "cp": 1.99,
-      "cl": 581.45,
-      "cdr": 1,
-      "o": 575.33,
-      "h": 595,
-      "l": 575.04,
-      "v": 9354760,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 671.83,
-      "l52": 279.19,
+      "c": -21.85,
+      "e": true,
+      "h": 581.84,
+      "l": 564.45,
+      "o": 575.75,
+      "p": 568.92,
+      "u": "Jul 16, 2026, 4:00 PM EDT",
+      "v": 12353271,
+      "cl": 590.77,
+      "cp": -3.7,
+      "ec": -4.39,
+      "ep": 564.53,
+      "es": "After-hours",
+      "eu": "Jul 16, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 591.22,
-      "epd": 591.22,
-      "ec": -1.78,
-      "ecp": -0.3,
-      "eu": "Jul 8, 2026, 6:39 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550388540.0918,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 568.92,
+      "td": "2026-07-16",
+      "ts": 1784232000000,
+      "cdr": -1,
+      "ecp": -0.77,
+      "epd": 564.53,
+      "etd": "2026-07-16",
+      "ets": 1784246393858.6838,
+      "exp": 1784276100000,
+      "fms": "closed",
+      "h52": 671.83,
+      "l52": 279.19,
+      "uid": "SMH",
       "days": 0,
-      "exp": 1783550451118,
-      "symbol": "SMH",
-      "uid": "SMH"
+      "symbol": "SMH"
     },
     "history": [
       {
         "t": "2026-07-01",
         "o": 634.35,
         "h": 639.89,
-        "l": 566.83,
-        "c": 593,
-        "a": 593,
-        "v": 66807644,
-        "ch": -9.59
+        "l": 564.45,
+        "c": 568.92,
+        "a": 568.92,
+        "v": 121065512,
+        "ch": -13.26
       },
       {
         "t": "2026-06-01",
@@ -592,6 +612,66 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-16",
+          "o": 575.75,
+          "h": 581.84,
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 11897844,
+          "ch": -3.7
+        },
+        {
+          "t": "2026-07-15",
+          "o": 606.88,
+          "h": 606.88,
+          "l": 573.72,
+          "c": 590.77,
+          "a": 590.77,
+          "v": 10887931,
+          "ch": -1.59
+        },
+        {
+          "t": "2026-07-14",
+          "o": 608.895,
+          "h": 608.895,
+          "l": 590.38,
+          "c": 600.31,
+          "a": 600.31,
+          "v": 7489979,
+          "ch": 2.51
+        },
+        {
+          "t": "2026-07-13",
+          "o": 598.005,
+          "h": 599.36,
+          "l": 583.09,
+          "c": 585.62,
+          "a": 585.62,
+          "v": 8584143,
+          "ch": -4.16
+        },
+        {
+          "t": "2026-07-10",
+          "o": 600.87,
+          "h": 615.05,
+          "l": 595.84,
+          "c": 611.03,
+          "a": 611.03,
+          "v": 6546015,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-07-09",
+          "o": 615.48,
+          "h": 618.166,
+          "l": 604.7,
+          "c": 607.73,
+          "a": 607.73,
+          "v": 8851956,
+          "ch": 2.48
+        },
         {
           "t": "2026-07-08",
           "o": 575.33,
@@ -3051,78 +3131,28 @@
           "a": 288.382918,
           "v": 10065893,
           "ch": -0.52
-        },
-        {
-          "t": "2025-07-15",
-          "o": 291.67,
-          "h": 293.2,
-          "l": 290.08,
-          "c": 290.8,
-          "a": 289.898204,
-          "v": 9892534,
-          "ch": 1.92
-        },
-        {
-          "t": "2025-07-14",
-          "o": 286.3,
-          "h": 286.52,
-          "l": 281.74,
-          "c": 285.32,
-          "a": 284.435198,
-          "v": 7455764,
-          "ch": -0.75
-        },
-        {
-          "t": "2025-07-11",
-          "o": 286.47,
-          "h": 288.94,
-          "l": 285.55,
-          "c": 287.49,
-          "a": 286.598469,
-          "v": 5676952,
-          "ch": -0.01
-        },
-        {
-          "t": "2025-07-10",
-          "o": 287.885,
-          "h": 288.19,
-          "l": 284.56,
-          "c": 287.52,
-          "a": 286.628376,
-          "v": 5636246,
-          "ch": 0.74
-        },
-        {
-          "t": "2025-07-09",
-          "o": 284.73,
-          "h": 287.84,
-          "l": 283.57,
-          "c": 285.42,
-          "a": 284.534888,
-          "v": 6810712,
-          "ch": 0.68
-        },
-        {
-          "t": "2025-07-08",
-          "o": 281.61,
-          "h": 284.73,
-          "l": 280.7,
-          "c": 283.48,
-          "a": 282.600904,
-          "v": 8186458.999999999,
-          "ch": 1.33
         }
       ],
       "weekly_1y": [
+        {
+          "t": "2026-07-13",
+          "o": 598.005,
+          "h": 608.895,
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 38859897,
+          "ch": -6.89
+        },
         {
           "t": "2026-07-06",
           "o": 607.05,
           "h": 618.21,
           "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 33262040,
-          "ch": 0.12
+          "c": 611.03,
+          "a": 611.03,
+          "v": 48660011,
+          "ch": 3.16
         },
         {
           "t": "2026-06-29",
@@ -3623,16 +3653,6 @@
           "a": 286.598469,
           "v": 35560585,
           "ch": -0.97
-        },
-        {
-          "t": "2025-07-14",
-          "o": 286.3,
-          "h": 293.325,
-          "l": 281.74,
-          "c": 290.31,
-          "a": 289.409724,
-          "v": 39935055,
-          "ch": 0.98
         }
       ],
       "monthly_1y": [
@@ -3640,11 +3660,11 @@
           "t": "2026-07-01",
           "o": 634.35,
           "h": 639.89,
-          "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 66807644,
-          "ch": -9.59
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 121065512,
+          "ch": -13.26
         },
         {
           "t": "2026-06-01",
@@ -3759,14 +3779,24 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-07-13",
+          "o": 598.005,
+          "h": 608.895,
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 38859897,
+          "ch": -6.89
+        },
+        {
           "t": "2026-07-06",
           "o": 607.05,
           "h": 618.21,
           "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 33262040,
-          "ch": 0.12
+          "c": 611.03,
+          "a": 611.03,
+          "v": 48660011,
+          "ch": 3.16
         },
         {
           "t": "2026-06-29",
@@ -4267,16 +4297,6 @@
           "a": 286.598469,
           "v": 35560585,
           "ch": -0.97
-        },
-        {
-          "t": "2025-07-14",
-          "o": 286.3,
-          "h": 293.325,
-          "l": 281.74,
-          "c": 290.31,
-          "a": 289.409724,
-          "v": 39935055,
-          "ch": 0.98
         }
       ],
       "monthly_3y": [
@@ -4284,11 +4304,11 @@
           "t": "2026-07-01",
           "o": 634.35,
           "h": 639.89,
-          "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 66807644,
-          "ch": -9.59
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 121065512,
+          "ch": -13.26
         },
         {
           "t": "2026-06-01",
@@ -4406,11 +4426,11 @@
           "t": "2026-07-01",
           "o": 634.35,
           "h": 639.89,
-          "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 66807644,
-          "ch": -9.59
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 121065512,
+          "ch": -13.26
         },
         {
           "t": "2026-06-01",
@@ -5006,1874 +5026,1620 @@
     }
   },
   "raw": {
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "NVIDIA Corporation",
-          "s": "$NVDA",
-          "as": "19.01%",
-          "sh": "67,132,346"
-        },
-        {
-          "no": 2,
-          "n": "Taiwan Semiconductor Manufacturing Company Limited",
-          "s": "$TSM",
-          "as": "9.40%",
-          "sh": "14,889,948"
-        },
-        {
-          "no": 3,
-          "n": "Broadcom Inc.",
-          "s": "$AVGO",
-          "as": "5.61%",
-          "sh": "10,700,777"
-        },
-        {
-          "no": 4,
-          "n": "Advanced Micro Devices, Inc.",
-          "s": "$AMD",
-          "as": "5.58%",
-          "sh": "7,418,187"
-        },
-        {
-          "no": 5,
-          "n": "Micron Technology, Inc.",
-          "s": "$MU",
-          "as": "5.34%",
-          "sh": "3,762,838"
-        },
-        {
-          "no": 6,
-          "n": "Applied Materials, Inc.",
-          "s": "$AMAT",
-          "as": "5.33%",
-          "sh": "6,077,118"
-        },
-        {
-          "no": 7,
-          "n": "ASML Holding N.V.",
-          "s": "$ASML",
-          "as": "4.99%",
-          "sh": "1,939,606"
-        },
-        {
-          "no": 8,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "4.88%",
-          "sh": "27,912,003"
-        },
-        {
-          "no": 9,
-          "n": "KLA Corporation",
-          "s": "$KLAC",
-          "as": "4.73%",
-          "sh": "13,802,186"
-        },
-        {
-          "no": 10,
-          "n": "Lam Research Corporation",
-          "s": "$LRCX",
-          "as": "4.68%",
-          "sh": "9,159,847"
-        },
-        {
-          "no": 11,
-          "n": "Texas Instruments Incorporated",
-          "s": "$TXN",
-          "as": "4.56%",
-          "sh": "10,710,296"
-        },
-        {
-          "no": 12,
-          "n": "Marvell Technology, Inc.",
-          "s": "$MRVL",
-          "as": "4.27%",
-          "sh": "11,985,054"
-        },
-        {
-          "no": 13,
-          "n": "Analog Devices, Inc.",
-          "s": "$ADI",
-          "as": "4.23%",
-          "sh": "7,709,527"
-        },
-        {
-          "no": 14,
-          "n": "QUALCOMM Incorporated",
-          "s": "$QCOM",
-          "as": "3.97%",
-          "sh": "15,483,836"
-        },
-        {
-          "no": 15,
-          "n": "Cadence Design Systems, Inc.",
-          "s": "$CDNS",
-          "as": "2.38%",
-          "sh": "4,386,021"
-        },
-        {
-          "no": 16,
-          "n": "Synopsys, Inc.",
-          "s": "$SNPS",
-          "as": "1.95%",
-          "sh": "3,075,477"
-        },
-        {
-          "no": 17,
-          "n": "STMicroelectronics N.V.",
-          "s": "$STM",
-          "as": "1.28%",
-          "sh": "12,881,054"
-        },
-        {
-          "no": 18,
-          "n": "Teradyne, Inc.",
-          "s": "$TER",
-          "as": "1.27%",
-          "sh": "2,366,409"
-        },
-        {
-          "no": 19,
-          "n": "Monolithic Power Systems, Inc.",
-          "s": "$MPWR",
-          "as": "1.26%",
-          "sh": "675,162"
-        },
-        {
-          "no": 20,
-          "n": "NXP Semiconductors N.V.",
-          "s": "$NXPI",
-          "as": "1.24%",
-          "sh": "3,122,625"
-        },
-        {
-          "no": 21,
-          "n": "Astera Labs, Inc.",
-          "s": "$ALAB",
-          "as": "1.19%",
-          "sh": "2,019,050"
-        },
-        {
-          "no": 22,
-          "n": "Arm Holdings plc",
-          "s": "$ARM",
-          "as": "1.15%",
-          "sh": "2,516,244"
-        },
-        {
-          "no": 23,
-          "n": "Microchip Technology Incorporated",
-          "s": "$MCHP",
-          "as": "0.93%",
-          "sh": "7,538,747"
-        },
-        {
-          "no": 24,
-          "n": "ON Semiconductor Corporation",
-          "s": "$ON",
-          "as": "0.62%",
-          "sh": "4,682,555"
-        },
-        {
-          "no": 25,
-          "n": "Skyworks Solutions, Inc.",
-          "s": "$SWKS",
-          "as": "0.16%",
-          "sh": "1,797,082"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": [
-        {
-          "n": "Technology",
-          "w": 84.48
-        },
-        {
-          "n": "Other",
-          "w": 15.52
-        }
-      ],
-      "countries": [
-        {
-          "code": "US",
-          "weight": 82.20157,
-          "country": "United States"
-        },
-        {
-          "code": "TW",
-          "weight": 10.06445,
-          "country": "Taiwan"
-        },
-        {
-          "code": "NL",
-          "weight": 7.06823,
-          "country": "Netherlands"
-        },
-        {
-          "code": "SG",
-          "weight": 0.66575,
-          "country": "Singapore"
-        }
-      ],
-      "news": [
-        {
-          "t": "Dow falls 400 points, oil surges after Trump says Iran ceasefire is ‘over' – which could halt gas decline",
-          "u": "https://nypost.com/2026/07/08/business/dow-falls-400-points-oil-surges-after-trump-says-iran-ceasefire-is-over/",
-          "n": "New York Post",
-          "d": "8 hours ago"
-        },
-        {
-          "t": "DRAM ETF falls 6.5% after Samsung earnings as expert warns on memory stocks",
-          "u": "https://invezz.com/news/2026/07/07/dram-etf-falls-6-5-after-samsung-earnings-as-expert-warns-on-memory-stocks/",
-          "n": "Invezz",
-          "d": "1 day ago"
-        },
-        {
-          "t": "Why Is the SMH Semiconductor ETF Rebounding Today?",
-          "u": "https://www.tipranks.com/news/why-is-the-smh-semiconductor-etf-rebounding-today",
-          "n": "TipRanks",
-          "d": "2 days ago"
-        },
-        {
-          "t": "Buy the Chip Dip but Beware These 'AI Cannibalization' Trades, JPMorgan Says",
-          "u": "https://www.barrons.com/articles/chip-stocks-buy-dip-ai-trade-35f78016",
-          "n": "Barrons",
-          "d": "2 days ago"
-        },
-        {
-          "t": "AI investors may pivot to hyperscalers from chipmakers, Morgan Stanley says",
-          "u": "https://www.reuters.com/business/ai-investors-may-pivot-hyperscalers-chipmakers-morgan-stanley-says-2026-07-06/",
-          "n": "Reuters",
-          "d": "2 days ago"
-        },
-        {
-          "t": "Hedge funds dumped chip stocks for a fourth week as AI shares sold off",
-          "u": "https://www.reuters.com/business/finance/hedge-funds-dumped-chip-stocks-fourth-week-ai-shares-sold-off-2026-07-06/",
-          "n": "Reuters",
-          "d": "2 days ago"
-        },
-        {
-          "t": "Why it's too early to call a top on semiconductor stocks, according to these highly regarded analysts",
-          "u": "https://www.marketwatch.com/story/why-its-too-early-to-call-a-top-on-semiconductor-stocks-according-to-these-highly-regarded-analysts-bb1139d4",
-          "n": "Market Watch",
-          "d": "7 days ago"
-        },
-        {
-          "t": "Chip Makers Are Profiting Off AI at the Expense of Just About Everyone Else",
-          "u": "https://www.wsj.com/tech/ai/chip-makers-are-profiting-off-ai-at-the-expense-of-just-about-everyone-else-fe893bdd",
-          "n": "WSJ",
-          "d": "10 days ago"
-        },
-        {
-          "t": "SK Hynix Stock Will List in the U.S. What That Means for South Korea and Chip Funds.",
-          "u": "https://www.barrons.com/articles/sk-hynix-stock-chips-south-korea-funds-1c2dcb12",
-          "n": "Barrons",
-          "d": "14 days ago"
-        },
-        {
-          "t": "SK Hynix to raise $29.4B in US listing: How it may impact the AI memory chip trade",
-          "u": "https://invezz.com/news/2026/06/24/sk-hynix-to-raise-29-4b-in-us-listing-how-it-may-impact-the-ai-memory-chip-trade/",
-          "n": "Invezz",
-          "d": "14 days ago"
-        }
-      ],
-      "infoBox": "SMH is an equity ETF with a total of 26 individual holdings. The top holdings are NVIDIA stock at 19.01%, Taiwan Semiconductor Manufacturing Company at 9.40%, Broadcom at 5.61%, Advanced Micro Devices at 5.58%, and Micron Technology at 5.34%.",
-      "infoTable": {
-        "count": 26,
-        "top10": 69.53,
-        "assetClass": "Equity",
-        "category": "Technology",
-        "aum": 65059978466,
-        "peRatio": 52.06486
-      },
-      "date": "Jul 3, 2026",
-      "count": 26
-    },
     "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "SMH",
+        "lastChecked": 1784248291109,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
       "type": "etf",
       "aum": "$65.06B",
       "nav": "$202.80",
       "expenseRatio": "0.35%",
-      "peRatio": "52.06",
-      "sharesOut": "119.19M",
+      "peRatio": "49.72",
+      "sharesOut": "119.94M",
       "dps": "$1.10",
       "dividendYield": "0.19%",
-      "payoutRatio": "9.27%",
+      "payoutRatio": "9.74%",
       "exDivDate": "Dec 22, 2025",
-      "ch1y": "+111.97%",
+      "ch1y": "+95.64%",
       "payoutFrequency": "Annual",
       "beta": "1.71",
       "holdings": 26,
       "inception": "Dec 20, 2011",
       "chart": {
-        "expiration": 1783553844421,
+        "expiration": 1784295000000,
         "data": [
           {
-            "c": 580.48,
+            "c": 578.47,
             "o": 575.89,
-            "t": 1783503000
+            "t": 1784194200
           },
           {
-            "c": 583.93,
-            "t": 1783503060
+            "c": 579.8,
+            "t": 1784194260
           },
           {
-            "c": 583.96,
-            "t": 1783503120
+            "c": 578.53,
+            "t": 1784194320
           },
           {
-            "c": 583.24,
-            "t": 1783503180
+            "c": 578.93,
+            "t": 1784194380
           },
           {
-            "c": 585,
-            "t": 1783503240
+            "c": 577.15,
+            "t": 1784194440
           },
           {
-            "c": 586.9,
-            "t": 1783503300
+            "c": 576.04,
+            "t": 1784194500
           },
           {
-            "c": 585.3,
-            "t": 1783503360
+            "c": 574.93,
+            "t": 1784194560
           },
           {
-            "c": 584.32,
-            "t": 1783503420
+            "c": 576.72,
+            "t": 1784194620
           },
           {
-            "c": 582.52,
-            "t": 1783503480
+            "c": 575.53,
+            "t": 1784194680
           },
           {
-            "c": 585.45,
-            "t": 1783503540
+            "c": 574.68,
+            "t": 1784194740
           },
           {
-            "c": 586.94,
-            "t": 1783503600
+            "c": 576.33,
+            "t": 1784194800
           },
           {
-            "c": 587.08,
-            "t": 1783503660
+            "c": 574.65,
+            "t": 1784194860
           },
           {
-            "c": 586.09,
-            "t": 1783503720
+            "c": 574.21,
+            "t": 1784194920
           },
           {
-            "c": 586.87,
-            "t": 1783503780
+            "c": 574.12,
+            "t": 1784194980
           },
           {
-            "c": 586.98,
-            "t": 1783503840
+            "c": 572.83,
+            "t": 1784195040
           },
           {
-            "c": 589.7,
-            "t": 1783503900
+            "c": 571.15,
+            "t": 1784195100
           },
           {
-            "c": 591.07,
-            "t": 1783503960
+            "c": 571.33,
+            "t": 1784195160
           },
           {
-            "c": 588.93,
-            "t": 1783504020
+            "c": 571.33,
+            "t": 1784195220
           },
           {
-            "c": 587.94,
-            "t": 1783504080
+            "c": 570.75,
+            "t": 1784195280
           },
           {
-            "c": 585.99,
-            "t": 1783504140
+            "c": 570.12,
+            "t": 1784195340
           },
           {
-            "c": 586,
-            "t": 1783504200
+            "c": 571.6,
+            "t": 1784195400
           },
           {
-            "c": 587.03,
-            "t": 1783504260
+            "c": 572.66,
+            "t": 1784195460
           },
           {
-            "c": 587.98,
-            "t": 1783504320
+            "c": 573.68,
+            "t": 1784195520
           },
           {
-            "c": 588.74,
-            "t": 1783504380
+            "c": 572.32,
+            "t": 1784195580
           },
           {
-            "c": 588.15,
-            "t": 1783504440
+            "c": 571.65,
+            "t": 1784195640
           },
           {
-            "c": 587.06,
-            "t": 1783504500
+            "c": 571.99,
+            "t": 1784195700
           },
           {
-            "c": 587.28,
-            "t": 1783504560
+            "c": 572.5,
+            "t": 1784195760
           },
           {
-            "c": 587.7,
-            "t": 1783504620
+            "c": 571.87,
+            "t": 1784195820
           },
           {
-            "c": 589.55,
-            "t": 1783504680
+            "c": 573.06,
+            "t": 1784195880
           },
           {
-            "c": 589.74,
-            "t": 1783504740
+            "c": 573.73,
+            "t": 1784195940
           },
           {
-            "c": 589.74,
-            "t": 1783504800
+            "c": 575,
+            "t": 1784196000
           },
           {
-            "c": 588.65,
-            "t": 1783504860
+            "c": 575,
+            "t": 1784196060
           },
           {
-            "c": 587.59,
-            "t": 1783504920
+            "c": 575.6,
+            "t": 1784196120
           },
           {
-            "c": 586.96,
-            "t": 1783504980
+            "c": 576,
+            "t": 1784196180
           },
           {
-            "c": 587.25,
-            "t": 1783505040
+            "c": 575.39,
+            "t": 1784196240
           },
           {
-            "c": 587.14,
-            "t": 1783505100
+            "c": 576.65,
+            "t": 1784196300
           },
           {
-            "c": 586.88,
-            "t": 1783505160
+            "c": 578.93,
+            "t": 1784196360
           },
           {
-            "c": 586.54,
-            "t": 1783505220
+            "c": 579.2,
+            "t": 1784196420
           },
           {
-            "c": 586.27,
-            "t": 1783505280
+            "c": 580.89,
+            "t": 1784196480
           },
           {
-            "c": 586.43,
-            "t": 1783505340
+            "c": 580.92,
+            "t": 1784196540
           },
           {
-            "c": 585.54,
-            "t": 1783505400
-          },
-          {
-            "c": 584,
-            "t": 1783505460
-          },
-          {
-            "c": 582.96,
-            "t": 1783505520
-          },
-          {
-            "c": 583.8,
-            "t": 1783505580
-          },
-          {
-            "c": 584.55,
-            "t": 1783505640
-          },
-          {
-            "c": 583.5,
-            "t": 1783505700
-          },
-          {
-            "c": 583.77,
-            "t": 1783505760
-          },
-          {
-            "c": 585.99,
-            "t": 1783505820
-          },
-          {
-            "c": 585.41,
-            "t": 1783505880
-          },
-          {
-            "c": 585.51,
-            "t": 1783505940
-          },
-          {
-            "c": 585.26,
-            "t": 1783506000
-          },
-          {
-            "c": 587.82,
-            "t": 1783506060
-          },
-          {
-            "c": 587.48,
-            "t": 1783506120
-          },
-          {
-            "c": 586.84,
-            "t": 1783506180
-          },
-          {
-            "c": 585.45,
-            "t": 1783506240
-          },
-          {
-            "c": 586.74,
-            "t": 1783506300
-          },
-          {
-            "c": 586.5,
-            "t": 1783506360
-          },
-          {
-            "c": 586.45,
-            "t": 1783506420
-          },
-          {
-            "c": 585.79,
-            "t": 1783506480
-          },
-          {
-            "c": 585.94,
-            "t": 1783506540
-          },
-          {
-            "c": 586.27,
-            "t": 1783506600
-          },
-          {
-            "c": 586.53,
-            "t": 1783506660
-          },
-          {
-            "c": 585.81,
-            "t": 1783506720
-          },
-          {
-            "c": 586.33,
-            "t": 1783506780
-          },
-          {
-            "c": 586.28,
-            "t": 1783506840
-          },
-          {
-            "c": 585.23,
-            "t": 1783506900
-          },
-          {
-            "c": 584.33,
-            "t": 1783506960
-          },
-          {
-            "c": 586.24,
-            "t": 1783507020
-          },
-          {
-            "c": 585.33,
-            "t": 1783507080
-          },
-          {
-            "c": 585.03,
-            "t": 1783507140
-          },
-          {
-            "c": 585.53,
-            "t": 1783507200
-          },
-          {
-            "c": 585.4,
-            "t": 1783507260
-          },
-          {
-            "c": 584.41,
-            "t": 1783507320
-          },
-          {
-            "c": 583.89,
-            "t": 1783507380
-          },
-          {
-            "c": 584.79,
-            "t": 1783507440
-          },
-          {
-            "c": 583.32,
-            "t": 1783507500
-          },
-          {
-            "c": 582.94,
-            "t": 1783507560
-          },
-          {
-            "c": 580.93,
-            "t": 1783507620
-          },
-          {
-            "c": 581.57,
-            "t": 1783507680
-          },
-          {
-            "c": 580.68,
-            "t": 1783507740
-          },
-          {
-            "c": 580.98,
-            "t": 1783507800
-          },
-          {
-            "c": 582.19,
-            "t": 1783507860
-          },
-          {
-            "c": 584,
-            "t": 1783507920
-          },
-          {
-            "c": 586.01,
-            "t": 1783507980
-          },
-          {
-            "c": 584.7,
-            "t": 1783508040
-          },
-          {
-            "c": 585.66,
-            "t": 1783508100
-          },
-          {
-            "c": 586.53,
-            "t": 1783508160
-          },
-          {
-            "c": 585.84,
-            "t": 1783508220
-          },
-          {
-            "c": 584.77,
-            "t": 1783508280
-          },
-          {
-            "c": 585.36,
-            "t": 1783508340
-          },
-          {
-            "c": 585.36,
-            "t": 1783508400
-          },
-          {
-            "c": 584.72,
-            "t": 1783508460
-          },
-          {
-            "c": 584.63,
-            "t": 1783508520
-          },
-          {
-            "c": 584.11,
-            "t": 1783508580
-          },
-          {
-            "c": 583.78,
-            "t": 1783508640
-          },
-          {
-            "c": 584.7,
-            "t": 1783508700
-          },
-          {
-            "c": 583.24,
-            "t": 1783508760
-          },
-          {
-            "c": 583.72,
-            "t": 1783508820
-          },
-          {
-            "c": 584.84,
-            "t": 1783508880
-          },
-          {
-            "c": 584.35,
-            "t": 1783508940
-          },
-          {
-            "c": 584.71,
-            "t": 1783509000
-          },
-          {
-            "c": 583.95,
-            "t": 1783509060
-          },
-          {
-            "c": 583.39,
-            "t": 1783509120
-          },
-          {
-            "c": 582,
-            "t": 1783509180
-          },
-          {
-            "c": 581.19,
-            "t": 1783509240
-          },
-          {
-            "c": 581.27,
-            "t": 1783509300
-          },
-          {
-            "c": 580.07,
-            "t": 1783509360
-          },
-          {
-            "c": 579.21,
-            "t": 1783509420
-          },
-          {
-            "c": 580,
-            "t": 1783509480
-          },
-          {
-            "c": 580.9,
-            "t": 1783509540
-          },
-          {
-            "c": 580.18,
-            "t": 1783509600
-          },
-          {
-            "c": 579.81,
-            "t": 1783509660
-          },
-          {
-            "c": 578.49,
-            "t": 1783509720
-          },
-          {
-            "c": 577.77,
-            "t": 1783509780
-          },
-          {
-            "c": 577.7,
-            "t": 1783509840
-          },
-          {
-            "c": 577.5,
-            "t": 1783509900
-          },
-          {
-            "c": 577.65,
-            "t": 1783509960
-          },
-          {
-            "c": 577.44,
-            "t": 1783510020
-          },
-          {
-            "c": 577.83,
-            "t": 1783510080
-          },
-          {
-            "c": 578.13,
-            "t": 1783510140
-          },
-          {
-            "c": 578.37,
-            "t": 1783510200
-          },
-          {
-            "c": 578.73,
-            "t": 1783510260
-          },
-          {
-            "c": 579.35,
-            "t": 1783510320
-          },
-          {
-            "c": 580,
-            "t": 1783510380
-          },
-          {
-            "c": 580.06,
-            "t": 1783510440
-          },
-          {
-            "c": 581.43,
-            "t": 1783510500
-          },
-          {
-            "c": 582.04,
-            "t": 1783510560
-          },
-          {
-            "c": 581.93,
-            "t": 1783510620
-          },
-          {
-            "c": 581.28,
-            "t": 1783510680
-          },
-          {
-            "c": 580.23,
-            "t": 1783510740
-          },
-          {
-            "c": 581.23,
-            "t": 1783510800
-          },
-          {
-            "c": 581.07,
-            "t": 1783510860
-          },
-          {
-            "c": 580.25,
-            "t": 1783510920
-          },
-          {
-            "c": 580.44,
-            "t": 1783510980
-          },
-          {
-            "c": 580.64,
-            "t": 1783511040
-          },
-          {
-            "c": 580.01,
-            "t": 1783511100
-          },
-          {
-            "c": 580.02,
-            "t": 1783511160
-          },
-          {
-            "c": 579.08,
-            "t": 1783511220
-          },
-          {
-            "c": 579.61,
-            "t": 1783511280
-          },
-          {
-            "c": 579.73,
-            "t": 1783511340
-          },
-          {
-            "c": 579.49,
-            "t": 1783511400
-          },
-          {
-            "c": 578.77,
-            "t": 1783511460
-          },
-          {
-            "c": 578.23,
-            "t": 1783511520
-          },
-          {
-            "c": 578.66,
-            "t": 1783511580
-          },
-          {
-            "c": 578.57,
-            "t": 1783511640
-          },
-          {
-            "c": 579.02,
-            "t": 1783511700
-          },
-          {
-            "c": 578.65,
-            "t": 1783511760
-          },
-          {
-            "c": 578.8,
-            "t": 1783511820
-          },
-          {
-            "c": 579,
-            "t": 1783511880
+            "c": 581.1,
+            "t": 1784196600
           },
           {
             "c": 579.59,
-            "t": 1783511940
+            "t": 1784196660
           },
           {
-            "c": 580.67,
-            "t": 1783512000
+            "c": 579.22,
+            "t": 1784196720
           },
           {
-            "c": 580.58,
-            "t": 1783512060
+            "c": 579.82,
+            "t": 1784196780
           },
           {
-            "c": 580.64,
-            "t": 1783512120
+            "c": 579.06,
+            "t": 1784196840
           },
           {
-            "c": 580.68,
-            "t": 1783512180
+            "c": 579.27,
+            "t": 1784196900
           },
           {
-            "c": 580.84,
-            "t": 1783512240
+            "c": 579.99,
+            "t": 1784196960
           },
           {
-            "c": 581.39,
-            "t": 1783512300
+            "c": 579.52,
+            "t": 1784197020
           },
           {
-            "c": 581.09,
-            "t": 1783512360
+            "c": 578.15,
+            "t": 1784197080
           },
           {
-            "c": 581.19,
-            "t": 1783512420
+            "c": 578.99,
+            "t": 1784197140
           },
           {
-            "c": 580.85,
-            "t": 1783512480
+            "c": 577.07,
+            "t": 1784197200
           },
           {
-            "c": 582.12,
-            "t": 1783512540
+            "c": 575.84,
+            "t": 1784197260
           },
           {
-            "c": 583.02,
-            "t": 1783512600
+            "c": 576.12,
+            "t": 1784197320
           },
           {
-            "c": 583.35,
-            "t": 1783512660
+            "c": 576.42,
+            "t": 1784197380
           },
           {
-            "c": 584.07,
-            "t": 1783512720
+            "c": 576.36,
+            "t": 1784197440
           },
           {
-            "c": 584.23,
-            "t": 1783512780
+            "c": 576.23,
+            "t": 1784197500
           },
           {
-            "c": 584.69,
-            "t": 1783512840
+            "c": 576.86,
+            "t": 1784197560
           },
           {
-            "c": 583.74,
-            "t": 1783512900
+            "c": 577.75,
+            "t": 1784197620
           },
           {
-            "c": 584.15,
-            "t": 1783512960
+            "c": 577.96,
+            "t": 1784197680
           },
           {
-            "c": 585.29,
-            "t": 1783513020
+            "c": 578.62,
+            "t": 1784197740
           },
           {
-            "c": 585.05,
-            "t": 1783513080
+            "c": 577.66,
+            "t": 1784197800
           },
           {
-            "c": 585.21,
-            "t": 1783513140
+            "c": 576.09,
+            "t": 1784197860
           },
           {
-            "c": 586.07,
-            "t": 1783513200
+            "c": 577.46,
+            "t": 1784197920
           },
           {
-            "c": 587.62,
-            "t": 1783513260
+            "c": 577.69,
+            "t": 1784197980
           },
           {
-            "c": 587.38,
-            "t": 1783513320
+            "c": 576.89,
+            "t": 1784198040
           },
           {
-            "c": 587.17,
-            "t": 1783513380
+            "c": 577.73,
+            "t": 1784198100
           },
           {
-            "c": 586.23,
-            "t": 1783513440
+            "c": 576.97,
+            "t": 1784198160
           },
           {
-            "c": 586.41,
-            "t": 1783513500
+            "c": 578.26,
+            "t": 1784198220
           },
           {
-            "c": 586.91,
-            "t": 1783513560
+            "c": 577.33,
+            "t": 1784198280
           },
           {
-            "c": 587.15,
-            "t": 1783513620
+            "c": 576.34,
+            "t": 1784198340
           },
           {
-            "c": 587.2,
-            "t": 1783513680
+            "c": 575.18,
+            "t": 1784198400
           },
           {
-            "c": 586.95,
-            "t": 1783513740
+            "c": 575.73,
+            "t": 1784198460
           },
           {
-            "c": 588.05,
-            "t": 1783513800
+            "c": 575.47,
+            "t": 1784198520
           },
           {
-            "c": 587.98,
-            "t": 1783513860
+            "c": 575.54,
+            "t": 1784198580
           },
           {
-            "c": 587.34,
-            "t": 1783513920
+            "c": 575.5,
+            "t": 1784198640
           },
           {
-            "c": 587.11,
-            "t": 1783513980
+            "c": 575.55,
+            "t": 1784198700
           },
           {
-            "c": 586.54,
-            "t": 1783514040
+            "c": 575.48,
+            "t": 1784198760
           },
           {
-            "c": 586.99,
-            "t": 1783514100
+            "c": 575.08,
+            "t": 1784198820
           },
           {
-            "c": 586.23,
-            "t": 1783514160
+            "c": 575,
+            "t": 1784198880
           },
           {
-            "c": 586.25,
-            "t": 1783514220
+            "c": 574.78,
+            "t": 1784198940
           },
           {
-            "c": 586,
-            "t": 1783514280
+            "c": 572.93,
+            "t": 1784199000
           },
           {
-            "c": 587.14,
-            "t": 1783514340
+            "c": 573.9,
+            "t": 1784199060
           },
           {
-            "c": 588.17,
-            "t": 1783514400
+            "c": 572.83,
+            "t": 1784199120
           },
           {
-            "c": 588.29,
-            "t": 1783514460
+            "c": 572.45,
+            "t": 1784199180
           },
           {
-            "c": 588.29,
-            "t": 1783514520
+            "c": 572.89,
+            "t": 1784199240
           },
           {
-            "c": 588.74,
-            "t": 1783514580
+            "c": 572.33,
+            "t": 1784199300
           },
           {
-            "c": 588.48,
-            "t": 1783514640
+            "c": 572.49,
+            "t": 1784199360
           },
           {
-            "c": 588.04,
-            "t": 1783514700
+            "c": 573.49,
+            "t": 1784199420
           },
           {
-            "c": 588.89,
-            "t": 1783514760
+            "c": 574.01,
+            "t": 1784199480
           },
           {
-            "c": 588.77,
-            "t": 1783514820
+            "c": 574.96,
+            "t": 1784199540
           },
           {
-            "c": 589.02,
-            "t": 1783514880
+            "c": 575.5,
+            "t": 1784199600
           },
           {
-            "c": 590.01,
-            "t": 1783514940
+            "c": 574.71,
+            "t": 1784199660
           },
           {
-            "c": 590.32,
-            "t": 1783515000
+            "c": 575.14,
+            "t": 1784199720
           },
           {
-            "c": 590.04,
-            "t": 1783515060
+            "c": 574.14,
+            "t": 1784199780
           },
           {
-            "c": 590.83,
-            "t": 1783515120
+            "c": 574.19,
+            "t": 1784199840
           },
           {
-            "c": 590.73,
-            "t": 1783515180
+            "c": 573.33,
+            "t": 1784199900
           },
           {
-            "c": 590.86,
-            "t": 1783515240
+            "c": 572.5,
+            "t": 1784199960
           },
           {
-            "c": 590.42,
-            "t": 1783515300
+            "c": 572.48,
+            "t": 1784200020
           },
           {
-            "c": 591.1,
-            "t": 1783515360
+            "c": 572.31,
+            "t": 1784200080
           },
           {
-            "c": 591.58,
-            "t": 1783515420
+            "c": 572.87,
+            "t": 1784200140
           },
           {
-            "c": 591.81,
-            "t": 1783515480
+            "c": 572.62,
+            "t": 1784200200
           },
           {
-            "c": 591.55,
-            "t": 1783515540
+            "c": 571.39,
+            "t": 1784200260
           },
           {
-            "c": 591.105,
-            "t": 1783515600
+            "c": 571.37,
+            "t": 1784200320
           },
           {
-            "c": 591.02,
-            "t": 1783515660
+            "c": 570.7,
+            "t": 1784200380
           },
           {
-            "c": 590.319,
-            "t": 1783515720
+            "c": 571.45,
+            "t": 1784200440
           },
           {
-            "c": 590.05,
-            "t": 1783515780
+            "c": 571.59,
+            "t": 1784200500
           },
           {
-            "c": 590.355,
-            "t": 1783515840
+            "c": 571.3,
+            "t": 1784200560
           },
           {
-            "c": 590.22,
-            "t": 1783515900
+            "c": 571.99,
+            "t": 1784200620
           },
           {
-            "c": 591.375,
-            "t": 1783515960
+            "c": 572.5,
+            "t": 1784200680
           },
           {
-            "c": 592.01,
-            "t": 1783516020
+            "c": 572.75,
+            "t": 1784200740
           },
           {
-            "c": 591.84,
-            "t": 1783516080
+            "c": 572.02,
+            "t": 1784200800
           },
           {
-            "c": 591.005,
-            "t": 1783516140
+            "c": 572.27,
+            "t": 1784200860
           },
           {
-            "c": 590.915,
-            "t": 1783516200
+            "c": 571.97,
+            "t": 1784200920
           },
           {
-            "c": 590.615,
-            "t": 1783516260
+            "c": 572.18,
+            "t": 1784200980
           },
           {
-            "c": 590.76,
-            "t": 1783516320
+            "c": 572.5,
+            "t": 1784201040
           },
           {
-            "c": 590.41,
-            "t": 1783516380
+            "c": 573.5,
+            "t": 1784201100
           },
           {
-            "c": 589.445,
-            "t": 1783516440
+            "c": 574,
+            "t": 1784201160
           },
           {
-            "c": 589.61,
-            "t": 1783516500
+            "c": 573.68,
+            "t": 1784201220
           },
           {
-            "c": 590.29,
-            "t": 1783516560
+            "c": 572.48,
+            "t": 1784201280
           },
           {
-            "c": 590.64,
-            "t": 1783516620
+            "c": 573.18,
+            "t": 1784201340
           },
           {
-            "c": 590.33,
-            "t": 1783516680
+            "c": 572.62,
+            "t": 1784201400
           },
           {
-            "c": 591.18,
-            "t": 1783516740
+            "c": 573.89,
+            "t": 1784201460
           },
           {
-            "c": 591.3,
-            "t": 1783516800
+            "c": 573.86,
+            "t": 1784201520
           },
           {
-            "c": 592.05,
-            "t": 1783516860
+            "c": 573.64,
+            "t": 1784201580
           },
           {
-            "c": 592.25,
-            "t": 1783516920
+            "c": 574.55,
+            "t": 1784201640
           },
           {
-            "c": 592.58,
-            "t": 1783516980
+            "c": 574.08,
+            "t": 1784201700
           },
           {
-            "c": 592.86,
-            "t": 1783517040
+            "c": 574.2,
+            "t": 1784201760
           },
           {
-            "c": 593.635,
-            "t": 1783517100
+            "c": 573.49,
+            "t": 1784201820
           },
           {
-            "c": 593.53,
-            "t": 1783517160
+            "c": 574.57,
+            "t": 1784201880
           },
           {
-            "c": 593.35,
-            "t": 1783517220
+            "c": 574.85,
+            "t": 1784201940
           },
           {
-            "c": 593.69,
-            "t": 1783517280
+            "c": 573.95,
+            "t": 1784202000
           },
           {
-            "c": 594.03,
-            "t": 1783517340
+            "c": 572.29,
+            "t": 1784202060
           },
           {
-            "c": 594.17,
-            "t": 1783517400
+            "c": 573.05,
+            "t": 1784202120
           },
           {
-            "c": 594.22,
-            "t": 1783517460
+            "c": 572.59,
+            "t": 1784202180
           },
           {
-            "c": 594.03,
-            "t": 1783517520
+            "c": 572.89,
+            "t": 1784202240
           },
           {
-            "c": 594.02,
-            "t": 1783517580
+            "c": 571.97,
+            "t": 1784202300
           },
           {
-            "c": 594.17,
-            "t": 1783517640
+            "c": 571.51,
+            "t": 1784202360
           },
           {
-            "c": 594.685,
-            "t": 1783517700
+            "c": 571.6,
+            "t": 1784202420
           },
           {
-            "c": 594.39,
-            "t": 1783517760
+            "c": 572.53,
+            "t": 1784202480
           },
           {
-            "c": 594.215,
-            "t": 1783517820
+            "c": 573.16,
+            "t": 1784202540
           },
           {
-            "c": 593.64,
-            "t": 1783517880
+            "c": 573.37,
+            "t": 1784202600
           },
           {
-            "c": 593.455,
-            "t": 1783517940
+            "c": 573.56,
+            "t": 1784202660
           },
           {
-            "c": 593.31,
-            "t": 1783518000
+            "c": 573.9,
+            "t": 1784202720
           },
           {
-            "c": 592.182,
-            "t": 1783518060
+            "c": 573.19,
+            "t": 1784202780
           },
           {
-            "c": 592.275,
-            "t": 1783518120
+            "c": 573.26,
+            "t": 1784202840
           },
           {
-            "c": 591.74,
-            "t": 1783518180
+            "c": 572.38,
+            "t": 1784202900
           },
           {
-            "c": 591.6,
-            "t": 1783518240
+            "c": 572.29,
+            "t": 1784202960
           },
           {
-            "c": 590.625,
-            "t": 1783518300
+            "c": 572.428,
+            "t": 1784203020
           },
           {
-            "c": 591.089,
-            "t": 1783518360
+            "c": 572.28,
+            "t": 1784203080
           },
           {
-            "c": 590.62,
-            "t": 1783518420
+            "c": 572.37,
+            "t": 1784203140
           },
           {
-            "c": 590.045,
-            "t": 1783518480
+            "c": 571.74,
+            "t": 1784203200
           },
           {
-            "c": 590.1,
-            "t": 1783518540
+            "c": 571.875,
+            "t": 1784203260
           },
           {
-            "c": 591.2,
-            "t": 1783518600
+            "c": 571.16,
+            "t": 1784203320
           },
           {
-            "c": 591.15,
-            "t": 1783518660
+            "c": 571.201,
+            "t": 1784203380
           },
           {
-            "c": 591.76,
-            "t": 1783518720
+            "c": 570.83,
+            "t": 1784203440
           },
           {
-            "c": 590.91,
-            "t": 1783518780
+            "c": 569.98,
+            "t": 1784203500
           },
           {
-            "c": 590.64,
-            "t": 1783518840
+            "c": 570.37,
+            "t": 1784203560
           },
           {
-            "c": 590.1,
-            "t": 1783518900
+            "c": 570.47,
+            "t": 1784203620
           },
           {
-            "c": 589.72,
-            "t": 1783518960
+            "c": 570.62,
+            "t": 1784203680
           },
           {
-            "c": 589.856,
-            "t": 1783519020
+            "c": 570.613,
+            "t": 1784203740
           },
           {
-            "c": 590.232,
-            "t": 1783519080
+            "c": 569.531,
+            "t": 1784203800
           },
           {
-            "c": 590.46,
-            "t": 1783519140
+            "c": 569.285,
+            "t": 1784203860
           },
           {
-            "c": 591.84,
-            "t": 1783519200
+            "c": 568.85,
+            "t": 1784203920
           },
           {
-            "c": 592.04,
-            "t": 1783519260
+            "c": 568.8,
+            "t": 1784203980
           },
           {
-            "c": 592.24,
-            "t": 1783519320
+            "c": 568.46,
+            "t": 1784204040
           },
           {
-            "c": 592.47,
-            "t": 1783519380
+            "c": 568.705,
+            "t": 1784204100
           },
           {
-            "c": 592.5,
-            "t": 1783519440
+            "c": 568.53,
+            "t": 1784204160
           },
           {
-            "c": 592.05,
-            "t": 1783519500
+            "c": 567.95,
+            "t": 1784204220
           },
           {
-            "c": 591.97,
-            "t": 1783519560
+            "c": 568.96,
+            "t": 1784204280
           },
           {
-            "c": 591.9,
-            "t": 1783519620
+            "c": 568.88,
+            "t": 1784204340
           },
           {
-            "c": 592.4,
-            "t": 1783519680
+            "c": 568.06,
+            "t": 1784204400
           },
           {
-            "c": 592.675,
-            "t": 1783519740
+            "c": 568.02,
+            "t": 1784204460
           },
           {
-            "c": 593.02,
-            "t": 1783519800
+            "c": 567.79,
+            "t": 1784204520
           },
           {
-            "c": 592.86,
-            "t": 1783519860
+            "c": 568.17,
+            "t": 1784204580
           },
           {
-            "c": 592.555,
-            "t": 1783519920
+            "c": 568.35,
+            "t": 1784204640
           },
           {
-            "c": 592.62,
-            "t": 1783519980
+            "c": 568.285,
+            "t": 1784204700
           },
           {
-            "c": 592.555,
-            "t": 1783520040
+            "c": 568.816,
+            "t": 1784204760
           },
           {
-            "c": 592.855,
-            "t": 1783520100
+            "c": 569.415,
+            "t": 1784204820
           },
           {
-            "c": 592.15,
-            "t": 1783520160
+            "c": 569.263,
+            "t": 1784204880
           },
           {
-            "c": 592.59,
-            "t": 1783520220
+            "c": 568.945,
+            "t": 1784204940
           },
           {
-            "c": 592.365,
-            "t": 1783520280
+            "c": 569.233,
+            "t": 1784205000
           },
           {
-            "c": 592.796,
-            "t": 1783520340
+            "c": 569.72,
+            "t": 1784205060
           },
           {
-            "c": 592.487,
-            "t": 1783520400
+            "c": 570.345,
+            "t": 1784205120
           },
           {
-            "c": 592.74,
-            "t": 1783520460
+            "c": 569.48,
+            "t": 1784205180
           },
           {
-            "c": 592.79,
-            "t": 1783520520
+            "c": 569.59,
+            "t": 1784205240
           },
           {
-            "c": 592.33,
-            "t": 1783520580
+            "c": 568.83,
+            "t": 1784205300
           },
           {
-            "c": 592.18,
-            "t": 1783520640
+            "c": 569.302,
+            "t": 1784205360
           },
           {
-            "c": 592.22,
-            "t": 1783520700
+            "c": 569.78,
+            "t": 1784205420
           },
           {
-            "c": 592.33,
-            "t": 1783520760
+            "c": 569.65,
+            "t": 1784205480
           },
           {
-            "c": 592.38,
-            "t": 1783520820
+            "c": 569.395,
+            "t": 1784205540
           },
           {
-            "c": 591.98,
-            "t": 1783520880
+            "c": 569.69,
+            "t": 1784205600
           },
           {
-            "c": 591.61,
-            "t": 1783520940
+            "c": 569.685,
+            "t": 1784205660
           },
           {
-            "c": 591.11,
-            "t": 1783521000
+            "c": 569.25,
+            "t": 1784205720
           },
           {
-            "c": 591.31,
-            "t": 1783521060
+            "c": 569.36,
+            "t": 1784205780
           },
           {
-            "c": 591.12,
-            "t": 1783521120
+            "c": 569.16,
+            "t": 1784205840
           },
           {
-            "c": 590.9,
-            "t": 1783521180
+            "c": 568.4,
+            "t": 1784205900
           },
           {
-            "c": 591.08,
-            "t": 1783521240
+            "c": 568.09,
+            "t": 1784205960
           },
           {
-            "c": 591.47,
-            "t": 1783521300
+            "c": 567.46,
+            "t": 1784206020
           },
           {
-            "c": 592.02,
-            "t": 1783521360
+            "c": 567.56,
+            "t": 1784206080
           },
           {
-            "c": 592.42,
-            "t": 1783521420
+            "c": 567.81,
+            "t": 1784206140
           },
           {
-            "c": 592.445,
-            "t": 1783521480
+            "c": 568.3,
+            "t": 1784206200
           },
           {
-            "c": 592.622,
-            "t": 1783521540
+            "c": 568.46,
+            "t": 1784206260
           },
           {
-            "c": 592.57,
-            "t": 1783521600
+            "c": 568.21,
+            "t": 1784206320
           },
           {
-            "c": 591.82,
-            "t": 1783521660
+            "c": 568.55,
+            "t": 1784206380
           },
           {
-            "c": 591.76,
-            "t": 1783521720
+            "c": 568.87,
+            "t": 1784206440
           },
           {
-            "c": 592.485,
-            "t": 1783521780
+            "c": 569.755,
+            "t": 1784206500
           },
           {
-            "c": 592.46,
-            "t": 1783521840
+            "c": 569.655,
+            "t": 1784206560
           },
           {
-            "c": 592.26,
-            "t": 1783521900
+            "c": 569.71,
+            "t": 1784206620
           },
           {
-            "c": 592.38,
-            "t": 1783521960
+            "c": 569.92,
+            "t": 1784206680
           },
           {
-            "c": 591.973,
-            "t": 1783522020
+            "c": 569.75,
+            "t": 1784206740
           },
           {
-            "c": 592.301,
-            "t": 1783522080
+            "c": 568.5,
+            "t": 1784206800
           },
           {
-            "c": 592.36,
-            "t": 1783522140
+            "c": 568.78,
+            "t": 1784206860
           },
           {
-            "c": 592.719,
-            "t": 1783522200
+            "c": 568.2,
+            "t": 1784206920
           },
           {
-            "c": 593.059,
-            "t": 1783522260
+            "c": 568.555,
+            "t": 1784206980
           },
           {
-            "c": 592.544,
-            "t": 1783522320
+            "c": 569.06,
+            "t": 1784207040
           },
           {
-            "c": 592.29,
-            "t": 1783522380
+            "c": 568.83,
+            "t": 1784207100
           },
           {
-            "c": 592.54,
-            "t": 1783522440
+            "c": 568.86,
+            "t": 1784207160
           },
           {
-            "c": 592.32,
-            "t": 1783522500
+            "c": 568.955,
+            "t": 1784207220
           },
           {
-            "c": 592.21,
-            "t": 1783522560
+            "c": 569.623,
+            "t": 1784207280
           },
           {
-            "c": 592.46,
-            "t": 1783522620
+            "c": 569.53,
+            "t": 1784207340
           },
           {
-            "c": 592.294,
-            "t": 1783522680
+            "c": 569.585,
+            "t": 1784207400
           },
           {
-            "c": 592.954,
-            "t": 1783522740
+            "c": 569.21,
+            "t": 1784207460
           },
           {
-            "c": 593.48,
-            "t": 1783522800
+            "c": 568.97,
+            "t": 1784207520
           },
           {
-            "c": 592.99,
-            "t": 1783522860
+            "c": 568.65,
+            "t": 1784207580
           },
           {
-            "c": 592.77,
-            "t": 1783522920
+            "c": 568.24,
+            "t": 1784207640
           },
           {
-            "c": 592.87,
-            "t": 1783522980
+            "c": 568.46,
+            "t": 1784207700
           },
           {
-            "c": 593.05,
-            "t": 1783523040
+            "c": 567.75,
+            "t": 1784207760
           },
           {
-            "c": 592.39,
-            "t": 1783523100
+            "c": 567.39,
+            "t": 1784207820
           },
           {
-            "c": 592.07,
-            "t": 1783523160
+            "c": 567.58,
+            "t": 1784207880
           },
           {
-            "c": 593.11,
-            "t": 1783523220
+            "c": 567.55,
+            "t": 1784207940
           },
           {
-            "c": 593.3,
-            "t": 1783523280
+            "c": 567.428,
+            "t": 1784208000
           },
           {
-            "c": 593.32,
-            "t": 1783523340
+            "c": 567.23,
+            "t": 1784208060
           },
           {
-            "c": 593.095,
-            "t": 1783523400
+            "c": 567.125,
+            "t": 1784208120
           },
           {
-            "c": 593.1,
-            "t": 1783523460
+            "c": 567.4,
+            "t": 1784208180
           },
           {
-            "c": 593.2,
-            "t": 1783523520
+            "c": 567.05,
+            "t": 1784208240
           },
           {
-            "c": 593.11,
-            "t": 1783523580
+            "c": 567.02,
+            "t": 1784208300
           },
           {
-            "c": 593.25,
-            "t": 1783523640
+            "c": 567.76,
+            "t": 1784208360
           },
           {
-            "c": 593.05,
-            "t": 1783523700
+            "c": 568.01,
+            "t": 1784208420
           },
           {
-            "c": 593.25,
-            "t": 1783523760
+            "c": 568.27,
+            "t": 1784208480
           },
           {
-            "c": 593,
-            "t": 1783523820
+            "c": 568.16,
+            "t": 1784208540
           },
           {
-            "c": 593.28,
-            "t": 1783523880
+            "c": 568.12,
+            "t": 1784208600
           },
           {
-            "c": 592.93,
-            "t": 1783523940
+            "c": 567.59,
+            "t": 1784208660
           },
           {
-            "c": 593.11,
-            "t": 1783524000
+            "c": 568,
+            "t": 1784208720
           },
           {
-            "c": 593.17,
-            "t": 1783524060
+            "c": 567.375,
+            "t": 1784208780
           },
           {
-            "c": 593.44,
-            "t": 1783524120
+            "c": 567.12,
+            "t": 1784208840
           },
           {
-            "c": 593.51,
-            "t": 1783524180
+            "c": 566.59,
+            "t": 1784208900
           },
           {
-            "c": 593.28,
-            "t": 1783524240
+            "c": 566.89,
+            "t": 1784208960
           },
           {
-            "c": 593.68,
-            "t": 1783524300
+            "c": 566.59,
+            "t": 1784209020
           },
           {
-            "c": 593.44,
-            "t": 1783524360
+            "c": 566.84,
+            "t": 1784209080
           },
           {
-            "c": 593.88,
-            "t": 1783524420
+            "c": 566.63,
+            "t": 1784209140
           },
           {
-            "c": 593.66,
-            "t": 1783524480
+            "c": 566.054,
+            "t": 1784209200
           },
           {
-            "c": 594.23,
-            "t": 1783524540
+            "c": 565.5,
+            "t": 1784209260
           },
           {
-            "c": 592.38,
-            "t": 1783524600
+            "c": 565.55,
+            "t": 1784209320
           },
           {
-            "c": 592.24,
-            "t": 1783524660
+            "c": 565.19,
+            "t": 1784209380
           },
           {
-            "c": 592.44,
-            "t": 1783524720
+            "c": 565.34,
+            "t": 1784209440
           },
           {
-            "c": 592.2,
-            "t": 1783524780
+            "c": 564.63,
+            "t": 1784209500
           },
           {
-            "c": 592.195,
-            "t": 1783524840
+            "c": 565.29,
+            "t": 1784209560
           },
           {
-            "c": 592.333,
-            "t": 1783524900
+            "c": 565.36,
+            "t": 1784209620
           },
           {
-            "c": 593.05,
-            "t": 1783524960
+            "c": 565.95,
+            "t": 1784209680
           },
           {
-            "c": 593.36,
-            "t": 1783525020
+            "c": 565.88,
+            "t": 1784209740
           },
           {
-            "c": 592.64,
-            "t": 1783525080
+            "c": 565.51,
+            "t": 1784209800
           },
           {
-            "c": 592.54,
-            "t": 1783525140
+            "c": 565.2,
+            "t": 1784209860
           },
           {
-            "c": 592.616,
-            "t": 1783525200
+            "c": 565.111,
+            "t": 1784209920
           },
           {
-            "c": 591.488,
-            "t": 1783525260
+            "c": 565.53,
+            "t": 1784209980
           },
           {
-            "c": 591.42,
-            "t": 1783525320
+            "c": 565.2,
+            "t": 1784210040
           },
           {
-            "c": 591.905,
-            "t": 1783525380
+            "c": 564.65,
+            "t": 1784210100
           },
           {
-            "c": 592.225,
-            "t": 1783525440
+            "c": 564.905,
+            "t": 1784210160
           },
           {
-            "c": 592.73,
-            "t": 1783525500
+            "c": 564.65,
+            "t": 1784210220
           },
           {
-            "c": 592.36,
-            "t": 1783525560
+            "c": 564.92,
+            "t": 1784210280
           },
           {
-            "c": 591.76,
-            "t": 1783525620
+            "c": 565.205,
+            "t": 1784210340
           },
           {
-            "c": 592.055,
-            "t": 1783525680
+            "c": 565.81,
+            "t": 1784210400
           },
           {
-            "c": 592.035,
-            "t": 1783525740
+            "c": 565.57,
+            "t": 1784210460
           },
           {
-            "c": 592.013,
-            "t": 1783525800
+            "c": 565.23,
+            "t": 1784210520
           },
           {
-            "c": 592.625,
-            "t": 1783525860
+            "c": 565.03,
+            "t": 1784210580
           },
           {
-            "c": 592.542,
-            "t": 1783525920
+            "c": 565.053,
+            "t": 1784210640
           },
           {
-            "c": 592.838,
-            "t": 1783525980
+            "c": 564.955,
+            "t": 1784210700
           },
           {
-            "c": 593.54,
-            "t": 1783526040
+            "c": 565.164,
+            "t": 1784210760
           },
           {
-            "c": 592.85,
-            "t": 1783526100
+            "c": 565.985,
+            "t": 1784210820
           },
           {
-            "c": 592.62,
-            "t": 1783526160
+            "c": 565.995,
+            "t": 1784210880
           },
           {
-            "c": 593.79,
-            "t": 1783526220
+            "c": 566.185,
+            "t": 1784210940
           },
           {
-            "c": 593.7,
-            "t": 1783526280
+            "c": 566.61,
+            "t": 1784211000
           },
           {
-            "c": 593.35,
-            "t": 1783526340
+            "c": 567.03,
+            "t": 1784211060
           },
           {
-            "c": 593,
-            "t": 1783526400
+            "c": 567.33,
+            "t": 1784211120
+          },
+          {
+            "c": 567.48,
+            "t": 1784211180
+          },
+          {
+            "c": 566.69,
+            "t": 1784211240
+          },
+          {
+            "c": 566.26,
+            "t": 1784211300
+          },
+          {
+            "c": 567.729,
+            "t": 1784211360
+          },
+          {
+            "c": 567.61,
+            "t": 1784211420
+          },
+          {
+            "c": 567.51,
+            "t": 1784211480
+          },
+          {
+            "c": 568.22,
+            "t": 1784211540
+          },
+          {
+            "c": 568.73,
+            "t": 1784211600
+          },
+          {
+            "c": 569.09,
+            "t": 1784211660
+          },
+          {
+            "c": 568.782,
+            "t": 1784211720
+          },
+          {
+            "c": 568.98,
+            "t": 1784211780
+          },
+          {
+            "c": 569.665,
+            "t": 1784211840
+          },
+          {
+            "c": 569.16,
+            "t": 1784211900
+          },
+          {
+            "c": 569.6,
+            "t": 1784211960
+          },
+          {
+            "c": 569.31,
+            "t": 1784212020
+          },
+          {
+            "c": 568.88,
+            "t": 1784212080
+          },
+          {
+            "c": 568.468,
+            "t": 1784212140
+          },
+          {
+            "c": 567.66,
+            "t": 1784212200
+          },
+          {
+            "c": 567.635,
+            "t": 1784212260
+          },
+          {
+            "c": 567.64,
+            "t": 1784212320
+          },
+          {
+            "c": 567.65,
+            "t": 1784212380
+          },
+          {
+            "c": 567.46,
+            "t": 1784212440
+          },
+          {
+            "c": 567.125,
+            "t": 1784212500
+          },
+          {
+            "c": 566.88,
+            "t": 1784212560
+          },
+          {
+            "c": 567.18,
+            "t": 1784212620
+          },
+          {
+            "c": 567.22,
+            "t": 1784212680
+          },
+          {
+            "c": 567.22,
+            "t": 1784212740
+          },
+          {
+            "c": 566.3,
+            "t": 1784212800
+          },
+          {
+            "c": 566.71,
+            "t": 1784212860
+          },
+          {
+            "c": 567.06,
+            "t": 1784212920
+          },
+          {
+            "c": 567.659,
+            "t": 1784212980
+          },
+          {
+            "c": 567.74,
+            "t": 1784213040
+          },
+          {
+            "c": 567.34,
+            "t": 1784213100
+          },
+          {
+            "c": 567.07,
+            "t": 1784213160
+          },
+          {
+            "c": 567.12,
+            "t": 1784213220
+          },
+          {
+            "c": 568.03,
+            "t": 1784213280
+          },
+          {
+            "c": 567.59,
+            "t": 1784213340
+          },
+          {
+            "c": 567.864,
+            "t": 1784213400
+          },
+          {
+            "c": 567.495,
+            "t": 1784213460
+          },
+          {
+            "c": 567.14,
+            "t": 1784213520
+          },
+          {
+            "c": 566.92,
+            "t": 1784213580
+          },
+          {
+            "c": 566.84,
+            "t": 1784213640
+          },
+          {
+            "c": 566.56,
+            "t": 1784213700
+          },
+          {
+            "c": 566.905,
+            "t": 1784213760
+          },
+          {
+            "c": 566.37,
+            "t": 1784213820
+          },
+          {
+            "c": 566.67,
+            "t": 1784213880
+          },
+          {
+            "c": 566.701,
+            "t": 1784213940
+          },
+          {
+            "c": 567.025,
+            "t": 1784214000
+          },
+          {
+            "c": 566.985,
+            "t": 1784214060
+          },
+          {
+            "c": 568.01,
+            "t": 1784214120
+          },
+          {
+            "c": 568.11,
+            "t": 1784214180
+          },
+          {
+            "c": 568.01,
+            "t": 1784214240
+          },
+          {
+            "c": 568.54,
+            "t": 1784214300
+          },
+          {
+            "c": 566.855,
+            "t": 1784214360
+          },
+          {
+            "c": 566.5,
+            "t": 1784214420
+          },
+          {
+            "c": 566.77,
+            "t": 1784214480
+          },
+          {
+            "c": 567,
+            "t": 1784214540
+          },
+          {
+            "c": 567.19,
+            "t": 1784214600
+          },
+          {
+            "c": 567.25,
+            "t": 1784214660
+          },
+          {
+            "c": 567.06,
+            "t": 1784214720
+          },
+          {
+            "c": 566.52,
+            "t": 1784214780
+          },
+          {
+            "c": 567.115,
+            "t": 1784214840
+          },
+          {
+            "c": 566.685,
+            "t": 1784214900
+          },
+          {
+            "c": 566.61,
+            "t": 1784214960
+          },
+          {
+            "c": 566.08,
+            "t": 1784215020
+          },
+          {
+            "c": 566.69,
+            "t": 1784215080
+          },
+          {
+            "c": 566.38,
+            "t": 1784215140
+          },
+          {
+            "c": 566.53,
+            "t": 1784215200
+          },
+          {
+            "c": 567.555,
+            "t": 1784215260
+          },
+          {
+            "c": 566.47,
+            "t": 1784215320
+          },
+          {
+            "c": 566.17,
+            "t": 1784215380
+          },
+          {
+            "c": 566.37,
+            "t": 1784215440
+          },
+          {
+            "c": 565.58,
+            "t": 1784215500
+          },
+          {
+            "c": 565.22,
+            "t": 1784215560
+          },
+          {
+            "c": 565.991,
+            "t": 1784215620
+          },
+          {
+            "c": 566.27,
+            "t": 1784215680
+          },
+          {
+            "c": 566.7,
+            "t": 1784215740
+          },
+          {
+            "c": 566.74,
+            "t": 1784215800
+          },
+          {
+            "c": 565.72,
+            "t": 1784215860
+          },
+          {
+            "c": 566.14,
+            "t": 1784215920
+          },
+          {
+            "c": 565.905,
+            "t": 1784215980
+          },
+          {
+            "c": 566.235,
+            "t": 1784216040
+          },
+          {
+            "c": 565.25,
+            "t": 1784216100
+          },
+          {
+            "c": 564.83,
+            "t": 1784216160
+          },
+          {
+            "c": 565.19,
+            "t": 1784216220
+          },
+          {
+            "c": 565.88,
+            "t": 1784216280
+          },
+          {
+            "c": 565.74,
+            "t": 1784216340
+          },
+          {
+            "c": 565.78,
+            "t": 1784216400
+          },
+          {
+            "c": 566.74,
+            "t": 1784216460
+          },
+          {
+            "c": 566.67,
+            "t": 1784216520
+          },
+          {
+            "c": 565.89,
+            "t": 1784216580
+          },
+          {
+            "c": 565.79,
+            "t": 1784216640
+          },
+          {
+            "c": 565.465,
+            "t": 1784216700
+          },
+          {
+            "c": 564.765,
+            "t": 1784216760
+          },
+          {
+            "c": 564.74,
+            "t": 1784216820
+          },
+          {
+            "c": 564.64,
+            "t": 1784216880
+          },
+          {
+            "c": 564.94,
+            "t": 1784216940
+          },
+          {
+            "c": 565.76,
+            "t": 1784217000
+          },
+          {
+            "c": 566.1,
+            "t": 1784217060
+          },
+          {
+            "c": 566.69,
+            "t": 1784217120
+          },
+          {
+            "c": 566.6,
+            "t": 1784217180
+          },
+          {
+            "c": 567.21,
+            "t": 1784217240
+          },
+          {
+            "c": 568.23,
+            "t": 1784217300
+          },
+          {
+            "c": 568.15,
+            "t": 1784217360
+          },
+          {
+            "c": 568.43,
+            "t": 1784217420
+          },
+          {
+            "c": 567.86,
+            "t": 1784217480
+          },
+          {
+            "c": 568.888,
+            "t": 1784217540
+          },
+          {
+            "c": 568.92,
+            "t": 1784217600
           }
         ]
       },
@@ -6912,68 +6678,68 @@
       "provider_page": "vaneck",
       "holdingsTable": {
         "count": 26,
-        "updated": "Jul 3, 2026",
-        "top10": 69.53,
+        "updated": "Jul 11, 2026",
+        "top10": 69.88,
         "holdings": [
           {
             "n": "NVIDIA Corporation",
             "s": "$NVDA",
-            "as": "19.01%",
-            "sh": "67,132,346"
+            "as": "19.86%",
+            "sh": "69,292,978"
           },
           {
             "n": "Taiwan Semiconductor Manufacturing Company Limited",
             "s": "$TSM",
-            "as": "9.40%",
-            "sh": "14,889,948"
+            "as": "9.08%",
+            "sh": "15,404,259"
           },
           {
             "n": "Broadcom Inc.",
             "s": "$AVGO",
-            "as": "5.61%",
-            "sh": "10,700,777"
+            "as": "6.00%",
+            "sh": "11,033,880"
           },
           {
             "n": "Advanced Micro Devices, Inc.",
             "s": "$AMD",
-            "as": "5.58%",
-            "sh": "7,418,187"
+            "as": "5.82%",
+            "sh": "7,674,458"
           },
           {
             "n": "Micron Technology, Inc.",
             "s": "$MU",
-            "as": "5.34%",
-            "sh": "3,762,838"
+            "as": "5.18%",
+            "sh": "3,892,816"
           },
           {
             "n": "Applied Materials, Inc.",
             "s": "$AMAT",
-            "as": "5.33%",
-            "sh": "6,077,118"
+            "as": "5.15%",
+            "sh": "6,287,058"
           },
           {
             "n": "ASML Holding N.V.",
             "s": "$ASML",
-            "as": "4.99%",
-            "sh": "1,939,606"
+            "as": "4.89%",
+            "sh": "2,002,047"
           },
           {
-            "n": "Intel Corporation",
-            "s": "$INTC",
-            "as": "4.88%",
-            "sh": "27,912,003"
-          },
-          {
-            "n": "KLA Corporation",
-            "s": "$KLAC",
-            "as": "4.73%",
-            "sh": "13,802,186"
+            "n": "Texas Instruments Incorporated",
+            "s": "$TXN",
+            "as": "4.69%",
+            "sh": "11,080,217"
           },
           {
             "n": "Lam Research Corporation",
             "s": "$LRCX",
-            "as": "4.68%",
-            "sh": "9,159,847"
+            "as": "4.62%",
+            "sh": "9,708,259"
+          },
+          {
+            "n": "KLA Corporation",
+            "s": "$KLAC",
+            "as": "4.60%",
+            "sh": "14,628,472"
           }
         ]
       },
@@ -7010,8 +6776,53 @@
         }
       ],
       "news": {
-        "exp": "1783550409207",
+        "exp": "1784271590808",
         "data": [
+          {
+            "url": "https://www.marketwatch.com/story/semiconductor-stocks-are-on-the-verge-of-a-bear-market-is-the-thrill-in-the-chips-trade-gone-592eded7",
+            "img": "https://cdn.snapi.dev/images/v1/i/f/j/33edew-2957655-3806729.jpg",
+            "title": "Semiconductor stocks are on the verge of a bear market. Is the thrill in the chips trade gone?",
+            "text": "Investors seem to be second-guessing the stunning rally in chip stocks as another earnings season picks up steam.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#SOXX"
+            ],
+            "time": "Jul 16, 2026, 5:02 PM EDT",
+            "ago": "9 hours ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/semiconductor-index-rally-eyes-new-highs-as-elliott-wave-correction-may-be-complete-1610369",
+            "img": "https://cdn.snapi.dev/images/v1/9/4/w/jhy43ed-3775081-3801164.jpg",
+            "title": "Semiconductor Index Rally Eyes New Highs as Elliott Wave Correction May Be Complete",
+            "text": "SOX may have completed its Elliott Wave correction, with bulls targeting new highs if key support holds, while breakout confirmation remains essential.",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "#SOXX"
+            ],
+            "time": "Jul 14, 2026, 2:48 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.investopedia.com/sk-hynix-shares-slide-after-south-korea-sell-off-this-expert-sees-a-vicious-circle-forming-skhy-12017059",
+            "img": "https://cdn.snapi.dev/images/v1/4/i/r/etf32-3798626.jpg",
+            "title": "SK Hynix Shares Slide After South Korea Sell-Off. This Expert Sees a ‘Vicious Circle' Forming",
+            "text": "SK Hynix stock slumped in its first full day of U.S. trading as jitters continued to weigh on chip and memory stocks.",
+            "source": "Investopedia",
+            "type": "Article",
+            "tickers": [
+              "#DRAM",
+              "#EWY",
+              "#FLKR",
+              "$MRVL",
+              "$MU",
+              "#PSI",
+              "$SNDK"
+            ],
+            "time": "Jul 13, 2026, 1:11 PM EDT",
+            "ago": "3 days ago"
+          },
           {
             "url": "https://nypost.com/2026/07/08/business/dow-falls-400-points-oil-surges-after-trump-says-iran-ceasefire-is-over/",
             "img": "https://cdn.snapi.dev/images/v1/m/z/r/etf48-3791366.jpg",
@@ -7029,7 +6840,7 @@
               "#IEO"
             ],
             "time": "Jul 8, 2026, 10:32 AM EDT",
-            "ago": "8 hours ago"
+            "ago": "8 days ago"
           },
           {
             "url": "https://invezz.com/news/2026/07/07/dram-etf-falls-6-5-after-samsung-earnings-as-expert-warns-on-memory-stocks/",
@@ -7042,7 +6853,7 @@
               "#SOXX"
             ],
             "time": "Jul 7, 2026, 6:54 AM EDT",
-            "ago": "1 day ago"
+            "ago": "9 days ago"
           },
           {
             "url": "https://www.tipranks.com/news/why-is-the-smh-semiconductor-etf-rebounding-today",
@@ -7061,7 +6872,7 @@
               "$SNPS"
             ],
             "time": "2026-07-06T14:55:24.000Z",
-            "ago": "2 days ago"
+            "ago": "10 days ago"
           },
           {
             "url": "https://www.barrons.com/articles/chip-stocks-buy-dip-ai-trade-35f78016",
@@ -7076,7 +6887,7 @@
               "#SOXX"
             ],
             "time": "Jul 6, 2026, 9:45 AM EDT",
-            "ago": "2 days ago"
+            "ago": "10 days ago"
           },
           {
             "url": "https://www.reuters.com/business/ai-investors-may-pivot-hyperscalers-chipmakers-morgan-stanley-says-2026-07-06/",
@@ -7092,7 +6903,7 @@
               "#SOXL"
             ],
             "time": "Jul 6, 2026, 9:30 AM EDT",
-            "ago": "2 days ago"
+            "ago": "10 days ago"
           },
           {
             "url": "2Y-r4JAhGYI",
@@ -7107,7 +6918,7 @@
               "#SOXX"
             ],
             "time": "Jul 6, 2026, 8:19 AM EDT",
-            "ago": "2 days ago"
+            "ago": "10 days ago"
           },
           {
             "url": "https://www.reuters.com/business/finance/hedge-funds-dumped-chip-stocks-fourth-week-ai-shares-sold-off-2026-07-06/",
@@ -7122,7 +6933,7 @@
               "#SOXX"
             ],
             "time": "Jul 6, 2026, 7:15 AM EDT",
-            "ago": "2 days ago"
+            "ago": "10 days ago"
           },
           {
             "url": "sS-eWNxmyvI",
@@ -7135,7 +6946,7 @@
               "#SOXX"
             ],
             "time": "Jul 5, 2026, 8:25 AM EDT",
-            "ago": "3 days ago"
+            "ago": "11 days ago"
           },
           {
             "url": "https://www.marketwatch.com/story/why-its-too-early-to-call-a-top-on-semiconductor-stocks-according-to-these-highly-regarded-analysts-bb1139d4",
@@ -7150,7 +6961,7 @@
               "#SOXX"
             ],
             "time": "Jul 1, 2026, 7:08 AM EDT",
-            "ago": "7 days ago"
+            "ago": "15 days ago"
           },
           {
             "url": "https://www.wsj.com/tech/ai/chip-makers-are-profiting-off-ai-at-the-expense-of-just-about-everyone-else-fe893bdd",
@@ -7168,7 +6979,7 @@
               "#SOXX"
             ],
             "time": "Jun 27, 2026, 10:00 PM EDT",
-            "ago": "10 days ago"
+            "ago": "19 days ago"
           },
           {
             "url": "SiP1yYt2ECY",
@@ -7181,7 +6992,7 @@
               "#SOXX"
             ],
             "time": "Jun 26, 2026, 10:45 PM EDT",
-            "ago": "11 days ago"
+            "ago": "20 days ago"
           },
           {
             "url": "DaW5TzI4UyI",
@@ -7194,7 +7005,7 @@
               "#SOXX"
             ],
             "time": "Jun 26, 2026, 7:42 AM EDT",
-            "ago": "12 days ago"
+            "ago": "20 days ago"
           },
           {
             "url": "https://www.barrons.com/articles/sk-hynix-stock-chips-south-korea-funds-1c2dcb12",
@@ -7211,7 +7022,7 @@
               "#SOXX"
             ],
             "time": "Jun 24, 2026, 3:15 PM EDT",
-            "ago": "14 days ago"
+            "ago": "22 days ago"
           },
           {
             "url": "https://invezz.com/news/2026/06/24/sk-hynix-to-raise-29-4b-in-us-listing-how-it-may-impact-the-ai-memory-chip-trade/",
@@ -7227,7 +7038,7 @@
               "#SOXX"
             ],
             "time": "Jun 24, 2026, 9:24 AM EDT",
-            "ago": "14 days ago"
+            "ago": "22 days ago"
           },
           {
             "url": "https://www.marketwatch.com/story/heres-what-happened-after-17-other-semiconductor-stock-one-day-plunges-over-the-last-15-years-c9b9ad8d",
@@ -7240,7 +7051,7 @@
               "#SOXX"
             ],
             "time": "Jun 24, 2026, 6:44 AM EDT",
-            "ago": "14 days ago"
+            "ago": "22 days ago"
           },
           {
             "url": "GlUoYB9Jqrw",
@@ -7255,7 +7066,7 @@
               "#SOXX"
             ],
             "time": "Jun 23, 2026, 10:23 PM EDT",
-            "ago": "14 days ago"
+            "ago": "23 days ago"
           },
           {
             "url": "https://www.marketwatch.com/story/chip-stocks-are-setting-records-but-this-hidden-chart-pattern-says-momentum-favors-the-bears-5ba98c10",
@@ -7268,7 +7079,7 @@
               "#SOXX"
             ],
             "time": "Jun 19, 2026, 9:56 AM EDT",
-            "ago": "19 days ago"
+            "ago": "27 days ago"
           },
           {
             "url": "https://www.barrons.com/articles/ai-chip-stocks-prices-valuations-volatility-914f4804",
@@ -7285,7 +7096,7 @@
               "$WDC"
             ],
             "time": "Jun 17, 2026, 1:20 PM EDT",
-            "ago": "21 days ago"
+            "ago": "4 weeks ago"
           },
           {
             "url": "https://www.nytimes.com/2026/06/16/technology/taiwan-south-korea-ai-chips.html",
@@ -7300,7 +7111,7 @@
               "#SOXX"
             ],
             "time": "Jun 16, 2026, 5:00 AM EDT",
-            "ago": "22 days ago"
+            "ago": "4 weeks ago"
           },
           {
             "url": "https://www.barrons.com/articles/south-korea-stocks-chips-6126199a",
@@ -7316,7 +7127,7 @@
               "$SKHY"
             ],
             "time": "Jun 11, 2026, 9:01 AM EDT",
-            "ago": "27 days ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.etftrends.com/thematic-investing-content-hub/vettafi-sentiment-check-advisors-view-markets/",
@@ -7335,7 +7146,7 @@
               "#SGOV"
             ],
             "time": "Jun 10, 2026, 7:59 AM EDT",
-            "ago": "4 weeks ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.reuters.com/world/asia-pacific/us-adds-chinese-solar-battery-firms-list-military-linked-companies-2026-06-09/",
@@ -7354,7 +7165,7 @@
               "#GXC"
             ],
             "time": "Jun 9, 2026, 2:16 AM EDT",
-            "ago": "4 weeks ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.reuters.com/legal/litigation/us-lawmakers-urge-tighter-rules-contract-chipmakers-supplying-chinese-firms-2026-06-09/",
@@ -7368,7 +7179,7 @@
               "$TSM"
             ],
             "time": "Jun 8, 2026, 10:09 PM EDT",
-            "ago": "4 weeks ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.cnbc.com/2026/06/08/chip-rebound-sparks-hedging-flurry-from-traders.html",
@@ -7383,7 +7194,7 @@
               "#SOXX"
             ],
             "time": "Jun 8, 2026, 1:38 PM EDT",
-            "ago": "4 weeks ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.cnbc.com/2026/06/08/chip-rebound-has-one-trader-buying-protection.html",
@@ -7398,7 +7209,377 @@
               "#SOXX"
             ],
             "time": "Jun 8, 2026, 12:02 PM EDT",
-            "ago": "4 weeks ago"
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.etftrends.com/thematic-investing-content-hub/ai-etfs-the-next-wave-emerges/",
+            "img": "https://cdn.snapi.dev/images/v1/v/o/l/etf18-3740708.jpg",
+            "title": "AI ETFs: The Next Wave Emerges",
+            "text": "The first phase of the artificial intelligence investment trade was relatively straightforward: if you wanted to capture the AI boom using familiar names, you bought semiconductors. The VanEck Semicon...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#DRAM",
+              "#FOTO"
+            ],
+            "time": "Jun 7, 2026, 1:35 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/if-the-semiconductor-rally-loses-steam-its-retail-investors-who-could-get-hurt-the-most-d4cea0c0",
+            "img": "https://cdn.snapi.dev/images/v1/q/y/d/etf18-3739452.jpg",
+            "title": "If the semiconductor rally loses steam, it's retail investors who could get hurt the most",
+            "text": "May was the strongest month of the year for buying by retail investors, as individuals piled into semiconductor stocks.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "Jun 5, 2026, 12:35 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/look-to-state-street-invesco-vaneck-for-top-performing-etfs-in-2026/",
+            "img": "https://cdn.snapi.dev/images/v1/g/s/8/etf28-3737866.jpg",
+            "title": "Look to State Street, Invesco, VanEck for Top-Performing ETFs in 2026",
+            "text": "The top-performing non-leveraged ETFs of 2026 span a distinct blend of digital assets, next-generation semiconductor technology, and localized international equity plays. For advisors assessing portfo...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#CHAT",
+              "#DECO",
+              "#EWT",
+              "#FLTW",
+              "#IGPT",
+              "#IQMM",
+              "#PTF"
+            ],
+            "time": "Jun 4, 2026, 3:47 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "_YDAVcvrrNI",
+            "img": "https://cdn.snapi.dev/images/v1/l/x/9/etf3-3737808.jpg",
+            "title": "Dan Niles: Semiconductor bulls should be ecstatic with sector's price action",
+            "text": "Dan Niles, Niles Investment Management, joins 'Power Lunch' to discuss Niles' investing take on the semiconductor sector, the market sentiment on the sector and much more.",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "Jun 4, 2026, 3:43 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/autos-transportation/automakers-retailers-warn-memory-chip-shortage-impacting-prices-2026-06-03/",
+            "img": "https://cdn.snapi.dev/images/v1/4/2/k/etf1-3735031.jpg",
+            "title": "Automakers, retailers warn memory chip shortage impacting prices",
+            "text": "The drastic shift of memory ​chips to artificial intelligence ‌data centers could lead to dramatic price hikes ​in consumer goods ​and disrupt supply chains, ⁠groups representing automakers, ​retailer...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "Jun 3, 2026, 12:39 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/03/europe-tech-sovereignty-us-tech-reliance.html",
+            "img": "https://cdn.snapi.dev/images/v1/r/w/q/etf21-3734120.jpg",
+            "title": "Europe unveils tech sovereignty package amid growing concerns over reliance on U.S. tech",
+            "text": "The proposals include a new act to bolster advanced chip manufacturing and homegrown cloud computing.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "#CLOU",
+              "#FDN",
+              "#FTEC",
+              "#IGV",
+              "#SKYY",
+              "#SOXX",
+              "#VGT"
+            ],
+            "time": "Jun 3, 2026, 8:29 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/eu-targets-big-tech-dependence-with-made-in-europe-drive-2026-06-03/",
+            "img": "https://cdn.snapi.dev/images/v1/v/5/a/etf16-3734049.jpg",
+            "title": "EU targets Big Tech dependence with 'made-in-Europe' drive",
+            "text": "The European Commission proposed new laws on Wednesday to boost domestic cloud, AI and semiconductor industries, aiming to cut reliance on U.S. Big Tech in ​a move that could ratchet up transatlantic ...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#ARKQ",
+              "#BBEU",
+              "#BOTZ",
+              "#DBEF",
+              "#DBEU",
+              "#DFE",
+              "#EZU"
+            ],
+            "time": "Jun 3, 2026, 8:11 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/02/software-stocks-just-passed-a-big-milestone.html",
+            "img": "https://cdn.snapi.dev/images/v1/1/f/8/yt43ed-3379264-3731286.jpg",
+            "title": "Software stocks just passed a big milestone",
+            "text": "Software stocks are making a comeback from their artificial intelligence-driven sell-off earlier this year.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "#HACK",
+              "#IGV"
+            ],
+            "time": "Jun 2, 2026, 7:13 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/sen-warren-calls-trump-close-loophole-allowing-ai-chips-be-sent-overseas-units-2026-06-01/",
+            "img": "https://cdn.snapi.dev/images/v1/n/h/e/etf17-3730399.jpg",
+            "title": "Sen. Warren calls for Trump to close \"loophole\" allowing AI chips to be sent to overseas units of Chinese firms",
+            "text": "Democratic Senator ​Elizabeth Warren is ‌calling on the Trump administration to ​close a \"loophole\" ​that has potentially allowed ⁠advanced American AI ​chips to be ​sent to overseas units of Chinese ...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "Jun 1, 2026, 3:43 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "B0zEUfjCozo",
+            "img": "https://cdn.snapi.dev/images/v1/8/j/d/etf8-3728570.jpg",
+            "title": "It's been one of the best years to generate alpha in China: Matthews Asia",
+            "text": "Matthews Asia's Sean Taylor explains why he remains constructive on China despite the broader indexes lagging some high-performing sectors. He also outlines his South Korea strategy, including an over...",
+            "source": "CNBC International TV",
+            "type": "Video",
+            "tickers": [
+              "#ASHR",
+              "#CHIQ",
+              "#CQQQ",
+              "#EWY",
+              "#FLKR",
+              "#FXI",
+              "#GXC"
+            ],
+            "time": "May 31, 2026, 11:42 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "7WgF-XXvHrQ",
+            "img": "https://cdn.snapi.dev/images/v1/5/t/d/semi21-3726148.jpg",
+            "title": "\"Price is not an issue\" for hyperscalers investing in Taiwan, S Korea's chipmakers: T.Rowe Price",
+            "text": "Thomas Poullaouec, Head of Global Investment Solutions, International at T.Rowe Price, says he does not foresee a slowdown in the demand for memory chips despite rising prices.",
+            "source": "CNBC International TV",
+            "type": "Video",
+            "tickers": [
+              "#SOXX",
+              "$SKHY"
+            ],
+            "time": "May 29, 2026, 12:39 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/china/huawei-bets-speed-over-shrinking-transistors-sidestep-us-chip-sanctions-2026-05-29/",
+            "img": "https://cdn.snapi.dev/images/v1/5/h/g/etf5-3726130.jpg",
+            "title": "Huawei bets on speed over shrinking transistors to sidestep US chip sanctions",
+            "text": "Huawei's new chip design principle focused on boosting transmission speed rather than continuing to shrink semiconductors offers a path for China to build cutting-edge chips ​despite U.S. sanctions, t...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "May 28, 2026, 11:42 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/05/28/this-is-the-greatest-time-ever-for-semiconductors-says-ceo-of-key-equipment-supplier.html",
+            "img": "https://cdn.snapi.dev/images/v1/5/l/k/semi20-3725982.jpg",
+            "title": "This is the greatest time ever for semiconductors, says CEO of key equipment supplier",
+            "text": "Applied Materials CEO Gary Dickerson said the semiconductor industry is experiencing its strongest period ever. He said artificial intelligence is driving unprecedented computing demand and long-term ...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$AMAT",
+              "#PSI",
+              "#SOXL",
+              "#SOXX",
+              "$KLAC",
+              "$LRCX",
+              "$TSM"
+            ],
+            "time": "May 28, 2026, 7:19 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.etftrends.com/etf-strategist-content-hub/the-magnificent-semis/",
+            "img": "https://cdn.snapi.dev/images/v1/n/q/x/etf7-3724928.jpg",
+            "title": "The Magnificent Semis?",
+            "text": "Shares of chipmakers are rallying this year While the AI spending boom is fueling big gains for lots of tech companies, it's the semiconductor makers that are truly in the chips these days.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "May 28, 2026, 12:00 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/why-its-time-to-start-discussing-semiconductors-like-commodities-there-may-be-a-supercycle-99eda2bf",
+            "img": "https://cdn.snapi.dev/images/v1/s/s/7/ht432wsd-3623618-3724301.jpg",
+            "title": "Why it's time to start discussing semiconductors like commodities: There may be a supercycle",
+            "text": "Ned Davis Research says the bubble argument for chips has some grounding, but that sector may also be looking at the start of a new supercycle.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXX"
+            ],
+            "time": "May 28, 2026, 7:02 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/stocks/5-7-trillion-and-counting-how-much-further-can-the-chip-rally-run-56daea5e",
+            "img": "https://cdn.snapi.dev/images/v1/r/v/c/etf32-3723316.jpg",
+            "title": "$5.7 Trillion and Counting. How Much Further Can the Chip Rally Run?",
+            "text": "Surging demand for chip makers has lifted major indexes from their wartime malaise.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "May 27, 2026, 8:00 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/05/27/nikkei-hits-record-high-as-ai-chip-frenzy-powers-japan-stocks/",
+            "img": "https://cdn.snapi.dev/images/v1/p/i/m/etf21-3720929.jpg",
+            "title": "Nikkei hits record high as AI chip frenzy powers Japan stocks",
+            "text": "Japan's Nikkei 225 climbed to a record high on Wednesday, as a rally in semiconductor shares outweighed weakness in banks and real estate stocks. The benchmark index rose 1.25% to 65,811.78 as of 0147...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "#BBJP",
+              "#DBJP",
+              "#DFJ",
+              "#DXJ",
+              "#EWJ",
+              "#EWY",
+              "#EZJ"
+            ],
+            "time": "May 27, 2026, 12:10 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/semiconductor-index-outlook-near-term-upside-limited-broader-rally-intact-1600327",
+            "img": "https://cdn.snapi.dev/images/v1/w/d/w/etf48-3720344.jpg",
+            "title": "Semiconductor Index Outlook: Near-Term Upside Limited, Broader Rally Intact",
+            "text": "The index remains in a broader uptrend, but near-term upside looks limited as it approaches a 5th-wave peak, with a likely deeper retracement ahead before resuming higher over the long term.",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "May 26, 2026, 2:45 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/stocks/u-s-semiconductor-stocks-rise-premarket-after-asia-rally-3eadc6db",
+            "img": "https://cdn.snapi.dev/images/v1/g/g/2/vfre32wed-3566957-3718937.jpg",
+            "title": "U.S. Semiconductor Stocks Rise Premarket After Asia Rally",
+            "text": "U.S. chip and memory stocks rallied premarket following gains for artificial intelligence-related names in Hong Kong and South Korea.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#SOXX"
+            ],
+            "time": "May 26, 2026, 6:11 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "dILi2e1E7sI",
+            "img": "https://cdn.snapi.dev/images/v1/k/h/t/semi8-3717363.jpg",
+            "title": "China's No. 2 chip foundry HHGrace says it has 'always been compliant' with U.S. export controls",
+            "text": "Daniel Wang, CFO of Shanghai Huahong Grace Semiconductor Manufacturing Corporation, says demand from AI, industrials and automotive clients is keeping its fabs running above full capacity, with moment...",
+            "source": "CNBC International TV",
+            "type": "Video",
+            "tickers": [
+              "#SOXX",
+              "$SKHY"
+            ],
+            "time": "May 22, 2026, 9:44 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "CLey0TIUIVk",
+            "img": "https://cdn.snapi.dev/images/v1/0/g/i/semi25-3715657.jpg",
+            "title": "We have had an ‘overweight waiting' on the IT sector since 2022: CFRA Research senior VP",
+            "text": "CFRA Research senior vice president and head of technology Angelo Zino explains why Nvidia, AMD, Microsoft and Meta remain top ‘strong buy' picks amid the ongoing AI-driven tech rally on ‘Making Money...",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "$AMD",
+              "#FDN",
+              "#FTEC",
+              "#IGV",
+              "$META",
+              "$MSFT",
+              "$NVDA"
+            ],
+            "time": "May 21, 2026, 11:30 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.etftrends.com/artificial-intelligence-content-hub/its-nvidias-world-how-advisors-see-next-phase-of-ai/",
+            "img": "https://cdn.snapi.dev/images/v1/o/b/q/etf33-3712248.jpg",
+            "title": "It's Nvidia's World: How Advisors See the Next Phase of AI",
+            "text": "Sometimes it feels like it's Nvidia's world, and we are all just living in it. As we brace for the firm's latest earnings report coming Wednesday, we could say that Nvidia (NVDA) earnings — and more i...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#CHAT",
+              "#CNEQ",
+              "#IGPT",
+              "$NVDA",
+              "#NVDL",
+              "#THNQ",
+              "#XLK"
+            ],
+            "time": "May 20, 2026, 2:40 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/china/imec-ceo-calls-stronger-ai-design-push-eus-chips-act-2026-05-19/",
+            "img": "https://cdn.snapi.dev/images/v1/4/r/x/etf3-3708923.jpg",
+            "title": "Imec CEO calls for stronger AI design push in EU's Chips Act",
+            "text": "Europe should aim to create home-grown AI chip design companies, the new head of Belgian research hub imec said on Tuesday, as ​Brussels prepares a package of measures dubbed Chips Act 2.0.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#PSI",
+              "#SOXL",
+              "#SOXX"
+            ],
+            "time": "May 19, 2026, 9:59 AM EDT",
+            "ago": "2 months ago"
           }
         ]
       },
@@ -7406,66 +7587,404 @@
         "no1d": false
       },
       "changes": {
-        "price1w": 620.46,
-        "price1m": 569.69,
+        "price1w": 607.73,
+        "price1m": 647.1,
+        "price3m": 453,
+        "price6m": 396.41,
         "priceYTD": 360.13,
-        "price1y": 279.76,
-        "price5y": 128.06,
+        "price1y": 290.8,
+        "price5y": 126.065,
         "priceMAX": 17.22
       },
       "performance": {
-        "tr1m": 4.092,
-        "trYTD": 64.663,
-        "tr1y": 112.627,
-        "cagr5y": 36.7,
-        "cagr10y": 36.883,
-        "cagrMAX": 29.399
+        "tr1m": -12.081594807603162,
+        "trYTD": 57.976,
+        "tr1y": 96.248,
+        "cagr5y": 35.998,
+        "cagr10y": 35.543,
+        "cagrMAX": 28.976
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "19.86%",
+          "sh": "69,292,978"
+        },
+        {
+          "no": 2,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "9.08%",
+          "sh": "15,404,259"
+        },
+        {
+          "no": 3,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "6.00%",
+          "sh": "11,033,880"
+        },
+        {
+          "no": 4,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "5.82%",
+          "sh": "7,674,458"
+        },
+        {
+          "no": 5,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "5.18%",
+          "sh": "3,892,816"
+        },
+        {
+          "no": 6,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "5.15%",
+          "sh": "6,287,058"
+        },
+        {
+          "no": 7,
+          "n": "ASML Holding N.V.",
+          "s": "$ASML",
+          "as": "4.89%",
+          "sh": "2,002,047"
+        },
+        {
+          "no": 8,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "4.69%",
+          "sh": "11,080,217"
+        },
+        {
+          "no": 9,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "4.62%",
+          "sh": "9,708,259"
+        },
+        {
+          "no": 10,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "4.60%",
+          "sh": "14,628,472"
+        },
+        {
+          "no": 11,
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "4.36%",
+          "sh": "29,189,878"
+        },
+        {
+          "no": 12,
+          "n": "Analog Devices, Inc.",
+          "s": "$ADI",
+          "as": "4.28%",
+          "sh": "7,957,659"
+        },
+        {
+          "no": 13,
+          "n": "QUALCOMM Incorporated",
+          "s": "$QCOM",
+          "as": "4.12%",
+          "sh": "16,018,675"
+        },
+        {
+          "no": 14,
+          "n": "Marvell Technology, Inc.",
+          "s": "$MRVL",
+          "as": "3.96%",
+          "sh": "12,370,778"
+        },
+        {
+          "no": 15,
+          "n": "Cadence Design Systems, Inc.",
+          "s": "$CDNS",
+          "as": "2.36%",
+          "sh": "4,527,186"
+        },
+        {
+          "no": 16,
+          "n": "Synopsys, Inc.",
+          "s": "$SNPS",
+          "as": "1.93%",
+          "sh": "3,181,706"
+        },
+        {
+          "no": 17,
+          "n": "STMicroelectronics N.V.",
+          "s": "$STM",
+          "as": "1.29%",
+          "sh": "13,295,661"
+        },
+        {
+          "no": 18,
+          "n": "Monolithic Power Systems, Inc.",
+          "s": "$MPWR",
+          "as": "1.28%",
+          "sh": "696,892"
+        },
+        {
+          "no": 19,
+          "n": "NXP Semiconductors N.V.",
+          "s": "$NXPI",
+          "as": "1.28%",
+          "sh": "3,223,120"
+        },
+        {
+          "no": 20,
+          "n": "Teradyne, Inc.",
+          "s": "$TER",
+          "as": "1.19%",
+          "sh": "2,442,562"
+        },
+        {
+          "no": 21,
+          "n": "Astera Labs, Inc.",
+          "s": "$ALAB",
+          "as": "1.17%",
+          "sh": "2,084,043"
+        },
+        {
+          "no": 22,
+          "n": "Arm Holdings plc",
+          "s": "$ARM",
+          "as": "1.14%",
+          "sh": "2,597,232"
+        },
+        {
+          "no": 23,
+          "n": "Microchip Technology Incorporated",
+          "s": "$MCHP",
+          "as": "0.94%",
+          "sh": "7,799,124"
+        },
+        {
+          "no": 24,
+          "n": "ON Semiconductor Corporation",
+          "s": "$ON",
+          "as": "0.63%",
+          "sh": "4,844,318"
+        },
+        {
+          "no": 25,
+          "n": "Skyworks Solutions, Inc.",
+          "s": "$SWKS",
+          "as": "0.15%",
+          "sh": "1,859,166"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 84.48
+        },
+        {
+          "n": "Other",
+          "w": 15.52
+        }
+      ],
+      "countries": [
+        {
+          "code": "US",
+          "weight": 82.20157,
+          "country": "United States"
+        },
+        {
+          "code": "TW",
+          "weight": 10.06445,
+          "country": "Taiwan"
+        },
+        {
+          "code": "NL",
+          "weight": 7.06823,
+          "country": "Netherlands"
+        },
+        {
+          "code": "SG",
+          "weight": 0.66575,
+          "country": "Singapore"
+        }
+      ],
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 84.48
+          },
+          {
+            "name": "Other",
+            "y": 15.52
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "United States",
+            "y": 82.20157
+          },
+          {
+            "name": "Taiwan",
+            "y": 10.06445
+          },
+          {
+            "name": "Netherlands",
+            "y": 7.06823
+          },
+          {
+            "name": "Singapore",
+            "y": 0.66575
+          }
+        ]
+      },
+      "news": [
+        {
+          "t": "Semiconductor stocks are on the verge of a bear market. Is the thrill in the chips trade gone?",
+          "u": "https://www.marketwatch.com/story/semiconductor-stocks-are-on-the-verge-of-a-bear-market-is-the-thrill-in-the-chips-trade-gone-592eded7",
+          "n": "Market Watch",
+          "d": "9 hours ago"
+        },
+        {
+          "t": "Semiconductor Index Rally Eyes New Highs as Elliott Wave Correction May Be Complete",
+          "u": "https://www.fxempire.com/forecasts/article/semiconductor-index-rally-eyes-new-highs-as-elliott-wave-correction-may-be-complete-1610369",
+          "n": "FXEmpire",
+          "d": "2 days ago"
+        },
+        {
+          "t": "SK Hynix Shares Slide After South Korea Sell-Off. This Expert Sees a ‘Vicious Circle' Forming",
+          "u": "https://www.investopedia.com/sk-hynix-shares-slide-after-south-korea-sell-off-this-expert-sees-a-vicious-circle-forming-skhy-12017059",
+          "n": "Investopedia",
+          "d": "3 days ago"
+        },
+        {
+          "t": "Dow falls 400 points, oil surges after Trump says Iran ceasefire is ‘over' – which could halt gas decline",
+          "u": "https://nypost.com/2026/07/08/business/dow-falls-400-points-oil-surges-after-trump-says-iran-ceasefire-is-over/",
+          "n": "New York Post",
+          "d": "8 days ago"
+        },
+        {
+          "t": "DRAM ETF falls 6.5% after Samsung earnings as expert warns on memory stocks",
+          "u": "https://invezz.com/news/2026/07/07/dram-etf-falls-6-5-after-samsung-earnings-as-expert-warns-on-memory-stocks/",
+          "n": "Invezz",
+          "d": "9 days ago"
+        },
+        {
+          "t": "Why Is the SMH Semiconductor ETF Rebounding Today?",
+          "u": "https://www.tipranks.com/news/why-is-the-smh-semiconductor-etf-rebounding-today",
+          "n": "TipRanks",
+          "d": "10 days ago"
+        },
+        {
+          "t": "Buy the Chip Dip but Beware These 'AI Cannibalization' Trades, JPMorgan Says",
+          "u": "https://www.barrons.com/articles/chip-stocks-buy-dip-ai-trade-35f78016",
+          "n": "Barrons",
+          "d": "10 days ago"
+        },
+        {
+          "t": "AI investors may pivot to hyperscalers from chipmakers, Morgan Stanley says",
+          "u": "https://www.reuters.com/business/ai-investors-may-pivot-hyperscalers-chipmakers-morgan-stanley-says-2026-07-06/",
+          "n": "Reuters",
+          "d": "10 days ago"
+        },
+        {
+          "t": "Hedge funds dumped chip stocks for a fourth week as AI shares sold off",
+          "u": "https://www.reuters.com/business/finance/hedge-funds-dumped-chip-stocks-fourth-week-ai-shares-sold-off-2026-07-06/",
+          "n": "Reuters",
+          "d": "10 days ago"
+        },
+        {
+          "t": "Why it's too early to call a top on semiconductor stocks, according to these highly regarded analysts",
+          "u": "https://www.marketwatch.com/story/why-its-too-early-to-call-a-top-on-semiconductor-stocks-according-to-these-highly-regarded-analysts-bb1139d4",
+          "n": "Market Watch",
+          "d": "15 days ago"
+        }
+      ],
+      "infoBox": "SMH is an equity ETF with a total of 26 individual holdings. The top holdings are NVIDIA stock at 19.86%, Taiwan Semiconductor Manufacturing Company at 9.08%, Broadcom at 6.00%, Advanced Micro Devices at 5.82%, and Micron Technology at 5.18%.",
+      "infoTable": {
+        "count": 26,
+        "top10": 69.88,
+        "assetClass": "Equity",
+        "category": "Technology",
+        "categoryLabel": "ETF Category",
+        "aum": 65059978466,
+        "peRatio": 49.72424
+      },
+      "date": "Jul 11, 2026",
+      "count": 26,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 11, 2026",
+        "lastChecked": 1784261320082,
+        "topic": "holdings",
+        "ticker": "SMH",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 593,
-      "pd": 593,
-      "c": 11.55,
-      "cp": 1.99,
-      "cl": 581.45,
-      "cdr": 1,
-      "o": 575.33,
-      "h": 595,
-      "l": 575.04,
-      "v": 9354760,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 671.83,
-      "l52": 279.19,
+      "c": -21.85,
+      "e": true,
+      "h": 581.84,
+      "l": 564.45,
+      "o": 575.75,
+      "p": 568.92,
+      "u": "Jul 16, 2026, 4:00 PM EDT",
+      "v": 12353271,
+      "cl": 590.77,
+      "cp": -3.7,
+      "ec": -4.39,
+      "ep": 564.53,
+      "es": "After-hours",
+      "eu": "Jul 16, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 591.22,
-      "epd": 591.22,
-      "ec": -1.78,
-      "ecp": -0.3,
-      "eu": "Jul 8, 2026, 6:39 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550388540.0918,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 568.92,
+      "td": "2026-07-16",
+      "ts": 1784232000000,
+      "cdr": -1,
+      "ecp": -0.77,
+      "epd": 564.53,
+      "etd": "2026-07-16",
+      "ets": 1784246393858.6838,
+      "exp": 1784276100000,
+      "fms": "closed",
+      "h52": 671.83,
+      "l52": 279.19,
+      "uid": "SMH",
       "days": 0,
-      "exp": 1783550451118,
-      "symbol": "SMH",
-      "uid": "SMH"
+      "symbol": "SMH"
     },
     "history": [
       {
         "t": "2026-07-01",
         "o": 634.35,
         "h": 639.89,
-        "l": 566.83,
-        "c": 593,
-        "a": 593,
-        "v": 66807644,
-        "ch": -9.59
+        "l": 564.45,
+        "c": 568.92,
+        "a": 568.92,
+        "v": 121065512,
+        "ch": -13.26
       },
       {
         "t": "2026-06-01",
@@ -7580,6 +8099,66 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-16",
+          "o": 575.75,
+          "h": 581.84,
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 11897844,
+          "ch": -3.7
+        },
+        {
+          "t": "2026-07-15",
+          "o": 606.88,
+          "h": 606.88,
+          "l": 573.72,
+          "c": 590.77,
+          "a": 590.77,
+          "v": 10887931,
+          "ch": -1.59
+        },
+        {
+          "t": "2026-07-14",
+          "o": 608.895,
+          "h": 608.895,
+          "l": 590.38,
+          "c": 600.31,
+          "a": 600.31,
+          "v": 7489979,
+          "ch": 2.51
+        },
+        {
+          "t": "2026-07-13",
+          "o": 598.005,
+          "h": 599.36,
+          "l": 583.09,
+          "c": 585.62,
+          "a": 585.62,
+          "v": 8584143,
+          "ch": -4.16
+        },
+        {
+          "t": "2026-07-10",
+          "o": 600.87,
+          "h": 615.05,
+          "l": 595.84,
+          "c": 611.03,
+          "a": 611.03,
+          "v": 6546015,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-07-09",
+          "o": 615.48,
+          "h": 618.166,
+          "l": 604.7,
+          "c": 607.73,
+          "a": 607.73,
+          "v": 8851956,
+          "ch": 2.48
+        },
         {
           "t": "2026-07-08",
           "o": 575.33,
@@ -10039,78 +10618,28 @@
           "a": 288.382918,
           "v": 10065893,
           "ch": -0.52
-        },
-        {
-          "t": "2025-07-15",
-          "o": 291.67,
-          "h": 293.2,
-          "l": 290.08,
-          "c": 290.8,
-          "a": 289.898204,
-          "v": 9892534,
-          "ch": 1.92
-        },
-        {
-          "t": "2025-07-14",
-          "o": 286.3,
-          "h": 286.52,
-          "l": 281.74,
-          "c": 285.32,
-          "a": 284.435198,
-          "v": 7455764,
-          "ch": -0.75
-        },
-        {
-          "t": "2025-07-11",
-          "o": 286.47,
-          "h": 288.94,
-          "l": 285.55,
-          "c": 287.49,
-          "a": 286.598469,
-          "v": 5676952,
-          "ch": -0.01
-        },
-        {
-          "t": "2025-07-10",
-          "o": 287.885,
-          "h": 288.19,
-          "l": 284.56,
-          "c": 287.52,
-          "a": 286.628376,
-          "v": 5636246,
-          "ch": 0.74
-        },
-        {
-          "t": "2025-07-09",
-          "o": 284.73,
-          "h": 287.84,
-          "l": 283.57,
-          "c": 285.42,
-          "a": 284.534888,
-          "v": 6810712,
-          "ch": 0.68
-        },
-        {
-          "t": "2025-07-08",
-          "o": 281.61,
-          "h": 284.73,
-          "l": 280.7,
-          "c": 283.48,
-          "a": 282.600904,
-          "v": 8186458.999999999,
-          "ch": 1.33
         }
       ],
       "weekly_1y": [
+        {
+          "t": "2026-07-13",
+          "o": 598.005,
+          "h": 608.895,
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 38859897,
+          "ch": -6.89
+        },
         {
           "t": "2026-07-06",
           "o": 607.05,
           "h": 618.21,
           "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 33262040,
-          "ch": 0.12
+          "c": 611.03,
+          "a": 611.03,
+          "v": 48660011,
+          "ch": 3.16
         },
         {
           "t": "2026-06-29",
@@ -10611,16 +11140,6 @@
           "a": 286.598469,
           "v": 35560585,
           "ch": -0.97
-        },
-        {
-          "t": "2025-07-14",
-          "o": 286.3,
-          "h": 293.325,
-          "l": 281.74,
-          "c": 290.31,
-          "a": 289.409724,
-          "v": 39935055,
-          "ch": 0.98
         }
       ],
       "monthly_1y": [
@@ -10628,11 +11147,11 @@
           "t": "2026-07-01",
           "o": 634.35,
           "h": 639.89,
-          "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 66807644,
-          "ch": -9.59
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 121065512,
+          "ch": -13.26
         },
         {
           "t": "2026-06-01",
@@ -10747,14 +11266,24 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-07-13",
+          "o": 598.005,
+          "h": 608.895,
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 38859897,
+          "ch": -6.89
+        },
+        {
           "t": "2026-07-06",
           "o": 607.05,
           "h": 618.21,
           "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 33262040,
-          "ch": 0.12
+          "c": 611.03,
+          "a": 611.03,
+          "v": 48660011,
+          "ch": 3.16
         },
         {
           "t": "2026-06-29",
@@ -11255,16 +11784,6 @@
           "a": 286.598469,
           "v": 35560585,
           "ch": -0.97
-        },
-        {
-          "t": "2025-07-14",
-          "o": 286.3,
-          "h": 293.325,
-          "l": 281.74,
-          "c": 290.31,
-          "a": 289.409724,
-          "v": 39935055,
-          "ch": 0.98
         }
       ],
       "monthly_3y": [
@@ -11272,11 +11791,11 @@
           "t": "2026-07-01",
           "o": 634.35,
           "h": 639.89,
-          "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 66807644,
-          "ch": -9.59
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 121065512,
+          "ch": -13.26
         },
         {
           "t": "2026-06-01",
@@ -11394,11 +11913,11 @@
           "t": "2026-07-01",
           "o": 634.35,
           "h": 639.89,
-          "l": 566.83,
-          "c": 593,
-          "a": 593,
-          "v": 66807644,
-          "ch": -9.59
+          "l": 564.45,
+          "c": 568.92,
+          "a": 568.92,
+          "v": 121065512,
+          "ch": -13.26
         },
         {
           "t": "2026-06-01",

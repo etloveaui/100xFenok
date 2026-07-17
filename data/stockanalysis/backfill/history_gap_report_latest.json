@@ -1,36 +1,36 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-07-17T05:30:24.800Z",
-  "classification_as_of": "2026-07-17T05:30:08.556Z",
+  "generated_at": "2026-07-17T07:30:17.630Z",
+  "classification_as_of": "2026-07-17T07:30:01.068Z",
   "report_profile": {
     "key": "daily_1y",
     "required_history_periods": [
       "daily_1y"
     ],
-    "generated_at": "2026-07-17T05:30:24.800Z",
-    "classification_as_of": "2026-07-17T05:30:08.556Z"
+    "generated_at": "2026-07-17T07:30:17.630Z",
+    "classification_as_of": "2026-07-17T07:30:01.068Z"
   },
   "required_history_periods": [
     "daily_1y"
   ],
-  "primary_stockanalysis_detail_files": 4928,
-  "complete_required_history": 4798,
+  "primary_stockanalysis_detail_files": 4949,
+  "complete_required_history": 4819,
   "missing_required_history": 130,
-  "fetchable_required_history": 5,
+  "fetchable_required_history": 17,
   "inception_limited_required_history": 48,
-  "terminal_limited_required_history": 77,
-  "coverage_pct": 97.36,
+  "terminal_limited_required_history": 65,
+  "coverage_pct": 97.37,
   "missing_by_period": {
     "daily_1y": 130
   },
   "fetchable_by_period": {
-    "daily_1y": 5
+    "daily_1y": 17
   },
   "inception_limited_by_period": {
     "daily_1y": 48
   },
   "terminal_limited_by_period": {
-    "daily_1y": 77
+    "daily_1y": 65
   },
   "samples": {
     "missing": [
@@ -230,6 +230,71 @@
         "terminal_limited_missing": [],
         "terminal_limit_source": null,
         "inception_date": "2024-12-16"
+      },
+      {
+        "ticker": "XTJA",
+        "missing": [
+          "daily_1y"
+        ],
+        "fetchable_missing": [
+          "daily_1y"
+        ],
+        "inception_limited_missing": [],
+        "terminal_limited_missing": [],
+        "terminal_limit_source": null,
+        "inception_date": "2022-01-01"
+      },
+      {
+        "ticker": "XTJL",
+        "missing": [
+          "daily_1y"
+        ],
+        "fetchable_missing": [
+          "daily_1y"
+        ],
+        "inception_limited_missing": [],
+        "terminal_limited_missing": [],
+        "terminal_limit_source": null,
+        "inception_date": "2021-07-01"
+      },
+      {
+        "ticker": "XTOC",
+        "missing": [
+          "daily_1y"
+        ],
+        "fetchable_missing": [
+          "daily_1y"
+        ],
+        "inception_limited_missing": [],
+        "terminal_limited_missing": [],
+        "terminal_limit_source": null,
+        "inception_date": "2021-10-01"
+      },
+      {
+        "ticker": "YBTC",
+        "missing": [
+          "daily_1y"
+        ],
+        "fetchable_missing": [
+          "daily_1y"
+        ],
+        "inception_limited_missing": [],
+        "terminal_limited_missing": [],
+        "terminal_limit_source": null,
+        "inception_date": "2024-01-18"
+      },
+      {
+        "ticker": "YCL",
+        "missing": [
+          "daily_1y"
+        ],
+        "fetchable_missing": [
+          "daily_1y"
+        ],
+        "inception_limited_missing": [],
+        "terminal_limited_missing": [],
+        "terminal_limit_source": null,
+        "inception_date": "2008-11-24"
       }
     ],
     "inception_limited": [
@@ -546,29 +611,30 @@
   },
   "daily_1y_gap": {
     "min_rows": 200,
-    "detail_files_scanned": 4928,
-    "complete": 3819,
-    "missing": 1109,
-    "fetchable": 21,
-    "inception_limited": 960,
-    "terminal_limited": 128,
+    "detail_files_scanned": 4949,
+    "complete": 3821,
+    "missing": 1128,
+    "fetchable": 33,
+    "inception_limited": 979,
+    "terminal_limited": 116,
     "classification_projection": {
-      "row_count": 4928,
-      "sha256": "5601ce7b16fb3841b1bbe769cfe6deb9bdc3c98303d350b98238ada3c4252020",
+      "row_count": 4949,
+      "sha256": "ac3db06f9ea0cefe2c60d75e0f627b4ac7282842bafde3702107c712fd61d01f",
       "reason_counts": {
-        "complete": 3819,
+        "complete": 3821,
         "full_span_sparse_history": 1,
-        "inception_limited_declared": 946,
+        "inception_limited_declared": 965,
         "inception_limited_observation_derived": 14,
         "provider_history_start_limited": 10,
-        "stockanalysis_recent_short_rows": 117,
+        "provider_recent_failure": 1,
+        "stockanalysis_recent_short_rows": 104,
         "successful_short_history_cooldown": 1,
-        "unconfirmed_short_history": 20
+        "unconfirmed_short_history": 32
       }
     },
     "fetchable_breakdown": {
       "counts": {
-        "stockanalysis_short_rows": 21
+        "stockanalysis_short_rows": 33
       },
       "samples": {
         "stockanalysis_short_rows": [
@@ -588,7 +654,8 @@
     "terminal_limited_breakdown": {
       "counts": {
         "provider_history_start_limited": 10,
-        "stockanalysis_recent_short_rows": 117,
+        "provider_recent_failure": 1,
+        "stockanalysis_recent_short_rows": 104,
         "successful_short_history_cooldown": 1
       },
       "samples": {
@@ -603,6 +670,9 @@
           "REGS",
           "TFGZ",
           "TLG"
+        ],
+        "provider_recent_failure": [
+          "APPX"
         ],
         "stockanalysis_recent_short_rows": [
           "AAOZ",
@@ -664,7 +734,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-29",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -708,7 +778,7 @@
             "yf_crosscheck_earliest": "2026-03-24",
             "yf_crosscheck_latest": "2026-07-14",
             "yf_crosscheck_density": 0.950617,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -752,7 +822,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-07-13",
             "yf_crosscheck_density": 0.95941,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -796,7 +866,7 @@
             "yf_crosscheck_earliest": "2026-07-08",
             "yf_crosscheck_latest": "2026-07-08",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -840,7 +910,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-29",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -884,7 +954,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -928,7 +998,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -972,7 +1042,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1016,7 +1086,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1060,7 +1130,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         }
       ],
@@ -1105,7 +1175,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1148,7 +1218,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1191,7 +1261,7 @@
             "yf_crosscheck_earliest": "2026-06-23",
             "yf_crosscheck_latest": "2026-06-30",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1234,7 +1304,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1277,7 +1347,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1320,7 +1390,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1363,7 +1433,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1406,7 +1476,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1449,7 +1519,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1492,7 +1562,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         }
       ],
@@ -1542,7 +1612,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1590,7 +1660,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-29",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1638,7 +1708,7 @@
             "yf_crosscheck_earliest": "2025-07-02",
             "yf_crosscheck_latest": "2026-07-15",
             "yf_crosscheck_density": 0.95941,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1686,7 +1756,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-26",
             "yf_crosscheck_density": 0.961538,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1734,7 +1804,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-29",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1782,7 +1852,7 @@
             "yf_crosscheck_earliest": "2026-06-30",
             "yf_crosscheck_latest": "2026-07-07",
             "yf_crosscheck_density": 0.833333,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1830,7 +1900,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1878,7 +1948,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-29",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1926,7 +1996,7 @@
             "yf_crosscheck_earliest": "2025-06-30",
             "yf_crosscheck_latest": "2026-06-29",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         },
         {
@@ -1974,7 +2044,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-07-17T05:30:08.556Z"
+            "classification_as_of": "2026-07-17T07:30:01.068Z"
           }
         }
       ],
@@ -2002,23 +2072,22 @@
       ]
     },
     "scored_etfs": {
-      "scored_etf_count": 4518,
+      "scored_etf_count": 4517,
       "complete": 3681,
-      "missing": 837,
-      "fetchable": 49,
+      "missing": 836,
+      "fetchable": 48,
       "inception_limited": 747,
       "terminal_limited": 41,
       "classification_projection": {
-        "row_count": 4518,
-        "sha256": "60be797b402775e93c778676eefe0f9cd47ac3a5500a56ad85e9c4d71feb39c0",
+        "row_count": 4517,
+        "sha256": "8d6b82dc9e4ab7ab341aa9a67a750bb1181c4d507aad0dd28cbbc291b3b6a0da",
         "reason_counts": {
           "complete": 3681,
           "data_supply_unavailable": 26,
           "full_span_sparse_history": 1,
-          "inception_limited_declared": 636,
-          "inception_limited_observation_derived": 111,
+          "inception_limited_declared": 637,
+          "inception_limited_observation_derived": 110,
           "missing_external_quote_type_mismatch": 42,
-          "missing_untracked": 1,
           "provider_history_start_limited": 10,
           "stockanalysis_recent_short_rows": 4,
           "successful_short_history_cooldown": 1,
@@ -2028,7 +2097,6 @@
       "fetchable_breakdown": {
         "counts": {
           "missing_external_quote_type_mismatch": 42,
-          "missing_untracked": 1,
           "stockanalysis_short_rows": 6
         },
         "samples": {
@@ -2043,9 +2111,6 @@
             "FECM",
             "FESC",
             "GISC"
-          ],
-          "missing_untracked": [
-            "WSPC"
           ],
           "stockanalysis_short_rows": [
             "FREI",
@@ -2260,7 +2325,7 @@
               "yf_crosscheck_earliest": "2026-06-18",
               "yf_crosscheck_latest": "2026-06-25",
               "yf_crosscheck_density": 0.833333,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2309,7 +2374,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2356,7 +2421,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2403,7 +2468,7 @@
               "yf_crosscheck_earliest": "2026-06-23",
               "yf_crosscheck_latest": "2026-06-30",
               "yf_crosscheck_density": 1,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2450,7 +2515,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2497,7 +2562,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2544,7 +2609,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2591,7 +2656,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2638,7 +2703,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2685,7 +2750,7 @@
               "yf_crosscheck_earliest": "2026-06-03",
               "yf_crosscheck_latest": "2026-06-29",
               "yf_crosscheck_density": 0.947368,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2732,7 +2797,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2786,7 +2851,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2838,7 +2903,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2890,7 +2955,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2942,7 +3007,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2994,7 +3059,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -3046,7 +3111,7 @@
               "yf_crosscheck_earliest": null,
               "yf_crosscheck_latest": null,
               "yf_crosscheck_density": 0,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -3098,7 +3163,7 @@
               "yf_crosscheck_earliest": "2026-06-01",
               "yf_crosscheck_latest": "2026-06-30",
               "yf_crosscheck_density": 0.954545,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -3150,7 +3215,7 @@
               "yf_crosscheck_earliest": "2026-06-01",
               "yf_crosscheck_latest": "2026-06-30",
               "yf_crosscheck_density": 0.954545,
-              "classification_as_of": "2026-07-17T05:30:08.556Z"
+              "classification_as_of": "2026-07-17T07:30:01.068Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -3182,7 +3247,7 @@
             ],
             "terminal_limit_source": "data_supply_unavailable",
             "daily_1y_gap_source": "data_supply_unavailable",
-            "pending_consecutive_failures": 0,
+            "pending_consecutive_failures": 1,
             "pending_next_attempt_after_utc": null,
             "detail_source_kind": "r2_unavailable",
             "primary_present": false,
@@ -3283,8 +3348,8 @@
   "market_facts_return_3y": {
     "etf": 2660,
     "stockanalysis_history": 2608,
-    "etf_coverage_pct": 50.02,
-    "etf_denominator": 5318,
+    "etf_coverage_pct": 49.9,
+    "etf_denominator": 5331,
     "stockanalysis_universe_denominator": 5467
   },
   "recommended_dispatch": {
