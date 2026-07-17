@@ -1,20 +1,20 @@
 {
-  "schema_version": "producer-lkg-key-state/v1",
+  "schema_version": "producer-lkg-key-state/v2",
   "lane_id": "yahoo_hourly_ticker",
   "key": "SOXL.json",
-  "updated_at": "2026-07-16T11:51:09.839Z",
+  "updated_at": "2026-07-17T04:19:06.582Z",
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/macro/yahoo-ticker.json#/tickers/SOXL",
-    "payload_sha256": "c45f9b5383bb083a655517bf67c02dba7456fffb15949e8520d159bd37179cda",
-    "source_as_of": "2026-07-15T20:00:00.000Z"
+    "payload_sha256": "25d892a8ad55ddf26e36587a324884518afd8d9cb2c29340c4c3407c6b92b95e",
+    "source_as_of": "2026-07-16T20:00:00.000Z"
   },
   "canonical_ref": "data/macro/yahoo-ticker.json#/tickers/SOXL",
   "lkg": {
     "path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json",
-    "payload_sha256": "c45f9b5383bb083a655517bf67c02dba7456fffb15949e8520d159bd37179cda",
-    "source_as_of": "2026-07-15T20:00:00.000Z"
+    "payload_sha256": "25d892a8ad55ddf26e36587a324884518afd8d9cb2c29340c4c3407c6b92b95e",
+    "source_as_of": "2026-07-16T20:00:00.000Z"
   },
   "latest_failure": null,
   "recovered_from_run_id": "29417720099",
@@ -22,6 +22,20 @@
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-07-15T14:04:52.506Z",
-  "last_run_id": "29495869517",
-  "last_run_attempt": 1
+  "last_run_id": "29554523711",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "provider_observation/v2",
+  "promotion_proof_required": true,
+  "provider_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "25d892a8ad55ddf26e36587a324884518afd8d9cb2c29340c4c3407c6b92b95e",
+    "source_as_of": "2026-07-16T20:00:00.000Z",
+    "run_id": "29554523711",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-07-17T04:19:06.582Z",
+    "recovered_from_run_id": "29417720099"
+  },
+  "recovery_provenance_contract": "legacy_source_marker/v1"
 }
