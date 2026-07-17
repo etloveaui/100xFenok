@@ -1,0 +1,63 @@
+name: Pipeline Failure Alarm
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+concurrency:
+  group: pipeline-failure-alarm
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check pipeline job health
+        id: pipeline
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
+        run: node scripts/ops/check-pipeline-job-health.mjs
+
+      - name: Prepare issue body
+        if: steps.pipeline.outcome == 'failure'
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const result = JSON.parse(fs.readFileSync('pipeline-job-health-result.json', 'utf8'));
+          fs.writeFileSync('pipeline-job-health-issue.md', result.issueBody || result.message || 'Pipeline job failure alarm fired.');
+          fs.writeFileSync('pipeline-job-health-title.txt', result.issueTitle || '100xFenok pipeline job failure alarm');
+          NODE
+
+      - name: Open or update OPS issue
+        if: steps.pipeline.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="$(cat pipeline-job-health-title.txt)"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file pipeline-job-health-issue.md
+          else
+            gh issue create --title "$title" --body-file pipeline-job-health-issue.md
+          fi
+
+      - name: Fail on alarm
+        if: steps.pipeline.outcome == 'failure'
+        run: exit 1
