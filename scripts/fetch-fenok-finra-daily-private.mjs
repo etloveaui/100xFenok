@@ -8,11 +8,13 @@
  * - Does not create public/computed mirrors or product-facing scores.
  */
 
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   attemptResult,
+  atomicWrite,
   classifyEndpointResponse,
   defaultAttemptId,
   returnedTuple,
@@ -22,6 +24,14 @@ import {
   worstRequestResult,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+  systemicLkgFailureReason,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -29,6 +39,14 @@ const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow");
 const FINRA_ROOT = path.join(privateRoot, "finra");
 const REGSHO_DAILY_CACHE_DIR = path.join(FINRA_ROOT, "regsho_daily");
 const MANIFEST_FILE = path.join(FINRA_ROOT, "manifests", "collection_manifest.json");
+// Last-known-good recovery lane. FINRA short-volume rows are admin-private
+// (raw_public: false), so the store never touches the raw payload: it protects a
+// NON-PRIVATE freshness marker (source date + row count + payload hash) that lives
+// under the committed data/admin/<lane>/ tree, mirroring fetch-defillama's stable
+// canonical without leaking any short-volume rows to the public repo.
+const FINRA_LANE_ID = "finra_short_volume";
+const FINRA_LKG_KEY = "regsho_daily";
+const FINRA_FRESHNESS_MARKER_SCHEMA = "fenok-finra-freshness-marker/v1";
 const DEFAULT_DATASET = "regsho-daily";
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_BACKOFF_MS = 2000;
@@ -363,6 +381,168 @@ function reduceFinraEndpointResults(results) {
   return worstRequestResult(actionable.length > 0 ? actionable : results);
 }
 
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function freshnessMarkerPathFor(repoRootDir) {
+  return path.join(repoRootDir, "data", "admin", FINRA_LANE_ID, "current", `${FINRA_LKG_KEY}.json`);
+}
+
+// The freshness marker is the store's canonical: a small, PUBLIC-SAFE record of the
+// latest ready trade date, its row count, and a sha256 of the private payload. It
+// carries no short-volume rows, so committing it never violates the lane's
+// admin_private_only / raw_public:false contract.
+function buildFreshnessMarker({ payload, generatedAt }) {
+  const payloadBytes = Buffer.from(`${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return {
+    schema_version: FINRA_FRESHNESS_MARKER_SCHEMA,
+    lane_id: FINRA_LANE_ID,
+    dataset_id: payload.dataset_id,
+    source_as_of: payload.as_of,
+    trade_date: payload.date,
+    row_count: payload.row_count,
+    payload_sha256: sha256Hex(payloadBytes),
+    generated_at: generatedAt,
+    raw_public: false,
+    public_mirror_allowed: false,
+  };
+}
+
+function validFreshnessMarker(doc) {
+  return Boolean(doc)
+    && typeof doc === "object"
+    && !Array.isArray(doc)
+    && doc.schema_version === FINRA_FRESHNESS_MARKER_SCHEMA
+    && doc.lane_id === FINRA_LANE_ID
+    && typeof doc.dataset_id === "string" && doc.dataset_id.length > 0
+    && typeof doc.source_as_of === "string" && /^\d{4}-\d{2}-\d{2}$/.test(doc.source_as_of)
+    && Number.isFinite(Date.parse(doc.source_as_of))
+    && typeof doc.trade_date === "string" && /^\d{8}$/.test(doc.trade_date)
+    && Number.isInteger(doc.row_count) && doc.row_count >= 0
+    && typeof doc.payload_sha256 === "string" && /^[0-9a-f]{64}$/.test(doc.payload_sha256)
+    && doc.raw_public === false
+    && doc.public_mirror_allowed === false;
+}
+
+function freshnessMarkerSourceAsOf(doc) {
+  return validFreshnessMarker(doc) ? doc.source_as_of : null;
+}
+
+// The store's freshness anchor is the NEWEST expected trading date in the window.
+// Holidays/weekends are not trading dates (isUsTradingDate), so their 403s never
+// enter the failure cycle: a window with no trading date at all is EXPECTED ABSENCE,
+// a window whose newest trading date was collected is SUCCESS, and a window whose
+// newest trading date is genuinely missing is a FAILURE (retain LKG). An older
+// date's transient miss cannot demote a lane whose latest trading data is present.
+function computeFinraLkgOutcome({ dates, results }) {
+  const tradingDates = (dates ?? []).filter((date) => isUsTradingDate(date)).sort();
+  if (tradingDates.length === 0) {
+    return { kind: "expected_absence" };
+  }
+  const newestTradingDate = tradingDates[tradingDates.length - 1];
+  const collected = new Map((results ?? []).map((result) => [result.payload.date, result]));
+  if (collected.has(newestTradingDate)) {
+    return { kind: "success", latest: collected.get(newestTradingDate) };
+  }
+  return { kind: "failure" };
+}
+
+function finraLkgArtifactDescriptor(markerPath) {
+  return {
+    key: FINRA_LKG_KEY,
+    canonicalPath: markerPath,
+    validateDocument: validFreshnessMarker,
+    sourceAsOf: freshnessMarkerSourceAsOf,
+  };
+}
+
+// Additive LKG recovery wrapper around the existing per-date collection. It never
+// mutates the detection attempt shard (that stays owned by writeAttemptShard) and
+// never rewrites a per-date payload; it only maintains the store's freshness marker,
+// LKG copy, and recovery index under data/admin/finra_short_volume/.
+function applyFinraLkgStore({ repoRoot: storeRepoRoot, markerPath, dates, endpointResults, results, run }) {
+  const store = new LaneLkgStore({ repoRoot: storeRepoRoot, laneId: FINRA_LANE_ID });
+  const artifact = finraLkgArtifactDescriptor(markerPath);
+  const outcome = computeFinraLkgOutcome({ dates, results });
+
+  if (outcome.kind === "expected_absence") {
+    return { kind: "expected_absence", updated: false };
+  }
+
+  if (outcome.kind === "failure") {
+    const actionableReasons = (endpointResults ?? [])
+      .filter((result) => result?.expectedMissing !== true)
+      .map((result) => result?.reason);
+    const reason = systemicLkgFailureReason(actionableReasons)
+      ?? reduceFinraEndpointResults(endpointResults).reason;
+    const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+    return {
+      kind: "failure",
+      updated: false,
+      reason,
+      retrySet: failure.retrySet,
+      ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg }),
+    };
+  }
+
+  const marker = buildFreshnessMarker({ payload: outcome.latest.payload, generatedAt: run.observedAt });
+  const serialized = `${JSON.stringify(marker, null, 2)}\n`;
+  const sourceAsOf = marker.source_as_of;
+  const payloadBytes = Buffer.from(serialized, "utf8");
+  const markerRelative = path.relative(storeRepoRoot, path.resolve(markerPath)).split(path.sep).join("/");
+
+  const snapshot = store.stateSnapshot();
+  const priorItem = snapshot.items[FINRA_LKG_KEY];
+  const retryActive = priorItem?.retry === true;
+  const priorSourceAsOf = priorItem?.current?.source_as_of;
+  // Backfill guard: outside an active retry, only advance the freshness anchor when
+  // the provider date is strictly newer. A range/backfill of older dates must never
+  // regress the marker. During a retry the store's own advancement gate governs.
+  if (!retryActive && typeof priorSourceAsOf === "string"
+    && Number.isFinite(Date.parse(priorSourceAsOf))
+    && Date.parse(sourceAsOf) <= Date.parse(priorSourceAsOf)) {
+    return { kind: "not_newer", updated: false, sourceAsOf };
+  }
+
+  const candidate = {
+    key: FINRA_LKG_KEY,
+    currentRelativePath: markerRelative,
+    payloadBytes,
+    sourceAsOf,
+    validateDocument: validFreshnessMarker,
+    deriveSourceAsOf: freshnessMarkerSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes,
+      sourceAsOf,
+      validateDocument: validFreshnessMarker,
+      deriveSourceAsOf: freshnessMarkerSourceAsOf,
+      candidateContainsObservation: (candidateDocument, providerDocument) => (
+        JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
+      ),
+      run,
+    }),
+  };
+
+  if (retryActive && !isNaturalScheduleRun(run)) {
+    return { kind: "recovery_requires_schedule", updated: false, reason: "recovery_requires_schedule", degraded: true, corrupt: false, exitCode: 0 };
+  }
+
+  const [decision] = store.evaluatePromotionCandidates([candidate], run);
+  if (!decision.eligible) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+    }
+    return { kind: "not_promotable", updated: false, reason: decision.reason, degraded: true, corrupt: false, exitCode: 0 };
+  }
+
+  atomicWrite(markerPath, serialized);
+  const success = store.recordSuccess({ artifacts: [candidate], run });
+  const recovered = success.state.items[FINRA_LKG_KEY]?.recovered_at === run.observedAt;
+  return { kind: "success", updated: true, recovered, sourceAsOf };
+}
+
 function cachePathForDate(yyyymmdd) {
   return path.join(REGSHO_DAILY_CACHE_DIR, `CNMSshvol${yyyymmdd}.json`);
 }
@@ -520,6 +700,11 @@ async function run(argv = process.argv.slice(2), {
   attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/finra_short_volume.json"),
   observedAt = new Date().toISOString(),
   attemptId = stableAttemptId("finra-short-volume", observedAt),
+  lkgRepoRoot = repoRoot,
+  markerPath = freshnessMarkerPathFor(lkgRepoRoot),
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
 } = {}) {
   const args = parseArgs(argv);
   const dataset = datasetConfig(args.dataset);
@@ -583,6 +768,26 @@ async function run(argv = process.argv.slice(2), {
         continue;
       }
       if (args.sleepMs > 0) await sleep(args.sleepMs);
+    }
+    // Additive LKG recovery: engage only for the automatic latest/window refresh
+    // (the daily cron and its dispatch overrides). Explicit single-date, input-file,
+    // and no-write invocations are manual/backfill/test paths and never touch the
+    // shared recovery state. This keeps every existing --no-write test unaffected.
+    const storeMode = !args.noWrite && !args.inputFile && !args.date;
+    if (storeMode) {
+      applyFinraLkgStore({
+        repoRoot: lkgRepoRoot,
+        markerPath,
+        dates,
+        endpointResults,
+        results,
+        run: {
+          runId: String(runId),
+          runAttempt: Number(runAttempt),
+          eventName,
+          observedAt,
+        },
+      });
     }
     if (results.length === 0 && dates.length > 0) {
       throw new Error(
@@ -652,17 +857,26 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  applyFinraLkgStore,
+  buildFreshnessMarker,
   buildPayload,
   buildManifest,
   cachePathForDate,
   classifyFinraEndpointResponse,
+  computeFinraLkgOutcome,
   datasetConfig,
   endpointForDate,
   expandDateRange,
   FINRA_AVAILABILITY_POLICY,
+  FINRA_FRESHNESS_MARKER_SCHEMA,
+  FINRA_LANE_ID,
+  FINRA_LKG_KEY,
+  freshnessMarkerPathFor,
+  freshnessMarkerSourceAsOf,
   normalizeDate,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
   reduceFinraEndpointResults,
   run,
+  validFreshnessMarker,
 };
