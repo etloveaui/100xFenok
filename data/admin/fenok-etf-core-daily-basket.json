@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-etf-core-daily-basket/v0.1",
-  "generated_at": "2026-07-18T20:02:42.928Z",
+  "generated_at": "2026-07-18T21:02:27.360Z",
   "basket_id": "etf_core_daily_basket",
   "asset_type": "etf",
   "contract_doc": "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md",
@@ -12,9 +12,9 @@
     "etf_detail_dir": "data/stockanalysis/etfs"
   },
   "source_generated_at": {
-    "etf_signal_summary": "2026-07-18T20:02:13.181Z",
-    "etf_action_index": "2026-07-18T20:02:42.822Z",
-    "etf_detail_coverage": "2026-07-18T18:49:18Z",
+    "etf_signal_summary": "2026-07-18T21:02:01.925Z",
+    "etf_action_index": "2026-07-18T21:02:27.271Z",
+    "etf_detail_coverage": "2026-07-18T20:56:02Z",
     "new_etfs": null
   },
   "raw_policy": {
@@ -63,7 +63,7 @@
     "action_index_total_etf_count": 4526,
     "new_etf_radar_count": 100,
     "detail_candidate_total": 5536,
-    "detail_stockanalysis_files": 5081,
+    "detail_stockanalysis_files": 5181,
     "detail_yahoo_fallback_files": null,
     "structural_candidate_count": 1569,
     "fresh_structural_candidate_count": 104,
@@ -88,13 +88,13 @@
     "freshness_blocker_counts": {},
     "excluded_reason_counts": {
       "action_confidence_not_high": 759,
-      "aum_lt_50m": 1626,
+      "aum_lt_50m": 1625,
       "avg_dollar_volume_5d_lt_1m": 2794,
-      "classification_not_high_confidence": 68,
+      "classification_not_high_confidence": 67,
       "coverage_ratio_lt_0_75": 759,
       "daily_1y_rows_lt_200": 842,
-      "detail_file_missing": 48,
-      "detail_missing": 22,
+      "detail_file_missing": 47,
+      "detail_missing": 21,
       "inverse_etf": 1,
       "new_etf_radar_only": 37,
       "scored_signal_count_lt_6": 759,
@@ -143,8 +143,8 @@
       "EMXC",
       "AVDV",
       "DBEF",
-      "VSGX",
       "FLTW",
+      "VSGX",
       "VT",
       "XCEM",
       "SCHA",
@@ -279,14 +279,14 @@
       "HYGW"
     ],
     "detail_missing": [
-      "IDEQ",
       "KRYP",
       "PHYS",
       "PSLV",
       "RAAR",
       "RAAY",
       "RCLR",
-      "RCLY"
+      "RCLY",
+      "RMHY"
     ],
     "inverse_etf": [
       "CLNK"
@@ -894,8 +894,8 @@
       "beta": 0.97,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 78.32,
-      "action_score": 78.32,
+      "signal_score": 78.46,
+      "action_score": 78.46,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -1388,6 +1388,34 @@
       }
     },
     {
+      "ticker": "FLTW",
+      "company": "Franklin FTSE Taiwan ETF",
+      "asset_type": "etf",
+      "category": "Equity",
+      "aum": 2730000000,
+      "expense_ratio": 0.19,
+      "dividend_yield": 1.75,
+      "beta": 1.11,
+      "scored_signal_count": 7,
+      "coverage_ratio": 1,
+      "signal_score": 75.88,
+      "action_score": 75.88,
+      "confidence_label": "high",
+      "core_candidate_allowed": true,
+      "core_candidate_reason": "passes_structural_core_daily_filters",
+      "status": "fresh",
+      "freshness_blockers": [],
+      "proof": {
+        "detail_source": "stockanalysis",
+        "classification_confidence": "high",
+        "quote_date": "2026-07-17",
+        "quote_age_days": 1,
+        "quote_volume": 672834,
+        "daily_1y_rows": 252,
+        "average_dollar_volume_5d": 36014652.89
+      }
+    },
+    {
       "ticker": "VSGX",
       "company": "Vanguard ESG International Stock ETF",
       "asset_type": "etf",
@@ -1413,34 +1441,6 @@
         "quote_volume": 467996,
         "daily_1y_rows": 252,
         "average_dollar_volume_5d": 1808751.05
-      }
-    },
-    {
-      "ticker": "FLTW",
-      "company": "Franklin FTSE Taiwan ETF",
-      "asset_type": "etf",
-      "category": "Equity",
-      "aum": 2730000000,
-      "expense_ratio": 0.19,
-      "dividend_yield": 1.75,
-      "beta": 1.11,
-      "scored_signal_count": 7,
-      "coverage_ratio": 1,
-      "signal_score": 75.84,
-      "action_score": 75.84,
-      "confidence_label": "high",
-      "core_candidate_allowed": true,
-      "core_candidate_reason": "passes_structural_core_daily_filters",
-      "status": "fresh",
-      "freshness_blockers": [],
-      "proof": {
-        "detail_source": "stockanalysis",
-        "classification_confidence": "high",
-        "quote_date": "2026-07-17",
-        "quote_age_days": 1,
-        "quote_volume": 672834,
-        "daily_1y_rows": 252,
-        "average_dollar_volume_5d": 36014652.89
       }
     },
     {
@@ -2182,8 +2182,8 @@
       "beta": 0.01,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 69.4,
-      "action_score": 69.4,
+      "signal_score": 69.47,
+      "action_score": 69.47,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
