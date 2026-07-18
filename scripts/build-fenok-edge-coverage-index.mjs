@@ -19,6 +19,11 @@ import {
   recomputeFenokEdgeSourceAsOf,
   shouldPreserveKoreaPrivateEvidence,
 } from "./lib/fenok-edge-source-stamp.mjs";
+import {
+  reconcileTaiwanCurrentUniverseDenominator,
+  selectExplicitTaiwanRows,
+  selectTaiwanTickerAnomalies,
+} from "./lib/taiwan-universe.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -448,6 +453,11 @@ function preservePriorPrivateBackedEvidence(index, priorIndex, conditions) {
   }
   if (conditions.taiwanHistoricalMissing) {
     replaceById(currentSources, "taiwan_current_universe", findById(priorSources, "taiwan_current_universe"));
+    reconcileTaiwanCurrentUniverseDenominator(
+      findById(currentSources, "taiwan_current_universe"),
+      activeScoringTotal,
+      pct,
+    );
   }
 
   recomputeSourceComposites(index);
@@ -499,19 +509,10 @@ const usRows = universeRows.filter((row) => row.market === "US" || row.market ==
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
 const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows];
-const explicitTaiwanRows = universeRows.filter((row) => /^(TW|TAIWAN|TPE|TPEX)$/i.test(String(row.market ?? "")) || /taiwan/i.test(String(row.market_scope ?? "")));
+const explicitTaiwanRows = selectExplicitTaiwanRows(universeRows);
 const finraEligibleRows = usRows.filter((row) => row.market === "US");
 const usClassYfRows = usRows.filter((row) => row.market !== "US");
-const taiwanTickerAnomalies = universeRows
-  .filter((row) => /\.(TW|TWO)$/i.test(String(row.ticker ?? "")) || /-(TW|TWO)$/i.test(String(row.ticker_normalized ?? "")))
-  .filter((row) => !explicitTaiwanRows.includes(row))
-  .map((row) => ({
-    ticker: row.ticker,
-    ticker_normalized: row.ticker_normalized,
-    market: row.market,
-    market_scope: row.market_scope,
-    company: row.company,
-  }));
+const taiwanTickerAnomalies = selectTaiwanTickerAnomalies(universeRows, explicitTaiwanRows);
 
 const usUniverse = new Set(usRows.map((row) => normTicker(row.ticker_normalized ?? row.ticker)));
 const krUniverseCodes = new Set(koreaRows.map((row) => krCode(row.ticker_normalized ?? row.ticker)).filter(Boolean));
