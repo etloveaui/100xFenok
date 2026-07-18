@@ -33,7 +33,7 @@ export function checkSyncExclusionsAgainstRegistry({
       .map(storeToExcludedForm),
   );
   const declaredExceptions = new Set(
-    declaredExceptionPaths("root").map(storeToExcludedForm),
+    declaredExceptionPaths("root", registry).map(storeToExcludedForm),
   );
 
   const missing_exclusions = [];

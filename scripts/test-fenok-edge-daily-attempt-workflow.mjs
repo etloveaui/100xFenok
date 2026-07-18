@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -144,6 +145,43 @@ assert.equal(noInjectionControls.status, 0, noInjectionControls.stderr);
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes.sort(), ["finra_short_volume", "occ_options_volume"].sort(),
     "the registry must attribute both edge lanes to fenok-edge-daily.yml");
+
+  // value-changing registry injection (sol fh-168 pattern rule): an injected
+  // registry whose edge lane declares one MORE admin shard must surface as
+  // missing_in_workflow — injected config changes must flow end to end.
+  const injectedRegistry = {
+    ...LANE_REGISTRY,
+    lanes: LANE_REGISTRY.lanes.map((lane) => lane.id === "finra_short_volume"
+      ? { ...lane, commit_shards: [...lane.commit_shards, "data/admin/finra_short_volume/history/injected_extra.json"] }
+      : lane),
+  };
+  const injected = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText: workflow,
+    workflowRel: ".github/workflows/fenok-edge-daily.yml",
+    registry: injectedRegistry,
+  });
+  assert.equal(injected.ok, false, "an injected extra declared shard must fail the gate");
+  assert.deepEqual(injected.missing_in_workflow, [{ shard: "data/admin/finra_short_volume/history/injected_extra.json", lane: "finra_short_volume" }],
+    "the injected shard must be named by lane in missing_in_workflow");
+
+  // empty-exceptions value-changing RED (sol fh-175): an admin path covered by
+  // a DEFAULT declared exception must turn undeclared when the injected
+  // registry drops all exceptions — direction 2 must honor the injected registry.
+  const ghosted = `${workflow}\n# data/admin/fenok-data-health-kpi.json\n`;
+  const coveredByDefault = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText: ghosted,
+    workflowRel: ".github/workflows/fenok-edge-daily.yml",
+  });
+  assert.equal(coveredByDefault.undeclared_in_workflow.includes("data/admin/fenok-data-health-kpi.json"), false,
+    "fixture sanity: the KPI manifest path is covered by a default declared exception");
+  const noExceptions = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText: ghosted,
+    workflowRel: ".github/workflows/fenok-edge-daily.yml",
+    registry: { ...LANE_REGISTRY, declared_exceptions: [] },
+  });
+  assert.equal(noExceptions.ok, false, "dropping injected exceptions must fail the gate");
+  assert.ok(noExceptions.undeclared_in_workflow.includes("data/admin/fenok-data-health-kpi.json"),
+    "the exception-covered path must turn undeclared under an empty injected exception set");
 }
 
 console.log("test-fenok-edge-daily-attempt-workflow: ok");

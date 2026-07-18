@@ -33,9 +33,9 @@ export function checkLaneRegistryCompleteness({
   info = (message) => console.log(message),
 } = {}) {
   const adminRoot = path.join(repoRoot, ADMIN_REL);
-  const adminRoots = declaredAdminRoots();
-  const exceptionRoots = new Set(declaredExceptionPaths("root"));
-  const exceptionFiles = new Set(declaredExceptionPaths("file"));
+  const adminRoots = declaredAdminRoots(registry);
+  const exceptionRoots = new Set(declaredExceptionPaths("root", registry));
+  const exceptionFiles = new Set(declaredExceptionPaths("file", registry));
 
   const undeclared_roots = [];
   const undeclared_files = [];

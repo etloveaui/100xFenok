@@ -16,7 +16,7 @@
 //     is empty (lane admin stores are NOT here by design — they never reach
 //     the mirror because the sync list above withholds them).
 
-import { LANE_REGISTRY } from "./lane-registry.mjs";
+import { LANE_REGISTRY, declaredExceptionPaths } from "./lane-registry.mjs";
 
 function stripDataPrefix(path) {
   return path.replace(/^data\//, "");
@@ -48,11 +48,8 @@ function laneCanonicalPrivateRoots(registry) {
 }
 
 function exceptionRootsOf(registry) {
-  // Read the PASSED registry's declared exceptions — never the module default
-  // (sol fh-155 B2: an injected registry must be honored end to end).
-  return registry.declared_exceptions
-    .filter((entry) => entry.kind === "root")
-    .map((entry) => entry.path);
+  // Unified on the parameterized registry API (fh-175 root-fix).
+  return declaredExceptionPaths("root", registry);
 }
 
 export function deriveExcludedPublicDataRoots(registry = LANE_REGISTRY) {

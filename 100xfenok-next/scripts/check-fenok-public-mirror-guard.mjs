@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const FORBIDDEN_PATTERNS = [
+export const FORBIDDEN_PATTERNS = [
   /^admin\/fenok-s1-stock-promotion-gate-plan\.json$/,
   /^admin\/fenok-s1-stock-public-promotion-dry-run\.json$/,
   /^admin\/fenok-s1-public-mutation-enable-readiness\.json$/,

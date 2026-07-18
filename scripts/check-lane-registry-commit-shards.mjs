@@ -140,7 +140,7 @@ export function checkWorkflowCommitShardsAgainstRegistry({
     }
     if (lane.roots.admin_store !== null) registryDeclared.add(lane.roots.admin_store);
   }
-  for (const exception of declaredExceptionPaths()) registryDeclared.add(exception);
+  for (const exception of declaredExceptionPaths(null, registry)) registryDeclared.add(exception);
   const undeclared_in_workflow = allowlistAll.filter((entry) => !coveredByRegistry(entry, registryDeclared));
 
   return {

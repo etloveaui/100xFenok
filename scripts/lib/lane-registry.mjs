@@ -844,9 +844,9 @@ export function registryLaneById(id) {
 }
 
 // Map of data/admin first-level roots -> owning lane ids (shared stores list all).
-export function declaredAdminRoots() {
+export function declaredAdminRoots(registry = LANE_REGISTRY) {
   const roots = new Map();
-  for (const laneValue of LANE_REGISTRY.lanes) {
+  for (const laneValue of registry.lanes) {
     const root = laneValue.roots.admin_store;
     if (root === null) continue;
     if (!roots.has(root)) roots.set(root, []);
@@ -855,8 +855,11 @@ export function declaredAdminRoots() {
   return roots;
 }
 
-export function declaredExceptionPaths(kind = null) {
-  return LANE_REGISTRY.declared_exceptions
+export function declaredExceptionPaths(kind = null, registry = LANE_REGISTRY) {
+  // Reads the PASSED registry's exceptions (default: the shipped one) — an
+  // injected registry must be honored end to end (the fh-155/fh-168/fh-175
+  // seam class; root-fixed here rather than per call site).
+  return registry.declared_exceptions
     .filter((entry) => kind === null || entry.kind === kind)
     .map((entry) => entry.path);
 }

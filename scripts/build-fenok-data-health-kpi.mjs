@@ -4,6 +4,8 @@ import path from "node:path";
 import { validateDetectionReport } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import { EXCLUDED_PUBLIC_DATA_FILES, EXCLUDED_PUBLIC_DATA_ROOTS } from "../100xfenok-next/scripts/sync-public-data.mjs";
+import { FORBIDDEN_PATTERNS, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "../100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
 import { assertValidCronDeferrals, publicationGateForRuntime } from "./lib/kpi-runtime-slots.mjs";
 import {
@@ -2087,6 +2089,70 @@ function deriveRecoveryStateSources() {
 
 export const RECOVERY_STATE_SOURCES = Object.freeze(deriveRecoveryStateSources());
 
+export // Source-artifact projection (#366 item 5): the 12-entry selection AND its
+// order are DECLARED here (legacy artifact order, ids are hand names by
+// design); the public_mirror / public_safe flags are DERIVED from the sync
+// exclusion lists and the mirror guard patterns, and recovery-index artifacts
+// are never a public surface by declared policy. The rules below reproduce the
+// historical hand flags exactly — pinned by the KPI suite against the built array.
+const SOURCE_ARTIFACT_SPECS = Object.freeze([
+  { id: "fenok_edge_coverage_index", path: "admin/fenok-edge-coverage-index.json", kind: "admin_manifest" },
+  { id: "rim_index_inputs", path: "computed/rim-index/inputs.json", kind: "computed" },
+  { id: "product_surface_coverage", path: "admin/product-surface-coverage.json", kind: "admin_manifest" },
+  { id: "s0_finra_occ_mapping_ledger", path: "admin/fenok-s0-finra-occ-mapping-ledger.json", kind: "admin_manifest" },
+  { id: "etf_daily1y_readiness_admin", path: "admin/fenok-edge-etf-daily1y-readiness.json", kind: "admin_manifest" },
+  { id: "etf_core_daily_basket_admin", path: "admin/fenok-etf-core-daily-basket.json", kind: "admin_manifest" },
+  { id: "yahoo_batch_quote_history_state", kind: "recovery_index" },
+  { id: "stockanalysis_recovery_state", kind: "recovery_index" },
+  { id: "occ_options_availability", path: "computed/fenok_occ_options_availability.json", kind: "computed" },
+  { id: "data_supply_detection_floor", path: "admin/data-supply-detection-floor.json", kind: "admin_manifest" },
+  { id: "yahoo_hourly_ticker_recovery_state", kind: "recovery_index" },
+  { id: "slickcharts_daily_delivery_recovery_state", kind: "recovery_index" },
+]);
+
+function pathWithin(path, root) {
+  return path === root || path.startsWith(`${root}/`);
+}
+
+function deriveArtifactPublicFlags(spec) {
+  if (spec.kind === "recovery_index") {
+    // Declared policy: recovery control-plane indexes are never a public
+    // surface, even where the bytes ride the bundle at build time.
+    return { public_mirror: false, public_safe: false };
+  }
+  const exposed = !EXCLUDED_PUBLIC_DATA_FILES.some((file) => spec.path === file)
+    && !EXCLUDED_PUBLIC_DATA_ROOTS.some((root) => pathWithin(spec.path, root))
+    && !FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS.some((root) => pathWithin(spec.path, root))
+    && !FORBIDDEN_PATTERNS.some((pattern) => pattern.test(spec.path));
+  return { public_mirror: exposed, public_safe: exposed };
+}
+
+function buildSourceArtifacts(loaded) {
+  // generated_at comes from the objects buildPayload already loaded and
+  // resolved (incl. the injected recoverySources seam and the RIM
+  // private-or-public fallback) — never from re-reading the default root
+  // (sol fh-168: injected seams must flow end to end).
+  const docBySpecId = {
+    fenok_edge_coverage_index: loaded.coverageIndex,
+    rim_index_inputs: loaded.rimInputs,
+    product_surface_coverage: loaded.productCoverage,
+    s0_finra_occ_mapping_ledger: loaded.finraOccLedger,
+    etf_daily1y_readiness_admin: loaded.etfDaily1y,
+    etf_core_daily_basket_admin: loaded.etfCoreBasket,
+    occ_options_availability: loaded.occAvailability,
+    data_supply_detection_floor: loaded.detectionFloor,
+    yahoo_batch_quote_history_state: loaded.yahooBatchState,
+    stockanalysis_recovery_state: loaded.stockanalysisRecovery,
+    yahoo_hourly_ticker_recovery_state: loaded.detectionRecovery.yahoo_ticker_macro,
+    slickcharts_daily_delivery_recovery_state: loaded.detectionRecovery.slickcharts,
+  };
+  return SOURCE_ARTIFACT_SPECS.map((spec) => ({
+    id: spec.id,
+    generated_at: docBySpecId[spec.id]?.generated_at ?? null,
+    ...deriveArtifactPublicFlags(spec),
+  }));
+}
+
 export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, recoverySources = RECOVERY_STATE_SOURCES) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
@@ -2176,20 +2242,19 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     deployment_integrity: deploymentIntegrity,
     runtime,
     source_sla: sourceSla,
-    source_artifacts: [
-      { id: "fenok_edge_coverage_index", generated_at: coverageIndex?.generated_at ?? null, public_mirror: true, public_safe: true },
-      { id: "rim_index_inputs", generated_at: rimInputs?.generated_at ?? null, public_mirror: true, public_safe: true },
-      { id: "product_surface_coverage", generated_at: productCoverage?.generated_at ?? null, public_mirror: true, public_safe: true },
-      { id: "s0_finra_occ_mapping_ledger", generated_at: finraOccLedger?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "etf_daily1y_readiness_admin", generated_at: etfDaily1y?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "etf_core_daily_basket_admin", generated_at: etfCoreBasket?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "yahoo_batch_quote_history_state", generated_at: yahooBatchState?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "stockanalysis_recovery_state", generated_at: stockanalysisRecovery?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "occ_options_availability", generated_at: occAvailability?.generated_at ?? null, public_mirror: true, public_safe: true },
-      { id: "data_supply_detection_floor", generated_at: detectionFloor?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "yahoo_hourly_ticker_recovery_state", generated_at: detectionRecovery.yahoo_ticker_macro?.generated_at ?? null, public_mirror: false, public_safe: false },
-      { id: "slickcharts_daily_delivery_recovery_state", generated_at: detectionRecovery.slickcharts?.generated_at ?? null, public_mirror: false, public_safe: false },
-    ],
+    source_artifacts: buildSourceArtifacts({
+      coverageIndex,
+      rimInputs,
+      productCoverage,
+      finraOccLedger,
+      etfDaily1y,
+      etfCoreBasket,
+      occAvailability,
+      detectionFloor,
+      yahooBatchState,
+      stockanalysisRecovery,
+      detectionRecovery,
+    }),
     totals,
     lanes,
     non_ready_checks: nonReadyChecks.slice(0, 25),

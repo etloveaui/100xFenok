@@ -3833,6 +3833,76 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("lane-registry recovery-source completeness (both directions)");
 }
 
+// Source-artifact projection migration pin (#366 item 5): the built
+// source_artifacts array must deep-equal the legacy hand list it replaces —
+// ids, order, and both public flags per entry.
+{
+  const payload = buildPayload("2026-07-19T05:00:00Z", null, null);
+  const legacy = [
+    { id: "fenok_edge_coverage_index", public_mirror: true, public_safe: true },
+    { id: "rim_index_inputs", public_mirror: true, public_safe: true },
+    { id: "product_surface_coverage", public_mirror: true, public_safe: true },
+    { id: "s0_finra_occ_mapping_ledger", public_mirror: false, public_safe: false },
+    { id: "etf_daily1y_readiness_admin", public_mirror: false, public_safe: false },
+    { id: "etf_core_daily_basket_admin", public_mirror: false, public_safe: false },
+    { id: "yahoo_batch_quote_history_state", public_mirror: false, public_safe: false },
+    { id: "stockanalysis_recovery_state", public_mirror: false, public_safe: false },
+    { id: "occ_options_availability", public_mirror: true, public_safe: true },
+    { id: "data_supply_detection_floor", public_mirror: false, public_safe: false },
+    { id: "yahoo_hourly_ticker_recovery_state", public_mirror: false, public_safe: false },
+    { id: "slickcharts_daily_delivery_recovery_state", public_mirror: false, public_safe: false },
+  ];
+  const actual = payload.source_artifacts.map((row) => ({
+    id: row.id,
+    public_mirror: row.public_mirror,
+    public_safe: row.public_safe,
+  }));
+  assert.deepEqual(actual, legacy,
+    `derived source_artifacts must deep-equal the legacy hand list (id/order/flags)`);
+  assert.equal(payload.source_artifacts.length, 12, "the projection keeps the curated 12-entry selection");
+  ok("source_artifacts projection deep-equals the legacy hand list (#366 item 5)");
+}
+
+// Source-artifact injected-seam proofs (sol fh-168): injected config must be
+// tested with VALUE-CHANGING injections, not shape-only permutations.
+{
+  // (a) value-changing recovery-source injection: an injected slickcharts
+  // source path must flow into the artifact's generated_at (vs the canonical
+  // slickcharts store), proving the seam reaches the projection end to end.
+  const canonicalSox = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "admin", "slickcharts-daily-delivery", "index.json"), "utf8"));
+  const injectedSox = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "admin", "yahoo-hourly-ticker", "index.json"), "utf8"));
+  const injectedSources = Object.freeze({
+    ...RECOVERY_STATE_SOURCES,
+    nonstandard: Object.freeze({
+      yahoo_ticker_macro: RECOVERY_STATE_SOURCES.nonstandard.yahoo_ticker_macro,
+      slickcharts: "admin/yahoo-hourly-ticker/index.json",
+    }),
+  });
+  const payloadInjected = buildPayload("2026-07-19T05:00:00Z", null, null, injectedSources);
+  const soxArtifact = payloadInjected.source_artifacts.find((row) => row.id === "slickcharts_daily_delivery_recovery_state");
+  assert.equal(soxArtifact.generated_at, injectedSox.generated_at,
+    "an injected recovery-source path must flow into the artifact generated_at");
+  assert.notEqual(soxArtifact.generated_at, canonicalSox.generated_at,
+    "fixture sanity: the injected path must differ from the canonical store");
+
+  // (b) RIM private-missing/public-present fallback: with no private rim inputs
+  // file, the artifact must carry the PUBLIC fallback's generated_at (the
+  // resolved object, not a re-read of the private path).
+  const rimNow = "2026-07-19T05:10:00.000Z";
+  const rimTmp = mkTmp("rim-fallback");
+  const rimPublicGeneratedAt = "2026-07-18T22:00:00.000Z";
+  writeJson(path.join(rimTmp, "public", "data", "computed", "rim-index", "inputs.json"), {
+    schema_version: "rim-index-inputs/v1",
+    generated_at: rimPublicGeneratedAt,
+    indices: [],
+  });
+  const { root: rimRoot } = runBuilder(rimTmp, {}, rimNow);
+  const rimArtifact = rimRoot.source_artifacts.find((row) => row.id === "rim_index_inputs");
+  assert.equal(rimArtifact.generated_at, rimPublicGeneratedAt,
+    "rim_index_inputs must use the resolved public fallback's generated_at when the private file is missing");
+  ok("source_artifacts honors injected recovery paths and the RIM public fallback");
+}
+
 // Recovery-source order-insensitivity proof (#366 item 3, sol fh-143 fix b):
 // RECOVERY_STATE_SOURCES is consumed strictly as an id-keyed lookup, so array
 // order must not change the built artifact. Building the same payload with a
