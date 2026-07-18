@@ -65,10 +65,6 @@ on:
         description: 'Skip usable local payloads newer than N hours (0 = disabled)'
         required: false
         default: '0'
-      include_options:
-        description: 'Fetch first option expiries (targeted runs only)'
-        required: false
-        default: 'false'
       include_shares_full:
         description: 'Fetch share-count history sample'
         required: false
@@ -146,7 +142,6 @@ jobs:
           INPUT_MERGE_EXISTING: ${{ github.event.inputs.merge_existing || 'false' }}
           INPUT_PROFILE: ${{ github.event.inputs.profile || 'full' }}
           INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '0' }}
-          INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options || 'false' }}
           INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full || 'false' }}
           INPUT_STOCKANALYSIS_ETFS: ${{ github.event.inputs.stockanalysis_etfs || 'false' }}
           INPUT_STOCKS_ONLY: ${{ github.event.inputs.stocks_only || 'false' }}
@@ -209,7 +204,6 @@ jobs:
               INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-true}"
               INPUT_STOCKS_ONLY="false"
             fi
-            INPUT_INCLUDE_OPTIONS="false"
             INPUT_INCLUDE_SHARES_FULL="false"
             INPUT_PLAN_ONLY="false"
           fi
@@ -226,7 +220,6 @@ jobs:
           if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
           if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi
           if [ "$INPUT_STOCKS_ONLY" = "true" ]; then ARGS="$ARGS --stocks-only"; fi
-          if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
           if [ "$INPUT_STOCKANALYSIS_ETFS" = "true" ]; then ARGS="$ARGS --stockanalysis-etfs"; fi
           if [ "$INPUT_HISTORY_GAPS_ONLY" = "true" ]; then ARGS="$ARGS --history-gaps-only --history-min-rows ${INPUT_HISTORY_MIN_ROWS:-200}"; fi

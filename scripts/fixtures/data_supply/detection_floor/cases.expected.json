@@ -22,6 +22,7 @@
       "sec_13f",
       "finra_short_volume",
       "occ_options_volume",
+      "yahoo_private_options",
       "apewisdom_attention",
       "gdelt_news_tone"
     ],
@@ -46,13 +47,14 @@
       "sec_13f",
       "finra_short_volume",
       "occ_options_volume",
+      "yahoo_private_options",
       "apewisdom_attention",
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "e1b6b8e5511381d75cd46032a4b33a9094d469351a75e465dd863d9dcb23a00f",
-  "logical_lane_count": 18,
-  "producer_member_count": 22,
+  "config_digest": "e911e962b0482876e82e4e3779dfbe521e77bea4d73420ffad563ce5124309ba",
+  "logical_lane_count": 19,
+  "producer_member_count": 23,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -80,27 +82,27 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "5a91cee7cd10810cb6b55627a4046060a842f7af15d36d6bbd783b5c9337dbbf",
+    "report_file_sha256": "3eb23bb3f9f7335dc3368b22e7849ec02303e011e8b38c0155f2683f62e7b070",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "e1b6b8e5511381d75cd46032a4b33a9094d469351a75e465dd863d9dcb23a00f",
-      "logical_lane_count": 18,
-      "producer_member_count": 22,
+      "config_digest": "e911e962b0482876e82e4e3779dfbe521e77bea4d73420ffad563ce5124309ba",
+      "logical_lane_count": 19,
+      "producer_member_count": 23,
       "counts": {
-        "ready": 15,
+        "ready": 16,
         "stale": 0,
         "drift": 0,
         "unavailable": 0,
         "unobserved": 3,
-        "producer_members_ready": 19,
+        "producer_members_ready": 20,
         "producer_members_stale": 0,
         "producer_members_drift": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3
       },
       "monitoring_mode_counts": {
-        "post_fetch_artifact": 14,
+        "post_fetch_artifact": 15,
         "artifact_only": 3,
         "composite": 1
       },
@@ -576,6 +578,30 @@
           },
           "affected_surface_ids": [
             "fenok_occ_options"
+          ]
+        },
+        {
+          "id": "yahoo_private_options",
+          "label": "Yahoo private options availability",
+          "enforcement": "shadow",
+          "kpi_required": false,
+          "monitoring_mode": "post_fetch_artifact",
+          "status": "ready",
+          "reason": "ok",
+          "endpoint": {
+            "status": "ready",
+            "reason": "ok",
+            "observed_at": "2026-07-11T00:00:00Z"
+          },
+          "artifact": {
+            "status": "ready",
+            "reason": "ok",
+            "source_as_of": "2026-07-10T01:10:00Z",
+            "age": 1,
+            "unit": "business_days"
+          },
+          "affected_surface_ids": [
+            "yahoo_private_options_availability"
           ]
         },
         {

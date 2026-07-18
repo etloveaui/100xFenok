@@ -1,0 +1,93 @@
+name: Fetch Fenok Private Options Availability
+
+on:
+  schedule:
+    # Weekdays after the US close. The producer enforces this exact allowlist.
+    - cron: '10 1 * * 2-6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-refs/heads/main
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  fetch-private-options:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SCHEDULED_TICKERS: DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install bounded provider client
+        run: pip install yfinance
+
+      - name: Test private options contracts
+        run: |
+          python3 -m unittest scripts/test_fetch_fenok_private_options.py
+          node scripts/test-run-fenok-private-options.mjs
+          node scripts/test-fetch-fenok-private-options-workflow.mjs
+
+      - name: Fetch private raw and build public-safe marker
+        id: fetch
+        run: |
+          set -euo pipefail
+          RAW_DIR="$RUNNER_TEMP/yf-options"
+          SUMMARY_PATH="$RUNNER_TEMP/yf-options-summary.json"
+          mkdir -p "$RAW_DIR"
+          node scripts/run-fenok-private-options.mjs \
+            --output-dir "$RAW_DIR" \
+            --summary-path "$SUMMARY_PATH"
+
+      - name: Persist safe marker and recovery state
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch.outcome }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          ATTEMPT="data/admin/data-supply-state/detection-attempts/yahoo_private_options.json"
+          if [[ -f "$ATTEMPT" ]]; then git add -- "$ATTEMPT"; fi
+          if [[ -d data/admin/yahoo_private_options ]]; then git add -- data/admin/yahoo_private_options; fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            git add -- \
+              data/computed/fenok_yahoo_private_options_availability.json \
+              100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json
+          fi
+          if git diff --staged --quiet; then
+            echo "No safe Yahoo private options changes to publish"
+            exit 0
+          fi
+          git commit -m "data: update Yahoo private options availability"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Yahoo private options push failed after retrying concurrent main updates"
+          exit 1

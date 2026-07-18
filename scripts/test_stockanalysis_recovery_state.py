@@ -245,6 +245,44 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertEqual(index["recovered_surfaces"], ["actions_recent"])
         self.assertEqual(self.store.assess_current_attempt(index)["status"], "ready")
 
+    def test_financial_recovery_accepts_new_collection_of_same_fiscal_source_only(self) -> None:
+        self.seed_lane()
+        self.store.bootstrap_existing(self.run_context("bootstrap"))
+        self.store.record_failure(
+            "financial", "AAPL", "transport failure", self.run_context("failed")
+        )
+
+        same_source_new_fetch = financial_payload("AAPL", "2026-06-30")
+        same_source_new_fetch["fetched_at"] = "2026-07-15T09:00:00Z"
+        self.assertTrue(
+            self.store.recovery_candidate_advances(
+                "financial", "AAPL", same_source_new_fetch
+            )
+        )
+
+        same_source_same_fetch = financial_payload("AAPL", "2026-06-30")
+        self.assertFalse(
+            self.store.recovery_candidate_advances(
+                "financial", "AAPL", same_source_same_fetch
+            )
+        )
+
+        regressed_source = financial_payload("AAPL", "2026-06-29")
+        regressed_source["fetched_at"] = "2026-07-15T09:00:00Z"
+        self.assertFalse(
+            self.store.recovery_candidate_advances(
+                "financial", "AAPL", regressed_source
+            )
+        )
+
+        advanced_source_old_fetch = financial_payload("AAPL", "2026-07-01")
+        advanced_source_old_fetch["fetched_at"] = "2026-06-30T23:00:00Z"
+        self.assertFalse(
+            self.store.recovery_candidate_advances(
+                "financial", "AAPL", advanced_source_old_fetch
+            )
+        )
+
     def test_existing_payload_loss_is_corruption(self) -> None:
         self.seed_lane()
         self.store.bootstrap_existing(self.run_context("bootstrap"))

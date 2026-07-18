@@ -1276,7 +1276,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             "summary": {"annual": {"income": {"field_count": 30, "period_count": 5}}},
         }
         original_fetch_json = self.fetcher.fetch_json
-        self.fetcher.fetch_json = lambda _path, _timeout: {"status": 200, "data": {}}
+        self.fetcher.fetch_json = lambda path, _timeout: (
+            {"nodes": [{"data": [{"overview": 1}, {"marketCap": 2}, "4T"]}]}
+            if path == "/stocks/aapl/__data.json"
+            else {"status": 200, "data": {}}
+        )
         try:
             stock_payload = self.fetcher.fetch_stock("AAPL", timeout=1, financials=financials)
         finally:
@@ -1285,6 +1289,184 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(stock_payload["financials_path"], "financials/AAPL.json")
         self.assertEqual(stock_payload["normalized"]["financials"]["path"], "financials/AAPL.json")
         self.assertEqual(stock_payload["normalized"]["financials"]["summary"], financials["summary"])
+
+    def test_stock_overview_uses_official_svelte_page_while_quote_and_history_stay_api_backed(self) -> None:
+        overview_payload = {
+            "nodes": [
+                {
+                    "data": [
+                        {"overview": 1},
+                        {
+                            "marketCap": 2,
+                            "revenue": 3,
+                            "netIncome": 4,
+                            "sharesOut": 5,
+                            "eps": 6,
+                            "peRatio": 7,
+                            "forwardPE": 8,
+                            "dividend": 9,
+                            "beta": 10,
+                            "analysts": 11,
+                            "target": 12,
+                            "earningsDate": 13,
+                        },
+                        "4.0T",
+                        "400B",
+                        "100B",
+                        "15B",
+                        "7.5",
+                        "30",
+                        "28",
+                        "$1.00 (0.4%)",
+                        "1.1",
+                        "Buy",
+                        "300 (+5%)",
+                        "Jul 30, 2026",
+                    ]
+                }
+            ]
+        }
+        calls = []
+
+        def fake_fetch_json(path: str, _timeout: int) -> dict:
+            calls.append(path)
+            if path == "/stocks/aapl/__data.json":
+                return overview_payload
+            if path == "/api/symbol/s/AAPL/history?range=1Y&period=Monthly":
+                return {"data": [{"t": "2026-07-17", "c": 210}]}
+            if path == "/api/quotes/s/AAPL":
+                return {"data": {"symbol": "AAPL", "uid": "AAPL", "p": 210, "td": "2026-07-17"}}
+            raise AssertionError(f"unexpected endpoint: {path}")
+
+        original_fetch_json = self.fetcher.fetch_json
+        self.fetcher.fetch_json = fake_fetch_json
+        try:
+            payload = self.fetcher.fetch_stock("AAPL", timeout=1)
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        self.assertEqual(
+            calls,
+            [
+                "/stocks/aapl/__data.json",
+                "/api/symbol/s/AAPL/history?range=1Y&period=Monthly",
+                "/api/quotes/s/AAPL",
+            ],
+        )
+        self.assertEqual(payload["normalized"]["overview"]["marketCap"], "4.0T")
+        self.assertEqual(payload["normalized"]["quote"]["p"], 210)
+        self.assertEqual(payload["normalized"]["history"][0]["c"], 210)
+
+    def test_stock_financial_pair_validation_rejects_missing_or_torn_pair(self) -> None:
+        financials = {
+            "schema_version": "stockanalysis/v1",
+            "source": "stockanalysis",
+            "asset_type": "stock",
+            "ticker": "AAPL",
+            "fetched_at": "2026-07-18T00:00:00Z",
+            "statements": {"annual": {"income": {"rows": [{}]}}},
+        }
+        stock = {
+            "schema_version": "stockanalysis/v1",
+            "source": "stockanalysis",
+            "asset_type": "stock",
+            "ticker": "AAPL",
+            "fetched_at": "2026-07-18T00:02:00Z",
+            "financials_path": "financials/AAPL.json",
+            "normalized": {
+                "overview": {"marketCap": "4T"},
+                "financials": {
+                    "path": "financials/AAPL.json",
+                    "fetched_at": "2026-07-18T00:00:00Z",
+                },
+            },
+        }
+        self.fetcher.validate_stock_financial_pair("AAPL", stock, financials)
+
+        torn = json.loads(json.dumps(stock))
+        torn["normalized"]["financials"]["fetched_at"] = "2026-07-17T00:00:00Z"
+        with self.assertRaisesRegex(ValueError, "fetched_at mismatch"):
+            self.fetcher.validate_stock_financial_pair("AAPL", torn, financials)
+
+        with self.assertRaisesRegex(ValueError, "financial candidate is required"):
+            self.fetcher.validate_stock_financial_pair("AAPL", stock, None)
+
+    def test_required_pair_publishes_financial_first_and_defers_recovery_success(self) -> None:
+        events = []
+
+        class RecoveryStore:
+            @staticmethod
+            def record_success(kind: str, ticker: str, _payload: dict, _run: dict) -> None:
+                events.append(("success", kind, ticker))
+
+        stock = {"ticker": "AAPL"}
+        financials = {"ticker": "AAPL"}
+        original_write = self.fetcher.write_payload
+
+        def failing_second_write(path: str, _payload: dict, _mirror: bool) -> None:
+            events.append(("write", path))
+            if path == "stocks/AAPL.json":
+                raise OSError("stock write failed")
+
+        self.fetcher.write_payload = failing_second_write
+        try:
+            with self.assertRaisesRegex(OSError, "stock write failed"):
+                self.fetcher.publish_stock_financial_pair(
+                    "AAPL",
+                    stock,
+                    financials,
+                    False,
+                    RecoveryStore(),
+                    {"run_id": "scheduled"},
+                )
+        finally:
+            self.fetcher.write_payload = original_write
+
+        self.assertEqual(
+            events,
+            [
+                ("write", "financials/AAPL.json"),
+                ("write", "stocks/AAPL.json"),
+            ],
+        )
+
+    def test_natural_recovery_selection_is_lane_scoped_and_bounded(self) -> None:
+        class FakeStore:
+            @staticmethod
+            def retry_entities(kind: str) -> set[str]:
+                return {
+                    "stock": {"AMD", "AMZN", "META", "MSFT", "NVDA"},
+                    "financial": {"AAPL", "NVDA"},
+                    "surface": {"actions_recent"},
+                    "universe": {"etf_universe"},
+                }[kind]
+
+        stocks, financials, surfaces, retry_universe = self.fetcher.select_natural_recovery_targets(
+            FakeStore(),
+            {"stock", "financial"},
+            ["AAPL", "MSFT"],
+            [],
+            stock_limit=3,
+        )
+        self.assertEqual(stocks, ["AAPL", "MSFT", "AMD"])
+        self.assertEqual(financials, {"AAPL"})
+        self.assertEqual(surfaces, [])
+        self.assertFalse(retry_universe)
+
+        stocks, financials, surfaces, retry_universe = self.fetcher.select_natural_recovery_targets(
+            FakeStore(),
+            {"surface", "universe"},
+            [],
+            ["market_gainers"],
+            stock_limit=3,
+        )
+        self.assertEqual(stocks, [])
+        self.assertEqual(financials, set())
+        self.assertEqual(surfaces, ["actions_recent", "market_gainers"])
+        self.assertTrue(retry_universe)
+
+        with self.assertRaisesRegex(ValueError, "unknown natural recovery kind"):
+            self.fetcher.parse_natural_recovery_kinds("stock,unknown")
 
     def test_etf_payload_includes_classification_candidate(self) -> None:
         def fake_fetch_svelte_detail(

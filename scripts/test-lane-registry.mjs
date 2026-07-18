@@ -210,7 +210,7 @@ function clone(value) {
     // Absent stores are time-dependent: each lane's store appears on its first
     // natural run, so assert the pending set is a SUBSET of the known
     // pre-launch lanes rather than an exact list.
-    const pendingLanes = new Set(["edgar_filings", "fred_yardeni", "occ_options_volume"]);
+    const pendingLanes = new Set(["edgar_filings", "fred_yardeni", "occ_options_volume", "yahoo_private_options"]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);
     }

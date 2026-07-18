@@ -258,6 +258,27 @@
       "content": { "schema_version": 1, "generated_at": "2026-07-11T00:00:00Z", "formula_version": "fenok-occ-options-volume-v0.1", "rows": [{ "ticker": "AAA", "as_of": "2026-07-10", "source_date": "20260710" }] }
     },
     {
+      "id": "yahoo_private_options",
+      "encoding": "json",
+      "content": {
+        "schema_version": "fenok-yahoo-private-options-availability/v1",
+        "lane_id": "yahoo_private_options",
+        "source": "yahoo_finance",
+        "source_family": "targeted_yfinance_option_chain_snapshot",
+        "generated_at": "2026-07-11T00:00:00Z",
+        "source_as_of": "2026-07-10T01:10:00Z",
+        "scheduled_allowlist": true,
+        "public_safe": true,
+        "raw_payload_included": false,
+        "tickers": ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"],
+        "counts": { "requested": 8, "ready": 8, "failed": 0 },
+        "rows": [
+          { "ticker": "DASH" }, { "ticker": "UNH" }, { "ticker": "PYPL" }, { "ticker": "RDDT" },
+          { "ticker": "COIN" }, { "ticker": "MU" }, { "ticker": "PLTR" }, { "ticker": "NVDA" }
+        ]
+      }
+    },
+    {
       "id": "apewisdom",
       "encoding": "json",
       "content": { "schema_version": 1, "generated_at": "2026-07-11T00:00:00Z", "source": { "source_date": "20260710" }, "rows": [{ "ticker": "AAA", "as_of": "2026-07-10" }] }
@@ -396,6 +417,11 @@
           "path": "data/computed/fenok_occ_options_volume.json",
           "node_type": "regular",
           "document_id": "occ"
+        },
+        {
+          "path": "data/computed/fenok_yahoo_private_options_availability.json",
+          "node_type": "regular",
+          "document_id": "yahoo_private_options"
         },
         {
           "path": "data/computed/fenok_social_attention_proxy.json",

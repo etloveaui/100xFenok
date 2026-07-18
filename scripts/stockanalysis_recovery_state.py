@@ -375,6 +375,22 @@ class StockAnalysisRecoveryStateStore:
             return True
         prior = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
         candidate = payload_source_fields(kind, payload)
+        if kind == "financial":
+            before_source = _iso_timestamp(prior.get("source_as_of"))
+            after_source = _iso_timestamp(candidate.get("source_as_of"))
+            before_fetch = _iso_timestamp(prior.get("fetched_at"))
+            after_fetch = _iso_timestamp(candidate.get("fetched_at"))
+            if before_source is not None and after_source is not None:
+                if after_source < before_source:
+                    return False
+                if (
+                    before_fetch is None
+                    or after_fetch is None
+                    or after_fetch <= before_fetch
+                ):
+                    return False
+                if after_source == before_source:
+                    return True
         before = _iso_timestamp(
             prior.get("source_as_of") or prior.get("fetched_at")
             if kind == "universe"

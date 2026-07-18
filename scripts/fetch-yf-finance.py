@@ -14,7 +14,6 @@ Usage:
   python3 scripts/fetch-yf-finance.py --limit 30       # first 30
   python3 scripts/fetch-yf-finance.py --shard 0/4      # shard i of n
   python3 scripts/fetch-yf-finance.py --tickers AAPL,005930.KS
-  python3 scripts/fetch-yf-finance.py --include-options --tickers AAPL
   python3 scripts/fetch-yf-finance.py --stockanalysis-etfs --history-gaps-only --plan-only
 
 Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
@@ -1688,7 +1687,7 @@ def main():
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
     parser.add_argument("--profile", choices=("daily", "core", "full", "etf"), default="full", help="daily=price/history only, core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
-    parser.add_argument("--include-options", action="store_true", help="fetch first option expiries; use targeted tickers only")
+    parser.add_argument("--include-options", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
     parser.add_argument("--max-age-hours", type=float, default=0, help="skip usable local payloads fetched within N hours")
     parser.add_argument("--sleep", type=float, default=0.8)
@@ -1706,6 +1705,9 @@ def main():
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
     args = parser.parse_args()
+
+    if args.include_options:
+        parser.error("--include-options is disabled; use fetch-fenok-private-options.py with the scheduled allowlist")
 
     try:
         if args.shard_cycle_index is None:

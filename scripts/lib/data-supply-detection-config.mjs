@@ -17,6 +17,7 @@ const LANE_IDS = Object.freeze([
   "sec_13f",
   "finra_short_volume",
   "occ_options_volume",
+  "yahoo_private_options",
   "apewisdom_attention",
   "gdelt_news_tone",
 ]);
@@ -61,6 +62,7 @@ const MEMBER_IDS = Object.freeze([
   "sec_13f",
   "finra_short_volume",
   "occ_options_volume",
+  "yahoo_private_options",
   "apewisdom_attention",
   "gdelt_news_tone",
 ]);
@@ -286,8 +288,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 18,
-  producer_member_count: 22,
+  logical_lane_count: 19,
+  producer_member_count: 23,
   lanes: [
     lane({
       id: "fred_macro",
@@ -723,6 +725,31 @@ const config = {
       visibility: "admin_only",
     }),
     lane({
+      id: "yahoo_private_options",
+      label: "Yahoo private options availability",
+      ownerWorkflow: ".github/workflows/fetch-fenok-private-options.yml",
+      members: [member("yahoo_private_options", ".github/workflows/fetch-fenok-private-options.yml", ["10 1 * * 2-6"], [
+        artifact("yahoo_private_options", "data/computed/fenok_yahoo_private_options_availability.json", {
+          schemaVersion: schemaVersion("/schema_version", "fenok-yahoo-private-options-availability/v1"),
+          sourceSelector: pointerSource("/source_as_of", "rfc3339"),
+          assertions: [
+            exactAssertion("source_yahoo_finance", "/source", "yahoo_finance"),
+            exactAssertion("scheduled_allowlist", "/scheduled_allowlist", true),
+            exactAssertion("public_safe", "/public_safe", true),
+            exactAssertion("no_raw_payload", "/raw_payload_included", false),
+            exactAssertion("requested_count", "/counts/requested", 8),
+            exactAssertion("ready_count", "/counts/ready", 8),
+            exactAssertion("failed_count", "/counts/failed", 0),
+            typeAssertion("rows_array", "/rows", "array"),
+            minRowsAssertion("scheduled_rows", "/rows", 8),
+          ],
+        }),
+      ], "us_trading")],
+      endpointContract: endpointAssertion("yahoo_option_chain", typeAssertion("scheduled_allowlist_complete", "/rows", "array"), "library"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
+      affectedSurfaceIds: ["yahoo_private_options_availability"],
+    }),
+    lane({
       id: "apewisdom_attention",
       label: "ApeWisdom attention",
       ownerWorkflow: null,
@@ -1109,8 +1136,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 18 || configValue.producer_member_count !== 22) fail("denominator must be 18/22");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 18) fail("lanes must contain exactly 18 rows");
+  if (configValue.logical_lane_count !== 19 || configValue.producer_member_count !== 23) fail("denominator must be 19/23");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 19) fail("lanes must contain exactly 19 rows");
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
   if (canonicalJson(laneIds) !== canonicalJson(LANE_IDS)) fail("logical lane order or identity changed");
   configValue.lanes.forEach(validateLane);
@@ -1124,7 +1151,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 22 || new Set(memberIds).size !== 22 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 23 || new Set(memberIds).size !== 23 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);

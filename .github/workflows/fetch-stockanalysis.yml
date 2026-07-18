@@ -5,6 +5,8 @@ name: Fetch StockAnalysis Data
 
 on:
   schedule:
+    # Daily bounded stock overview + financial pair refresh (KST 06:20).
+    - cron: '20 21 * * *'
     # Weekday scored-ETF daily 1Y continuity catch-up (KST Tue-Sat 07:50).
     - cron: '50 22 * * 1-5'
     # Weekday bounded ETF/surface catch-up after US close (KST Tue-Sat 08:50).
@@ -177,6 +179,10 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
+          NATURAL_RECOVERY_KINDS="all"
+          INPUT_STOCK_LIMIT="0"
+          INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="false"
+          INPUT_ISOLATED_STOCK_SCHEDULE="false"
           if [ "$EVENT_NAME" = "schedule" ]; then
             INPUT_FETCH_FINANCIALS="false"
             INPUT_DISCOVER_UNIVERSE="false"
@@ -185,7 +191,24 @@ jobs:
             INPUT_YF_ETF_FALLBACK="true"
             INPUT_SLEEP="${STOCKANALYSIS_DAILY_SLEEP:-0.5}"
             INPUT_MAX_UNIVERSE_PAGES="${STOCKANALYSIS_DAILY_MAX_UNIVERSE_PAGES:-5}"
-            if [ "$EVENT_SCHEDULE" = "50 22 * * 1-5" ]; then
+            if [ "$EVENT_SCHEDULE" = "20 21 * * *" ]; then
+              INPUT_ETFS=""
+              INPUT_STOCKS="AAPL,NVDA,MSFT,AMZN,GOOGL,META,TSLA,JPM"
+              INPUT_STOCKS_ONLY="true"
+              INPUT_FETCH_FINANCIALS="true"
+              INPUT_DISCOVER_UNIVERSE="false"
+              INPUT_UNIVERSE_BACKFILL="false"
+              INPUT_INCREMENTAL_ETF_BACKFILL="false"
+              INPUT_HISTORY_GAPS_ONLY="false"
+              INPUT_REQUIRED_HISTORY_PERIODS=""
+              INPUT_FETCH_SURFACES="false"
+              INPUT_SURFACE_SET=""
+              INPUT_CORE_BASKET_REFRESH="false"
+              INPUT_STOCK_LIMIT="8"
+              INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
+              INPUT_ISOLATED_STOCK_SCHEDULE="true"
+              NATURAL_RECOVERY_KINDS="stock,financial"
+            elif [ "$EVENT_SCHEDULE" = "50 22 * * 1-5" ]; then
               INPUT_HISTORY_GAPS_ONLY="true"
               INPUT_REQUIRED_HISTORY_PERIODS="daily_1y"
               INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT:-120}"
@@ -193,12 +216,13 @@ jobs:
               INPUT_FETCH_SURFACES="false"
               INPUT_SURFACE_SET=""
               INPUT_CORE_BASKET_REFRESH="false"
+              NATURAL_RECOVERY_KINDS="none"
               if [ -n "${STOCKANALYSIS_DAILY1Y_OFFSET:-}" ]; then
                 INPUT_OFFSET="$STOCKANALYSIS_DAILY1Y_OFFSET"
               else
                 INPUT_OFFSET="$(node scripts/select-stockanalysis-daily1y-offset.mjs)"
               fi
-            else
+            elif [ "$EVENT_SCHEDULE" = "50 23 * * 1-5" ] || [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
               INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"
@@ -206,13 +230,18 @@ jobs:
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
+              NATURAL_RECOVERY_KINDS="surface"
               if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
                 # BACKLOG #331: one complete weekly universe collection. Current
                 # measured universe is 11 pages; 100 preserves headroom without
                 # turning weekday bounded runs into broad discovery.
                 INPUT_DISCOVER_UNIVERSE="true"
                 INPUT_MAX_UNIVERSE_PAGES="100"
+                NATURAL_RECOVERY_KINDS="surface,universe"
               fi
+            else
+              echo "unknown StockAnalysis schedule: $EVENT_SCHEDULE" >&2
+              exit 64
             fi
           fi
           {
@@ -252,7 +281,11 @@ jobs:
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then ARGS="$ARGS --yf-etf-fallback"; fi
           else
-            ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --classify-etf-catalogs"
+            if [ "${INPUT_ISOLATED_STOCK_SCHEDULE:-false}" = "true" ]; then
+              ARGS="--sleep ${INPUT_SLEEP:-0.25}"
+            else
+              ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --classify-etf-catalogs"
+            fi
             if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
             if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
             if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-true}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi
@@ -266,6 +299,8 @@ jobs:
             if [ -n "$INPUT_STOCKS" ]; then ARGS="$ARGS --stocks $INPUT_STOCKS"; fi
             if [ "${INPUT_STOCKS_ONLY:-false}" = "true" ]; then ARGS="$ARGS --stocks-only"; fi
             if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then ARGS="$ARGS --fetch-financials"; fi
+            if [ "${INPUT_REQUIRE_STOCK_FINANCIAL_PAIR:-false}" = "true" ]; then ARGS="$ARGS --require-stock-financial-pair"; fi
+            if [ -n "$INPUT_STOCK_LIMIT" ]; then ARGS="$ARGS --stock-limit $INPUT_STOCK_LIMIT"; fi
             if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi
             if [ -n "$INPUT_CONTROLLED_FAILURE_SURFACES" ]; then ARGS="$ARGS --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
@@ -273,7 +308,9 @@ jobs:
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" != "true" ] && [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --fail-on-error"; fi
           fi
-          if [ "$EVENT_NAME" = "schedule" ]; then ARGS="$ARGS --natural-run"; fi
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            ARGS="$ARGS --natural-run --natural-recovery-kinds $NATURAL_RECOVERY_KINDS"
+          fi
           set -o pipefail
           PRIMARY_FETCH_LOG="$RUNNER_TEMP/stockanalysis-primary-fetch.log"
           PRIMARY_FETCHED_TICKERS="$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt"
@@ -312,6 +349,7 @@ jobs:
           python3 scripts/test_stockanalysis_recovery_state.py
           node scripts/test-stockanalysis-attempt-emitter.mjs
           python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+          python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
           python3 scripts/test-stockanalysis-financials-fixtures.py
           python3 -m unittest scripts/test_audit_market_data.py
           node scripts/test-select-stockanalysis-daily1y-offset.mjs

@@ -855,6 +855,37 @@ def extract_financial_node(payload: dict) -> dict:
     return candidates[-1]
 
 
+STOCK_OVERVIEW_KEYS = (
+    "marketCap", "revenue", "revenue_type", "netIncome", "sharesOut", "eps",
+    "peRatio", "forwardPE", "dividend", "beta", "analysts", "target", "earningsDate",
+)
+
+
+def extract_stock_overview_node(payload: dict) -> dict:
+    """Decode the official stock page Svelte payload and select its overview object."""
+    candidates = []
+    for node in payload.get("nodes") or []:
+        data = node.get("data") if isinstance(node, dict) else None
+        if not isinstance(data, list) or not data:
+            continue
+        decoded = decode_svelte_data(data)
+        if not isinstance(decoded, dict):
+            continue
+        candidates.append(decoded)
+        for key in ("overview", "data", "metrics", "info"):
+            value = decoded.get(key)
+            if isinstance(value, dict):
+                candidates.append(value)
+    ranked = sorted(
+        candidates,
+        key=lambda candidate: sum(key in candidate for key in STOCK_OVERVIEW_KEYS),
+        reverse=True,
+    )
+    if not ranked or not any(key in ranked[0] for key in STOCK_OVERVIEW_KEYS):
+        raise ValueError("stock overview node not found in official Svelte payload")
+    return ranked[0]
+
+
 def normalize_financial_statement(ticker: str, statement: str, decoded: dict) -> dict:
     financial_data = decoded.get("financialData") or {}
     row_map = decoded.get("map") or []
@@ -2363,12 +2394,16 @@ def fetch_etf(
 
 def fetch_stock(ticker: str, timeout: int, financials: dict | None = None) -> dict:
     paths = {
-        "overview": f"/api/symbol/s/{ticker}/overview",
+        "overview": f"/stocks/{ticker.lower()}/__data.json",
         "history": f"/api/symbol/s/{ticker}/history?range=1Y&period=Monthly",
         "quote": f"/api/quotes/s/{ticker}",
     }
-    raw = {name: pick_data(fetch_json(path, timeout)) for name, path in paths.items()}
-    overview = raw["overview"] if isinstance(raw.get("overview"), dict) else {}
+    overview = extract_stock_overview_node(fetch_json(paths["overview"], timeout))
+    raw = {
+        "overview": overview,
+        "history": pick_data(fetch_json(paths["history"], timeout)),
+        "quote": pick_data(fetch_json(paths["quote"], timeout)),
+    }
     normalized = {
         "overview": {
             key: overview.get(key)
@@ -2405,6 +2440,46 @@ def fetch_stock(ticker: str, timeout: int, financials: dict | None = None) -> di
         "financials_path": financials_path,
         "raw": raw,
     }
+
+
+def validate_stock_financial_pair(ticker: str, stock: dict, financials: dict | None) -> None:
+    if financials is None:
+        raise ValueError(f"financial candidate is required for stock pair: {ticker}")
+    for payload, label in ((stock, "stock"), (financials, "financial")):
+        if payload.get("schema_version") != SCHEMA_VERSION:
+            raise ValueError(f"{label} schema mismatch for {ticker}")
+        if payload.get("source") != "stockanalysis" or payload.get("asset_type") != "stock":
+            raise ValueError(f"{label} identity mismatch for {ticker}")
+        if payload.get("ticker") != ticker:
+            raise ValueError(f"{label} ticker mismatch for {ticker}")
+    expected_path = f"financials/{ticker}.json"
+    linked = (stock.get("normalized") or {}).get("financials") or {}
+    if stock.get("financials_path") != expected_path or linked.get("path") != expected_path:
+        raise ValueError(f"financial path mismatch for {ticker}")
+    if linked.get("fetched_at") != financials.get("fetched_at"):
+        raise ValueError(f"financial fetched_at mismatch for {ticker}")
+    stock_fetched = parse_iso_timestamp(stock.get("fetched_at"))
+    financial_fetched = parse_iso_timestamp(financials.get("fetched_at"))
+    if stock_fetched is None or financial_fetched is None:
+        raise ValueError(f"pair fetched_at is invalid for {ticker}")
+    if abs((stock_fetched - financial_fetched).total_seconds()) > 300:
+        raise ValueError(f"stock/financial pair exceeds five minutes for {ticker}")
+
+
+def publish_stock_financial_pair(
+    ticker: str,
+    stock: dict,
+    financials: dict,
+    mirror_public: bool,
+    recovery_store: StockAnalysisRecoveryStateStore | None,
+    recovery_run: dict | None,
+) -> None:
+    """Publish the financial payload first and expose its stock link last."""
+    write_payload(f"financials/{ticker}.json", financials, mirror_public)
+    write_payload(f"stocks/{ticker}.json", stock, mirror_public)
+    if recovery_store is not None and recovery_run is not None:
+        recovery_store.record_success("financial", ticker, financials, recovery_run)
+        recovery_store.record_success("stock", ticker, stock, recovery_run)
 
 
 def write_json(path: Path, payload: dict) -> None:
@@ -3668,6 +3743,54 @@ def unique_symbols(items: list[str]) -> list[str]:
     return out
 
 
+NATURAL_RECOVERY_KINDS = frozenset({"stock", "financial", "surface", "universe"})
+
+
+def parse_natural_recovery_kinds(value: str) -> set[str]:
+    text = str(value or "").strip().lower()
+    if not text or text == "all":
+        return set(NATURAL_RECOVERY_KINDS)
+    if text == "none":
+        return set()
+    kinds = {item.strip() for item in text.split(",") if item.strip()}
+    unknown = sorted(kinds - NATURAL_RECOVERY_KINDS)
+    if unknown:
+        raise ValueError(f"unknown natural recovery kind: {','.join(unknown)}")
+    return kinds
+
+
+def select_natural_recovery_targets(
+    store: StockAnalysisRecoveryStateStore,
+    kinds: set[str],
+    stocks: list[str],
+    surface_names: list[str],
+    *,
+    stock_limit: int,
+) -> tuple[list[str], set[str], list[str], bool]:
+    retry_financials = store.retry_entities("financial") if "financial" in kinds else set()
+    retry_stocks = store.retry_entities("stock") if "stock" in kinds else set()
+    retry_stocks |= retry_financials
+    selected_stocks = unique_symbols(stocks + sorted(retry_stocks))
+    if stock_limit > 0:
+        selected_stocks = selected_stocks[:stock_limit]
+    selected_set = set(selected_stocks)
+    retry_financials &= selected_set
+
+    retry_surfaces = []
+    if "surface" in kinds:
+        retry_surfaces = [
+            name
+            for name in sorted(store.retry_entities("surface"))
+            if name in SURFACE_DEFINITIONS
+        ]
+    selected_surfaces = list(dict.fromkeys(retry_surfaces + surface_names))
+    retry_universe = (
+        "universe" in kinds
+        and "etf_universe" in store.retry_entities("universe")
+    )
+    return selected_stocks, retry_financials, selected_surfaces, retry_universe
+
+
 def load_surface_symbols(name: str) -> list[str]:
     payload = read_json(OUT_DIR / "surfaces" / f"{name}.json") or {}
     symbols = []
@@ -4633,6 +4756,7 @@ def run_one(
     recovery_store: StockAnalysisRecoveryStateStore | None = None,
     recovery_run: dict | None = None,
     controlled_failure: bool = False,
+    require_stock_financial_pair: bool = False,
 ) -> dict:
     start = time.perf_counter()
     preserved_primary = False
@@ -4797,8 +4921,15 @@ def run_one(
                         recovery_store.record_failure(
                             "financial", ticker, financials_error, recovery_run
                         )
+            if require_stock_financial_pair and financials is None:
+                raise ValueError(
+                    f"financial candidate is required for stock pair: {ticker}; "
+                    f"{financials_error or 'unavailable'}"
+                )
             try:
                 payload = fetch_stock(ticker, timeout, financials)
+                if financials is not None:
+                    validate_stock_financial_pair(ticker, payload, financials)
                 if recovery_store is not None and not recovery_store.recovery_candidate_advances(
                     "stock", ticker, payload
                 ):
@@ -4880,7 +5011,9 @@ def run_one(
                         origin="manual",
                     )
                     raise
-            write_payload(rel_path, payload, mirror_public)
+            pair_publish = kind == "stock" and financials is not None
+            if not pair_publish:
+                write_payload(rel_path, payload, mirror_public)
             if kind == "etf":
                 provider_path = OUT_DIR / rel_path
                 source_as_of = payload.get("source_as_of")
@@ -4908,7 +5041,7 @@ def run_one(
                     validation_status=validation_status,
                     reason_code=reason_code,
                 )
-            elif stock_candidate is not None:
+            elif stock_candidate is not None and not pair_publish:
                 provider_path = OUT_DIR / rel_path
                 verified = stock_supply.validate_stock_detail_candidate(
                     provider="stockanalysis",
@@ -4925,12 +5058,42 @@ def run_one(
                     observed_at=stock_observed_at,
                     origin="manual",
                 )
-            if kind == "stock" and recovery_store is not None and recovery_run is not None:
+            if (
+                kind == "stock"
+                and not pair_publish
+                and recovery_store is not None
+                and recovery_run is not None
+            ):
                 recovery_store.record_success("stock", ticker, payload, recovery_run)
-        if financials is not None and financials_rel_path is not None:
-            write_payload(financials_rel_path, financials, mirror_public)
-            if recovery_store is not None and recovery_run is not None:
-                recovery_store.record_success("financial", ticker, financials, recovery_run)
+            if pair_publish:
+                publish_stock_financial_pair(
+                    ticker,
+                    payload,
+                    financials,
+                    mirror_public,
+                    recovery_store,
+                    recovery_run,
+                )
+                if stock_candidate is not None:
+                    provider_path = OUT_DIR / rel_path
+                    verified = stock_supply.validate_stock_detail_candidate(
+                        provider="stockanalysis",
+                        entity=ticker,
+                        provider_path=f"data/stockanalysis/{rel_path}",
+                        payload_bytes=provider_path.read_bytes(),
+                        observed_at=stock_observed_at,
+                        expected_sha256=stock_candidate.payload_sha256,
+                        provider_truth_root=OUT_DIR.parent.parent,
+                    )
+                    stock_supply.record_stock_detail_success(
+                        store=DataSupplyStateStore(
+                            DATA_SUPPLY_STATE_ROOT,
+                            provider_truth_root=OUT_DIR.parent.parent,
+                        ),
+                        candidate=verified,
+                        observed_at=stock_observed_at,
+                        origin="manual",
+                    )
         return {
             "ticker": ticker,
             "asset_type": kind,
@@ -5073,6 +5236,9 @@ def _main() -> None:
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--natural-run", action="store_true", help="prepend StockAnalysis recovery retry artifacts")
+    parser.add_argument("--natural-recovery-kinds", default="all", help="comma-separated natural recovery kinds: stock,financial,surface,universe; none disables recovery prepending")
+    parser.add_argument("--stock-limit", type=int, default=0, help="maximum explicit plus recovery stock targets; 0 = unbounded manual behavior")
+    parser.add_argument("--require-stock-financial-pair", action="store_true", help="fail a stock target before writing unless its coherent financial pair was collected")
     parser.add_argument("--offset", type=int, default=0, help="ETF offset for universe backfill chunking")
     parser.add_argument("--limit-etfs", type=int, default=0)
     parser.add_argument("--max-universe-pages", type=int, default=100)
@@ -5086,6 +5252,14 @@ def _main() -> None:
 
     if args.incremental_etf_only and not args.incremental_etf_backfill:
         raise SystemExit("--incremental-etf-only requires --incremental-etf-backfill")
+    if args.stock_limit < 0:
+        raise SystemExit("--stock-limit must be non-negative")
+    try:
+        natural_recovery_kinds = parse_natural_recovery_kinds(args.natural_recovery_kinds)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    if args.require_stock_financial_pair and not args.fetch_financials:
+        raise SystemExit("--require-stock-financial-pair requires --fetch-financials")
     if args.history_gaps_only and not args.incremental_etf_backfill:
         raise SystemExit("--history-gaps-only requires --incremental-etf-backfill")
     if args.required_history_periods and not args.incremental_etf_backfill:
@@ -5228,16 +5402,16 @@ def _main() -> None:
         )
         recovery_store.bootstrap_existing(recovery_run)
         if args.natural_run:
-            retry_financials = recovery_store.retry_entities("financial")
-            retry_stocks = recovery_store.retry_entities("stock") | retry_financials
-            stocks = unique_symbols(sorted(retry_stocks) + stocks)
-            retry_surfaces = [
-                name
-                for name in sorted(recovery_store.retry_entities("surface"))
-                if name in SURFACE_DEFINITIONS
-            ]
-            surface_names = list(dict.fromkeys(retry_surfaces + surface_names))
-            if "etf_universe" in recovery_store.retry_entities("universe"):
+            stocks, retry_financials, surface_names, retry_universe = (
+                select_natural_recovery_targets(
+                    recovery_store,
+                    natural_recovery_kinds,
+                    stocks,
+                    surface_names,
+                    stock_limit=args.stock_limit,
+                )
+            )
+            if retry_universe:
                 args.discover_etf_universe = True
                 args.max_universe_pages = max(
                     args.max_universe_pages, UNIVERSE_RECOVERY_MAX_PAGES
@@ -5379,6 +5553,9 @@ def _main() -> None:
                 recovery_run=recovery_run if kind == "stock" else None,
                 controlled_failure=(
                     kind == "stock" and ticker in controlled_failure_tickers
+                ),
+                require_stock_financial_pair=(
+                    kind == "stock" and args.require_stock_financial_pair
                 ),
             )
             results.append(result)

@@ -2063,6 +2063,7 @@ export const RECOVERY_STATE_SOURCES = Object.freeze({
     "treasury_tga",
     "finra_short_volume",
     "occ_options_volume",
+    "yahoo_private_options",
     "fred_yardeni",
     "edgar_filings",
     "defillama_stablecoins",

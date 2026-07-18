@@ -14,6 +14,7 @@ export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
   "admin/data-supply-state",
   "admin/finra_short_volume",
   "admin/occ_options_volume",
+  "admin/yahoo_private_options",
   "admin/fred_yardeni",
   "admin/edgar_filings",
   "admin/nasdaq_giw_sox",
