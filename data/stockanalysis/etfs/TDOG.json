@@ -1,0 +1,259 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "TDOG",
+  "source_as_of": "2026-07-13T00:00:00Z",
+  "fetched_at": "2026-07-18T23:39:29Z",
+  "endpoints": {
+    "holdings": "/etf/tdog/holdings/__data.json",
+    "overview": "/etf/tdog/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Dogecoin",
+        "weight_pct": 100.0,
+        "shares": 38262003,
+        "raw": {
+          "n": "Dogecoin",
+          "as": "100.00%",
+          "sh": "38,262,003"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 1,
+    "holdings_updated": "Jul 13, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": null,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$2.83M",
+      "expenseRatio": "0.50%",
+      "sharesOut": "190,000",
+      "inception": "Jan 22, 2026",
+      "etf_website": "https://www.21shares-funds.com/product/tdog"
+    },
+    "performance": {
+      "tr1m": -16.727940128702766,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "TDOG",
+        "lastChecked": 1784334182833,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$2.83M",
+      "nav": null,
+      "expenseRatio": "0.50%",
+      "peRatio": null,
+      "sharesOut": "190,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 1,
+      "inception": "Jan 22, 2026",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The 21Shares Dogecoin ETF (TDOG) is an exchange-traded fund that mostly invests in long doge, short usd currency. The fund provides exposure to the daily price movements, net of expenses, of the US dollar price of Dogecoin (DOGE) through an ETF structure. The Custodian holds most DOGE and their private keys in cold storage (offline). TDOG was launched on Jan 22, 2026 and is issued by 21Shares.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Currency"
+        ],
+        [
+          "Category",
+          "Digital Assets"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "TDOG"
+        ],
+        [
+          "Provider",
+          "21Shares"
+        ],
+        [
+          "Index Tracked",
+          "CF Dogecoin-Dollar US Settlement Price Index - Benchmark Price Return"
+        ]
+      ],
+      "etf_website": "https://www.21shares-funds.com/product/tdog",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 1,
+        "updated": "Jul 13, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Dogecoin",
+            "as": "100.00%",
+            "sh": "38,262,003"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784326637149",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/03/04/3249368/0/en/The-First-Dog-to-Ring-the-Bell-House-of-Doge-and-21shares-Mark-NASDAQ-Bell-Ringing-with-Community-Activation-Celebrating-the-21shares-Dogecoin-ETF-TDOG.html",
+            "img": "https://cdn.snapi.dev/images/v1/s/v/i/press2-3562969.jpg",
+            "title": "The First Dog to Ring the Bell: House of Doge and 21shares Mark NASDAQ Bell Ringing with Community Activation Celebrating the 21shares Dogecoin ETF (TDOG)",
+            "text": "NEW YORK and MIAMI, March 04, 2026 (GLOBE NEWSWIRE) -- House of Doge, the official corporate arm of the Dogecoin Foundation, along with merger partner Brag House Holdings (NASDAQ:TBH) and partner 21sh...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "$TBH"
+            ],
+            "time": "Mar 4, 2026, 8:30 AM EST",
+            "ago": "4 months ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/01/22/3223887/0/en/House-of-Doge-and-Merger-Partner-Brag-House-Holdings-Announce-Launch-of-the-21shares-Dogecoin-ETF-TDOG.html",
+            "img": "https://cdn.snapi.dev/images/v1/q/t/w/press1-3486848.jpg",
+            "title": "House of Doge and Merger Partner Brag House Holdings Announce Launch of the 21shares Dogecoin ETF (TDOG)",
+            "text": "New physically backed ETF brings regulated Dogecoin exposure to U.S. investors New physically backed ETF brings regulated Dogecoin exposure to U.S. investors",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "$TBH"
+            ],
+            "time": "Jan 22, 2026, 9:30 AM EST",
+            "ago": "6 months ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/01/22/3223886/0/en/21shares-Announces-Launch-of-the-21shares-Dogecoin-ETF-TDOG.html",
+            "img": "https://cdn.snapi.dev/images/v1/p/j/u/press7-3486847.jpg",
+            "title": "21shares Announces Launch of the 21shares Dogecoin ETF (TDOG)",
+            "text": "New physically backed ETF brings regulated Dogecoin exposure to U.S. investors New physically backed ETF brings regulated Dogecoin exposure to U.S. investors",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#TXXS"
+            ],
+            "time": "Jan 22, 2026, 9:30 AM EST",
+            "ago": "6 months ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 14.915,
+        "price1m": 17.544,
+        "price3m": 20.057,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.033
+      },
+      "performance": {
+        "tr1m": -16.727940128702766,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
