@@ -1,3 +1,4 @@
+import { formatPlainPercent } from '@/lib/format';
 import type { NumberPoint, QuickIndexSnapshot, StressTone } from './types';
 
 export function clamp(value: number, min: number, max: number): number {
@@ -32,7 +33,9 @@ export function formatSignedPercentDecimal(value: number, digits = 2): string {
 }
 
 export function formatPercent(value: number, digits = 1): string {
-  return `${value.toFixed(digits)}%`;
+  // Routed through the shared formatter (§H one-number-language). Byte-identical
+  // for finite inputs; non-finite now yields "—" instead of "NaN%".
+  return formatPlainPercent(value, { fraction: false, digits });
 }
 
 export function getFearGreedLabel(score: number): string {

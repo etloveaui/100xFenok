@@ -178,3 +178,68 @@ export function formatCurrency(value: unknown, currency: Currency, options: Numb
   }
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }
+
+// --- Multi-currency money (any ISO code), folded from the per-route helper so
+// non-USD/KRW listings (JPY/HKD/TWD/…) share one number language. USD/KRW keep
+// the currency-origin compact above; other codes go through Intl currency style.
+
+const ZERO_DECIMAL_CURRENCIES = new Set(["KRW", "JPY", "TWD", "VND", "IDR"]);
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$",
+  KRW: "₩",
+  JPY: "¥",
+  HKD: "HK$",
+  TWD: "NT$",
+  CNY: "CN¥",
+  EUR: "€",
+  GBP: "£",
+};
+
+export function normalizeCurrency(currency: unknown): string {
+  return typeof currency === "string" && /^[A-Z]{3}$/.test(currency.trim().toUpperCase())
+    ? currency.trim().toUpperCase()
+    : "USD";
+}
+
+function defaultCurrencyDigits(currency: string): number {
+  return ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2;
+}
+
+export function formatMoney(value: unknown, currency: unknown = "USD", digits?: number): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
+  const code = normalizeCurrency(currency);
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: digits ?? defaultCurrencyDigits(code),
+    }).format(v);
+  } catch {
+    // Invalid-code fallback. Locale pinned to en-US (deterministic) rather than
+    // the environment default, per §H "no locale drift".
+    const symbol = CURRENCY_SYMBOLS[code] ?? `${code} `;
+    return `${symbol}${v.toLocaleString("en-US", { maximumFractionDigits: digits ?? defaultCurrencyDigits(code) })}`;
+  }
+}
+
+export function formatCompactMoney(value: unknown, currency: unknown = "USD"): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
+  const code = normalizeCurrency(currency);
+  if (code === "USD" || code === "KRW") return formatCurrencyCompact(v, code);
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      notation: "compact",
+      compactDisplay: "short",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 1,
+    }).format(v);
+  } catch {
+    const symbol = CURRENCY_SYMBOLS[code] ?? `${code} `;
+    return `${symbol}${formatCompactNumber(v)}`;
+  }
+}

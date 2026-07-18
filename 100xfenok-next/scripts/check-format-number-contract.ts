@@ -12,16 +12,19 @@ import assert from "node:assert/strict";
 import {
   finiteNumber,
   formatBasisPoints,
+  formatCompactMoney,
   formatCompactNumber,
   formatCurrency,
   formatCurrencyCompact,
   formatDecimal,
   formatInteger,
+  formatMoney,
   formatMultiple,
   formatPercent,
   formatShares,
   formatSignedDecimal,
   formatSignedPercent,
+  normalizeCurrency,
 } from "../src/lib/format";
 
 const eq = (actual: string, expected: string, label: string) => assert.equal(actual, expected, label);
@@ -87,6 +90,24 @@ eq(formatShares(150_000_000, { compact: true }), "1.5억주", "shares compact �
 eq(formatShares(50_000, { compact: true }), "5.0만주", "shares compact 만");
 eq(formatShares(500, { compact: true }), "500주", "shares compact sub-만 stays plain");
 eq(formatShares(null), "—", "shares null -> em dash");
+
+// --- multi-currency money (folded from the per-route helper) ---
+// USD/KRW keep currency-origin; other ISO codes go through Intl currency style.
+eq(normalizeCurrency("jpy"), "JPY", "normalizeCurrency upcases valid ISO code");
+eq(normalizeCurrency("12"), "USD", "normalizeCurrency falls back to USD on non-ISO");
+eq(formatMoney(1234.5, "USD"), "$1,234.5", "money USD");
+eq(formatMoney(1234567, "KRW"), "₩1,234,567", "money KRW (zero-decimal)");
+eq(formatMoney(1234.5, "JPY"), "¥1,235", "money JPY (zero-decimal rounds)");
+eq(formatMoney(1234.5, "HKD"), "HK$1,234.5", "money HKD");
+eq(formatMoney(null, "USD"), "—", "money null -> em dash");
+// (Invalid-code output is intentionally NOT pinned: whether Intl throws for a
+// non-ISO code is ICU/runtime-dependent. The fallback path pins its OWN locale
+// to en-US for no-drift, but the throw-vs-render decision is not our contract.)
+eq(formatCompactMoney(2_500_000_000, "USD"), "$2.5B", "compact money USD delegates to currency-origin");
+eq(formatCompactMoney(3_000_000_000_000, "KRW"), "3.0조원", "compact money KRW delegates to currency-origin");
+eq(formatCompactMoney(1_500_000_000, "JPY"), "¥2B", "compact money JPY via Intl compact");
+eq(formatCompactMoney(2_500_000, "HKD"), "HK$2.5M", "compact money HKD via Intl compact");
+eq(formatCompactMoney(null, "EUR"), "—", "compact money null -> em dash");
 
 // --- custom empty label passthrough (honest missing, not 0) ---
 eq(formatPercent(null, { empty: "N/A" }), "N/A", "custom empty label honored");
