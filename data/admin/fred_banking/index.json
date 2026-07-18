@@ -1,10 +1,9 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "fred_banking",
-  "updated_at": "2026-07-17T09:05:21.396Z",
+  "updated_at": "2026-07-18T08:45:50.573Z",
   "retry_set": [
-    "quarterly",
-    "weekly"
+    "quarterly"
   ],
   "items": {
     "daily": {
@@ -13,7 +12,7 @@
       "retry": false,
       "current": {
         "path": "data/macro/fred-banking-daily.json",
-        "payload_sha256": "dede93c1be1d7944e35cdd5311c989e9b65ac5317a19b01ebf47074d23925486",
+        "payload_sha256": "6f23ac789517ed5b42e3f339cf31f7ed0ddfaa7be9d8a12848cc38043233d72c",
         "source_as_of": "2026-06-01"
       },
       "lkg": {
@@ -21,15 +20,15 @@
         "payload_sha256": "70583c780245f63b51f838f9d767a0d11b0a3e229e726c5f6f1824718b9f4c06",
         "source_as_of": "2026-05-01"
       },
-      "updated_at": "2026-07-17T09:05:21.396Z",
+      "updated_at": "2026-07-18T08:45:50.573Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "dede93c1be1d7944e35cdd5311c989e9b65ac5317a19b01ebf47074d23925486",
+        "payload_sha256": "6f23ac789517ed5b42e3f339cf31f7ed0ddfaa7be9d8a12848cc38043233d72c",
         "source_as_of": "2026-06-01",
-        "run_id": "29568660557",
+        "run_id": "29637977853",
         "run_attempt": 1,
-        "observed_at": "2026-07-17T09:05:21.396Z"
+        "observed_at": "2026-07-18T08:45:50.573Z"
       },
       "recovered_from_run_id": "29406166955",
       "recovered_at": "2026-07-17T09:05:21.396Z",
@@ -45,30 +44,38 @@
     },
     "weekly": {
       "key": "weekly",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/fred_banking/lkg/weekly.json",
-        "payload_sha256": "84e6ed0cb75a00f62d5702086fcc4f9bbbb5bcd11797a5cbaec8af0bca3b9f13",
-        "source_as_of": "2026-07-01"
+        "path": "data/macro/fred-banking-weekly.json",
+        "payload_sha256": "d721ffbd2d2fa205dd39d57ae19c4f8d48eb25be86ef5c82b26863d6885eb00c",
+        "source_as_of": "2026-07-08"
       },
       "lkg": {
         "path": "data/admin/fred_banking/lkg/weekly.json",
         "payload_sha256": "84e6ed0cb75a00f62d5702086fcc4f9bbbb5bcd11797a5cbaec8af0bca3b9f13",
         "source_as_of": "2026-07-01"
       },
-      "latest_failure": {
+      "updated_at": "2026-07-18T08:45:50.573Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "d721ffbd2d2fa205dd39d57ae19c4f8d48eb25be86ef5c82b26863d6885eb00c",
+        "source_as_of": "2026-07-08",
+        "run_id": "29637977853",
+        "run_attempt": 1,
+        "observed_at": "2026-07-18T08:45:50.573Z"
+      },
+      "recovered_from_run_id": "29406166955",
+      "recovered_at": "2026-07-18T08:45:50.573Z",
+      "recovery_run_id": "29637977853",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29406166955",
         "run_attempt": 1,
         "observed_at": "2026-07-15T09:58:31.570Z",
         "reason": "controlled_failure"
-      },
-      "updated_at": "2026-07-17T09:05:21.396Z",
-      "latest_promotion_deferral": {
-        "run_id": "29568660557",
-        "run_attempt": 1,
-        "observed_at": "2026-07-17T09:05:21.396Z",
-        "reason": "recovery_not_advanced_by_provider"
       }
     },
     "quarterly": {
@@ -91,11 +98,11 @@
         "observed_at": "2026-07-15T09:58:31.570Z",
         "reason": "controlled_failure"
       },
-      "updated_at": "2026-07-17T09:05:21.396Z",
+      "updated_at": "2026-07-18T08:45:50.573Z",
       "latest_promotion_deferral": {
-        "run_id": "29568660557",
+        "run_id": "29637977853",
         "run_attempt": 1,
-        "observed_at": "2026-07-17T09:05:21.396Z",
+        "observed_at": "2026-07-18T08:45:50.573Z",
         "reason": "recovery_not_advanced_by_provider"
       }
     },
@@ -105,18 +112,18 @@
       "retry": false,
       "current": {
         "path": "data/macro/fred-banking-monthly.json",
-        "payload_sha256": "2d29182bf716a2c0de73df64ec4b9102822d531d7f7ca7223bb61a0bf9cb752c",
+        "payload_sha256": "fd78da6720ddcd0890de8186cd60014a5bc76662c4ee4b9ac0dd677304c92682",
         "source_as_of": "2026-06-01"
       },
-      "updated_at": "2026-07-17T09:05:21.396Z",
+      "updated_at": "2026-07-18T08:45:50.573Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "2d29182bf716a2c0de73df64ec4b9102822d531d7f7ca7223bb61a0bf9cb752c",
+        "payload_sha256": "fd78da6720ddcd0890de8186cd60014a5bc76662c4ee4b9ac0dd677304c92682",
         "source_as_of": "2026-06-01",
-        "run_id": "29568660557",
+        "run_id": "29637977853",
         "run_attempt": 1,
-        "observed_at": "2026-07-17T09:05:21.396Z"
+        "observed_at": "2026-07-18T08:45:50.573Z"
       }
     }
   }
