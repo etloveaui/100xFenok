@@ -1,8 +1,8 @@
 # ADAPTER SPEC: Fenok Signal Lens Private Proxy Adapters
 
 Date: 2026-06-28 KST
-Status: private/admin prep, owner per-axis gate pending
-Public surface: blocked until owner approval
+Status: derived-score adapters implemented; raw inputs remain private/admin
+Public surface: approved derived stock scores only
 
 ## Scope
 
@@ -23,33 +23,32 @@ Public surface: blocked until owner approval
 
 ### Net Options Proxy
 
-Source basis: `Asset_Allocator/docs/agent-work/forecast_arena/enriched_features.py`.
+Source basis: OCC listed-options call/put volume by underlying and source date.
 
 Input:
 
-- Nearest 1-3 option expiries.
-- Calls/puts: strike, open interest, volume, implied volatility, last price or bid/ask midpoint.
-- Spot price.
+- OCC aggregate call volume.
+- OCC aggregate put volume.
 
 Formula:
 
-- `aggregate_volume_log_ratio = ln((total_call_volume + 1) / (total_put_volume + 1))`
-- `aggregate_oi_log_ratio = ln((total_call_oi + 1) / (total_put_oi + 1))`
-- ATM band: strikes in `0.95x..1.05x spot`.
-- `atm_premium_log_ratio = ln((atm_call_premium_oi + 1) / (atm_put_premium_oi + 1))`
-- `atm_confirmation_component = 0.25 * clamp(atm_premium_log_ratio, -1, 1)` when positive, otherwise `0.05 * clamp(...)`
-- `net_options_raw = 0.55 * aggregate_volume_log_ratio + 0.45 * aggregate_oi_log_ratio + atm_confirmation_component`
-- `score_0_100 = 50 + 50 * tanh(1.3 * net_options_raw)`, clamped to `0..100`.
+- `log_ratio = ln((call_volume + 1) / (put_volume + 1))`
+- declared endpoints: `floor=-0.90`, `neutral=0`, `ceil=+3.45`
+- `floor..neutral` maps linearly to `0..50`; `neutral..ceil` maps to `50..100`
+- values outside the endpoints clamp to `0/100`
+- endpoints are rounded measured p5/p95 values from the 2026-07-18
+  latest-per-ticker OCC projection (`686` rows); equal call/put remains `50`
 
 Private metadata:
 
-- `put_call_oi_ratio`, `put_call_volume_ratio`, front-expiry ratios, ATM premium fields.
-- Optional GEX/max-pain diagnostics may remain private only.
+- `put_call_volume_ratio`, `call_share`, call/put/total volume, source date.
+- Legacy yfinance option-chain OI/GEX/max-pain diagnostics remain private PoC
+  fields and do not feed the public OCC score.
 
 Honesty:
 
-- Free chain data is not OPRA-grade flow.
-- Score is volume/OI/skew proxy, not trade initiator direction.
+- OCC aggregate volume is not OPRA-grade flow.
+- Score is a listed-options volume-skew proxy, not trade initiator direction.
 
 ### FINRA Off-Exchange Activity Proxy
 
@@ -61,7 +60,9 @@ Input:
 Formula:
 
 - `off_exchange_share = FINRA_TotalVolume / consolidated_total_volume`
-- `score_0_100 = ((off_exchange_share - 0.10) / 0.30) * 100`, clamped to `0..100`.
+- `score_0_100 = ((off_exchange_share - 0.25) / (0.65 - 0.25)) * 100`, clamped to `0..100`.
+- `0.25/0.65` are the declared rounded p5/p95 calibration endpoints from
+  the measured 2026-07-18 distribution (`687` rows).
 
 Public label if approved later:
 
@@ -81,7 +82,9 @@ Input:
 Formula:
 
 - `short_ratio = ShortVolume / TotalVolume`
-- `score_0_100 = ((short_ratio - 0.35) / 0.35) * 100`, clamped to `0..100`.
+- `score_0_100 = ((short_ratio - 0.28) / (0.77 - 0.28)) * 100`, clamped to `0..100`.
+- `0.28/0.77` are the declared rounded p5/p95 calibration endpoints from
+  the measured 2026-07-18 distribution (`687` rows).
 
 Honesty:
 

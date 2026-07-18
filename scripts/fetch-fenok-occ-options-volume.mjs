@@ -30,6 +30,7 @@ import {
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { isUsTradingDate } from "./fetch-fenok-finra-daily-private.mjs";
+import { OCC_OPTIONS_FORMULA_VERSION } from "./lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -37,7 +38,7 @@ const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow");
 
 const SCHEMA_VERSION = "fenok-occ-options-volume/v0.1";
-const FORMULA_VERSION = "fenok-occ-options-volume-v0.1";
+const FORMULA_VERSION = OCC_OPTIONS_FORMULA_VERSION;
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_flow_sources_20260628.md";
 const OCC_CACHE_DIR = path.join(privateRoot, "occ_options_volume");
 const OUTPUT_FILE = "computed/fenok_occ_options_volume.json";
@@ -788,10 +789,32 @@ function round(value, digits = 4) {
   return Math.round(value * factor) / factor;
 }
 
+// OCC call/put volume log-ratio -> 0..100 skew score (declared calibration).
+// Anchored on the latest-per-ticker projection of
+// data/computed/fenok_occ_options_volume.json (686 scored rows, measured
+// 2026-07-18; 685 rows source-dated 2026-07-17):
+//   p5=-0.889  p10=-0.421  p25=0.065  p50=0.649
+//   p75=1.531  p90=2.594  p95=3.446
+// Rounded p5/p95 endpoints (-0.90/+3.45) keep measured saturation near 10%.
+// The mapping is piecewise around log-ratio 0 so equal call/put volume remains
+// exactly neutral at 50 despite the empirically call-skewed cross-section.
+const OPTIONS_LOG_RATIO_FLOOR = -0.9; // ~p5 of 2026-07-18 latest projection
+const OPTIONS_LOG_RATIO_NEUTRAL = 0;
+const OPTIONS_LOG_RATIO_CEIL = 3.45; // ~p95 of 2026-07-18 latest projection
+
+function scoreOptionsLogRatio(logRatio) {
+  if (!Number.isFinite(logRatio)) return null;
+  if (logRatio <= OPTIONS_LOG_RATIO_NEUTRAL) {
+    const lowerSpan = OPTIONS_LOG_RATIO_NEUTRAL - OPTIONS_LOG_RATIO_FLOOR;
+    return round(clamp(50 * ((logRatio - OPTIONS_LOG_RATIO_FLOOR) / lowerSpan)), 2);
+  }
+  const upperSpan = OPTIONS_LOG_RATIO_CEIL - OPTIONS_LOG_RATIO_NEUTRAL;
+  return round(clamp(50 + (50 * ((logRatio - OPTIONS_LOG_RATIO_NEUTRAL) / upperSpan))), 2);
+}
+
 function scoreOptionsVolume(callVolume, putVolume) {
   if (callVolume + putVolume <= 0) return null;
-  const logRatio = Math.log((callVolume + 1) / (putVolume + 1));
-  return round(clamp(50 + (18 * logRatio)), 2);
+  return scoreOptionsLogRatio(Math.log((callVolume + 1) / (putVolume + 1)));
 }
 
 function directionFromOptionsVolume(score) {
@@ -1160,7 +1183,20 @@ function mergeAvailabilitySnapshot(previous, snapshot) {
 }
 
 function mergeOutputSnapshot(previous, snapshot) {
-  const existingRows = Array.isArray(previous?.rows) ? previous.rows : [];
+  const existingRows = Array.isArray(previous?.rows) ? previous.rows.map((row) => {
+    const score = scoreOptionsVolume(
+      row.options_activity_proxy?.call_volume,
+      row.options_activity_proxy?.put_volume,
+    );
+    return {
+      ...row,
+      options_activity_proxy: {
+        ...row.options_activity_proxy,
+        score_0_100: score,
+        direction: directionFromOptionsVolume(score),
+      },
+    };
+  }) : [];
   const incomingKeys = new Set(snapshot.rows.map((row) => `${row.ticker}|${row.source_date}`));
   const kept = existingRows.filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}`));
   const mergedRows = [...kept, ...snapshot.rows].sort((a, b) => (
@@ -1191,7 +1227,10 @@ function mergeHistory(snapshot) {
     generated_at: snapshot.generated_at,
     rows: [],
   });
-  const rows = Array.isArray(history.rows) ? history.rows : [];
+  const rows = Array.isArray(history.rows) ? history.rows.map((row) => ({
+    ...row,
+    netOptionsProxyScore: scoreOptionsVolume(row.callVolume, row.putVolume),
+  })) : [];
   const incoming = snapshot.rows.map((row) => ({
     ticker: row.ticker,
     as_of: row.as_of,
@@ -1879,6 +1918,7 @@ export {
   parseArgs,
   reduceOccEndpointResults,
   retainLatestTickerSourceDates,
+  scoreOptionsLogRatio,
   scoreOptionsVolume,
   shouldManageOccLkg,
   summarizeTickerAvailability,

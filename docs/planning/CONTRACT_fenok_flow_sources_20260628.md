@@ -90,7 +90,7 @@ Boundary:
 - `raw_public`: false
 - `public_derived_path`: `computed/fenok_occ_options_volume.json` feeds the approved public summary score
 - `fallback`: none for the public score; yfinance option-chain snapshots are admin-only PoC if kept
-- `verification_status`: NVDA/MU 20260626 call/put CSV sample verified; public score formula `clamp(50 + 18*ln(calls/puts), 0, 100)`
+- `verification_status`: NVDA/MU 20260626 call/put CSV sample verified; producer formula `fenok-occ-options-volume-v0.2-volume-skew-calibration` maps the measured latest-per-ticker p5/p95 log-ratio band (`-0.90..+3.45`) piecewise to `0..100`, preserving equal call/put volume as neutral `50`
 - `evidence`: https://marketdata.theocc.com/volume-query
 - `docs_evidence`: https://www.theocc.com/market-data/market-data-reports/other-market-data-info/batch-processing/volume-query-batch-processing
 - `terms_evidence`: https://www.theocc.com/specialpages/legal/terms-and-conditions

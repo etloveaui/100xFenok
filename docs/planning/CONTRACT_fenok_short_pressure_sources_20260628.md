@@ -41,6 +41,14 @@ Derived-only candidates:
 - `short_exempt_ratio`
 - `short_volume_pressure`
 
+Implemented producer calibration:
+
+- `fenok-flow-proxies-v0.3-short-pressure-calibration`
+- static `short_volume_ratio` band `0.28..0.77`, anchored on the measured
+  2026-07-18 p5/p95 distribution (`687` scored US rows)
+- exact `0/100` endpoint mass falls from `24.60%` under the retired
+  `[0.35, 0.70]` band to `10.19%`
+
 Boundary:
 
 - `ShortVolume / TotalVolume` must be labeled as FINRA reported short-sale

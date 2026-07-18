@@ -12,12 +12,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  FLOW_PROXY_FORMULA_VERSION,
+  OCC_OPTIONS_FORMULA_VERSION,
+  assertProxyFormulaVersion,
+} from "./lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 
-const FORMULA_VERSION = "fenok-signal-lens-proxies-v0.2-ma-distance";
+const FORMULA_VERSION = "fenok-signal-lens-proxies-v0.3-stock-flow-calibration";
 const OUTPUT_FILE = "computed/fenok_signal_lens_proxies.json";
 const SUMMARY_FILE = "computed/fenok_signal_lens_proxies_summary.json";
 const HISTORY_FILE = "computed/fenok_signal_lens_proxies_history.json";
@@ -352,10 +357,13 @@ function findFenokRowIndex() {
   return index;
 }
 
-function findFlowRowIndex() {
-  const flow = readJson("computed/fenok_flow_proxies.json", {});
+function findFlowRowIndex({ validateSourceFormulas = true } = {}) {
+  const flow = readJson("computed/fenok_flow_proxies.json", null);
+  if (validateSourceFormulas) {
+    assertProxyFormulaVersion(flow, FLOW_PROXY_FORMULA_VERSION, "fenok_flow_proxies");
+  }
   const index = new Map();
-  for (const row of flow.rows ?? []) {
+  for (const row of flow?.rows ?? []) {
     index.set(normalizeTicker(row.ticker), row);
   }
   return index;
@@ -370,10 +378,13 @@ function findNewsRowIndex() {
   return index;
 }
 
-function findOccOptionsRowIndex() {
-  const occ = readJson("computed/fenok_occ_options_volume.json", {});
+function findOccOptionsRowIndex({ validateSourceFormulas = true } = {}) {
+  const occ = readJson("computed/fenok_occ_options_volume.json", null);
+  if (validateSourceFormulas) {
+    assertProxyFormulaVersion(occ, OCC_OPTIONS_FORMULA_VERSION, "fenok_occ_options_volume");
+  }
   const index = new Map();
-  for (const row of occ.rows ?? []) {
+  for (const row of occ?.rows ?? []) {
     index.set(normalizeTicker(row.ticker), row);
   }
   return index;
@@ -386,9 +397,9 @@ function signalScore(signal) {
 function buildRows(args) {
   const tickers = loadTickerUniverse(args);
   const fenokIndex = findFenokRowIndex();
-  const flowIndex = findFlowRowIndex();
+  const flowIndex = findFlowRowIndex({ validateSourceFormulas: args.validateSourceFormulas });
   const newsIndex = findNewsRowIndex();
-  const occIndex = findOccOptionsRowIndex();
+  const occIndex = findOccOptionsRowIndex({ validateSourceFormulas: args.validateSourceFormulas });
   const spyHistory = loadHistory(SPY_TICKER);
 
   return tickers.map((ticker) => {

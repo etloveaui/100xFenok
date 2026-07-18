@@ -15,6 +15,7 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { FLOW_PROXY_FORMULA_VERSION } from "./lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -22,7 +23,7 @@ const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow");
 
 const SCHEMA_VERSION = "fenok-flow-proxies/v0.1";
-const FORMULA_VERSION = "fenok-flow-proxies-v0.2-finra-daily";
+const FORMULA_VERSION = FLOW_PROXY_FORMULA_VERSION;
 const CONTRACT_DOCS = [
   "docs/planning/CONTRACT_fenok_short_pressure_sources_20260628.md",
   "docs/planning/CONTRACT_fenok_flow_sources_20260628.md",
@@ -243,9 +244,20 @@ function round(value, digits = 4) {
   return Math.round(value * factor) / factor;
 }
 
+// FINRA short-volume ratio -> 0..100 pressure score (declared calibration).
+// Anchored on data/computed/fenok_flow_proxies.json (687 scored US rows,
+// measured 2026-07-18, source date 2026-07-17):
+//   p5=0.281  p10=0.335  p25=0.430  p50=0.530  p75=0.637  p90=0.722  p95=0.771
+// The retired [0.35, 0.70] band pinned 11.6% at 0 and 13.0% at 100
+// (24.6% combined). Rounded p5/p95 endpoints restore discrimination while
+// keeping exact-boundary saturation near 10% on the measured universe.
+const SHORT_PRESSURE_RATIO_FLOOR = 0.28; // ~p5 of 2026-07-18 distribution
+const SHORT_PRESSURE_RATIO_CEIL = 0.77; // ~p95 of 2026-07-18 distribution
+
 function scoreShortPressure(shortRatio) {
   if (!Number.isFinite(shortRatio)) return null;
-  return round(clamp(((shortRatio - 0.35) / 0.35) * 100), 2);
+  const span = SHORT_PRESSURE_RATIO_CEIL - SHORT_PRESSURE_RATIO_FLOOR;
+  return round(clamp(((shortRatio - SHORT_PRESSURE_RATIO_FLOOR) / span) * 100), 2);
 }
 
 // Off-exchange share -> 0..100 activity score (DEC-266-style declared calibration).
@@ -383,7 +395,11 @@ function mergeHistory(snapshot) {
     generated_at: snapshot.generated_at,
     rows: [],
   });
-  const rows = Array.isArray(history.rows) ? history.rows : [];
+  const rows = Array.isArray(history.rows) ? history.rows.map((row) => ({
+    ...row,
+    shortPressureProxyScore: scoreShortPressure(row.shortVolumeRatio),
+    offExchangeActivityProxyScore: scoreOffExchangeShare(row.offExchangeShare),
+  })) : [];
   const incoming = snapshot.rows.map((row) => ({
     ticker: row.ticker,
     as_of: row.as_of,

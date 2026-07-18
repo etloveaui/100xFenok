@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import {
+  FLOW_PROXY_FORMULA_VERSION,
+  OCC_OPTIONS_FORMULA_VERSION,
+} from "./fenok-proxy-formula-contract.mjs";
 
 const LANE_IDS = Object.freeze([
   "fred_macro",
@@ -700,7 +704,7 @@ const config = {
         artifact("finra_flow_proxy", "data/computed/fenok_flow_proxies.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
-          assertions: [exactAssertion("formula_version", "/formula_version", "fenok-flow-proxies-v0.2-finra-daily"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
+          assertions: [exactAssertion("formula_version", "/formula_version", FLOW_PROXY_FORMULA_VERSION), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
       endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array"),
@@ -716,7 +720,7 @@ const config = {
         artifact("occ_options_volume", "data/computed/fenok_occ_options_volume.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
-          assertions: [exactAssertion("formula_version", "/formula_version", "fenok-occ-options-volume-v0.1"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
+          assertions: [exactAssertion("formula_version", "/formula_version", OCC_OPTIONS_FORMULA_VERSION), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
       endpointContract: endpoint("occ_market_data", "csv_rows", "/rows", "array"),

@@ -72,10 +72,11 @@ Current full US universe run:
 
 ## Semantics
 
-- Signal-lens formula `fenok-signal-lens-proxies-v0.2-ma-distance` replaces the
-  binary `80/30` MA20/50/200 components with declared close-to-MA distance
-  bands: below `-10/-5/-2%` scores `10/25/40`, `-2%..+2%` scores `50`, and
-  above `+2/+5/+10%` scores `60/75/90`.
+- Signal-lens formula `fenok-signal-lens-proxies-v0.3-stock-flow-calibration`
+  carries the v0.2 MA-distance bands and the recalibrated stock-flow producer
+  scores as a new comparable series. MA20/50/200 bands remain: below
+  `-10/-5/-2%` scores `10/25/40`, `-2%..+2%` scores `50`, and above
+  `+2/+5/+10%` scores `60/75/90`.
 - Invalid or non-positive latest/MA values remain `null`; the output records
   each MA distance percentage and band beside the component score.
 - A formula-version change starts a fresh signal-lens history series so rows
@@ -83,9 +84,15 @@ Current full US universe run:
 - `offExchangeActivityProxyScore` is FINRA-reported off-exchange activity
   relative to local consolidated volume. It is not true ATS-only dark-pool flow.
 - `shortPressureProxyScore` is FINRA-reported short-sale volume share. It is not
-  short interest, borrow fee, utilization, or buy/sell direction.
-- `netOptionsProxyScore` is a private option-chain volume/OI proxy. It is not
-  OPRA buyer/seller initiated flow.
+  short interest, borrow fee, utilization, or buy/sell direction. Producer
+  formula `fenok-flow-proxies-v0.3-short-pressure-calibration` maps the measured
+  2026-07-18 p5/p95 ratio band (`0.28..0.77`) to `0..100`; measured endpoint
+  saturation falls from `24.60%` to `10.19%`.
+- `netOptionsProxyScore` is an OCC listed-options call/put volume-skew proxy. It
+  is not OPRA buyer/seller initiated flow. Producer formula
+  `fenok-occ-options-volume-v0.2-volume-skew-calibration` uses latest-per-ticker
+  measured p5/p95 log-ratio endpoints (`-0.90..+3.45`) with equal call/put
+  volume fixed at neutral `50`; measured endpoint saturation is `10.06%`.
 - `directNewsToneProxyScore` is a headline lexical proxy. It is not social
   sentiment and not a live news firehose.
 - `sp500TrackingSimilarityScore` is daily return correlation vs SPY, separate

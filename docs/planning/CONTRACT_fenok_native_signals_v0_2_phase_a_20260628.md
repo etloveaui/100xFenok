@@ -52,9 +52,14 @@ pressure; UI may invert it separately only as a labeled display transform.
 
 ## Formula Version
 
-- `formula_version`: `fenok-native-signals-v0.2.0-phase-a`
+- `formula_version`: `fenok-native-signals-v0.2.2-phase-b-flow-calibration`
 - `public_surface_status`:
-  `phase_a_v0_2_stock_signal_lens_approved_summary_public`
+  `phase_b_v0_2_stock_signal_lens_approved_summary_public`
+
+The Phase B public summary also carries the derived `net_options_proxy`,
+`off_exchange_activity_proxy`, and `short_pressure_proxy` axes. The v0.2.2
+bump marks the 2026-07-18 measured p5/p95 recalibration of those producer
+scores; these proxy axes remain outside the conviction composite.
 
 The conviction composite remains unchanged: it averages the present
 `profitability`, `growth`, `technical_flow`, and `upside_downside` scores when at

@@ -15,11 +15,26 @@ import {
   sp500TrackingSignal,
   technicalIndicatorSignal,
 } from "./build-fenok-signal-lens-proxies.mjs";
+import {
+  FLOW_PROXY_FORMULA_VERSION,
+  OCC_OPTIONS_FORMULA_VERSION,
+  assertProxyFormulaVersion,
+} from "./lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 
-assert.equal(FORMULA_VERSION, "fenok-signal-lens-proxies-v0.2-ma-distance");
+assert.equal(FORMULA_VERSION, "fenok-signal-lens-proxies-v0.3-stock-flow-calibration");
+assert.doesNotThrow(() => assertProxyFormulaVersion(null, FLOW_PROXY_FORMULA_VERSION, "missing_optional_source"));
+assert.doesNotThrow(() => assertProxyFormulaVersion({ formula_version: FLOW_PROXY_FORMULA_VERSION }, FLOW_PROXY_FORMULA_VERSION, "flow"));
+assert.throws(
+  () => assertProxyFormulaVersion({ formula_version: "fenok-flow-proxies-v0.1" }, FLOW_PROXY_FORMULA_VERSION, "flow"),
+  /flow formula_version must be fenok-flow-proxies-v0\.3-short-pressure-calibration; got fenok-flow-proxies-v0\.1/,
+);
+assert.throws(
+  () => assertProxyFormulaVersion({}, OCC_OPTIONS_FORMULA_VERSION, "occ"),
+  /occ formula_version must be fenok-occ-options-volume-v0\.2-volume-skew-calibration; got missing/,
+);
 assert.deepEqual(historyRowsForCurrentFormula({ formula_version: "fenok-signal-lens-proxies-v0.1", rows: [{ ticker: "OLD" }] }), []);
 const currentHistoryRows = [{ ticker: "NEW" }];
 assert.equal(historyRowsForCurrentFormula({ formula_version: FORMULA_VERSION, rows: currentHistoryRows }), currentHistoryRows);
@@ -62,7 +77,7 @@ assert.deepEqual(movingAveragePositionScore(null, 100), { score: null, distance_
 assert.deepEqual(movingAveragePositionScore(100, 0), { score: null, distance_pct: null, band: "unavailable" });
 assert.deepEqual(movingAveragePositionScore(Infinity, 100), { score: null, distance_pct: null, band: "unavailable" });
 
-const corpusRows = buildRows({ tickers: "", referenceOnly: false, limit: 0 });
+const corpusRows = buildRows({ tickers: "", referenceOnly: false, limit: 0, validateSourceFormulas: false });
 for (const key of ["ma20_position", "ma50_position", "ma200_position"]) {
   const scores = corpusRows
     .map((row) => row.short_term.technicalIndicatorProxy?.indicators?.components?.[key])

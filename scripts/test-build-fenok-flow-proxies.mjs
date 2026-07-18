@@ -24,10 +24,26 @@ assert.equal(parsed.get("NVDA").total_volume, 400);
 assert.equal(parsed.get("NVDA").row_count, 2);
 assert.equal(parsed.get("PLTR").total_volume, 100);
 
-assert.equal(scoreShortPressure(0.35), 0);
+assert.equal(scoreShortPressure(0.28), 0);
 assert.equal(scoreShortPressure(0.525), 50);
-assert.equal(scoreShortPressure(0.7), 100);
+assert.equal(scoreShortPressure(0.77), 100);
 assert.equal(scoreShortPressure(0.9), 100);
+
+// DISTRIBUTION-SANITY: 40 evenly-spaced order statistics from the measured
+// 2026-07-18 production short_volume_ratio distribution (687 scored US rows).
+const SHORT_PRESSURE_RATIO_SAMPLE = [
+  0.128276, 0.253162, 0.280666, 0.309837, 0.33737, 0.358035, 0.373192, 0.386365,
+  0.403721, 0.417886, 0.431305, 0.439411, 0.453837, 0.468943, 0.475625, 0.491129,
+  0.499912, 0.508302, 0.520473, 0.527937, 0.533586, 0.544145, 0.557348, 0.566403,
+  0.575375, 0.586325, 0.594414, 0.606598, 0.620484, 0.635271, 0.643699, 0.655748,
+  0.670384, 0.683837, 0.700734, 0.720368, 0.735636, 0.770676, 0.80901, 0.875031,
+];
+const shortPressureSampleScores = SHORT_PRESSURE_RATIO_SAMPLE.map(scoreShortPressure);
+const shortPressureSaturated = shortPressureSampleScores.filter((score) => score === 0 || score === 100).length;
+assert.ok(
+  shortPressureSaturated / shortPressureSampleScores.length <= 0.2,
+  `short_pressure score saturated on ${shortPressureSaturated}/${shortPressureSampleScores.length} realistic fixtures (> 20% ceiling)`,
+);
 
 // Off-exchange share recalibrated 2026-07-18 to the measured p5/p95 band
 // [0.25, 0.65] (see build-fenok-flow-proxies.mjs). Boundary cases:
@@ -56,7 +72,7 @@ const sampleScores = OFF_EXCHANGE_SHARE_SAMPLE.map(scoreOffExchangeShare);
 const saturated = sampleScores.filter((s) => s === 0 || s === 100).length;
 assert.ok(
   saturated / sampleScores.length <= 0.2,
-  `off_exchange score saturated on ${saturated}/${sampleScores.length} realistic fixtures (> 20% floor)`,
+  `off_exchange score saturated on ${saturated}/${sampleScores.length} realistic fixtures (> 20% ceiling)`,
 );
 
 const rows = buildRows({
@@ -67,7 +83,7 @@ const rows = buildRows({
 assert.equal(rows.length, 2);
 assert.equal(rows[0].ticker, "NVDA");
 assert.equal(rows[0].short_pressure_proxy.short_volume_ratio, 0.375);
-assert.equal(rows[0].short_pressure_proxy.score_0_100, 7.14);
+assert.equal(rows[0].short_pressure_proxy.score_0_100, 19.39);
 assert.equal(rows[1].confidence, "low");
 assert.equal(rows[1].short_pressure_proxy.score_0_100, null);
 

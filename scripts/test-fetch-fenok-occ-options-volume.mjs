@@ -28,6 +28,7 @@ import {
   parseArgs,
   reduceOccEndpointResults,
   retainLatestTickerSourceDates,
+  scoreOptionsLogRatio,
   scoreOptionsVolume,
   summarizeDateAttempt,
   summarizeTickerAvailability,
@@ -248,7 +249,32 @@ assert.equal(OCC_AVAILABILITY_POLICY.exact_volume_query_release_time, null);
 assert.equal(OCC_AVAILABILITY_POLICY.scheduler_guidance.initial_daily_run_kst, "08:30");
 assert.ok(OCC_AVAILABILITY_POLICY.scheduler_guidance.do_not_default_to.includes("12:45 KST"));
 
-assert.equal(scoreOptionsVolume(4045792, 2746518), 56.97);
+assert.equal(scoreOptionsVolume(999999, 999999), 50, "equal call/put volume must remain semantically balanced");
+assert.equal(scoreOptionsVolume(4045792, 2746518), 55.61);
+assert.equal(scoreOptionsLogRatio(-0.9), 0);
+assert.equal(scoreOptionsLogRatio(-0.45), 25);
+assert.equal(scoreOptionsLogRatio(0), 50);
+assert.equal(scoreOptionsLogRatio(1.725), 75);
+assert.equal(scoreOptionsLogRatio(3.45), 100);
+assert.equal(scoreOptionsLogRatio(Number.NaN), null);
+
+// DISTRIBUTION-SANITY: 40 evenly-spaced latest-per-ticker order statistics
+// from the measured 2026-07-18 OCC log(call/put) distribution (686 rows).
+const OCC_LOG_RATIO_SAMPLE = [
+  -3.01762, -1.422859, -0.873283, -0.524877, -0.40718, -0.283685, -0.19601, -0.093499,
+  -0.024507, 0.035916, 0.070231, 0.127307, 0.190259, 0.241347, 0.319425, 0.378749,
+  0.444417, 0.510826, 0.568013, 0.6283, 0.670254, 0.740033, 0.827586, 0.905208,
+  1.005739, 1.095345, 1.155933, 1.242343, 1.375154, 1.483295, 1.632166, 1.717651,
+  1.956927, 2.105732, 2.353303, 2.576408, 2.931201, 3.376604, 4.147034, 8.761707,
+];
+const occSampleScores = OCC_LOG_RATIO_SAMPLE.map((logRatio) => (
+  scoreOptionsVolume(Math.round(Math.exp(logRatio) * 1_000_000) - 1, 999_999)
+));
+const occSaturated = occSampleScores.filter((score) => score === 0 || score === 100).length;
+assert.ok(
+  occSaturated / occSampleScores.length <= 0.2,
+  `net_options score saturated on ${occSaturated}/${occSampleScores.length} realistic fixtures (> 20% ceiling)`,
+);
 
 const row = buildRowsForTest({
   ticker: "NVDA",
@@ -258,7 +284,7 @@ const row = buildRowsForTest({
 });
 
 assert.equal(row.ticker, "NVDA");
-assert.equal(row.options_activity_proxy.score_0_100, 56.97);
+assert.equal(row.options_activity_proxy.score_0_100, 55.61);
 assert.equal(row.options_activity_proxy.call_volume, 4045792);
 assert.equal(row.options_activity_proxy.put_volume, 2746518);
 assert.equal(row.options_activity_proxy.direction, "balanced_volume_proxy");
@@ -315,6 +341,30 @@ assert.equal(mergedOutput.batch_coverage.row_count, 2);
 assert.equal(mergedOutput.upsert_policy.replaced_rows, 1);
 assert.equal(mergedOutput.rows.find((item) => item.ticker === "AAPL").options_activity_proxy.score_0_100, 60);
 assert.deepEqual(mergedOutput.persistence_policy, OCC_PERSISTENCE_POLICY);
+
+const retainedOldFormulaRow = {
+  ...row,
+  ticker: "OLD",
+  source_date: "20260625",
+  options_activity_proxy: {
+    ...row.options_activity_proxy,
+    score_0_100: 99,
+  },
+};
+const recalibratedOutput = mergeOutputSnapshot(
+  { generated_at: "2026-06-28T00:00:00.000Z", rows: [retainedOldFormulaRow] },
+  {
+    generated_at: "2026-06-29T00:00:00.000Z",
+    attempts: [],
+    coverage: { row_count: 1 },
+    rows: [newOutputRow],
+  },
+);
+assert.equal(
+  recalibratedOutput.rows.find((item) => item.ticker === "OLD").options_activity_proxy.score_0_100,
+  55.61,
+  "a formula bump must rescore retained rows from call/put volumes instead of relabeling old scores",
+);
 
 function ymdAtOffset(offset) {
   const value = new Date(Date.UTC(2026, 0, 1 + offset));

@@ -1,13 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  FLOW_PROXY_FORMULA_VERSION,
+  OCC_OPTIONS_FORMULA_VERSION,
+  assertProxyFormulaVersion,
+} from "./lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 
-const FORMULA_VERSION = "fenok-native-signals-v0.2.1-phase-b";
+const FORMULA_VERSION = "fenok-native-signals-v0.2.2-phase-b-flow-calibration";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md";
 const PUBLIC_SURFACE_STATUS = "phase_b_v0_2_stock_signal_lens_approved_summary_public";
 const SOURCE_FILE = "computed/stock_action_index.json";
@@ -60,12 +65,14 @@ function readFinancialsByTicker(tickers) {
 
 function readFlowProxiesByTicker() {
   const flow = readOptionalJson("computed/fenok_flow_proxies.json");
+  assertProxyFormulaVersion(flow, FLOW_PROXY_FORMULA_VERSION, "fenok_flow_proxies");
   const rows = Array.isArray(flow?.rows) ? flow.rows : [];
   return new Map(rows.map((row) => [String(row.ticker ?? "").toUpperCase(), row]));
 }
 
 function readOccOptionsByTicker() {
   const payload = readOptionalJson(OCC_OPTIONS_VOLUME_FILE);
+  assertProxyFormulaVersion(payload, OCC_OPTIONS_FORMULA_VERSION, "fenok_occ_options_volume");
   const rows = Array.isArray(payload?.rows) ? payload.rows : [];
   return new Map(rows.map((row) => [String(row.ticker ?? "").toUpperCase(), row]));
 }

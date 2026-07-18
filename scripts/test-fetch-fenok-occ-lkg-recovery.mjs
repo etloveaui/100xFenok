@@ -85,7 +85,7 @@ function outputDocument(sourceDate, runId = "run") {
   return {
     schema_version: 1,
     generated_at: `${sourceDate}T12:00:00.000Z`,
-    formula_version: "fenok-occ-options-volume-v0.1",
+    formula_version: "fenok-occ-options-volume-v0.2-volume-skew-calibration",
     public_surface_status: "admin_private_derived_only_public_summary_source",
     raw_policy: {
       external_collection: true,
