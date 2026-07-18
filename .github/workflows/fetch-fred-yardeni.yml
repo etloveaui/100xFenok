@@ -37,7 +37,9 @@ jobs:
           node-version: '22'
 
       - name: Test Feno Yardeni builder
-        run: node scripts/test-build-feno-yardeni-model.mjs
+        run: |
+          node scripts/test-build-feno-yardeni-model.mjs
+          node scripts/test-build-feno-yardeni-lkg-recovery.mjs
 
       - name: Build Feno Yardeni model from FRED
         id: fetch_yardeni
@@ -57,10 +59,17 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          SHARD="data/admin/data-supply-state/detection-attempts/fred_yardeni.json"
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
+          # Public-safe detection attempt shard AND the Yardeni LKG recovery state
+          # (freshness marker + retained LKG copy + recovery index) are committed on
+          # every run so retry/recovery accounting survives across CI runs. These
+          # carry no FRED bond-yield components.
+          for SHARD in \
+            data/admin/data-supply-state/detection-attempts/fred_yardeni.json \
+            data/admin/fred_yardeni/index.json \
+            data/admin/fred_yardeni/current/yardney_model.json \
+            data/admin/fred_yardeni/lkg/yardney_model.json; do
+            if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
+          done
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- \
               data/yardney/yardney_model.json \

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
@@ -6,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   attemptResult,
+  atomicWrite,
   classifyEndpointResponse,
   defaultAttemptId,
   returnedTuple,
@@ -15,6 +17,13 @@ import {
   writeAttemptShard,
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -29,6 +38,20 @@ const DEFAULT_PUBLIC_MIRROR = path.join(publicDataRoot, "yardney", "yardney_mode
 const DEFAULT_PRIVATE_OUT = path.join(privateRoot, "yardney_model_full.json");
 const DEFAULT_PRIVATE_FRED_CACHE = path.join(privateRoot, "fred_yardeni_yields.json");
 const DEFAULT_ATTEMPT_SHARD = path.join(dataRoot, "admin", "data-supply-state", "detection-attempts", "fred_yardeni.json");
+
+// Last-known-good recovery lane. The lane's canonical public artifact
+// (data/yardney/yardney_model.json) is public-safe, so the store protects a
+// small freshness marker (newest weekly Friday date + record count + payload
+// hash) under data/admin/fred_yardeni/, mirroring fetch-defillama's stable
+// canonical; the modeled rows themselves are rebuilt by the producer and the
+// on-disk payload simply persists across failures.
+const YARDENI_LANE_ID = "fred_yardeni";
+const YARDENI_LKG_KEY = "yardney_model";
+const YARDENI_FRESHNESS_MARKER_SCHEMA = "fenok-yardeni-freshness-marker/v1";
+// DEC-264: staleness is judged by the source's own cadence. FRED WAAA/WBAA are
+// weekly series (Friday observations), so a rebuild whose newest Friday is not
+// strictly newer is EXPECTED ABSENCE of a fresh weekly print — never a failure.
+const YARDENI_SOURCE_CADENCE = "weekly";
 
 const FRED_SERIES = [
   { id: "WAAA", label: "Moody's Seasoned Aaa Corporate Bond Yield" },
@@ -436,6 +459,135 @@ async function loadFredSeries(args) {
   throw new Error("Provide --fred-file <path> for offline builds");
 }
 
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function yardeniMarkerPathFor(repoRootDir) {
+  return path.join(repoRootDir, "data", "admin", YARDENI_LANE_ID, "current", `${YARDENI_LKG_KEY}.json`);
+}
+
+// The freshness marker is the store's canonical: a small, public-safe record of
+// the newest weekly Friday in the model output, the record count, and a sha256
+// of the public payload it describes. It carries no FRED bond-yield components.
+function buildYardeniFreshnessMarker({ publicPayload, publicPayloadBytes, generatedAt }) {
+  return {
+    schema_version: YARDENI_FRESHNESS_MARKER_SCHEMA,
+    lane_id: YARDENI_LANE_ID,
+    model: "feno_yardeni_model",
+    source_cadence: YARDENI_SOURCE_CADENCE,
+    source_as_of: publicPayload.meta.last_update.last_public_date,
+    total_records: publicPayload.meta.total_records,
+    payload_sha256: sha256Hex(publicPayloadBytes),
+    generated_at: generatedAt,
+  };
+}
+
+function validYardeniFreshnessMarker(doc) {
+  return Boolean(doc)
+    && typeof doc === "object"
+    && !Array.isArray(doc)
+    && doc.schema_version === YARDENI_FRESHNESS_MARKER_SCHEMA
+    && doc.lane_id === YARDENI_LANE_ID
+    && doc.source_cadence === YARDENI_SOURCE_CADENCE
+    && typeof doc.source_as_of === "string" && /^\d{4}-\d{2}-\d{2}$/.test(doc.source_as_of)
+    && Number.isFinite(Date.parse(doc.source_as_of))
+    && Number.isInteger(doc.total_records) && doc.total_records > 0
+    && typeof doc.payload_sha256 === "string" && /^[0-9a-f]{64}$/.test(doc.payload_sha256);
+}
+
+function yardeniMarkerSourceAsOf(doc) {
+  return validYardeniFreshnessMarker(doc) ? doc.source_as_of : null;
+}
+
+// Additive LKG recovery wrapper around the weekly fetch+build. It never mutates
+// the detection attempt shard (that stays owned by writeAttemptShard) and never
+// rewrites the model payloads; it only maintains the store's freshness marker,
+// LKG copy, and recovery index under data/admin/fred_yardeni/.
+function applyYardeniLkgStore({ repoRoot: storeRepoRoot, markerPath, worst, built, run }) {
+  const store = new LaneLkgStore({ repoRoot: storeRepoRoot, laneId: YARDENI_LANE_ID });
+  const artifact = {
+    key: YARDENI_LKG_KEY,
+    canonicalPath: markerPath,
+    validateDocument: validYardeniFreshnessMarker,
+    sourceAsOf: yardeniMarkerSourceAsOf,
+  };
+
+  if (worst?.status !== "ready" || built === null) {
+    const reason = worst?.reason ?? "unexpected_error";
+    const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+    return {
+      kind: "failure",
+      updated: false,
+      reason,
+      retrySet: failure.retrySet,
+      ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg }),
+    };
+  }
+
+  const publicPayloadBytes = Buffer.from(`${JSON.stringify(built.publicPayload, null, 2)}\n`, "utf8");
+  const marker = buildYardeniFreshnessMarker({
+    publicPayload: built.publicPayload,
+    publicPayloadBytes,
+    generatedAt: run.observedAt,
+  });
+  const serialized = `${JSON.stringify(marker, null, 2)}\n`;
+  const sourceAsOf = marker.source_as_of;
+  const payloadBytes = Buffer.from(serialized, "utf8");
+  const markerRelative = path.relative(storeRepoRoot, path.resolve(markerPath)).split(path.sep).join("/");
+
+  const snapshot = store.stateSnapshot();
+  const priorItem = snapshot.items[YARDENI_LKG_KEY];
+  const retryActive = priorItem?.retry === true;
+  const priorSourceAsOf = priorItem?.current?.source_as_of;
+  // Weekly-cadence guard (DEC-264): outside an active retry, only advance the
+  // freshness anchor when the provider's newest Friday is strictly newer. A
+  // weekly rebuild without a new print is expected absence, never a failure and
+  // never a regression. During a retry the store's own advancement gate governs.
+  if (!retryActive && typeof priorSourceAsOf === "string"
+    && Number.isFinite(Date.parse(priorSourceAsOf))
+    && Date.parse(sourceAsOf) <= Date.parse(priorSourceAsOf)) {
+    return { kind: "not_newer", updated: false, sourceAsOf };
+  }
+
+  const candidate = {
+    key: YARDENI_LKG_KEY,
+    currentRelativePath: markerRelative,
+    payloadBytes,
+    sourceAsOf,
+    validateDocument: validYardeniFreshnessMarker,
+    deriveSourceAsOf: yardeniMarkerSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes,
+      sourceAsOf,
+      validateDocument: validYardeniFreshnessMarker,
+      deriveSourceAsOf: yardeniMarkerSourceAsOf,
+      candidateContainsObservation: (candidateDocument, providerDocument) => (
+        JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
+      ),
+      run,
+    }),
+  };
+
+  if (retryActive && !isNaturalScheduleRun(run)) {
+    return { kind: "recovery_requires_schedule", updated: false, reason: "recovery_requires_schedule", degraded: true, corrupt: false, exitCode: 0 };
+  }
+
+  const [decision] = store.evaluatePromotionCandidates([candidate], run);
+  if (!decision.eligible) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+    }
+    return { kind: "not_promotable", updated: false, reason: decision.reason, degraded: true, corrupt: false, exitCode: 0 };
+  }
+
+  atomicWrite(markerPath, serialized);
+  const success = store.recordSuccess({ artifacts: [candidate], run });
+  const recovered = success.state.items[YARDENI_LKG_KEY]?.recovered_at === run.observedAt;
+  return { kind: "success", updated: true, recovered, sourceAsOf };
+}
+
 export async function runFenoYardeni({
   seedPayload,
   privateSeedPayload = null,
@@ -452,6 +604,10 @@ export async function runFenoYardeni({
   generatedBy = "build-feno-yardeni-model.mjs",
   check = false,
   noWrite = false,
+  lkgRepoRoot = null,
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
 } = {}) {
   let requestResults;
   if (!apiKey) {
@@ -491,7 +647,31 @@ export async function runFenoYardeni({
     attemptId,
     result: worst,
   });
-  if (worst.status !== "ready") return { ok: false, reason: worst.reason, updated: false, attempt };
+
+  // Additive LKG recovery: engage only for the automatic weekly refresh
+  // (--fetch without --no-write/--check). Offline --fred-file builds, --check
+  // verification, and every caller that does not pass an explicit lkgRepoRoot
+  // never touch the shared recovery state. This keeps every existing test
+  // unaffected. Detection attempt shard emission above is untouched.
+  const storeMode = lkgRepoRoot !== null && !noWrite && !check;
+  const storeRun = {
+    runId: String(runId),
+    runAttempt: Number(runAttempt),
+    eventName,
+    observedAt,
+  };
+  if (worst.status !== "ready") {
+    const lkg = storeMode
+      ? applyYardeniLkgStore({
+        repoRoot: lkgRepoRoot,
+        markerPath: yardeniMarkerPathFor(lkgRepoRoot),
+        worst,
+        built: null,
+        run: storeRun,
+      })
+      : null;
+    return { ok: false, reason: worst.reason, updated: false, attempt, lkg };
+  }
 
   if (check) {
     const current = fs.existsSync(publicOutputPath) ? JSON.parse(fs.readFileSync(publicOutputPath, "utf8")) : null;
@@ -509,7 +689,16 @@ export async function runFenoYardeni({
       series: built.fredSeries,
     });
   }
-  return { ok: true, reason: "ok", updated: !noWrite, attempt, report: built.report };
+  const lkg = storeMode
+    ? applyYardeniLkgStore({
+      repoRoot: lkgRepoRoot,
+      markerPath: yardeniMarkerPathFor(lkgRepoRoot),
+      worst,
+      built,
+      run: storeRun,
+    })
+    : null;
+  return { ok: true, reason: "ok", updated: !noWrite, attempt, report: built.report, lkg };
 }
 
 async function main() {
@@ -528,8 +717,19 @@ async function main() {
       privateFredCachePath: args.privateFredCache,
       check: args.check,
       noWrite: args.noWrite,
+      lkgRepoRoot: repoRoot,
     });
-    if (!result.ok) throw new Error(`FRED Yardeni fetch failed: ${result.reason}; last-known-good artifacts retained`);
+    if (!result.ok) {
+      // DEC-264: a degraded lane (valid LKG retained, retry parked, KPI-named)
+      // exits 0 so the workflow commits the honest retry state; only true
+      // corruption (no provable LKG, or a systemic break) exits non-zero.
+      const exitCode = result.lkg?.exitCode ?? 2;
+      if (exitCode !== 0) {
+        throw new Error(`FRED Yardeni fetch failed: ${result.reason}; no valid last-known-good retained`);
+      }
+      console.warn(`[yardeni] degraded: ${result.reason}; retained last-known-good and parked retry`);
+      return;
+    }
     console.log(JSON.stringify(result.report, null, 2));
     return;
   }
@@ -564,3 +764,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   });
 }
+
+export {
+  applyYardeniLkgStore,
+  buildYardeniFreshnessMarker,
+  validYardeniFreshnessMarker,
+  yardeniMarkerPathFor,
+  yardeniMarkerSourceAsOf,
+  YARDENI_FRESHNESS_MARKER_SCHEMA,
+  YARDENI_LANE_ID,
+  YARDENI_LKG_KEY,
+  YARDENI_SOURCE_CADENCE,
+};
