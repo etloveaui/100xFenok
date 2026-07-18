@@ -1,127 +1,127 @@
 {
   "schema_version": "stockanalysis-etf-detail-reconcile/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-18T18:49:18Z",
+  "generated_at": "2026-07-18T20:56:02Z",
   "operation": "reconcile_missing_etf_details",
   "method": "probe every selected missing ticker against StockAnalysis overview and holdings; write an honest stockanalysis_partial detail when the overview exists, including a named holdings-surface omission and null source_as_of with an explicit reason when provider dates are unavailable; classify only overview HTTP 400/404 as provider_absent; keep all other responses unresolved, named in retry evidence, and degraded when any selected ticker resolves; fail only when no selected ticker resolves, failures are systemic, or canonical coverage regresses",
   "counts": {
-    "initial_missing": 587,
+    "initial_missing": 487,
     "selected": 100,
     "fetchable_fetched": 100,
     "provider_absent": 0,
     "unresolved": 0,
-    "remaining_missing": 487
+    "remaining_missing": 387
   },
   "selected_tickers": [
-    "BSEP",
-    "BSOL",
-    "BSTP",
-    "BTC",
-    "BTCO",
-    "BTCW",
-    "BTRN",
-    "BUCK",
-    "BWOW",
-    "CBOJ",
-    "CBOO",
-    "CBOX",
-    "CBOY",
-    "CBRX",
-    "CBRZ",
-    "CBTJ",
-    "CBTO",
-    "CBTY",
-    "CBXO",
-    "CBXY",
-    "CEFD",
-    "CEGX",
-    "CERY",
-    "CEW",
-    "CHNL",
-    "CHNU",
-    "CLNK",
-    "COHX",
-    "COIW",
-    "COM",
-    "COMD",
-    "COSW",
-    "COZX",
-    "CPAG",
-    "CPHY",
-    "CPNJ",
-    "CPNM",
-    "CPNQ",
-    "CPNS",
-    "CPNX",
-    "CPRA",
-    "CPRJ",
-    "CPRO",
-    "CPRY",
-    "CPSA",
-    "CPSD",
-    "CPSF",
-    "CPSJ",
-    "CPSM",
-    "CPSN",
-    "CPSO",
-    "CPSP",
-    "CPSR",
-    "CPST",
-    "CPSU",
-    "CPSY",
-    "CRDD",
-    "CRMX",
-    "CSEX",
-    "CXRN",
-    "DDSQ",
-    "DECU",
-    "DEFI",
-    "DGP",
-    "DGZ",
-    "DHSB",
-    "DJP",
-    "DOJE",
-    "DRUP",
-    "DULL",
-    "DVIN",
-    "DVQQ",
-    "DVRE",
-    "DVSP",
-    "DVUT",
-    "DVXB",
-    "DVXC",
-    "DVXE",
-    "DVXF",
-    "DVXK",
-    "DVXP",
-    "DVXV",
-    "DVXY",
-    "DWUS",
-    "DZZ",
-    "EALT",
-    "EAPR",
-    "EBUF",
-    "ECHX",
-    "EDGQ",
-    "EDGX",
-    "EETH",
-    "EHCC",
-    "EJAN",
-    "EMCS",
-    "EOCT",
-    "ESUM",
-    "ETH",
-    "ETHA",
-    "ETHB"
+    "ETHD",
+    "ETHE",
+    "ETHT",
+    "ETHV",
+    "ETHW",
+    "EUO",
+    "EVMT",
+    "EWV",
+    "EZBC",
+    "EZET",
+    "EZMO",
+    "FBTC",
+    "FEBU",
+    "FETH",
+    "FGDL",
+    "FLAO",
+    "FLJJ",
+    "FLYT",
+    "FPAA",
+    "FSOL",
+    "FXA",
+    "FXB",
+    "FXC",
+    "FXE",
+    "FXF",
+    "FXY",
+    "GAVA",
+    "GBTC",
+    "GDLC",
+    "GDOG",
+    "GDT",
+    "GDXD",
+    "GDXU",
+    "GDXW",
+    "GEVX",
+    "GLD",
+    "GLDI",
+    "GLDM",
+    "GLDW",
+    "GLNK",
+    "GLTR",
+    "GLXU",
+    "GMEC",
+    "GMMA",
+    "GOOW",
+    "GOOX",
+    "GOP",
+    "GPT",
+    "GRN",
+    "GSOL",
+    "GSUI",
+    "GTOH",
+    "HBR",
+    "HDLB",
+    "HFSP",
+    "HIGH",
+    "HODL",
+    "HOOW",
+    "HPEL",
+    "HYGW",
+    "HYPG",
+    "HYSA",
+    "HYTI",
+    "HYTR",
+    "IAPR",
+    "IAU",
+    "IAUG",
+    "IAUM",
+    "IBGM",
+    "IBIC",
+    "IBIH",
+    "IBIJ",
+    "IBIK",
+    "IBIL",
+    "IBIM",
+    "IBIT",
+    "IBUF",
+    "IBX",
+    "IDEC",
+    "IDEQ",
+    "IFEB",
+    "IFED",
+    "IGLD",
+    "IJAN",
+    "IJUL",
+    "IJUN",
+    "IMAR",
+    "IMAY",
+    "INFH",
+    "INOV",
+    "INYY",
+    "IOCT",
+    "IONC",
+    "IOSX",
+    "IREX",
+    "IREZ",
+    "ISEP",
+    "IVVW",
+    "IWDL",
+    "IWFL"
   ],
   "provider_absent_tickers": [],
   "unresolved_tickers": [],
   "results": [
     {
-      "ticker": "BSEP",
+      "ticker": "ETHD",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSEP.json",
+      "path": "etfs/ETHD.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -129,10 +129,10 @@
       "error": null
     },
     {
-      "ticker": "BSOL",
+      "ticker": "ETHE",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSOL.json",
+      "path": "etfs/ETHE.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -140,10 +140,10 @@
       "error": null
     },
     {
-      "ticker": "BSTP",
+      "ticker": "ETHT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BSTP.json",
+      "path": "etfs/ETHT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -151,10 +151,10 @@
       "error": null
     },
     {
-      "ticker": "BTC",
+      "ticker": "ETHV",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BTC.json",
+      "path": "etfs/ETHV.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -162,10 +162,10 @@
       "error": null
     },
     {
-      "ticker": "BTCO",
+      "ticker": "ETHW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BTCO.json",
+      "path": "etfs/ETHW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -173,10 +173,10 @@
       "error": null
     },
     {
-      "ticker": "BTCW",
+      "ticker": "EUO",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BTCW.json",
+      "path": "etfs/EUO.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -184,10 +184,10 @@
       "error": null
     },
     {
-      "ticker": "BTRN",
+      "ticker": "EVMT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BTRN.json",
+      "path": "etfs/EVMT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -195,10 +195,10 @@
       "error": null
     },
     {
-      "ticker": "BUCK",
+      "ticker": "EWV",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BUCK.json",
+      "path": "etfs/EWV.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -206,10 +206,10 @@
       "error": null
     },
     {
-      "ticker": "BWOW",
+      "ticker": "EZBC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/BWOW.json",
+      "path": "etfs/EZBC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -217,10 +217,10 @@
       "error": null
     },
     {
-      "ticker": "CBOJ",
+      "ticker": "EZET",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBOJ.json",
+      "path": "etfs/EZET.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -228,10 +228,10 @@
       "error": null
     },
     {
-      "ticker": "CBOO",
+      "ticker": "EZMO",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBOO.json",
+      "path": "etfs/EZMO.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -239,10 +239,10 @@
       "error": null
     },
     {
-      "ticker": "CBOX",
+      "ticker": "FBTC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBOX.json",
+      "path": "etfs/FBTC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -250,10 +250,10 @@
       "error": null
     },
     {
-      "ticker": "CBOY",
+      "ticker": "FEBU",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBOY.json",
+      "path": "etfs/FEBU.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -261,10 +261,10 @@
       "error": null
     },
     {
-      "ticker": "CBRX",
+      "ticker": "FETH",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBRX.json",
+      "path": "etfs/FETH.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -272,10 +272,10 @@
       "error": null
     },
     {
-      "ticker": "CBRZ",
+      "ticker": "FGDL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBRZ.json",
+      "path": "etfs/FGDL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -283,10 +283,10 @@
       "error": null
     },
     {
-      "ticker": "CBTJ",
+      "ticker": "FLAO",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBTJ.json",
+      "path": "etfs/FLAO.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -294,10 +294,10 @@
       "error": null
     },
     {
-      "ticker": "CBTO",
+      "ticker": "FLJJ",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBTO.json",
+      "path": "etfs/FLJJ.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -305,10 +305,10 @@
       "error": null
     },
     {
-      "ticker": "CBTY",
+      "ticker": "FLYT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBTY.json",
+      "path": "etfs/FLYT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -316,10 +316,10 @@
       "error": null
     },
     {
-      "ticker": "CBXO",
+      "ticker": "FPAA",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBXO.json",
+      "path": "etfs/FPAA.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -327,10 +327,10 @@
       "error": null
     },
     {
-      "ticker": "CBXY",
+      "ticker": "FSOL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CBXY.json",
+      "path": "etfs/FSOL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -338,10 +338,10 @@
       "error": null
     },
     {
-      "ticker": "CEFD",
+      "ticker": "FXA",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CEFD.json",
+      "path": "etfs/FXA.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -349,10 +349,10 @@
       "error": null
     },
     {
-      "ticker": "CEGX",
+      "ticker": "FXB",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CEGX.json",
+      "path": "etfs/FXB.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -360,10 +360,10 @@
       "error": null
     },
     {
-      "ticker": "CERY",
+      "ticker": "FXC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CERY.json",
+      "path": "etfs/FXC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -371,10 +371,10 @@
       "error": null
     },
     {
-      "ticker": "CEW",
+      "ticker": "FXE",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CEW.json",
+      "path": "etfs/FXE.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -382,10 +382,10 @@
       "error": null
     },
     {
-      "ticker": "CHNL",
+      "ticker": "FXF",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CHNL.json",
+      "path": "etfs/FXF.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -393,10 +393,10 @@
       "error": null
     },
     {
-      "ticker": "CHNU",
+      "ticker": "FXY",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CHNU.json",
+      "path": "etfs/FXY.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -404,10 +404,10 @@
       "error": null
     },
     {
-      "ticker": "CLNK",
+      "ticker": "GAVA",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CLNK.json",
+      "path": "etfs/GAVA.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -415,10 +415,10 @@
       "error": null
     },
     {
-      "ticker": "COHX",
+      "ticker": "GBTC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/COHX.json",
+      "path": "etfs/GBTC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -426,10 +426,10 @@
       "error": null
     },
     {
-      "ticker": "COIW",
+      "ticker": "GDLC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/COIW.json",
+      "path": "etfs/GDLC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -437,10 +437,10 @@
       "error": null
     },
     {
-      "ticker": "COM",
+      "ticker": "GDOG",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/COM.json",
+      "path": "etfs/GDOG.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -448,10 +448,10 @@
       "error": null
     },
     {
-      "ticker": "COMD",
+      "ticker": "GDT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/COMD.json",
+      "path": "etfs/GDT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -459,10 +459,10 @@
       "error": null
     },
     {
-      "ticker": "COSW",
+      "ticker": "GDXD",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/COSW.json",
+      "path": "etfs/GDXD.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -470,10 +470,10 @@
       "error": null
     },
     {
-      "ticker": "COZX",
+      "ticker": "GDXU",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/COZX.json",
+      "path": "etfs/GDXU.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -481,10 +481,10 @@
       "error": null
     },
     {
-      "ticker": "CPAG",
+      "ticker": "GDXW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPAG.json",
+      "path": "etfs/GDXW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -492,10 +492,10 @@
       "error": null
     },
     {
-      "ticker": "CPHY",
+      "ticker": "GEVX",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPHY.json",
+      "path": "etfs/GEVX.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -503,10 +503,10 @@
       "error": null
     },
     {
-      "ticker": "CPNJ",
+      "ticker": "GLD",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPNJ.json",
+      "path": "etfs/GLD.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -514,10 +514,10 @@
       "error": null
     },
     {
-      "ticker": "CPNM",
+      "ticker": "GLDI",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPNM.json",
+      "path": "etfs/GLDI.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -525,10 +525,10 @@
       "error": null
     },
     {
-      "ticker": "CPNQ",
+      "ticker": "GLDM",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPNQ.json",
+      "path": "etfs/GLDM.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -536,10 +536,10 @@
       "error": null
     },
     {
-      "ticker": "CPNS",
+      "ticker": "GLDW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPNS.json",
+      "path": "etfs/GLDW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -547,10 +547,10 @@
       "error": null
     },
     {
-      "ticker": "CPNX",
+      "ticker": "GLNK",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPNX.json",
+      "path": "etfs/GLNK.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -558,10 +558,10 @@
       "error": null
     },
     {
-      "ticker": "CPRA",
+      "ticker": "GLTR",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPRA.json",
+      "path": "etfs/GLTR.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -569,10 +569,10 @@
       "error": null
     },
     {
-      "ticker": "CPRJ",
+      "ticker": "GLXU",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPRJ.json",
+      "path": "etfs/GLXU.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -580,10 +580,10 @@
       "error": null
     },
     {
-      "ticker": "CPRO",
+      "ticker": "GMEC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPRO.json",
+      "path": "etfs/GMEC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -591,10 +591,10 @@
       "error": null
     },
     {
-      "ticker": "CPRY",
+      "ticker": "GMMA",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPRY.json",
+      "path": "etfs/GMMA.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -602,10 +602,10 @@
       "error": null
     },
     {
-      "ticker": "CPSA",
+      "ticker": "GOOW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSA.json",
+      "path": "etfs/GOOW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -613,10 +613,10 @@
       "error": null
     },
     {
-      "ticker": "CPSD",
+      "ticker": "GOOX",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSD.json",
+      "path": "etfs/GOOX.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -624,10 +624,10 @@
       "error": null
     },
     {
-      "ticker": "CPSF",
+      "ticker": "GOP",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSF.json",
+      "path": "etfs/GOP.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -635,10 +635,10 @@
       "error": null
     },
     {
-      "ticker": "CPSJ",
+      "ticker": "GPT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSJ.json",
+      "path": "etfs/GPT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -646,10 +646,10 @@
       "error": null
     },
     {
-      "ticker": "CPSM",
+      "ticker": "GRN",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSM.json",
+      "path": "etfs/GRN.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -657,10 +657,10 @@
       "error": null
     },
     {
-      "ticker": "CPSN",
+      "ticker": "GSOL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSN.json",
+      "path": "etfs/GSOL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -668,10 +668,10 @@
       "error": null
     },
     {
-      "ticker": "CPSO",
+      "ticker": "GSUI",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSO.json",
+      "path": "etfs/GSUI.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -679,10 +679,10 @@
       "error": null
     },
     {
-      "ticker": "CPSP",
+      "ticker": "GTOH",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSP.json",
+      "path": "etfs/GTOH.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -690,10 +690,10 @@
       "error": null
     },
     {
-      "ticker": "CPSR",
+      "ticker": "HBR",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSR.json",
+      "path": "etfs/HBR.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -701,10 +701,10 @@
       "error": null
     },
     {
-      "ticker": "CPST",
+      "ticker": "HDLB",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPST.json",
+      "path": "etfs/HDLB.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -712,10 +712,10 @@
       "error": null
     },
     {
-      "ticker": "CPSU",
+      "ticker": "HFSP",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSU.json",
+      "path": "etfs/HFSP.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -723,10 +723,10 @@
       "error": null
     },
     {
-      "ticker": "CPSY",
+      "ticker": "HIGH",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CPSY.json",
+      "path": "etfs/HIGH.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -734,10 +734,10 @@
       "error": null
     },
     {
-      "ticker": "CRDD",
+      "ticker": "HODL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CRDD.json",
+      "path": "etfs/HODL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -745,10 +745,10 @@
       "error": null
     },
     {
-      "ticker": "CRMX",
+      "ticker": "HOOW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CRMX.json",
+      "path": "etfs/HOOW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -756,10 +756,10 @@
       "error": null
     },
     {
-      "ticker": "CSEX",
+      "ticker": "HPEL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CSEX.json",
+      "path": "etfs/HPEL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -767,10 +767,10 @@
       "error": null
     },
     {
-      "ticker": "CXRN",
+      "ticker": "HYGW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/CXRN.json",
+      "path": "etfs/HYGW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -778,10 +778,10 @@
       "error": null
     },
     {
-      "ticker": "DDSQ",
+      "ticker": "HYPG",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DDSQ.json",
+      "path": "etfs/HYPG.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -789,10 +789,10 @@
       "error": null
     },
     {
-      "ticker": "DECU",
+      "ticker": "HYSA",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DECU.json",
+      "path": "etfs/HYSA.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -800,10 +800,10 @@
       "error": null
     },
     {
-      "ticker": "DEFI",
+      "ticker": "HYTI",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DEFI.json",
+      "path": "etfs/HYTI.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -811,10 +811,10 @@
       "error": null
     },
     {
-      "ticker": "DGP",
+      "ticker": "HYTR",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DGP.json",
+      "path": "etfs/HYTR.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -822,10 +822,10 @@
       "error": null
     },
     {
-      "ticker": "DGZ",
+      "ticker": "IAPR",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DGZ.json",
+      "path": "etfs/IAPR.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -833,10 +833,10 @@
       "error": null
     },
     {
-      "ticker": "DHSB",
+      "ticker": "IAU",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DHSB.json",
+      "path": "etfs/IAU.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -844,10 +844,10 @@
       "error": null
     },
     {
-      "ticker": "DJP",
+      "ticker": "IAUG",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DJP.json",
+      "path": "etfs/IAUG.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -855,10 +855,10 @@
       "error": null
     },
     {
-      "ticker": "DOJE",
+      "ticker": "IAUM",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DOJE.json",
+      "path": "etfs/IAUM.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -866,10 +866,10 @@
       "error": null
     },
     {
-      "ticker": "DRUP",
+      "ticker": "IBGM",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DRUP.json",
+      "path": "etfs/IBGM.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -877,10 +877,10 @@
       "error": null
     },
     {
-      "ticker": "DULL",
+      "ticker": "IBIC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DULL.json",
+      "path": "etfs/IBIC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -888,10 +888,10 @@
       "error": null
     },
     {
-      "ticker": "DVIN",
+      "ticker": "IBIH",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVIN.json",
+      "path": "etfs/IBIH.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -899,10 +899,10 @@
       "error": null
     },
     {
-      "ticker": "DVQQ",
+      "ticker": "IBIJ",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVQQ.json",
+      "path": "etfs/IBIJ.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -910,10 +910,10 @@
       "error": null
     },
     {
-      "ticker": "DVRE",
+      "ticker": "IBIK",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVRE.json",
+      "path": "etfs/IBIK.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -921,10 +921,10 @@
       "error": null
     },
     {
-      "ticker": "DVSP",
+      "ticker": "IBIL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVSP.json",
+      "path": "etfs/IBIL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -932,10 +932,10 @@
       "error": null
     },
     {
-      "ticker": "DVUT",
+      "ticker": "IBIM",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVUT.json",
+      "path": "etfs/IBIM.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -943,10 +943,10 @@
       "error": null
     },
     {
-      "ticker": "DVXB",
+      "ticker": "IBIT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXB.json",
+      "path": "etfs/IBIT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -954,10 +954,10 @@
       "error": null
     },
     {
-      "ticker": "DVXC",
+      "ticker": "IBUF",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXC.json",
+      "path": "etfs/IBUF.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -965,10 +965,10 @@
       "error": null
     },
     {
-      "ticker": "DVXE",
+      "ticker": "IBX",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXE.json",
+      "path": "etfs/IBX.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -976,10 +976,10 @@
       "error": null
     },
     {
-      "ticker": "DVXF",
+      "ticker": "IDEC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXF.json",
+      "path": "etfs/IDEC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -987,10 +987,10 @@
       "error": null
     },
     {
-      "ticker": "DVXK",
+      "ticker": "IDEQ",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXK.json",
+      "path": "etfs/IDEQ.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -998,10 +998,10 @@
       "error": null
     },
     {
-      "ticker": "DVXP",
+      "ticker": "IFEB",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXP.json",
+      "path": "etfs/IFEB.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1009,10 +1009,10 @@
       "error": null
     },
     {
-      "ticker": "DVXV",
+      "ticker": "IFED",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXV.json",
+      "path": "etfs/IFED.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1020,10 +1020,10 @@
       "error": null
     },
     {
-      "ticker": "DVXY",
+      "ticker": "IGLD",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DVXY.json",
+      "path": "etfs/IGLD.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1031,10 +1031,10 @@
       "error": null
     },
     {
-      "ticker": "DWUS",
+      "ticker": "IJAN",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DWUS.json",
+      "path": "etfs/IJAN.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1042,10 +1042,10 @@
       "error": null
     },
     {
-      "ticker": "DZZ",
+      "ticker": "IJUL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/DZZ.json",
+      "path": "etfs/IJUL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1053,10 +1053,10 @@
       "error": null
     },
     {
-      "ticker": "EALT",
+      "ticker": "IJUN",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EALT.json",
+      "path": "etfs/IJUN.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1064,10 +1064,10 @@
       "error": null
     },
     {
-      "ticker": "EAPR",
+      "ticker": "IMAR",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EAPR.json",
+      "path": "etfs/IMAR.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1075,10 +1075,10 @@
       "error": null
     },
     {
-      "ticker": "EBUF",
+      "ticker": "IMAY",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EBUF.json",
+      "path": "etfs/IMAY.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1086,10 +1086,10 @@
       "error": null
     },
     {
-      "ticker": "ECHX",
+      "ticker": "INFH",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ECHX.json",
+      "path": "etfs/INFH.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1097,10 +1097,10 @@
       "error": null
     },
     {
-      "ticker": "EDGQ",
+      "ticker": "INOV",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EDGQ.json",
+      "path": "etfs/INOV.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1108,10 +1108,10 @@
       "error": null
     },
     {
-      "ticker": "EDGX",
+      "ticker": "INYY",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EDGX.json",
+      "path": "etfs/INYY.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1119,10 +1119,10 @@
       "error": null
     },
     {
-      "ticker": "EETH",
+      "ticker": "IOCT",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EETH.json",
+      "path": "etfs/IOCT.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1130,10 +1130,10 @@
       "error": null
     },
     {
-      "ticker": "EHCC",
+      "ticker": "IONC",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EHCC.json",
+      "path": "etfs/IONC.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1141,10 +1141,10 @@
       "error": null
     },
     {
-      "ticker": "EJAN",
+      "ticker": "IOSX",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EJAN.json",
+      "path": "etfs/IOSX.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1152,10 +1152,10 @@
       "error": null
     },
     {
-      "ticker": "EMCS",
+      "ticker": "IREX",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EMCS.json",
+      "path": "etfs/IREX.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1163,10 +1163,10 @@
       "error": null
     },
     {
-      "ticker": "EOCT",
+      "ticker": "IREZ",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/EOCT.json",
+      "path": "etfs/IREZ.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1174,10 +1174,10 @@
       "error": null
     },
     {
-      "ticker": "ESUM",
+      "ticker": "ISEP",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ESUM.json",
+      "path": "etfs/ISEP.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1185,10 +1185,10 @@
       "error": null
     },
     {
-      "ticker": "ETH",
+      "ticker": "IVVW",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ETH.json",
+      "path": "etfs/IVVW.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1196,10 +1196,10 @@
       "error": null
     },
     {
-      "ticker": "ETHA",
+      "ticker": "IWDL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ETHA.json",
+      "path": "etfs/IWDL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
@@ -1207,10 +1207,10 @@
       "error": null
     },
     {
-      "ticker": "ETHB",
+      "ticker": "IWFL",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/ETHB.json",
+      "path": "etfs/IWFL.json",
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
       "provider_response": "HTTP 200 partial contract valid",
