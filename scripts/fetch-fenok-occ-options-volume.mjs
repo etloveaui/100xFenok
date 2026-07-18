@@ -1241,7 +1241,7 @@ function buildOccFreshnessMarker({ candidateDocument, generatedAt }) {
   }
   const sourceAsOf = candidateDocument.current_attempt?.served_source_date;
   const compactSourceDate = typeof sourceAsOf === "string" ? sourceAsOf.replaceAll("-", "") : "";
-  if (candidateDocument.current_attempt?.status !== "ready_current"
+  if (!["ready_current", "degraded_walkback"].includes(candidateDocument.current_attempt?.status)
     || !/^\d{8}$/.test(compactSourceDate)
     || !candidateDocument.rows.some((row) => row?.source_date === compactSourceDate)) {
     throw new Error("OCC freshness marker source date is not bound to this run's ready provider rows");
@@ -1315,11 +1315,24 @@ function buildOccLkgCandidate({ repoRoot: storeRepoRoot, markerPath, candidateDo
   };
 }
 
+// Anchor LKG health to the newest expected US trading date in the candidate
+// window. A holiday target may legitimately walk back to that date; an older
+// fallback means the newest trading date is still unserved and remains a real
+// failure.
 function computeOccLkgOutcome({ dates, currentAttempt, candidateDocument }) {
-  const tradingDates = (dates ?? []).filter((date) => isUsTradingDate(date));
+  const tradingDates = (dates ?? []).filter((date) => isUsTradingDate(date)).sort();
   if (tradingDates.length === 0) return { kind: "expected_absence" };
-  if (currentAttempt?.status === "ready_current" && validOccOutputDocument(candidateDocument)) {
-    return { kind: "success" };
+  const newestTradingDate = tradingDates[tradingDates.length - 1];
+  const servedSourceDate = currentAttempt?.served_source_date;
+  const servedYmd = typeof servedSourceDate === "string" ? servedSourceDate.replaceAll("-", "") : "";
+  const candidateAttempt = candidateDocument?.current_attempt;
+  if (["ready_current", "degraded_walkback"].includes(currentAttempt?.status)
+    && /^\d{8}$/.test(servedYmd)
+    && servedYmd >= newestTradingDate
+    && candidateAttempt?.status === currentAttempt.status
+    && candidateAttempt?.served_source_date === servedSourceDate
+    && validOccOutputDocument(candidateDocument)) {
+    return { kind: "success", sourceAsOf: servedSourceDate, newestTradingDate };
   }
   return { kind: "failure" };
 }
@@ -1403,8 +1416,10 @@ function applyOccLkgStore({
   return { kind: "success", updated: true, recovered, sourceAsOf: candidate.sourceAsOf, exitCode: 0 };
 }
 
-function shouldManageOccLkg({ args, universe }) {
+function shouldManageOccLkg({ args, universe, selectedTickers }) {
   if (args.noWrite || args.noFetch || args.planOnly || args.date || !args.allEligible) return false;
+  const selectedTickerCount = Number(selectedTickers);
+  if (!Number.isInteger(selectedTickerCount) || selectedTickerCount <= 0) return false;
   const batchSize = Number(args.batchSize);
   if (!Number.isInteger(batchSize) || batchSize <= 0) return false;
   return (Number(args.batchIndex) + 1) * batchSize >= Number(universe.eligible_count);
@@ -1425,7 +1440,7 @@ async function build(args, {
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
   const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
-  const manageLkg = shouldManageOccLkg({ args, universe });
+  const manageLkg = shouldManageOccLkg({ args, universe, selectedTickers: tickers.length });
   const run = {
     runId: String(runId),
     runAttempt: Number(runAttempt),

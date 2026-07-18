@@ -117,11 +117,18 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
 {
   const firstBatch = parseArgs(["--all-eligible", "--batch-size", "250", "--batch-index", "0"]);
   const finalBatch = parseArgs(["--all-eligible", "--batch-size", "250", "--batch-index", "3"]);
-  assert.equal(shouldManageOccLkg({ args: firstBatch, universe: { eligible_count: 1000 } }), false);
-  assert.equal(shouldManageOccLkg({ args: finalBatch, universe: { eligible_count: 1000 } }), true);
+  const selectedBatch = { eligible_count: 1000 };
+  assert.equal(shouldManageOccLkg({ args: firstBatch, universe: selectedBatch, selectedTickers: 250 }), false);
+  assert.equal(shouldManageOccLkg({ args: finalBatch, universe: selectedBatch, selectedTickers: 250 }), true);
+  assert.equal(shouldManageOccLkg({
+    args: parseArgs(["--all-eligible", "--batch-size", "250", "--batch-index", "99"]),
+    universe: { eligible_count: 1000 },
+    selectedTickers: 0,
+  }), false, "an out-of-range batch index with zero selected tickers cannot mutate shared recovery state");
   assert.equal(shouldManageOccLkg({
     args: parseArgs(["--all-eligible", "--batch-size", "250", "--batch-index", "3", "--date", "20260716"]),
-    universe: { eligible_count: 1000 },
+    universe: selectedBatch,
+    selectedTickers: 250,
   }), false, "manual date/backfill runs never mutate shared recovery state");
 }
 
@@ -150,7 +157,9 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   }), /source date is not bound to this run's ready provider rows/);
 }
 
-// Holidays/weekends are expected absence and never start a retry cycle.
+// Production-shaped holiday walkback: the holiday target is unavailable, but
+// the newest trading date in the candidate window is served. This is not a
+// failure and must not fabricate a recovery on the next natural run.
 {
   const root = makeRoot("holiday");
   const seedDocument = outputDocument("2026-07-02", "seed-run");
@@ -166,17 +175,95 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   });
   assert.equal(seed.kind, "success");
 
-  const holiday = applyOccLkgStore({
+  const nonTradingOnly = applyOccLkgStore({
     repoRoot: root,
     markerPath: markerPath(root),
     candidateDocument: null,
     dates: ["20260703"],
-    currentAttempt: { ...readyAttempt("2026-07-03", "holiday-run"), status: "unavailable", served_source_date: null },
+    currentAttempt: { ...readyAttempt("2026-07-03", "nontrading-run"), status: "unavailable", served_source_date: null },
+    endpointResults: failureEndpoints,
+    run: naturalRun("nontrading-run", "2026-07-03T11:00:00.000Z"),
+  });
+  assert.equal(nonTradingOnly.kind, "expected_absence");
+  assert.deepEqual(readJson(indexPath(root)).retry_set, []);
+
+  const holidayDocument = outputDocument("2026-07-02", "holiday-run");
+  holidayDocument.current_attempt = {
+    ...holidayDocument.current_attempt,
+    observed_at: "2026-07-03T12:00:00.000Z",
+    target_source_date: "2026-07-03",
+    served_source_date: "2026-07-02",
+    status: "degraded_walkback",
+    fallback_active: true,
+    message: "fixture holiday target served by prior trading-day walkback",
+  };
+  const holiday = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: holidayDocument,
+    dates: ["20260703", "20260702", "20260701"],
+    currentAttempt: holidayDocument.current_attempt,
     endpointResults: failureEndpoints,
     run: naturalRun("holiday-run", "2026-07-03T12:00:00.000Z"),
   });
-  assert.equal(holiday.kind, "expected_absence");
-  assert.deepEqual(readJson(indexPath(root)).retry_set, []);
+  assert.equal(holiday.kind, "not_newer");
+  const holidayState = readJson(indexPath(root));
+  assert.deepEqual(holidayState.retry_set, []);
+  assert.equal(holidayState.items[OCC_LKG_KEY].resolution_state, "fresh_primary");
+  assert.equal(occFreshnessMarkerSourceAsOf(readJson(markerPath(root))), "2026-07-02");
+  assert.deepEqual(projectRecoveryRecoveredSet(holidayState, OCC_LANE_ID), []);
+
+  const nextTradingDocument = outputDocument("2026-07-06", "next-trading-run");
+  const nextTrading = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: nextTradingDocument,
+    dates: ["20260706", "20260705", "20260704", "20260703", "20260702"],
+    currentAttempt: nextTradingDocument.current_attempt,
+    endpointResults: [],
+    run: naturalRun("next-trading-run", "2026-07-06T12:00:00.000Z"),
+  });
+  assert.equal(nextTrading.kind, "success");
+  assert.equal(nextTrading.recovered, false);
+  const nextTradingState = readJson(indexPath(root));
+  assert.deepEqual(nextTradingState.retry_set, []);
+  assert.deepEqual(projectRecoveryRecoveredSet(nextTradingState, OCC_LANE_ID), []);
+}
+
+// A fallback older than the newest trading date remains a real failure.
+{
+  const root = makeRoot("stale-walkback");
+  const seedDocument = outputDocument("2026-07-01", "seed-run");
+  writeCanonical(root, seedDocument);
+  applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: seedDocument,
+    dates: ["20260701"],
+    currentAttempt: seedDocument.current_attempt,
+    endpointResults: [],
+    run: naturalRun("seed-run", "2026-07-01T12:00:00.000Z"),
+  });
+  const staleDocument = outputDocument("2026-07-01", "stale-run");
+  staleDocument.current_attempt = {
+    ...staleDocument.current_attempt,
+    observed_at: "2026-07-03T12:00:00.000Z",
+    target_source_date: "2026-07-03",
+    served_source_date: "2026-07-01",
+    status: "degraded_walkback",
+    fallback_active: true,
+  };
+  const stale = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: staleDocument,
+    dates: ["20260703", "20260702", "20260701"],
+    currentAttempt: staleDocument.current_attempt,
+    endpointResults: failureEndpoints,
+    run: naturalRun("stale-run", "2026-07-03T12:00:00.000Z"),
+  });
+  assert.equal(stale.kind, "failure");
+  assert.deepEqual(stale.retrySet, [OCC_LKG_KEY]);
 }
 
 // Full failure -> retained LKG -> natural provider-bound recovery.
