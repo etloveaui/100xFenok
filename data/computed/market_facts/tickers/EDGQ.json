@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "EDGQ",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-18T18:54:49Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -122,6 +122,28 @@
       ],
       "candidate_count": 2
     },
+    "total_assets": {
+      "value": 8340000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T18:45:18Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 8340000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T18:45:18Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "trailing_pe": {
       "value": 30.890997,
       "source": "yf",
@@ -139,6 +161,31 @@
           "as_of": "2026-07-17",
           "fetched_at": "2026-07-17T23:55:58Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 5.16,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T18:45:18Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 5.16,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T18:45:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -164,9 +211,17 @@
           "fetched_at": "2026-07-17T23:55:58Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -4.2059945224534285,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T18:45:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 7.347957054904872,
@@ -252,25 +307,87 @@
       "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 4,
+    "holdings_updated": "Jul 14, 2026",
+    "top_holdings": [
+      {
+        "symbol": "#QQQM",
+        "name": "Invesco NASDAQ 100 ETF",
+        "weight_pct": 98.65,
+        "shares": 26964,
+        "raw": {
+          "n": "Invesco NASDAQ 100 ETF",
+          "s": "#QQQM",
+          "as": "98.65%",
+          "sh": "26,964"
+        }
+      },
+      {
+        "symbol": "#SCHG",
+        "name": "Schwab U.S. Large-Cap Growth ETF",
+        "weight_pct": 0.99,
+        "shares": 2302,
+        "raw": {
+          "n": "Schwab U.S. Large-Cap Growth ETF",
+          "s": "#SCHG",
+          "as": "0.99%",
+          "sh": "2,302"
+        }
+      },
+      {
+        "name": "Cash",
+        "weight_pct": 0.43,
+        "shares": 34840,
+        "raw": {
+          "n": "Cash",
+          "as": "0.43%",
+          "sh": "34,840"
+        }
+      },
+      {
+        "name": "4qqq 07/17/2026 C725.51",
+        "weight_pct": -0.07,
+        "shares": 24,
+        "raw": {
+          "n": "4qqq 07/17/2026 C725.51",
+          "as": "-0.07%",
+          "sh": "24"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/EDGQ.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/EDGQ.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "EDGX",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-18T18:54:49Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -122,6 +122,28 @@
       ],
       "candidate_count": 2
     },
+    "total_assets": {
+      "value": 5090000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T18:45:39Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 5090000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T18:45:39Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "trailing_pe": {
       "value": 26.707285,
       "source": "yf",
@@ -139,6 +161,31 @@
           "as_of": "2026-07-17",
           "fetched_at": "2026-07-17T23:55:59Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 3.53,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T18:45:39Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3.53,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T18:45:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -164,9 +211,17 @@
           "fetched_at": "2026-07-17T23:55:59Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -0.7076332724724289,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T18:45:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 6.104184043645691,
@@ -252,25 +307,99 @@
       "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 5,
+    "holdings_updated": "Jul 13, 2026",
+    "top_holdings": [
+      {
+        "symbol": "#BKLC",
+        "name": "BNY Mellon US Large Cap Core Equity ETF",
+        "weight_pct": 58.82,
+        "shares": 19621,
+        "raw": {
+          "n": "BNY Mellon US Large Cap Core Equity ETF",
+          "s": "#BKLC",
+          "as": "58.82%",
+          "sh": "19,621"
+        }
+      },
+      {
+        "symbol": "#VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "weight_pct": 20.56,
+        "shares": 1431,
+        "raw": {
+          "n": "Vanguard S&P 500 ETF",
+          "s": "#VOO",
+          "as": "20.56%",
+          "sh": "1,431"
+        }
+      },
+      {
+        "symbol": "#SPYM",
+        "name": "State Street SPDR Portfolio S&P 500 ETF",
+        "weight_pct": 20.41,
+        "shares": 11090,
+        "raw": {
+          "n": "State Street SPDR Portfolio S&P 500 ETF",
+          "s": "#SPYM",
+          "as": "20.41%",
+          "sh": "11,090"
+        }
+      },
+      {
+        "name": "Cash",
+        "weight_pct": 0.27,
+        "shares": 12901,
+        "raw": {
+          "n": "Cash",
+          "as": "0.27%",
+          "sh": "12,901"
+        }
+      },
+      {
+        "name": "4spy 07/17/2026 C754.95",
+        "weight_pct": -0.07,
+        "shares": 16,
+        "raw": {
+          "n": "4spy 07/17/2026 C754.95",
+          "as": "-0.07%",
+          "sh": "16"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/EDGX.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/EDGX.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",

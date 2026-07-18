@@ -1,0 +1,286 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DVSP",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-18T18:40:00Z",
+  "endpoints": {
+    "holdings": "/etf/dvsp/holdings/__data.json",
+    "overview": "/etf/dvsp/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Trs Spdr S&P 500 Etf Trust /Long/",
+        "weight_pct": 89.49,
+        "shares": 1897,
+        "raw": {
+          "n": "Trs Spdr S&P 500 Etf Trust /Long/",
+          "as": "89.49%",
+          "sh": "1,897"
+        }
+      },
+      {
+        "name": "Us Dollars",
+        "weight_pct": 50.47,
+        "shares": 803232,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "50.47%",
+          "sh": "803,232"
+        }
+      },
+      {
+        "name": "State Street® SPDR® S&P 500® ETF",
+        "weight_pct": 43.64,
+        "shares": 925,
+        "raw": {
+          "n": "State Street® SPDR® S&P 500® ETF",
+          "as": "43.64%",
+          "sh": "925"
+        }
+      },
+      {
+        "name": "Trs Spdr S&P 500 Etf Trust /Short/",
+        "weight_pct": -83.6,
+        "shares": 1330406,
+        "raw": {
+          "n": "Trs Spdr S&P 500 Etf Trust /Short/",
+          "as": "-83.60%",
+          "sh": "1,330,406"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$1.46M",
+      "expenseRatio": "0.89%",
+      "sharesOut": "50,000",
+      "dividendYield": "0.26%",
+      "inception": "Dec 16, 2024",
+      "etf_website": "https://www.websinv.com/product_page/dvsp"
+    },
+    "performance": {
+      "tr1m": -1.5822577813275742,
+      "trYTD": 5.478,
+      "tr1y": 20.281,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 9.27
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DVSP",
+        "lastChecked": 1784335447562,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$1.46M",
+      "nav": null,
+      "expenseRatio": "0.89%",
+      "peRatio": null,
+      "sharesOut": "50,000",
+      "dps": "$0.08",
+      "dividendYield": "0.26%",
+      "payoutRatio": null,
+      "exDivDate": "Dec 30, 2025",
+      "ch1y": "+19.95%",
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Dec 16, 2024",
+      "chart": {
+        "expiration": 1784309649777,
+        "data": []
+      },
+      "description": "The WEBs SPY Defined Volatility ETF (DVSP) is an exchange-traded fund that mostly invests in large cap equity. The fund tracks an index that primarily invests in the SPDR S&P 500 ETF (SPY), while alternately allocating between total return swaps and cash positions for a target annual volatility rate of 20%. DVSP was launched on Dec 16, 2024 and is issued by WEBs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Large Blend"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "DVSP"
+        ],
+        [
+          "Provider",
+          "WEBs"
+        ],
+        [
+          "Index Tracked",
+          "Syntax Defined Volatility US Large Cap 500 Index"
+        ]
+      ],
+      "etf_website": "https://www.websinv.com/product_page/dvsp",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Trs Spdr S&P 500 Etf Trust /Long/",
+            "as": "89.49%",
+            "sh": "1,897"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "50.47%",
+            "sh": "803,232"
+          },
+          {
+            "n": "State Street® SPDR® S&P 500® ETF",
+            "as": "43.64%",
+            "sh": "925"
+          },
+          {
+            "n": "Trs Spdr S&P 500 Etf Trust /Short/",
+            "as": "-83.60%",
+            "sh": "1,330,406"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2025-12-30",
+          "amt": 0.07541,
+          "pay": "2026-01-05"
+        }
+      ],
+      "news": {
+        "exp": "1784224133410",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2024/12/17/2998184/0/en/WEBs-Investments-Inc-and-Westwood-Holdings-Group-Launch-Defined-Volatility-ETF-Series-with-Debut-of-DVSP-and-DVQQ.html",
+            "img": "https://cdn.snapi.dev/images/v1/w/b/n/press18-2810151.jpg",
+            "title": "WEBs Investments Inc. and Westwood Holdings Group Launch Defined Volatility℠ ETF Series with Debut of DVSP and DVQQ",
+            "text": "WEBs and Westwood Holdings Group Launch Two New, Innovative ETFs Into the Market that Directly Align with Today's Market Environment and Investors' Needs Created by ETF Pioneer Ben Fulton and Directly...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "$WHG",
+              "#DVQQ"
+            ],
+            "time": "Dec 17, 2024, 8:00 AM EST",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 29.265,
+        "price1m": 29.047,
+        "price3m": 26.641,
+        "price6m": 27.777,
+        "priceYTD": 27.103,
+        "price1y": 23.832,
+        "price5y": null,
+        "priceMAX": 24.908
+      },
+      "performance": {
+        "tr1m": -1.5822577813275742,
+        "trYTD": 5.478,
+        "tr1y": 20.281,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 9.27
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

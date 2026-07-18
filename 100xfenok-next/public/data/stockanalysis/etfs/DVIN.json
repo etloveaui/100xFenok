@@ -1,0 +1,287 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DVIN",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-18T18:38:56Z",
+  "endpoints": {
+    "holdings": "/etf/dvin/holdings/__data.json",
+    "overview": "/etf/dvin/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Trs Industrial Select Sect Spdr /Long/",
+        "weight_pct": 95.07,
+        "shares": 1523,
+        "raw": {
+          "n": "Trs Industrial Select Sect Spdr /Long/",
+          "as": "95.07%",
+          "sh": "1,523"
+        }
+      },
+      {
+        "symbol": "#XLI",
+        "name": "State Street Industrial Select Sector SPDR ETF",
+        "weight_pct": 51.56,
+        "shares": 826,
+        "raw": {
+          "n": "State Street Industrial Select Sector SPDR ETF",
+          "s": "#XLI",
+          "as": "51.56%",
+          "sh": "826"
+        }
+      },
+      {
+        "name": "Us Dollars",
+        "weight_pct": 39.76,
+        "shares": 114750,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "39.76%",
+          "sh": "114,750"
+        }
+      },
+      {
+        "name": "Trs Industrial Select Sect Spdr /Short/",
+        "weight_pct": -86.38,
+        "shares": 249314,
+        "raw": {
+          "n": "Trs Industrial Select Sect Spdr /Short/",
+          "as": "-86.38%",
+          "sh": "249,314"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$303.76K",
+      "expenseRatio": "0.89%",
+      "sharesOut": "10,000",
+      "inception": "Jul 22, 2025",
+      "etf_website": "https://www.websinv.com/product_page/dvin/"
+    },
+    "performance": {
+      "tr1m": -0.26495616509770914,
+      "trYTD": 18.116,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DVIN",
+        "lastChecked": 1784335383276,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$303.76K",
+      "nav": null,
+      "expenseRatio": "0.89%",
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Jul 22, 2025",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The WEBs Industrials XLI Defined Volatility ETF (DVIN) is an exchange-traded fund that is based on the Syntax Defined Volatility XLI index. The fund tracks an index that adjusts exposure, between 0-200% via swaps, to the US large-cap Industrials sector based on recent market volatility. The investment objective is to reduce volatility to a distinct target level and pursue better risk-adjusted sector returns DVIN was launched on Jul 22, 2025 and is issued by WEBs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Industrials"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "DVIN"
+        ],
+        [
+          "Provider",
+          "WEBs"
+        ],
+        [
+          "Index Tracked",
+          "Syntax Defined Volatility XLI Index"
+        ]
+      ],
+      "etf_website": "https://www.websinv.com/product_page/dvin/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Trs Industrial Select Sect Spdr /Long/",
+            "as": "95.07%",
+            "sh": "1,523"
+          },
+          {
+            "n": "State Street Industrial Select Sector SPDR ETF",
+            "s": "#XLI",
+            "as": "51.56%",
+            "sh": "826"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "39.76%",
+            "sh": "114,750"
+          },
+          {
+            "n": "Trs Industrial Select Sect Spdr /Short/",
+            "as": "-86.38%",
+            "sh": "249,314"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784393762492",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2025/07/23/3120166/0/en/WEBs-Investments-Expands-Defined-Volatility-ETF-Suite-with-Launch-of-11-Sector-Funds.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/a/x/press1-3192805.jpg",
+            "title": "WEBs Investments Expands Defined Volatility℠ ETF Suite with Launch of 11 Sector Funds",
+            "text": "PARK CITY, Utah, July 23, 2025 (GLOBE NEWSWIRE) -- WEBs Investments Inc. (WEBs) , an innovator in volatility-managed investment solutions, in partnership with Westwood Holdings Group, Inc. (NYSE: WHG)...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#DVRE",
+              "#DVUT",
+              "#DVXB",
+              "#DVXC",
+              "#DVXE",
+              "#DVXF",
+              "#DVXK"
+            ],
+            "time": "Jul 23, 2025, 8:00 AM EDT",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 30.726,
+        "price1m": 30.307,
+        "price3m": 28.778,
+        "price6m": 28.845,
+        "priceYTD": 25.591,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.864
+      },
+      "performance": {
+        "tr1m": -0.26495616509770914,
+        "trYTD": 18.116,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
