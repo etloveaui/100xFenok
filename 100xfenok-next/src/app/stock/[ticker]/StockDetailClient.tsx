@@ -2527,7 +2527,6 @@ function OwnershipHeroCp({
                   {institutionsFloatPct !== null ? <div className="cpw4-own-tile"><div className="v">{institutionsFloatPct.toFixed(1)}%</div><div className="l">유동주 기준 기관 보유율</div></div> : null}
                   {insidersPct !== null ? <div className="cpw4-own-tile"><div className="v">{insidersPct.toFixed(1)}%</div><div className="l">내부자 보유율</div></div> : null}
                   {institutionsCount !== null ? <div className="cpw4-own-tile"><div className="v">{institutionsCount.toLocaleString()}</div><div className="l">보유 기관 총 수</div></div> : null}
-                  {holderCount > 0 ? <div className="cpw4-own-tile"><div className="v">{holderCount}</div><div className="l">추종 Guru 기관 수</div></div> : null}
                 </div>
               </div>
             </section>
