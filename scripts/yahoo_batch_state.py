@@ -239,14 +239,18 @@ class YahooBatchStateStore:
         attempts.append(row)
         state["attempts"] = attempts[-ATTEMPT_RETENTION:]
 
-    def retry_tickers(self, active_universe: set[str]) -> set[str]:
+    def retry_tickers_ordered(self, active_universe: set[str]) -> list[str]:
         active = set(active_universe)
-        retry = set()
-        for ticker in active:
+        retry = []
+        for ticker in sorted(active):
             state = _read_json(self._state_path(ticker))
             if state and state.get("retry") is True:
-                retry.add(ticker)
-        return retry
+                observed_at = str((state.get("last_attempt") or {}).get("observed_at") or "")
+                retry.append((observed_at, ticker))
+        return [ticker for _observed_at, ticker in sorted(retry)]
+
+    def retry_tickers(self, active_universe: set[str]) -> set[str]:
+        return set(self.retry_tickers_ordered(active_universe))
 
     def bootstrap_existing(
         self,

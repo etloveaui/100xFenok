@@ -581,6 +581,20 @@ const config = {
             sourceSelector: maxArrayFieldSource("/history", "date", "date"),
             assertions: [exactAssertion("source_slickcharts", "/source", "slickcharts"), typeAssertion("history_array", "/history", "array"), minRowsAssertion("history_non_empty", "/history")],
           }),
+          artifact("slickcharts_daily_treasury", "data/slickcharts/treasury.json", {
+            sourceSelector: notApplicableSource(),
+            assertions: [
+              exactAssertion("source_slickcharts", "/source", "slickcharts"),
+              typeAssertion("history_array", "/history", "array"),
+              minRowsAssertion("history_non_empty", "/history"),
+              objectArrayFieldsAssertion("treasury_history_rows", "/history", {
+                fields: { date: "string", count: "number", rates: "array" },
+                min: 1,
+                nonEmptyFields: ["date"],
+                uniqueBy: "date",
+              }),
+            ],
+          }),
         ]),
         member("weekly", ".github/workflows/slickcharts-weekly.yml", ["0 7 * * 0"], [
           artifact("slickcharts_weekly", "data/slickcharts/sp500.json", {

@@ -1,5 +1,5 @@
 # yf Finance Engine v2 — bounded Yahoo Finance depth for the stock lens.
-# Daily measured-stock refresh + weekly bounded ETF catch-up.
+# Daily measured-stock refresh + bounded six-day ETF shard cycle.
 # Output: owned canonical Yahoo data. Update Manifest owns shared/public projections.
 
 name: Fetch YF Finance Data
@@ -8,8 +8,8 @@ on:
   schedule:
     # Weekday measured-stock refresh after US close (KST Tue-Sat 08:20).
     - cron: '20 23 * * 1-5'
-    # 매주 토요일 22:00 UTC (한국 일요일 07:00) — scouter weekly 주기와 정합
-    - cron: '0 22 * * 6'
+    # Sunday-Friday 22:00 UTC: one stable ETF shard per day, all six each week.
+    - cron: '0 22 * * 0-5'
   workflow_dispatch:
     inputs:
       limit:
@@ -140,6 +140,8 @@ jobs:
           INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only || 'false' }}
           INPUT_HISTORY_MIN_ROWS: ${{ github.event.inputs.history_min_rows || '200' }}
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
+          INPUT_RETRY_LIMIT: ''
+          INPUT_STABLE_SHARDS: 'false'
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
@@ -164,8 +166,11 @@ jobs:
               INPUT_STOCKS_ONLY="true"
             else
               DAILY_SHARDS="${YF_WEEKLY_ETF_SHARDS:-6}"
-              DAILY_INDEX=$(( ${GITHUB_RUN_NUMBER:-0} % DAILY_SHARDS ))
+              SCHEDULE_SLOT="$(date -u +%w)"
+              DAILY_INDEX=$(( SCHEDULE_SLOT % DAILY_SHARDS ))
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-140}"
+              INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
+              INPUT_STABLE_SHARDS="true"
               INPUT_SHARD="${YF_WEEKLY_ETF_SHARD:-${DAILY_INDEX}/${DAILY_SHARDS}}"
               INPUT_SLEEP="${YF_WEEKLY_ETF_SLEEP:-1.0}"
               INPUT_TICKER_TIMEOUT="${YF_WEEKLY_ETF_TICKER_TIMEOUT:-90}"
@@ -186,6 +191,8 @@ jobs:
           ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --run-id ${GITHUB_RUN_ID} --run-attempt ${GITHUB_RUN_ATTEMPT}"
           if [ "$EVENT_NAME" = "schedule" ]; then ARGS="$ARGS --natural-run"; fi
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
+          if [ -n "$INPUT_RETRY_LIMIT" ]; then ARGS="$ARGS --retry-limit $INPUT_RETRY_LIMIT"; fi
+          if [ "$INPUT_STABLE_SHARDS" = "true" ]; then ARGS="$ARGS --stable-shards"; fi
           if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
           if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
           if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi

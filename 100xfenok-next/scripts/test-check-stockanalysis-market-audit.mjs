@@ -18,7 +18,10 @@ import {
 } from "./check-stockanalysis-market-audit.mjs";
 import { deriveProductSurfaceStampEvidence } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 import { validateCoverage } from "./check-data-freshness.mjs";
-import { assertProductSurfaceCoverageV2Contract } from "./smoke-stockanalysis-routes.mjs";
+import {
+  assertProductSurfaceCoverageV2Contract,
+  assertStockCandidatePair,
+} from "./smoke-stockanalysis-routes.mjs";
 import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
 
 let passed = 0;
@@ -270,6 +273,53 @@ function coverageFixture(surfaces) {
   assert.ok(errors.some((error) => /source_as_of must be a valid source date/.test(error)), "malformed source date must fail");
   assert.ok(errors.some((error) => /freshness source date is invalid/.test(error)), "malformed freshness date must fail");
   ok("(i) malformed claimed source date -> hard error");
+}
+
+function stockCandidateFixture() {
+  return {
+    stock: {
+      schema_version: "stockanalysis/v1",
+      source: "stockanalysis",
+      asset_type: "stock",
+      ticker: "AAPL",
+      fetched_at: "2026-07-18T00:00:30Z",
+      normalized: {
+        overview: { marketCap: "4T" },
+        financials: { fetched_at: "2026-07-18T00:00:00Z" },
+      },
+    },
+    financials: {
+      schema_version: "stockanalysis/v1",
+      source: "stockanalysis",
+      asset_type: "stock",
+      ticker: "AAPL",
+      fetched_at: "2026-07-18T00:00:00Z",
+      statements: {
+        annual: { income: { rows: [{}] } },
+        quarterly: { income: { rows: [{}] } },
+      },
+    },
+  };
+}
+
+// (k) The live overview and financial candidate must be one coherent producer pair.
+{
+  const fixture = stockCandidateFixture();
+  assert.doesNotThrow(() => assertStockCandidatePair(fixture.stock, fixture.financials, "AAPL", "2026-07-18T01:00:00Z"));
+  const mismatched = structuredClone(fixture);
+  mismatched.stock.normalized.financials.fetched_at = "2026-07-17T00:00:00Z";
+  assert.throws(
+    () => assertStockCandidatePair(mismatched.stock, mismatched.financials, "AAPL", "2026-07-18T01:00:00Z"),
+    /financial freshness mismatch/,
+  );
+  const future = structuredClone(fixture);
+  future.financials.fetched_at = "2026-07-19T00:00:00Z";
+  future.stock.normalized.financials.fetched_at = future.financials.fetched_at;
+  assert.throws(
+    () => assertStockCandidatePair(future.stock, future.financials, "AAPL", "2026-07-18T01:00:00Z"),
+    /cannot be in the future/,
+  );
+  ok("(k) stock overview + financial candidate -> coherent live freshness pair");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

@@ -435,7 +435,12 @@ function runConfigAndFixtureChecks() {
   assert.equal(Object.isFrozen(DATA_SUPPLY_DETECTION_CONFIG), true);
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, 18);
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 22);
-  assert.deepEqual(DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts").producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
+  const slickcharts = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts");
+  assert.deepEqual(slickcharts.producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
+  assert.deepEqual(
+    slickcharts.producer_members.find((item) => item.id === "daily").artifact_contracts.map((item) => item.id),
+    ["slickcharts_daily", "slickcharts_daily_treasury"],
+  );
   const treasuryTga = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "treasury_tga");
   const fredYardeni = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_yardeni");
   const liveLaneIds = DATA_SUPPLY_DETECTION_CONFIG.lanes
@@ -825,6 +830,13 @@ function runCompositeSourceFoldChecks() {
   assert.equal(readySlick.status, "ready");
   assert.equal(readySlick.artifact.source_as_of, "2026-06-15");
   assert.equal(readySlick.artifact.age, symbolsMember.artifact.age);
+
+  const missingTreasuryRoot = materializeArtifacts("all_valid");
+  fs.unlinkSync(path.join(missingTreasuryRoot.raw, "data", "slickcharts", "treasury.json"));
+  const missingTreasuryReport = buildDetectionReport({ artifactRoot: missingTreasuryRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+  const missingTreasuryDaily = lane(missingTreasuryReport, "slickcharts").members.find((member) => member.id === "daily");
+  assert.equal(missingTreasuryDaily.reason, "missing_artifact");
+  assert.equal(missingTreasuryReport.producer_member_count, 22);
 
   const staleRoot = materializeArtifacts("all_valid");
   const dailyPath = path.join(staleRoot.raw, "data", "slickcharts", "gainers.json");
@@ -1338,7 +1350,7 @@ function runCliReproduction(artifactRoot) {
           const identity = row?.[assertion.unique_by];
           const normalized = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
           if (!row || Array.isArray(row) || typeof row !== "object"
-            || Object.entries(assertion.fields).some(([field, type]) => typeof row[field] !== type)
+            || Object.entries(assertion.fields).some(([field, type]) => (Array.isArray(row[field]) ? "array" : typeof row[field]) !== type)
             || assertion.non_empty_fields.some((field) => row[field].trim() === "") || unique.has(normalized)) return false;
           unique.add(normalized);
           return true;

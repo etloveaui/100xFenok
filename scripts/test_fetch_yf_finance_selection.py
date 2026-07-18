@@ -1499,6 +1499,66 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertNotIn("AAPL", shard_one)
         self.assertEqual(weekly[0], "AAPL")
 
+    def test_weekly_stable_shards_survive_gap_removal(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(240)]
+        assignments = {}
+        for shard_index in range(6):
+            selected = self.fetcher.select_ticker_plan(
+                tickers,
+                [],
+                shard=f"{shard_index}/6",
+                stable_shards=True,
+            )
+            for ticker in selected:
+                self.assertNotIn(ticker, assignments)
+                assignments[ticker] = shard_index
+        self.assertEqual(set(assignments), set(tickers))
+
+        remaining = tickers[37:]
+        for shard_index in range(6):
+            selected = self.fetcher.select_ticker_plan(
+                remaining,
+                [],
+                shard=f"{shard_index}/6",
+                stable_shards=True,
+            )
+            self.assertTrue(all(assignments[ticker] == shard_index for ticker in selected))
+
+    def test_weekly_budget_reserves_retry_and_regular_capacity(self) -> None:
+        retries = [f"RETRY{i:04d}" for i in range(200)]
+        regular = [f"ETF{i:04d}" for i in range(200)]
+        selected = self.fetcher.select_ticker_plan(
+            [*retries, *regular],
+            retries,
+            natural=True,
+            retry_limit=40,
+        )[:140]
+        self.assertEqual(selected[:40], retries[:40])
+        self.assertEqual(len([ticker for ticker in selected if ticker in regular]), 100)
+        self.assertEqual(len(selected), 140)
+
+    def test_retry_queue_is_oldest_attempt_first(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        for ticker, observed_at in [
+            ("NEWEST", "2026-07-18T00:00:00Z"),
+            ("OLDEST", "2026-07-16T00:00:00Z"),
+            ("MIDDLE", "2026-07-17T00:00:00Z"),
+        ]:
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "retry": True,
+                "last_attempt": {"observed_at": observed_at},
+                "attempts": [],
+            })
+        self.assertEqual(
+            store.retry_tickers_ordered({"NEWEST", "OLDEST", "MIDDLE"}),
+            ["OLDEST", "MIDDLE", "NEWEST"],
+        )
+
     def test_controlled_failure_scope_is_manual_targeted_and_stateful_only(self) -> None:
         self.fetcher.validate_controlled_failure_scope(
             {"AAPL"}, ["AAPL"], event_name="workflow_dispatch", record_batch_state=True,
@@ -1624,7 +1684,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         source = FETCH_PATH.read_text(encoding="utf-8")
         self.assertLess(
             source.index("state_store.bootstrap_existing("),
-            source.index("retry_tickers = state_store.retry_tickers"),
+            source.index("retry_queue = state_store.retry_tickers_ordered"),
             "stale classification must enter the retry set before natural-run selection",
         )
 
@@ -1940,6 +2000,13 @@ assert callable(namespace["load_universe"])
         self.assertIn("--run-id", run_step)
         self.assertIn("--natural-run", run_step)
         self.assertIn("--all-shards-run", run_step)
+        self.assertIn("0 22 * * 0-5", workflow)
+        self.assertIn('SCHEDULE_SLOT="$(date -u +%w)"', run_step)
+        self.assertIn("DAILY_INDEX=$(( SCHEDULE_SLOT % DAILY_SHARDS ))", run_step)
+        self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
+        self.assertIn("--retry-limit", run_step)
+        self.assertIn("--stable-shards", run_step)
+        self.assertNotIn("GITHUB_RUN_NUMBER", run_step)
         self.assertIn("controlled_failure_tickers", workflow)
         self.assertIn("--controlled-failure-tickers", run_step)
         self.assertIn("steps.fetch_batch.outcome == 'failure'", failure_dispatch)

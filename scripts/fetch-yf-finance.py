@@ -1161,14 +1161,47 @@ def load_universe(stocks_only=False, stockanalysis_etfs=False):
     return sort_universe(sources, stockanalysis_etfs=stockanalysis_etfs)
 
 
-def select_ticker_plan(tickers, retry_tickers, *, shard="", natural=False, all_shards=False):
-    retry = sorted(set(tickers) & set(retry_tickers)) if natural else []
-    regular = [ticker for ticker in tickers if ticker not in retry]
+def stable_shard_index(ticker, shard_count):
+    if shard_count <= 0:
+        raise ValueError("shard count must be positive")
+    digest = hashlib.sha256(ticker.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % shard_count
+
+
+def select_ticker_plan(
+    tickers,
+    retry_tickers,
+    *,
+    shard="",
+    natural=False,
+    all_shards=False,
+    retry_limit=None,
+    stable_shards=False,
+):
+    ticker_set = set(tickers)
+    retry_order = (
+        sorted(retry_tickers)
+        if isinstance(retry_tickers, (set, frozenset))
+        else list(dict.fromkeys(retry_tickers))
+    )
+    retry = [ticker for ticker in retry_order if ticker in ticker_set] if natural else []
+    retry_set = set(retry)
+    regular = [ticker for ticker in tickers if ticker not in retry_set]
     shard_index = None
     if shard:
         shard_index, shard_count = (int(value) for value in shard.split("/"))
-        regular = regular[shard_index::shard_count]
+        if shard_index < 0 or shard_index >= shard_count:
+            raise ValueError("shard index must be within shard count")
+        regular = (
+            [ticker for ticker in regular if stable_shard_index(ticker, shard_count) == shard_index]
+            if stable_shards
+            else regular[shard_index::shard_count]
+        )
     claim_retry = natural and (not all_shards or shard_index in {None, 0})
+    if retry_limit is not None:
+        if retry_limit < 0:
+            raise ValueError("retry limit must be non-negative")
+        retry = retry[:retry_limit]
     return [*(retry if claim_retry else []), *regular]
 
 
@@ -1528,7 +1561,9 @@ def plan_summary(args, tickers, candidate_count):
         "history_min_rows": args.history_min_rows,
         "merge_existing": args.merge_existing,
         "limit": args.limit,
+        "retry_limit": args.retry_limit,
         "shard": args.shard,
+        "stable_shards": args.stable_shards,
         "tickers_override": bool(args.tickers),
         "sample_size": args.plan_sample_size,
         "sample": tickers[: args.plan_sample_size],
@@ -1589,7 +1624,9 @@ def existing_yahoo_source_dates(active_universe):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--retry-limit", type=int, default=None, help="reserve the remaining total limit for regular candidates after this many natural retries")
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
+    parser.add_argument("--stable-shards", action="store_true", help="assign regular tickers by stable digest instead of list position")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
@@ -1618,6 +1655,8 @@ def main():
     try:
         retries = validate_retry_count(args.retries)
         explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
+        if args.retry_limit is not None and args.retry_limit < 0:
+            raise ValueError("retry limit must be non-negative")
     except ValueError as exc:
         parser.error(str(exc))
     controlled_failures = {
@@ -1671,17 +1710,21 @@ def main():
             source_age_business_days=freshness["ages"],
             max_source_business_days=freshness["max_source_business_days"],
         )
-    retry_tickers = state_store.retry_tickers(active_universe) if state_store and args.natural_run else set()
+    retry_queue = state_store.retry_tickers_ordered(active_universe) if state_store and args.natural_run else []
+    retry_tickers = set(retry_queue)
     regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
     if args.history_gaps_only:
         regular_tickers = filter_history_gaps(regular_tickers, args.history_min_rows)
-    planned_tickers = [*sorted(set(tickers) & retry_tickers), *regular_tickers]
+    selected_universe = set(tickers)
+    planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
     tickers = select_ticker_plan(
         planned_tickers,
-        retry_tickers,
+        retry_queue,
         shard=args.shard,
         natural=args.natural_run,
         all_shards=args.all_shards_run,
+        retry_limit=args.retry_limit,
+        stable_shards=args.stable_shards,
     )
     if args.limit:
         tickers = tickers[: args.limit]

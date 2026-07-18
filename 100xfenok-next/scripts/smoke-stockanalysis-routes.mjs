@@ -89,6 +89,52 @@ function checkedSourceDay(value, label) {
   return day;
 }
 
+function checkedSourceTimestamp(value, label, nowIso = new Date().toISOString()) {
+  assert(nonEmptyString(value), `${label} must be a real source timestamp`);
+  const timestamp = new Date(value);
+  const now = new Date(nowIso);
+  assert(Number.isFinite(timestamp.getTime()), `${label} must be a real source timestamp`);
+  assert(Number.isFinite(now.getTime()), `${label} comparison clock is invalid`);
+  assert(timestamp.getTime() <= now.getTime(), `${label} cannot be in the future: ${value}`);
+  return timestamp;
+}
+
+export function assertStockCandidatePair(stock, financials, ticker, nowIso = new Date().toISOString()) {
+  for (const [payload, label] of [[stock, "stock overview"], [financials, "stock financials"]]) {
+    assert(payload?.schema_version === "stockanalysis/v1", `${label} schema_version mismatch`);
+    assert(payload?.source === "stockanalysis", `${label} source mismatch`);
+    assert(payload?.asset_type === "stock", `${label} asset_type mismatch`);
+    assert(payload?.ticker === ticker, `${label} ticker mismatch: expected ${ticker}, got ${payload?.ticker}`);
+  }
+  assert(
+    stock?.normalized?.overview && typeof stock.normalized.overview === "object"
+      && !Array.isArray(stock.normalized.overview) && Object.keys(stock.normalized.overview).length > 0,
+    "stock overview normalized.overview must be a non-empty object",
+  );
+  const stockFetchedAt = checkedSourceTimestamp(stock?.fetched_at, "stock overview fetched_at", nowIso);
+  const financialFetchedAt = checkedSourceTimestamp(financials?.fetched_at, "stock financials fetched_at", nowIso);
+  assert(
+    stock?.normalized?.financials?.fetched_at === financials?.fetched_at,
+    `financial freshness mismatch: overview reference ${stock?.normalized?.financials?.fetched_at} != financial payload ${financials?.fetched_at}`,
+  );
+  assert(
+    Math.abs(stockFetchedAt.getTime() - financialFetchedAt.getTime()) <= 5 * 60 * 1000,
+    "stock overview and financial candidate were not collected within five minutes",
+  );
+  for (const period of ["annual", "quarterly"]) {
+    const statements = financials?.statements?.[period];
+    assert(
+      statements && typeof statements === "object" && !Array.isArray(statements) && Object.keys(statements).length > 0,
+      `stock financials ${period} statements must be a non-empty object`,
+    );
+  }
+  return {
+    ticker,
+    stock_fetched_at: stock.fetched_at,
+    financials_fetched_at: financials.fetched_at,
+  };
+}
+
 function producerSourceDay(value, label) {
   if (!hasValue(value)) {
     degrade(false, `${label} is degraded: producer source evidence is missing.`);
@@ -510,6 +556,15 @@ async function checkEtfSnapshot(root) {
   return { ...counts, sourceTotals, classifiedNewEtfs: classifiedNewEtfs.length };
 }
 
+async function checkStockCandidatePair(root, ticker = "AAPL") {
+  const encoded = encodeURIComponent(ticker);
+  const [stock, financials] = await Promise.all([
+    fetchJson(`${root}/api/data/stockanalysis/stocks/${encoded}`),
+    fetchJson(`${root}/api/data/stockanalysis/financials/${encoded}`),
+  ]);
+  return assertStockCandidatePair(stock, financials, ticker);
+}
+
 async function checkEtfUniverse(root) {
   const payload = await fetchJson(`${root}/api/data/stockanalysis/etf-universe`);
   assert(payload?.asset_type === "etf_universe", `ETF universe asset_type mismatch: ${payload?.asset_type}`);
@@ -791,6 +846,7 @@ async function main() {
   const root = baseUrl();
   const bundle = await checkBundleIdentity(root);
   const freshness = await checkProductSurfaceFreshness(root);
+  const stockCandidate = await checkStockCandidatePair(root);
   const pages = [];
   for (const route of PAGE_ROUTES) pages.push(await checkPage(root, route));
   const snapshot = await checkEtfSnapshot(root);
@@ -811,6 +867,7 @@ async function main() {
     base_url: root,
     bundle,
     freshness,
+    stockCandidate,
     pages,
     snapshot,
     universe,
