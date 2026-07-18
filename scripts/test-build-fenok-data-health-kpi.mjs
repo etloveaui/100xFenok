@@ -1610,6 +1610,53 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("Treasury TGA retained-LKG retry is loaded and source-bound in private/public KPI evidence");
 }
 
+// DefiLlama uses the same generic recovery state and must not be omitted from
+// the builder's recovery-state reader list.
+{
+  const now = "2026-07-18T06:10:00.000Z";
+  const tmp = mkTmp("defillama-lkg-retry");
+  const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  writeJson(path.join(tmp, "data", "admin", "defillama_stablecoins", "index.json"), {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "defillama_stablecoins",
+    updated_at: now,
+    retry_set: ["stablecoins"],
+    items: {
+      stablecoins: {
+        key: "stablecoins",
+        resolution_state: "lkg_primary",
+        retry: true,
+        current: {
+          path: "data/admin/defillama_stablecoins/lkg/stablecoins.json",
+          payload_sha256: "d".repeat(64),
+          source_as_of: "2026-07-17",
+        },
+        lkg: {
+          path: "data/admin/defillama_stablecoins/lkg/stablecoins.json",
+          payload_sha256: "d".repeat(64),
+          source_as_of: "2026-07-17",
+        },
+        latest_failure: {
+          run_id: "defillama-chaos-1",
+          run_attempt: 1,
+          observed_at: now,
+          reason: "controlled_failure",
+        },
+        updated_at: now,
+      },
+    },
+  });
+  const { root, public: pub } = runBuilder(tmp, {}, now);
+  const defillamaLane = root.lanes.find((item) => item.id === "defillama_stablecoins");
+  assert.equal(defillamaLane.status, "degraded");
+  assert.match(defillamaLane.checks.find((item) => item.id === "lkg_retry_set_empty")?.detail,
+    /stablecoins.*defillama-chaos-1/i);
+  assert.deepEqual(pub.lanes.find((item) => item.id === "defillama_stablecoins")?.details?.recovery_retry_set,
+    defillamaLane.details.recovery_retry_set);
+  ok("DefiLlama retained-LKG retry is loaded into private and public KPI evidence");
+}
+
 {
   const now = "2026-07-16T06:10:00.000Z";
   const tmp = mkTmp("treasury-tga-natural-recovery");
