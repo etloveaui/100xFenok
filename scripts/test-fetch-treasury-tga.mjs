@@ -498,8 +498,23 @@ async function seededFailure({
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
   fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
   const currentBytes = `${JSON.stringify(validDocument({ sourceDate: "2026-07-11" }), null, 2)}\n`;
+  await runTreasuryTga({
+    ...paths,
+    repoRoot: root,
+    request: async (_url, accountType) => response(200, rowsFor(accountType)),
+    observedAt: OBSERVED_AT,
+    attemptId: `${ATTEMPT_ID}-seed-state`,
+    runId: "seed-current-state",
+    runAttempt: 1,
+    eventName: "schedule",
+  });
+  // Reproduce origin/main after the producer code landed: state is already
+  // fresh_primary for this source, while canonical/public bytes are legacy.
   fs.writeFileSync(paths.canonicalPath, currentBytes);
   fs.writeFileSync(paths.publicPath, currentBytes);
+  // Production-shaped migration: the natural workflow may observe the same
+  // provider source date as the tracked legacy payload.  Same-source must not
+  // short-circuit until the bounded-persistence envelope has been emitted.
   const equal = await runTreasuryTga({
     ...paths,
     repoRoot: root,
@@ -510,10 +525,14 @@ async function seededFailure({
     runAttempt: 1,
     eventName: "schedule",
   });
-  assert.equal(equal.reason, "unchanged_source");
-  assert.equal(equal.updated, false);
-  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), currentBytes);
+  assert.equal(equal.reason, "ok");
+  assert.equal(equal.updated, true);
+  const migrated = readJson(paths.canonicalPath);
+  assert.deepEqual(migrated.persistence_policy, TGA_PERSISTENCE_POLICY);
+  assert.equal(migrated.persistence_state.retained_series_days, 1);
+  assert.deepEqual(readJson(paths.publicPath), migrated);
   assert.equal(readJson(paths.statePath).items.tga.current.source_as_of, "2026-07-11");
+  const migratedBytes = fs.readFileSync(paths.canonicalPath, "utf8");
 
   const regression = await runTreasuryTga({
     ...paths,
@@ -530,8 +549,8 @@ async function seededFailure({
   assert.equal(regression.reason, "source_regression");
   assert.equal(regression.degraded, true);
   assert.equal(regression.exitCode, 0);
-  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), currentBytes);
-  assert.equal(fs.readFileSync(paths.lkgPath, "utf8"), currentBytes);
+  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), migratedBytes);
+  assert.equal(fs.readFileSync(paths.lkgPath, "utf8"), migratedBytes);
 }
 
 {

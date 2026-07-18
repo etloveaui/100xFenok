@@ -557,7 +557,11 @@ export async function runTreasuryTga({
         ...outcome,
       };
     }
-    if (candidateEpoch === currentEpoch) {
+    const currentHasPersistenceEnvelope = Object.prototype.hasOwnProperty.call(
+      currentCanonical.document,
+      "persistence_policy",
+    ) && Object.prototype.hasOwnProperty.call(currentCanonical.document, "persistence_state");
+    if (candidateEpoch === currentEpoch && currentHasPersistenceEnvelope) {
       if (!recoveryState.items[LKG_KEY]) {
         lkgStore.recordSuccess({
           artifacts: [{ ...candidate, payloadBytes: currentCanonical.bytes, sourceAsOf: currentSourceAsOf }],
