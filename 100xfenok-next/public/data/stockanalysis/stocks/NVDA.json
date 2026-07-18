@@ -3,72 +3,72 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "NVDA",
-  "fetched_at": "2026-07-08T22:45:27Z",
+  "source_as_of": "2026-07-17T20:00:00Z",
+  "fetched_at": "2026-07-18T22:56:29Z",
   "endpoints": {
-    "overview": "/api/symbol/s/NVDA/overview",
+    "overview": "/stocks/nvda/__data.json",
     "history": "/api/symbol/s/NVDA/history?range=1Y&period=Monthly",
     "quote": "/api/quotes/s/NVDA"
   },
   "normalized": {
     "overview": {
-      "marketCap": "4.87T",
+      "marketCap": "4.91T",
       "revenue": "253.49B",
       "revenue_type": "ttm",
       "netIncome": "159.61B",
       "sharesOut": "24.22B",
       "eps": "6.53",
-      "peRatio": "31.26",
-      "forwardPE": "20.54",
-      "dividend": "$1.00 (0.50%)",
+      "peRatio": "31.06",
+      "forwardPE": "20.34",
+      "dividend": "$1.00 (0.49%)",
       "beta": "2.21",
       "analysts": "Strong Buy",
-      "target": "301.62 (+50.05%)",
+      "target": "301.62 (+48.72%)",
       "earningsDate": "Aug 26, 2026"
     },
     "quote": {
-      "p": 201.01,
-      "pd": 201.01,
-      "c": 4.08,
-      "cp": 2.07,
-      "cl": 196.93,
-      "cdr": 1,
-      "o": 195.18,
-      "h": 201.2,
-      "l": 195.06,
-      "v": 74640554,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 236.54,
-      "l52": 158.39,
+      "c": -4.59,
+      "e": true,
+      "h": 206.65,
+      "l": 197.97,
+      "o": 202.64,
+      "p": 202.81,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 144255421,
+      "cl": 207.4,
+      "cp": -2.21,
+      "ec": -0.32,
+      "ep": 202.4887,
+      "es": "After-hours",
+      "eu": "Jul 17, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 202.69,
-      "epd": 202.69,
-      "ec": 1.68,
-      "ecp": 0.84,
-      "eu": "Jul 8, 2026, 6:45 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550724071.2874,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 202.81,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": -0.16,
+      "epd": 202.49,
+      "etd": "2026-07-17",
+      "ets": 1784332798884.7305,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 236.54,
+      "l52": 164.07,
+      "uid": "NVDA",
       "days": 0,
-      "exp": 1783550731277,
-      "symbol": "NVDA",
-      "uid": "NVDA"
+      "symbol": "NVDA"
     },
     "history": [
       {
         "t": "2026-07-01",
         "o": 196.2,
-        "h": 205.16,
+        "h": 213.81,
         "l": 191.14,
-        "c": 204.12,
-        "a": 204.12,
-        "v": 667348116,
-        "ch": 2.01
+        "c": 202.81,
+        "a": 202.81,
+        "v": 1580812366,
+        "ch": 1.36
       },
       {
         "t": "2026-06-01",
@@ -183,7 +183,7 @@
     ],
     "financials": {
       "path": "financials/NVDA.json",
-      "fetched_at": "2026-07-08T22:45:26Z",
+      "fetched_at": "2026-07-18T22:56:28Z",
       "role": "financial statement cross-check candidate; not valuation SSOT",
       "summary": {
         "annual": {
@@ -236,19 +236,49 @@
   "financials_path": "financials/NVDA.json",
   "raw": {
     "overview": {
-      "marketCap": "4.87T",
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "NVDA",
+        "lastChecked": 1784334681701,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "4.91T",
+      "marketCapGrowth": 17.475769542893,
       "revenue": "253.49B",
       "revenue_type": "ttm",
+      "revenueGrowth": 70.684,
       "netIncome": "159.61B",
+      "netIncomeGrowth": 107.9,
       "sharesOut": "24.22B",
       "eps": "6.53",
-      "peRatio": "31.26",
-      "forwardPE": "20.54",
-      "dividend": "$1.00 (0.50%)",
+      "epsGrowth": 110.585,
+      "peRatio": "31.06",
+      "forwardPE": "20.34",
+      "dividend": "$1.00 (0.49%)",
       "exDividendDate": "Jun 4, 2026",
       "beta": "2.21",
       "analysts": "Strong Buy",
-      "target": "301.62 (+50.05%)",
+      "target": "301.62 (+48.72%)",
       "earningsDate": "Aug 26, 2026",
       "description": "NVIDIA Corporation operates as a data center scale AI infrastructure company in the United States, Taiwan, China, Hong Kong, Europe, and internationally. It operates through Compute & Networking, and Graphics segments. The Compute & Networking segment provides data center accelerated computing and networking platforms and artificial intelligence solutions and software, and automotive platforms and autonomous and electric vehicle solutions, including software. The Graphics segment offers GeForce GPUs for gaming and PCs; Quadro/NVIDIA RTX GPUs fo...",
       "infoTable": [
@@ -323,10 +353,10 @@
           "earningsGrowth": 64.74600000000001
         }
       ],
-      "analystIntro": "According to 61 analysts, the average rating for NVDA stock is \"Strong Buy.\" The 12-month stock price target is $301.62, which is an increase of 50.05% from the latest price.",
+      "analystIntro": "According to 61 analysts, the average rating for NVDA stock is \"Strong Buy.\" The 12-month stock price target is $301.62, which is an increase of 48.72% from the latest price.",
       "analystTarget": {
         "target": "$301.62",
-        "change": "50.05%",
+        "change": "48.72%",
         "changeWord": "upside"
       },
       "analystChart": {
@@ -337,206 +367,167 @@
         "strongSell": 1
       },
       "news": {
-        "exp": "1783550966159",
+        "exp": "1784417254673",
         "data": [
           {
-            "url": "https://www.tipranks.com/news/bofa-says-buy-nvidia-nvda-stock-calls-it-a-unique-durable-growth-franchise",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2796150623-750x406.jpg",
-            "title": "BofA Says Buy Nvidia (NVDA) Stock, Calls It a ‘Unique, Durable Growth Franchise’",
-            "text": "Nvidia ($NVDA) stock has risen only 10% year-to-date, underperforming other chip stocks like Advanced Micro Devices ($AMD), Intel ($INTC), and Micron Technology ($MU), which have risen 141%, 193%, and...",
+            "url": "https://www.forbes.com/sites/michaelfoster/2026/07/18/this-cef-holds-the-biggest-bargains-in-tech-pays-74/",
+            "img": "https://cdn.snapi.dev/images/v1/t/g/m/this-cef-holds-the-biggest-bar-3809016.jpg",
+            "title": "This CEF Holds The Biggest Bargains In Tech, Pays 7.4%",
+            "text": "One of our favorite tech-focused closed-end funds (CEFs) is showing a pattern we love to see. What I'm going to show you below is one of my favorite setups for future gains for us, while we collect st...",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": [
+              "$AMAT",
+              "$AMD",
+              "$ASML",
+              "$AVGO",
+              "$BTX",
+              "$INTC",
+              "$LITE"
+            ],
+            "time": "Jul 18, 2026, 9:25 AM EDT",
+            "ago": "9 hours ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/07/18/nvidia-micron-lead-4-cash-rich-stocks-with-rising-profit-forecasts/",
+            "img": "https://cdn.snapi.dev/images/v1/y/z/d/semi14-3808907.jpg",
+            "title": "Nvidia, Micron lead 4 cash-rich stocks with rising profit forecasts",
+            "text": "Some of Wall Street's fastest-growing companies are turning expansion into something more tangible: cash. Nvidia, Micron Technology, CrowdStrike and Palo Alto Networks have each reported sharp increas...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$MU",
+              "$CRWD",
+              "$PANW"
+            ],
+            "time": "Jul 18, 2026, 5:30 AM EDT",
+            "ago": "13 hours ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/07/17/leather-jacket-worn-by-nvidia-ceo-goes-for-just-under-1-million-at-sothebys-auction-.html",
+            "img": "https://cdn.snapi.dev/images/v1/c/h/b/nvd40-3606112-3808784.jpg",
+            "title": "Leather jacket worn by Nvidia CEO goes for just under $1 million at Sotheby's auction",
+            "text": "Nvidia CEO Jensen Huang is rarely seen without his leather jacket. It's his signature look.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 17, 2026, 7:18 PM EDT",
+            "ago": "23 hours ago"
+          },
+          {
+            "url": "https://nypost.com/2026/07/17/business/apple-races-past-nvidia-to-reclaim-crown-as-worlds-most-valuable-company/",
+            "img": "https://cdn.snapi.dev/images/v1/r/7/u/computer-electronic3-3807926.jpg",
+            "title": "Apple races past Nvidia to reclaim crown as world's most valuable company",
+            "text": "Apple is reclaiming the top spot for the first time since April last year.",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": [
+              "$AAPL"
+            ],
+            "time": "Jul 17, 2026, 11:12 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/nvidia-stock-price-apple-market-cap-2dc42669",
+            "img": "https://cdn.snapi.dev/images/v1/l/e/s/computer-electronic28-3807880.jpg",
+            "title": "Nvidia Could Lose Its Crown to Apple. It Can Still Be a Chip-Stock Champion",
+            "text": "Nvidia stock is under pressure with Apple set to surpass it as the world's largest company.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:54 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/apple-stock-briefly-grabs-top-financial-spot-from-nvidia-as-iphone-sales-power-stock-surge",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2177974405-750x406.jpg",
+            "title": "Apple Briefly Grabs Top Financial Spot From Nvidia as iPhone Sales Power AAPL Stock Surge",
+            "text": "Apple ($AAPL) briefly took over the crown as the world’s most valuable public company on Friday morning. In the early hours of trading, Apple’s total value touched $4.92 trillion, sliding…",
             "source": "TipRanks",
             "type": "Article",
             "tickers": [
               "$AAPL",
               "$AMD",
-              "$AMZN",
-              "$GOOGL",
-              "$INTC",
-              "$META",
-              "$MSFT"
+              "$AVGO",
+              "$GOOGL"
             ],
-            "time": "2026-07-08T20:04:28.000Z",
-            "ago": "2 hours ago"
+            "time": "2026-07-17T13:51:41.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.marketwatch.com/story/nvidias-stock-trades-at-a-juicy-discount-according-to-bofa-93f46d19",
-            "img": "https://cdn.snapi.dev/images/v1/v/t/c/nvd19-3608232-3792092.jpg",
-            "title": "Nvidia's stock trades at a juicy discount, according to BofA",
-            "text": "An analyst recommends investors take advantage of the “enhanced” buying opportunity brought upon by sustained underperformance.",
-            "source": "Market Watch",
-            "type": "Article",
-            "time": "Jul 8, 2026, 3:36 PM EDT",
-            "ago": "3 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/nvidia-nvda-stock-jumps-as-h200-chips-could-re-enter-china-under-strict-limits",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2681314113-750x406.jpg",
-            "title": "Nvidia (NVDA) Stock Jumps as H200 Chips Could Re-Enter China Under Strict Limits",
-            "text": "Nvidia ($NVDA) shares are up today amid news that it could soon see a small boost in China. This comes as Beijing is reportedly getting closer to allowing major AI…",
-            "source": "TipRanks",
-            "type": "Article",
-            "time": "2026-07-08T17:54:19.000Z",
-            "ago": "4 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/amd-stock-dips-as-rival-nvidia-nvda-gains-another-customer-for-its-vera-ai-cpus",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/amdstock-4-768x432.jpg",
-            "title": "AMD Stock Dips as Rival Nvidia (NVDA) Gains Another Customer for Its Vera AI CPUs",
-            "text": "AMD stock fell on Wednesday after one of its largest rivals revealed a new AI CPU deal.",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$AMD"
-            ],
-            "time": "2026-07-08T17:12:22.000Z",
-            "ago": "5 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/nvidia-or-sandisk-one-ai-chip-stock-is-a-buy-the-other-is-a-risky-bet-says-investor",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/NVDA-SNDK-0708-750x406.jpg",
-            "title": "Nvidia or Sandisk: One AI Chip Stock Is a Buy, the Other Is a Risky Bet, Says Investor",
-            "text": "Nvidia (NASDAQ:NVDA) might still be the biggest semiconductor name around, but over the past year, investors have been far better rewarded by looking beyond the mega-cap leader and into smaller…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$SNDK"
-            ],
-            "time": "2026-07-08T17:07:39.000Z",
-            "ago": "5 hours ago"
-          },
-          {
-            "url": "FNRGijFJgfE",
-            "img": "https://cdn.snapi.dev/images/v1/p/r/8/broadc15-2478872-2482662-26929-3791615.jpg",
-            "title": "2 Cheap Stocks to Buy in July",
-            "text": "The stocks of these wide-moat companies look like bargains today.",
-            "source": "Morningstar",
-            "type": "Video",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 11:50 AM EDT",
-            "ago": "6 hours ago"
-          },
-          {
-            "url": "https://www.reuters.com/world/china/china-plans-let-top-ai-firms-buy-limited-amount-nvidia-h200-chips-information-2026-07-08/",
-            "img": "https://cdn.snapi.dev/images/v1/i/w/1/nvd6-3610961-3791518.jpg",
-            "title": "China plans to let top AI firms buy limited amount of Nvidia H200 chips, the Information reports",
-            "text": "China is planning ​to let top ‌AI companies buy a ​limited amount ​of Nvidia's H200 ⁠chips, the ​Information reported ​on Wednesday.",
+            "url": "https://www.reuters.com/world/asia-pacific/chipmakers-other-high-flying-stocks-slide-ai-trade-wobbles-2026-07-17/",
+            "img": "https://cdn.snapi.dev/images/v1/b/t/o/asset-management15-3798637-3807723.jpg",
+            "title": "Chipmakers and other high-flying stocks slide as AI trade wobbles",
+            "text": "A rotation out of the biggest winners of the recent rally gathered momentum this week, sending chip stocks toward their steepest weekly decline in more than a year and sparking fresh concerns about th...",
             "source": "Reuters",
             "type": "Article",
-            "time": "Jul 8, 2026, 11:05 AM EDT",
-            "ago": "7 hours ago"
+            "tickers": [
+              "$AMAT",
+              "$AMD",
+              "$ASML",
+              "$GOOG",
+              "$GOOGL",
+              "$LUNR",
+              "$MU"
+            ],
+            "time": "Jul 17, 2026, 9:51 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/the-fly/china-to-allow-top-ai-companies-buy-some-nvidia-h200-chips-the-information-says-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2191084767-750x406.jpg",
-            "title": "China to allow top AI companies buy some Nvidia H200 chips, The Information says",
-            "text": "China plans to allow some of the country’s biggest AI companies to buy a small number of Nvidia’s (NVDA) H200 chips, The Information’s Qianer Liu reports, citing two people with…",
+            "url": "https://www.tipranks.com/news/the-fly/apple-overtakes-nvidia-as-worlds-most-valuable-company-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1415353979-750x406.jpg",
+            "title": "Apple overtakes Nvidia as world’s most valuable company",
+            "text": "Apple (AAPL) in early trading is up 70c to $333.96 while Nvidia (NVDA) is down $7.56 to $199.84.",
             "source": "TheFly",
             "type": "Article",
-            "time": "2026-07-08T15:00:19.000Z",
-            "ago": "7 hours ago"
+            "tickers": [
+              "$AAPL"
+            ],
+            "time": "2026-07-17T13:40:23.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/nvidias-nvda-7-year-low-valuation-creates-a-buy-opportunity-bofa-says",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2742922073-768x512.jpg",
-            "title": "Nvidia’s (NVDA) 7-Year-Low Valuation Creates a Buy Opportunity, BofA Says",
-            "text": "Nvidia ($NVDA) stock remains a Buy at Bank of America ($BAC), which reiterated its $350 price target and called the stock’s valuation compelling. Five-star analyst Vivek Arya argues that investors…",
+            "url": "https://www.tipranks.com/news/article/take-this-as-a-warning-says-investor-about-nvidia-stock",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2325547161-750x406.jpg",
+            "title": "‘Take This as a Warning,’ Says Investor About Nvidia Stock",
+            "text": "Despite chip stocks’ recent recent selloff, the segment got a positive signal this week. While TSMC’s strong Q2 results and outlook failed to boost currently damaged AI sentiment, the print…",
             "source": "TipRanks",
             "type": "Article",
-            "time": "2026-07-08T14:53:19.000Z",
-            "ago": "7 hours ago"
+            "tickers": null,
+            "time": "2026-07-17T13:23:41.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://invezz.com/news/2026/07/08/from-startups-to-big-tech-nvidias-rivals-are-multiplying-can-it-be-dethroned/",
-            "img": "https://cdn.snapi.dev/images/v1/7/p/i/nvd20-3608257-3791205.jpg",
-            "title": "From startups to Big Tech, Nvidia's rivals are multiplying: can it be dethroned?",
-            "text": "The race to challenge Nvidia's dominance in artificial intelligence chips is entering a new chapter, with startups attracting billions of dollars in funding, Big Tech accelerating in-house chip develo...",
-            "source": "Invezz",
+            "url": "https://www.reuters.com/business/apple-closes-nvidia-race-worlds-most-valuable-company-2026-07-17/",
+            "img": "https://cdn.snapi.dev/images/v1/y/6/d/computer-electronic17-3807587.jpg",
+            "title": "Apple closes in on Nvidia in race for world's most valuable company",
+            "text": "Apple is within striking distance of overtaking Nvidia as the world's most valuable company, a milestone that would ​reshuffle the ranks of tech heavyweights as investors reassess the outlook for AI.",
+            "source": "Reuters",
             "type": "Article",
-            "time": "Jul 8, 2026, 9:21 AM EDT",
-            "ago": "9 hours ago"
+            "tickers": [
+              "$AAPL"
+            ],
+            "time": "Jul 17, 2026, 9:03 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://invezz.com/news/2026/07/08/nvidia-stock-hits-key-support-forms-bullish-pattern-as-key-valuation-metric-dips/",
-            "img": "https://cdn.snapi.dev/images/v1/u/2/e/nvd25-3607494-3791029.jpg",
-            "title": "Nvidia stock hits key support, forms bullish pattern as key valuation metric dips",
-            "text": "Nvidia stock remains under pressure this week as the recent sell-off continues. It dropped to $189, down by 18% from its highest point this year, with its valuation falling by nearly $1 trillion.",
-            "source": "Invezz",
-            "type": "Article",
-            "time": "Jul 8, 2026, 8:43 AM EDT",
-            "ago": "10 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/nvidia-call-buyer-realizes-87-same-day-gains-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1964816632-750x406.jpg",
-            "title": "NVIDIA call buyer realizes 87% same-day gains",
-            "text": "Notable profits for the buyer who lifted the $3.30 offer for 3,891 NVIDIA (NVDA) 7/13 weekly 192.5 calls yesterday at 09:54ET when underlying shares were trading at $191.79. Shares closed…",
+            "url": "https://www.tipranks.com/news/the-fly/qumulusai-joins-nvidia-partner-network-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1969673350-2-750x406.jpg",
+            "title": "QumulusAI joins Nvidia Partner Network",
+            "text": "QumulusAI (QMLS) has been approved as an NVIDIA (NVDA) Cloud Partner within the NVIDIA Partner Network, reinforcing its ability to bring high-performance compute online quickly to meet growing custome...",
             "source": "TheFly",
             "type": "Article",
-            "time": "2026-07-08T12:00:19.000Z",
-            "ago": "10 hours ago"
+            "tickers": null,
+            "time": "2026-07-17T11:40:49.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/article/nvidia-stock-has-underperformed-thats-about-to-change-says-bank-of-america",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2025/01/NVDA-Vivek-Arya-750x406.jpg",
-            "title": "Nvidia Stock Has Underperformed – That’s About to Change, Says Bank of America",
-            "text": "Despite still dominating the AI space, Nvidia (NASDAQ:NVDA) has significantly underperformed its peers in 2026. The stock is up by a modest 4% year-to-date, while the industry barometer index, the…",
-            "source": "TipRanks",
-            "type": "Article",
-            "time": "2026-07-08T10:48:42.000Z",
-            "ago": "11 hours ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/nvidia-stock-perplexity-deal-f4958fdc",
-            "img": "https://cdn.snapi.dev/images/v1/e/y/j/nvd36-3606749-3790563.jpg",
-            "title": "Nvidia Lands Crunch Perplexity Deal But the Stock Is Falling",
-            "text": "Nvidia stock has been in a rut but could be helped by confirmation of a new customer for its stand-alone Vera CPUs.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "Jul 8, 2026, 4:57 AM EDT",
-            "ago": "13 hours ago"
-          },
-          {
-            "url": "https://www.cnbc.com/2026/07/07/as-chip-sector-takes-it-on-the-chin-traders-bet-on-a-big-nvidia-rally-.html",
-            "img": "https://cdn.snapi.dev/images/v1/u/n/y/vfew2qwsd-3460054-3789863.jpg",
-            "title": "As chip sector takes it on the chin, traders bet on a big Nvidia rally",
-            "text": "Shares of Nvidia fought into the green despite a 5% sell-off in chip stocks tracked by the VanEck Semiconductor ETF (SMH).",
+            "url": "https://www.cnbc.com/2026/07/17/obscure-volatility-measure-points-to-a-magnificent-seven-earnings-breakout-.html",
+            "img": "https://cdn.snapi.dev/images/v1/m/q/8/w22wedw-2900716-3807377.jpg",
+            "title": "Obscure volatility measure points to a 'Magnificent Seven' earnings breakout",
+            "text": "If the S&P 500 is to make a new record, it may require the \"Magnificent Seven\" to get back into gear.",
             "source": "CNBC",
             "type": "Article",
-            "time": "Jul 7, 2026, 3:56 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.reuters.com/business/perplexity-says-it-plans-use-nvidias-new-cpu-2026-07-07/",
-            "img": "https://cdn.snapi.dev/images/v1/t/q/a/semi20-3789770.jpg",
-            "title": "Perplexity says it plans to use Nvidia's new CPU",
-            "text": "AI startup Perplexity on Tuesday confirmed it plans to use Nvidia's new central processing units, ​as the chip giant works to broaden its market ‌and take on entrenched players such as Intel and Advan...",
-            "source": "Reuters",
-            "type": "Article",
-            "time": "Jul 7, 2026, 3:03 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://invezz.com/news/2026/07/07/physical-ai-emerges-as-wall-streets-next-ai-trade-stocks-to-consider/",
-            "img": "https://cdn.snapi.dev/images/v1/y/p/w/etf9-3781808-3789758.jpg",
-            "title": "Physical AI emerges as Wall Street's next AI trade: stocks to consider",
-            "text": "The artificial intelligence investment story is beginning to evolve beyond chatbots and data centers, with an increasing number of strategists and technology leaders pointing to robotics, autonomous v...",
-            "source": "Invezz",
-            "type": "Article",
-            "tickers": [
-              "$OUST"
-            ],
-            "time": "Jul 7, 2026, 2:45 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "UnK1lV6mr6M",
-            "img": "https://cdn.snapi.dev/images/v1/e/3/a/data26-3553093-3789726.jpg",
-            "title": "Magnificent Seven Tech Stocks Lose Market Swagger",
-            "text": "For years, the Magnificent Seven tech giants commanded investors' attention, dominating the S&P 500 Index and determining which way the overall stock market was headed. Those days are over: Bloomberg'...",
-            "source": "Bloomberg Technology",
-            "type": "Video",
             "tickers": [
               "$AAPL",
               "$AMZN",
@@ -546,1666 +537,1758 @@
               "$MSFT",
               "$TSLA"
             ],
-            "time": "Jul 7, 2026, 2:22 PM EDT",
+            "time": "Jul 17, 2026, 7:36 AM EDT",
             "ago": "1 day ago"
           },
           {
-            "url": "https://invezz.com/news/2026/07/07/nvidia-stock-remains-under-pressure-on-tuesday-whats-hurting-the-ai-darling/",
-            "img": "https://cdn.snapi.dev/images/v1/4/r/s/nvd19-3608232-3789275.jpg",
-            "title": "Nvidia stock remains under pressure on Tuesday: what's hurting the AI darling?",
-            "text": "Nvidia stock (NVDA) fell on Tuesday after a report that Chinese artificial intelligence startup DeepSeek is developing its own inference chip added to investor concerns that major AI customers are inc...",
-            "source": "Invezz",
-            "type": "Article",
-            "time": "Jul 7, 2026, 11:39 AM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.fxempire.com/forecasts/article/nvda-amd-and-intc-forecasts-stalling-ai-trade-pressures-chip-stocks-1608737",
-            "img": "https://cdn.snapi.dev/images/v1/w/w/p/semi12-3788748.jpg",
-            "title": "NVDA, AMD, and INTC Forecasts – Stalling AI Trade Pressures Chip Stocks",
-            "text": "Microchips look a bit threatened in the early part of the Tuesday session, as we continue to see fears about the AI trade.",
-            "source": "FXEmpire",
+            "url": "https://www.businessinsider.com/why-nvidia-hired-microsoft-veteran-nick-parker-global-sales-2026-7",
+            "img": "https://cdn.snapi.dev/images/v1/c/t/q/software18-3807214.jpg",
+            "title": "Why Nvidia turned to Microsoft for one of its biggest leadership hires in years",
+            "text": "Nvidia made an outside hire to replace billionaire sales chief Jay Puri. 26-year Microsoft veteran Nick Parker has been tapped to lead its next phase.",
+            "source": "Business Insider",
             "type": "Article",
             "tickers": [
-              "$AMD",
-              "$INTC"
+              "$MSFT"
             ],
-            "time": "Jul 7, 2026, 8:48 AM EDT",
+            "time": "Jul 17, 2026, 5:00 AM EDT",
             "ago": "1 day ago"
           },
           {
-            "url": "https://www.cnbc.com/2026/07/07/hesai-technology-nvidia-cyber-risk.html",
-            "img": "https://cdn.snapi.dev/images/v1/9/v/d/nvd25-3607494-3788603.jpg",
-            "title": "Chinese lidar maker with Nvidia ties accused of being cyber risk for U.S.",
-            "text": "Hesai Technology, a Shanghai-based manufacturer of the sensors that allow robots and self-driving vehicles to see, was blacklisted as a national security threat in 2024 by the U.S. Department of Defen...",
-            "source": "CNBC",
+            "url": "https://www.investopedia.com/investors-can-t-shake-ai-bubble-fears-but-they-re-not-dropping-their-favorite-tech-stocks-12021155",
+            "img": "https://cdn.snapi.dev/images/v1/b/s/w/data-internet15-3806751.jpg",
+            "title": "Investors Can't Shake AI Bubble Fears—But They're Not Dropping Their Favorite Tech Stocks",
+            "text": "Individual investors continue to prove their resilience and maintain their optimism more than halfway through a volatile year for stocks and continued geopolitical uncertainty, according to Investoped...",
+            "source": "Investopedia",
             "type": "Article",
-            "time": "Jul 7, 2026, 8:00 AM EDT",
-            "ago": "1 day ago"
+            "tickers": [
+              "$IBM",
+              "$INTC",
+              "$MP",
+              "$MSFT",
+              "$MU",
+              "$SPCX",
+              "$WDC"
+            ],
+            "time": "Jul 16, 2026, 5:20 PM EDT",
+            "ago": "2 days ago"
           },
           {
-            "url": "https://www.barrons.com/articles/nvidia-stock-price-ai-chip-competition-9a6ce62d",
-            "img": "https://cdn.snapi.dev/images/v1/e/s/b/nvd26-3607397-3788459.jpg",
-            "title": "Nvidia Stock Drops Again as More AI Chip Competition Fears Emerge",
-            "text": "Nvidia stock was headed for its lowest level since April on a report another customer is developing an in-house AI chip.",
-            "source": "Barrons",
+            "url": "NlgnG0CgmEs",
+            "img": "https://cdn.snapi.dev/images/v1/i/5/o/nvd16-3608793-3806508.jpg",
+            "title": "Bull v. Bear: NVDA \"Catching Its Breath,\" Investors Eye GPU Growth",
+            "text": "Characteristics and Risks of Standardized Options: https://bit.ly/2v9tH6D. Nvidia (NVDA) is a Mag 7 giant \"catching its breath,\" says Kevin Hincks.",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": null,
+            "time": "Jul 16, 2026, 3:30 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/07/16/why-nvidia-stock-is-down-around-2-5-on-thursday/",
+            "img": "https://cdn.snapi.dev/images/v1/m/u/1/nvd22-3607939-3806208.jpg",
+            "title": "Why Nvidia stock is down around 2.5% on Thursday",
+            "text": "Nvidia stock (NVDA) fell 2.5% on Thursday, tracking a broader decline in semiconductor stocks, even as the company announced new artificial intelligence partnerships and products aimed at expanding it...",
+            "source": "Invezz",
             "type": "Article",
-            "time": "Jul 7, 2026, 7:41 AM EDT",
-            "ago": "1 day ago"
+            "tickers": null,
+            "time": "Jul 16, 2026, 1:03 PM EDT",
+            "ago": "2 days ago"
           },
           {
-            "url": "/stocks/nvda/filings/3237386/",
-            "img": "",
-            "title": "NVIDIA Slides: Company presentation",
-            "text": "NVIDIA has posted slides in relation to its latest quarterly earnings report, which was published on July 7, 2026.",
-            "source": "Filings",
-            "type": "Article",
-            "time": "Jul 7, 2026, 7:00 AM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.wsj.com/tech/ai/nvidia-backed-startup-nscale-locks-in-900-million-for-data-center-buildout-fd9820b3",
-            "img": "https://cdn.snapi.dev/images/v1/n/b/w/nvd28-3607228-3788193.jpg",
-            "title": "Nvidia-Backed Startup Nscale Locks in $900 Million for Data-Center Buildout",
-            "text": "The U.K. artificial-intelligence infrastructure startup said the funds would inject flexible liquidity to accelerate its data-center plans across Europe, the U.S. and the Asia Pacific.",
-            "source": "WSJ",
-            "type": "Article",
-            "time": "Jul 7, 2026, 5:16 AM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.investopedia.com/ai-trade-is-off-to-hot-start-this-week-as-chip-memory-stocks-surge-intc-amd-nvda-mu-12012383",
-            "img": "https://cdn.snapi.dev/images/v1/t/b/k/semi13-3787483.jpg",
-            "title": "The AI Trade Is Off to a Hot Start This Week as Chip, Memory Stocks Surge",
-            "text": "The AI trade is off to a strong start this week, with several chip and memory stocks among the biggest gainers in the S&P 500 and Nasdaq on Monday.",
+            "url": "https://www.investopedia.com/chip-stocks-slide-despite-solid-results-adding-pressure-on-the-ai-trade-12020486",
+            "img": "https://cdn.snapi.dev/images/v1/b/6/p/semi25-3806001.jpg",
+            "title": "The Chip-Stock Slide Isn't Over. The AI Trade Is Still Under Pressure.",
+            "text": "The chips are down today.",
             "source": "Investopedia",
             "type": "Article",
             "tickers": [
               "$AMD",
-              "$AVGO",
-              "#DRAM",
+              "$DELL",
               "$INTC",
-              "$MCHP",
               "$MU",
-              "$ON"
+              "$SNDK",
+              "$STX",
+              "$TSM"
             ],
-            "time": "Jul 6, 2026, 2:36 PM EDT",
+            "time": "Jul 16, 2026, 12:01 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/technology/nvidia-backed-startup-fireworks-valued-175-billion-latest-funding-2026-07-16/",
+            "img": "https://cdn.snapi.dev/images/v1/w/u/g/nvd12-3609660-3805858.jpg",
+            "title": "Nvidia-backed startup Fireworks valued at $17.5 billion in latest funding",
+            "text": "Nvidia-backed AI infrastructure startup Fireworks said on Thursday it raised $1.51 billion at a $17.5 billion valuation to expand ​its engineering team and global compute capacity.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 10:52 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/greatspeculations/2026/07/16/will-nvidia-stock-surge-on-its-new-200b-cpu-ambitions/",
+            "img": "https://cdn.snapi.dev/images/v1/j/i/d/will-nvidia-stock-surge-on-its-3805538.jpg",
+            "title": "Will NVIDIA Stock Surge On Its New $200B CPU Ambitions?",
+            "text": "This article was written by Doug Nathman, with research by his team at Trefis.",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 10:30 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/nvidia-stock-price-today-ai-9af33ec6",
+            "img": "https://cdn.snapi.dev/images/v1/z/l/j/nvd35-3606784-3805398.jpg",
+            "title": "Nvidia Pushes Into a Big New AI Market That Could Rally the Stock",
+            "text": "Nvidia stock has been slow to rally but business in Japan and a robotics push could help in the future.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 9:59 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/07/16/fireworks-nvidia-cloud-ai-startup-value.html",
+            "img": "https://cdn.snapi.dev/images/v1/i/h/8/nvd40-3606112-3805196.jpg",
+            "title": "Nvidia-backed Fireworks hits $17.5 billion valuation as companies pursue cheaper AI models",
+            "text": "Fireworks, a startup whose cloud service runs open-source AI models for software developers, has raised $1.5 billion at a $17.5 billion valuation. The company, which is backed by Nvidia, is now genera...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 9:00 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/07/16/nvidia-reveals-new-ai-model-and-expands-japans-physical-ai-ecosystem.html",
+            "img": "https://cdn.snapi.dev/images/v1/u/x/a/nvd19-3608232-3804755.jpg",
+            "title": "Nvidia unveils new AI model and expands Japan's physical AI ecosystem",
+            "text": "Nvidia introduced its new AI model Cosmos 3 Edge. The company plans to expand physical AI ecosystem in Japan with local partners.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 7:15 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/mag-7-stock-market-things-to-know-today-b7d26f86",
+            "img": "https://cdn.snapi.dev/images/v1/g/o/v/computer-electronic11-3804737.jpg",
+            "title": "Why the Mag 7 Stocks Can Save the Stock Market Rally",
+            "text": "Chinese rival to Micron could shake up the chip market, U.S. will put 25% tariff on some Brazilian goods, United Airlines raises full-year guidance, and more news to start your day.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$AAPL",
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "$META",
+              "$MSFT",
+              "$TSLA"
+            ],
+            "time": "Jul 16, 2026, 7:05 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/tech/ai/nvidia-noetra-to-build-ai-factory-to-power-japans-ai-ambitions-95e74210",
+            "img": "https://cdn.snapi.dev/images/v1/q/y/k/nvd15-3609468-3804524.jpg",
+            "title": "Nvidia, Noetra to Build AI Factory to Power Japan's AI Ambitions",
+            "text": "The AI factory will provide the computing foundation to develop multimodal foundation models for physical AI.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 4:58 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/16/3328258/0/en/Japan-Government-Industrial-Leaders-and-NVIDIA-Launch-the-World-s-First-National-AI-Infrastructure.html",
+            "img": "https://cdn.snapi.dev/images/v1/6/4/5/press14-3804498.jpg",
+            "title": "Japan Government, Industrial Leaders and NVIDIA Launch the World's First National AI Infrastructure",
+            "text": "News Summary: NVIDIA to partner with Noetra Corp. to build the NVIDIA Vera Rubin AI factory with 13,750 Vera CPUs and 27,500 Rubin GPUs to deliver 140 megawatts of data center capacity based on the NV...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 4:00 AM EDT",
             "ago": "2 days ago"
           }
         ]
       },
       "chart": {
-        "expiration": 1783554283103,
+        "expiration": 1784554200000,
         "data": [
           {
-            "c": 196.35,
-            "o": 195.18,
-            "t": 1783503000
-          },
-          {
-            "c": 197.7,
-            "t": 1783503060
-          },
-          {
-            "c": 197.63,
-            "t": 1783503120
-          },
-          {
-            "c": 197.46,
-            "t": 1783503180
-          },
-          {
-            "c": 197.21,
-            "t": 1783503240
-          },
-          {
-            "c": 197.22,
-            "t": 1783503300
-          },
-          {
-            "c": 197.46,
-            "t": 1783503360
-          },
-          {
-            "c": 197.21,
-            "t": 1783503420
-          },
-          {
-            "c": 197.3,
-            "t": 1783503480
-          },
-          {
-            "c": 197.87,
-            "t": 1783503540
-          },
-          {
-            "c": 197.88,
-            "t": 1783503600
-          },
-          {
-            "c": 197.67,
-            "t": 1783503660
-          },
-          {
-            "c": 197.61,
-            "t": 1783503720
-          },
-          {
-            "c": 198.06,
-            "t": 1783503780
-          },
-          {
-            "c": 198.25,
-            "t": 1783503840
-          },
-          {
-            "c": 199.33,
-            "t": 1783503900
-          },
-          {
-            "c": 199.72,
-            "t": 1783503960
-          },
-          {
-            "c": 198.4,
-            "t": 1783504020
-          },
-          {
-            "c": 198.49,
-            "t": 1783504080
-          },
-          {
-            "c": 197.62,
-            "t": 1783504140
-          },
-          {
-            "c": 197.52,
-            "t": 1783504200
-          },
-          {
-            "c": 197.54,
-            "t": 1783504260
-          },
-          {
-            "c": 197.4,
-            "t": 1783504320
-          },
-          {
-            "c": 197.59,
-            "t": 1783504380
-          },
-          {
-            "c": 197.55,
-            "t": 1783504440
-          },
-          {
-            "c": 197.28,
-            "t": 1783504500
-          },
-          {
-            "c": 197.65,
-            "t": 1783504560
-          },
-          {
-            "c": 197.58,
-            "t": 1783504620
-          },
-          {
-            "c": 197.53,
-            "t": 1783504680
-          },
-          {
-            "c": 197.59,
-            "t": 1783504740
-          },
-          {
-            "c": 197.63,
-            "t": 1783504800
-          },
-          {
-            "c": 197.49,
-            "t": 1783504860
-          },
-          {
-            "c": 197.37,
-            "t": 1783504920
-          },
-          {
-            "c": 197.28,
-            "t": 1783504980
-          },
-          {
-            "c": 197.3,
-            "t": 1783505040
-          },
-          {
-            "c": 197.4,
-            "t": 1783505100
-          },
-          {
-            "c": 197.26,
-            "t": 1783505160
-          },
-          {
-            "c": 197.2,
-            "t": 1783505220
-          },
-          {
-            "c": 197.33,
-            "t": 1783505280
-          },
-          {
-            "c": 197.29,
-            "t": 1783505340
-          },
-          {
-            "c": 197.12,
-            "t": 1783505400
-          },
-          {
-            "c": 196.76,
-            "t": 1783505460
-          },
-          {
-            "c": 196.7,
-            "t": 1783505520
-          },
-          {
-            "c": 197.19,
-            "t": 1783505580
-          },
-          {
-            "c": 197.34,
-            "t": 1783505640
-          },
-          {
-            "c": 197.08,
-            "t": 1783505700
-          },
-          {
-            "c": 196.96,
-            "t": 1783505760
-          },
-          {
-            "c": 197.38,
-            "t": 1783505820
-          },
-          {
-            "c": 197.33,
-            "t": 1783505880
-          },
-          {
-            "c": 197.43,
-            "t": 1783505940
-          },
-          {
-            "c": 197.45,
-            "t": 1783506000
-          },
-          {
-            "c": 197.52,
-            "t": 1783506060
-          },
-          {
-            "c": 197.45,
-            "t": 1783506120
-          },
-          {
-            "c": 197.1,
-            "t": 1783506180
-          },
-          {
-            "c": 196.8,
-            "t": 1783506240
-          },
-          {
-            "c": 196.99,
-            "t": 1783506300
-          },
-          {
-            "c": 197.05,
-            "t": 1783506360
-          },
-          {
-            "c": 197.06,
-            "t": 1783506420
-          },
-          {
-            "c": 197.03,
-            "t": 1783506480
-          },
-          {
-            "c": 197.04,
-            "t": 1783506540
-          },
-          {
-            "c": 197.1,
-            "t": 1783506600
-          },
-          {
-            "c": 197.33,
-            "t": 1783506660
-          },
-          {
-            "c": 197.13,
-            "t": 1783506720
-          },
-          {
-            "c": 197.29,
-            "t": 1783506780
-          },
-          {
-            "c": 197.16,
-            "t": 1783506840
-          },
-          {
-            "c": 196.93,
-            "t": 1783506900
-          },
-          {
-            "c": 196.92,
-            "t": 1783506960
-          },
-          {
-            "c": 197.05,
-            "t": 1783507020
-          },
-          {
-            "c": 196.86,
-            "t": 1783507080
-          },
-          {
-            "c": 196.95,
-            "t": 1783507140
-          },
-          {
-            "c": 197.04,
-            "t": 1783507200
-          },
-          {
-            "c": 197.21,
-            "t": 1783507260
-          },
-          {
-            "c": 197.19,
-            "t": 1783507320
-          },
-          {
-            "c": 197.02,
-            "t": 1783507380
-          },
-          {
-            "c": 197.25,
-            "t": 1783507440
-          },
-          {
-            "c": 197,
-            "t": 1783507500
-          },
-          {
-            "c": 196.64,
-            "t": 1783507560
-          },
-          {
-            "c": 196.35,
-            "t": 1783507620
-          },
-          {
-            "c": 196.63,
-            "t": 1783507680
-          },
-          {
-            "c": 196.35,
-            "t": 1783507740
-          },
-          {
-            "c": 196.22,
-            "t": 1783507800
-          },
-          {
-            "c": 196.3,
-            "t": 1783507860
-          },
-          {
-            "c": 196.71,
-            "t": 1783507920
-          },
-          {
-            "c": 198.08,
-            "t": 1783507980
-          },
-          {
-            "c": 197.11,
-            "t": 1783508040
-          },
-          {
-            "c": 198.25,
-            "t": 1783508100
-          },
-          {
-            "c": 198.53,
-            "t": 1783508160
-          },
-          {
-            "c": 198.73,
-            "t": 1783508220
-          },
-          {
-            "c": 198.15,
-            "t": 1783508280
-          },
-          {
-            "c": 198.78,
-            "t": 1783508340
-          },
-          {
-            "c": 199.07,
-            "t": 1783508400
-          },
-          {
-            "c": 198.56,
-            "t": 1783508460
-          },
-          {
-            "c": 199.05,
-            "t": 1783508520
-          },
-          {
-            "c": 198.8,
-            "t": 1783508580
-          },
-          {
-            "c": 198.53,
-            "t": 1783508640
-          },
-          {
-            "c": 198.35,
-            "t": 1783508700
-          },
-          {
-            "c": 197.94,
-            "t": 1783508760
-          },
-          {
-            "c": 198.11,
-            "t": 1783508820
-          },
-          {
-            "c": 198.16,
-            "t": 1783508880
-          },
-          {
-            "c": 198,
-            "t": 1783508940
-          },
-          {
-            "c": 198.01,
-            "t": 1783509000
-          },
-          {
-            "c": 197.92,
-            "t": 1783509060
-          },
-          {
-            "c": 197.91,
-            "t": 1783509120
-          },
-          {
-            "c": 197.38,
-            "t": 1783509180
-          },
-          {
-            "c": 197.24,
-            "t": 1783509240
-          },
-          {
-            "c": 197.16,
-            "t": 1783509300
-          },
-          {
-            "c": 196.81,
-            "t": 1783509360
-          },
-          {
-            "c": 196.7,
-            "t": 1783509420
-          },
-          {
-            "c": 196.92,
-            "t": 1783509480
-          },
-          {
-            "c": 197.24,
-            "t": 1783509540
-          },
-          {
-            "c": 197.2,
-            "t": 1783509600
-          },
-          {
-            "c": 197.09,
-            "t": 1783509660
-          },
-          {
-            "c": 196.85,
-            "t": 1783509720
-          },
-          {
-            "c": 196.58,
-            "t": 1783509780
-          },
-          {
-            "c": 196.56,
-            "t": 1783509840
-          },
-          {
-            "c": 196.57,
-            "t": 1783509900
-          },
-          {
-            "c": 196.5,
-            "t": 1783509960
-          },
-          {
-            "c": 196.55,
-            "t": 1783510020
-          },
-          {
-            "c": 196.66,
-            "t": 1783510080
-          },
-          {
-            "c": 196.57,
-            "t": 1783510140
-          },
-          {
-            "c": 196.9,
-            "t": 1783510200
-          },
-          {
-            "c": 196.99,
-            "t": 1783510260
-          },
-          {
-            "c": 197.37,
-            "t": 1783510320
-          },
-          {
-            "c": 197.55,
-            "t": 1783510380
-          },
-          {
-            "c": 197.53,
-            "t": 1783510440
-          },
-          {
-            "c": 197.75,
-            "t": 1783510500
-          },
-          {
-            "c": 197.8,
-            "t": 1783510560
-          },
-          {
-            "c": 197.75,
-            "t": 1783510620
-          },
-          {
-            "c": 197.59,
-            "t": 1783510680
-          },
-          {
-            "c": 197.31,
-            "t": 1783510740
-          },
-          {
-            "c": 197.56,
-            "t": 1783510800
-          },
-          {
-            "c": 197.59,
-            "t": 1783510860
-          },
-          {
-            "c": 197.33,
-            "t": 1783510920
-          },
-          {
-            "c": 197.42,
-            "t": 1783510980
-          },
-          {
-            "c": 197.44,
-            "t": 1783511040
-          },
-          {
-            "c": 197.5,
-            "t": 1783511100
-          },
-          {
-            "c": 197.29,
-            "t": 1783511160
-          },
-          {
-            "c": 197.38,
-            "t": 1783511220
-          },
-          {
-            "c": 197.22,
-            "t": 1783511280
-          },
-          {
-            "c": 197.28,
-            "t": 1783511340
-          },
-          {
-            "c": 197.16,
-            "t": 1783511400
-          },
-          {
-            "c": 197.1,
-            "t": 1783511460
-          },
-          {
-            "c": 197.04,
-            "t": 1783511520
-          },
-          {
-            "c": 197.13,
-            "t": 1783511580
-          },
-          {
-            "c": 197.02,
-            "t": 1783511640
-          },
-          {
-            "c": 197.07,
-            "t": 1783511700
-          },
-          {
-            "c": 197.08,
-            "t": 1783511760
-          },
-          {
-            "c": 197.03,
-            "t": 1783511820
-          },
-          {
-            "c": 197.08,
-            "t": 1783511880
-          },
-          {
-            "c": 197.23,
-            "t": 1783511940
-          },
-          {
-            "c": 197.58,
-            "t": 1783512000
-          },
-          {
-            "c": 197.64,
-            "t": 1783512060
-          },
-          {
-            "c": 197.57,
-            "t": 1783512120
-          },
-          {
-            "c": 197.69,
-            "t": 1783512180
-          },
-          {
-            "c": 197.73,
-            "t": 1783512240
-          },
-          {
-            "c": 197.8,
-            "t": 1783512300
-          },
-          {
-            "c": 197.76,
-            "t": 1783512360
-          },
-          {
-            "c": 197.77,
-            "t": 1783512420
-          },
-          {
-            "c": 197.64,
-            "t": 1783512480
-          },
-          {
-            "c": 197.89,
-            "t": 1783512540
-          },
-          {
-            "c": 198.09,
-            "t": 1783512600
-          },
-          {
-            "c": 198.26,
-            "t": 1783512660
-          },
-          {
-            "c": 198.54,
-            "t": 1783512720
-          },
-          {
-            "c": 198.56,
-            "t": 1783512780
-          },
-          {
-            "c": 198.7,
-            "t": 1783512840
-          },
-          {
-            "c": 198.49,
-            "t": 1783512900
-          },
-          {
-            "c": 198.74,
-            "t": 1783512960
-          },
-          {
-            "c": 199.08,
-            "t": 1783513020
-          },
-          {
-            "c": 199.08,
-            "t": 1783513080
-          },
-          {
-            "c": 199.32,
-            "t": 1783513140
-          },
-          {
-            "c": 199.72,
-            "t": 1783513200
-          },
-          {
-            "c": 199.8,
-            "t": 1783513260
-          },
-          {
-            "c": 199.96,
-            "t": 1783513320
-          },
-          {
-            "c": 199.78,
-            "t": 1783513380
-          },
-          {
-            "c": 199.35,
-            "t": 1783513440
-          },
-          {
-            "c": 199.18,
-            "t": 1783513500
-          },
-          {
-            "c": 199.32,
-            "t": 1783513560
-          },
-          {
-            "c": 199.33,
-            "t": 1783513620
-          },
-          {
-            "c": 199.35,
-            "t": 1783513680
-          },
-          {
-            "c": 199.26,
-            "t": 1783513740
-          },
-          {
-            "c": 199.49,
-            "t": 1783513800
-          },
-          {
-            "c": 199.48,
-            "t": 1783513860
-          },
-          {
-            "c": 199.35,
-            "t": 1783513920
-          },
-          {
-            "c": 199.31,
-            "t": 1783513980
-          },
-          {
-            "c": 199.42,
-            "t": 1783514040
-          },
-          {
-            "c": 199.41,
-            "t": 1783514100
-          },
-          {
-            "c": 199.27,
-            "t": 1783514160
-          },
-          {
-            "c": 199.072,
-            "t": 1783514220
-          },
-          {
-            "c": 199.04,
-            "t": 1783514280
-          },
-          {
-            "c": 199.33,
-            "t": 1783514340
-          },
-          {
-            "c": 199.578,
-            "t": 1783514400
-          },
-          {
-            "c": 199.52,
-            "t": 1783514460
-          },
-          {
-            "c": 199.51,
-            "t": 1783514520
-          },
-          {
-            "c": 199.65,
-            "t": 1783514580
-          },
-          {
-            "c": 199.611,
-            "t": 1783514640
-          },
-          {
-            "c": 199.466,
-            "t": 1783514700
-          },
-          {
-            "c": 199.706,
-            "t": 1783514760
-          },
-          {
-            "c": 199.747,
-            "t": 1783514820
-          },
-          {
-            "c": 199.824,
-            "t": 1783514880
-          },
-          {
-            "c": 200.14,
-            "t": 1783514940
-          },
-          {
-            "c": 200.35,
-            "t": 1783515000
-          },
-          {
-            "c": 200.38,
-            "t": 1783515060
-          },
-          {
-            "c": 200.41,
-            "t": 1783515120
-          },
-          {
-            "c": 200.27,
-            "t": 1783515180
-          },
-          {
-            "c": 200.3,
-            "t": 1783515240
-          },
-          {
-            "c": 200.45,
-            "t": 1783515300
-          },
-          {
-            "c": 200.59,
-            "t": 1783515360
-          },
-          {
-            "c": 200.61,
-            "t": 1783515420
-          },
-          {
-            "c": 200.986,
-            "t": 1783515480
-          },
-          {
-            "c": 201,
-            "t": 1783515540
-          },
-          {
-            "c": 200.75,
-            "t": 1783515600
-          },
-          {
-            "c": 200.913,
-            "t": 1783515660
-          },
-          {
-            "c": 200.54,
-            "t": 1783515720
-          },
-          {
-            "c": 200.27,
-            "t": 1783515780
-          },
-          {
-            "c": 200.32,
-            "t": 1783515840
-          },
-          {
-            "c": 200.38,
-            "t": 1783515900
-          },
-          {
-            "c": 200.715,
-            "t": 1783515960
-          },
-          {
-            "c": 200.88,
-            "t": 1783516020
-          },
-          {
-            "c": 200.92,
-            "t": 1783516080
-          },
-          {
-            "c": 200.895,
-            "t": 1783516140
-          },
-          {
-            "c": 201.05,
-            "t": 1783516200
-          },
-          {
-            "c": 200.949,
-            "t": 1783516260
-          },
-          {
-            "c": 201.1,
-            "t": 1783516320
-          },
-          {
-            "c": 200.884,
-            "t": 1783516380
-          },
-          {
-            "c": 200.61,
-            "t": 1783516440
-          },
-          {
-            "c": 200.74,
-            "t": 1783516500
-          },
-          {
-            "c": 200.91,
-            "t": 1783516560
-          },
-          {
-            "c": 201.1,
-            "t": 1783516620
-          },
-          {
-            "c": 201.29,
-            "t": 1783516680
-          },
-          {
-            "c": 201.61,
-            "t": 1783516740
-          },
-          {
-            "c": 201.8,
-            "t": 1783516800
-          },
-          {
-            "c": 202,
-            "t": 1783516860
-          },
-          {
-            "c": 202.11,
-            "t": 1783516920
-          },
-          {
-            "c": 202.28,
-            "t": 1783516980
-          },
-          {
-            "c": 202.475,
-            "t": 1783517040
-          },
-          {
-            "c": 202.81,
-            "t": 1783517100
-          },
-          {
-            "c": 202.69,
-            "t": 1783517160
-          },
-          {
-            "c": 202.72,
-            "t": 1783517220
-          },
-          {
-            "c": 202.97,
-            "t": 1783517280
-          },
-          {
-            "c": 203.05,
-            "t": 1783517340
-          },
-          {
-            "c": 203.1,
-            "t": 1783517400
-          },
-          {
-            "c": 203.02,
-            "t": 1783517460
-          },
-          {
-            "c": 202.805,
-            "t": 1783517520
-          },
-          {
-            "c": 202.98,
-            "t": 1783517580
-          },
-          {
-            "c": 203.06,
-            "t": 1783517640
-          },
-          {
-            "c": 203.6,
-            "t": 1783517700
-          },
-          {
-            "c": 203.61,
-            "t": 1783517760
-          },
-          {
-            "c": 203.536,
-            "t": 1783517820
-          },
-          {
-            "c": 203.315,
-            "t": 1783517880
-          },
-          {
-            "c": 203.27,
-            "t": 1783517940
-          },
-          {
-            "c": 203.2,
-            "t": 1783518000
-          },
-          {
-            "c": 202.59,
-            "t": 1783518060
-          },
-          {
-            "c": 202.74,
-            "t": 1783518120
-          },
-          {
-            "c": 202.67,
-            "t": 1783518180
-          },
-          {
-            "c": 202.62,
-            "t": 1783518240
-          },
-          {
-            "c": 202.312,
-            "t": 1783518300
-          },
-          {
-            "c": 202.45,
-            "t": 1783518360
-          },
-          {
-            "c": 202.315,
-            "t": 1783518420
-          },
-          {
-            "c": 202.151,
-            "t": 1783518480
-          },
-          {
-            "c": 202.148,
-            "t": 1783518540
-          },
-          {
-            "c": 202.475,
-            "t": 1783518600
-          },
-          {
-            "c": 202.4,
-            "t": 1783518660
-          },
-          {
-            "c": 202.6,
-            "t": 1783518720
-          },
-          {
-            "c": 202.38,
-            "t": 1783518780
-          },
-          {
-            "c": 202.33,
-            "t": 1783518840
-          },
-          {
-            "c": 202.25,
-            "t": 1783518900
-          },
-          {
-            "c": 202.04,
-            "t": 1783518960
-          },
-          {
-            "c": 201.99,
-            "t": 1783519020
-          },
-          {
-            "c": 202.013,
-            "t": 1783519080
+            "c": 202.64,
+            "o": 202.64,
+            "t": 1784280600
           },
           {
             "c": 202.15,
-            "t": 1783519140
+            "t": 1784280660
           },
           {
-            "c": 202.48,
-            "t": 1783519200
+            "c": 200.66,
+            "t": 1784280720
           },
           {
-            "c": 202.39,
-            "t": 1783519260
+            "c": 200.1,
+            "t": 1784280780
           },
           {
-            "c": 202.41,
-            "t": 1783519320
+            "c": 200.21,
+            "t": 1784280840
           },
           {
-            "c": 202.48,
-            "t": 1783519380
+            "c": 200.42,
+            "t": 1784280900
           },
           {
-            "c": 202.52,
-            "t": 1783519440
+            "c": 200,
+            "t": 1784280960
+          },
+          {
+            "c": 199.75,
+            "t": 1784281020
+          },
+          {
+            "c": 199.79,
+            "t": 1784281080
+          },
+          {
+            "c": 199.44,
+            "t": 1784281140
+          },
+          {
+            "c": 199.76,
+            "t": 1784281200
+          },
+          {
+            "c": 199.13,
+            "t": 1784281260
+          },
+          {
+            "c": 198.34,
+            "t": 1784281320
+          },
+          {
+            "c": 198.08,
+            "t": 1784281380
+          },
+          {
+            "c": 198.35,
+            "t": 1784281440
+          },
+          {
+            "c": 198.75,
+            "t": 1784281500
+          },
+          {
+            "c": 198.45,
+            "t": 1784281560
+          },
+          {
+            "c": 198.83,
+            "t": 1784281620
+          },
+          {
+            "c": 199.37,
+            "t": 1784281680
+          },
+          {
+            "c": 199.24,
+            "t": 1784281740
+          },
+          {
+            "c": 199.53,
+            "t": 1784281800
+          },
+          {
+            "c": 199.6,
+            "t": 1784281860
+          },
+          {
+            "c": 199.72,
+            "t": 1784281920
+          },
+          {
+            "c": 200.14,
+            "t": 1784281980
+          },
+          {
+            "c": 200.54,
+            "t": 1784282040
+          },
+          {
+            "c": 200.28,
+            "t": 1784282100
+          },
+          {
+            "c": 200.2,
+            "t": 1784282160
+          },
+          {
+            "c": 200.65,
+            "t": 1784282220
+          },
+          {
+            "c": 201.27,
+            "t": 1784282280
+          },
+          {
+            "c": 201.7,
+            "t": 1784282340
           },
           {
             "c": 202.37,
-            "t": 1783519500
+            "t": 1784282400
           },
           {
-            "c": 202.29,
-            "t": 1783519560
+            "c": 202.28,
+            "t": 1784282460
           },
           {
-            "c": 202.11,
-            "t": 1783519620
-          },
-          {
-            "c": 202.288,
-            "t": 1783519680
-          },
-          {
-            "c": 202.54,
-            "t": 1783519740
-          },
-          {
-            "c": 202.724,
-            "t": 1783519800
-          },
-          {
-            "c": 202.63,
-            "t": 1783519860
-          },
-          {
-            "c": 202.58,
-            "t": 1783519920
-          },
-          {
-            "c": 202.65,
-            "t": 1783519980
-          },
-          {
-            "c": 202.535,
-            "t": 1783520040
-          },
-          {
-            "c": 202.72,
-            "t": 1783520100
-          },
-          {
-            "c": 202.31,
-            "t": 1783520160
-          },
-          {
-            "c": 202.555,
-            "t": 1783520220
-          },
-          {
-            "c": 202.49,
-            "t": 1783520280
-          },
-          {
-            "c": 202.83,
-            "t": 1783520340
-          },
-          {
-            "c": 202.785,
-            "t": 1783520400
-          },
-          {
-            "c": 202.84,
-            "t": 1783520460
-          },
-          {
-            "c": 202.654,
-            "t": 1783520520
-          },
-          {
-            "c": 202.542,
-            "t": 1783520580
-          },
-          {
-            "c": 202.52,
-            "t": 1783520640
-          },
-          {
-            "c": 202.58,
-            "t": 1783520700
-          },
-          {
-            "c": 202.51,
-            "t": 1783520760
-          },
-          {
-            "c": 202.45,
-            "t": 1783520820
-          },
-          {
-            "c": 202.515,
-            "t": 1783520880
-          },
-          {
-            "c": 202.19,
-            "t": 1783520940
-          },
-          {
-            "c": 202.235,
-            "t": 1783521000
-          },
-          {
-            "c": 202.325,
-            "t": 1783521060
-          },
-          {
-            "c": 202.35,
-            "t": 1783521120
-          },
-          {
-            "c": 202.29,
-            "t": 1783521180
-          },
-          {
-            "c": 202.31,
-            "t": 1783521240
-          },
-          {
-            "c": 202.39,
-            "t": 1783521300
-          },
-          {
-            "c": 202.65,
-            "t": 1783521360
-          },
-          {
-            "c": 202.97,
-            "t": 1783521420
-          },
-          {
-            "c": 202.952,
-            "t": 1783521480
-          },
-          {
-            "c": 202.915,
-            "t": 1783521540
-          },
-          {
-            "c": 202.9,
-            "t": 1783521600
+            "c": 202.76,
+            "t": 1784282520
           },
           {
             "c": 202.74,
-            "t": 1783521660
+            "t": 1784282580
           },
           {
-            "c": 202.64,
-            "t": 1783521720
+            "c": 202.7,
+            "t": 1784282640
           },
           {
-            "c": 203.06,
-            "t": 1783521780
-          },
-          {
-            "c": 203.08,
-            "t": 1783521840
-          },
-          {
-            "c": 203.075,
-            "t": 1783521900
-          },
-          {
-            "c": 203.094,
-            "t": 1783521960
-          },
-          {
-            "c": 202.962,
-            "t": 1783522020
-          },
-          {
-            "c": 203.144,
-            "t": 1783522080
-          },
-          {
-            "c": 203.098,
-            "t": 1783522140
-          },
-          {
-            "c": 203.158,
-            "t": 1783522200
-          },
-          {
-            "c": 203.36,
-            "t": 1783522260
-          },
-          {
-            "c": 203.36,
-            "t": 1783522320
-          },
-          {
-            "c": 203.29,
-            "t": 1783522380
-          },
-          {
-            "c": 203.56,
-            "t": 1783522440
-          },
-          {
-            "c": 203.385,
-            "t": 1783522500
-          },
-          {
-            "c": 203.34,
-            "t": 1783522560
-          },
-          {
-            "c": 203.542,
-            "t": 1783522620
-          },
-          {
-            "c": 203.75,
-            "t": 1783522680
-          },
-          {
-            "c": 204.17,
-            "t": 1783522740
-          },
-          {
-            "c": 204.355,
-            "t": 1783522800
-          },
-          {
-            "c": 204.27,
-            "t": 1783522860
-          },
-          {
-            "c": 204.445,
-            "t": 1783522920
-          },
-          {
-            "c": 204.64,
-            "t": 1783522980
-          },
-          {
-            "c": 204.69,
-            "t": 1783523040
-          },
-          {
-            "c": 204.465,
-            "t": 1783523100
-          },
-          {
-            "c": 204.215,
-            "t": 1783523160
-          },
-          {
-            "c": 204.42,
-            "t": 1783523220
-          },
-          {
-            "c": 204.43,
-            "t": 1783523280
-          },
-          {
-            "c": 204.456,
-            "t": 1783523340
-          },
-          {
-            "c": 204.498,
-            "t": 1783523400
-          },
-          {
-            "c": 204.38,
-            "t": 1783523460
-          },
-          {
-            "c": 204.355,
-            "t": 1783523520
-          },
-          {
-            "c": 204.365,
-            "t": 1783523580
-          },
-          {
-            "c": 204.37,
-            "t": 1783523640
-          },
-          {
-            "c": 204.346,
-            "t": 1783523700
-          },
-          {
-            "c": 204.29,
-            "t": 1783523760
-          },
-          {
-            "c": 204.215,
-            "t": 1783523820
-          },
-          {
-            "c": 204.44,
-            "t": 1783523880
-          },
-          {
-            "c": 204.34,
-            "t": 1783523940
-          },
-          {
-            "c": 204.336,
-            "t": 1783524000
-          },
-          {
-            "c": 204.272,
-            "t": 1783524060
-          },
-          {
-            "c": 204.256,
-            "t": 1783524120
-          },
-          {
-            "c": 204.19,
-            "t": 1783524180
-          },
-          {
-            "c": 204.24,
-            "t": 1783524240
-          },
-          {
-            "c": 204.35,
-            "t": 1783524300
-          },
-          {
-            "c": 204.33,
-            "t": 1783524360
-          },
-          {
-            "c": 204.385,
-            "t": 1783524420
+            "c": 203.51,
+            "t": 1784282700
           },
           {
             "c": 204.26,
-            "t": 1783524480
+            "t": 1784282760
           },
           {
-            "c": 204.434,
-            "t": 1783524540
+            "c": 204.57,
+            "t": 1784282820
           },
           {
-            "c": 204.15,
-            "t": 1783524600
+            "c": 204.6,
+            "t": 1784282880
           },
           {
-            "c": 204.33,
-            "t": 1783524660
+            "c": 204.64,
+            "t": 1784282940
           },
           {
-            "c": 204.43,
-            "t": 1783524720
+            "c": 205.42,
+            "t": 1784283000
           },
           {
-            "c": 204.334,
-            "t": 1783524780
+            "c": 205.2,
+            "t": 1784283060
           },
           {
-            "c": 204.665,
-            "t": 1783524840
+            "c": 204.36,
+            "t": 1784283120
           },
           {
-            "c": 204.724,
-            "t": 1783524900
+            "c": 204.26,
+            "t": 1784283180
           },
           {
-            "c": 204.895,
-            "t": 1783524960
+            "c": 204.51,
+            "t": 1784283240
           },
           {
-            "c": 205.087,
-            "t": 1783525020
+            "c": 205.14,
+            "t": 1784283300
           },
           {
-            "c": 204.73,
-            "t": 1783525080
+            "c": 205.74,
+            "t": 1784283360
+          },
+          {
+            "c": 205.72,
+            "t": 1784283420
+          },
+          {
+            "c": 205.23,
+            "t": 1784283480
+          },
+          {
+            "c": 205.05,
+            "t": 1784283540
+          },
+          {
+            "c": 205.15,
+            "t": 1784283600
+          },
+          {
+            "c": 205,
+            "t": 1784283660
+          },
+          {
+            "c": 204.84,
+            "t": 1784283720
+          },
+          {
+            "c": 204.59,
+            "t": 1784283780
+          },
+          {
+            "c": 204.7,
+            "t": 1784283840
           },
           {
             "c": 204.45,
-            "t": 1783525140
+            "t": 1784283900
           },
           {
-            "c": 204.186,
-            "t": 1783525200
-          },
-          {
-            "c": 203.84,
-            "t": 1783525260
-          },
-          {
-            "c": 203.97,
-            "t": 1783525320
-          },
-          {
-            "c": 204.325,
-            "t": 1783525380
+            "c": 204.29,
+            "t": 1784283960
           },
           {
             "c": 204.44,
-            "t": 1783525440
+            "t": 1784284020
           },
           {
-            "c": 204.596,
-            "t": 1783525500
+            "c": 203.99,
+            "t": 1784284080
           },
           {
-            "c": 204.345,
-            "t": 1783525560
+            "c": 203.8,
+            "t": 1784284140
           },
           {
-            "c": 204.15,
-            "t": 1783525620
+            "c": 204.18,
+            "t": 1784284200
           },
           {
-            "c": 204.154,
-            "t": 1783525680
+            "c": 203.78,
+            "t": 1784284260
           },
           {
-            "c": 204.22,
-            "t": 1783525740
+            "c": 203.3,
+            "t": 1784284320
           },
           {
-            "c": 204.179,
-            "t": 1783525800
+            "c": 203.14,
+            "t": 1784284380
           },
           {
-            "c": 204.37,
-            "t": 1783525860
+            "c": 203.59,
+            "t": 1784284440
           },
           {
-            "c": 204.336,
-            "t": 1783525920
+            "c": 204.19,
+            "t": 1784284500
+          },
+          {
+            "c": 204.32,
+            "t": 1784284560
+          },
+          {
+            "c": 204.2,
+            "t": 1784284620
+          },
+          {
+            "c": 204,
+            "t": 1784284680
+          },
+          {
+            "c": 204.54,
+            "t": 1784284740
+          },
+          {
+            "c": 204.25,
+            "t": 1784284800
+          },
+          {
+            "c": 204.17,
+            "t": 1784284860
+          },
+          {
+            "c": 203.5,
+            "t": 1784284920
+          },
+          {
+            "c": 203.17,
+            "t": 1784284980
+          },
+          {
+            "c": 203.25,
+            "t": 1784285040
+          },
+          {
+            "c": 203.24,
+            "t": 1784285100
+          },
+          {
+            "c": 203.26,
+            "t": 1784285160
+          },
+          {
+            "c": 203.77,
+            "t": 1784285220
+          },
+          {
+            "c": 203.67,
+            "t": 1784285280
+          },
+          {
+            "c": 203.91,
+            "t": 1784285340
+          },
+          {
+            "c": 204.24,
+            "t": 1784285400
+          },
+          {
+            "c": 203.54,
+            "t": 1784285460
+          },
+          {
+            "c": 203.78,
+            "t": 1784285520
+          },
+          {
+            "c": 203.79,
+            "t": 1784285580
+          },
+          {
+            "c": 203.58,
+            "t": 1784285640
+          },
+          {
+            "c": 204.14,
+            "t": 1784285700
+          },
+          {
+            "c": 203.66,
+            "t": 1784285760
+          },
+          {
+            "c": 203.57,
+            "t": 1784285820
+          },
+          {
+            "c": 203.18,
+            "t": 1784285880
+          },
+          {
+            "c": 203.01,
+            "t": 1784285940
+          },
+          {
+            "c": 203,
+            "t": 1784286000
+          },
+          {
+            "c": 203.1,
+            "t": 1784286060
+          },
+          {
+            "c": 203.05,
+            "t": 1784286120
+          },
+          {
+            "c": 202.73,
+            "t": 1784286180
+          },
+          {
+            "c": 202.48,
+            "t": 1784286240
+          },
+          {
+            "c": 202.72,
+            "t": 1784286300
+          },
+          {
+            "c": 202.94,
+            "t": 1784286360
+          },
+          {
+            "c": 202.85,
+            "t": 1784286420
+          },
+          {
+            "c": 203.17,
+            "t": 1784286480
+          },
+          {
+            "c": 203.2,
+            "t": 1784286540
+          },
+          {
+            "c": 202.98,
+            "t": 1784286600
+          },
+          {
+            "c": 203.03,
+            "t": 1784286660
+          },
+          {
+            "c": 203.24,
+            "t": 1784286720
+          },
+          {
+            "c": 203.21,
+            "t": 1784286780
+          },
+          {
+            "c": 203.28,
+            "t": 1784286840
+          },
+          {
+            "c": 203.28,
+            "t": 1784286900
+          },
+          {
+            "c": 203.45,
+            "t": 1784286960
+          },
+          {
+            "c": 203.45,
+            "t": 1784287020
+          },
+          {
+            "c": 203.56,
+            "t": 1784287080
+          },
+          {
+            "c": 203.7,
+            "t": 1784287140
+          },
+          {
+            "c": 203.75,
+            "t": 1784287200
+          },
+          {
+            "c": 203.73,
+            "t": 1784287260
+          },
+          {
+            "c": 203.94,
+            "t": 1784287320
+          },
+          {
+            "c": 203.37,
+            "t": 1784287380
+          },
+          {
+            "c": 203.49,
+            "t": 1784287440
+          },
+          {
+            "c": 203.73,
+            "t": 1784287500
+          },
+          {
+            "c": 203.76,
+            "t": 1784287560
+          },
+          {
+            "c": 203.61,
+            "t": 1784287620
+          },
+          {
+            "c": 203.82,
+            "t": 1784287680
+          },
+          {
+            "c": 203.93,
+            "t": 1784287740
+          },
+          {
+            "c": 204.17,
+            "t": 1784287800
+          },
+          {
+            "c": 204.1,
+            "t": 1784287860
+          },
+          {
+            "c": 204.29,
+            "t": 1784287920
+          },
+          {
+            "c": 204.27,
+            "t": 1784287980
+          },
+          {
+            "c": 204.16,
+            "t": 1784288040
+          },
+          {
+            "c": 204.25,
+            "t": 1784288100
+          },
+          {
+            "c": 204.48,
+            "t": 1784288160
+          },
+          {
+            "c": 204.73,
+            "t": 1784288220
           },
           {
             "c": 204.77,
-            "t": 1783525980
+            "t": 1784288280
           },
           {
-            "c": 204.63,
-            "t": 1783526040
+            "c": 204.74,
+            "t": 1784288340
           },
           {
-            "c": 204.395,
-            "t": 1783526100
+            "c": 204.66,
+            "t": 1784288400
           },
           {
-            "c": 204.255,
-            "t": 1783526160
+            "c": 204.26,
+            "t": 1784288460
+          },
+          {
+            "c": 204.23,
+            "t": 1784288520
+          },
+          {
+            "c": 204.3,
+            "t": 1784288580
+          },
+          {
+            "c": 204.42,
+            "t": 1784288640
+          },
+          {
+            "c": 204.33,
+            "t": 1784288700
+          },
+          {
+            "c": 204.56,
+            "t": 1784288760
+          },
+          {
+            "c": 204.7,
+            "t": 1784288820
+          },
+          {
+            "c": 204.59,
+            "t": 1784288880
+          },
+          {
+            "c": 204.86,
+            "t": 1784288940
+          },
+          {
+            "c": 204.57,
+            "t": 1784289000
+          },
+          {
+            "c": 204.72,
+            "t": 1784289060
+          },
+          {
+            "c": 204.75,
+            "t": 1784289120
+          },
+          {
+            "c": 204.74,
+            "t": 1784289180
+          },
+          {
+            "c": 205,
+            "t": 1784289240
+          },
+          {
+            "c": 205.21,
+            "t": 1784289300
+          },
+          {
+            "c": 205.23,
+            "t": 1784289360
+          },
+          {
+            "c": 205.16,
+            "t": 1784289420
+          },
+          {
+            "c": 205.14,
+            "t": 1784289480
+          },
+          {
+            "c": 205.12,
+            "t": 1784289540
+          },
+          {
+            "c": 205.26,
+            "t": 1784289600
+          },
+          {
+            "c": 204.89,
+            "t": 1784289660
+          },
+          {
+            "c": 204.81,
+            "t": 1784289720
+          },
+          {
+            "c": 204.48,
+            "t": 1784289780
+          },
+          {
+            "c": 204.5,
+            "t": 1784289840
+          },
+          {
+            "c": 204.36,
+            "t": 1784289900
+          },
+          {
+            "c": 204.2,
+            "t": 1784289960
+          },
+          {
+            "c": 204.21,
+            "t": 1784290020
+          },
+          {
+            "c": 204.41,
+            "t": 1784290080
+          },
+          {
+            "c": 204.74,
+            "t": 1784290140
+          },
+          {
+            "c": 204.93,
+            "t": 1784290200
+          },
+          {
+            "c": 204.54,
+            "t": 1784290260
+          },
+          {
+            "c": 204.79,
+            "t": 1784290320
+          },
+          {
+            "c": 204.88,
+            "t": 1784290380
+          },
+          {
+            "c": 205.02,
+            "t": 1784290440
+          },
+          {
+            "c": 205.11,
+            "t": 1784290500
+          },
+          {
+            "c": 204.95,
+            "t": 1784290560
+          },
+          {
+            "c": 204.98,
+            "t": 1784290620
+          },
+          {
+            "c": 205.11,
+            "t": 1784290680
+          },
+          {
+            "c": 205.16,
+            "t": 1784290740
+          },
+          {
+            "c": 205.16,
+            "t": 1784290800
+          },
+          {
+            "c": 204.65,
+            "t": 1784290860
+          },
+          {
+            "c": 204.34,
+            "t": 1784290920
+          },
+          {
+            "c": 204.29,
+            "t": 1784290980
+          },
+          {
+            "c": 204.25,
+            "t": 1784291040
+          },
+          {
+            "c": 204.5,
+            "t": 1784291100
+          },
+          {
+            "c": 204.46,
+            "t": 1784291160
+          },
+          {
+            "c": 204.75,
+            "t": 1784291220
+          },
+          {
+            "c": 204.89,
+            "t": 1784291280
+          },
+          {
+            "c": 204.82,
+            "t": 1784291340
+          },
+          {
+            "c": 204.62,
+            "t": 1784291400
+          },
+          {
+            "c": 204.79,
+            "t": 1784291460
+          },
+          {
+            "c": 204.97,
+            "t": 1784291520
+          },
+          {
+            "c": 205.16,
+            "t": 1784291580
+          },
+          {
+            "c": 205.11,
+            "t": 1784291640
+          },
+          {
+            "c": 205.1,
+            "t": 1784291700
+          },
+          {
+            "c": 205.15,
+            "t": 1784291760
+          },
+          {
+            "c": 204.81,
+            "t": 1784291820
+          },
+          {
+            "c": 205.05,
+            "t": 1784291880
+          },
+          {
+            "c": 204.98,
+            "t": 1784291940
+          },
+          {
+            "c": 204.9,
+            "t": 1784292000
+          },
+          {
+            "c": 204.97,
+            "t": 1784292060
+          },
+          {
+            "c": 205.05,
+            "t": 1784292120
+          },
+          {
+            "c": 205.1,
+            "t": 1784292180
+          },
+          {
+            "c": 205.31,
+            "t": 1784292240
+          },
+          {
+            "c": 205.36,
+            "t": 1784292300
+          },
+          {
+            "c": 205.23,
+            "t": 1784292360
+          },
+          {
+            "c": 205.51,
+            "t": 1784292420
+          },
+          {
+            "c": 205.69,
+            "t": 1784292480
+          },
+          {
+            "c": 205.86,
+            "t": 1784292540
+          },
+          {
+            "c": 205.82,
+            "t": 1784292600
+          },
+          {
+            "c": 205.96,
+            "t": 1784292660
+          },
+          {
+            "c": 205.94,
+            "t": 1784292720
+          },
+          {
+            "c": 205.94,
+            "t": 1784292780
+          },
+          {
+            "c": 206.03,
+            "t": 1784292840
+          },
+          {
+            "c": 205.85,
+            "t": 1784292900
+          },
+          {
+            "c": 205.62,
+            "t": 1784292960
+          },
+          {
+            "c": 205.56,
+            "t": 1784293020
+          },
+          {
+            "c": 205.65,
+            "t": 1784293080
+          },
+          {
+            "c": 205.61,
+            "t": 1784293140
+          },
+          {
+            "c": 205.95,
+            "t": 1784293200
+          },
+          {
+            "c": 206.04,
+            "t": 1784293260
+          },
+          {
+            "c": 205.8,
+            "t": 1784293320
+          },
+          {
+            "c": 205.86,
+            "t": 1784293380
+          },
+          {
+            "c": 205.86,
+            "t": 1784293440
+          },
+          {
+            "c": 205.93,
+            "t": 1784293500
+          },
+          {
+            "c": 206.28,
+            "t": 1784293560
+          },
+          {
+            "c": 206.36,
+            "t": 1784293620
+          },
+          {
+            "c": 206.52,
+            "t": 1784293680
+          },
+          {
+            "c": 206.49,
+            "t": 1784293740
+          },
+          {
+            "c": 206.57,
+            "t": 1784293800
+          },
+          {
+            "c": 206.38,
+            "t": 1784293860
+          },
+          {
+            "c": 206.41,
+            "t": 1784293920
+          },
+          {
+            "c": 206.31,
+            "t": 1784293980
+          },
+          {
+            "c": 206.17,
+            "t": 1784294040
+          },
+          {
+            "c": 206.2,
+            "t": 1784294100
+          },
+          {
+            "c": 206.33,
+            "t": 1784294160
+          },
+          {
+            "c": 206.29,
+            "t": 1784294220
+          },
+          {
+            "c": 206.03,
+            "t": 1784294280
+          },
+          {
+            "c": 205.9,
+            "t": 1784294340
+          },
+          {
+            "c": 205.54,
+            "t": 1784294400
+          },
+          {
+            "c": 205.46,
+            "t": 1784294460
+          },
+          {
+            "c": 205.75,
+            "t": 1784294520
+          },
+          {
+            "c": 205.71,
+            "t": 1784294580
+          },
+          {
+            "c": 205.71,
+            "t": 1784294640
+          },
+          {
+            "c": 205.8,
+            "t": 1784294700
+          },
+          {
+            "c": 206,
+            "t": 1784294760
+          },
+          {
+            "c": 206.1,
+            "t": 1784294820
+          },
+          {
+            "c": 206.04,
+            "t": 1784294880
+          },
+          {
+            "c": 206.13,
+            "t": 1784294940
+          },
+          {
+            "c": 206.03,
+            "t": 1784295000
+          },
+          {
+            "c": 205.96,
+            "t": 1784295060
+          },
+          {
+            "c": 205.81,
+            "t": 1784295120
+          },
+          {
+            "c": 205.86,
+            "t": 1784295180
+          },
+          {
+            "c": 205.72,
+            "t": 1784295240
+          },
+          {
+            "c": 205.35,
+            "t": 1784295300
+          },
+          {
+            "c": 205.32,
+            "t": 1784295360
+          },
+          {
+            "c": 205.55,
+            "t": 1784295420
+          },
+          {
+            "c": 205.37,
+            "t": 1784295480
+          },
+          {
+            "c": 205.43,
+            "t": 1784295540
+          },
+          {
+            "c": 205.38,
+            "t": 1784295600
+          },
+          {
+            "c": 205.31,
+            "t": 1784295660
+          },
+          {
+            "c": 205.22,
+            "t": 1784295720
+          },
+          {
+            "c": 205.3,
+            "t": 1784295780
+          },
+          {
+            "c": 205.31,
+            "t": 1784295840
+          },
+          {
+            "c": 205.46,
+            "t": 1784295900
+          },
+          {
+            "c": 205.16,
+            "t": 1784295960
+          },
+          {
+            "c": 205.3,
+            "t": 1784296020
+          },
+          {
+            "c": 205.27,
+            "t": 1784296080
+          },
+          {
+            "c": 205.2,
+            "t": 1784296140
+          },
+          {
+            "c": 205.05,
+            "t": 1784296200
+          },
+          {
+            "c": 205.05,
+            "t": 1784296260
+          },
+          {
+            "c": 205.12,
+            "t": 1784296320
+          },
+          {
+            "c": 205.02,
+            "t": 1784296380
+          },
+          {
+            "c": 204.98,
+            "t": 1784296440
+          },
+          {
+            "c": 204.86,
+            "t": 1784296500
+          },
+          {
+            "c": 204.55,
+            "t": 1784296560
           },
           {
             "c": 204.44,
-            "t": 1783526220
+            "t": 1784296620
           },
           {
-            "c": 204.305,
-            "t": 1783526280
+            "c": 204.47,
+            "t": 1784296680
           },
           {
-            "c": 204.12,
-            "t": 1783526340
+            "c": 204.41,
+            "t": 1784296740
+          },
+          {
+            "c": 204.44,
+            "t": 1784296800
+          },
+          {
+            "c": 204.41,
+            "t": 1784296860
+          },
+          {
+            "c": 204.51,
+            "t": 1784296920
+          },
+          {
+            "c": 204.69,
+            "t": 1784296980
+          },
+          {
+            "c": 204.37,
+            "t": 1784297040
+          },
+          {
+            "c": 204.15,
+            "t": 1784297100
+          },
+          {
+            "c": 204.05,
+            "t": 1784297160
+          },
+          {
+            "c": 203.98,
+            "t": 1784297220
+          },
+          {
+            "c": 203.94,
+            "t": 1784297280
+          },
+          {
+            "c": 203.94,
+            "t": 1784297340
+          },
+          {
+            "c": 203.88,
+            "t": 1784297400
+          },
+          {
+            "c": 203.84,
+            "t": 1784297460
+          },
+          {
+            "c": 203.83,
+            "t": 1784297520
+          },
+          {
+            "c": 203.78,
+            "t": 1784297580
+          },
+          {
+            "c": 203.65,
+            "t": 1784297640
+          },
+          {
+            "c": 203.405,
+            "t": 1784297700
+          },
+          {
+            "c": 203.235,
+            "t": 1784297760
+          },
+          {
+            "c": 203.11,
+            "t": 1784297820
+          },
+          {
+            "c": 203.115,
+            "t": 1784297880
+          },
+          {
+            "c": 203.375,
+            "t": 1784297940
+          },
+          {
+            "c": 203.165,
+            "t": 1784298000
+          },
+          {
+            "c": 203.16,
+            "t": 1784298060
+          },
+          {
+            "c": 203.34,
+            "t": 1784298120
+          },
+          {
+            "c": 203.54,
+            "t": 1784298180
+          },
+          {
+            "c": 203.32,
+            "t": 1784298240
+          },
+          {
+            "c": 203.195,
+            "t": 1784298300
+          },
+          {
+            "c": 203.245,
+            "t": 1784298360
+          },
+          {
+            "c": 203.14,
+            "t": 1784298420
+          },
+          {
+            "c": 203.265,
+            "t": 1784298480
+          },
+          {
+            "c": 203.36,
+            "t": 1784298540
+          },
+          {
+            "c": 203.72,
+            "t": 1784298600
+          },
+          {
+            "c": 203.681,
+            "t": 1784298660
+          },
+          {
+            "c": 203.485,
+            "t": 1784298720
+          },
+          {
+            "c": 203.295,
+            "t": 1784298780
+          },
+          {
+            "c": 203.32,
+            "t": 1784298840
+          },
+          {
+            "c": 203.38,
+            "t": 1784298900
+          },
+          {
+            "c": 203.43,
+            "t": 1784298960
+          },
+          {
+            "c": 203.28,
+            "t": 1784299020
+          },
+          {
+            "c": 203.38,
+            "t": 1784299080
+          },
+          {
+            "c": 203.34,
+            "t": 1784299140
+          },
+          {
+            "c": 203.13,
+            "t": 1784299200
+          },
+          {
+            "c": 203.05,
+            "t": 1784299260
+          },
+          {
+            "c": 202.935,
+            "t": 1784299320
+          },
+          {
+            "c": 202.93,
+            "t": 1784299380
+          },
+          {
+            "c": 203.065,
+            "t": 1784299440
+          },
+          {
+            "c": 203.07,
+            "t": 1784299500
+          },
+          {
+            "c": 203.23,
+            "t": 1784299560
+          },
+          {
+            "c": 203.35,
+            "t": 1784299620
+          },
+          {
+            "c": 203.35,
+            "t": 1784299680
+          },
+          {
+            "c": 203.225,
+            "t": 1784299740
+          },
+          {
+            "c": 203.105,
+            "t": 1784299800
+          },
+          {
+            "c": 203.16,
+            "t": 1784299860
+          },
+          {
+            "c": 203.2,
+            "t": 1784299920
+          },
+          {
+            "c": 203.34,
+            "t": 1784299980
+          },
+          {
+            "c": 203.61,
+            "t": 1784300040
+          },
+          {
+            "c": 203.53,
+            "t": 1784300100
+          },
+          {
+            "c": 203.19,
+            "t": 1784300160
+          },
+          {
+            "c": 203.28,
+            "t": 1784300220
+          },
+          {
+            "c": 203.33,
+            "t": 1784300280
+          },
+          {
+            "c": 203.36,
+            "t": 1784300340
+          },
+          {
+            "c": 203.22,
+            "t": 1784300400
+          },
+          {
+            "c": 203.18,
+            "t": 1784300460
+          },
+          {
+            "c": 203.01,
+            "t": 1784300520
+          },
+          {
+            "c": 203.13,
+            "t": 1784300580
+          },
+          {
+            "c": 203.09,
+            "t": 1784300640
+          },
+          {
+            "c": 203.02,
+            "t": 1784300700
+          },
+          {
+            "c": 202.965,
+            "t": 1784300760
+          },
+          {
+            "c": 202.83,
+            "t": 1784300820
+          },
+          {
+            "c": 202.745,
+            "t": 1784300880
+          },
+          {
+            "c": 202.73,
+            "t": 1784300940
+          },
+          {
+            "c": 202.62,
+            "t": 1784301000
+          },
+          {
+            "c": 202.492,
+            "t": 1784301060
+          },
+          {
+            "c": 202.15,
+            "t": 1784301120
+          },
+          {
+            "c": 202.25,
+            "t": 1784301180
+          },
+          {
+            "c": 202.27,
+            "t": 1784301240
+          },
+          {
+            "c": 201.93,
+            "t": 1784301300
+          },
+          {
+            "c": 201.74,
+            "t": 1784301360
+          },
+          {
+            "c": 201.78,
+            "t": 1784301420
+          },
+          {
+            "c": 202.005,
+            "t": 1784301480
+          },
+          {
+            "c": 202.24,
+            "t": 1784301540
+          },
+          {
+            "c": 202.26,
+            "t": 1784301600
+          },
+          {
+            "c": 202.23,
+            "t": 1784301660
+          },
+          {
+            "c": 202.18,
+            "t": 1784301720
+          },
+          {
+            "c": 202.23,
+            "t": 1784301780
+          },
+          {
+            "c": 202.13,
+            "t": 1784301840
+          },
+          {
+            "c": 202.06,
+            "t": 1784301900
+          },
+          {
+            "c": 202.2,
+            "t": 1784301960
+          },
+          {
+            "c": 202.53,
+            "t": 1784302020
+          },
+          {
+            "c": 202.82,
+            "t": 1784302080
+          },
+          {
+            "c": 202.95,
+            "t": 1784302140
+          },
+          {
+            "c": 202.935,
+            "t": 1784302200
+          },
+          {
+            "c": 203.219,
+            "t": 1784302260
+          },
+          {
+            "c": 203.155,
+            "t": 1784302320
+          },
+          {
+            "c": 203.18,
+            "t": 1784302380
+          },
+          {
+            "c": 202.95,
+            "t": 1784302440
+          },
+          {
+            "c": 202.82,
+            "t": 1784302500
+          },
+          {
+            "c": 203.01,
+            "t": 1784302560
+          },
+          {
+            "c": 203.26,
+            "t": 1784302620
+          },
+          {
+            "c": 202.96,
+            "t": 1784302680
+          },
+          {
+            "c": 202.61,
+            "t": 1784302740
+          },
+          {
+            "c": 202.6,
+            "t": 1784302800
+          },
+          {
+            "c": 203.03,
+            "t": 1784302860
+          },
+          {
+            "c": 203.21,
+            "t": 1784302920
+          },
+          {
+            "c": 203.185,
+            "t": 1784302980
+          },
+          {
+            "c": 203.07,
+            "t": 1784303040
+          },
+          {
+            "c": 203.04,
+            "t": 1784303100
+          },
+          {
+            "c": 202.95,
+            "t": 1784303160
+          },
+          {
+            "c": 203.24,
+            "t": 1784303220
+          },
+          {
+            "c": 203.487,
+            "t": 1784303280
+          },
+          {
+            "c": 203.43,
+            "t": 1784303340
+          },
+          {
+            "c": 203.37,
+            "t": 1784303400
+          },
+          {
+            "c": 203.72,
+            "t": 1784303460
+          },
+          {
+            "c": 203.49,
+            "t": 1784303520
+          },
+          {
+            "c": 203.435,
+            "t": 1784303580
+          },
+          {
+            "c": 203.515,
+            "t": 1784303640
+          },
+          {
+            "c": 203.49,
+            "t": 1784303700
+          },
+          {
+            "c": 203.48,
+            "t": 1784303760
+          },
+          {
+            "c": 203.15,
+            "t": 1784303820
+          },
+          {
+            "c": 203.3,
+            "t": 1784303880
+          },
+          {
+            "c": 202.71,
+            "t": 1784303940
+          },
+          {
+            "c": 202.81,
+            "t": 1784304000
           }
         ]
       },
       "changes": {
-        "price1w": 197.58,
-        "price1m": 205.1,
+        "price1w": 210.96,
+        "price1m": 207.41,
+        "price3m": 198.35,
+        "price6m": 186.23,
         "priceYTD": 186.5,
-        "price1y": 158.24,
-        "price5y": 20.372,
+        "price1y": 171.37,
+        "price5y": 18.161,
         "priceMAX": 0.041
       },
       "source": "polygon"
@@ -2214,12 +2297,12 @@
       {
         "t": "2026-07-01",
         "o": 196.2,
-        "h": 205.16,
+        "h": 213.81,
         "l": 191.14,
-        "c": 204.12,
-        "a": 204.12,
-        "v": 667348116,
-        "ch": 2.01
+        "c": 202.81,
+        "a": 202.81,
+        "v": 1580812366,
+        "ch": 1.36
       },
       {
         "t": "2026-06-01",
@@ -2333,38 +2416,37 @@
       }
     ],
     "quote": {
-      "p": 201.01,
-      "pd": 201.01,
-      "c": 4.08,
-      "cp": 2.07,
-      "cl": 196.93,
-      "cdr": 1,
-      "o": 195.18,
-      "h": 201.2,
-      "l": 195.06,
-      "v": 74640554,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 236.54,
-      "l52": 158.39,
+      "c": -4.59,
+      "e": true,
+      "h": 206.65,
+      "l": 197.97,
+      "o": 202.64,
+      "p": 202.81,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 144255421,
+      "cl": 207.4,
+      "cp": -2.21,
+      "ec": -0.32,
+      "ep": 202.4887,
+      "es": "After-hours",
+      "eu": "Jul 17, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 202.69,
-      "epd": 202.69,
-      "ec": 1.68,
-      "ecp": 0.84,
-      "eu": "Jul 8, 2026, 6:45 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550724071.2874,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 202.81,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": -0.16,
+      "epd": 202.49,
+      "etd": "2026-07-17",
+      "ets": 1784332798884.7305,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 236.54,
+      "l52": 164.07,
+      "uid": "NVDA",
       "days": 0,
-      "exp": 1783550731277,
-      "symbol": "NVDA",
-      "uid": "NVDA"
+      "symbol": "NVDA"
     }
   }
 }

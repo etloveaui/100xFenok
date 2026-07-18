@@ -3,72 +3,72 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "AAPL",
-  "fetched_at": "2026-07-08T22:45:25Z",
+  "source_as_of": "2026-07-17T20:00:00Z",
+  "fetched_at": "2026-07-18T22:56:26Z",
   "endpoints": {
-    "overview": "/api/symbol/s/AAPL/overview",
+    "overview": "/stocks/aapl/__data.json",
     "history": "/api/symbol/s/AAPL/history?range=1Y&period=Monthly",
     "quote": "/api/quotes/s/AAPL"
   },
   "normalized": {
     "overview": {
-      "marketCap": "4.61T",
+      "marketCap": "4.90T",
       "revenue": "451.44B",
       "revenue_type": "ttm",
       "netIncome": "122.58B",
       "sharesOut": "14.69B",
       "eps": "8.25",
-      "peRatio": "37.64",
-      "forwardPE": "34.08",
-      "dividend": "$1.04 (0.33%)",
+      "peRatio": "40.46",
+      "forwardPE": "36.57",
+      "dividend": "$1.08 (0.32%)",
       "beta": "1.10",
       "analysts": "Buy",
-      "target": "315.09 (+0.4%)",
+      "target": "318.25 (-4.64%)",
       "earningsDate": "Jul 30, 2026"
     },
     "quote": {
-      "p": 313.83,
-      "pd": 313.83,
-      "c": 3.17,
-      "cp": 1.02,
-      "cl": 310.66,
-      "cdr": 1,
-      "o": 311.91,
-      "h": 313.89,
-      "l": 307.05,
-      "v": 19646273,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 317.4,
-      "l52": 201.5,
+      "c": 0.48,
+      "e": true,
+      "h": 334.99,
+      "l": 329,
+      "o": 331.98,
+      "p": 333.74,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 63704417,
+      "cl": 333.26,
+      "cp": 0.14,
+      "ec": -0.08,
+      "ep": 333.6638,
+      "es": "After-hours",
+      "eu": "Jul 17, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 313.3,
-      "epd": 313.3,
-      "ec": -0.53,
-      "ecp": -0.17,
-      "eu": "Jul 8, 2026, 6:40 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550442465.408,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 333.74,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": 1,
+      "ecp": -0.02,
+      "epd": 333.66,
+      "etd": "2026-07-17",
+      "ets": 1784332799392.9846,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 334.99,
+      "l52": 201.5,
+      "uid": "AAPL",
       "days": 0,
-      "exp": 1783550729358,
-      "symbol": "AAPL",
-      "uid": "AAPL"
+      "symbol": "AAPL"
     },
     "history": [
       {
         "t": "2026-07-01",
         "o": 293.44,
-        "h": 315.48,
+        "h": 334.99,
         "l": 289.195,
-        "c": 313.39,
-        "a": 313.39,
-        "v": 262837055,
-        "ch": 8.3
+        "c": 333.74,
+        "a": 333.74,
+        "v": 606012316,
+        "ch": 15.34
       },
       {
         "t": "2026-06-01",
@@ -183,7 +183,7 @@
     ],
     "financials": {
       "path": "financials/AAPL.json",
-      "fetched_at": "2026-07-08T22:45:24Z",
+      "fetched_at": "2026-07-18T22:56:26Z",
       "role": "financial statement cross-check candidate; not valuation SSOT",
       "summary": {
         "annual": {
@@ -236,19 +236,49 @@
   "financials_path": "financials/AAPL.json",
   "raw": {
     "overview": {
-      "marketCap": "4.61T",
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AAPL",
+        "lastChecked": 1784334695972,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "4.90T",
+      "marketCapGrowth": 56.16099838122316,
       "revenue": "451.44B",
       "revenue_type": "ttm",
+      "revenueGrowth": 12.757,
       "netIncome": "122.58B",
+      "netIncomeGrowth": 25.984,
       "sharesOut": "14.69B",
       "eps": "8.25",
-      "peRatio": "37.64",
-      "forwardPE": "34.08",
-      "dividend": "$1.04 (0.33%)",
+      "epsGrowth": 28.902,
+      "peRatio": "40.46",
+      "forwardPE": "36.57",
+      "dividend": "$1.08 (0.32%)",
       "exDividendDate": "May 11, 2026",
       "beta": "1.10",
       "analysts": "Buy",
-      "target": "315.09 (+0.4%)",
+      "target": "318.25 (-4.64%)",
       "earningsDate": "Jul 30, 2026",
       "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide. The company offers iPhone, a line of smartphones; Mac, a line of personal computers; iPad, a line of multi-purpose tablets; and wearables, home, and accessories comprising AirPods, Apple Vision Pro, Apple TV, Apple Watch, Beats products, and HomePod, as well as Apple branded and third-party accessories. It also provides AppleCare support and cloud services; and operates various platforms, including the App Store that all...",
       "infoTable": [
@@ -323,1906 +353,1892 @@
           "earningsGrowth": 19.495
         }
       ],
-      "analystIntro": "According to 47 analysts, the average rating for AAPL stock is \"Buy.\" The 12-month stock price target is $315.09, which is an increase of 0.40% from the latest price.",
+      "analystIntro": "According to 47 analysts, the average rating for AAPL stock is \"Buy.\" The 12-month stock price target is $318.25, which is a decrease of -4.64% from the latest price.",
       "analystTarget": {
-        "target": "$315.09",
-        "change": "0.40%",
-        "changeWord": "upside"
+        "target": "$318.25",
+        "change": "-4.64%",
+        "changeWord": "downside"
       },
       "analystChart": {
-        "strongBuy": 22,
+        "strongBuy": 23,
         "buy": 6,
-        "hold": 16,
-        "sell": 2,
-        "strongSell": 1
+        "hold": 15,
+        "sell": 1,
+        "strongSell": 2
       },
       "news": {
-        "exp": "1783553351026",
+        "exp": "1784417174480",
         "data": [
           {
-            "url": "nGdzCAJc__U",
-            "img": "https://cdn.snapi.dev/images/v1/z/p/q/computer-electronic10-3792106.jpg",
-            "title": "How Apple Will Use Broadcom Chips",
-            "text": "Broadcom is going to more than 15 billion chips in the US as part of an extended deal with Apple. Mark Gurman reports on how those new US-made components will be used on \"Bloomberg Tech.",
-            "source": "Bloomberg Technology",
-            "type": "Video",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 3:49 PM EDT",
-            "ago": "2 hours ago"
-          },
-          {
-            "url": "M0mnDPCsllE",
-            "img": "https://cdn.snapi.dev/images/v1/w/q/a/computer-electronic9-3792066.jpg",
-            "title": "Bull v. Bear: What's Next for AAPL After Signing $30B AVGO Deal?",
-            "text": "Characteristics and Risks of Standardized Options: https://bit.ly/2v9tH6D. Kevin Hincks and Tom White discuss Apple's (AAPL) $30 billion deal to extend their partnership with Broadcom (AVGO) for U.S. ...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 3:00 PM EDT",
-            "ago": "3 hours ago"
-          },
-          {
-            "url": "https://www.investopedia.com/broadcom-stock-jumps-on-new-usd30-billion-deal-to-supply-chips-to-apple-avgo-aapl-12014008",
-            "img": "https://cdn.snapi.dev/images/v1/z/f/g/computer-electronic6-3791998.jpg",
-            "title": "Broadcom Stock Jumps on New $30 Billion Deal to Supply Chips to Apple",
-            "text": "Apple has a new chip deal that could help the tech giant be less reliant on international suppliers. That deal sent shares of chipmaking giant Broadcom sharply higher on Wednesday.",
-            "source": "Investopedia",
+            "url": "https://www.foxbusiness.com/markets/apple-briefly-overtakes-nvidia-worlds-most-valuable-company-amid-ai-investment-doubts",
+            "img": "https://cdn.snapi.dev/images/v1/z/2/b/computer-electronic12-3808572.jpg",
+            "title": "Apple briefly overtakes Nvidia as world's most valuable company amid AI investment doubts",
+            "text": "Apple briefly overtook Nvidia as the world's most valuable company Friday before the AI chip giant reclaimed its $4.92 trillion market cap by closing bell.",
+            "source": "Fox Business",
             "type": "Article",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 2:26 PM EDT",
-            "ago": "4 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 5:01 PM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "j6SJyYKh-yI",
-            "img": "https://cdn.snapi.dev/images/v1/a/m/u/computer-electronic40-3791991.jpg",
-            "title": "Apple-Broadcom announce $30B deal for custom U.S.-made chips",
-            "text": "CNBC's MacKenzie Sigalos reports on news regarding Apple's recent partnership expansion.",
-            "source": "CNBC Television",
-            "type": "Video",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 2:08 PM EDT",
-            "ago": "4 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/broadcom-agreement-a-strategic-positive-for-apple-says-evercore-isi-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2096992069-750x406.jpg",
-            "title": "Broadcom agreement a strategic positive for Apple, says Evercore ISI",
-            "text": "Evercore ISI reiterated an Outperform rating and $365 price target on Apple (AAPL) after the tech giant announced a new multiyear commitment with Broadcom (AVGO) to design and produce custom…",
-            "source": "TheFly",
-            "type": "Article",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "2026-07-08T17:40:14.000Z",
-            "ago": "5 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/apple-stock-aapl-rebounds-after-eu-court-rejects-challenge-to-big-tech-rules",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2621147733-750x406.jpg",
-            "title": "Apple Stock (AAPL) Rebounds After EU Court Rejects Challenge to Big Tech Rules",
-            "text": "Apple ($AAPL) shares edged lower during early trading hours on Wednesday after a European Union (EU) court dismissed the tech giant’s bid to overturn rules for leading technology companies. The…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$META"
-            ],
-            "time": "2026-07-08T17:09:51.000Z",
-            "ago": "5 hours ago"
-          },
-          {
-            "url": "FGkVudSQ4qI",
-            "img": "https://cdn.snapi.dev/images/v1/z/k/q/computer-electronic35-3791737.jpg",
-            "title": "Apple expands Broadcom partnership with $1.5B expansion of Colorado manufacturing facility",
-            "text": "CNBC's MacKenzie Sigalos reports on news regarding Apple.",
-            "source": "CNBC Television",
-            "type": "Video",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 12:16 PM EDT",
-            "ago": "6 hours ago"
-          },
-          {
-            "url": "https://techxplore.com/news/2026-07-apple-eu-digital-competition.html",
-            "img": "https://cdn.snapi.dev/images/v1/x/z/b/apl9-3558030-3791587.jpg",
-            "title": "Apple loses challenge against EU digital competition rules",
-            "text": "Apple lost its bid to escape digital competition rules after an EU court on Wednesday rejected the U.S. giant's challenge.",
-            "source": "TechXplore",
-            "type": "Article",
-            "time": "Jul 8, 2026, 11:40 AM EDT",
-            "ago": "7 hours ago"
-          },
-          {
-            "url": "2rcv-LDCZKs",
-            "img": "https://cdn.snapi.dev/images/v1/x/e/0/computer-electronic34-3791581.jpg",
-            "title": "Significance of AAPL & AVGO $30B Deal as AI Chip Trade Sees Pressure",
-            "text": "Jenny Horne talks about Apple's (AAPL) new partnership with Broadcom (AVGO). She says the $30 billion deal to extend the partnership is Apple's largest agreement so far under its American manufacturin...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 11:30 AM EDT",
-            "ago": "7 hours ago"
-          },
-          {
-            "url": "https://techcrunch.com/2026/07/08/apple-to-produce-made-in-america-wireless-chips-with-broadcom/",
-            "img": "https://cdn.snapi.dev/images/v1/g/9/q/computer-electronic3-3791420.jpg",
-            "title": "Apple to produce Made in America wireless chips with Broadcom",
-            "text": "Apple has signed a $30 billion+ multiyear deal with Broadcom to design and produce more than 15 billion U.S.-made custom wireless connectivity chips for Apple products.",
+            "url": "https://techcrunch.com/2026/07/17/apple-and-google-ordered-to-purge-nudify-apps-from-app-stores/",
+            "img": "https://cdn.snapi.dev/images/v1/q/t/o/computer-electronic1-3808451.jpg",
+            "title": "Apple and Google ordered to purge ‘nudify' apps from App Stores",
+            "text": "The city of San Francisco has ordered Apple and Google to remove dozens of “nudify” apps — — software programs that can digitally alter pictures to unclothe the people in them — from their app stores.",
             "source": "TechCrunch",
             "type": "Article",
             "tickers": [
-              "$AVGO"
+              "$GOOG",
+              "$GOOGL"
             ],
-            "time": "Jul 8, 2026, 10:43 AM EDT",
-            "ago": "8 hours ago"
+            "time": "Jul 17, 2026, 3:49 PM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/broadcom-stock-avgo-rides-30b-apple-chip-deal-to-defy-tech-sell-off",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2696923103-750x406.jpg",
-            "title": "Broadcom Stock (AVGO) Rides $30B Apple Chip Deal to Defy Tech Sell-Off",
-            "text": "Shares in U.S. chipmaker Broadcom ($AVGO) rose more than 4% on Wednesday morning, defying a broad sell-off in tech and chip stocks. This came after Apple ($AAPL) announced a $30…",
+            "url": "https://www.barrons.com/articles/berkshire-hathaway-apple-stock-portfolio-240a36cc",
+            "img": "https://cdn.snapi.dev/images/v1/h/h/i/computer-electronic8-3808437.jpg",
+            "title": "Berkshire's Equity Portfolio Is Rallying, but the Apple Sales Still Sting",
+            "text": "Berkshire Hathaway's biggest stock holdings have added more than $20 billion in value this quarter, but Warren Buffett's decision to slash the Apple stake continues to weigh on the portfolio's upside.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 17, 2026, 3:34 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/apple-aapl-raises-the-cost-of-its-music-subscription-service",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/aaa-110-750x406.jpg",
+            "title": "Apple (AAPL) Raises the Cost of Its Music Streaming Service",
+            "text": "The last price increase occurred in 2022.",
             "source": "TipRanks",
             "type": "Article",
             "tickers": [
-              "$AVGO",
-              "$GOOGL",
-              "$META"
+              "$SPOT"
             ],
-            "time": "2026-07-08T14:20:30.000Z",
-            "ago": "8 hours ago"
+            "time": "2026-07-17T19:12:34.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/apple-aapl-enters-30b-chip-deal-with-broadcom-in-u-s-manufacturing-push",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2325281849-1-750x406.jpg",
-            "title": "Apple (AAPL) Enters $30B Chip Deal with Broadcom in U.S. Manufacturing Push",
-            "text": "Consumer electronics giant Apple ($AAPL) said on Wednesday that it had signed a $30 billion-plus deal with Broadcom ($AVGO) to advance the U.S. chip supply chain. Under the multi-year agreement,…",
-            "source": "TipRanks",
+            "url": "https://www.tipranks.com/news/the-fly/apple-raises-prices-for-apple-music-and-apple-one-subscriptions-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_577999513-750x406.jpg",
+            "title": "Apple raises prices for Apple Music and Apple One subscriptions",
+            "text": "An Apple (AAPL) Music individual subscription in the U.S. is now priced at $11.99 per month, up from $10.99 previously, while an Apple One family plan now costs $27.95 per…",
+            "source": "TheFly",
             "type": "Article",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "2026-07-08T13:02:55.000Z",
-            "ago": "9 hours ago"
+            "tickers": null,
+            "time": "2026-07-17T19:10:18.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "7axJNjtmDNo",
-            "img": "https://cdn.snapi.dev/images/v1/h/9/k/computer-electronic18-3791001.jpg",
-            "title": "Ceasefire Over? Iran Volatility Strikes Wall Street, AAPL Signs $30B AVGO Deal",
-            "text": "President Trump says the ceasefire between the U.S. and Iran is over after Iranian forces struck multiple vessels in the Strait of Hormuz. Tom White takes investors through the latest headlines and th...",
+            "url": "https://techcrunch.com/video/how-apples-big-lawsuit-could-disrupt-openais-ipo-plans/",
+            "img": "https://cdn.snapi.dev/images/v1/c/n/i/computer-electronic5-3808284.jpg",
+            "title": "How Apple's big lawsuit could disrupt OpenAI's IPO plans",
+            "text": "Apple filed a trade secrets lawsuit against OpenAI last Friday, and it's not messing around. The complaint alleges a pattern of misconduct reaching all the way up to OpenAI's chief hardware officer an...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 17, 2026, 1:45 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://techcrunch.com/podcast/apples-lawsuit-couldnt-come-at-a-worse-time-for-openai/",
+            "img": "https://cdn.snapi.dev/images/v1/a/d/4/computer-electronic40-3808278.jpg",
+            "title": "Apple's lawsuit couldn't come at a worse time for OpenAI",
+            "text": "Apple filed a trade secrets lawsuit against OpenAI last Friday, and it's not messing around. The complaint alleges a pattern of misconduct reaching all the way up to OpenAI's chief hardware officer an...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 17, 2026, 1:41 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "XbAMdxHEPRc",
+            "img": "https://cdn.snapi.dev/images/v1/m/7/q/apl12-3556897-3808283.jpg",
+            "title": "Apple in Early Settlement Talks With DOJ Over Antitrust Case",
+            "text": "Apple and the US Justice Department are in early discussions about settling a 2024 lawsuit that alleges the iPhone maker violated antitrust laws. Mark Gurman reports on \"Balance of Power.",
+            "source": "Bloomberg Markets and Finance",
+            "type": "Video",
+            "tickers": null,
+            "time": "Jul 17, 2026, 1:37 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/litigation/apple-early-settlement-talks-with-us-doj-over-antitrust-case-bloomberg-news-2026-07-17/",
+            "img": "https://cdn.snapi.dev/images/v1/l/z/e/apl21-3552165-3808253.jpg",
+            "title": "Apple in early settlement talks with US DOJ over antitrust case, Bloomberg News reports",
+            "text": "Apple and ​the U.S. ‌Department of ​Justice ​are in early ⁠discussions ​about settling ​a 2024 lawsuit that ​alleges ​the iPhone maker ‌violated ⁠antitrust laws, Bloomberg ​News ​reported ⁠on Friday.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 17, 2026, 1:05 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "EZsgJiuL0wA",
+            "img": "https://cdn.snapi.dev/images/v1/y/l/1/computer-electronic38-3808241.jpg",
+            "title": "The Big 3: AAPL, SPCX, BAC",
+            "text": "@Stockstotrade's Tim Bohen talks through today's tech-centric Big 3. He sees Apple (AAPL) as a stock “nailing technology” and reaping all the benefits from AI, sees SpaceX (SPCX) under $100 as a stron...",
             "source": "Schwab Network",
             "type": "Video",
             "tickers": [
-              "$AVGO"
+              "$BAC",
+              "$SPCX"
             ],
-            "time": "Jul 8, 2026, 8:30 AM EDT",
-            "ago": "10 hours ago"
+            "time": "Jul 17, 2026, 1:00 PM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.barrons.com/articles/apple-broadcom-stock-chip-deal-fb8c6dd9",
-            "img": "https://cdn.snapi.dev/images/v1/b/y/i/computer-electronic13-3790760.jpg",
-            "title": "Apple Puts $30 Billion Sticker on Broadcom Chip Deal. Both Stocks Fall.",
-            "text": "Apple and Btoadcom stocks were slipping despite a big chip partnership between the two companies.",
+            "url": "https://www.tipranks.com/news/the-fly/apple-in-early-talks-with-doj-to-settle-antitrust-suit-bloomberg-says-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_577999513-750x406.jpg",
+            "title": "Apple in early talks with DOJ to settle antitrust suit, Bloomberg says",
+            "text": "12:52 EDT Apple (AAPL) in early talks with DOJ to settle antitrust suit, Bloomberg says",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-17T16:55:36.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/apple-in-talks-to-settle-doj-antitrust-lawsuit-bloomberg-reports-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_577999513-750x406.jpg",
+            "title": "Apple in talks to settle DOJ antitrust lawsuit, Bloomberg reports",
+            "text": "Apple (AAPL) and the Justice Department are in early discussions about settling a 2024 lawsuit that alleges the iPhone maker violated antitrust laws, according to Bloomberg’s Mark Gurman, Josh Sisco…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-17T16:55:18.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/apples-stock-price-ai-iphone-upgrade-5095e27f",
+            "img": "https://cdn.snapi.dev/images/v1/d/t/1/data35-3555921-3808011.jpg",
+            "title": "Apple's ‘Wait and See' AI Strategy Just Earned the Stock an Upgrade",
+            "text": "The company is letting its Big Tech peers pony up for research and development and then is ready to swoop in to grab the best models when the dust settles.",
             "source": "Barrons",
             "type": "Article",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 7:10 AM EDT",
-            "ago": "11 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 11:45 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/the-fly/apple-lost-challenge-against-eu-rules-on-app-store-system-reuters-says-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_380042644-750x406.jpg",
-            "title": "Apple lost challenge against EU rules on app store, system, Reuters says",
-            "text": "On Wednesday, Apple (AAPL) lost its challenge against EU rules that determined its app stores and operating system iOS were gatekeepers subject to obligations meant to give rivals more ability…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-07-08T10:20:22.000Z",
-            "ago": "12 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/apple-to-increase-spend-with-broadcom-to-produce-billions-more-u-s-chips-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2096992069-750x406.jpg",
-            "title": "Apple to increase spend with Broadcom to produce billions more U.S. chips",
-            "text": "Apple (AAPL) announced a new multiyear commitment with Broadcom (AVGO) to design and produce custom silicon components and cutting-edge wireless connectivity technologies for a wide range of Apple pro...",
-            "source": "TheFly",
+            "url": "https://www.tipranks.com/news/apple-aapl-hits-dozens-of-openai-staff-with-legal-notices-as-lawsuit-escalates",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2624983023-750x406.jpg",
+            "title": "Apple (AAPL) Hits Dozens of OpenAI Staff With Legal Notices as Lawsuit Escalates",
+            "text": "Global tech giant Apple ($AAPL) has sent legal letters to about 40 former staff who now work at artificial intelligence (AI) firm OpenAI. The move is part of Apple’s lawsuit,…",
+            "source": "TipRanks",
             "type": "Article",
             "tickers": [
-              "$AVGO"
+              "$NVDA"
             ],
-            "time": "2026-07-08T10:05:50.000Z",
-            "ago": "12 hours ago"
+            "time": "2026-07-17T15:32:42.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.reuters.com/business/apple-spend-30-billion-broadcom-chips-deal-that-will-see-colorado-factory-expand-2026-07-08/",
-            "img": "https://cdn.snapi.dev/images/v1/2/b/6/computer-electronic1-3790619.jpg",
-            "title": "Apple to spend $30 billion in Broadcom chips deal that will see Colorado factory expand",
-            "text": "Apple plans to spend more than $30 billion as part of a ​chip-supply agreement reached earlier this week with Broadcom ‌that will also see the chipmaker expand a factory in Colorado, the companies sai...",
-            "source": "Reuters",
+            "url": "Wn9cdse5o-s",
+            "img": "https://cdn.snapi.dev/images/v1/5/h/h/computer-electronic31-3807996.jpg",
+            "title": "AAPL Tests NVDA for Most Valuable Company After Analyst Upgrade",
+            "text": "Apple (AAPL) briefly surpassed Nvidia (NVDA) in market cap as the biggest company on Wall Street after HSBC upgraded the stock to buy from hold. Jenny Horne talks about the “operational turning point”...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": null,
+            "time": "Jul 17, 2026, 11:30 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://nypost.com/2026/07/17/business/apple-races-past-nvidia-to-reclaim-crown-as-worlds-most-valuable-company/",
+            "img": "https://cdn.snapi.dev/images/v1/r/7/u/computer-electronic3-3807926.jpg",
+            "title": "Apple races past Nvidia to reclaim crown as world's most valuable company",
+            "text": "Apple is reclaiming the top spot for the first time since April last year.",
+            "source": "New York Post",
             "type": "Article",
             "tickers": [
-              "$AVGO"
+              "$NVDA"
             ],
-            "time": "Jul 8, 2026, 6:01 AM EDT",
-            "ago": "12 hours ago"
+            "time": "Jul 17, 2026, 11:12 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.cnbc.com/2026/07/08/apple-commits-30-billion-to-broadcom-for-us-chipmaking-push.html",
-            "img": "https://cdn.snapi.dev/images/v1/q/c/a/computer-electronic9-3790637.jpg",
-            "title": "Apple commits $30 billion to Broadcom for U.S. chipmaking push",
-            "text": "Apple is expanding its Broadcom partnership in a $30 billion-plus chipmaking agreement, its largest American manufacturing commitment to date. The deal is expected to produce more than 15 billion U.S....",
-            "source": "CNBC",
+            "url": "https://www.pymnts.com/news/artificial-intelligence/2026/apple-retakes-top-valuation-spot-wall-street-rewards-smart-ai-spending/",
+            "img": "https://cdn.snapi.dev/images/v1/k/e/k/apl13-3556845-3808171.jpg",
+            "title": "Apple Retakes Top Valuation Spot as Wall Street Rewards Smart AI Spending",
+            "text": "Apple has become the world's most valuable company for the first time since April 2025, overtaking Nvidia, which had held the top spot since June 2025, Reuters reported Friday (July 17). The iPhone ma...",
+            "source": "PYMNTS",
             "type": "Article",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 6:00 AM EDT",
-            "ago": "12 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 11:07 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.wsj.com/tech/apple-to-spend-30-billion-on-u-s-made-chips-from-broadcom-aaf23490",
-            "img": "https://cdn.snapi.dev/images/v1/u/q/t/computer-electronic8-3790610.jpg",
-            "title": "Apple to Spend $30 Billion on U.S.-Made Chips from Broadcom",
-            "text": "The deal, for billions of chips, is the latest part of Apple's domestic investment pledge.",
-            "source": "WSJ",
+            "url": "https://www.theguardian.com/technology/2026/jul/17/apple-nvidia-most-valuable-company",
+            "img": "https://cdn.snapi.dev/images/v1/b/q/k/apl50-3540266-3808134.jpg",
+            "title": "Apple dethrones Nvidia to regain title of world's most valuable company",
+            "text": "Shift in pecking order illustrates that investors are reassessing outlook for artificial intelligence",
+            "source": "The Guardian",
             "type": "Article",
-            "tickers": [
-              "$AVGO"
-            ],
-            "time": "Jul 8, 2026, 6:00 AM EDT",
-            "ago": "12 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 11:01 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.businesswire.com/news/home/20260708510843/en/Apple-to-increase-spend-with-Broadcom-to-produce-billions-more-U.S.-chips/",
-            "img": "https://cdn.snapi.dev/images/v1/e/c/r/press20-3790629.jpg",
-            "title": "Apple to increase spend with Broadcom to produce billions more U.S. chips",
-            "text": "CUPERTINO, Calif.--(BUSINESS WIRE)--Apple® today announced a new multiyear commitment with Broadcom to design and produce custom silicon components and cutting-edge wireless connectivity technologies ...",
-            "source": "Business Wire",
+            "url": "https://www.marketwatch.com/story/apples-stock-is-beating-the-s-p-500-by-a-remarkable-degree-and-it-may-have-more-room-to-run-1b0a1454",
+            "img": "https://cdn.snapi.dev/images/v1/u/q/r/apl23-3550675-3807883.jpg",
+            "title": "Apple's stock is beating the S&P 500 by a remarkable degree — and it may have more room to run",
+            "text": "Apple was once seen as behind the curve in AI, but now it's getting more respect for its strategic choices.",
+            "source": "Market Watch",
             "type": "Article",
-            "time": "Jul 8, 2026, 6:00 AM EDT",
-            "ago": "12 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:58 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://invezz.com/news/2026/07/08/apple-price-hikes-unlikely-to-hurt-demand-jpmorgan-says-as-it-raises-pt/",
-            "img": "https://cdn.snapi.dev/images/v1/w/x/w/apl17-3553948-3790549.jpg",
-            "title": "Apple price hikes unlikely to hurt demand, JPMorgan says as it raises PT",
-            "text": "Recent price increases for Apple's Mac and iPad devices and any potential hikes in iPhone prices are unlikely to significantly dampen consumer demand, according to JPMorgan, which has raised its price...",
+            "url": "H_iIDEk2JUk",
+            "img": "https://cdn.snapi.dev/images/v1/d/s/e/computer-electronic27-3807869.jpg",
+            "title": "Apple Passes Nvidia to Become World's Largest Company",
+            "text": "Apple Inc. is again the biggest company in the world after wresting the title from Nvidia Corp. Sarah Hunt of Alpine Saxon Woods says talks about the growth of Apple and the AI trade on \"Bloomberg Ope...",
+            "source": "Bloomberg Markets and Finance",
+            "type": "Video",
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:40 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/07/17/apple-reclaims-title-as-worlds-most-valuable-company-overtaking-nvidia/",
+            "img": "https://cdn.snapi.dev/images/v1/i/u/g/apl25-3549155-3807821.jpg",
+            "title": "Apple reclaims title as world's most valuable company, overtaking Nvidia",
+            "text": "Apple (AAPL) reclaimed its position as the world's most valuable publicly traded company on Friday after its market capitalization surpassed Nvidia's. Apple shares climbed to an all-time high of $334....",
             "source": "Invezz",
             "type": "Article",
-            "time": "Jul 8, 2026, 4:37 AM EDT",
-            "ago": "14 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:33 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.reuters.com/world/eu-court-rejects-apples-challenge-against-eu-rules-reining-big-tech-2026-07-08/",
-            "img": "https://cdn.snapi.dev/images/v1/i/g/o/apl42-3543125-3790533.jpg",
-            "title": "EU court rejects Apple's challenge against EU rules reining in Big Tech",
-            "text": "Europe's second-highest court on Wednesday dismissed Apple's challenge against landmark EU rules labelling ​its app stores and operating system ‌iOS as gatekeepers subject to strict obligations.",
-            "source": "Reuters",
+            "url": "ZDlHP42s_ck",
+            "img": "https://cdn.snapi.dev/images/v1/e/i/9/computer-electronic26-3807868.jpg",
+            "title": "Friday's Morning Movers: SPCX Scrubs Test Flights, AAPL Upgrade, ISRG Earnings",
+            "text": "Diane King Hall discusses Intuitive Surgical (ISRG) earnings, explaining how GLP-1 trends have hit the company. She also talks about SpaceX (SPCX) shares coming back to Earth after scrubbing Starship'...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$ISRG",
+              "$SPCX"
+            ],
+            "time": "Jul 17, 2026, 10:30 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/tylerroush/2026/07/17/apple-unseats-nvidia-as-worlds-largest-company/",
+            "img": "https://cdn.snapi.dev/images/v1/k/r/2/apple-unseats-nvidia-as-worlds-3807761.jpg",
+            "title": "Apple Unseats Nvidia As World's Largest Company",
+            "text": "This is a developing story.",
+            "source": "Forbes",
             "type": "Article",
-            "time": "Jul 8, 2026, 3:59 AM EDT",
-            "ago": "14 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:20 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/apple-aapl-stock-heads-into-fiscal-q3-with-ai-upside-in-focus",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2325281849-750x406.jpg",
-            "title": "Apple (AAPL) Stock Heads into Fiscal Q3 with AI Upside in Focus",
-            "text": "As Apple ($AAPL) heads into its Fiscal Q3 results later this month, the artificial intelligence (AI) upside is becoming the core of my long-term bull case. I believe this shift…",
-            "source": "TipRanks",
+            "url": "https://www.pymnts.com/apple/2026/apple-demands-documents-from-former-employees-openai/",
+            "img": "https://cdn.snapi.dev/images/v1/e/n/e/computer-electronic2-3807708.jpg",
+            "title": "Apple Demands Documents From Former Employees Now at OpenAI",
+            "text": "Apple sent letters to about 40 former employees who now work at OpenAI, demanding that they preserve documents and communications and meet with Apple lawyers, the Financial Times reported Friday (July...",
+            "source": "PYMNTS",
             "type": "Article",
-            "time": "2026-07-08T06:36:06.000Z",
-            "ago": "16 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:01 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.cnbc.com/2026/07/08/apple-begins-testing-cxmt-chips-for-devices-sold-in-china-ft-says-.html",
-            "img": "https://cdn.snapi.dev/images/v1/s/n/o/apl21-3552165-3790473.jpg",
-            "title": "Apple begins testing CXMT chips for devices sold in China, FT says",
-            "text": "Apple has reportedly begun testing DRAM chips from China's state-backed ChangXin Memory Technologies for devices sold within China. It is lobbying the U.S government to permit broader use of its produ...",
+            "url": "https://www.cnbc.com/2026/07/17/apple-nvidia-aapl-nvda-market-cap.html",
+            "img": "https://cdn.snapi.dev/images/v1/o/y/u/apl44-3542212-3807709.jpg",
+            "title": "Apple dethrones Nvidia as world's most valuable company, ending the chipmaker's long run at the top",
+            "text": "Apple surpassed Nvidia in market value, reclaiming its spot as the world's most valuable company. Apple has outperformed the AI chipmaker in 2026",
             "source": "CNBC",
             "type": "Article",
-            "time": "Jul 8, 2026, 1:15 AM EDT",
-            "ago": "17 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/apple-tests-chinas-cxmt-memory-chips-what-it-means-for-micron-stock",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2184812177-750x406.jpg",
-            "title": "Apple Tests China’s CXMT Memory Chips. What It Means for Micron Stock",
-            "text": "iPhone maker Apple ($AAPL) is testing memory chips from China’s ChangXin Memory Technologies (CXMT) for its products sold in mainland China, according to the Financial Times. CXMT is a Chinese…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$MU"
-            ],
-            "time": "2026-07-08T04:59:40.000Z",
-            "ago": "17 hours ago"
+            "tickers": null,
+            "time": "Jul 17, 2026, 10:00 AM EDT",
+            "ago": "1 day ago"
           }
         ]
       },
       "chart": {
-        "expiration": 1783554064557,
+        "expiration": 1784554200000,
         "data": [
           {
-            "c": 310.2,
-            "o": 311.98,
-            "t": 1783503000
+            "c": 332.72,
+            "o": 331.69,
+            "t": 1784280600
           },
           {
-            "c": 309.5,
-            "t": 1783503060
+            "c": 331.41,
+            "t": 1784280660
           },
           {
-            "c": 309.83,
-            "t": 1783503120
+            "c": 332.84,
+            "t": 1784280720
           },
           {
-            "c": 309.48,
-            "t": 1783503180
+            "c": 333.02,
+            "t": 1784280780
           },
           {
-            "c": 309.02,
-            "t": 1783503240
+            "c": 333.41,
+            "t": 1784280840
           },
           {
-            "c": 308.28,
-            "t": 1783503300
+            "c": 333.22,
+            "t": 1784280900
           },
           {
-            "c": 308.66,
-            "t": 1783503360
+            "c": 333.77,
+            "t": 1784280960
           },
           {
-            "c": 309.4,
-            "t": 1783503420
+            "c": 333.94,
+            "t": 1784281020
           },
           {
-            "c": 309.48,
-            "t": 1783503480
+            "c": 334.36,
+            "t": 1784281080
           },
           {
-            "c": 309.58,
-            "t": 1783503540
+            "c": 334.94,
+            "t": 1784281140
           },
           {
-            "c": 308.55,
-            "t": 1783503600
+            "c": 333.49,
+            "t": 1784281200
           },
           {
-            "c": 308.24,
-            "t": 1783503660
+            "c": 334.36,
+            "t": 1784281260
           },
           {
-            "c": 308.23,
-            "t": 1783503720
+            "c": 334.03,
+            "t": 1784281320
           },
           {
-            "c": 308.08,
-            "t": 1783503780
+            "c": 333.8,
+            "t": 1784281380
           },
           {
-            "c": 307.91,
-            "t": 1783503840
+            "c": 333.88,
+            "t": 1784281440
           },
           {
-            "c": 307.42,
-            "t": 1783503900
+            "c": 333.72,
+            "t": 1784281500
           },
           {
-            "c": 307.12,
-            "t": 1783503960
+            "c": 332.93,
+            "t": 1784281560
           },
           {
-            "c": 307.99,
-            "t": 1783504020
+            "c": 333.6,
+            "t": 1784281620
           },
           {
-            "c": 308.25,
-            "t": 1783504080
+            "c": 333.53,
+            "t": 1784281680
           },
           {
-            "c": 308.53,
-            "t": 1783504140
+            "c": 333.16,
+            "t": 1784281740
           },
           {
-            "c": 309.51,
-            "t": 1783504200
+            "c": 331.7,
+            "t": 1784281800
           },
           {
-            "c": 309.29,
-            "t": 1783504260
+            "c": 331.16,
+            "t": 1784281860
           },
           {
-            "c": 309.25,
-            "t": 1783504320
+            "c": 331.88,
+            "t": 1784281920
           },
           {
-            "c": 309.28,
-            "t": 1783504380
+            "c": 331.8,
+            "t": 1784281980
           },
           {
-            "c": 309.1,
-            "t": 1783504440
+            "c": 332.25,
+            "t": 1784282040
           },
           {
-            "c": 308.91,
-            "t": 1783504500
+            "c": 332,
+            "t": 1784282100
           },
           {
-            "c": 309.18,
-            "t": 1783504560
+            "c": 331.84,
+            "t": 1784282160
           },
           {
-            "c": 309.13,
-            "t": 1783504620
+            "c": 331.46,
+            "t": 1784282220
           },
           {
-            "c": 309.18,
-            "t": 1783504680
+            "c": 331.37,
+            "t": 1784282280
           },
           {
-            "c": 309.19,
-            "t": 1783504740
+            "c": 330.92,
+            "t": 1784282340
           },
           {
-            "c": 308.8,
-            "t": 1783504800
+            "c": 330.5,
+            "t": 1784282400
           },
           {
-            "c": 308.64,
-            "t": 1783504860
+            "c": 330.29,
+            "t": 1784282460
           },
           {
-            "c": 308.64,
-            "t": 1783504920
+            "c": 329.53,
+            "t": 1784282520
           },
           {
-            "c": 308.96,
-            "t": 1783504980
+            "c": 329.85,
+            "t": 1784282580
           },
           {
-            "c": 308.98,
-            "t": 1783505040
+            "c": 330.26,
+            "t": 1784282640
           },
           {
-            "c": 309.18,
-            "t": 1783505100
+            "c": 330.18,
+            "t": 1784282700
           },
           {
-            "c": 309.46,
-            "t": 1783505160
+            "c": 329.93,
+            "t": 1784282760
           },
           {
-            "c": 309.26,
-            "t": 1783505220
+            "c": 330.12,
+            "t": 1784282820
           },
           {
-            "c": 309.78,
-            "t": 1783505280
+            "c": 330.01,
+            "t": 1784282880
           },
           {
-            "c": 309.68,
-            "t": 1783505340
+            "c": 329.69,
+            "t": 1784282940
           },
           {
-            "c": 309.67,
-            "t": 1783505400
+            "c": 329.09,
+            "t": 1784283000
           },
           {
-            "c": 309.97,
-            "t": 1783505460
+            "c": 329.45,
+            "t": 1784283060
           },
           {
-            "c": 309.98,
-            "t": 1783505520
+            "c": 330.09,
+            "t": 1784283120
           },
           {
-            "c": 310.1,
-            "t": 1783505580
+            "c": 330.19,
+            "t": 1784283180
           },
           {
-            "c": 309.94,
-            "t": 1783505640
+            "c": 330.44,
+            "t": 1784283240
           },
           {
-            "c": 310.09,
-            "t": 1783505700
+            "c": 330.24,
+            "t": 1784283300
           },
           {
-            "c": 310.06,
-            "t": 1783505760
+            "c": 330.01,
+            "t": 1784283360
           },
           {
-            "c": 310.28,
-            "t": 1783505820
+            "c": 330.03,
+            "t": 1784283420
           },
           {
-            "c": 310.19,
-            "t": 1783505880
+            "c": 330.52,
+            "t": 1784283480
           },
           {
-            "c": 310.23,
-            "t": 1783505940
+            "c": 330.58,
+            "t": 1784283540
           },
           {
-            "c": 310.5,
-            "t": 1783506000
+            "c": 330.27,
+            "t": 1784283600
           },
           {
-            "c": 310.38,
-            "t": 1783506060
+            "c": 330.61,
+            "t": 1784283660
           },
           {
-            "c": 310.46,
-            "t": 1783506120
+            "c": 330.25,
+            "t": 1784283720
           },
           {
-            "c": 310.43,
-            "t": 1783506180
+            "c": 330.5,
+            "t": 1784283780
           },
           {
-            "c": 310.58,
-            "t": 1783506240
+            "c": 330.8,
+            "t": 1784283840
           },
           {
-            "c": 310.25,
-            "t": 1783506300
+            "c": 330.85,
+            "t": 1784283900
           },
           {
-            "c": 309.91,
-            "t": 1783506360
+            "c": 331.27,
+            "t": 1784283960
           },
           {
-            "c": 310.03,
-            "t": 1783506420
+            "c": 331.35,
+            "t": 1784284020
           },
           {
-            "c": 309.12,
-            "t": 1783506480
+            "c": 331.19,
+            "t": 1784284080
           },
           {
-            "c": 308.85,
-            "t": 1783506540
+            "c": 331.84,
+            "t": 1784284140
           },
           {
-            "c": 309.02,
-            "t": 1783506600
+            "c": 332.72,
+            "t": 1784284200
           },
           {
-            "c": 309.31,
-            "t": 1783506660
+            "c": 332.88,
+            "t": 1784284260
           },
           {
-            "c": 309.32,
-            "t": 1783506720
+            "c": 333.25,
+            "t": 1784284320
           },
           {
-            "c": 309.44,
-            "t": 1783506780
+            "c": 333.56,
+            "t": 1784284380
           },
           {
-            "c": 309.63,
-            "t": 1783506840
+            "c": 333.94,
+            "t": 1784284440
           },
           {
-            "c": 309.32,
-            "t": 1783506900
+            "c": 333.18,
+            "t": 1784284500
           },
           {
-            "c": 309.96,
-            "t": 1783506960
+            "c": 333.05,
+            "t": 1784284560
           },
           {
-            "c": 309.71,
-            "t": 1783507020
+            "c": 332.4,
+            "t": 1784284620
           },
           {
-            "c": 309.83,
-            "t": 1783507080
+            "c": 332.38,
+            "t": 1784284680
           },
           {
-            "c": 310.24,
-            "t": 1783507140
+            "c": 332.41,
+            "t": 1784284740
           },
           {
-            "c": 310.45,
-            "t": 1783507200
+            "c": 332.54,
+            "t": 1784284800
           },
           {
-            "c": 310.2,
-            "t": 1783507260
+            "c": 332.69,
+            "t": 1784284860
           },
           {
-            "c": 310.26,
-            "t": 1783507320
+            "c": 332.87,
+            "t": 1784284920
           },
           {
-            "c": 310.33,
-            "t": 1783507380
+            "c": 332.67,
+            "t": 1784284980
           },
           {
-            "c": 310.27,
-            "t": 1783507440
+            "c": 333.07,
+            "t": 1784285040
           },
           {
-            "c": 310.29,
-            "t": 1783507500
+            "c": 333.35,
+            "t": 1784285100
           },
           {
-            "c": 310.23,
-            "t": 1783507560
+            "c": 333.45,
+            "t": 1784285160
           },
           {
-            "c": 310.54,
-            "t": 1783507620
+            "c": 333.16,
+            "t": 1784285220
           },
           {
-            "c": 310.41,
-            "t": 1783507680
+            "c": 332.83,
+            "t": 1784285280
           },
           {
-            "c": 310.05,
-            "t": 1783507740
+            "c": 332.62,
+            "t": 1784285340
           },
           {
-            "c": 309.24,
-            "t": 1783507800
+            "c": 332.18,
+            "t": 1784285400
           },
           {
-            "c": 309.38,
-            "t": 1783507860
+            "c": 332.41,
+            "t": 1784285460
           },
           {
-            "c": 309.13,
-            "t": 1783507920
+            "c": 332.33,
+            "t": 1784285520
           },
           {
-            "c": 309.17,
-            "t": 1783507980
+            "c": 332.08,
+            "t": 1784285580
           },
           {
-            "c": 309.37,
-            "t": 1783508040
+            "c": 332.8,
+            "t": 1784285640
           },
           {
-            "c": 309.16,
-            "t": 1783508100
+            "c": 333.14,
+            "t": 1784285700
           },
           {
-            "c": 308.83,
-            "t": 1783508160
+            "c": 332.83,
+            "t": 1784285760
           },
           {
-            "c": 308.82,
-            "t": 1783508220
+            "c": 332.71,
+            "t": 1784285820
           },
           {
-            "c": 309.09,
-            "t": 1783508280
+            "c": 332.99,
+            "t": 1784285880
           },
           {
-            "c": 308.89,
-            "t": 1783508340
+            "c": 333.18,
+            "t": 1784285940
           },
           {
-            "c": 308.95,
-            "t": 1783508400
+            "c": 332.82,
+            "t": 1784286000
           },
           {
-            "c": 308.94,
-            "t": 1783508460
+            "c": 332.77,
+            "t": 1784286060
           },
           {
-            "c": 309.25,
-            "t": 1783508520
+            "c": 332.68,
+            "t": 1784286120
           },
           {
-            "c": 309.36,
-            "t": 1783508580
+            "c": 332.81,
+            "t": 1784286180
           },
           {
-            "c": 309.34,
-            "t": 1783508640
+            "c": 332.94,
+            "t": 1784286240
           },
           {
-            "c": 309.39,
-            "t": 1783508700
+            "c": 333.33,
+            "t": 1784286300
           },
           {
-            "c": 309.67,
-            "t": 1783508760
+            "c": 333.22,
+            "t": 1784286360
           },
           {
-            "c": 310.2,
-            "t": 1783508820
+            "c": 333.18,
+            "t": 1784286420
           },
           {
-            "c": 309.71,
-            "t": 1783508880
+            "c": 333.42,
+            "t": 1784286480
           },
           {
-            "c": 309.51,
-            "t": 1783508940
+            "c": 333.3,
+            "t": 1784286540
           },
           {
-            "c": 309.76,
-            "t": 1783509000
+            "c": 333.37,
+            "t": 1784286600
           },
           {
-            "c": 309.78,
-            "t": 1783509060
+            "c": 333.47,
+            "t": 1784286660
           },
           {
-            "c": 309.82,
-            "t": 1783509120
+            "c": 333.76,
+            "t": 1784286720
           },
           {
-            "c": 309.94,
-            "t": 1783509180
+            "c": 333.8,
+            "t": 1784286780
           },
           {
-            "c": 309.97,
-            "t": 1783509240
+            "c": 333.75,
+            "t": 1784286840
           },
           {
-            "c": 310.05,
-            "t": 1783509300
+            "c": 333.76,
+            "t": 1784286900
           },
           {
-            "c": 310.06,
-            "t": 1783509360
+            "c": 333.81,
+            "t": 1784286960
           },
           {
-            "c": 310.34,
-            "t": 1783509420
+            "c": 333.71,
+            "t": 1784287020
           },
           {
-            "c": 310.2,
-            "t": 1783509480
+            "c": 333.64,
+            "t": 1784287080
           },
           {
-            "c": 310.31,
-            "t": 1783509540
+            "c": 333.72,
+            "t": 1784287140
           },
           {
-            "c": 310.49,
-            "t": 1783509600
+            "c": 333.92,
+            "t": 1784287200
           },
           {
-            "c": 310.73,
-            "t": 1783509660
+            "c": 334.06,
+            "t": 1784287260
           },
           {
-            "c": 310.6,
-            "t": 1783509720
+            "c": 334.04,
+            "t": 1784287320
           },
           {
-            "c": 310.47,
-            "t": 1783509780
+            "c": 333.61,
+            "t": 1784287380
           },
           {
-            "c": 310.49,
-            "t": 1783509840
+            "c": 333.54,
+            "t": 1784287440
           },
           {
-            "c": 310.19,
-            "t": 1783509900
+            "c": 334.22,
+            "t": 1784287500
           },
           {
-            "c": 309.96,
-            "t": 1783509960
+            "c": 334.35,
+            "t": 1784287560
           },
           {
-            "c": 309.99,
-            "t": 1783510020
+            "c": 334.34,
+            "t": 1784287620
           },
           {
-            "c": 310.14,
-            "t": 1783510080
+            "c": 334.56,
+            "t": 1784287680
           },
           {
-            "c": 310.07,
-            "t": 1783510140
+            "c": 334.65,
+            "t": 1784287740
           },
           {
-            "c": 310.02,
-            "t": 1783510200
+            "c": 334.85,
+            "t": 1784287800
           },
           {
-            "c": 309.89,
-            "t": 1783510260
+            "c": 334.69,
+            "t": 1784287860
           },
           {
-            "c": 309.57,
-            "t": 1783510320
+            "c": 334.46,
+            "t": 1784287920
           },
           {
-            "c": 309.6,
-            "t": 1783510380
+            "c": 334.27,
+            "t": 1784287980
           },
           {
-            "c": 309.77,
-            "t": 1783510440
+            "c": 334,
+            "t": 1784288040
           },
           {
-            "c": 309.65,
-            "t": 1783510500
+            "c": 333.71,
+            "t": 1784288100
           },
           {
-            "c": 309.73,
-            "t": 1783510560
+            "c": 333.69,
+            "t": 1784288160
           },
           {
-            "c": 310.03,
-            "t": 1783510620
+            "c": 333.82,
+            "t": 1784288220
           },
           {
-            "c": 309.92,
-            "t": 1783510680
+            "c": 333.83,
+            "t": 1784288280
           },
           {
-            "c": 309.92,
-            "t": 1783510740
+            "c": 333.75,
+            "t": 1784288340
           },
           {
-            "c": 309.96,
-            "t": 1783510800
+            "c": 333.3,
+            "t": 1784288400
           },
           {
-            "c": 309.96,
-            "t": 1783510860
+            "c": 333.64,
+            "t": 1784288460
           },
           {
-            "c": 309.74,
-            "t": 1783510920
+            "c": 333.79,
+            "t": 1784288520
           },
           {
-            "c": 309.74,
-            "t": 1783510980
+            "c": 333.74,
+            "t": 1784288580
           },
           {
-            "c": 309.56,
-            "t": 1783511040
+            "c": 333.71,
+            "t": 1784288640
           },
           {
-            "c": 309.81,
-            "t": 1783511100
+            "c": 333.24,
+            "t": 1784288700
           },
           {
-            "c": 309.85,
-            "t": 1783511160
+            "c": 333.23,
+            "t": 1784288760
           },
           {
-            "c": 309.9,
-            "t": 1783511220
+            "c": 333.5,
+            "t": 1784288820
           },
           {
-            "c": 309.96,
-            "t": 1783511280
+            "c": 333.51,
+            "t": 1784288880
           },
           {
-            "c": 309.81,
-            "t": 1783511340
+            "c": 333.57,
+            "t": 1784288940
           },
           {
-            "c": 309.77,
-            "t": 1783511400
+            "c": 333.13,
+            "t": 1784289000
           },
           {
-            "c": 309.66,
-            "t": 1783511460
+            "c": 333.28,
+            "t": 1784289060
           },
           {
-            "c": 309.76,
-            "t": 1783511520
+            "c": 333.1,
+            "t": 1784289120
           },
           {
-            "c": 309.9,
-            "t": 1783511580
+            "c": 332.97,
+            "t": 1784289180
           },
           {
-            "c": 309.92,
-            "t": 1783511640
+            "c": 333.09,
+            "t": 1784289240
           },
           {
-            "c": 310.12,
-            "t": 1783511700
+            "c": 332.91,
+            "t": 1784289300
           },
           {
-            "c": 310.2,
-            "t": 1783511760
+            "c": 332.57,
+            "t": 1784289360
           },
           {
-            "c": 310.39,
-            "t": 1783511820
+            "c": 332.42,
+            "t": 1784289420
           },
           {
-            "c": 310.39,
-            "t": 1783511880
+            "c": 332.23,
+            "t": 1784289480
           },
           {
-            "c": 310.24,
-            "t": 1783511940
+            "c": 332.32,
+            "t": 1784289540
           },
           {
-            "c": 310.26,
-            "t": 1783512000
+            "c": 332.02,
+            "t": 1784289600
           },
           {
-            "c": 310.24,
-            "t": 1783512060
+            "c": 331.37,
+            "t": 1784289660
           },
           {
-            "c": 310.39,
-            "t": 1783512120
+            "c": 331.4,
+            "t": 1784289720
           },
           {
-            "c": 310.5,
-            "t": 1783512180
+            "c": 331.12,
+            "t": 1784289780
           },
           {
-            "c": 310.75,
-            "t": 1783512240
+            "c": 330.87,
+            "t": 1784289840
           },
           {
-            "c": 311.03,
-            "t": 1783512300
+            "c": 330.87,
+            "t": 1784289900
           },
           {
-            "c": 310.89,
-            "t": 1783512360
+            "c": 330.22,
+            "t": 1784289960
           },
           {
-            "c": 310.73,
-            "t": 1783512420
+            "c": 330.14,
+            "t": 1784290020
           },
           {
-            "c": 310.57,
-            "t": 1783512480
+            "c": 330.18,
+            "t": 1784290080
           },
           {
-            "c": 310.89,
-            "t": 1783512540
+            "c": 330.6,
+            "t": 1784290140
           },
           {
-            "c": 311,
-            "t": 1783512600
+            "c": 330.53,
+            "t": 1784290200
           },
           {
-            "c": 310.8,
-            "t": 1783512660
+            "c": 330.08,
+            "t": 1784290260
           },
           {
-            "c": 310.65,
-            "t": 1783512720
+            "c": 330.4,
+            "t": 1784290320
           },
           {
-            "c": 310.6,
-            "t": 1783512780
+            "c": 330.23,
+            "t": 1784290380
           },
           {
-            "c": 310.51,
-            "t": 1783512840
+            "c": 330.31,
+            "t": 1784290440
           },
           {
-            "c": 310.67,
-            "t": 1783512900
+            "c": 330.42,
+            "t": 1784290500
           },
           {
-            "c": 310.68,
-            "t": 1783512960
+            "c": 330.88,
+            "t": 1784290560
           },
           {
-            "c": 310.66,
-            "t": 1783513020
+            "c": 330.84,
+            "t": 1784290620
           },
           {
-            "c": 310.81,
-            "t": 1783513080
+            "c": 330.9,
+            "t": 1784290680
           },
           {
-            "c": 310.88,
-            "t": 1783513140
+            "c": 330.79,
+            "t": 1784290740
           },
           {
-            "c": 311.33,
-            "t": 1783513200
+            "c": 330.98,
+            "t": 1784290800
           },
           {
-            "c": 311.07,
-            "t": 1783513260
+            "c": 330.81,
+            "t": 1784290860
           },
           {
-            "c": 311.22,
-            "t": 1783513320
+            "c": 330.71,
+            "t": 1784290920
           },
           {
-            "c": 311.14,
-            "t": 1783513380
+            "c": 330.61,
+            "t": 1784290980
           },
           {
-            "c": 311.31,
-            "t": 1783513440
+            "c": 330.55,
+            "t": 1784291040
           },
           {
-            "c": 311.31,
-            "t": 1783513500
+            "c": 331.15,
+            "t": 1784291100
           },
           {
-            "c": 311.21,
-            "t": 1783513560
+            "c": 331.23,
+            "t": 1784291160
           },
           {
-            "c": 311.32,
-            "t": 1783513620
+            "c": 331.64,
+            "t": 1784291220
           },
           {
-            "c": 311.39,
-            "t": 1783513680
+            "c": 331.53,
+            "t": 1784291280
           },
           {
-            "c": 311.62,
-            "t": 1783513740
+            "c": 331.73,
+            "t": 1784291340
           },
           {
-            "c": 311.51,
-            "t": 1783513800
+            "c": 331.6,
+            "t": 1784291400
           },
           {
-            "c": 311.49,
-            "t": 1783513860
+            "c": 331.86,
+            "t": 1784291460
           },
           {
-            "c": 311.49,
-            "t": 1783513920
+            "c": 332.1,
+            "t": 1784291520
           },
           {
-            "c": 311.65,
-            "t": 1783513980
+            "c": 332.15,
+            "t": 1784291580
           },
           {
-            "c": 311.5,
-            "t": 1783514040
+            "c": 331.97,
+            "t": 1784291640
           },
           {
-            "c": 311.39,
-            "t": 1783514100
+            "c": 331.84,
+            "t": 1784291700
           },
           {
-            "c": 311.4,
-            "t": 1783514160
+            "c": 331.66,
+            "t": 1784291760
           },
           {
-            "c": 311.45,
-            "t": 1783514220
+            "c": 331.8,
+            "t": 1784291820
           },
           {
-            "c": 311.76,
-            "t": 1783514280
+            "c": 331.82,
+            "t": 1784291880
           },
           {
-            "c": 312.12,
-            "t": 1783514340
+            "c": 332.13,
+            "t": 1784291940
           },
           {
-            "c": 312.12,
-            "t": 1783514400
+            "c": 331.97,
+            "t": 1784292000
           },
           {
-            "c": 312.16,
-            "t": 1783514460
+            "c": 332.08,
+            "t": 1784292060
           },
           {
-            "c": 312.12,
-            "t": 1783514520
+            "c": 332.16,
+            "t": 1784292120
           },
           {
-            "c": 312.04,
-            "t": 1783514580
+            "c": 332.23,
+            "t": 1784292180
           },
           {
-            "c": 312.2,
-            "t": 1783514640
+            "c": 332.21,
+            "t": 1784292240
           },
           {
-            "c": 312.16,
-            "t": 1783514700
+            "c": 331.96,
+            "t": 1784292300
           },
           {
-            "c": 312.42,
-            "t": 1783514760
+            "c": 331.83,
+            "t": 1784292360
           },
           {
-            "c": 312.59,
-            "t": 1783514820
+            "c": 331.92,
+            "t": 1784292420
           },
           {
-            "c": 312.76,
-            "t": 1783514880
+            "c": 332.11,
+            "t": 1784292480
           },
           {
-            "c": 312.78,
-            "t": 1783514940
+            "c": 331.8,
+            "t": 1784292540
           },
           {
-            "c": 312.9,
-            "t": 1783515000
+            "c": 331.7,
+            "t": 1784292600
           },
           {
-            "c": 313.07,
-            "t": 1783515060
+            "c": 332.65,
+            "t": 1784292660
           },
           {
-            "c": 313.15,
-            "t": 1783515120
+            "c": 332.58,
+            "t": 1784292720
           },
           {
-            "c": 312.99,
-            "t": 1783515180
+            "c": 332.78,
+            "t": 1784292780
           },
           {
-            "c": 313.11,
-            "t": 1783515240
+            "c": 332.08,
+            "t": 1784292840
           },
           {
-            "c": 313.27,
-            "t": 1783515300
+            "c": 331.68,
+            "t": 1784292900
           },
           {
-            "c": 313.19,
-            "t": 1783515360
+            "c": 331.62,
+            "t": 1784292960
           },
           {
-            "c": 313.15,
-            "t": 1783515420
+            "c": 331.25,
+            "t": 1784293020
           },
           {
-            "c": 313.22,
-            "t": 1783515480
+            "c": 330.61,
+            "t": 1784293080
           },
           {
-            "c": 313.12,
-            "t": 1783515540
+            "c": 330.54,
+            "t": 1784293140
           },
           {
-            "c": 313.24,
-            "t": 1783515600
+            "c": 330.63,
+            "t": 1784293200
           },
           {
-            "c": 313.15,
-            "t": 1783515660
+            "c": 330.44,
+            "t": 1784293260
           },
           {
-            "c": 313.11,
-            "t": 1783515720
+            "c": 330.29,
+            "t": 1784293320
           },
           {
-            "c": 313.17,
-            "t": 1783515780
+            "c": 330.18,
+            "t": 1784293380
           },
           {
-            "c": 313.32,
-            "t": 1783515840
+            "c": 330.08,
+            "t": 1784293440
           },
           {
-            "c": 313.45,
-            "t": 1783515900
+            "c": 330.07,
+            "t": 1784293500
           },
           {
-            "c": 313.6,
-            "t": 1783515960
+            "c": 330.13,
+            "t": 1784293560
           },
           {
-            "c": 313.61,
-            "t": 1783516020
+            "c": 330.32,
+            "t": 1784293620
           },
           {
-            "c": 313.56,
-            "t": 1783516080
+            "c": 330.15,
+            "t": 1784293680
           },
           {
-            "c": 313.74,
-            "t": 1783516140
+            "c": 330.29,
+            "t": 1784293740
           },
           {
-            "c": 313.75,
-            "t": 1783516200
+            "c": 330.22,
+            "t": 1784293800
           },
           {
-            "c": 313.82,
-            "t": 1783516260
+            "c": 329.96,
+            "t": 1784293860
           },
           {
-            "c": 313.98,
-            "t": 1783516320
+            "c": 329.72,
+            "t": 1784293920
           },
           {
-            "c": 314.02,
-            "t": 1783516380
+            "c": 329.56,
+            "t": 1784293980
           },
           {
-            "c": 313.89,
-            "t": 1783516440
+            "c": 329.49,
+            "t": 1784294040
           },
           {
-            "c": 313.91,
-            "t": 1783516500
+            "c": 329.69,
+            "t": 1784294100
           },
           {
-            "c": 313.79,
-            "t": 1783516560
+            "c": 330.12,
+            "t": 1784294160
           },
           {
-            "c": 313.43,
-            "t": 1783516620
+            "c": 329.85,
+            "t": 1784294220
           },
           {
-            "c": 313.33,
-            "t": 1783516680
+            "c": 329.66,
+            "t": 1784294280
           },
           {
-            "c": 313.53,
-            "t": 1783516740
+            "c": 329.61,
+            "t": 1784294340
           },
           {
-            "c": 313.34,
-            "t": 1783516800
+            "c": 329.39,
+            "t": 1784294400
           },
           {
-            "c": 313.46,
-            "t": 1783516860
+            "c": 329.34,
+            "t": 1784294460
           },
           {
-            "c": 313.56,
-            "t": 1783516920
+            "c": 329.33,
+            "t": 1784294520
           },
           {
-            "c": 313.81,
-            "t": 1783516980
+            "c": 329.3,
+            "t": 1784294580
           },
           {
-            "c": 313.79,
-            "t": 1783517040
+            "c": 329.36,
+            "t": 1784294640
           },
           {
-            "c": 313.67,
-            "t": 1783517100
+            "c": 330.34,
+            "t": 1784294700
           },
           {
-            "c": 313.67,
-            "t": 1783517160
+            "c": 330.8,
+            "t": 1784294760
           },
           {
-            "c": 313.89,
-            "t": 1783517220
+            "c": 330.47,
+            "t": 1784294820
           },
           {
-            "c": 314.16,
-            "t": 1783517280
+            "c": 330.5,
+            "t": 1784294880
           },
           {
-            "c": 314.11,
-            "t": 1783517340
+            "c": 330.53,
+            "t": 1784294940
           },
           {
-            "c": 314.22,
-            "t": 1783517400
+            "c": 330.71,
+            "t": 1784295000
           },
           {
-            "c": 314.19,
-            "t": 1783517460
+            "c": 330.53,
+            "t": 1784295060
           },
           {
-            "c": 314.21,
-            "t": 1783517520
+            "c": 330.24,
+            "t": 1784295120
           },
           {
-            "c": 314.34,
-            "t": 1783517580
+            "c": 330.25,
+            "t": 1784295180
           },
           {
-            "c": 314.12,
-            "t": 1783517640
+            "c": 330.34,
+            "t": 1784295240
           },
           {
-            "c": 314.14,
-            "t": 1783517700
+            "c": 330.15,
+            "t": 1784295300
           },
           {
-            "c": 314.38,
-            "t": 1783517760
+            "c": 330.31,
+            "t": 1784295360
           },
           {
-            "c": 314.35,
-            "t": 1783517820
+            "c": 330.57,
+            "t": 1784295420
           },
           {
-            "c": 314.31,
-            "t": 1783517880
+            "c": 330.33,
+            "t": 1784295480
           },
           {
-            "c": 314.28,
-            "t": 1783517940
+            "c": 330.47,
+            "t": 1784295540
           },
           {
-            "c": 314.26,
-            "t": 1783518000
+            "c": 330.49,
+            "t": 1784295600
           },
           {
-            "c": 314.4,
-            "t": 1783518060
+            "c": 330.67,
+            "t": 1784295660
           },
           {
-            "c": 314.55,
-            "t": 1783518120
+            "c": 330.72,
+            "t": 1784295720
           },
           {
-            "c": 314.44,
-            "t": 1783518180
+            "c": 330.81,
+            "t": 1784295780
           },
           {
-            "c": 314.48,
-            "t": 1783518240
+            "c": 330.89,
+            "t": 1784295840
           },
           {
-            "c": 314.45,
-            "t": 1783518300
+            "c": 330.94,
+            "t": 1784295900
           },
           {
-            "c": 314.49,
-            "t": 1783518360
+            "c": 330.81,
+            "t": 1784295960
           },
           {
-            "c": 314.42,
-            "t": 1783518420
+            "c": 330.69,
+            "t": 1784296020
           },
           {
-            "c": 314.28,
-            "t": 1783518480
+            "c": 330.71,
+            "t": 1784296080
           },
           {
-            "c": 314.3,
-            "t": 1783518540
+            "c": 330.8,
+            "t": 1784296140
           },
           {
-            "c": 314.54,
-            "t": 1783518600
+            "c": 330.7,
+            "t": 1784296200
           },
           {
-            "c": 314.59,
-            "t": 1783518660
+            "c": 330.55,
+            "t": 1784296260
           },
           {
-            "c": 314.56,
-            "t": 1783518720
+            "c": 330.6,
+            "t": 1784296320
           },
           {
-            "c": 314.41,
-            "t": 1783518780
+            "c": 330.74,
+            "t": 1784296380
           },
           {
-            "c": 314.38,
-            "t": 1783518840
+            "c": 330.81,
+            "t": 1784296440
           },
           {
-            "c": 314.36,
-            "t": 1783518900
+            "c": 331.2,
+            "t": 1784296500
           },
           {
-            "c": 314.31,
-            "t": 1783518960
+            "c": 331.47,
+            "t": 1784296560
           },
           {
-            "c": 314.41,
-            "t": 1783519020
+            "c": 331.49,
+            "t": 1784296620
           },
           {
-            "c": 314.43,
-            "t": 1783519080
+            "c": 331.64,
+            "t": 1784296680
           },
           {
-            "c": 314.39,
-            "t": 1783519140
+            "c": 331.77,
+            "t": 1784296740
           },
           {
-            "c": 314.45,
-            "t": 1783519200
+            "c": 331.85,
+            "t": 1784296800
           },
           {
-            "c": 314.71,
-            "t": 1783519260
+            "c": 331.97,
+            "t": 1784296860
           },
           {
-            "c": 314.46,
-            "t": 1783519320
+            "c": 332.11,
+            "t": 1784296920
           },
           {
-            "c": 314.67,
-            "t": 1783519380
+            "c": 332.1,
+            "t": 1784296980
           },
           {
-            "c": 314.7,
-            "t": 1783519440
+            "c": 332.03,
+            "t": 1784297040
           },
           {
-            "c": 314.7,
-            "t": 1783519500
+            "c": 332.17,
+            "t": 1784297100
           },
           {
-            "c": 314.66,
-            "t": 1783519560
+            "c": 332.15,
+            "t": 1784297160
           },
           {
-            "c": 314.68,
-            "t": 1783519620
+            "c": 332.03,
+            "t": 1784297220
           },
           {
-            "c": 314.47,
-            "t": 1783519680
+            "c": 332,
+            "t": 1784297280
           },
           {
-            "c": 314.69,
-            "t": 1783519740
+            "c": 331.9,
+            "t": 1784297340
           },
           {
-            "c": 314.54,
-            "t": 1783519800
+            "c": 332.51,
+            "t": 1784297400
           },
           {
-            "c": 314.52,
-            "t": 1783519860
+            "c": 332.78,
+            "t": 1784297460
           },
           {
-            "c": 314.55,
-            "t": 1783519920
+            "c": 333,
+            "t": 1784297520
           },
           {
-            "c": 314.59,
-            "t": 1783519980
+            "c": 332.66,
+            "t": 1784297580
           },
           {
-            "c": 314.58,
-            "t": 1783520040
+            "c": 332.61,
+            "t": 1784297640
           },
           {
-            "c": 314.55,
-            "t": 1783520100
+            "c": 332.26,
+            "t": 1784297700
           },
           {
-            "c": 314.4,
-            "t": 1783520160
+            "c": 332.24,
+            "t": 1784297760
           },
           {
-            "c": 314.44,
-            "t": 1783520220
+            "c": 332.39,
+            "t": 1784297820
           },
           {
-            "c": 314.45,
-            "t": 1783520280
+            "c": 332.41,
+            "t": 1784297880
           },
           {
-            "c": 314.5,
-            "t": 1783520340
+            "c": 332.35,
+            "t": 1784297940
           },
           {
-            "c": 314.48,
-            "t": 1783520400
+            "c": 332.48,
+            "t": 1784298000
           },
           {
-            "c": 314.52,
-            "t": 1783520460
+            "c": 332.46,
+            "t": 1784298060
           },
           {
-            "c": 314.55,
-            "t": 1783520520
+            "c": 332.54,
+            "t": 1784298120
           },
           {
-            "c": 314.58,
-            "t": 1783520580
+            "c": 332.49,
+            "t": 1784298180
           },
           {
-            "c": 314.43,
-            "t": 1783520640
+            "c": 332.54,
+            "t": 1784298240
           },
           {
-            "c": 314.5,
-            "t": 1783520700
+            "c": 332.52,
+            "t": 1784298300
           },
           {
-            "c": 314.42,
-            "t": 1783520760
+            "c": 332.34,
+            "t": 1784298360
           },
           {
-            "c": 314.25,
-            "t": 1783520820
+            "c": 332.43,
+            "t": 1784298420
           },
           {
-            "c": 314.16,
-            "t": 1783520880
+            "c": 332.41,
+            "t": 1784298480
           },
           {
-            "c": 314.11,
-            "t": 1783520940
+            "c": 332.38,
+            "t": 1784298540
           },
           {
-            "c": 313.91,
-            "t": 1783521000
+            "c": 332.29,
+            "t": 1784298600
           },
           {
-            "c": 314.09,
-            "t": 1783521060
+            "c": 332.3,
+            "t": 1784298660
           },
           {
-            "c": 314.16,
-            "t": 1783521120
+            "c": 332.23,
+            "t": 1784298720
           },
           {
-            "c": 314.06,
-            "t": 1783521180
+            "c": 332.29,
+            "t": 1784298780
           },
           {
-            "c": 314.08,
-            "t": 1783521240
+            "c": 332.23,
+            "t": 1784298840
           },
           {
-            "c": 314.02,
-            "t": 1783521300
+            "c": 332.3,
+            "t": 1784298900
           },
           {
-            "c": 314.13,
-            "t": 1783521360
+            "c": 332.35,
+            "t": 1784298960
           },
           {
-            "c": 314.11,
-            "t": 1783521420
+            "c": 332.55,
+            "t": 1784299020
           },
           {
-            "c": 314.12,
-            "t": 1783521480
+            "c": 332.46,
+            "t": 1784299080
           },
           {
-            "c": 314.14,
-            "t": 1783521540
+            "c": 332.47,
+            "t": 1784299140
           },
           {
-            "c": 314,
-            "t": 1783521600
+            "c": 332.47,
+            "t": 1784299200
           },
           {
-            "c": 313.85,
-            "t": 1783521660
+            "c": 333,
+            "t": 1784299260
           },
           {
-            "c": 313.75,
-            "t": 1783521720
+            "c": 333.03,
+            "t": 1784299320
           },
           {
-            "c": 313.95,
-            "t": 1783521780
+            "c": 333.31,
+            "t": 1784299380
           },
           {
-            "c": 313.95,
-            "t": 1783521840
+            "c": 333.58,
+            "t": 1784299440
           },
           {
-            "c": 313.97,
-            "t": 1783521900
+            "c": 334.05,
+            "t": 1784299500
           },
           {
-            "c": 314.08,
-            "t": 1783521960
+            "c": 334.06,
+            "t": 1784299560
           },
           {
-            "c": 314.06,
-            "t": 1783522020
+            "c": 334.29,
+            "t": 1784299620
           },
           {
-            "c": 314.19,
-            "t": 1783522080
+            "c": 334.58,
+            "t": 1784299680
           },
           {
-            "c": 314.19,
-            "t": 1783522140
+            "c": 334.49,
+            "t": 1784299740
           },
           {
-            "c": 314.37,
-            "t": 1783522200
+            "c": 333.95,
+            "t": 1784299800
           },
           {
-            "c": 314.24,
-            "t": 1783522260
+            "c": 334.14,
+            "t": 1784299860
           },
           {
-            "c": 314.21,
-            "t": 1783522320
+            "c": 334.31,
+            "t": 1784299920
           },
           {
-            "c": 314.19,
-            "t": 1783522380
+            "c": 334.28,
+            "t": 1784299980
           },
           {
-            "c": 314.21,
-            "t": 1783522440
+            "c": 334.27,
+            "t": 1784300040
           },
           {
-            "c": 314.2,
-            "t": 1783522500
+            "c": 334.07,
+            "t": 1784300100
           },
           {
-            "c": 314.06,
-            "t": 1783522560
+            "c": 334.15,
+            "t": 1784300160
           },
           {
-            "c": 314.13,
-            "t": 1783522620
+            "c": 334.16,
+            "t": 1784300220
           },
           {
-            "c": 313.96,
-            "t": 1783522680
+            "c": 334.12,
+            "t": 1784300280
           },
           {
-            "c": 313.89,
-            "t": 1783522740
+            "c": 333.93,
+            "t": 1784300340
           },
           {
-            "c": 314,
-            "t": 1783522800
+            "c": 333.97,
+            "t": 1784300400
           },
           {
-            "c": 313.85,
-            "t": 1783522860
+            "c": 334.11,
+            "t": 1784300460
           },
           {
-            "c": 313.83,
-            "t": 1783522920
+            "c": 334.14,
+            "t": 1784300520
           },
           {
-            "c": 313.85,
-            "t": 1783522980
+            "c": 334.07,
+            "t": 1784300580
           },
           {
-            "c": 314.01,
-            "t": 1783523040
+            "c": 334.02,
+            "t": 1784300640
           },
           {
-            "c": 313.97,
-            "t": 1783523100
+            "c": 334.52,
+            "t": 1784300700
           },
           {
-            "c": 313.92,
-            "t": 1783523160
+            "c": 334.1,
+            "t": 1784300760
           },
           {
-            "c": 314.02,
-            "t": 1783523220
+            "c": 334.07,
+            "t": 1784300820
           },
           {
-            "c": 314.13,
-            "t": 1783523280
+            "c": 334.45,
+            "t": 1784300880
           },
           {
-            "c": 314.03,
-            "t": 1783523340
+            "c": 334.03,
+            "t": 1784300940
           },
           {
-            "c": 313.91,
-            "t": 1783523400
+            "c": 334.03,
+            "t": 1784301000
           },
           {
-            "c": 313.94,
-            "t": 1783523460
+            "c": 334.22,
+            "t": 1784301060
           },
           {
-            "c": 314.01,
-            "t": 1783523520
+            "c": 333.94,
+            "t": 1784301120
           },
           {
-            "c": 313.95,
-            "t": 1783523580
+            "c": 334.12,
+            "t": 1784301180
           },
           {
-            "c": 313.93,
-            "t": 1783523640
+            "c": 333.67,
+            "t": 1784301240
           },
           {
-            "c": 313.96,
-            "t": 1783523700
+            "c": 333.64,
+            "t": 1784301300
           },
           {
-            "c": 313.91,
-            "t": 1783523760
+            "c": 333.68,
+            "t": 1784301360
           },
           {
-            "c": 313.92,
-            "t": 1783523820
+            "c": 333.41,
+            "t": 1784301420
           },
           {
-            "c": 313.75,
-            "t": 1783523880
+            "c": 333.35,
+            "t": 1784301480
           },
           {
-            "c": 313.68,
-            "t": 1783523940
+            "c": 333.36,
+            "t": 1784301540
           },
           {
-            "c": 313.7,
-            "t": 1783524000
+            "c": 333.31,
+            "t": 1784301600
           },
           {
-            "c": 313.81,
-            "t": 1783524060
+            "c": 333.01,
+            "t": 1784301660
           },
           {
-            "c": 313.79,
-            "t": 1783524120
+            "c": 332.99,
+            "t": 1784301720
           },
           {
-            "c": 313.78,
-            "t": 1783524180
+            "c": 333.05,
+            "t": 1784301780
           },
           {
-            "c": 313.96,
-            "t": 1783524240
+            "c": 332.78,
+            "t": 1784301840
           },
           {
-            "c": 313.84,
-            "t": 1783524300
+            "c": 332.66,
+            "t": 1784301900
           },
           {
-            "c": 314,
-            "t": 1783524360
+            "c": 332.87,
+            "t": 1784301960
           },
           {
-            "c": 313.97,
-            "t": 1783524420
+            "c": 332.82,
+            "t": 1784302020
           },
           {
-            "c": 313.84,
-            "t": 1783524480
+            "c": 332.65,
+            "t": 1784302080
           },
           {
-            "c": 313.82,
-            "t": 1783524540
+            "c": 332.82,
+            "t": 1784302140
           },
           {
-            "c": 314.06,
-            "t": 1783524600
+            "c": 332.67,
+            "t": 1784302200
           },
           {
-            "c": 314.13,
-            "t": 1783524660
+            "c": 332.72,
+            "t": 1784302260
           },
           {
-            "c": 314.07,
-            "t": 1783524720
+            "c": 332.56,
+            "t": 1784302320
           },
           {
-            "c": 313.99,
-            "t": 1783524780
+            "c": 332.33,
+            "t": 1784302380
           },
           {
-            "c": 313.96,
-            "t": 1783524840
+            "c": 332.72,
+            "t": 1784302440
           },
           {
-            "c": 313.88,
-            "t": 1783524900
+            "c": 332.48,
+            "t": 1784302500
           },
           {
-            "c": 314.02,
-            "t": 1783524960
+            "c": 332.7,
+            "t": 1784302560
           },
           {
-            "c": 313.89,
-            "t": 1783525020
+            "c": 333.09,
+            "t": 1784302620
           },
           {
-            "c": 313.88,
-            "t": 1783525080
+            "c": 333.12,
+            "t": 1784302680
           },
           {
-            "c": 313.83,
-            "t": 1783525140
+            "c": 333.43,
+            "t": 1784302740
           },
           {
-            "c": 313.84,
-            "t": 1783525200
+            "c": 333.13,
+            "t": 1784302800
           },
           {
-            "c": 313.85,
-            "t": 1783525260
+            "c": 332.94,
+            "t": 1784302860
           },
           {
-            "c": 313.45,
-            "t": 1783525320
+            "c": 333.38,
+            "t": 1784302920
           },
           {
-            "c": 313.32,
-            "t": 1783525380
+            "c": 333.61,
+            "t": 1784302980
           },
           {
-            "c": 313.1,
-            "t": 1783525440
+            "c": 333.9,
+            "t": 1784303040
           },
           {
-            "c": 312.89,
-            "t": 1783525500
+            "c": 333.92,
+            "t": 1784303100
           },
           {
-            "c": 312.85,
-            "t": 1783525560
+            "c": 334.06,
+            "t": 1784303160
           },
           {
-            "c": 312.82,
-            "t": 1783525620
+            "c": 333.95,
+            "t": 1784303220
           },
           {
-            "c": 313.06,
-            "t": 1783525680
+            "c": 333.93,
+            "t": 1784303280
           },
           {
-            "c": 313.02,
-            "t": 1783525740
+            "c": 333.88,
+            "t": 1784303340
           },
           {
-            "c": 313.38,
-            "t": 1783525800
+            "c": 333.87,
+            "t": 1784303400
           },
           {
-            "c": 313.4,
-            "t": 1783525860
+            "c": 333.95,
+            "t": 1784303460
           },
           {
-            "c": 313.42,
-            "t": 1783525920
+            "c": 333.9,
+            "t": 1784303520
           },
           {
-            "c": 313.44,
-            "t": 1783525980
+            "c": 334.35,
+            "t": 1784303580
           },
           {
-            "c": 313.37,
-            "t": 1783526040
+            "c": 334.18,
+            "t": 1784303640
           },
           {
-            "c": 313.75,
-            "t": 1783526100
+            "c": 333.9,
+            "t": 1784303700
           },
           {
-            "c": 313.89,
-            "t": 1783526160
+            "c": 333.75,
+            "t": 1784303760
           },
           {
-            "c": 313.88,
-            "t": 1783526220
+            "c": 333.93,
+            "t": 1784303820
           },
           {
-            "c": 313.76,
-            "t": 1783526280
+            "c": 334.14,
+            "t": 1784303880
           },
           {
-            "c": 313.3,
-            "t": 1783526340
+            "c": 333.84,
+            "t": 1784303940
           },
           {
-            "c": 313.83,
-            "t": 1783526400
+            "c": 333.74,
+            "t": 1784304000
           }
         ]
       },
       "changes": {
-        "price1w": 294.38,
-        "price1m": 307.34,
+        "price1w": 315.32,
+        "price1m": 299.24,
+        "price3m": 263.4,
+        "price6m": 255.53,
         "priceYTD": 271.86,
-        "price1y": 209.95,
-        "price5y": 144.57,
+        "price1y": 210.16,
+        "price5y": 146.39,
         "priceMAX": 0.0837
       },
       "source": "polygon"
@@ -2231,12 +2247,12 @@
       {
         "t": "2026-07-01",
         "o": 293.44,
-        "h": 315.48,
+        "h": 334.99,
         "l": 289.195,
-        "c": 313.39,
-        "a": 313.39,
-        "v": 262837055,
-        "ch": 8.3
+        "c": 333.74,
+        "a": 333.74,
+        "v": 606012316,
+        "ch": 15.34
       },
       {
         "t": "2026-06-01",
@@ -2350,38 +2366,37 @@
       }
     ],
     "quote": {
-      "p": 313.83,
-      "pd": 313.83,
-      "c": 3.17,
-      "cp": 1.02,
-      "cl": 310.66,
-      "cdr": 1,
-      "o": 311.91,
-      "h": 313.89,
-      "l": 307.05,
-      "v": 19646273,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 317.4,
-      "l52": 201.5,
+      "c": 0.48,
+      "e": true,
+      "h": 334.99,
+      "l": 329,
+      "o": 331.98,
+      "p": 333.74,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 63704417,
+      "cl": 333.26,
+      "cp": 0.14,
+      "ec": -0.08,
+      "ep": 333.6638,
+      "es": "After-hours",
+      "eu": "Jul 17, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 313.3,
-      "epd": 313.3,
-      "ec": -0.53,
-      "ecp": -0.17,
-      "eu": "Jul 8, 2026, 6:40 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550442465.408,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 333.74,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": 1,
+      "ecp": -0.02,
+      "epd": 333.66,
+      "etd": "2026-07-17",
+      "ets": 1784332799392.9846,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 334.99,
+      "l52": 201.5,
+      "uid": "AAPL",
       "days": 0,
-      "exp": 1783550729358,
-      "symbol": "AAPL",
-      "uid": "AAPL"
+      "symbol": "AAPL"
     }
   }
 }

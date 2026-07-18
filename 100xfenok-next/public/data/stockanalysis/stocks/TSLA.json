@@ -3,72 +3,72 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "TSLA",
-  "fetched_at": "2026-07-08T22:45:40Z",
+  "source_as_of": "2026-07-17T20:00:00Z",
+  "fetched_at": "2026-07-18T22:56:41Z",
   "endpoints": {
-    "overview": "/api/symbol/s/TSLA/overview",
+    "overview": "/stocks/tsla/__data.json",
     "history": "/api/symbol/s/TSLA/history?range=1Y&period=Monthly",
     "quote": "/api/quotes/s/TSLA"
   },
   "normalized": {
     "overview": {
-      "marketCap": "1.48T",
+      "marketCap": "1.43T",
       "revenue": "97.88B",
       "revenue_type": "ttm",
       "netIncome": "3.86B",
       "sharesOut": "3.76B",
       "eps": "1.09",
-      "peRatio": "384.11",
-      "forwardPE": "182.01",
+      "peRatio": "370.36",
+      "forwardPE": "168.32",
       "dividend": "n/a",
       "beta": "1.80",
       "analysts": "Buy",
-      "target": "424.01 (+7.68%)",
+      "target": "425.49 (+11.72%)",
       "earningsDate": "Jul 22, 2026"
     },
     "quote": {
-      "p": 393.7791,
-      "pd": 393.78,
-      "c": -9.12,
-      "cp": -2.26,
-      "cl": 402.9,
-      "cdr": -1,
-      "o": 399.38,
-      "h": 399.63,
-      "l": 390.96,
-      "v": 20834369,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 498.83,
-      "l52": 293.55,
+      "c": -10.22,
+      "e": true,
+      "h": 385.69,
+      "l": 377.22,
+      "o": 381.78,
+      "p": 380.84,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 31394689,
+      "cl": 391.06,
+      "cp": -2.61,
+      "ec": -0.81,
+      "ep": 380.03,
+      "es": "After-hours",
+      "eu": "Jul 17, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 393.34,
-      "epd": 393.34,
-      "ec": -0.44,
-      "ecp": -0.11,
-      "eu": "Jul 8, 2026, 6:44 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550664481.8948,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 380.84,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": -0.21,
+      "epd": 380.03,
+      "etd": "2026-07-17",
+      "ets": 1784332796671.1255,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 498.83,
+      "l52": 297.82,
+      "uid": "TSLA",
       "days": 0,
-      "exp": 1783550744334,
-      "symbol": "TSLA",
-      "uid": "TSLA"
+      "symbol": "TSLA"
     },
     "history": [
       {
         "t": "2026-07-01",
         "o": 421.46,
         "h": 432.86,
-        "l": 389.301,
-        "c": 393.93,
-        "a": 393.93,
-        "v": 236038300,
-        "ch": -6.34
+        "l": 377.22,
+        "c": 380.84,
+        "a": 380.84,
+        "v": 460369228,
+        "ch": -9.45
       },
       {
         "t": "2026-06-01",
@@ -77,7 +77,7 @@
         "l": 368.6,
         "c": 420.6,
         "a": 420.6,
-        "v": 999869920,
+        "v": 1002561005,
         "ch": -3.49
       },
       {
@@ -183,7 +183,7 @@
     ],
     "financials": {
       "path": "financials/TSLA.json",
-      "fetched_at": "2026-07-08T22:45:40Z",
+      "fetched_at": "2026-07-18T22:56:41Z",
       "role": "financial statement cross-check candidate; not valuation SSOT",
       "summary": {
         "annual": {
@@ -236,19 +236,49 @@
   "financials_path": "financials/TSLA.json",
   "raw": {
     "overview": {
-      "marketCap": "1.48T",
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "TSLA",
+        "lastChecked": 1784334727683,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "1.43T",
+      "marketCapGrowth": 38.05140302504138,
       "revenue": "97.88B",
       "revenue_type": "ttm",
+      "revenueGrowth": 2.251,
       "netIncome": "3.86B",
+      "netIncomeGrowth": -36.792,
       "sharesOut": "3.76B",
       "eps": "1.09",
-      "peRatio": "384.11",
-      "forwardPE": "182.01",
+      "epsGrowth": -37.677,
+      "peRatio": "370.36",
+      "forwardPE": "168.32",
       "dividend": "n/a",
       "exDividendDate": "n/a",
       "beta": "1.80",
       "analysts": "Buy",
-      "target": "424.01 (+7.68%)",
+      "target": "425.49 (+11.72%)",
       "earningsDate": "Jul 22, 2026",
       "description": "Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, and energy generation and storage systems in the United States, China, and internationally. The company operates in two segments, Automotive; and Energy Generation and Storage. The company offers electric vehicles, as well as sells automotive regulatory credits; and non-warranty maintenance services and collision, automotive insurance services, as well as part sales and retail merchandise sale. It also provides sedans and sport utility vehicles through direct and ...",
       "infoTable": [
@@ -323,173 +353,93 @@
           "earningsGrowth": -46.495999999999995
         }
       ],
-      "analystIntro": "According to 47 analysts, the average rating for TSLA stock is \"Buy.\" The 12-month stock price target is $424.01, which is an increase of 7.68% from the latest price.",
+      "analystIntro": "According to 47 analysts, the average rating for TSLA stock is \"Buy.\" The 12-month stock price target is $425.49, which is an increase of 11.72% from the latest price.",
       "analystTarget": {
-        "target": "$424.01",
-        "change": "7.68%",
+        "target": "$425.49",
+        "change": "11.72%",
         "changeWord": "upside"
       },
       "analystChart": {
-        "strongBuy": 18,
+        "strongBuy": 17,
         "buy": 5,
-        "hold": 18,
+        "hold": 19,
         "sell": 2,
         "strongSell": 4
       },
       "news": {
-        "exp": "1783551510135",
+        "exp": "1784416357252",
         "data": [
           {
-            "url": "https://www.tipranks.com/news/demand-for-used-tesla-tsla-evs-surges-as-drivers-look-to-escape-the-pump",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2375980005-750x406.jpg",
-            "title": "Demand for Used Tesla (TSLA) EVs Surges as Drivers Look to Escape the Pump",
-            "text": "Used electric vehicle prices are rising quickly as higher U.S. gas prices and the Iran war push more buyers toward pre-owned EVs. Unsurprisingly, Tesla ($TSLA) models continue to lead the…",
+            "url": "https://www.tipranks.com/news/will-teslas-q2-earnings-help-tsla-stock-recover-heres-what-analysts-expect",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2603742827-750x406.jpg",
+            "title": "Will Tesla’s Q2 Earnings Help TSLA Stock Recover? Here’s What Analysts Expect",
+            "text": "Electric vehicle (EV) giant Tesla ($TSLA) is scheduled to announce its Q2 earnings on July 22. Despite reporting better-than-expected Q2 deliveries, TSLA stock is down 15% year-to-date. Some analysts ...",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-17T20:07:54.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-will-report-q2-earnings-on-july-22-heres-who-owns-tsla-stock",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2221501227-750x406.jpg",
+            "title": "Tesla Will Report Q2 Earnings on July 22. Here’s Who Owns TSLA Stock",
+            "text": "Tesla ($TSLA) is set to report its second-quarter 2026 results on July 22. Ahead of the earnings report, analysts remain neutral on the stock and expect the company to post…",
             "source": "TipRanks",
             "type": "Article",
             "tickers": [
-              "$F",
-              "$GM"
+              "#VOO",
+              "#VTI"
             ],
-            "time": "2026-07-08T18:47:22.000Z",
-            "ago": "3 hours ago"
+            "time": "2026-07-17T15:56:59.000Z",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.forbes.com/sites/antoniopequenoiv/2026/07/08/meta-overtakes-tesla-in-market-value-heres-why-both-stocks-are-still-tanking/",
-            "img": "https://cdn.snapi.dev/images/v1/j/a/a/meta-overtakes-tesla-in-market-3791947.jpg",
-            "title": "Meta Overtakes Tesla In Market Value—Here's Why Both Stocks Are Still Tanking",
-            "text": "Meta's next earnings report on July 29 will allow management to address how much it plans to spend on AI infrastructure in the second half of the year and whether its fledgling cloud computing busines...",
-            "source": "Forbes",
+            "url": "https://www.fxempire.com/forecasts/article/tesla-spacex-and-meta-forecasts-geopolitical-risks-trigger-pre-market-tech-selling-1611088",
+            "img": "https://cdn.snapi.dev/images/v1/i/n/w/data-internet27-3807598.jpg",
+            "title": "Tesla, SpaceX and Meta Forecasts – Geopolitical Risks Trigger Pre-Market Tech Selling",
+            "text": "Major tech companies are under pressure in early Friday pre-market trading.",
+            "source": "FXEmpire",
             "type": "Article",
             "tickers": [
-              "$META"
+              "$META",
+              "$SPCX"
             ],
-            "time": "Jul 8, 2026, 1:51 PM EDT",
-            "ago": "4 hours ago"
+            "time": "Jul 17, 2026, 9:06 AM EDT",
+            "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/this-is-not-anti-tesla-tesla-stock-nasdaqtsla-slips-as-new-jersey-law-may-ban-robotaxi",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/tesla-shutterstock_2806481201-750x406.jpg",
-            "title": "‘This Is Not Anti-Tesla’: Tesla Stock (NASDAQ:TSLA) Slips as New Jersey Law May Ban Robotaxi",
-            "text": "Electric vehicle giant Tesla ($TSLA) has been hard at work rolling out its Robotaxi operations, and has made some significant advances already. But plans to expand into New Jersey may…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$GOOGL"
-            ],
-            "time": "2026-07-08T17:06:56.000Z",
-            "ago": "5 hours ago"
-          },
-          {
-            "url": "https://invezz.com/news/2026/07/08/why-tesla-stock-is-down-around-2-today/",
-            "img": "https://cdn.snapi.dev/images/v1/j/i/r/tsla35-3525483-3791768.jpg",
-            "title": "Why Tesla stock is down around 2% today",
-            "text": "Tesla stock (TSLA) fell on Wednesday as investors continued to look past the electric-vehicle maker's core automotive business and instead focused on the company's long-term artificial intelligence am...",
-            "source": "Invezz",
-            "type": "Article",
-            "time": "Jul 8, 2026, 12:41 PM EDT",
-            "ago": "6 hours ago"
-          },
-          {
-            "url": "https://www.investopedia.com/tesla-and-two-other-stocks-wall-street-thinks-could-benefit-from-their-links-to-elon-musk-s-spacex-tsla-spcx-12013784",
-            "img": "https://cdn.snapi.dev/images/v1/r/b/3/catv7-3791604.jpg",
-            "title": "Tesla—and Two More Stocks Wall Street Thinks Could Benefit From Their Links to Elon Musk's SpaceX",
-            "text": "SpaceX (SPCX) has landed. The hunt for proxy stocks is still in play.",
+            "url": "https://www.investopedia.com/here-is-how-much-traders-see-tesla-stock-moving-after-earnings-tsla-q2-fy2026-12020439",
+            "img": "https://cdn.snapi.dev/images/v1/y/j/m/tsla11-3535981-3807437.jpg",
+            "title": "Here's How Much Traders See Tesla Stock Moving After Earnings",
+            "text": "Tesla is scheduled to report earnings after markets close on Wednesday, with traders anticipating a big move from the EV maker's stock.",
             "source": "Investopedia",
             "type": "Article",
-            "tickers": [
-              "$CHTR",
-              "$ECHO",
-              "$SPCX"
-            ],
-            "time": "Jul 8, 2026, 11:51 AM EDT",
-            "ago": "6 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/tesla-trails-waymo-in-robotaxis-as-miami-launch-tests-musks-fast-scaling-strategy",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2025/07/rtaxi-750x406.jpg",
-            "title": "Tesla Trails Waymo in Robotaxis as Miami Launch Tests Musk’s Fast-Scaling Strategy",
-            "text": "Tesla Inc. ($TSLA), the electric vehicle maker, is testing a faster and leaner approach to scaling its Robotaxi service. According to The Information, Tesla launched its Robotaxi service in Miami…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$GOOG",
-              "$GOOGL"
-            ],
-            "time": "2026-07-08T13:53:03.000Z",
-            "ago": "8 hours ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/tesla-stock-price-sales-401e238b",
-            "img": "https://cdn.snapi.dev/images/v1/i/y/a/tsla20-3533547-3790954.jpg",
-            "title": "Tesla Has a New Car but the Stock Is Falling",
-            "text": "Tesla has started production of a three-row, six-seat Model Y in Texas.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "Jul 8, 2026, 8:17 AM EDT",
-            "ago": "10 hours ago"
-          },
-          {
-            "url": "https://invezz.com/news/2026/07/08/jpmorgan-says-tesla-spacex-merger-idea-has-logic-is-tsla-a-buy-now/",
-            "img": "https://cdn.snapi.dev/images/v1/g/z/q/data20-3727831-3790517.jpg",
-            "title": "JPMorgan says Tesla-SpaceX merger idea has logic: is TSLA a buy now?",
-            "text": "Tesla stock (NASDAQ: TSLA) remained under pressure as Wall Street debated whether a future tie-up with SpaceX could reshape the company's valuation story. TSLA closed around $402.90, down over 4% on T...",
-            "source": "Invezz",
-            "type": "Article",
-            "tickers": [
-              "$SPCX"
-            ],
-            "time": "Jul 8, 2026, 3:36 AM EDT",
-            "ago": "15 hours ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/tesla-stock-rbc-analyst-says-spacex-merger-deal-could-lift-tsla-to-500",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2221141503-750x406.jpg",
-            "title": "Tesla Stock: RBC Analyst Says SpaceX Merger Deal Could Lift TSLA to $500",
-            "text": "RBC Capital analyst Tom Narayan raised his price target on Tesla ($TSLA) stock to $500 from $475, citing a possible SpaceX ($SPCX) acquisition scenario. The Top analyst said recent media…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$SPCX"
-            ],
-            "time": "2026-07-07T21:02:13.000Z",
+            "tickers": null,
+            "time": "Jul 17, 2026, 8:06 AM EDT",
             "ago": "1 day ago"
           },
           {
-            "url": "https://www.forbes.com/sites/tylerroush/2026/07/07/elon-musks-net-worth-drops-50-billion-in-latest-spacex-selloff/",
-            "img": "https://cdn.snapi.dev/images/v1/w/e/e/elon-musks-net-worth-drops-50--3789896.jpg",
-            "title": "Elon Musk's Net Worth Drops $50 Billion In Latest SpaceX Selloff",
-            "text": "JPMorgan analyst Rajat Gupta cast doubt on a possible merger between Tesla and SpaceX, writing that a tie-up between Musk's firms is “strategically coherent on paper” and that their businesses would c...",
-            "source": "Forbes",
+            "url": "https://www.etftrends.com/leveraged-inverse-content-hub/q2-earnings-report-could-shift-these-tesla-etfs-into-high-gear/",
+            "img": "https://cdn.snapi.dev/images/v1/s/a/n/auto3-3807380.jpg",
+            "title": "Q2 Earnings Report Could Shift These Tesla ETFs Into High Gear",
+            "text": "Second-quarter earnings season is ramping up with the third week of July slated to bring some high-profile reports, including one from Elon Musk's Tesla, Inc. (TSLA). The electric vehicle giant is sch...",
+            "source": "ETF Trends",
             "type": "Article",
             "tickers": [
-              "$SPCX"
+              "#TSLL",
+              "#TSLS"
             ],
-            "time": "Jul 7, 2026, 4:10 PM EDT",
+            "time": "Jul 17, 2026, 7:46 AM EDT",
             "ago": "1 day ago"
           },
           {
-            "url": "https://www.tipranks.com/news/tesla-stock-tsla-falls-as-jpmorgan-calls-spacex-merger-idea-coherent-on-paper",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2499832647-750x406.jpg",
-            "title": "Tesla Stock (TSLA) Falls as JPMorgan Calls SpaceX Merger Idea ‘Coherent on Paper’",
-            "text": "Shares in EV giant Tesla ($TSLA) dropped about 4% on Tuesday afternoon. This came after JPMorgan ($JPM) noted that a merger with satellite and rocket firm SpaceX ($SPCX) overlooks the…",
-            "source": "TipRanks",
+            "url": "https://www.cnbc.com/2026/07/17/obscure-volatility-measure-points-to-a-magnificent-seven-earnings-breakout-.html",
+            "img": "https://cdn.snapi.dev/images/v1/m/q/8/w22wedw-2900716-3807377.jpg",
+            "title": "Obscure volatility measure points to a 'Magnificent Seven' earnings breakout",
+            "text": "If the S&P 500 is to make a new record, it may require the \"Magnificent Seven\" to get back into gear.",
+            "source": "CNBC",
             "type": "Article",
-            "tickers": [
-              "$CVNA",
-              "$JPM",
-              "$RIVN",
-              "$SPCX"
-            ],
-            "time": "2026-07-07T18:53:20.000Z",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "UnK1lV6mr6M",
-            "img": "https://cdn.snapi.dev/images/v1/e/3/a/data26-3553093-3789726.jpg",
-            "title": "Magnificent Seven Tech Stocks Lose Market Swagger",
-            "text": "For years, the Magnificent Seven tech giants commanded investors' attention, dominating the S&P 500 Index and determining which way the overall stock market was headed. Those days are over: Bloomberg'...",
-            "source": "Bloomberg Technology",
-            "type": "Video",
             "tickers": [
               "$AAPL",
               "$AMZN",
@@ -499,1752 +449,1826 @@
               "$MSFT",
               "$NVDA"
             ],
-            "time": "Jul 7, 2026, 2:22 PM EDT",
+            "time": "Jul 17, 2026, 7:36 AM EDT",
             "ago": "1 day ago"
           },
           {
-            "url": "https://www.marketwatch.com/story/teslas-stock-could-rise-20-thanks-to-the-potential-for-a-spacex-merger-analyst-says-0d64693e",
-            "img": "https://cdn.snapi.dev/images/v1/a/g/z/bre32wsd-3764271-3789589.jpg",
-            "title": "Tesla's stock could rise 20% thanks to the potential for a SpaceX merger, analyst says",
-            "text": "Some on Wall Street see an increasing likelihood that Elon Musk's two biggest companies will combine.",
+            "url": "https://invezz.com/news/2026/07/17/tesla-stock-tumbles-why-a-spacex-takeover-may-be-impossible-to-pull-off/",
+            "img": "https://cdn.snapi.dev/images/v1/w/c/k/spc28-3752231-3807177.jpg",
+            "title": "Tesla stock tumbles: why a SpaceX takeover may be impossible to pull off",
+            "text": "Tesla stock (NASDAQ: TSLA) extended its decline heading into Friday as investors questioned whether SpaceX could realistically finance a takeover of Elon Musk's electric-vehicle company. Tesla fell 0....",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$SPCX"
+            ],
+            "time": "Jul 17, 2026, 3:41 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/pet-safe-mode-traps-elderly-woman-in-tesla-tesla-stock-nasdaqtsla-slips",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/tesla-shutterstock_2811535773-750x406.jpg",
+            "title": "“Pet Safe Mode” Traps Elderly Woman in Tesla, Tesla Stock (NASDAQ:TSLA) Slips",
+            "text": "On the surface, “pet safe mode” sounds like a great idea, especially for cars made by electric vehicle giant Tesla ($TSLA). A means to protect your furry friends from high…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-16T17:00:41.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/litigation/legal-heavyweights-square-off-in-243-million-tesla-crash-appeal-2026-07-16/",
+            "img": "https://cdn.snapi.dev/images/v1/r/q/4/tsla28-3530189-3807126.jpg",
+            "title": "Legal heavyweights square off in $243 million Tesla crash appeal",
+            "text": "(Billable Hours is Reuters' weekly report on lawyers and money. Please send tips or suggestions to D.Thomas@thomsonreuters.com.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 12:12 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/us-agency-denies-tesla-petition-avoid-recall-fix-over-headlight-issue-2026-07-16/",
+            "img": "https://cdn.snapi.dev/images/v1/x/a/2/tsla43-3541385-3805903.jpg",
+            "title": "US agency denies Tesla petition to avoid recall fix over headlight issue",
+            "text": "The National ​Highway Traffic Safety Administration on Thursday said it was denying ‌a 2024 petition filed by Tesla to avoid a recall fix for nearly 20,000 vehicles with headlights that may exceed max...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 11:24 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/byd-throws-down-gauntlet-to-tesla-as-it-plans-thousands-of-new-global-flash-charging-stations",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/06/shutterstock_2644113713-750x406.jpg",
+            "title": "BYD Throws Down The Gauntlet to Tesla as It Plans Thousands of New Global Flash Charging Stations",
+            "text": "Chinese EV maker BYD ($BYDDY) has laid out plans to challenge rivals such as Tesla ($TSLA) in Europe and around the world with a huge roll-out of flash charging stations.",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$BYD",
+              "$PLUG",
+              "$XPEV"
+            ],
+            "time": "2026-07-16T14:38:21.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-shares-decline-as-investors-focus-on-july-22-earnings-after-texas-crash-investigation",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2230972265-768x512.jpg",
+            "title": "Tesla Shares Decline as Investors Focus on July 22 Earnings after Texas Crash Investigation",
+            "text": "Tesla stock ($TSLA) fell early Thursday despite a report from the National Transportation Safety Board (NTSB) that cleared its Full Self Driving product of responsibility in a recent Texas crash.",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-16T14:02:47.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/he-backed-tesla-and-spacex-before-anyone-else-here-is-the-impossible-bet-he-is-making-now-025e00ef",
+            "img": "https://cdn.snapi.dev/images/v1/d/b/e/bre32wsd-3764271-3805312.jpg",
+            "title": "He backed Tesla and SpaceX before anyone else — here is the impossible bet he is making now",
+            "text": "Veteran venture capitalist Tim Draper weighs in on the AI bubble and four huge opportunities he missed.",
             "source": "Market Watch",
             "type": "Article",
             "tickers": [
               "$SPCX"
             ],
-            "time": "Jul 7, 2026, 1:28 PM EDT",
-            "ago": "1 day ago"
+            "time": "Jul 16, 2026, 9:37 AM EDT",
+            "ago": "2 days ago"
           },
           {
-            "url": "https://www.tipranks.com/news/tesla-stock-nasdaqtsla-slips-despite-massive-new-growth-vector",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/tesla-shutterstock_2805861539-750x406.jpg",
-            "title": "Tesla Stock (NASDAQ:TSLA) Slips Despite Massive New Growth Vector",
-            "text": "Granted, most people think of electric vehicle giant Tesla ($TSLA) as a major source of, well, electric vehicles. But there is a bigger potential growth vector for Tesla lurking just…",
-            "source": "TipRanks",
-            "type": "Article",
-            "time": "2026-07-07T17:03:21.000Z",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/jpmorgan-says-possibility-tesla-spacex-combination-coherent-on-paper-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Consumer-Cylical-4-750x406.jpg",
-            "title": "JPMorgan says possibility Tesla-SpaceX combination ‘coherent on paper’",
-            "text": "JPMorgan sees the possibility of a combination between Tesla (TSLA) and SpaceX (SPCX) as “strategically coherent on paper,” noting it would include “vertical integration across AI, robotics, energy, t...",
-            "source": "TheFly",
-            "type": "Article",
-            "tickers": [
-              "$SPCX"
-            ],
-            "time": "2026-07-07T16:25:35.000Z",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/tesla-amd-and-spacex-cathie-woods-3-biggest-stock-bets-at-the-end-of-h1-2026",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/02/Cathie-Wood-0823-750x406.jpg",
-            "title": "Tesla, AMD, and SpaceX — Cathie Wood’s 3 Biggest Stock Bets at the End of H1 2026",
-            "text": "Cathie Wood’s ARK Invest continued to bet heavily on artificial intelligence, electric vehicles, and space technology during the first half of 2026. At the end of H1, Tesla ($TSLA), Advanced Micro…",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$AMD",
-              "$SPCX"
-            ],
-            "time": "2026-07-07T12:45:03.000Z",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/tesla-stock-analyst-ratings-spacex-17843e31",
-            "img": "https://cdn.snapi.dev/images/v1/j/u/5/spc21-3752175-3788698.jpg",
-            "title": "Why Analysts Prefer SpaceX to Tesla Stock",
-            "text": "It's official. Wall Street analysts prefer SpaceX to Tesla among Elon Musk's publicly traded companies.",
+            "url": "https://www.barrons.com/articles/mag-7-stock-market-things-to-know-today-b7d26f86",
+            "img": "https://cdn.snapi.dev/images/v1/g/o/v/computer-electronic11-3804737.jpg",
+            "title": "Why the Mag 7 Stocks Can Save the Stock Market Rally",
+            "text": "Chinese rival to Micron could shake up the chip market, U.S. will put 25% tariff on some Brazilian goods, United Airlines raises full-year guidance, and more news to start your day.",
             "source": "Barrons",
             "type": "Article",
             "tickers": [
-              "$SPCX"
+              "$AAPL",
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "$META",
+              "$MSFT",
+              "$NVDA"
             ],
-            "time": "Jul 7, 2026, 8:42 AM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/tesla-price-target-raised-to-500-from-475-at-rbc-capital-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Consumer-Cylical-8-750x406.jpg",
-            "title": "Tesla price target raised to $500 from $475 at RBC Capital",
-            "text": "RBC Capital raised the firm’s price target on Tesla (TSLA) to $500 from $475 and keeps an Outperform rating on the shares. The firm is updating its model by incorporating…",
-            "source": "TheFly",
-            "type": "Article",
-            "tickers": [
-              "$SPCX"
-            ],
-            "time": "2026-07-07T11:10:28.000Z",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.reuters.com/business/wall-street-warms-spacex-ahead-nasdaq-100-inclusion-2026-07-07/",
-            "img": "https://cdn.snapi.dev/images/v1/q/c/a/aero3-3789397.jpg",
-            "title": "Brokerages line up bullish calls as SpaceX enters Nasdaq-100",
-            "text": "SpaceX's swift ​addition to the Nasdaq-100 index on Tuesday is expected to unleash billions in passive buying, as brokerages kicked off coverage of the $2 trillion ‌rocket and satellite company with l...",
-            "source": "Reuters",
-            "type": "Article",
-            "tickers": [
-              "$SPCX"
-            ],
-            "time": "Jul 7, 2026, 4:00 AM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/charged-tesla-reports-better-than-expected-q2-deliveries-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Consumer-Cylical-2-750x406.jpg",
-            "title": "Charged: Tesla reports better than expected Q2 deliveries",
-            "text": "Institutional investors and professional traders rely on The Fly to keep up-to-the-second on breaking news in the electric vehicle and clean energy space, as well as which stocks in these…",
-            "source": "TheFly",
-            "type": "Article",
-            "tickers": [
-              "$ARRY",
-              "$CSIQ",
-              "$ENPH",
-              "$F",
-              "$FSLR",
-              "$FTCI",
-              "$GM"
-            ],
-            "time": "2026-07-06T17:40:27.000Z",
+            "time": "Jul 16, 2026, 7:05 AM EDT",
             "ago": "2 days ago"
           },
           {
-            "url": "https://www.tipranks.com/news/another-sleeping-tesla-driver-caught-on-camera-tesla-stock-nasdaqtsla-surges",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/tesla-shutterstock_2805092413-750x406.jpg",
-            "title": "Another Sleeping Tesla Driver Caught on Camera, Tesla Stock (NASDAQ:TSLA) Surges",
-            "text": "Electric vehicle giant Tesla ($TSLA) is widely known for its Full Self-Driving (FSD) (Supervised) system. But a system that can largely handle its own driving, even if it insists it…",
+            "url": "https://techcrunch.com/2026/07/15/tesla-driver-in-fatal-texas-crash-pressed-accelerator-100-ntsb-confirms/",
+            "img": "https://cdn.snapi.dev/images/v1/b/f/y/tsla2-3540981-3803972.jpg",
+            "title": "Tesla driver in fatal Texas crash pressed accelerator 100%, NTSB confirms",
+            "text": "The National Transportation Safety Board (NTSB) said Wednesday that the driver of a Tesla who crashed into a house in June had pressed the accelerator pedal to 100%, overriding the company's Full Self...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 15, 2026, 4:22 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/retail-investors-charge-into-tesla-stock-tsla-ahead-of-q2-earnings",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2168697155-4-750x406.jpg",
+            "title": "Retail Investors Charge Into Tesla Stock (TSLA) Ahead of Q2 Earnings",
+            "text": "Retail investors are charging into EV maker Tesla ($TSLA) as it gets set to report its Q2 earnings next week – July 22. The company’s share price is down nearly…",
             "source": "TipRanks",
             "type": "Article",
-            "time": "2026-07-06T16:59:53.000Z",
-            "ago": "2 days ago"
+            "tickers": null,
+            "time": "2026-07-15T18:34:27.000Z",
+            "ago": "3 days ago"
           },
           {
-            "url": "https://www.cnbc.com/2026/07/06/rivian-tesla-and-the-holly-index-how-to-trade-the-new-ev-main-street-battle.html",
-            "img": "https://cdn.snapi.dev/images/v1/2/v/i/auto36-3787133.jpg",
-            "title": "Rivian, Tesla and the 'Holly Index': How to trade the new EV Main Street battle",
-            "text": "Mike Khouw gives a trade on Rivian and Tesla, informed by his wife's recent auto purchase.",
-            "source": "CNBC",
+            "url": "https://www.tipranks.com/news/wells-fargo-raises-tesla-stocks-price-forecast-but-warns-of-a-severe-67-price-drop-for-tsla",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2714916583-750x406.jpg",
+            "title": "Wells Fargo Raises Tesla Stock’s Price Forecast but Warns of a Severe 67% Price Drop for TSLA",
+            "text": "Tesla stock ($TSLA) is currently trading around $396 on the Nasdaq, but one major Wall Street bank believes the price is much too high. Wells Fargo ($WFC) recently raised its…",
+            "source": "TipRanks",
             "type": "Article",
             "tickers": [
-              "$RIVN"
+              "$BCS",
+              "$JEF",
+              "$WFC"
             ],
-            "time": "Jul 6, 2026, 12:11 PM EDT",
-            "ago": "2 days ago"
+            "time": "2026-07-15T17:22:54.000Z",
+            "ago": "3 days ago"
           },
           {
-            "url": "https://invezz.com/news/2026/07/06/tesla-stock-up-3-today-after-thursdays-selloff-whats-behind-the-rebound/",
-            "img": "https://cdn.snapi.dev/images/v1/4/y/l/tsla21-3533359-3786848.jpg",
-            "title": "Tesla stock up 3% today after Thursday's selloff: what's behind the rebound?",
-            "text": "Tesla stock (TSLA) rose on Monday, recovering some of last week's sharp losses after investors sold the stock despite a stronger-than-expected second-quarter delivery report. The rebound came as the e...",
+            "url": "https://www.tipranks.com/news/guaranteed-future-value-program-sets-floor-for-tesla-buyers-tesla-stock-nasdaqtsla-slips",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/tesla-shutterstock_2811531101-750x406.jpg",
+            "title": "“Guaranteed Future Value” Program Sets Floor for Tesla Buyers, Tesla Stock (NASDAQ:TSLA) Slips",
+            "text": "Early adopters have always played something of a dangerous game. They get access to the most exciting new technologies, but they often pay the most, and if there is any…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$BYD"
+            ],
+            "time": "2026-07-15T16:57:53.000Z",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/its-critical-says-5-star-analyst-about-spacex-spcx-stock",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2542753061-2-750x406.jpg",
+            "title": "“It’s Critical,” Says 5-Star Analyst About SpaceX (SPCX) Stock",
+            "text": "SpaceX’s ($SPCX) planned Terafab chip project with EV maker Tesla ($TSLA) could be critical to the aerospace company’s long-term value, according to five-star Oppenheimer analyst Timothy Horan. He bel...",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$INTC",
+              "$SPCX",
+              "$TSM"
+            ],
+            "time": "2026-07-15T16:08:10.000Z",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-stock-price-forecast-what-financial-analysts-expect-ahead-of-q2-earnings",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2559199649-750x406.jpg",
+            "title": "Tesla Stock Price Forecast — What Financial Analysts Expect Ahead of Q2 Earnings",
+            "text": "Tesla ($TSLA) is set to report its second-quarter 2026 results on July 22, with investors watching closely for signs of a turnaround. Wall Street expects the EV maker to report…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-15T13:20:00.000Z",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/tesla-stock-price-volatility-earnings-bcb428a3",
+            "img": "https://cdn.snapi.dev/images/v1/x/7/6/tsla52-2815150-3802421.jpg",
+            "title": "Tesla Stock Is in the Calm Before the Storm",
+            "text": "Tesla is expected to report second-quarter earnings per share of 55 cents, up from 40 cents a year ago.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 15, 2026, 8:21 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-stock-price-outlook-what-technical-charts-say-before-july-22-earnings",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2174014435-750x406.jpg",
+            "title": "Tesla Stock Price Outlook: What Technical Charts Say Before July 22 Earnings",
+            "text": "Tesla ($TSLA) stock is in the spotlight ahead of its second-quarter earnings on July 22. Several Wall Street firms recently raised their price targets after the company’s stronger-than-expected second...",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-15T12:13:24.000Z",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/07/14/tesla-stock-edges-up-as-wall-street-raises-targets-ahead-of-q2-earnings/",
+            "img": "https://cdn.snapi.dev/images/v1/e/r/x/tsla34-2684580-3801072.jpg",
+            "title": "Tesla stock edges up as Wall Street raises targets ahead of Q2 earnings",
+            "text": "Tesla stock traded slightly higher in trading on Tuesday as investors assessed a series of price target increases from Wall Street analysts ahead of the electric vehicle maker's second-quarter earning...",
             "source": "Invezz",
             "type": "Article",
-            "time": "Jul 6, 2026, 10:33 AM EDT",
-            "ago": "2 days ago"
+            "tickers": null,
+            "time": "Jul 14, 2026, 1:48 PM EDT",
+            "ago": "4 days ago"
           },
           {
-            "url": "https://www.fxempire.com/forecasts/article/tsla-nvda-andpltr-forecasts-weak-jobs-report-triggers-mixed-premarket-action-1608486",
-            "img": "https://cdn.snapi.dev/images/v1/e/m/w/semi7-3786533.jpg",
-            "title": "TSLA, NVDA, and PLTR Forecasts – Weak Jobs Report Triggers Mixed Premarket Action",
-            "text": "Major tech stocks look a bit mixed, with AI noticeably weaker than we are used to.",
-            "source": "FXEmpire",
-            "type": "Article",
-            "tickers": [
-              "$NVDA",
-              "$PLTR"
-            ],
-            "time": "Jul 6, 2026, 8:40 AM EDT",
-            "ago": "2 days ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/tesla-stock-robo-taxi-miami-c6ec7821",
-            "img": "https://cdn.snapi.dev/images/v1/j/8/k/tsla39-3547969-3786304.jpg",
-            "title": "Tesla Stock Rises as the Slow Robo-Taxi Rollout Heads to Miami",
-            "text": "Tesla shares rose Monday after the company said its robo-taxi business was operating in another city.",
+            "url": "https://www.barrons.com/articles/tesla-stock-price-target-0e4899ed",
+            "img": "https://cdn.snapi.dev/images/v1/w/3/r/tsla9-3536871-3799891.jpg",
+            "title": "Three Price Target Boosts Can't Help Tesla Stock",
+            "text": "Wall Street is adjusting numbers after Tesla's strong second-quarter delivery report.",
             "source": "Barrons",
             "type": "Article",
-            "time": "Jul 6, 2026, 7:26 AM EDT",
-            "ago": "2 days ago"
+            "tickers": null,
+            "time": "Jul 14, 2026, 8:00 AM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/why-spacex-and-tesla-are-value-stocks-according-to-this-fund-manager-5f59ff86",
+            "img": "https://cdn.snapi.dev/images/v1/i/d/w/aero12-3799680.jpg",
+            "title": "Why SpaceX and Tesla are ‘value' stocks, according to this fund manager",
+            "text": "Tesla and SpaceX may be winners in the next evolution of value investing, says the president and chief investment officer of Tsai Capital, Christopher Tsai.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "$SPCX"
+            ],
+            "time": "Jul 14, 2026, 7:08 AM EDT",
+            "ago": "4 days ago"
           }
         ]
       },
       "chart": {
-        "expiration": 1783552542438,
+        "expiration": 1784554200000,
         "data": [
           {
-            "c": 397.37,
-            "o": 399.38,
-            "t": 1783503000
+            "c": 381.45,
+            "o": 381.72,
+            "t": 1784280600
           },
           {
-            "c": 396.4,
-            "t": 1783503060
+            "c": 381.73,
+            "t": 1784280660
           },
           {
-            "c": 397.98,
-            "t": 1783503120
+            "c": 379.32,
+            "t": 1784280720
           },
           {
-            "c": 398.18,
-            "t": 1783503180
+            "c": 381.96,
+            "t": 1784280780
           },
           {
-            "c": 397.54,
-            "t": 1783503240
+            "c": 381.51,
+            "t": 1784280840
           },
           {
-            "c": 395,
-            "t": 1783503300
+            "c": 380.85,
+            "t": 1784280900
           },
           {
-            "c": 396.75,
-            "t": 1783503360
+            "c": 379.42,
+            "t": 1784280960
           },
           {
-            "c": 396.76,
-            "t": 1783503420
+            "c": 380.14,
+            "t": 1784281020
           },
           {
-            "c": 396.08,
-            "t": 1783503480
+            "c": 378.76,
+            "t": 1784281080
           },
           {
-            "c": 397.01,
-            "t": 1783503540
+            "c": 378.37,
+            "t": 1784281140
           },
           {
-            "c": 398.08,
-            "t": 1783503600
+            "c": 378.63,
+            "t": 1784281200
           },
           {
-            "c": 397.74,
-            "t": 1783503660
+            "c": 379.33,
+            "t": 1784281260
           },
           {
-            "c": 398.07,
-            "t": 1783503720
+            "c": 377.5,
+            "t": 1784281320
           },
           {
-            "c": 398.2,
-            "t": 1783503780
+            "c": 377.68,
+            "t": 1784281380
           },
           {
-            "c": 398.7,
-            "t": 1783503840
+            "c": 377.6,
+            "t": 1784281440
           },
           {
-            "c": 398.52,
-            "t": 1783503900
+            "c": 377.6,
+            "t": 1784281500
           },
           {
-            "c": 398.04,
-            "t": 1783503960
+            "c": 378.81,
+            "t": 1784281560
           },
           {
-            "c": 398.02,
-            "t": 1783504020
+            "c": 379.83,
+            "t": 1784281620
           },
           {
-            "c": 397.61,
-            "t": 1783504080
+            "c": 379.41,
+            "t": 1784281680
           },
           {
-            "c": 396.41,
-            "t": 1783504140
+            "c": 379.59,
+            "t": 1784281740
           },
           {
-            "c": 396.29,
-            "t": 1783504200
+            "c": 379.66,
+            "t": 1784281800
           },
           {
-            "c": 396,
-            "t": 1783504260
+            "c": 379.57,
+            "t": 1784281860
           },
           {
-            "c": 394.77,
-            "t": 1783504320
+            "c": 379.86,
+            "t": 1784281920
           },
           {
-            "c": 395.09,
-            "t": 1783504380
+            "c": 380.11,
+            "t": 1784281980
           },
           {
-            "c": 394.77,
-            "t": 1783504440
+            "c": 380.16,
+            "t": 1784282040
           },
           {
-            "c": 394.08,
-            "t": 1783504500
+            "c": 380.15,
+            "t": 1784282100
           },
           {
-            "c": 394.27,
-            "t": 1783504560
+            "c": 380.88,
+            "t": 1784282160
           },
           {
-            "c": 394.09,
-            "t": 1783504620
+            "c": 381.07,
+            "t": 1784282220
           },
           {
-            "c": 394.94,
-            "t": 1783504680
+            "c": 381.21,
+            "t": 1784282280
           },
           {
-            "c": 395.88,
-            "t": 1783504740
+            "c": 381.43,
+            "t": 1784282340
           },
           {
-            "c": 394.96,
-            "t": 1783504800
+            "c": 382.02,
+            "t": 1784282400
           },
           {
-            "c": 394.19,
-            "t": 1783504860
+            "c": 382.06,
+            "t": 1784282460
           },
           {
-            "c": 394.15,
-            "t": 1783504920
+            "c": 381.91,
+            "t": 1784282520
           },
           {
-            "c": 394.17,
-            "t": 1783504980
+            "c": 382.47,
+            "t": 1784282580
           },
           {
-            "c": 394.2,
-            "t": 1783505040
+            "c": 382.58,
+            "t": 1784282640
           },
           {
-            "c": 394.95,
-            "t": 1783505100
+            "c": 382.62,
+            "t": 1784282700
           },
           {
-            "c": 394.62,
-            "t": 1783505160
+            "c": 382.51,
+            "t": 1784282760
           },
           {
-            "c": 394.62,
-            "t": 1783505220
+            "c": 382.1,
+            "t": 1784282820
           },
           {
-            "c": 395,
-            "t": 1783505280
+            "c": 382.47,
+            "t": 1784282880
           },
           {
-            "c": 395.13,
-            "t": 1783505340
+            "c": 382.31,
+            "t": 1784282940
           },
           {
-            "c": 395.1,
-            "t": 1783505400
+            "c": 382.56,
+            "t": 1784283000
           },
           {
-            "c": 395.21,
-            "t": 1783505460
+            "c": 382.89,
+            "t": 1784283060
           },
           {
-            "c": 394.44,
-            "t": 1783505520
+            "c": 382.27,
+            "t": 1784283120
           },
           {
-            "c": 394.75,
-            "t": 1783505580
+            "c": 382.31,
+            "t": 1784283180
           },
           {
-            "c": 394.46,
-            "t": 1783505640
+            "c": 382.12,
+            "t": 1784283240
           },
           {
-            "c": 393.79,
-            "t": 1783505700
+            "c": 382.97,
+            "t": 1784283300
           },
           {
-            "c": 393.94,
-            "t": 1783505760
+            "c": 382.67,
+            "t": 1784283360
           },
           {
-            "c": 393.94,
-            "t": 1783505820
+            "c": 382.53,
+            "t": 1784283420
           },
           {
-            "c": 394.36,
-            "t": 1783505880
+            "c": 382.37,
+            "t": 1784283480
           },
           {
-            "c": 394.13,
-            "t": 1783505940
+            "c": 381.95,
+            "t": 1784283540
           },
           {
-            "c": 394.24,
-            "t": 1783506000
+            "c": 381.64,
+            "t": 1784283600
           },
           {
-            "c": 395.65,
-            "t": 1783506060
+            "c": 382.23,
+            "t": 1784283660
           },
           {
-            "c": 396.52,
-            "t": 1783506120
+            "c": 382.27,
+            "t": 1784283720
           },
           {
-            "c": 396.81,
-            "t": 1783506180
+            "c": 381.65,
+            "t": 1784283780
           },
           {
-            "c": 396.64,
-            "t": 1783506240
+            "c": 382.19,
+            "t": 1784283840
           },
           {
-            "c": 397.45,
-            "t": 1783506300
+            "c": 381.99,
+            "t": 1784283900
           },
           {
-            "c": 396.16,
-            "t": 1783506360
+            "c": 381.71,
+            "t": 1784283960
           },
           {
-            "c": 395.68,
-            "t": 1783506420
+            "c": 381.67,
+            "t": 1784284020
           },
           {
-            "c": 395.32,
-            "t": 1783506480
+            "c": 381.4,
+            "t": 1784284080
           },
           {
-            "c": 395.34,
-            "t": 1783506540
+            "c": 380.94,
+            "t": 1784284140
           },
           {
-            "c": 395.4,
-            "t": 1783506600
+            "c": 380.51,
+            "t": 1784284200
           },
           {
-            "c": 395.22,
-            "t": 1783506660
+            "c": 379.71,
+            "t": 1784284260
           },
           {
-            "c": 394.87,
-            "t": 1783506720
+            "c": 378.96,
+            "t": 1784284320
           },
           {
-            "c": 395.16,
-            "t": 1783506780
+            "c": 379.1,
+            "t": 1784284380
           },
           {
-            "c": 394.97,
-            "t": 1783506840
+            "c": 380.01,
+            "t": 1784284440
           },
           {
-            "c": 394.41,
-            "t": 1783506900
+            "c": 380.96,
+            "t": 1784284500
           },
           {
-            "c": 393.6,
-            "t": 1783506960
+            "c": 380.97,
+            "t": 1784284560
           },
           {
-            "c": 394.66,
-            "t": 1783507020
+            "c": 380.7,
+            "t": 1784284620
           },
           {
-            "c": 394.86,
-            "t": 1783507080
+            "c": 381.14,
+            "t": 1784284680
           },
           {
-            "c": 394.32,
-            "t": 1783507140
+            "c": 381.93,
+            "t": 1784284740
           },
           {
-            "c": 394.93,
-            "t": 1783507200
+            "c": 381.49,
+            "t": 1784284800
           },
           {
-            "c": 394.94,
-            "t": 1783507260
+            "c": 381.28,
+            "t": 1784284860
           },
           {
-            "c": 394.45,
-            "t": 1783507320
+            "c": 381.02,
+            "t": 1784284920
           },
           {
-            "c": 393.85,
-            "t": 1783507380
+            "c": 380.12,
+            "t": 1784284980
           },
           {
-            "c": 393.92,
-            "t": 1783507440
+            "c": 380.09,
+            "t": 1784285040
           },
           {
-            "c": 393.23,
-            "t": 1783507500
+            "c": 379.79,
+            "t": 1784285100
           },
           {
-            "c": 393.35,
-            "t": 1783507560
+            "c": 379.25,
+            "t": 1784285160
           },
           {
-            "c": 393.1,
-            "t": 1783507620
+            "c": 379.87,
+            "t": 1784285220
           },
           {
-            "c": 392.63,
-            "t": 1783507680
+            "c": 379.36,
+            "t": 1784285280
           },
           {
-            "c": 392.1,
-            "t": 1783507740
+            "c": 379.21,
+            "t": 1784285340
           },
           {
-            "c": 392.46,
-            "t": 1783507800
+            "c": 379.41,
+            "t": 1784285400
           },
           {
-            "c": 392.19,
-            "t": 1783507860
+            "c": 378.8,
+            "t": 1784285460
           },
           {
-            "c": 392.89,
-            "t": 1783507920
+            "c": 379.69,
+            "t": 1784285520
           },
           {
-            "c": 393.45,
-            "t": 1783507980
+            "c": 379.73,
+            "t": 1784285580
           },
           {
-            "c": 393.39,
-            "t": 1783508040
+            "c": 380.05,
+            "t": 1784285640
           },
           {
-            "c": 393.06,
-            "t": 1783508100
+            "c": 380.79,
+            "t": 1784285700
           },
           {
-            "c": 392.76,
-            "t": 1783508160
+            "c": 380.49,
+            "t": 1784285760
           },
           {
-            "c": 392.8,
-            "t": 1783508220
+            "c": 380.53,
+            "t": 1784285820
           },
           {
-            "c": 392.57,
-            "t": 1783508280
+            "c": 380.04,
+            "t": 1784285880
           },
           {
-            "c": 392.63,
-            "t": 1783508340
+            "c": 380.25,
+            "t": 1784285940
           },
           {
-            "c": 392.45,
-            "t": 1783508400
+            "c": 380.05,
+            "t": 1784286000
           },
           {
-            "c": 392.06,
-            "t": 1783508460
+            "c": 380.2,
+            "t": 1784286060
           },
           {
-            "c": 392.08,
-            "t": 1783508520
+            "c": 380.56,
+            "t": 1784286120
           },
           {
-            "c": 391.99,
-            "t": 1783508580
+            "c": 380.37,
+            "t": 1784286180
           },
           {
-            "c": 391.66,
-            "t": 1783508640
+            "c": 380.19,
+            "t": 1784286240
           },
           {
-            "c": 392.22,
-            "t": 1783508700
+            "c": 379.96,
+            "t": 1784286300
           },
           {
-            "c": 391.66,
-            "t": 1783508760
+            "c": 379.94,
+            "t": 1784286360
           },
           {
-            "c": 391.98,
-            "t": 1783508820
+            "c": 379.68,
+            "t": 1784286420
           },
           {
-            "c": 391.93,
-            "t": 1783508880
+            "c": 379.94,
+            "t": 1784286480
           },
           {
-            "c": 391.74,
-            "t": 1783508940
+            "c": 380.06,
+            "t": 1784286540
           },
           {
-            "c": 392.07,
-            "t": 1783509000
+            "c": 379.56,
+            "t": 1784286600
           },
           {
-            "c": 392.07,
-            "t": 1783509060
+            "c": 379.5,
+            "t": 1784286660
           },
           {
-            "c": 391.93,
-            "t": 1783509120
+            "c": 380.08,
+            "t": 1784286720
           },
           {
-            "c": 391.61,
-            "t": 1783509180
+            "c": 379.75,
+            "t": 1784286780
           },
           {
-            "c": 391.29,
-            "t": 1783509240
+            "c": 379.87,
+            "t": 1784286840
           },
           {
-            "c": 391.41,
-            "t": 1783509300
+            "c": 379.93,
+            "t": 1784286900
           },
           {
-            "c": 391.22,
-            "t": 1783509360
+            "c": 379.71,
+            "t": 1784286960
           },
           {
-            "c": 391.18,
-            "t": 1783509420
+            "c": 380.06,
+            "t": 1784287020
           },
           {
-            "c": 391.87,
-            "t": 1783509480
+            "c": 380.2,
+            "t": 1784287080
           },
           {
-            "c": 392.23,
-            "t": 1783509540
+            "c": 380.38,
+            "t": 1784287140
           },
           {
-            "c": 392.47,
-            "t": 1783509600
+            "c": 380.34,
+            "t": 1784287200
           },
           {
-            "c": 391.99,
-            "t": 1783509660
+            "c": 380.31,
+            "t": 1784287260
           },
           {
-            "c": 391.97,
-            "t": 1783509720
+            "c": 380.18,
+            "t": 1784287320
           },
           {
-            "c": 391.81,
-            "t": 1783509780
+            "c": 379.49,
+            "t": 1784287380
           },
           {
-            "c": 391.5,
-            "t": 1783509840
+            "c": 379.62,
+            "t": 1784287440
           },
           {
-            "c": 391.57,
-            "t": 1783509900
+            "c": 379.9,
+            "t": 1784287500
           },
           {
-            "c": 391.74,
-            "t": 1783509960
+            "c": 380.07,
+            "t": 1784287560
           },
           {
-            "c": 391.72,
-            "t": 1783510020
+            "c": 380.23,
+            "t": 1784287620
           },
           {
-            "c": 391.98,
-            "t": 1783510080
+            "c": 380.37,
+            "t": 1784287680
           },
           {
-            "c": 391.97,
-            "t": 1783510140
+            "c": 380.68,
+            "t": 1784287740
           },
           {
-            "c": 391.87,
-            "t": 1783510200
+            "c": 381.28,
+            "t": 1784287800
           },
           {
-            "c": 391.77,
-            "t": 1783510260
+            "c": 381.14,
+            "t": 1784287860
           },
           {
-            "c": 392.05,
-            "t": 1783510320
+            "c": 381.05,
+            "t": 1784287920
           },
           {
-            "c": 392.43,
-            "t": 1783510380
+            "c": 380.56,
+            "t": 1784287980
           },
           {
-            "c": 392.7,
-            "t": 1783510440
+            "c": 379.52,
+            "t": 1784288040
           },
           {
-            "c": 392.76,
-            "t": 1783510500
+            "c": 379.22,
+            "t": 1784288100
           },
           {
-            "c": 392.91,
-            "t": 1783510560
+            "c": 380.01,
+            "t": 1784288160
           },
           {
-            "c": 392.78,
-            "t": 1783510620
+            "c": 380.6,
+            "t": 1784288220
           },
           {
-            "c": 392.43,
-            "t": 1783510680
+            "c": 381,
+            "t": 1784288280
           },
           {
-            "c": 392.17,
-            "t": 1783510740
+            "c": 380.9,
+            "t": 1784288340
           },
           {
-            "c": 392.57,
-            "t": 1783510800
+            "c": 380.7,
+            "t": 1784288400
           },
           {
-            "c": 392.54,
-            "t": 1783510860
+            "c": 380.1,
+            "t": 1784288460
           },
           {
-            "c": 392.27,
-            "t": 1783510920
+            "c": 380.04,
+            "t": 1784288520
           },
           {
-            "c": 392.55,
-            "t": 1783510980
+            "c": 379.91,
+            "t": 1784288580
           },
           {
-            "c": 392.66,
-            "t": 1783511040
+            "c": 379.91,
+            "t": 1784288640
           },
           {
-            "c": 392.68,
-            "t": 1783511100
+            "c": 379.63,
+            "t": 1784288700
           },
           {
-            "c": 392.9,
-            "t": 1783511160
+            "c": 380.26,
+            "t": 1784288760
           },
           {
-            "c": 392.84,
-            "t": 1783511220
+            "c": 380.65,
+            "t": 1784288820
           },
           {
-            "c": 392.57,
-            "t": 1783511280
+            "c": 380.41,
+            "t": 1784288880
           },
           {
-            "c": 392.68,
-            "t": 1783511340
+            "c": 380.55,
+            "t": 1784288940
           },
           {
-            "c": 392.62,
-            "t": 1783511400
+            "c": 380.73,
+            "t": 1784289000
           },
           {
-            "c": 392.81,
-            "t": 1783511460
+            "c": 381.06,
+            "t": 1784289060
           },
           {
-            "c": 392.68,
-            "t": 1783511520
+            "c": 381.84,
+            "t": 1784289120
           },
           {
-            "c": 392.98,
-            "t": 1783511580
+            "c": 381.83,
+            "t": 1784289180
           },
           {
-            "c": 393.17,
-            "t": 1783511640
+            "c": 381.75,
+            "t": 1784289240
           },
           {
-            "c": 393.17,
-            "t": 1783511700
+            "c": 382.39,
+            "t": 1784289300
           },
           {
-            "c": 392.78,
-            "t": 1783511760
+            "c": 382.38,
+            "t": 1784289360
           },
           {
-            "c": 392.89,
-            "t": 1783511820
+            "c": 382.11,
+            "t": 1784289420
           },
           {
-            "c": 392.95,
-            "t": 1783511880
+            "c": 382.31,
+            "t": 1784289480
           },
           {
-            "c": 392.89,
-            "t": 1783511940
+            "c": 382.49,
+            "t": 1784289540
           },
           {
-            "c": 393.68,
-            "t": 1783512000
+            "c": 382.87,
+            "t": 1784289600
           },
           {
-            "c": 393.63,
-            "t": 1783512060
+            "c": 382,
+            "t": 1784289660
           },
           {
-            "c": 393.58,
-            "t": 1783512120
+            "c": 382.26,
+            "t": 1784289720
           },
           {
-            "c": 393.45,
-            "t": 1783512180
+            "c": 382.28,
+            "t": 1784289780
           },
           {
-            "c": 393.64,
-            "t": 1783512240
+            "c": 382.18,
+            "t": 1784289840
           },
           {
-            "c": 394.03,
-            "t": 1783512300
+            "c": 382.28,
+            "t": 1784289900
           },
           {
-            "c": 394.12,
-            "t": 1783512360
+            "c": 382.64,
+            "t": 1784289960
           },
           {
-            "c": 394.1,
-            "t": 1783512420
+            "c": 382.42,
+            "t": 1784290020
           },
           {
-            "c": 393.98,
-            "t": 1783512480
+            "c": 382.66,
+            "t": 1784290080
           },
           {
-            "c": 393.81,
-            "t": 1783512540
+            "c": 383.11,
+            "t": 1784290140
           },
           {
-            "c": 394.2,
-            "t": 1783512600
+            "c": 383.62,
+            "t": 1784290200
           },
           {
-            "c": 394.11,
-            "t": 1783512660
+            "c": 383.3,
+            "t": 1784290260
           },
           {
-            "c": 394.15,
-            "t": 1783512720
+            "c": 383.6,
+            "t": 1784290320
           },
           {
-            "c": 393.92,
-            "t": 1783512780
+            "c": 383.57,
+            "t": 1784290380
           },
           {
-            "c": 394.09,
-            "t": 1783512840
+            "c": 383.94,
+            "t": 1784290440
           },
           {
-            "c": 393.75,
-            "t": 1783512900
+            "c": 383.92,
+            "t": 1784290500
           },
           {
-            "c": 393.7,
-            "t": 1783512960
+            "c": 383.88,
+            "t": 1784290560
           },
           {
-            "c": 394.14,
-            "t": 1783513020
+            "c": 384,
+            "t": 1784290620
           },
           {
-            "c": 394.3,
-            "t": 1783513080
+            "c": 383.8,
+            "t": 1784290680
           },
           {
-            "c": 394.4,
-            "t": 1783513140
+            "c": 383.72,
+            "t": 1784290740
           },
           {
-            "c": 394.55,
-            "t": 1783513200
+            "c": 383.69,
+            "t": 1784290800
           },
           {
-            "c": 394.48,
-            "t": 1783513260
+            "c": 383.06,
+            "t": 1784290860
           },
           {
-            "c": 394.27,
-            "t": 1783513320
+            "c": 382.9,
+            "t": 1784290920
           },
           {
-            "c": 394.11,
-            "t": 1783513380
+            "c": 382.42,
+            "t": 1784290980
           },
           {
-            "c": 393.6,
-            "t": 1783513440
+            "c": 382.15,
+            "t": 1784291040
           },
           {
-            "c": 393.36,
-            "t": 1783513500
+            "c": 383,
+            "t": 1784291100
           },
           {
-            "c": 393.64,
-            "t": 1783513560
+            "c": 382.71,
+            "t": 1784291160
           },
           {
-            "c": 393.61,
-            "t": 1783513620
+            "c": 383.29,
+            "t": 1784291220
           },
           {
-            "c": 393.63,
-            "t": 1783513680
+            "c": 383.16,
+            "t": 1784291280
           },
           {
-            "c": 393.89,
-            "t": 1783513740
+            "c": 382.53,
+            "t": 1784291340
           },
           {
-            "c": 394.09,
-            "t": 1783513800
+            "c": 382.26,
+            "t": 1784291400
           },
           {
-            "c": 393.895,
-            "t": 1783513860
+            "c": 382.92,
+            "t": 1784291460
           },
           {
-            "c": 393.665,
-            "t": 1783513920
+            "c": 383.08,
+            "t": 1784291520
           },
           {
-            "c": 393.44,
-            "t": 1783513980
+            "c": 383.01,
+            "t": 1784291580
           },
           {
-            "c": 393.055,
-            "t": 1783514040
+            "c": 382.87,
+            "t": 1784291640
           },
           {
-            "c": 393.285,
-            "t": 1783514100
+            "c": 383.1,
+            "t": 1784291700
           },
           {
-            "c": 393.33,
-            "t": 1783514160
+            "c": 383.59,
+            "t": 1784291760
           },
           {
-            "c": 393.14,
-            "t": 1783514220
+            "c": 383.25,
+            "t": 1784291820
           },
           {
-            "c": 393.165,
-            "t": 1783514280
+            "c": 383.67,
+            "t": 1784291880
           },
           {
-            "c": 393.78,
-            "t": 1783514340
+            "c": 383.64,
+            "t": 1784291940
           },
           {
-            "c": 394.74,
-            "t": 1783514400
+            "c": 383.26,
+            "t": 1784292000
           },
           {
-            "c": 394.07,
-            "t": 1783514460
+            "c": 383.31,
+            "t": 1784292060
           },
           {
-            "c": 394.36,
-            "t": 1783514520
+            "c": 383.83,
+            "t": 1784292120
           },
           {
-            "c": 394.16,
-            "t": 1783514580
+            "c": 384.03,
+            "t": 1784292180
           },
           {
-            "c": 394.32,
-            "t": 1783514640
+            "c": 384.03,
+            "t": 1784292240
           },
           {
-            "c": 393.845,
-            "t": 1783514700
+            "c": 384.19,
+            "t": 1784292300
           },
           {
-            "c": 394.13,
-            "t": 1783514760
+            "c": 384.03,
+            "t": 1784292360
           },
           {
-            "c": 394.082,
-            "t": 1783514820
+            "c": 384.59,
+            "t": 1784292420
           },
           {
-            "c": 394.01,
-            "t": 1783514880
+            "c": 385,
+            "t": 1784292480
           },
           {
-            "c": 394.19,
-            "t": 1783514940
+            "c": 384.72,
+            "t": 1784292540
           },
           {
-            "c": 394.6,
-            "t": 1783515000
+            "c": 384.62,
+            "t": 1784292600
           },
           {
-            "c": 394.66,
-            "t": 1783515060
+            "c": 385.01,
+            "t": 1784292660
           },
           {
-            "c": 394.65,
-            "t": 1783515120
+            "c": 384.85,
+            "t": 1784292720
           },
           {
-            "c": 394.92,
-            "t": 1783515180
+            "c": 384.18,
+            "t": 1784292780
           },
           {
-            "c": 394.93,
-            "t": 1783515240
+            "c": 384.26,
+            "t": 1784292840
           },
           {
-            "c": 394.899,
-            "t": 1783515300
+            "c": 384.19,
+            "t": 1784292900
           },
           {
-            "c": 394.69,
-            "t": 1783515360
+            "c": 384.26,
+            "t": 1784292960
           },
           {
-            "c": 394.864,
-            "t": 1783515420
+            "c": 384.05,
+            "t": 1784293020
           },
           {
-            "c": 394.57,
-            "t": 1783515480
+            "c": 384.11,
+            "t": 1784293080
           },
           {
-            "c": 394.6,
-            "t": 1783515540
+            "c": 384.07,
+            "t": 1784293140
           },
           {
-            "c": 394.05,
-            "t": 1783515600
+            "c": 384.55,
+            "t": 1784293200
           },
           {
-            "c": 393.68,
-            "t": 1783515660
+            "c": 384.75,
+            "t": 1784293260
           },
           {
-            "c": 393.7,
-            "t": 1783515720
+            "c": 384.86,
+            "t": 1784293320
           },
           {
-            "c": 394.14,
-            "t": 1783515780
+            "c": 385.05,
+            "t": 1784293380
           },
           {
-            "c": 393.915,
-            "t": 1783515840
+            "c": 385.01,
+            "t": 1784293440
           },
           {
-            "c": 394.005,
-            "t": 1783515900
+            "c": 384.96,
+            "t": 1784293500
           },
           {
-            "c": 394.362,
-            "t": 1783515960
+            "c": 385.17,
+            "t": 1784293560
           },
           {
-            "c": 394.19,
-            "t": 1783516020
+            "c": 385.09,
+            "t": 1784293620
           },
           {
-            "c": 394.37,
-            "t": 1783516080
+            "c": 385.39,
+            "t": 1784293680
           },
           {
-            "c": 394.03,
-            "t": 1783516140
+            "c": 385.19,
+            "t": 1784293740
           },
           {
-            "c": 394.226,
-            "t": 1783516200
+            "c": 385.32,
+            "t": 1784293800
           },
           {
-            "c": 394.04,
-            "t": 1783516260
+            "c": 385.4,
+            "t": 1784293860
           },
           {
-            "c": 393.77,
-            "t": 1783516320
+            "c": 385.44,
+            "t": 1784293920
           },
           {
-            "c": 393.82,
-            "t": 1783516380
+            "c": 385.38,
+            "t": 1784293980
           },
           {
-            "c": 393.64,
-            "t": 1783516440
+            "c": 385.02,
+            "t": 1784294040
           },
           {
-            "c": 393.78,
-            "t": 1783516500
+            "c": 385.02,
+            "t": 1784294100
           },
           {
-            "c": 393.85,
-            "t": 1783516560
+            "c": 384.96,
+            "t": 1784294160
           },
           {
-            "c": 393.8,
-            "t": 1783516620
+            "c": 384.89,
+            "t": 1784294220
           },
           {
-            "c": 393.846,
-            "t": 1783516680
+            "c": 384.58,
+            "t": 1784294280
           },
           {
-            "c": 393.93,
-            "t": 1783516740
+            "c": 384.41,
+            "t": 1784294340
           },
           {
-            "c": 393.86,
-            "t": 1783516800
+            "c": 384.35,
+            "t": 1784294400
           },
           {
-            "c": 394.052,
-            "t": 1783516860
+            "c": 384.19,
+            "t": 1784294460
           },
           {
-            "c": 393.94,
-            "t": 1783516920
+            "c": 384.52,
+            "t": 1784294520
           },
           {
-            "c": 394.18,
-            "t": 1783516980
+            "c": 384.45,
+            "t": 1784294580
           },
           {
-            "c": 394.44,
-            "t": 1783517040
+            "c": 384.51,
+            "t": 1784294640
           },
           {
-            "c": 394.505,
-            "t": 1783517100
+            "c": 384.52,
+            "t": 1784294700
           },
           {
-            "c": 394.53,
-            "t": 1783517160
+            "c": 384.58,
+            "t": 1784294760
           },
           {
-            "c": 394.43,
-            "t": 1783517220
+            "c": 384.42,
+            "t": 1784294820
           },
           {
-            "c": 394.5,
-            "t": 1783517280
+            "c": 384.52,
+            "t": 1784294880
           },
           {
-            "c": 394.87,
-            "t": 1783517340
+            "c": 384.47,
+            "t": 1784294940
           },
           {
-            "c": 395.34,
-            "t": 1783517400
+            "c": 384.71,
+            "t": 1784295000
           },
           {
-            "c": 395.08,
-            "t": 1783517460
+            "c": 384.58,
+            "t": 1784295060
           },
           {
-            "c": 394.78,
-            "t": 1783517520
+            "c": 384.51,
+            "t": 1784295120
           },
           {
-            "c": 395.08,
-            "t": 1783517580
+            "c": 384.26,
+            "t": 1784295180
           },
           {
-            "c": 394.9,
-            "t": 1783517640
+            "c": 384.17,
+            "t": 1784295240
           },
           {
-            "c": 395.1,
-            "t": 1783517700
+            "c": 383.9,
+            "t": 1784295300
           },
           {
-            "c": 395.03,
-            "t": 1783517760
+            "c": 383.6,
+            "t": 1784295360
           },
           {
-            "c": 394.94,
-            "t": 1783517820
+            "c": 383.74,
+            "t": 1784295420
           },
           {
-            "c": 394.735,
-            "t": 1783517880
+            "c": 383.4,
+            "t": 1784295480
           },
           {
-            "c": 394.775,
-            "t": 1783517940
+            "c": 383.12,
+            "t": 1784295540
           },
           {
-            "c": 394.598,
-            "t": 1783518000
+            "c": 382.81,
+            "t": 1784295600
           },
           {
-            "c": 394.26,
-            "t": 1783518060
+            "c": 382.86,
+            "t": 1784295660
           },
           {
-            "c": 394.34,
-            "t": 1783518120
+            "c": 382.87,
+            "t": 1784295720
           },
           {
-            "c": 393.9,
-            "t": 1783518180
+            "c": 383.05,
+            "t": 1784295780
           },
           {
-            "c": 393.46,
-            "t": 1783518240
+            "c": 383.02,
+            "t": 1784295840
           },
           {
-            "c": 392.46,
-            "t": 1783518300
+            "c": 383.2,
+            "t": 1784295900
           },
           {
-            "c": 393.145,
-            "t": 1783518360
+            "c": 382.66,
+            "t": 1784295960
           },
           {
-            "c": 392.93,
-            "t": 1783518420
+            "c": 382.56,
+            "t": 1784296020
           },
           {
-            "c": 392.88,
-            "t": 1783518480
+            "c": 382.68,
+            "t": 1784296080
           },
           {
-            "c": 392.69,
-            "t": 1783518540
+            "c": 382.77,
+            "t": 1784296140
           },
           {
-            "c": 392.805,
-            "t": 1783518600
+            "c": 382.24,
+            "t": 1784296200
           },
           {
-            "c": 392.945,
-            "t": 1783518660
+            "c": 382.31,
+            "t": 1784296260
           },
           {
-            "c": 393.02,
-            "t": 1783518720
+            "c": 382.27,
+            "t": 1784296320
           },
           {
-            "c": 392.885,
-            "t": 1783518780
+            "c": 382.12,
+            "t": 1784296380
           },
           {
-            "c": 392.77,
-            "t": 1783518840
+            "c": 382.19,
+            "t": 1784296440
           },
           {
-            "c": 392.38,
-            "t": 1783518900
+            "c": 382.14,
+            "t": 1784296500
           },
           {
-            "c": 392.43,
-            "t": 1783518960
+            "c": 382.19,
+            "t": 1784296560
           },
           {
-            "c": 392.35,
-            "t": 1783519020
+            "c": 382.37,
+            "t": 1784296620
           },
           {
-            "c": 392.25,
-            "t": 1783519080
+            "c": 382.32,
+            "t": 1784296680
           },
           {
-            "c": 392.265,
-            "t": 1783519140
+            "c": 382.4,
+            "t": 1784296740
           },
           {
-            "c": 393.06,
-            "t": 1783519200
+            "c": 382.13,
+            "t": 1784296800
           },
           {
-            "c": 393.05,
-            "t": 1783519260
+            "c": 381.82,
+            "t": 1784296860
           },
           {
-            "c": 392.932,
-            "t": 1783519320
+            "c": 382.16,
+            "t": 1784296920
           },
           {
-            "c": 393.04,
-            "t": 1783519380
+            "c": 382.6,
+            "t": 1784296980
           },
           {
-            "c": 392.955,
-            "t": 1783519440
+            "c": 382.29,
+            "t": 1784297040
           },
           {
-            "c": 393.06,
-            "t": 1783519500
+            "c": 382.3,
+            "t": 1784297100
           },
           {
-            "c": 392.74,
-            "t": 1783519560
+            "c": 381.88,
+            "t": 1784297160
           },
           {
-            "c": 392.885,
-            "t": 1783519620
+            "c": 382.44,
+            "t": 1784297220
           },
           {
-            "c": 392.96,
-            "t": 1783519680
+            "c": 382.15,
+            "t": 1784297280
           },
           {
-            "c": 392.955,
-            "t": 1783519740
+            "c": 382.2,
+            "t": 1784297340
           },
           {
-            "c": 392.96,
-            "t": 1783519800
+            "c": 382.13,
+            "t": 1784297400
           },
           {
-            "c": 393.101,
-            "t": 1783519860
+            "c": 381.98,
+            "t": 1784297460
           },
           {
-            "c": 393.02,
-            "t": 1783519920
+            "c": 381.94,
+            "t": 1784297520
           },
           {
-            "c": 393.01,
-            "t": 1783519980
+            "c": 382.1,
+            "t": 1784297580
           },
           {
-            "c": 392.701,
-            "t": 1783520040
+            "c": 381.85,
+            "t": 1784297640
           },
           {
-            "c": 392.91,
-            "t": 1783520100
+            "c": 381.64,
+            "t": 1784297700
           },
           {
-            "c": 392.405,
-            "t": 1783520160
+            "c": 381.56,
+            "t": 1784297760
           },
           {
-            "c": 392.35,
-            "t": 1783520220
+            "c": 381.69,
+            "t": 1784297820
           },
           {
-            "c": 392.175,
-            "t": 1783520280
+            "c": 381.8,
+            "t": 1784297880
           },
           {
-            "c": 392.29,
-            "t": 1783520340
+            "c": 381.79,
+            "t": 1784297940
           },
           {
-            "c": 392.15,
-            "t": 1783520400
+            "c": 381.75,
+            "t": 1784298000
           },
           {
-            "c": 392.24,
-            "t": 1783520460
+            "c": 381.5,
+            "t": 1784298060
           },
           {
-            "c": 392.36,
-            "t": 1783520520
+            "c": 381.8,
+            "t": 1784298120
           },
           {
-            "c": 392.15,
-            "t": 1783520580
+            "c": 381.79,
+            "t": 1784298180
           },
           {
-            "c": 391.75,
-            "t": 1783520640
+            "c": 381.59,
+            "t": 1784298240
           },
           {
-            "c": 391.55,
-            "t": 1783520700
+            "c": 381.36,
+            "t": 1784298300
           },
           {
-            "c": 391.27,
-            "t": 1783520760
+            "c": 381.45,
+            "t": 1784298360
           },
           {
-            "c": 391.709,
-            "t": 1783520820
+            "c": 381.57,
+            "t": 1784298420
           },
           {
-            "c": 391.47,
-            "t": 1783520880
+            "c": 381.6,
+            "t": 1784298480
           },
           {
-            "c": 391.411,
-            "t": 1783520940
+            "c": 381.68,
+            "t": 1784298540
           },
           {
-            "c": 391.32,
-            "t": 1783521000
+            "c": 381.78,
+            "t": 1784298600
           },
           {
-            "c": 391.38,
-            "t": 1783521060
+            "c": 381.65,
+            "t": 1784298660
           },
           {
-            "c": 391.448,
-            "t": 1783521120
+            "c": 381.45,
+            "t": 1784298720
           },
           {
-            "c": 391.58,
-            "t": 1783521180
+            "c": 381.35,
+            "t": 1784298780
           },
           {
-            "c": 391.31,
-            "t": 1783521240
+            "c": 381.6,
+            "t": 1784298840
           },
           {
-            "c": 391.04,
-            "t": 1783521300
+            "c": 381.42,
+            "t": 1784298900
           },
           {
-            "c": 391.48,
-            "t": 1783521360
+            "c": 381.44,
+            "t": 1784298960
           },
           {
-            "c": 392.01,
-            "t": 1783521420
+            "c": 381.17,
+            "t": 1784299020
           },
           {
-            "c": 392.47,
-            "t": 1783521480
+            "c": 381.34,
+            "t": 1784299080
           },
           {
-            "c": 392.164,
-            "t": 1783521540
+            "c": 381.12,
+            "t": 1784299140
           },
           {
-            "c": 392.11,
-            "t": 1783521600
+            "c": 380.81,
+            "t": 1784299200
           },
           {
-            "c": 391.095,
-            "t": 1783521660
+            "c": 380.79,
+            "t": 1784299260
           },
           {
-            "c": 390.73,
-            "t": 1783521720
+            "c": 380.7,
+            "t": 1784299320
           },
           {
-            "c": 390.72,
-            "t": 1783521780
+            "c": 380.68,
+            "t": 1784299380
           },
           {
-            "c": 390.93,
-            "t": 1783521840
+            "c": 380.71,
+            "t": 1784299440
           },
           {
-            "c": 390.7,
-            "t": 1783521900
+            "c": 380.86,
+            "t": 1784299500
           },
           {
-            "c": 390.805,
-            "t": 1783521960
+            "c": 381.07,
+            "t": 1784299560
           },
           {
-            "c": 390.814,
-            "t": 1783522020
+            "c": 381.33,
+            "t": 1784299620
           },
           {
-            "c": 390.83,
-            "t": 1783522080
+            "c": 381.57,
+            "t": 1784299680
           },
           {
-            "c": 390.959,
-            "t": 1783522140
+            "c": 381.39,
+            "t": 1784299740
           },
           {
-            "c": 390.935,
-            "t": 1783522200
+            "c": 381.3,
+            "t": 1784299800
           },
           {
-            "c": 390.9,
-            "t": 1783522260
+            "c": 381.33,
+            "t": 1784299860
           },
           {
-            "c": 391.12,
-            "t": 1783522320
+            "c": 381.42,
+            "t": 1784299920
           },
           {
-            "c": 390.67,
-            "t": 1783522380
+            "c": 381.62,
+            "t": 1784299980
           },
           {
-            "c": 390.785,
-            "t": 1783522440
+            "c": 381.89,
+            "t": 1784300040
           },
           {
-            "c": 390.835,
-            "t": 1783522500
+            "c": 381.9,
+            "t": 1784300100
           },
           {
-            "c": 390.9,
-            "t": 1783522560
+            "c": 381.81,
+            "t": 1784300160
           },
           {
-            "c": 391,
-            "t": 1783522620
+            "c": 381.85,
+            "t": 1784300220
           },
           {
-            "c": 391.06,
-            "t": 1783522680
+            "c": 381.8,
+            "t": 1784300280
           },
           {
-            "c": 391.37,
-            "t": 1783522740
+            "c": 381.76,
+            "t": 1784300340
           },
           {
-            "c": 391.86,
-            "t": 1783522800
+            "c": 381.54,
+            "t": 1784300400
           },
           {
-            "c": 391.835,
-            "t": 1783522860
+            "c": 381.46,
+            "t": 1784300460
           },
           {
-            "c": 391.6,
-            "t": 1783522920
+            "c": 381.36,
+            "t": 1784300520
           },
           {
-            "c": 391.58,
-            "t": 1783522980
+            "c": 381.44,
+            "t": 1784300580
           },
           {
-            "c": 391.605,
-            "t": 1783523040
+            "c": 381.52,
+            "t": 1784300640
           },
           {
-            "c": 391.77,
-            "t": 1783523100
+            "c": 381.72,
+            "t": 1784300700
           },
           {
-            "c": 391.825,
-            "t": 1783523160
+            "c": 381.72,
+            "t": 1784300760
           },
           {
-            "c": 391.9,
-            "t": 1783523220
+            "c": 381.65,
+            "t": 1784300820
           },
           {
-            "c": 392.2,
-            "t": 1783523280
+            "c": 381.47,
+            "t": 1784300880
           },
           {
-            "c": 392.304,
-            "t": 1783523340
+            "c": 381.56,
+            "t": 1784300940
           },
           {
-            "c": 392.145,
-            "t": 1783523400
+            "c": 381.45,
+            "t": 1784301000
           },
           {
-            "c": 392.09,
-            "t": 1783523460
+            "c": 381.4,
+            "t": 1784301060
           },
           {
-            "c": 392.03,
-            "t": 1783523520
+            "c": 381.23,
+            "t": 1784301120
           },
           {
-            "c": 391.96,
-            "t": 1783523580
+            "c": 381.03,
+            "t": 1784301180
           },
           {
-            "c": 392.27,
-            "t": 1783523640
+            "c": 381.1,
+            "t": 1784301240
           },
           {
-            "c": 391.95,
-            "t": 1783523700
+            "c": 381.17,
+            "t": 1784301300
           },
           {
-            "c": 391.995,
-            "t": 1783523760
+            "c": 381.27,
+            "t": 1784301360
           },
           {
-            "c": 392.445,
-            "t": 1783523820
+            "c": 381.29,
+            "t": 1784301420
           },
           {
-            "c": 392.08,
-            "t": 1783523880
+            "c": 381.37,
+            "t": 1784301480
           },
           {
-            "c": 392.135,
-            "t": 1783523940
+            "c": 381.7,
+            "t": 1784301540
           },
           {
-            "c": 392.44,
-            "t": 1783524000
+            "c": 381.55,
+            "t": 1784301600
           },
           {
-            "c": 392.936,
-            "t": 1783524060
+            "c": 381.47,
+            "t": 1784301660
           },
           {
-            "c": 392.711,
-            "t": 1783524120
+            "c": 381.53,
+            "t": 1784301720
           },
           {
-            "c": 392.74,
-            "t": 1783524180
+            "c": 381.63,
+            "t": 1784301780
           },
           {
-            "c": 392.82,
-            "t": 1783524240
+            "c": 381.55,
+            "t": 1784301840
           },
           {
-            "c": 392.619,
-            "t": 1783524300
+            "c": 381.44,
+            "t": 1784301900
           },
           {
-            "c": 392.46,
-            "t": 1783524360
+            "c": 381.42,
+            "t": 1784301960
           },
           {
-            "c": 392.43,
-            "t": 1783524420
+            "c": 381.68,
+            "t": 1784302020
           },
           {
-            "c": 392.724,
-            "t": 1783524480
+            "c": 382.24,
+            "t": 1784302080
           },
           {
-            "c": 392.79,
-            "t": 1783524540
+            "c": 382.48,
+            "t": 1784302140
           },
           {
-            "c": 392.82,
-            "t": 1783524600
+            "c": 382.82,
+            "t": 1784302200
           },
           {
-            "c": 393.025,
-            "t": 1783524660
+            "c": 382.86,
+            "t": 1784302260
           },
           {
-            "c": 392.97,
-            "t": 1783524720
+            "c": 382.63,
+            "t": 1784302320
           },
           {
-            "c": 393,
-            "t": 1783524780
+            "c": 382.3,
+            "t": 1784302380
           },
           {
-            "c": 392.9,
-            "t": 1783524840
+            "c": 382.12,
+            "t": 1784302440
           },
           {
-            "c": 393.28,
-            "t": 1783524900
+            "c": 382.05,
+            "t": 1784302500
           },
           {
-            "c": 393.495,
-            "t": 1783524960
+            "c": 382.06,
+            "t": 1784302560
           },
           {
-            "c": 393.49,
-            "t": 1783525020
+            "c": 382.2,
+            "t": 1784302620
           },
           {
-            "c": 393.495,
-            "t": 1783525080
+            "c": 381.83,
+            "t": 1784302680
           },
           {
-            "c": 393.45,
-            "t": 1783525140
+            "c": 381.86,
+            "t": 1784302740
           },
           {
-            "c": 393.52,
-            "t": 1783525200
+            "c": 381.94,
+            "t": 1784302800
           },
           {
-            "c": 393.59,
-            "t": 1783525260
+            "c": 381.93,
+            "t": 1784302860
           },
           {
-            "c": 393.76,
-            "t": 1783525320
+            "c": 381.52,
+            "t": 1784302920
           },
           {
-            "c": 393.77,
-            "t": 1783525380
+            "c": 381.51,
+            "t": 1784302980
           },
           {
-            "c": 393.68,
-            "t": 1783525440
+            "c": 381.47,
+            "t": 1784303040
           },
           {
-            "c": 393.41,
-            "t": 1783525500
+            "c": 381.73,
+            "t": 1784303100
           },
           {
-            "c": 393.24,
-            "t": 1783525560
+            "c": 381.66,
+            "t": 1784303160
           },
           {
-            "c": 393.55,
-            "t": 1783525620
+            "c": 381.78,
+            "t": 1784303220
           },
           {
-            "c": 393.94,
-            "t": 1783525680
+            "c": 381.86,
+            "t": 1784303280
           },
           {
-            "c": 394.135,
-            "t": 1783525740
+            "c": 381.83,
+            "t": 1784303340
           },
           {
-            "c": 395.6,
-            "t": 1783525800
+            "c": 381.31,
+            "t": 1784303400
           },
           {
-            "c": 395.65,
-            "t": 1783525860
+            "c": 381.95,
+            "t": 1784303460
           },
           {
-            "c": 395.275,
-            "t": 1783525920
+            "c": 381.81,
+            "t": 1784303520
           },
           {
-            "c": 395.4,
-            "t": 1783525980
+            "c": 381.54,
+            "t": 1784303580
           },
           {
-            "c": 395.52,
-            "t": 1783526040
+            "c": 381.27,
+            "t": 1784303640
           },
           {
-            "c": 394.77,
-            "t": 1783526100
+            "c": 381.7,
+            "t": 1784303700
           },
           {
-            "c": 394.36,
-            "t": 1783526160
+            "c": 381.71,
+            "t": 1784303760
           },
           {
-            "c": 394.32,
-            "t": 1783526220
+            "c": 381.52,
+            "t": 1784303820
           },
           {
-            "c": 394.1,
-            "t": 1783526280
+            "c": 381.41,
+            "t": 1784303880
           },
           {
-            "c": 393.93,
-            "t": 1783526340
+            "c": 380.85,
+            "t": 1784303940
           },
           {
-            "c": 393.7791,
-            "t": 1783526400
+            "c": 380.84,
+            "t": 1784304000
           }
         ]
       },
       "changes": {
-        "price1w": 425.3,
-        "price1m": 391,
+        "price1w": 407.76,
+        "price1m": 404.66,
+        "price3m": 388.9,
+        "price6m": 437.5,
         "priceYTD": 449.72,
-        "price1y": 293.94,
-        "price5y": 214.883,
+        "price1y": 321.67,
+        "price5y": 214.74,
         "priceMAX": 1.593
       },
       "source": "polygon"
@@ -2254,11 +2278,11 @@
         "t": "2026-07-01",
         "o": 421.46,
         "h": 432.86,
-        "l": 389.301,
-        "c": 393.93,
-        "a": 393.93,
-        "v": 236038300,
-        "ch": -6.34
+        "l": 377.22,
+        "c": 380.84,
+        "a": 380.84,
+        "v": 460369228,
+        "ch": -9.45
       },
       {
         "t": "2026-06-01",
@@ -2267,7 +2291,7 @@
         "l": 368.6,
         "c": 420.6,
         "a": 420.6,
-        "v": 999869920,
+        "v": 1002561005,
         "ch": -3.49
       },
       {
@@ -2372,38 +2396,37 @@
       }
     ],
     "quote": {
-      "p": 393.7791,
-      "pd": 393.78,
-      "c": -9.12,
-      "cp": -2.26,
-      "cl": 402.9,
-      "cdr": -1,
-      "o": 399.38,
-      "h": 399.63,
-      "l": 390.96,
-      "v": 20834369,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 498.83,
-      "l52": 293.55,
+      "c": -10.22,
+      "e": true,
+      "h": 385.69,
+      "l": 377.22,
+      "o": 381.78,
+      "p": 380.84,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 31394689,
+      "cl": 391.06,
+      "cp": -2.61,
+      "ec": -0.81,
+      "ep": 380.03,
+      "es": "After-hours",
+      "eu": "Jul 17, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 393.34,
-      "epd": 393.34,
-      "ec": -0.44,
-      "ecp": -0.11,
-      "eu": "Jul 8, 2026, 6:44 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550664481.8948,
-      "etd": "2026-07-08",
-      "epv": null,
+      "pd": 380.84,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": -0.21,
+      "epd": 380.03,
+      "etd": "2026-07-17",
+      "ets": 1784332796671.1255,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 498.83,
+      "l52": 297.82,
+      "uid": "TSLA",
       "days": 0,
-      "exp": 1783550744334,
-      "symbol": "TSLA",
-      "uid": "TSLA"
+      "symbol": "TSLA"
     }
   }
 }
