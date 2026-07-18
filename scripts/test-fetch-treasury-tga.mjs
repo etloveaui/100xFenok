@@ -15,6 +15,7 @@ import {
   runTreasuryTga,
 } from "./fetch-treasury-tga.mjs";
 import { validateAttemptEvidence } from "./build-data-supply-detection-floor.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "tga-20260714t123456000z-test";
@@ -669,6 +670,20 @@ await assert.rejects(
   assert.doesNotMatch(workflow, /git add -A/);
   assert.doesNotMatch(workflow, /data-supply-detection-floor\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
+}
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-treasury-tga.yml"), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-treasury-tga.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes, ["treasury_tga"], "the registry must attribute this lane to fetch-treasury-tga.yml");
 }
 
 console.log("test-fetch-treasury-tga: ok");

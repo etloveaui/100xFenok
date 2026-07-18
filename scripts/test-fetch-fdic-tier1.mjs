@@ -14,6 +14,7 @@ import {
   retainLatestQuarters,
   runFdicTier1,
 } from "./fetch-fdic-tier1.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "fdic-tier1-20260714t123456000z-test";
@@ -374,6 +375,20 @@ function assertValidShard(shard) {
   assert.match(workflow, /data\/admin\/fdic_tier1\/index\.json/);
   assert.match(workflow, /data\/admin\/fdic_tier1\/lkg\/fdic_tier1\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
+}
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-fdic.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes, ["fdic_tier1"], "the registry must attribute this lane to fetch-fdic.yml");
 }
 
 console.log("test-fetch-fdic-tier1: ok");

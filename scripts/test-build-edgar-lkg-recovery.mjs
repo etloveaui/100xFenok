@@ -33,6 +33,7 @@ import {
 } from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 function response(statusCode, document) {
   return { statusCode, body: typeof document === "string" ? document : JSON.stringify(document) };
@@ -427,6 +428,20 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   const source = fs.readFileSync(producerPath, "utf8");
   assert.match(source, /runEdgarFilingTimeline\(CLI_RUN_OPTIONS\)/, "the CLI entry must pass CLI_RUN_OPTIONS");
   assert.doesNotMatch(source, /runEdgarFilingTimeline\(\)\.then/, "a bare CLI call leaves the store inert (the 29642839382 class)");
+}
+
+// --- Lane Registry ⇄ commit-shard completeness gate (#366 step 4) -----------
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-edgar-filings.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-edgar-filings.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes, ["edgar_filings"], "the registry must attribute this lane to fetch-edgar-filings.yml");
 }
 
 console.log("test-build-edgar-lkg-recovery: ok");

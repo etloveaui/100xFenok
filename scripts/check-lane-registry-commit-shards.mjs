@@ -17,9 +17,14 @@ import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 export function extractWorkflowShardAllowlist(workflowText) {
-  const block = workflowText.match(/for SHARD in \\\n([\s\S]*?); do/);
-  if (!block) throw new Error("shard allowlist block not found in workflow text");
-  return [...block[1].matchAll(/data\/admin\/[^\s\\;]+/g)].map((match) => match[0]);
+  // Whole-file scan: workflows commit admin state via SHARD loops, standalone
+  // git add lines, or var assignments — the allowlist is every data/admin/*.json
+  // literal in the file, however it is reached. Non-admin canonical/public
+  // paths are deliberately out of scope (the registry's public_mirror axis).
+  const matches = [...workflowText.matchAll(/data\/admin\/[^\s"';\\]+\.json/g)].map((match) => match[0]);
+  const unique = [...new Set(matches)].sort();
+  if (unique.length === 0) throw new Error("no data/admin shard paths found in workflow text");
+  return unique;
 }
 
 export function checkWorkflowCommitShardsAgainstRegistry({
@@ -36,7 +41,11 @@ export function checkWorkflowCommitShardsAgainstRegistry({
 
   const declared = new Map();
   for (const lane of lanes) {
-    for (const shard of lane.commit_shards) declared.set(shard, lane.id);
+    for (const shard of lane.commit_shards) {
+      // Gate scope is admin control-plane state; canonical/public mirrors of a
+      // lane are tracked on the registry's public_mirror axis instead.
+      if (shard.startsWith("data/admin/")) declared.set(shard, lane.id);
+    }
   }
   const allowSet = new Set(allowlist);
 

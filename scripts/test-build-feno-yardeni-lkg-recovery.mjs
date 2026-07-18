@@ -33,6 +33,7 @@ import {
   projectRecoveryRetrySet,
 } from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 
 const seedPayload = {
@@ -405,6 +406,20 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   const plain = await runLane(root, { series: fredGen2, run: dispatchRun("plain-dispatch", "2026-07-25T11:00:00Z") });
   assert.equal(plain.ok, true);
   assert.equal(plain.lkg.kind, "not_newer", "no injection = no chaos; dispatch is a normal (non-advancing) run");
+}
+
+// --- Lane Registry ⇄ commit-shard completeness gate (#366 step 4) -----------
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-fred-yardeni.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-fred-yardeni.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes, ["fred_yardeni"], "the registry must attribute this lane to fetch-fred-yardeni.yml");
 }
 
 console.log("test-build-feno-yardeni-lkg-recovery: ok");
