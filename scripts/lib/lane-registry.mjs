@@ -613,6 +613,18 @@ const declared_exceptions = [
     reason: "public mirror of the #365 lane-metadata projection (metadata-only, KPI-mirror precedent); not a lane store",
     owner: "platform",
   },
+  {
+    path: "data/admin/alarm-state.json",
+    kind: "file",
+    reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); committed by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",
+    owner: "platform",
+  },
+  {
+    path: "100xfenok-next/public/data/admin/alarm-state.json",
+    kind: "file",
+    reason: "public mirror of the #365 P3 alarm state (run-metadata only, KPI-mirror precedent); not a lane store",
+    owner: "platform",
+  },
   ...[
     "data/admin/README.md",
     "data/admin/data-usage-manifest.json",    "data/admin/fenok-data-health-kpi.json",

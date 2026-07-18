@@ -26,6 +26,11 @@ export type LaneBoardKpiLane = {
   };
 };
 
+export type AlarmState = {
+  status?: string;
+  open_incident_count?: number;
+};
+
 function dateLabel(value?: string | null) {
   return value ? value.slice(0, 10) : "-";
 }
@@ -69,21 +74,48 @@ function countOf(list?: unknown[]) {
 export default function LaneBoard({
   projection,
   kpiLanes,
+  alarm = null,
 }: {
   projection: LaneProjection[] | null;
   kpiLanes: LaneBoardKpiLane[];
+  alarm?: AlarmState | null;
 }) {
   const projectionIds = new Set((projection ?? []).map((lane) => lane.id));
   const platformGates = kpiLanes.filter((lane) => lane.id && !projectionIds.has(lane.id));
 
+  const alarmOpen = alarm?.status === "open";
+  const alarmCount = typeof alarm?.open_incident_count === "number" ? alarm.open_incident_count : 0;
+  const alarmLabel = !alarm
+    ? "알람 상태 미확인"
+    : alarmOpen
+      ? `알람 열림 ${alarmCount}`
+      : alarm.status === "unknown"
+        ? "알람 확인 필요"
+        : "알람 없음";
+  const alarmClass = !alarm
+    ? "border-slate-200 bg-slate-50 text-slate-600"
+    : alarmOpen
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : alarm.status === "unknown"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : "border-emerald-200 bg-emerald-50 text-emerald-700";
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-lane-board="true">
-      <div className="flex flex-col gap-1">
-        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Lane Registry × Data Health</p>
-        <h2 className="text-lg font-black tracking-tight text-slate-950">레인 보드</h2>
-        <p className="text-xs font-semibold text-slate-500">
-          관리 레인의 메타데이터·신선도·복구 상태를 한 화면에서 확인합니다.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Lane Registry × Data Health</p>
+          <h2 className="text-lg font-black tracking-tight text-slate-950">레인 보드</h2>
+          <p className="text-xs font-semibold text-slate-500">
+            관리 레인의 메타데이터·신선도·복구 상태를 한 화면에서 확인합니다.
+          </p>
+        </div>
+        <span
+          data-admin-alarm-badge={alarmOpen ? "open" : alarm?.status ?? "unknown"}
+          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-black ${alarmClass}`}
+        >
+          {alarmLabel}
+        </span>
       </div>
 
       <div className="mt-4 overflow-x-auto">

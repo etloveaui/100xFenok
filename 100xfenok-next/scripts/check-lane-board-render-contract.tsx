@@ -76,4 +76,20 @@ assert(emptyHtml.includes("읽지 못했습니다"), "null projection should sho
 // Platform gates still render even when projection is null.
 assert(emptyHtml.includes('data-platform-gate="rim_inputs"'), "platform gates should render even with null projection");
 
+// Alarm badge (#365 P3): open / clear / unknown / missing states.
+const openHtml = renderToStaticMarkup(
+  <LaneBoard projection={projection} kpiLanes={kpiLanes} alarm={{ status: "open", open_incident_count: 2 }} />,
+);
+assert(openHtml.includes('data-admin-alarm-badge="open"'), "open alarm should mark the badge open");
+assert(openHtml.includes("알람 열림 2"), "open alarm should show the incident count");
+
+const clearHtml = renderToStaticMarkup(
+  <LaneBoard projection={projection} kpiLanes={kpiLanes} alarm={{ status: "clear", open_incident_count: 0 }} />,
+);
+assert(clearHtml.includes("알람 없음"), "clear alarm should show 알람 없음");
+assert(!clearHtml.includes('data-admin-alarm-badge="open"'), "clear alarm must not mark the badge open");
+
+const noAlarmHtml = renderToStaticMarkup(<LaneBoard projection={projection} kpiLanes={kpiLanes} alarm={null} />);
+assert(noAlarmHtml.includes("알람 상태 미확인"), "missing alarm state should degrade honestly");
+
 console.log(JSON.stringify({ ok: true, suite: "lane-board render contract", lanes: projection.length }, null, 2));

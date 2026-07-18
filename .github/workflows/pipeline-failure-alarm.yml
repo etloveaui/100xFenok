@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   actions: read
 
@@ -37,6 +37,37 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
         run: node scripts/ops/check-pipeline-job-health.mjs
+
+      - name: Emit alarm state
+        if: always()
+        continue-on-error: true
+        env:
+          PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
+        run: node scripts/ops/emit-alarm-state.mjs
+
+      - name: Commit alarm state
+        if: always()
+        continue-on-error: true
+        run: |
+          # Fail-closed: this whole step is continue-on-error so an alarm-state
+          # commit failure can NEVER mask the alarm — the OPS issue + job failure
+          # (below) stay the primary channel. [skip ci] keeps this ops-metadata
+          # commit from re-triggering the pipeline it is reporting on.
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/admin/alarm-state.json 100xfenok-next/public/data/admin/alarm-state.json || exit 0
+          if git diff --cached --quiet; then
+            echo "alarm-state unchanged; nothing to commit"
+            exit 0
+          fi
+          branch="${GITHUB_REF_NAME:-main}"
+          git commit -m "ops: refresh alarm-state.json [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin "$branch" && git push origin "HEAD:$branch"; then
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
 
       - name: Prepare issue body
         if: steps.pipeline.outcome == 'failure'
