@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-18T01:18:00Z",
+  "generated_at": "2026-07-18T14:17:23Z",
   "counts": {
     "tracked": 118,
     "fresh": 77,
     "lkg": 41,
     "unavailable": 0,
     "retry": 41,
-    "failed": 41,
+    "failed": 2,
     "recovered": 0
   },
   "counts_by_kind": {
@@ -213,8 +213,8 @@
       "resolution_state": "lkg_primary",
       "payload_sha256": "25cb07334425ff3c20edea88f9a1d4127c3b90dcf207e5ad18b91677b4195b37",
       "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
+      "failure_run_id": "29647721523",
+      "failure_observed_at": "2026-07-18T14:17:23Z",
       "data_loss": false
     },
     {
@@ -613,8 +613,8 @@
       "resolution_state": "lkg_primary",
       "payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
       "source_as_of": "2026-03-28",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
+      "failure_run_id": "29647721523",
+      "failure_observed_at": "2026-07-18T14:17:23Z",
       "data_loss": false
     }
   ],
@@ -667,292 +667,19 @@
   "recovered_surfaces": [],
   "recovered_universes": [],
   "current_attempt": {
-    "run_id": "29624561317",
+    "run_id": "29647721523",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
-    "natural": true,
-    "attempted": 66,
-    "successes": 25,
-    "failed": 41,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "attempted": 28,
+    "successes": 26,
+    "failed": 2,
     "recovered": 0,
     "errors": [
       {
         "artifact_kind": "stock",
         "entity": "AAPL",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ABBV",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AMAT",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AMD",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AMZN",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ARM",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ASML",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AVGO",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "BAC",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "BRK.A",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "BRK.B",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "CAT",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "COST",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "CSCO",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "CVX",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "GE",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "GOOG",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "GOOGL",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "INTC",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "JNJ",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "JPM",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "KO",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "LLY",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "LRCX",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MA",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "META",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MS",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MSFT",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MU",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "NFLX",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "NVDA",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ORCL",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "PG",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "PLTR",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "TSLA",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "TSM",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "UNH",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "V",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "WMT",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "XOM",
         "error": "HTTPError: HTTP Error 404: Not Found",
         "controlled": false,
         "data_loss": false
@@ -1089,6 +816,11 @@
       {
         "artifact_kind": "surface",
         "entity": "sector_technology",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "universe",
+        "entity": "etf_universe",
         "outcome": "fresh"
       }
     ]
