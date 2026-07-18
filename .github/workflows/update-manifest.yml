@@ -34,6 +34,7 @@ on:
       - '!data/admin/fenok-etf-core-daily-basket.json'
       - '!data/admin/fenok-edge-korea-krx-daily-index.json'
       - '!data/admin/data-supply-state/**'
+      - '!data/admin/lane-registry-projection.json'
       - '!data/stockanalysis/**'
       - '!data/slickcharts/discovery-summary.json'
       - '!data/slickcharts/membership-changes.json'
@@ -249,6 +250,7 @@ jobs:
       - name: Build data health KPI
         run: |
           npm --prefix 100xfenok-next run build:fenok-data-health-kpi
+          npm --prefix 100xfenok-next run build:lane-registry-projection
           node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
           node scripts/test-build-fenok-data-health-kpi.mjs
           node scripts/test-update-manifest-workflow.mjs
@@ -290,6 +292,7 @@ jobs:
               data/admin/data-usage-manifest.json \
               data/admin/product-surface-coverage.json \
               data/admin/fenok-data-health-kpi.json \
+              data/admin/lane-registry-projection.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
               100xfenok-next/public/data/computed/stock_action_index.json \
@@ -315,6 +318,7 @@ jobs:
               100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/admin/product-surface-coverage.json \
               100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
+              100xfenok-next/public/data/admin/lane-registry-projection.json \
               100xfenok-next/public/data/manifest.json \
               100xfenok-next/src/generated/static-route-manifest.ts \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
@@ -411,6 +415,7 @@ jobs:
               node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
             )
             npm --prefix 100xfenok-next run build:fenok-data-health-kpi
+            npm --prefix 100xfenok-next run build:lane-registry-projection
             node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
             node scripts/test-build-fenok-data-health-kpi.mjs
             node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
@@ -448,6 +453,7 @@ jobs:
                 data/admin/data-usage-manifest.json \
                 data/admin/product-surface-coverage.json \
                 data/admin/fenok-data-health-kpi.json \
+                data/admin/lane-registry-projection.json \
                 data/manifest.json \
                 100xfenok-next/public/data/computed/signals.json \
                 100xfenok-next/public/data/computed/stock_action_index.json \
@@ -473,6 +479,7 @@ jobs:
                 100xfenok-next/public/data/admin/data-usage-manifest.json \
                 100xfenok-next/public/data/admin/product-surface-coverage.json \
                 100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
+                100xfenok-next/public/data/admin/lane-registry-projection.json \
                 100xfenok-next/public/data/manifest.json \
               100xfenok-next/src/generated/static-route-manifest.ts; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
@@ -512,6 +519,7 @@ jobs:
               data/admin/data-usage-manifest.json \
               data/admin/product-surface-coverage.json \
               data/admin/fenok-data-health-kpi.json \
+              data/admin/lane-registry-projection.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
               100xfenok-next/public/data/computed/stock_action_index.json \
@@ -537,6 +545,7 @@ jobs:
               100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/admin/product-surface-coverage.json \
               100xfenok-next/public/data/admin/fenok-data-health-kpi.json \
+              100xfenok-next/public/data/admin/lane-registry-projection.json \
               100xfenok-next/public/data/manifest.json \
               100xfenok-next/src/generated/static-route-manifest.ts
             git commit -m "chore: update computed signals and manifest"

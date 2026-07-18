@@ -1,0 +1,249 @@
+{
+  "schema_version": "lane-registry-projection/v1",
+  "generated_at": "2026-07-18T20:23:46.983Z",
+  "source_schema_version": "lane-registry/v1",
+  "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
+  "lane_count": 20,
+  "lanes": [
+    {
+      "id": "fred_macro",
+      "label": "FRED macro",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "fred"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-fred-macro.yml"
+    },
+    {
+      "id": "fred_banking",
+      "label": "FRED banking",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "mixed",
+        "provider": "fred (daily/weekly/monthly/quarterly series)"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-fred-banking.yml"
+    },
+    {
+      "id": "fred_yardeni",
+      "label": "Feno Yardeni model (FRED WAAA/WBAA)",
+      "store_kind": "marker",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "fred weekly (Friday observations)"
+      },
+      "enforcement": "live",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-fred-yardeni.yml"
+    },
+    {
+      "id": "fdic_tier1",
+      "label": "FDIC Tier-1",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "quarterly",
+        "provider": "fdic (first-Monday cron)"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-fdic.yml"
+    },
+    {
+      "id": "treasury_tga",
+      "label": "Treasury FiscalData TGA",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "fiscaldata.treasury.gov"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-treasury-tga.yml"
+    },
+    {
+      "id": "defillama_stablecoins",
+      "label": "DefiLlama stablecoins",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "defillama"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-defillama.yml"
+    },
+    {
+      "id": "yahoo_etf_fallback",
+      "label": "Yahoo ETF fallback candidate",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "yahoo/stockanalysis (shared workflow)"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "stockanalysis_etf_universe",
+      "label": "StockAnalysis ETF universe",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "stockanalysis (shared workflow)"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "yahoo_ticker_macro",
+      "label": "Yahoo hourly ticker snapshot",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "hourly",
+        "provider": "yahoo (TQQQ/SOXL keys)"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-yahoo-ticker.yml"
+    },
+    {
+      "id": "sentiment",
+      "label": "Sentiment bundle (CNN/VIX/MOVE/CFTC/crypto)",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "multi-source sentiment"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-sentiment.yml"
+    },
+    {
+      "id": "nasdaq_giw_sox",
+      "label": "Nasdaq GIW SOX constituents",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "nasdaq GIW (us_trading_days)"
+      },
+      "enforcement": "live",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-nasdaq-giw-sox.yml"
+    },
+    {
+      "id": "slickcharts",
+      "label": "SlickCharts daily delivery (composite lane)",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "slickcharts (us_trading_days)"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "slickcharts-daily.yml"
+    },
+    {
+      "id": "edgar_filings",
+      "label": "SEC EDGAR filing timeline",
+      "store_kind": "marker",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "sec edgar (Monday 00:40Z poll)"
+      },
+      "enforcement": "live",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-edgar-filings.yml"
+    },
+    {
+      "id": "sec_13f",
+      "label": "SEC 13F (ownerless artifact lane)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "quarterly",
+        "provider": "sec 13f"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": null
+    },
+    {
+      "id": "finra_short_volume",
+      "label": "FINRA RegSHO daily short volume",
+      "store_kind": "marker",
+      "cadence": {
+        "kind": "daily",
+        "provider": "finra (us_trading_days)"
+      },
+      "enforcement": "live",
+      "privacy_class": "private",
+      "owner_workflow": "fenok-edge-daily.yml"
+    },
+    {
+      "id": "occ_options_volume",
+      "label": "OCC options volume",
+      "store_kind": "marker",
+      "cadence": {
+        "kind": "daily",
+        "provider": "occ (us_trading_days)"
+      },
+      "enforcement": "live",
+      "privacy_class": "private",
+      "owner_workflow": "fenok-edge-daily.yml"
+    },
+    {
+      "id": "yahoo_private_options",
+      "label": "Yahoo private options availability",
+      "store_kind": "marker",
+      "cadence": {
+        "kind": "daily",
+        "provider": "yahoo finance targeted options (us_trading_days)"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-fenok-private-options.yml"
+    },
+    {
+      "id": "apewisdom_attention",
+      "label": "ApeWisdom attention (ownerless artifact lane)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "unknown",
+        "provider": "apewisdom"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": null
+    },
+    {
+      "id": "gdelt_news_tone",
+      "label": "GDELT news tone (ownerless artifact lane)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "unknown",
+        "provider": "gdelt"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": null
+    },
+    {
+      "id": "yahoo_batch_quote_history",
+      "label": "Yahoo batch quote/history",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "yahoo"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-yf-finance.yml"
+    }
+  ]
+}

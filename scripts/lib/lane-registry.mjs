@@ -601,6 +601,18 @@ const declared_exceptions = [
     owner: "platform",
     may_be_absent: true,
   },
+  {
+    path: "data/admin/lane-registry-projection.json",
+    kind: "file",
+    reason: "public-safe lane-metadata projection for the #365 owner dashboard (privacy-filtered by build-lane-registry-projection.mjs; no store roots/paths); not a lane store",
+    owner: "platform",
+  },
+  {
+    path: "100xfenok-next/public/data/admin/lane-registry-projection.json",
+    kind: "file",
+    reason: "public mirror of the #365 lane-metadata projection (metadata-only, KPI-mirror precedent); not a lane store",
+    owner: "platform",
+  },
   ...[
     "data/admin/README.md",
     "data/admin/data-usage-manifest.json",    "data/admin/fenok-data-health-kpi.json",

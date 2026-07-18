@@ -3,6 +3,7 @@ import Link from "next/link";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { ROUTES } from "@/lib/routes";
 import { readPublicAssetText } from "@/lib/server/public-assets";
+import LaneBoard, { type LaneProjection } from "./LaneBoard";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,15 @@ async function readDataHealthKpi(): Promise<DataHealthKpi | null> {
   }
 }
 
+async function readLaneRegistryProjection(): Promise<LaneProjection[] | null> {
+  try {
+    const parsed = JSON.parse(await readPublicAssetText("/data/admin/lane-registry-projection.json")) as { lanes?: LaneProjection[] };
+    return Array.isArray(parsed.lanes) ? parsed.lanes : null;
+  } catch {
+    return null;
+  }
+}
+
 function dateLabel(value?: string) {
   if (!value) return "-";
   return value.slice(0, 10);
@@ -130,6 +140,7 @@ function compactLaneCounts(lane: DataHealthLane) {
 export default async function AdminDataLabPage() {
   const dataHealthKpi = await readDataHealthKpi();
   const coverage = await readProductSurfaceCoverage();
+  const laneProjection = await readLaneRegistryProjection();
   const kpiLanes = dataHealthKpi?.lanes || [];
   const s0Lane = laneById(dataHealthKpi, "stock_s0_active_daily_gate");
   const etfLane = laneById(dataHealthKpi, "etf_public_and_daily_gate");
@@ -277,6 +288,8 @@ export default async function AdminDataLabPage() {
           </table>
         </div>
       </section>
+
+      <LaneBoard projection={laneProjection} kpiLanes={kpiLanes} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-lab-coverage="true">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
