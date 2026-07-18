@@ -1,0 +1,354 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "LRNX",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-18T21:48:17Z",
+  "endpoints": {
+    "holdings": "/etf/lrnx/holdings/__data.json",
+    "overview": "/etf/lrnx/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "STRIDE INC.-SWAP-CANT-L",
+        "weight_pct": 191.07,
+        "shares": 5973,
+        "raw": {
+          "no": 1,
+          "n": "STRIDE INC.-SWAP-CANT-L",
+          "as": "191.07%",
+          "sh": "5,973"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 81.79,
+        "shares": 224039,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "81.79%",
+          "sh": "224,039"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 9.26,
+        "shares": 25370,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "9.26%",
+          "sh": "25,370"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -1.14,
+        "shares": 3118,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-1.14%",
+          "sh": "3,118"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -180.99,
+        "shares": 495739,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-180.99%",
+          "sh": "495,739"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$270.65K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "10,000",
+      "inception": "Jun 24, 2026",
+      "etf_website": "https://corgifunds.com/LRNX"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "LRNX",
+        "lastChecked": 1784333772253,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$270.65K",
+      "nav": null,
+      "expenseRatio": "0.45%",
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 5,
+      "inception": "Jun 24, 2026",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The Corgi LRN 2x Daily ETF (LRNX) is an exchange-traded fund that mostly invests in consumer discretionary equity. The fund provides 2x leveraged exposure, less fees and expenses, to the daily price movement for shares of Stride, Inc. (NYSE: LRN), through derivatives such as swaps. LRNX was launched on Jun 24, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Equity"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "LRNX"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/LRNX",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "STRIDE INC.-SWAP-CANT-L",
+            "as": "191.07%",
+            "sh": "5,973"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "81.79%",
+            "sh": "224,039"
+          },
+          {
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "9.26%",
+            "sh": "25,370"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "-1.14%",
+            "sh": "3,118"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-180.99%",
+            "sh": "495,739"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784382447189",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 29.781,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.987
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "STRIDE INC.-SWAP-CANT-L",
+          "as": "191.07%",
+          "sh": "5,973"
+        },
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "81.79%",
+          "sh": "224,039"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "9.26%",
+          "sh": "25,370"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-1.14%",
+          "sh": "3,118"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-180.99%",
+          "sh": "495,739"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "category": "Trading--Leveraged Equity",
+        "categoryLabel": "ETF Category",
+        "aum": 270653,
+        "peRatio": null
+      },
+      "date": "Jul 16, 2026",
+      "count": 5,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 16, 2026",
+        "lastChecked": 1784399473281,
+        "topic": "holdings",
+        "ticker": "LRNX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
