@@ -821,8 +821,15 @@ export async function runEdgarFilingTimeline({
   };
 }
 
+// The production CLI engages the LKG recovery store BY DEFAULT; library callers
+// (tests, embedders) opt in explicitly via their own lkgRepoRoot. These are the
+// exact options the CLI entry passes — exporting them lets the test suite pin
+// the CLI-vs-library engagement parity class (calling the runner with no
+// options silently lands the store inert: proven live by run 29642839382).
+export const CLI_RUN_OPTIONS = Object.freeze({ lkgRepoRoot: ROOT });
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  runEdgarFilingTimeline().then((result) => {
+  runEdgarFilingTimeline(CLI_RUN_OPTIONS).then((result) => {
     // DEC-264: a degraded lane (valid LKG retained, retry parked, KPI-named)
     // exits 0 so the workflow commits the honest retry state; only true
     // corruption (no provable LKG, or a systemic break) exits non-zero.

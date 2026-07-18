@@ -19,6 +19,7 @@ import path from "node:path";
 
 import {
   buildEdgarFreshnessMarker,
+  CLI_RUN_OPTIONS,
   edgarMarkerPathFor,
   edgarMarkerSourceAsOf,
   runEdgarFilingTimeline,
@@ -411,6 +412,21 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   const plain = await runLane(rootB, { gen: GEN1, run: dispatchRun("plain-dispatch", "2026-07-18T11:00:00Z") });
   assert.equal(plain.ok, true);
   assert.equal(plain.lkg.kind, "recovery_requires_schedule", "no injection = no chaos; a plain dispatch just defers recovery to the natural gate");
+}
+
+// --- CLI-vs-library engagement parity (the inert-store class) -----------------
+// The production CLI must engage the LKG store by default; library callers opt
+// in explicitly. A bare runEdgarFilingTimeline() call lands the store inert
+// (proven live by injection run 29642839382, which fired correctly and
+// committed nothing). This pin must fail if the entry ever drops lkgRepoRoot.
+{
+  const producerPath = new URL("./build-edgar-filing-timeline.mjs", import.meta.url);
+  const expectedRoot = path.resolve(path.dirname(producerPath.pathname), "..");
+  assert.equal(CLI_RUN_OPTIONS.lkgRepoRoot, expectedRoot, "CLI options must bind the store to the repo root");
+  assert.notEqual(CLI_RUN_OPTIONS.lkgRepoRoot, null, "CLI must engage the LKG store by default");
+  const source = fs.readFileSync(producerPath, "utf8");
+  assert.match(source, /runEdgarFilingTimeline\(CLI_RUN_OPTIONS\)/, "the CLI entry must pass CLI_RUN_OPTIONS");
+  assert.doesNotMatch(source, /runEdgarFilingTimeline\(\)\.then/, "a bare CLI call leaves the store inert (the 29642839382 class)");
 }
 
 console.log("test-build-edgar-lkg-recovery: ok");

@@ -201,11 +201,13 @@ function clone(value) {
     assert.deepEqual(summary.undeclared_roots, [], "no undeclared roots on origin/main");
     assert.deepEqual(summary.undeclared_files, [], "no undeclared files on origin/main");
     assert.deepEqual(summary.stale_exceptions, [], "no stale exceptions on origin/main");
-    assert.deepEqual(
-      summary.absent_store_roots.map((row) => row.lane).sort(),
-      ["edgar_filings", "fred_yardeni", "occ_options_volume"].sort(),
-      "only the three pre-launch stores are absent",
-    );
+    // Absent stores are time-dependent: each lane's store appears on its first
+    // natural run, so assert the pending set is a SUBSET of the known
+    // pre-launch lanes rather than an exact list.
+    const pendingLanes = new Set(["edgar_filings", "fred_yardeni", "occ_options_volume"]);
+    for (const row of summary.absent_store_roots) {
+      assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);
+    }
   }
 }
 
