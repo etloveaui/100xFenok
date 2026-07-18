@@ -432,6 +432,25 @@ function s0FinraOccLedgerEvidence(index, activeTotal) {
   return evidence;
 }
 
+// Integration guard against the taiwanHistoricalMissing carry-over silently
+// re-freezing the denominator. taiwan_current_universe declares (via its
+// denominator_label) that its denominator IS active_scoring_universe.total, so
+// it must equal it. This validates the committed artifact, so it fires even if
+// the build script's reconcileTaiwanCurrentUniverseDenominator call is later
+// removed (the inert-wiring failure class) — a case the helper unit tests, which
+// exercise the function directly, cannot see.
+function taiwanCurrentUniverseDenominatorErrors(active, sourceRows) {
+  const total = active?.total;
+  if (!Number.isInteger(total)) return [];
+  const row = findById(asArray(sourceRows), "taiwan_current_universe");
+  if (!row || row.denominator_label !== "active_scoring_universe.total") return [];
+  if (Number(row.denominator) === total) return [];
+  return [
+    `taiwan_current_universe.denominator ${row.denominator} must equal active_scoring_universe.total ${total}; `
+      + "the taiwanHistoricalMissing carry-over froze a prior build's total — reconcileTaiwanCurrentUniverseDenominator must re-stamp it",
+  ];
+}
+
 function main() {
 const index = readJson(INDEX_PATH);
 const errors = [];
@@ -509,6 +528,9 @@ if (asArray(active.taiwan_ticker_anomalies).length > 0) {
 }
 if (!Array.isArray(active.taiwan_ticker_anomalies)) {
   add(errors, "active_scoring_universe.taiwan_ticker_anomalies must be an array");
+}
+for (const message of taiwanCurrentUniverseDenominatorErrors(active, sourceRows)) {
+  add(errors, message);
 }
 
 if (sourceAvailability.not_public_scoring !== true) {
@@ -754,5 +776,6 @@ export {
   requirementsReady,
   s0FinraOccLedgerEvidence,
   sourceAvailabilityIntegrityErrors,
+  taiwanCurrentUniverseDenominatorErrors,
   warnOnlyAvailabilityIssue,
 };

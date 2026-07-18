@@ -10,6 +10,7 @@ import {
   requirementsReady,
   s0FinraOccLedgerEvidence,
   sourceAvailabilityIntegrityErrors,
+  taiwanCurrentUniverseDenominatorErrors,
   warnOnlyAvailabilityIssue,
 } from "./check-fenok-edge-freshness.mjs";
 import fs from "node:fs";
@@ -110,6 +111,36 @@ assert.equal(warnOnlyAvailabilityIssue({ id: "us_occ_source", availability_statu
 assert.equal(warnOnlyAvailabilityIssue({ id: "us_occ_source", availability_status: "unavailable" }, true), true);
 assert.equal(warnOnlyAvailabilityIssue({ id: "etf_gap", status: "blocked_fetchable_gap" }, true), true);
 assert.equal(warnOnlyAvailabilityIssue({ id: "us_occ_source_date", status: "ready" }, true), false);
+
+// Taiwan current-universe denominator carry-over guard (integration-level).
+// GREEN: denominator matching active total produces no error.
+assert.deepEqual(
+  taiwanCurrentUniverseDenominatorErrors(
+    { total: 1177 },
+    [{ id: "taiwan_current_universe", denominator: 1177, denominator_label: "active_scoring_universe.total" }],
+  ),
+  [],
+);
+// RED: the pre-fix carry-over shape (frozen 1173 vs current total 1177) is flagged
+// with a message naming the carry-over class. This is the regression pin that
+// would fail if the build script's reconcile call were ever removed.
+assert.ok(
+  taiwanCurrentUniverseDenominatorErrors(
+    { total: 1177 },
+    [{ id: "taiwan_current_universe", denominator: 1173, denominator_label: "active_scoring_universe.total" }],
+  ).some((message) => message.includes("carry-over") && message.includes("1173") && message.includes("1177")),
+);
+// Guard is scoped: no matching row, or a row that does not claim the total as its
+// denominator, is not flagged (avoids false positives).
+assert.deepEqual(taiwanCurrentUniverseDenominatorErrors({ total: 1177 }, []), []);
+assert.deepEqual(
+  taiwanCurrentUniverseDenominatorErrors(
+    { total: 1177 },
+    [{ id: "taiwan_current_universe", denominator: 1173, denominator_label: "some_other_denominator" }],
+  ),
+  [],
+);
+assert.deepEqual(taiwanCurrentUniverseDenominatorErrors({ total: null }, []), []);
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const coverageIndex = JSON.parse(fs.readFileSync(path.join(repoRoot, "data/admin/fenok-edge-coverage-index.json"), "utf8"));
