@@ -6,7 +6,11 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { runEdgarFilingTimeline } from "./build-edgar-filing-timeline.mjs";
+import {
+  mergeFilings,
+  retainLatestFilingDates,
+  runEdgarFilingTimeline,
+} from "./build-edgar-filing-timeline.mjs";
 import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 
@@ -202,9 +206,103 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/fetch-edgar-filings.yml"), "utf8");
   assert.match(workflow, /node scripts\/test-build-edgar-filing-timeline\.mjs/);
+  assert.match(workflow, /node scripts\/test-build-edgar-lkg-recovery\.mjs/);
   assert.match(workflow, /detection-attempts\/edgar_filings\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.doesNotMatch(workflow, /git add -A/);
+}
+
+// --- Bounded persistence (P): merged timelines are capped per ticker --------
+{
+  const dayMs = 24 * 60 * 60 * 1000;
+  const dateAt = (index) => new Date(Date.UTC(2025, 0, 1) + index * dayMs).toISOString().slice(0, 10);
+  const filing = (index, extra = {}) => ({
+    accession: `acc-${index}`,
+    filingDate: dateAt(index),
+    form: "8-K",
+    summaryPath: null,
+    translationPath: null,
+    ...extra,
+  });
+
+  // cap enforcement + eviction order: 105 distinct dates -> newest 100 retained,
+  // oldest filingDate evicted first.
+  const existingManifest = {
+    filings: Array.from({ length: 105 }, (_, index) => filing(index)),
+  };
+  const discovered = [filing(105), filing(106)];
+  const merged = mergeFilings({
+    ticker: "NVDA",
+    companyName: "NVIDIA CORP",
+    cik: "0001045810",
+    existingManifest,
+    discoveredRows: discovered,
+    updated: "2026-07-18",
+  });
+  assert.equal(merged.filings.length, 100, "merged timeline is bounded at the cap");
+  const retainedDates = new Set(merged.filings.map((row) => row.filingDate));
+  assert.equal(retainedDates.size, 100);
+  assert.equal(retainedDates.has(dateAt(0)), false, "oldest filingDate is evicted first");
+  assert.equal(retainedDates.has(dateAt(6)), false);
+  assert.equal(retainedDates.has(dateAt(7)), true, "newest 100 distinct dates are retained");
+  assert.equal(retainedDates.has(dateAt(106)), true);
+  assert.equal(merged.filings[0].filingDate, dateAt(106), "descending order preserved");
+  assert.equal(merged.persistence_policy.max_distinct_filing_dates_per_ticker, 100);
+  assert.equal(merged.persistence_state.distinct_filing_dates, 107);
+  assert.equal(merged.persistence_state.filings_before, 107);
+  assert.equal(merged.persistence_state.filings_retained, 100);
+  assert.equal(merged.persistence_state.pruned_this_merge, 7);
+  assert.equal(merged.persistence_state.total_pruned_filings, 7);
+
+  // sparse-ticker non-eviction: a ticker below the cap is never pruned.
+  const sparse = mergeFilings({
+    ticker: "AAPL",
+    companyName: "APPLE INC",
+    cik: "0000320193",
+    existingManifest: { filings: [filing(1), filing(2), filing(3)] },
+    discoveredRows: [],
+    updated: "2026-07-18",
+  });
+  assert.equal(sparse.filings.length, 3, "sparse tickers are never evicted");
+  assert.equal(sparse.persistence_state.pruned_this_merge, 0);
+
+  // idempotency: merging the capped result with no new discoveries is a no-op.
+  const again = mergeFilings({
+    ticker: "NVDA",
+    companyName: "NVIDIA CORP",
+    cik: "0001045810",
+    existingManifest: merged,
+    discoveredRows: [],
+    updated: "2026-07-19",
+  });
+  assert.deepEqual(
+    again.filings.map((row) => row.accession),
+    merged.filings.map((row) => row.accession),
+    "re-running the cap is idempotent",
+  );
+  assert.equal(again.persistence_state.pruned_this_merge, 0);
+  assert.equal(again.persistence_state.total_pruned_filings, 7, "cumulative prune count is stable under idempotent re-runs");
+
+  // malformed dates fail closed.
+  assert.throws(() => mergeFilings({
+    ticker: "NVDA",
+    companyName: "NVIDIA CORP",
+    cik: "0001045810",
+    existingManifest: { filings: [{ accession: "bad-1", filingDate: "not-a-date" }] },
+    discoveredRows: [],
+    updated: "2026-07-18",
+  }), /invalid EDGAR persistence filingDate/, "a malformed filingDate must fail closed");
+  assert.throws(() => mergeFilings({
+    ticker: "NVDA",
+    companyName: "NVIDIA CORP",
+    cik: "0001045810",
+    existingManifest: null,
+    discoveredRows: [filing(1, { filingDate: "2026-13-40" })],
+    updated: "2026-07-18",
+  }), /invalid EDGAR persistence filingDate/);
+
+  // retainLatestFilingDates rejects a non-positive cap outright.
+  assert.throws(() => retainLatestFilingDates([], { max_distinct_filing_dates_per_ticker: 0 }), /invalid EDGAR persistence/);
 }
 
 console.log("test-build-edgar-filing-timeline: ok");

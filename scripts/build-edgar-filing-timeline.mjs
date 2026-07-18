@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   loadJsonGuarded,
@@ -23,6 +24,7 @@ import {
 } from "./lib/guarded-json.mjs";
 import {
   attemptResult,
+  atomicWrite,
   classifyEndpointResponse,
   classifyHttpResponse,
   defaultAttemptId,
@@ -31,9 +33,38 @@ import {
   worstRequestResult,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
+
+// Last-known-good recovery lane. The published tree is far too large to snapshot
+// (18MB / 1800+ files, company_tickers churn), so the store protects a small
+// freshness marker (max eligible filingDate + coverage counts + tree digest)
+// under data/admin/edgar_filings/, mirroring the finra/yardeni marker contract.
+// EDGAR is a poll_only source: a quiet week (no new qualifying filing, weekend,
+// federal holiday) is a VALID poll — never a failure; a due poll whose endpoint
+// fails or schema-drifts IS a failure and retains the prior marker.
+const EDGAR_LANE_ID = "edgar_filings";
+const EDGAR_LKG_KEY = "edgar_filings";
+const EDGAR_FRESHNESS_MARKER_SCHEMA = "fenok-edgar-freshness-marker/v1";
+
+// Bounded persistence (P): mergeFilings accumulates per-ticker filings; bound the
+// merged timeline to the latest 100 distinct filingDates per ticker. Sparse
+// tickers are never evicted; malformed dates fail closed; re-runs are idempotent.
+const EDGAR_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "edgar-bounded-persistence/v1",
+  basis: "filingDate",
+  scope: "per_ticker",
+  max_distinct_filing_dates_per_ticker: 100,
+  eviction: "oldest_filing_date_first",
+});
 
 const DEFAULT_PATHS = Object.freeze({
   analyzerPath: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
@@ -297,6 +328,40 @@ function isReadySummaryRow(row) {
   return Boolean(row?.summaryPath || row?.translationPath);
 }
 
+function assertValidFilingDate(value) {
+  const text = String(value ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || !Number.isFinite(Date.parse(text))) {
+    throw new Error(`invalid EDGAR persistence filingDate: ${value}`);
+  }
+  return text;
+}
+
+// Bounded persistence (OCC-consistent recipe): retain only filings whose
+// filingDate is within the ticker's newest N distinct filingDates. A ticker with
+// fewer distinct dates is never pruned (sparse-ticker non-eviction); any
+// malformed filingDate throws (fail-closed); applying the cap twice is a no-op
+// (idempotent).
+function retainLatestFilingDates(filings, policy = EDGAR_PERSISTENCE_POLICY) {
+  const maxDates = Number(policy?.max_distinct_filing_dates_per_ticker);
+  if (!Number.isInteger(maxDates) || maxDates <= 0) {
+    throw new Error("invalid EDGAR persistence max_distinct_filing_dates_per_ticker");
+  }
+  const rows = Array.isArray(filings) ? filings : [];
+  const dates = new Set();
+  for (const row of rows) dates.add(assertValidFilingDate(row?.filingDate));
+  const retainedDates = new Set([...dates].sort().reverse().slice(0, maxDates));
+  const retained = rows.filter((row) => retainedDates.has(String(row.filingDate)));
+  return {
+    rows: retained,
+    stats: {
+      distinct_filing_dates: dates.size,
+      filings_before: rows.length,
+      filings_retained: retained.length,
+      pruned: rows.length - retained.length,
+    },
+  };
+}
+
 function mergeFilings({ ticker, companyName, cik, existingManifest, discoveredRows, updated }) {
   const byAccession = new Map();
   const existingRows = Array.isArray(existingManifest?.filings) ? existingManifest.filings : [];
@@ -315,12 +380,16 @@ function mergeFilings({ ticker, companyName, cik, existingManifest, discoveredRo
     }
   }
 
-  const filings = [...byAccession.values()].sort((a, b) => {
+  const merged = [...byAccession.values()].sort((a, b) => {
     const dateCompare = String(b.filingDate ?? "").localeCompare(String(a.filingDate ?? ""));
     if (dateCompare !== 0) return dateCompare;
     return String(b.accession ?? "").localeCompare(String(a.accession ?? ""));
   });
+  const capped = retainLatestFilingDates(merged);
+  const filings = capped.rows;
   const readyCount = filings.filter(isReadySummaryRow).length;
+  const previousTotalPruned = Number(existingManifest?.persistence_state?.total_pruned_filings);
+  const prunedThisMerge = capped.stats.pruned;
 
   return {
     schemaVersion: existingManifest?.schemaVersion ?? 1,
@@ -331,8 +400,181 @@ function mergeFilings({ ticker, companyName, cik, existingManifest, discoveredRo
     updated,
     source: "SEC EDGAR submissions and feno-edgar Korean summary artifacts",
     summaryStatus: readyCount > 0 ? "partial" : "pending",
+    persistence_policy: EDGAR_PERSISTENCE_POLICY,
+    persistence_state: {
+      distinct_filing_dates: capped.stats.distinct_filing_dates,
+      filings_before: capped.stats.filings_before,
+      filings_retained: capped.stats.filings_retained,
+      pruned_this_merge: prunedThisMerge,
+      total_pruned_filings: (Number.isFinite(previousTotalPruned) ? previousTotalPruned : 0) + prunedThisMerge,
+    },
     filings,
   };
+}
+
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function edgarMarkerPathFor(storeRepoRoot) {
+  return path.join(storeRepoRoot, "data", "admin", EDGAR_LANE_ID, "current", `${EDGAR_LKG_KEY}.json`);
+}
+
+function maxFilingDateAcrossManifests(manifests) {
+  const dates = [];
+  for (const manifest of (manifests?.values() ?? [])) {
+    for (const row of (manifest?.filings ?? [])) {
+      const date = String(row?.filingDate ?? "");
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(date))) dates.push(date);
+    }
+  }
+  return dates.length > 0 ? dates.sort().at(-1) : null;
+}
+
+// The freshness marker is the store's canonical: a small record of the newest
+// eligible filingDate across the published tree, coverage counts, and a digest
+// of the per-ticker (count, newest-date) tuples. It never snapshots the 18MB
+// tree itself and carries no filing payloads.
+function buildEdgarFreshnessMarker({ manifests, stats, generatedAt }) {
+  const tree = [...(manifests?.entries() ?? [])]
+    .map(([ticker, manifest]) => {
+      const filings = Array.isArray(manifest?.filings) ? manifest.filings : [];
+      const newest = filings.reduce((acc, row) => {
+        const date = String(row?.filingDate ?? "");
+        return date > acc ? date : acc;
+      }, "");
+      return [ticker, filings.length, newest || null];
+    })
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const sourceAsOf = maxFilingDateAcrossManifests(manifests);
+  if (sourceAsOf === null) throw new Error("EDGAR freshness marker requires at least one dated filing in the published tree");
+  return {
+    schema_version: EDGAR_FRESHNESS_MARKER_SCHEMA,
+    lane_id: EDGAR_LANE_ID,
+    source_as_of: sourceAsOf,
+    coverage: {
+      tickers_total: manifests.size,
+      tickers_fetched: Number(stats?.fetched ?? 0),
+      tickers_resolved: Number(stats?.resolved ?? 0),
+      filings_total: tree.reduce((sum, row) => sum + row[1], 0),
+    },
+    payload_sha256: sha256Hex(Buffer.from(JSON.stringify(tree), "utf8")),
+    generated_at: generatedAt,
+    raw_public: false,
+    public_mirror_allowed: false,
+  };
+}
+
+function validEdgarFreshnessMarker(doc) {
+  return Boolean(doc)
+    && typeof doc === "object"
+    && !Array.isArray(doc)
+    && doc.schema_version === EDGAR_FRESHNESS_MARKER_SCHEMA
+    && doc.lane_id === EDGAR_LANE_ID
+    && typeof doc.source_as_of === "string"
+    && /^\d{4}-\d{2}-\d{2}$/.test(doc.source_as_of)
+    && Number.isFinite(Date.parse(doc.source_as_of))
+    && Number.isInteger(doc.coverage?.tickers_total) && doc.coverage.tickers_total > 0
+    && Number.isInteger(doc.coverage?.filings_total) && doc.coverage.filings_total > 0
+    && typeof doc.payload_sha256 === "string" && /^[0-9a-f]{64}$/.test(doc.payload_sha256)
+    && typeof doc.generated_at === "string" && doc.generated_at.endsWith("Z")
+    && Number.isFinite(Date.parse(doc.generated_at))
+    && doc.raw_public === false
+    && doc.public_mirror_allowed === false;
+}
+
+function edgarMarkerSourceAsOf(doc) {
+  return validEdgarFreshnessMarker(doc) ? doc.source_as_of : null;
+}
+
+// Additive LKG recovery wrapper around the weekly poll. It never mutates the
+// detection attempt shard and never rewrites manifests; it only maintains the
+// store's freshness marker, LKG copy, and recovery index under
+// data/admin/edgar_filings/, finalized ONCE after the whole ticker loop.
+// Outcome semantics (poll_only):
+//   - full clean poll (bootstrap + every resolved ticker ready) = SUCCESS
+//     (promoted only when the provider's newest filingDate strictly advances);
+//   - a full clean poll with no newer filingDate = EXPECTED ABSENCE (not_newer),
+//     a valid quiet week, never a failure;
+//   - any endpoint failure, partial result, or schema drift = FAILURE
+//     (prior marker retained, retry parked; systemic classes are corruption).
+function applyEdgarLkgStore({ repoRoot: storeRepoRoot, markerPath, manifests, stats, telemetry, run }) {
+  const store = new LaneLkgStore({ repoRoot: storeRepoRoot, laneId: EDGAR_LANE_ID });
+  const artifact = {
+    key: EDGAR_LKG_KEY,
+    canonicalPath: markerPath,
+    validateDocument: validEdgarFreshnessMarker,
+    sourceAsOf: edgarMarkerSourceAsOf,
+  };
+
+  if (telemetry?.status !== "ready") {
+    const reason = telemetry?.reason ?? "unexpected_error";
+    const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+    return {
+      kind: "failure",
+      updated: false,
+      reason,
+      retrySet: failure.retrySet,
+      ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg }),
+    };
+  }
+
+  const marker = buildEdgarFreshnessMarker({ manifests, stats, generatedAt: run.observedAt });
+  const serialized = `${JSON.stringify(marker, null, 2)}\n`;
+  const payloadBytes = Buffer.from(serialized, "utf8");
+  const sourceAsOf = marker.source_as_of;
+  const markerRelative = path.relative(storeRepoRoot, path.resolve(markerPath)).split(path.sep).join("/");
+
+  const snapshot = store.stateSnapshot();
+  const priorItem = snapshot.items[EDGAR_LKG_KEY];
+  const retryActive = priorItem?.retry === true;
+  const priorSourceAsOf = priorItem?.current?.source_as_of;
+  // Quiet-week guard: outside an active retry, only advance the freshness anchor
+  // when the provider's newest filingDate is strictly newer. A clean poll with
+  // no new qualifying filing is expected absence, never a failure. During a
+  // retry the store's own advancement gate governs.
+  if (!retryActive && typeof priorSourceAsOf === "string"
+    && Number.isFinite(Date.parse(priorSourceAsOf))
+    && Date.parse(sourceAsOf) <= Date.parse(priorSourceAsOf)) {
+    return { kind: "not_newer", updated: false, sourceAsOf };
+  }
+
+  const candidate = {
+    key: EDGAR_LKG_KEY,
+    currentRelativePath: markerRelative,
+    payloadBytes,
+    sourceAsOf,
+    validateDocument: validEdgarFreshnessMarker,
+    deriveSourceAsOf: edgarMarkerSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes,
+      sourceAsOf,
+      validateDocument: validEdgarFreshnessMarker,
+      deriveSourceAsOf: edgarMarkerSourceAsOf,
+      candidateContainsObservation: (candidateDocument, providerDocument) => (
+        JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
+      ),
+      run,
+    }),
+  };
+
+  if (retryActive && !isNaturalScheduleRun(run)) {
+    return { kind: "recovery_requires_schedule", updated: false, reason: "recovery_requires_schedule", degraded: true, corrupt: false, exitCode: 0 };
+  }
+
+  const [decision] = store.evaluatePromotionCandidates([candidate], run);
+  if (!decision.eligible) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+    }
+    return { kind: "not_promotable", updated: false, reason: decision.reason, degraded: true, corrupt: false, exitCode: 0 };
+  }
+
+  atomicWrite(markerPath, serialized);
+  const success = store.recordSuccess({ artifacts: [candidate], run });
+  const recovered = success.state.items[EDGAR_LKG_KEY]?.recovered_at === run.observedAt;
+  return { kind: "success", updated: true, recovered, sourceAsOf };
 }
 
 function writeManifestMirror(paths, ticker, manifest) {
@@ -374,15 +616,33 @@ export async function runEdgarFilingTimeline({
   observedAt = new Date().toISOString(),
   attemptId = defaultAttemptId("edgar-filings", observedAt),
   sleepFn = sleep,
+  lkgRepoRoot = null,
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
 } = {}) {
   let args = null;
   const requestResults = [];
   let bootstrapResult = null;
   const stats = { resolved: 0, unresolved: 0, fetched: 0, filings: 0, readyPreserved: 0, errors: 0 };
   let fatalError = null;
+  let lkgOutcome = null;
 
   try {
     args = parseArgs(argv);
+    // Additive LKG recovery: engage only for the automatic weekly universe poll
+    // (no --tickers override, no --full-universe, no --plan-only). Manual subset
+    // polls, backfills, plan-only runs, and every caller without an explicit
+    // lkgRepoRoot never touch the shared recovery state. Detection attempt
+    // shard emission below is untouched.
+    const manageLkg = lkgRepoRoot !== null && !args.planOnly && args.tickers.length === 0 && !args.fullUniverse;
+    const storeRun = {
+      runId: String(runId),
+      runAttempt: Number(runAttempt),
+      eventName,
+      observedAt,
+    };
+    const storeMarkerPath = manageLkg ? edgarMarkerPathFor(lkgRepoRoot) : null;
     const updated = observedAt.slice(0, 10);
     const universe = loadUniverse(args, paths);
     console.log(
@@ -394,9 +654,29 @@ export async function runEdgarFilingTimeline({
       bootstrapResult = company.result;
     } catch (error) {
       bootstrapResult = thrownResult(error);
-      throw error;
     }
     if (bootstrapResult.status !== "ready") {
+      if (manageLkg) {
+        lkgOutcome = applyEdgarLkgStore({
+          repoRoot: lkgRepoRoot,
+          markerPath: storeMarkerPath,
+          manifests: new Map(),
+          stats,
+          telemetry: bootstrapResult,
+          run: storeRun,
+        });
+        if (lkgOutcome.corrupt) {
+          throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}; EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
+        }
+        return {
+          ok: false,
+          reason: bootstrapResult.reason,
+          telemetry_status: bootstrapResult.status,
+          telemetry_reason: bootstrapResult.reason,
+          stats,
+          lkg: lkgOutcome,
+        };
+      }
       throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}`);
     }
     const cikMap = buildCikMap(company.rows);
@@ -457,6 +737,23 @@ export async function runEdgarFilingTimeline({
     if (!args.planOnly && stats.fetched > 0) {
       writeIndex(paths, { manifests: nextManifests, updated, generatedAt: observedAt });
     }
+
+    if (manageLkg) {
+      const telemetry = requestResults.length > 0
+        ? worstRequestResult(requestResults)
+        : attemptResult("unexpected_error", threwTuple("unexpected"));
+      lkgOutcome = applyEdgarLkgStore({
+        repoRoot: lkgRepoRoot,
+        markerPath: storeMarkerPath,
+        manifests: nextManifests,
+        stats,
+        telemetry,
+        run: storeRun,
+      });
+      if (lkgOutcome.corrupt) {
+        throw new Error(`EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
+      }
+    }
   } catch (error) {
     fatalError = error;
   } finally {
@@ -489,14 +786,33 @@ export async function runEdgarFilingTimeline({
     telemetry_status: telemetry.status,
     telemetry_reason: telemetry.reason,
     stats,
+    lkg: lkgOutcome,
   };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runEdgarFilingTimeline().then((result) => {
-    if (!result.ok) process.exitCode = 2;
+    // DEC-264: a degraded lane (valid LKG retained, retry parked, KPI-named)
+    // exits 0 so the workflow commits the honest retry state; only true
+    // corruption (no provable LKG, or a systemic break) exits non-zero.
+    if (!result.ok) process.exitCode = result.lkg?.exitCode ?? 2;
   }).catch((error) => {
     console.error(error instanceof Error ? error.stack || error.message : error);
     process.exitCode = 1;
   });
 }
+
+export {
+  applyEdgarLkgStore,
+  buildEdgarFreshnessMarker,
+  edgarMarkerPathFor,
+  edgarMarkerSourceAsOf,
+  maxFilingDateAcrossManifests,
+  mergeFilings,
+  retainLatestFilingDates,
+  validEdgarFreshnessMarker,
+  EDGAR_FRESHNESS_MARKER_SCHEMA,
+  EDGAR_LANE_ID,
+  EDGAR_LKG_KEY,
+  EDGAR_PERSISTENCE_POLICY,
+};

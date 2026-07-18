@@ -67,6 +67,7 @@ jobs:
         run: |
           node scripts/test-data-supply-attempt-producer.mjs
           node scripts/test-build-edgar-filing-timeline.mjs
+          node scripts/test-build-edgar-lkg-recovery.mjs
 
       - name: Build EDGAR filing timeline
         id: fetch_edgar
@@ -104,8 +105,17 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          SHARD="data/admin/data-supply-state/detection-attempts/edgar_filings.json"
-          if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
+          # Public-safe detection attempt shard AND the EDGAR LKG recovery state
+          # (freshness marker + retained LKG copy + recovery index) are committed
+          # on every run so retry/recovery accounting survives across CI runs.
+          # The recovery tree carries no filing payloads.
+          for SHARD in \
+            data/admin/data-supply-state/detection-attempts/edgar_filings.json \
+            data/admin/edgar_filings/index.json \
+            data/admin/edgar_filings/current/edgar_filings.json \
+            data/admin/edgar_filings/lkg/edgar_filings.json; do
+            if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
+          done
           if [ "${EDGAR_PLAN_ONLY:-false}" != "true" ] && [ "$FETCH_OUTCOME" = "success" ] && [ "$VERIFY_OUTCOME" = "success" ]; then
             git add -- \
               data/edgar \

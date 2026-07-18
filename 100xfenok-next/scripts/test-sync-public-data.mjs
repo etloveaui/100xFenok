@@ -25,6 +25,8 @@ const EXPECTED_PRIVATE_ROOTS = Object.freeze([
   "admin/data-supply-state",
   "admin/finra_short_volume",
   "admin/occ_options_volume",
+  "admin/fred_yardeni",
+  "admin/edgar_filings",
   "yf/etf-details",
   "yf/migration-evidence",
 ]);
@@ -520,9 +522,9 @@ try {
   assert.equal(rehearsal.removedDestinationExactFiles, 1);
   assert.deepEqual(rehearsal.excludedSourceFilePaths, [DETECTION_FLOOR_REPORT]);
   assert.deepEqual(rehearsal.removedDestinationExactFilePaths, [DETECTION_FLOOR_REPORT]);
-  assert.equal(rehearsal.excludedSourceRoots, 5);
-  assert.equal(rehearsal.removedDestinationRoots, 5);
-  assert.equal(rehearsal.removedDestinationFiles, 5);
+  assert.equal(rehearsal.excludedSourceRoots, 7);
+  assert.equal(rehearsal.removedDestinationRoots, 7);
+  assert.equal(rehearsal.removedDestinationFiles, 7);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -532,10 +534,10 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 2);
-  assert.equal(result.excludedSourceRoots, 5);
+  assert.equal(result.excludedSourceRoots, 7);
   assert.equal(result.excludedSourceFiles, 1);
-  assert.equal(result.removedDestinationRoots, 5);
-  assert.equal(result.removedDestinationFiles, 5);
+  assert.equal(result.removedDestinationRoots, 7);
+  assert.equal(result.removedDestinationFiles, 7);
   assert.equal(result.removedDestinationExactFiles, 1);
   assert.deepEqual(result.excludedSourceFilePaths, [DETECTION_FLOOR_REPORT]);
   assert.deepEqual(result.removedDestinationExactFilePaths, [DETECTION_FLOOR_REPORT]);
@@ -544,6 +546,8 @@ try {
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/data-supply-state")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/finra_short_volume")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/occ_options_volume")), false);
+  assert.equal(fs.existsSync(path.join(destinationRoot, "admin/fred_yardeni")), false);
+  assert.equal(fs.existsSync(path.join(destinationRoot, "admin/edgar_filings")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/etf-details")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/migration-evidence")), false);
   assert.equal(lstatIfPresent(destinationReportPath), null);
@@ -554,7 +558,7 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 2);
-  assert.equal(rerun.excludedSourceRoots, 5);
+  assert.equal(rerun.excludedSourceRoots, 7);
   assert.equal(rerun.excludedSourceFiles, 1);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
