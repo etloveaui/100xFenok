@@ -12,6 +12,7 @@ import {
 
 export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
   "admin/data-supply-state",
+  "admin/finra_short_volume",
   "yf/etf-details",
   "yf/migration-evidence",
 ]);
