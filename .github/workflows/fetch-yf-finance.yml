@@ -8,8 +8,13 @@ on:
   schedule:
     # Weekday measured-stock refresh after US close (KST Tue-Sat 08:20).
     - cron: '20 23 * * 1-5'
-    # Sunday-Friday 22:00 UTC: one stable ETF shard per day, all six each week.
-    - cron: '0 22 * * 0-5'
+    # Sunday-Friday 22:00 UTC: explicit schedule keys bind one stable ETF shard per day.
+    - cron: '0 22 * * 0'
+    - cron: '0 22 * * 1'
+    - cron: '0 22 * * 2'
+    - cron: '0 22 * * 3'
+    - cron: '0 22 * * 4'
+    - cron: '0 22 * * 5'
   workflow_dispatch:
     inputs:
       limit:
@@ -141,6 +146,9 @@ jobs:
           INPUT_HISTORY_MIN_ROWS: ${{ github.event.inputs.history_min_rows || '200' }}
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
           INPUT_RETRY_LIMIT: ''
+          INPUT_REGULAR_LIMIT: ''
+          INPUT_SHARD_CYCLE_INDEX: ''
+          INPUT_SCHEDULED_WEEKDAY: ''
           INPUT_STABLE_SHARDS: 'false'
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
@@ -165,13 +173,23 @@ jobs:
               INPUT_STOCKANALYSIS_ETFS="false"
               INPUT_STOCKS_ONLY="true"
             else
-              DAILY_SHARDS="${YF_WEEKLY_ETF_SHARDS:-6}"
-              SCHEDULE_SLOT="$(date -u +%w)"
-              DAILY_INDEX=$(( SCHEDULE_SLOT % DAILY_SHARDS ))
+              case "$EVENT_SCHEDULE" in
+                '0 22 * * 0') DAILY_INDEX=0 ;;
+                '0 22 * * 1') DAILY_INDEX=1 ;;
+                '0 22 * * 2') DAILY_INDEX=2 ;;
+                '0 22 * * 3') DAILY_INDEX=3 ;;
+                '0 22 * * 4') DAILY_INDEX=4 ;;
+                '0 22 * * 5') DAILY_INDEX=5 ;;
+                *) echo "::error::unrecognized scheduled ETF slot: $EVENT_SCHEDULE" >&2; exit 2 ;;
+              esac
+              DAILY_SHARDS=6
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-140}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
+              INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-100}"
+              INPUT_SHARD_CYCLE_INDEX="${YF_WEEKLY_ETF_SHARD_CYCLE_INDEX:-}"
+              INPUT_SCHEDULED_WEEKDAY="$DAILY_INDEX"
               INPUT_STABLE_SHARDS="true"
-              INPUT_SHARD="${YF_WEEKLY_ETF_SHARD:-${DAILY_INDEX}/${DAILY_SHARDS}}"
+              INPUT_SHARD="${DAILY_INDEX}/${DAILY_SHARDS}"
               INPUT_SLEEP="${YF_WEEKLY_ETF_SLEEP:-1.0}"
               INPUT_TICKER_TIMEOUT="${YF_WEEKLY_ETF_TICKER_TIMEOUT:-90}"
               INPUT_RETRIES="${YF_WEEKLY_ETF_RETRIES:-1}"
@@ -192,6 +210,9 @@ jobs:
           if [ "$EVENT_NAME" = "schedule" ]; then ARGS="$ARGS --natural-run"; fi
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
           if [ -n "$INPUT_RETRY_LIMIT" ]; then ARGS="$ARGS --retry-limit $INPUT_RETRY_LIMIT"; fi
+          if [ -n "$INPUT_REGULAR_LIMIT" ]; then ARGS="$ARGS --regular-limit $INPUT_REGULAR_LIMIT"; fi
+          if [ -n "$INPUT_SHARD_CYCLE_INDEX" ]; then ARGS="$ARGS --shard-cycle-index $INPUT_SHARD_CYCLE_INDEX"; fi
+          if [ -n "$INPUT_SCHEDULED_WEEKDAY" ]; then ARGS="$ARGS --scheduled-weekday $INPUT_SCHEDULED_WEEKDAY"; fi
           if [ "$INPUT_STABLE_SHARDS" = "true" ]; then ARGS="$ARGS --stable-shards"; fi
           if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
           if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi

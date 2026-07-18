@@ -1168,6 +1168,52 @@ def stable_shard_index(ticker, shard_count):
     return int.from_bytes(digest[:8], "big") % shard_count
 
 
+def select_bounded_cycle_page(tickers, limit, cycle_index):
+    candidates = list(tickers)
+    if limit is None:
+        return candidates
+    if limit <= 0:
+        raise ValueError("regular limit must be positive")
+    if cycle_index < 0:
+        raise ValueError("shard cycle index must be non-negative")
+    page_count = max(1, (len(candidates) + limit - 1) // limit)
+    page_index = cycle_index % page_count
+    start = page_index * limit
+    return candidates[start:start + limit]
+
+
+def validate_ticker_plan_limits(total_limit, retry_limit, regular_limit):
+    if total_limit < 0:
+        raise ValueError("total limit must be non-negative")
+    if (
+        total_limit > 0
+        and retry_limit is not None
+        and regular_limit is not None
+        and total_limit < retry_limit + regular_limit
+    ):
+        raise ValueError("total limit must cover retry and regular limits")
+
+
+def scheduled_shard_cycle_index(now, scheduled_weekday):
+    if scheduled_weekday < 0 or scheduled_weekday > 6:
+        raise ValueError("scheduled weekday must be within 0..6")
+    current_weekday = (now.weekday() + 1) % 7
+    occurrence_date = now.date() - timedelta(days=(current_weekday - scheduled_weekday) % 7)
+    iso_year, iso_week, _ = occurrence_date.isocalendar()
+    iso_monday = datetime.fromisocalendar(iso_year, iso_week, 1)
+    return iso_monday.toordinal() // 7
+
+
+def validate_scheduled_shard(shard, scheduled_weekday):
+    if scheduled_weekday is None:
+        return
+    if scheduled_weekday < 0 or scheduled_weekday > 5:
+        raise ValueError("scheduled weekday must be within 0..5")
+    expected = f"{scheduled_weekday}/6"
+    if shard != expected:
+        raise ValueError(f"scheduled shard must match weekday/6: expected {expected}, got {shard or '<empty>'}")
+
+
 def select_ticker_plan(
     tickers,
     retry_tickers,
@@ -1177,6 +1223,8 @@ def select_ticker_plan(
     all_shards=False,
     retry_limit=None,
     stable_shards=False,
+    regular_limit=None,
+    shard_cycle_index=0,
 ):
     ticker_set = set(tickers)
     retry_order = (
@@ -1193,7 +1241,7 @@ def select_ticker_plan(
         if shard_index < 0 or shard_index >= shard_count:
             raise ValueError("shard index must be within shard count")
         regular = (
-            [ticker for ticker in regular if stable_shard_index(ticker, shard_count) == shard_index]
+            sorted(ticker for ticker in regular if stable_shard_index(ticker, shard_count) == shard_index)
             if stable_shards
             else regular[shard_index::shard_count]
         )
@@ -1202,6 +1250,7 @@ def select_ticker_plan(
         if retry_limit < 0:
             raise ValueError("retry limit must be non-negative")
         retry = retry[:retry_limit]
+    regular = select_bounded_cycle_page(regular, regular_limit, shard_cycle_index)
     return [*(retry if claim_retry else []), *regular]
 
 
@@ -1562,7 +1611,10 @@ def plan_summary(args, tickers, candidate_count):
         "merge_existing": args.merge_existing,
         "limit": args.limit,
         "retry_limit": args.retry_limit,
+        "regular_limit": args.regular_limit,
         "shard": args.shard,
+        "shard_cycle_index": args.shard_cycle_index,
+        "scheduled_weekday": args.scheduled_weekday,
         "stable_shards": args.stable_shards,
         "tickers_override": bool(args.tickers),
         "sample_size": args.plan_sample_size,
@@ -1625,7 +1677,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--retry-limit", type=int, default=None, help="reserve the remaining total limit for regular candidates after this many natural retries")
+    parser.add_argument("--regular-limit", type=int, default=None, help="bounded regular candidates per stable-shard cycle page")
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
+    parser.add_argument("--shard-cycle-index", type=int, default=None, help="monotonic weekly cycle used to rotate bounded stable-shard pages")
+    parser.add_argument("--scheduled-weekday", type=int, default=None, help="scheduled Sunday=0 weekday used to bind shard and delayed-run cycle")
     parser.add_argument("--stable-shards", action="store_true", help="assign regular tickers by stable digest instead of list position")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
@@ -1653,10 +1708,22 @@ def main():
     args = parser.parse_args()
 
     try:
+        if args.shard_cycle_index is None:
+            args.shard_cycle_index = (
+                scheduled_shard_cycle_index(datetime.now(timezone.utc), args.scheduled_weekday)
+                if args.scheduled_weekday is not None
+                else 0
+            )
         retries = validate_retry_count(args.retries)
         explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
         if args.retry_limit is not None and args.retry_limit < 0:
             raise ValueError("retry limit must be non-negative")
+        if args.regular_limit is not None and args.regular_limit <= 0:
+            raise ValueError("regular limit must be positive")
+        if args.shard_cycle_index < 0:
+            raise ValueError("shard cycle index must be non-negative")
+        validate_ticker_plan_limits(args.limit, args.retry_limit, args.regular_limit)
+        validate_scheduled_shard(args.shard, args.scheduled_weekday)
     except ValueError as exc:
         parser.error(str(exc))
     controlled_failures = {
@@ -1725,6 +1792,8 @@ def main():
         all_shards=args.all_shards_run,
         retry_limit=args.retry_limit,
         stable_shards=args.stable_shards,
+        regular_limit=args.regular_limit,
+        shard_cycle_index=args.shard_cycle_index,
     )
     if args.limit:
         tickers = tickers[: args.limit]

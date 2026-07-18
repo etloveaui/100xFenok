@@ -22,6 +22,7 @@ import {
   assertProductSurfaceCoverageV2Contract,
   assertStockCandidatePair,
 } from "./smoke-stockanalysis-routes.mjs";
+import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
 
 let passed = 0;
@@ -305,7 +306,18 @@ function stockCandidateFixture() {
 // (k) The live overview and financial candidate must be one coherent producer pair.
 {
   const fixture = stockCandidateFixture();
-  assert.doesNotThrow(() => assertStockCandidatePair(fixture.stock, fixture.financials, "AAPL", "2026-07-18T01:00:00Z"));
+  const pair = assertStockCandidatePair(fixture.stock, fixture.financials, "AAPL", "2026-07-18T01:00:00Z");
+  assert.equal(pair.max_age_hours, PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS);
+  assert.equal(pair.status, "ready");
+  assert.equal(pair.degraded, false);
+  assert.deepEqual(pair.warnings, []);
+  const boundary = structuredClone(fixture);
+  boundary.stock.fetched_at = "2026-07-15T23:00:00Z";
+  boundary.financials.fetched_at = "2026-07-15T23:00:00Z";
+  boundary.stock.normalized.financials.fetched_at = boundary.financials.fetched_at;
+  assert.doesNotThrow(
+    () => assertStockCandidatePair(boundary.stock, boundary.financials, "AAPL", "2026-07-18T01:00:00Z"),
+  );
   const mismatched = structuredClone(fixture);
   mismatched.stock.normalized.financials.fetched_at = "2026-07-17T00:00:00Z";
   assert.throws(
@@ -319,6 +331,22 @@ function stockCandidateFixture() {
     () => assertStockCandidatePair(future.stock, future.financials, "AAPL", "2026-07-18T01:00:00Z"),
     /cannot be in the future/,
   );
+  const stale = structuredClone(fixture);
+  stale.stock.fetched_at = "2026-07-15T22:59:59Z";
+  stale.financials.fetched_at = "2026-07-15T22:59:59Z";
+  stale.stock.normalized.financials.fetched_at = stale.financials.fetched_at;
+  const warnings = [];
+  const stalePair = assertStockCandidatePair(
+    stale.stock,
+    stale.financials,
+    "AAPL",
+    "2026-07-18T01:00:00Z",
+    warnings,
+  );
+  assert.equal(stalePair.status, "degraded");
+  assert.equal(stalePair.degraded, true);
+  assert.equal(warnings.length, 2);
+  assert.ok(warnings.every((warning) => /older than 50 hours/.test(warning)));
   ok("(k) stock overview + financial candidate -> coherent live freshness pair");
 }
 

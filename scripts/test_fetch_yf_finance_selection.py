@@ -7,6 +7,7 @@ import importlib.util
 import hashlib
 import io
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
 import sys
@@ -1524,6 +1525,122 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             )
             self.assertTrue(all(assignments[ticker] == shard_index for ticker in selected))
 
+    def test_weekly_stable_shard_overflow_rotates_into_bounded_coverage(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(2400)]
+        membership = self.fetcher.select_ticker_plan(
+            tickers,
+            [],
+            shard="0/6",
+            stable_shards=True,
+        )
+        regular_limit = 100
+        cycle_count = (len(membership) + regular_limit - 1) // regular_limit
+        self.assertGreater(cycle_count, 1)
+
+        covered = []
+        for cycle_index in range(cycle_count):
+            selected = self.fetcher.select_ticker_plan(
+                tickers,
+                [],
+                shard="0/6",
+                stable_shards=True,
+                regular_limit=regular_limit,
+                shard_cycle_index=cycle_index,
+            )
+            self.assertLessEqual(len(selected), regular_limit)
+            covered.extend(selected)
+
+        self.assertEqual(len(covered), len(membership))
+        self.assertEqual(set(covered), set(membership))
+        self.assertEqual(
+            self.fetcher.select_ticker_plan(
+                tickers,
+                [],
+                shard="0/6",
+                stable_shards=True,
+                regular_limit=regular_limit,
+                shard_cycle_index=cycle_count,
+            ),
+            self.fetcher.select_ticker_plan(
+                tickers,
+                [],
+                shard="0/6",
+                stable_shards=True,
+                regular_limit=regular_limit,
+                shard_cycle_index=0,
+            ),
+        )
+
+    def test_full_active_scale_has_twelve_cycle_upper_bound(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(6722)]
+        for shard_index in range(6):
+            membership = self.fetcher.select_ticker_plan(
+                tickers,
+                [],
+                shard=f"{shard_index}/6",
+                stable_shards=True,
+            )
+            cycle_count = (len(membership) + 99) // 100
+            self.assertLessEqual(cycle_count, 12)
+            covered = []
+            for cycle_index in range(cycle_count):
+                covered.extend(self.fetcher.select_bounded_cycle_page(membership, 100, cycle_index))
+            self.assertEqual(len(covered), len(membership))
+            self.assertEqual(set(covered), set(membership))
+
+    def test_weekly_retry_and_rotating_regular_budgets_stay_within_total_cap(self) -> None:
+        retries = [f"RETRY{i:04d}" for i in range(200)]
+        regular = [f"ETF{i:04d}" for i in range(1200)]
+        selected = self.fetcher.select_ticker_plan(
+            [*retries, *regular],
+            retries,
+            natural=True,
+            retry_limit=40,
+            regular_limit=100,
+            shard_cycle_index=3,
+        )
+        self.assertEqual(selected[:40], retries[:40])
+        self.assertEqual(len(selected), 140)
+        self.assertEqual(len([ticker for ticker in selected if ticker in regular]), 100)
+
+    def test_bounded_cycle_rejects_invalid_contract_values(self) -> None:
+        with self.assertRaisesRegex(ValueError, "regular limit must be positive"):
+            self.fetcher.select_bounded_cycle_page(["AAPL"], 0, 0)
+        with self.assertRaisesRegex(ValueError, "shard cycle index must be non-negative"):
+            self.fetcher.select_bounded_cycle_page(["AAPL"], 100, -1)
+
+    def test_total_limit_cannot_truncate_retry_plus_regular_budgets(self) -> None:
+        with self.assertRaisesRegex(ValueError, "total limit must cover retry and regular limits"):
+            self.fetcher.validate_ticker_plan_limits(139, 40, 100)
+        self.assertIsNone(self.fetcher.validate_ticker_plan_limits(140, 40, 100))
+        self.assertIsNone(self.fetcher.validate_ticker_plan_limits(0, 40, 100))
+
+    def test_scheduled_cycle_uses_occurrence_weekday_across_iso_boundaries(self) -> None:
+        sunday_before = self.fetcher.scheduled_shard_cycle_index(
+            datetime(2026, 12, 27, 22, 0, tzinfo=timezone.utc), 0,
+        )
+        sunday_delayed = self.fetcher.scheduled_shard_cycle_index(
+            datetime(2026, 12, 28, 1, 0, tzinfo=timezone.utc), 0,
+        )
+        sunday_after = self.fetcher.scheduled_shard_cycle_index(
+            datetime(2027, 1, 3, 22, 0, tzinfo=timezone.utc), 0,
+        )
+        sunday_after_delayed = self.fetcher.scheduled_shard_cycle_index(
+            datetime(2027, 1, 4, 1, 0, tzinfo=timezone.utc), 0,
+        )
+        self.assertEqual(sunday_delayed, sunday_before)
+        self.assertEqual(sunday_after, sunday_before + 1)
+        self.assertEqual(sunday_after_delayed, sunday_after)
+
+    def test_scheduled_shard_contract_rejects_uncovered_overrides(self) -> None:
+        self.assertIsNone(self.fetcher.validate_scheduled_shard("3/6", 3))
+        with self.assertRaisesRegex(ValueError, "scheduled shard must match weekday/6"):
+            self.fetcher.validate_scheduled_shard("4/6", 3)
+        with self.assertRaisesRegex(ValueError, "scheduled shard must match weekday/6"):
+            self.fetcher.validate_scheduled_shard("3/7", 3)
+        with self.assertRaisesRegex(ValueError, "scheduled weekday must be within 0..5"):
+            self.fetcher.validate_scheduled_shard("6/6", 6)
+
     def test_weekly_budget_reserves_retry_and_regular_capacity(self) -> None:
         retries = [f"RETRY{i:04d}" for i in range(200)]
         regular = [f"ETF{i:04d}" for i in range(200)]
@@ -2000,11 +2117,16 @@ assert callable(namespace["load_universe"])
         self.assertIn("--run-id", run_step)
         self.assertIn("--natural-run", run_step)
         self.assertIn("--all-shards-run", run_step)
-        self.assertIn("0 22 * * 0-5", workflow)
-        self.assertIn('SCHEDULE_SLOT="$(date -u +%w)"', run_step)
-        self.assertIn("DAILY_INDEX=$(( SCHEDULE_SLOT % DAILY_SHARDS ))", run_step)
+        for weekday in range(6):
+            self.assertIn(f"0 22 * * {weekday}", workflow)
+            self.assertIn(f"'0 22 * * {weekday}') DAILY_INDEX={weekday}", run_step)
+        self.assertNotIn('date -u +%w', run_step)
+        self.assertIn("--scheduled-weekday", run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
+        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-100", run_step)
         self.assertIn("--retry-limit", run_step)
+        self.assertIn("--regular-limit", run_step)
+        self.assertIn("--shard-cycle-index", run_step)
         self.assertIn("--stable-shards", run_step)
         self.assertNotIn("GITHUB_RUN_NUMBER", run_step)
         self.assertIn("controlled_failure_tickers", workflow)

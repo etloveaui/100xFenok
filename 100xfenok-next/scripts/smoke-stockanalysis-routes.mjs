@@ -2,6 +2,7 @@
 
 import { pathToFileURL } from "node:url";
 import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
+import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
@@ -99,7 +100,14 @@ function checkedSourceTimestamp(value, label, nowIso = new Date().toISOString())
   return timestamp;
 }
 
-export function assertStockCandidatePair(stock, financials, ticker, nowIso = new Date().toISOString()) {
+export function assertStockCandidatePair(
+  stock,
+  financials,
+  ticker,
+  nowIso = new Date().toISOString(),
+  warnings = degradations,
+) {
+  const pairWarnings = [];
   for (const [payload, label] of [[stock, "stock overview"], [financials, "stock financials"]]) {
     assert(payload?.schema_version === "stockanalysis/v1", `${label} schema_version mismatch`);
     assert(payload?.source === "stockanalysis", `${label} source mismatch`);
@@ -113,6 +121,15 @@ export function assertStockCandidatePair(stock, financials, ticker, nowIso = new
   );
   const stockFetchedAt = checkedSourceTimestamp(stock?.fetched_at, "stock overview fetched_at", nowIso);
   const financialFetchedAt = checkedSourceTimestamp(financials?.fetched_at, "stock financials fetched_at", nowIso);
+  const now = new Date(nowIso);
+  for (const [timestamp, label] of [[stockFetchedAt, "stock overview fetched_at"], [financialFetchedAt, "stock financials fetched_at"]]) {
+    const ageHours = (now.getTime() - timestamp.getTime()) / (60 * 60 * 1000);
+    if (ageHours > PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS) {
+      const message = `${label} is degraded: older than ${PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS} hours (${ageHours.toFixed(2)}h).`;
+      recordDegradation(false, message, pairWarnings);
+      recordDegradation(false, message, warnings);
+    }
+  }
   assert(
     stock?.normalized?.financials?.fetched_at === financials?.fetched_at,
     `financial freshness mismatch: overview reference ${stock?.normalized?.financials?.fetched_at} != financial payload ${financials?.fetched_at}`,
@@ -130,8 +147,12 @@ export function assertStockCandidatePair(stock, financials, ticker, nowIso = new
   }
   return {
     ticker,
+    status: pairWarnings.length > 0 ? "degraded" : "ready",
+    degraded: pairWarnings.length > 0,
+    warnings: pairWarnings,
     stock_fetched_at: stock.fetched_at,
     financials_fetched_at: financials.fetched_at,
+    max_age_hours: PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS,
   };
 }
 
