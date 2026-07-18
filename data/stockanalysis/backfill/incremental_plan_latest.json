@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-07-15T23:46:21Z",
+  "generated_at": "2026-07-18T00:04:49Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "daily_1y"
@@ -13,21 +13,42 @@
     "execution_proof": "backfill/incremental_latest.json remains reserved for completed fetch runs"
   },
   "counts": {
-    "etfs_planned": 0,
-    "incremental_selected": 0,
-    "incremental_candidates": 0,
-    "history_gap": 0,
+    "etfs_planned": 20,
+    "incremental_selected": 20,
+    "incremental_candidates": 20,
+    "history_gap": 20,
     "inception_limited_history_gap": 0,
     "terminal_limited_history_gap": 0,
-    "total_history_gap": 0,
-    "cooldown_skipped": 8
+    "total_history_gap": 20,
+    "cooldown_skipped": 32
   },
-  "etfs": [],
+  "etfs": [
+    "ACII",
+    "ACYQ",
+    "AFGR",
+    "AMHI",
+    "CRIB",
+    "DISK",
+    "FECM",
+    "FESC",
+    "FREI",
+    "FSTB",
+    "JPO",
+    "LAZR",
+    "PQV",
+    "PQXX",
+    "RANK",
+    "RNMN",
+    "RWEM",
+    "RWLC",
+    "SFYI",
+    "ZTAX"
+  ],
   "incremental_etf_backfill": {
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-15T23:46:21Z",
+    "generated_at": "2026-07-18T00:04:49Z",
     "policy": {
       "limit": 0,
       "offset": 0,
@@ -43,29 +64,30 @@
       "min_daily_1y_rows": 200
     },
     "counts": {
-      "candidates": 0,
-      "selected": 0,
+      "candidates": 20,
+      "selected": 20,
       "missing": 0,
       "fallback_retry": 0,
-      "history_gap": 0,
+      "history_gap": 20,
       "inception_limited_history_gap": 0,
-      "total_history_gap": 0,
+      "total_history_gap": 20,
       "stale": 0,
-      "cooldown_skipped": 8,
-      "prior_failed_candidates": 0,
-      "daily_1y_missing_file": 0,
-      "daily_1y_short_rows": 0,
+      "cooldown_skipped": 32,
+      "prior_failed_candidates": 1,
+      "daily_1y_missing_file": 13,
+      "daily_1y_short_rows": 7,
       "offset_skipped": 0,
-      "scheduled_plan_rows": 8
+      "scheduled_plan_rows": 52
     },
-    "selected": [],
-    "cooldown": [
+    "selected": [
       {
-        "ticker": "BGCG",
+        "ticker": "ACII",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 29 unique daily_1y dates (< 200)",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
         "plan_order": 0,
         "missing_history_periods": [
           "daily_1y"
@@ -73,14 +95,52 @@
         "fetchable_missing_history_periods": [
           "daily_1y"
         ],
-        "inception_date": "2026-06-02"
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 0,
+          "raw_row_count": 0,
+          "valid_unique_date_count": 0,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": null,
+          "earliest_date": null,
+          "latest_observation": null,
+          "latest_date": null,
+          "span_days": null,
+          "expected_trading_days": 0,
+          "expected_utc_weekdays_inclusive": 0,
+          "observed_trading_days": 0,
+          "density": 0.0,
+          "max_internal_gap_days": 0,
+          "max_internal_calendar_gap_days": 0,
+          "latest_observation_age_days": null,
+          "latest_observation_age_business_days": null,
+          "latest_business_day_age": null,
+          "latest_not_future": false,
+          "gates": {
+            "min_rows": false,
+            "density": false,
+            "max_internal_gap": true,
+            "latest_business_day_age": false
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-15T14:31:24Z"
       },
       {
-        "ticker": "BGGG",
+        "ticker": "ACYQ",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 30 unique daily_1y dates (< 200)",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
         "plan_order": 1,
         "missing_history_periods": [
           "daily_1y"
@@ -88,14 +148,52 @@
         "fetchable_missing_history_periods": [
           "daily_1y"
         ],
-        "inception_date": "2026-06-02"
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 15,
+          "raw_row_count": 15,
+          "valid_unique_date_count": 15,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-06-25",
+          "earliest_date": "2026-06-25",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 21,
+          "expected_trading_days": 16,
+          "expected_utc_weekdays_inclusive": 16,
+          "observed_trading_days": 15,
+          "density": 0.9375,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:53:43Z"
       },
       {
-        "ticker": "EMEM",
+        "ticker": "AFGR",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 36 unique daily_1y dates (< 200)",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
         "plan_order": 2,
         "missing_history_periods": [
           "daily_1y"
@@ -103,14 +201,52 @@
         "fetchable_missing_history_periods": [
           "daily_1y"
         ],
-        "inception_date": null
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 252,
+          "raw_row_count": 252,
+          "valid_unique_date_count": 252,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-07-16",
+          "earliest_date": "2025-07-16",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 365,
+          "expected_trading_days": 262,
+          "expected_utc_weekdays_inclusive": 262,
+          "observed_trading_days": 252,
+          "density": 0.961832,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": true,
+          "eligible": true
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:54:06Z"
       },
       {
-        "ticker": "MAUG",
+        "ticker": "AMHI",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
         "plan_order": 3,
         "missing_history_periods": [
           "daily_1y"
@@ -118,14 +254,900 @@
         "fetchable_missing_history_periods": [
           "daily_1y"
         ],
-        "inception_date": null
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 14,
+          "raw_row_count": 14,
+          "valid_unique_date_count": 14,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-06-26",
+          "earliest_date": "2026-06-26",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 20,
+          "expected_trading_days": 15,
+          "expected_utc_weekdays_inclusive": 15,
+          "observed_trading_days": 14,
+          "density": 0.933333,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:54:28Z"
       },
       {
-        "ticker": "MFEB",
+        "ticker": "CRIB",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 6,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 16,
+          "raw_row_count": 16,
+          "valid_unique_date_count": 16,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-06-24",
+          "earliest_date": "2026-06-24",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 22,
+          "expected_trading_days": 17,
+          "expected_utc_weekdays_inclusive": 17,
+          "observed_trading_days": 16,
+          "density": 0.941176,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:55:14Z"
+      },
+      {
+        "ticker": "DISK",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 7,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 12,
+          "raw_row_count": 12,
+          "valid_unique_date_count": 12,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-01",
+          "earliest_date": "2026-07-01",
+          "latest_observation": "2026-07-17",
+          "latest_date": "2026-07-17",
+          "span_days": 16,
+          "expected_trading_days": 13,
+          "expected_utc_weekdays_inclusive": 13,
+          "observed_trading_days": 12,
+          "density": 0.923077,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 1,
+          "latest_observation_age_business_days": 0,
+          "latest_business_day_age": 0,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:55:36Z"
+      },
+      {
+        "ticker": "FECM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 11,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 11,
+          "raw_row_count": 11,
+          "valid_unique_date_count": 11,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-02",
+          "earliest_date": "2026-07-02",
+          "latest_observation": "2026-07-17",
+          "latest_date": "2026-07-17",
+          "span_days": 15,
+          "expected_trading_days": 12,
+          "expected_utc_weekdays_inclusive": 12,
+          "observed_trading_days": 11,
+          "density": 0.916667,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 1,
+          "latest_observation_age_business_days": 0,
+          "latest_business_day_age": 0,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:56:02Z"
+      },
+      {
+        "ticker": "FESC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 12,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 10,
+          "raw_row_count": 10,
+          "valid_unique_date_count": 10,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-02",
+          "earliest_date": "2026-07-02",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 14,
+          "expected_trading_days": 11,
+          "expected_utc_weekdays_inclusive": 11,
+          "observed_trading_days": 10,
+          "density": 0.909091,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:56:25Z"
+      },
+      {
+        "ticker": "FREI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 13,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2026-06-22",
+        "daily_1y_actual_rows": 14,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 19,
+          "raw_row_count": 19,
+          "valid_unique_date_count": 19,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-06-22",
+          "earliest_date": "2026-06-22",
+          "latest_observation": "2026-07-17",
+          "latest_date": "2026-07-17",
+          "span_days": 25,
+          "expected_trading_days": 20,
+          "expected_utc_weekdays_inclusive": 20,
+          "observed_trading_days": 19,
+          "density": 0.95,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 1,
+          "latest_observation_age_business_days": 0,
+          "latest_business_day_age": 0,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:56:47Z"
+      },
+      {
+        "ticker": "FSTB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 14,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2026-06-22",
+        "daily_1y_actual_rows": 14,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 18,
+          "raw_row_count": 18,
+          "valid_unique_date_count": 18,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-06-22",
+          "earliest_date": "2026-06-22",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 24,
+          "expected_trading_days": 19,
+          "expected_utc_weekdays_inclusive": 19,
+          "observed_trading_days": 18,
+          "density": 0.947368,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:57:09Z"
+      },
+      {
+        "ticker": "JPO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 17,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 252,
+          "raw_row_count": 252,
+          "valid_unique_date_count": 252,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-07-17",
+          "earliest_date": "2025-07-17",
+          "latest_observation": "2026-07-17",
+          "latest_date": "2026-07-17",
+          "span_days": 365,
+          "expected_trading_days": 262,
+          "expected_utc_weekdays_inclusive": 262,
+          "observed_trading_days": 252,
+          "density": 0.961832,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 1,
+          "latest_observation_age_business_days": 0,
+          "latest_business_day_age": 0,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": true,
+          "eligible": true
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:57:55Z"
+      },
+      {
+        "ticker": "LAZR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 19,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 11,
+          "raw_row_count": 11,
+          "valid_unique_date_count": 11,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-01",
+          "earliest_date": "2026-07-01",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 15,
+          "expected_trading_days": 12,
+          "expected_utc_weekdays_inclusive": 12,
+          "observed_trading_days": 11,
+          "density": 0.916667,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:58:18Z"
+      },
+      {
+        "ticker": "PQV",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 24,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 10,
+          "raw_row_count": 10,
+          "valid_unique_date_count": 10,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-02",
+          "earliest_date": "2026-07-02",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 14,
+          "expected_trading_days": 11,
+          "expected_utc_weekdays_inclusive": 11,
+          "observed_trading_days": 10,
+          "density": 0.909091,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-17T23:59:49Z"
+      },
+      {
+        "ticker": "PQXX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 25,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 10,
+          "raw_row_count": 10,
+          "valid_unique_date_count": 10,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-02",
+          "earliest_date": "2026-07-02",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 14,
+          "expected_trading_days": 11,
+          "expected_utc_weekdays_inclusive": 11,
+          "observed_trading_days": 10,
+          "density": 0.909091,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:00:11Z"
+      },
+      {
+        "ticker": "RANK",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 29,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 12,
+          "raw_row_count": 12,
+          "valid_unique_date_count": 12,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-01",
+          "earliest_date": "2026-07-01",
+          "latest_observation": "2026-07-17",
+          "latest_date": "2026-07-17",
+          "span_days": 16,
+          "expected_trading_days": 13,
+          "expected_utc_weekdays_inclusive": 13,
+          "observed_trading_days": 12,
+          "density": 0.923077,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 1,
+          "latest_observation_age_business_days": 0,
+          "latest_business_day_age": 0,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:00:38Z"
+      },
+      {
+        "ticker": "RNMN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 33,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 252,
+          "raw_row_count": 252,
+          "valid_unique_date_count": 252,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-07-16",
+          "earliest_date": "2025-07-16",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 365,
+          "expected_trading_days": 262,
+          "expected_utc_weekdays_inclusive": 262,
+          "observed_trading_days": 252,
+          "density": 0.961832,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": true,
+          "eligible": true
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:01:04Z"
+      },
+      {
+        "ticker": "RWEM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 34,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 251,
+          "raw_row_count": 251,
+          "valid_unique_date_count": 251,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-07-16",
+          "earliest_date": "2025-07-16",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 365,
+          "expected_trading_days": 262,
+          "expected_utc_weekdays_inclusive": 262,
+          "observed_trading_days": 251,
+          "density": 0.958015,
+          "max_internal_gap_days": 5,
+          "max_internal_calendar_gap_days": 5,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": true,
+          "eligible": true
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:01:26Z"
+      },
+      {
+        "ticker": "RWLC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 35,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 252,
+          "raw_row_count": 252,
+          "valid_unique_date_count": 252,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-07-16",
+          "earliest_date": "2025-07-16",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 365,
+          "expected_trading_days": 262,
+          "expected_utc_weekdays_inclusive": 262,
+          "observed_trading_days": 252,
+          "density": 0.961832,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": true,
+          "eligible": true
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:01:49Z"
+      },
+      {
+        "ticker": "SFYI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 37,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 7,
+          "raw_row_count": 7,
+          "valid_unique_date_count": 7,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-07-08",
+          "earliest_date": "2026-07-08",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 8,
+          "expected_trading_days": 7,
+          "expected_utc_weekdays_inclusive": 7,
+          "observed_trading_days": 7,
+          "density": 1.0,
+          "max_internal_gap_days": 3,
+          "max_internal_calendar_gap_days": 3,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": false,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:02:13Z"
+      },
+      {
+        "ticker": "ZTAX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 51,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2025-07-10",
+        "daily_1y_actual_rows": 189,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null,
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 189,
+          "raw_row_count": 189,
+          "valid_unique_date_count": 189,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-07-16",
+          "earliest_date": "2025-07-16",
+          "latest_observation": "2026-07-16",
+          "latest_date": "2026-07-16",
+          "span_days": 365,
+          "expected_trading_days": 262,
+          "expected_utc_weekdays_inclusive": 262,
+          "observed_trading_days": 189,
+          "density": 0.721374,
+          "max_internal_gap_days": 17,
+          "max_internal_calendar_gap_days": 17,
+          "latest_observation_age_days": 2,
+          "latest_observation_age_business_days": 1,
+          "latest_business_day_age": 1,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": false,
+            "max_internal_gap": false,
+            "latest_business_day_age": true
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-18T00:03:57Z"
+      }
+    ],
+    "cooldown": [
+      {
+        "ticker": "CLNK",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
         "plan_order": 4,
         "missing_history_periods": [
           "daily_1y"
@@ -136,11 +1158,11 @@
         "inception_date": null
       },
       {
-        "ticker": "MMAY",
+        "ticker": "CLOO",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
         "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 48 unique daily_1y dates (< 200)",
         "plan_order": 5,
         "missing_history_periods": [
           "daily_1y"
@@ -151,12 +1173,12 @@
         "inception_date": null
       },
       {
-        "ticker": "MNVR",
+        "ticker": "EDGQ",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 49 unique daily_1y dates (< 200)",
-        "plan_order": 6,
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 8,
         "missing_history_periods": [
           "daily_1y"
         ],
@@ -166,12 +1188,432 @@
         "inception_date": null
       },
       {
-        "ticker": "WDE",
+        "ticker": "EDGX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 9,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "ESUM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 10,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "GISC",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
         "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-07-22T23:46:13Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 35 unique daily_1y dates (< 200)",
-        "plan_order": 7,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 21 unique daily_1y dates (< 200)",
+        "plan_order": 15,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "IDEQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 16,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "KRYP",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 18,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MDCR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 22 unique daily_1y dates (< 200)",
+        "plan_order": 20,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MSEP",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 22 unique daily_1y dates (< 200)",
+        "plan_order": 21,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "NISM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 43 unique daily_1y dates (< 200)",
+        "plan_order": 22,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "PHYS",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 23,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "PSLV",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 26,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "RAAR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 27,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "RAAY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 28,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "RCLR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 30,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "RCLY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 31,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "RMHY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 6,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 32,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "SFGV",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 36,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "SHRD",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 22 unique daily_1y dates (< 200)",
+        "plan_order": 38,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "SLWS",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 172 unique daily_1y dates (< 200)",
+        "plan_order": 39,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "SPPP",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 9,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 40,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "TOT",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 41,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "TPUT",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 23 unique daily_1y dates (< 200)",
+        "plan_order": 42,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "WTIB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 43,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XLCI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 44,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XLFI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 45,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XLII",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 46,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XLRI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 47,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XLVI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 48,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XLYI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 49,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "XRPZ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 8,
+        "next_attempt_after_utc": "2026-07-25T00:04:41Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 50,
         "missing_history_periods": [
           "daily_1y"
         ],

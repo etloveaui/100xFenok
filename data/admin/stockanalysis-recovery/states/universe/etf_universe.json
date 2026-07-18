@@ -23,29 +23,46 @@
       "outcome": "failed",
       "controlled": true,
       "error": "RuntimeError: controlled failure injection for universe:etf_universe"
+    },
+    {
+      "run_id": "29621081806",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 22 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-17T23:53:18Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
+    "path": "data/stockanalysis/etf_universe.json",
+    "payload_sha256": "7e8042f68010cc047130816df351ff00182c5c7ad28912a48fc059b9204b1902",
+    "source_as_of": null,
+    "fetched_at": "2026-07-17T23:53:40Z"
+  },
+  "updated_at": "2026-07-17T23:53:18Z",
+  "last_attempt": {
+    "run_id": "29621081806",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 22 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-17T23:53:18Z",
+    "outcome": "recovered",
+    "controlled": false
+  },
+  "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/universe/etf_universe.json",
     "payload_sha256": "359e2a9e795d7916d796f5a0cec9f1599ccaac7dce5d71f27a34790d624b4a08",
     "source_as_of": null,
     "fetched_at": "2026-07-16T09:37:42Z"
   },
-  "updated_at": "2026-07-17T05:51:44Z",
-  "last_attempt": {
-    "run_id": "29558385830",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "observed_at": "2026-07-17T05:51:44Z",
-    "outcome": "failed",
-    "controlled": true,
-    "error": "RuntimeError: controlled failure injection for universe:etf_universe"
-  },
-  "latest_failure": {
+  "recovered_from_run_id": "29558385830",
+  "recovered_at": "2026-07-17T23:53:18Z",
+  "last_recovered_failure": {
     "run_id": "29558385830",
     "run_attempt": 1,
     "observed_at": "2026-07-17T05:51:44Z",
@@ -54,11 +71,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "359e2a9e795d7916d796f5a0cec9f1599ccaac7dce5d71f27a34790d624b4a08",
     "data_loss": false
-  },
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/universe/etf_universe.json",
-    "payload_sha256": "359e2a9e795d7916d796f5a0cec9f1599ccaac7dce5d71f27a34790d624b4a08",
-    "source_as_of": null,
-    "fetched_at": "2026-07-16T09:37:42Z"
   }
 }
