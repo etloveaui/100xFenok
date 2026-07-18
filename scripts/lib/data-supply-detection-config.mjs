@@ -3,46 +3,27 @@ import {
   FLOW_PROXY_FORMULA_VERSION,
   OCC_OPTIONS_FORMULA_VERSION,
 } from "./fenok-proxy-formula-contract.mjs";
+import { canonicalJson } from "./json-canonical.mjs";
+import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
 
-const LANE_IDS = Object.freeze([
-  "fred_macro",
-  "fred_banking",
-  "fred_yardeni",
-  "fdic_tier1",
-  "treasury_tga",
-  "defillama_stablecoins",
-  "yahoo_etf_fallback",
-  "stockanalysis_etf_universe",
-  "yahoo_ticker_macro",
-  "sentiment",
-  "nasdaq_giw_sox",
-  "slickcharts",
-  "edgar_filings",
-  "sec_13f",
-  "finra_short_volume",
-  "occ_options_volume",
-  "yahoo_private_options",
-  "apewisdom_attention",
-  "gdelt_news_tone",
-]);
+// LANE_IDS derives from the lane registry — the SSOT for lane existence
+// (#366 derivation). Values stay exact-value pinned by cases.expected.json's
+// config_digest, so drift is a conscious edit (DEC-266).
+const LANE_IDS = Object.freeze(
+  LANE_REGISTRY.lanes
+    .filter((lane) => lane.lane_class === "detection_floor")
+    .map((lane) => lane.id),
+);
 
-const LIVE_LANE_IDS = Object.freeze([
-  "fred_macro",
-  "fred_banking",
-  "fred_yardeni",
-  "fdic_tier1",
-  "treasury_tga",
-  "defillama_stablecoins",
-  "yahoo_etf_fallback",
-  "stockanalysis_etf_universe",
-  "yahoo_ticker_macro",
-  "sentiment",
-  "nasdaq_giw_sox",
-  "slickcharts",
-  "edgar_filings",
-  "finra_short_volume",
-  "occ_options_volume",
-]);
+// LIVE_LANE_IDS derives from the lane registry — the SSOT for lane existence
+// and enforcement (#366 derivation, hand list removed). The VALUES are still
+// exact-value pinned by cases.expected.json's config_digest, so any
+// registry/config drift fails loudly as a conscious edit (DEC-266).
+const LIVE_LANE_IDS = Object.freeze(
+  LANE_REGISTRY.lanes
+    .filter((lane) => lane.enforcement === "live")
+    .map((lane) => lane.id),
+);
 const LIVE_LANE_ID_SET = new Set(LIVE_LANE_IDS);
 
 const MEMBER_IDS = Object.freeze([
@@ -79,11 +60,12 @@ const SLICKCHARTS_MEMBER_IDS = Object.freeze([
   "symbols",
 ]);
 
-const OWNERLESS_LANE_IDS = Object.freeze([
-  "sec_13f",
-  "apewisdom_attention",
-  "gdelt_news_tone",
-]);
+// OWNERLESS_LANE_IDS derives from the lane registry (artifact_only lanes).
+const OWNERLESS_LANE_IDS = Object.freeze(
+  LANE_REGISTRY.lanes
+    .filter((lane) => lane.store_kind === "artifact_only")
+    .map((lane) => lane.id),
+);
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_]{0,63}$/;
 const WORKFLOW_RE = /^\.github\/workflows\/[a-z0-9][a-z0-9._-]*\.ya?ml$/;
@@ -261,7 +243,7 @@ function freshness({ fold, unit, calendar, maxStaleness, duePolicy }) {
 function lane({
   id,
   label,
-  ownerWorkflow,
+  ownerWorkflow = registryLaneById(id)?.owner_workflow ?? null,
   monitoringMode = "post_fetch_artifact",
   members,
   endpointContract,
@@ -298,7 +280,6 @@ const config = {
     lane({
       id: "fred_macro",
       label: "FRED macro series",
-      ownerWorkflow: ".github/workflows/fetch-fred-macro.yml",
       members: [member("fred_macro", ".github/workflows/fetch-fred-macro.yml", ["0 8 * * *"], [
         artifact("fred_macro", "data/macro/fred-macro.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
@@ -323,7 +304,6 @@ const config = {
     lane({
       id: "fred_banking",
       label: "FRED banking series",
-      ownerWorkflow: ".github/workflows/fetch-fred-banking.yml",
       members: [member("fred_banking", ".github/workflows/fetch-fred-banking.yml", ["0 7 * * *"], [
         artifact("fred_banking_daily", "data/macro/fred-banking-daily.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
@@ -361,7 +341,6 @@ const config = {
     lane({
       id: "fred_yardeni",
       label: "FRED Yardeni model",
-      ownerWorkflow: ".github/workflows/fetch-fred-yardeni.yml",
       members: [member("fred_yardeni", ".github/workflows/fetch-fred-yardeni.yml", ["0 10 * * 6"], [
         artifact("fred_yardeni_model", "data/yardney/yardney_model.json", {
           schemaVersion: schemaVersion("/meta/public_schema_version", "yardney_model_public_v1"),
@@ -380,7 +359,6 @@ const config = {
     lane({
       id: "fdic_tier1",
       label: "FDIC Tier 1 capital",
-      ownerWorkflow: ".github/workflows/fetch-fdic.yml",
       members: [member("fdic_tier1", ".github/workflows/fetch-fdic.yml", ["0 6 1-7 * 1"], [
         artifact("fdic_tier1", "data/macro/fdic-tier1.json", {
           sourceSelector: maxArrayFieldSource("/data", "date", "date"),
@@ -399,7 +377,6 @@ const config = {
     lane({
       id: "treasury_tga",
       label: "US Treasury TGA",
-      ownerWorkflow: ".github/workflows/fetch-treasury-tga.yml",
       members: [member("treasury_tga", ".github/workflows/fetch-treasury-tga.yml", ["0 */6 * * *"], [
         artifact("treasury_tga", "data/macro/tga.json", {
           sourceSelector: maxArrayFieldSource("/series", "date", "date"),
@@ -418,7 +395,6 @@ const config = {
     lane({
       id: "defillama_stablecoins",
       label: "DefiLlama stablecoins",
-      ownerWorkflow: ".github/workflows/fetch-defillama.yml",
       members: [member("defillama_stablecoins", ".github/workflows/fetch-defillama.yml", ["0 * * * *"], [
         artifact("defillama_stablecoins", "data/macro/stablecoins.json", {
           sourceSelector: maxArrayFieldSource("/series", "date", "date"),
@@ -441,7 +417,6 @@ const config = {
     lane({
       id: "yahoo_etf_fallback",
       label: "Yahoo ETF fallback",
-      ownerWorkflow: ".github/workflows/fetch-stockanalysis.yml",
       members: [member("yahoo_etf_fallback", ".github/workflows/fetch-stockanalysis.yml", [
         "50 22 * * 1-5",
         "50 23 * * 1-5",
@@ -471,7 +446,6 @@ const config = {
     lane({
       id: "stockanalysis_etf_universe",
       label: "StockAnalysis ETF universe",
-      ownerWorkflow: ".github/workflows/fetch-stockanalysis.yml",
       members: [member("stockanalysis_etf_universe", ".github/workflows/fetch-stockanalysis.yml", ["20 23 * * 0"], [
         artifact("stockanalysis_etf_universe", "data/stockanalysis/etf_universe.json", {
           schemaVersion: schemaVersion("/schema_version", "stockanalysis/v1"),
@@ -499,7 +473,6 @@ const config = {
     lane({
       id: "yahoo_ticker_macro",
       label: "Yahoo macro tickers",
-      ownerWorkflow: ".github/workflows/fetch-yahoo-ticker.yml",
       members: [member("yahoo_ticker_macro", ".github/workflows/fetch-yahoo-ticker.yml", ["5 * * * *"], [
         artifact("yahoo_ticker_macro", "data/macro/yahoo-ticker.json", {
           sourceSelector: maxObjectFieldSource("/tickers", "regularMarketTime", "unix_seconds"),
@@ -522,7 +495,6 @@ const config = {
     lane({
       id: "sentiment",
       label: "Market sentiment",
-      ownerWorkflow: ".github/workflows/fetch-sentiment.yml",
       members: [member("sentiment", ".github/workflows/fetch-sentiment.yml", ["0 22 * * 1-5"], [
         artifact("sentiment_vix", "data/sentiment/vix.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
@@ -539,7 +511,6 @@ const config = {
     lane({
       id: "nasdaq_giw_sox",
       label: "Nasdaq GIW SOX constituents",
-      ownerWorkflow: ".github/workflows/fetch-nasdaq-giw-sox.yml",
       members: [member("nasdaq_giw_sox", ".github/workflows/fetch-nasdaq-giw-sox.yml", ["50 23 * * 1-5"], [
         artifact("nasdaq_giw_sox_constituents", "data/indices/nasdaq-giw-sox-constituents.json", {
           schemaVersion: schemaVersion("/schema_version", "nasdaq_giw_sox_constituents.v1"),
@@ -579,6 +550,9 @@ const config = {
     lane({
       id: "slickcharts",
       label: "SlickCharts composite",
+      // Composite lane: no single owner workflow in the DETECTION sense, while
+      // the registry's owner_workflow (slickcharts-daily.yml) names the
+      // PUBLISHER for the commit-shard gate. Keep the null literal.
       ownerWorkflow: null,
       monitoringMode: "composite",
       members: [
@@ -634,7 +608,6 @@ const config = {
     lane({
       id: "edgar_filings",
       label: "SEC EDGAR filings",
-      ownerWorkflow: ".github/workflows/fetch-edgar-filings.yml",
       members: [member("edgar_filings", ".github/workflows/fetch-edgar-filings.yml", ["40 0 * * 1"], [
         artifact("edgar_filings_index", "data/edgar-korean-summaries/index.json", {
           schemaVersion: schemaVersion("/schemaVersion", 1),
@@ -699,7 +672,6 @@ const config = {
     lane({
       id: "finra_short_volume",
       label: "FINRA short volume",
-      ownerWorkflow: ".github/workflows/fenok-edge-daily.yml",
       members: [member("finra_short_volume", ".github/workflows/fenok-edge-daily.yml", ["30 0 * * 2-6"], [
         artifact("finra_flow_proxy", "data/computed/fenok_flow_proxies.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
@@ -715,7 +687,6 @@ const config = {
     lane({
       id: "occ_options_volume",
       label: "OCC options volume",
-      ownerWorkflow: ".github/workflows/fenok-edge-daily.yml",
       members: [member("occ_options_volume", ".github/workflows/fenok-edge-daily.yml", ["30 0 * * 2-6"], [
         artifact("occ_options_volume", "data/computed/fenok_occ_options_volume.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
@@ -731,7 +702,6 @@ const config = {
     lane({
       id: "yahoo_private_options",
       label: "Yahoo private options availability",
-      ownerWorkflow: ".github/workflows/fetch-fenok-private-options.yml",
       members: [member("yahoo_private_options", ".github/workflows/fetch-fenok-private-options.yml", ["10 1 * * 2-6"], [
         artifact("yahoo_private_options", "data/computed/fenok_yahoo_private_options_availability.json", {
           schemaVersion: schemaVersion("/schema_version", "fenok-yahoo-private-options-availability/v1"),
@@ -1142,6 +1112,8 @@ export function validateDetectionConfig(configValue) {
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
   if (configValue.logical_lane_count !== 19 || configValue.producer_member_count !== 23) fail("denominator must be 19/23");
   if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 19) fail("lanes must contain exactly 19 rows");
+  const uncoveredLive = LIVE_LANE_IDS.filter((id) => !LANE_IDS.includes(id));
+  if (uncoveredLive.length > 0) fail(`live registry lanes must have detection rows: ${uncoveredLive.join(", ")}`);
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
   if (canonicalJson(laneIds) !== canonicalJson(LANE_IDS)) fail("logical lane order or identity changed");
   configValue.lanes.forEach(validateLane);
@@ -1162,37 +1134,10 @@ export function validateDetectionConfig(configValue) {
   return true;
 }
 
-function canonicalize(value, stack) {
-  if (value === null || typeof value === "string" || typeof value === "boolean") return value;
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) fail("canonical JSON rejects non-finite numbers");
-    return Object.is(value, -0) ? 0 : value;
-  }
-  if (Array.isArray(value)) {
-    if (stack.has(value)) fail("canonical JSON rejects cycles");
-    stack.add(value);
-    const result = value.map((entry) => canonicalize(entry, stack));
-    stack.delete(value);
-    return result;
-  }
-  if (!isPlainObject(value)) fail("canonical JSON accepts plain JSON objects only");
-  if (stack.has(value)) fail("canonical JSON rejects cycles");
-  stack.add(value);
-  const result = {};
-  for (const key of Object.keys(value).sort()) {
-    const entry = value[key];
-    if (entry === undefined || typeof entry === "function" || typeof entry === "symbol" || typeof entry === "bigint") {
-      fail(`canonical JSON rejects non-JSON value at ${key}`);
-    }
-    result[key] = canonicalize(entry, stack);
-  }
-  stack.delete(value);
-  return result;
-}
-
-export function canonicalJson(value) {
-  return JSON.stringify(canonicalize(value, new Set()));
-}
+// canonicalJson lives in scripts/lib/json-canonical.mjs (shared leaf) so this
+// module can import the lane registry without a circular import
+// (config -> lane-registry -> json-canonical). Re-exported for compatibility.
+export { canonicalJson };
 
 function deepFreeze(value) {
   if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {

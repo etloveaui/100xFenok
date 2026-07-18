@@ -553,6 +553,61 @@ function runConfigAndFixtureChecks() {
     mutate(invalid);
     assert.throws(() => validateDetectionConfig(invalid), TypeError);
   }
+
+  // Durable RED for the derivation boundary (#366): a registry whose live lane
+  // has no detection row must fail the config load loudly. The guard and the
+  // derived LANE_IDS/LIVE_LANE_IDS live at module level, so the mutation is
+  // applied to a copied lane-registry and the config is loaded in a child
+  // process — the RED evidence is retained here, not in a session anecdote.
+  {
+    const LIB_FILES = [
+      "json-canonical.mjs",
+      "fenok-proxy-formula-contract.mjs",
+      "data-supply-detection-config.mjs",
+    ];
+    const loadConfigWithRegistry = (mutateRegistry) => {
+      const root = fs.mkdtempSync(path.join(os.tmpdir(), "detfloor-derivation-red-"));
+      const libDir = path.join(root, "scripts", "lib");
+      fs.mkdirSync(libDir, { recursive: true });
+      for (const file of [...LIB_FILES, "lane-registry.mjs"]) {
+        let source = fs.readFileSync(path.join(REPO_ROOT, "scripts", "lib", file), "utf8");
+        if (file === "lane-registry.mjs") source = mutateRegistry(source);
+        fs.writeFileSync(path.join(libDir, file), source);
+      }
+      return spawnSync(
+        process.execPath,
+        ["-e", `import(${JSON.stringify(`file://${path.join(libDir, "data-supply-detection-config.mjs")}`)}).then(() => process.exit(0)).catch((error) => { console.error(error?.message ?? error); process.exit(1); })`],
+        { encoding: "utf8" },
+      );
+    };
+
+    // (a) an auxiliary lane flipped live: LIVE_LANE_IDS gains it but LANE_IDS
+    // excludes it -> the live-coverage guard must fire.
+    const liveWithoutRow = loadConfigWithRegistry((source) => {
+      const anchor = 'id: "yahoo_batch_quote_history"';
+      const index = source.indexOf(anchor);
+      const segment = source.slice(index, index + 400);
+      if (!segment.includes('enforcement: "shadow"')) throw new Error("RED(a) mutation anchor missing");
+      return source.slice(0, index) + segment.replace('enforcement: "shadow"', 'enforcement: "live"') + source.slice(index + 400);
+    });
+    assert.equal(liveWithoutRow.status, 1, `RED(a) unexpectedly loaded: ${liveWithoutRow.stdout}`);
+    assert.match(liveWithoutRow.stderr, /live registry lanes must have detection rows: yahoo_batch_quote_history/,
+      "RED(a): a live registry lane without a detection row must fail loudly by name");
+
+    // (b) a detection_floor lane reclassed as auxiliary: derived LANE_IDS
+    // shrinks while the hand-written lanes stay 19 -> identity check fails.
+    const floorReclassed = loadConfigWithRegistry((source) => {
+      const anchor = 'id: "treasury_tga"';
+      const index = source.indexOf(anchor);
+      const segment = source.slice(index, index + 300);
+      if (!segment.includes('lane_class: "detection_floor"')) throw new Error("RED(b) mutation anchor missing");
+      return source.slice(0, index) + segment.replace('lane_class: "detection_floor"', 'lane_class: "auxiliary"') + source.slice(index + 300);
+    });
+    assert.equal(floorReclassed.status, 1, `RED(b) unexpectedly loaded: ${floorReclassed.stdout}`);
+    assert.match(floorReclassed.stderr, /live registry lanes must have detection rows: treasury_tga/,
+      "RED(b): a live lane reclassed out of detection_floor must fail the coverage guard by name");
+  }
+
   assert.equal(validateAttemptEvidence(attemptsFixture), true);
   assert.equal(validateCalendars(calendarsFixture), undefined);
   const canonicalCalendars = readJson(CALENDAR_PATH);

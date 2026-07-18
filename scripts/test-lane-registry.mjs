@@ -67,6 +67,8 @@ function clone(value) {
     ["duplicate exception", (draft) => { draft.declared_exceptions.push(clone(draft.declared_exceptions[0])); }],
     ["invalid cadence", (draft) => { draft.lanes[0].cadence.kind = "fortnightly"; }],
     ["invalid privacy class", (draft) => { draft.lanes[0].privacy_class = "publicish"; }],
+    ["missing lane_class", (draft) => { delete draft.lanes[0].lane_class; }],
+    ["invalid lane_class", (draft) => { draft.lanes[0].lane_class = "sometimes"; }],
     ["owner workflow outside workflows dir", (draft) => { draft.lanes[0].owner_workflow = "scripts/x.yml"; }],
     ["duplicate commit shard", (draft) => {
       const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
@@ -129,6 +131,16 @@ function clone(value) {
   for (const entry of LANE_REGISTRY.declared_exceptions) {
     if (entry.may_be_absent === true) continue;
     assert.equal(fs.existsSync(path.join(REPO_ROOT, entry.path)), true, `stale declared exception: ${entry.path}`);
+  }
+  // lane_class: exactly one auxiliary lane today; everything else is detection_floor
+  {
+    const byClass = LANE_REGISTRY.lanes.reduce((acc, lane) => {
+      acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
+      return acc;
+    }, {});
+    assert.deepEqual(byClass, { detection_floor: 19, auxiliary: 1 }, "lane_class partition drifted");
+    assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
+      "yahoo_batch_quote_history is the only auxiliary lane (not a detection-floor lane)");
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");

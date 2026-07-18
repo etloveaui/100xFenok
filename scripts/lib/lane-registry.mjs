@@ -14,10 +14,11 @@
 // (deepFreeze + canonicalJson + sha256 digest, validating load, fail-closed).
 
 import { createHash } from "node:crypto";
-import { canonicalJson } from "./data-supply-detection-config.mjs";
+import { canonicalJson } from "./json-canonical.mjs";
 
 export const LANE_REGISTRY_SCHEMA = "lane-registry/v1";
 export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"]);
+export const LANE_CLASSES = Object.freeze(["detection_floor", "auxiliary"]);
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
 export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
@@ -40,6 +41,7 @@ function record({
   label,
   owner_workflow,
   store_kind,
+  lane_class,
   cadence,
   enforcement,
   privacy_class,
@@ -58,6 +60,7 @@ function record({
     label,
     owner_workflow,
     store_kind,
+    lane_class,
     cadence,
     enforcement,
     privacy_class,
@@ -86,6 +89,7 @@ const lanes = [
     label: "FRED macro",
     owner_workflow: ".github/workflows/fetch-fred-macro.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "fred" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -107,6 +111,7 @@ const lanes = [
     label: "FRED banking",
     owner_workflow: ".github/workflows/fetch-fred-banking.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "mixed", provider: "fred (daily/weekly/monthly/quarterly series)" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -147,6 +152,7 @@ const lanes = [
     label: "Feno Yardeni model (FRED WAAA/WBAA)",
     owner_workflow: ".github/workflows/fetch-fred-yardeni.yml",
     store_kind: "marker",
+    lane_class: "detection_floor",
     cadence: { kind: "weekly", provider: "fred weekly (Friday observations)" },
     enforcement: "live",
     privacy_class: "private",
@@ -169,6 +175,7 @@ const lanes = [
     label: "FDIC Tier-1",
     owner_workflow: ".github/workflows/fetch-fdic.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "quarterly", provider: "fdic (first-Monday cron)" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -190,6 +197,7 @@ const lanes = [
     label: "Treasury FiscalData TGA",
     owner_workflow: ".github/workflows/fetch-treasury-tga.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "fiscaldata.treasury.gov" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -211,6 +219,7 @@ const lanes = [
     label: "DefiLlama stablecoins",
     owner_workflow: ".github/workflows/fetch-defillama.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "defillama" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -232,6 +241,7 @@ const lanes = [
     label: "Yahoo ETF fallback candidate",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "yahoo/stockanalysis (shared workflow)" },
     enforcement: "live",
     // privacy_class describes ADMIN-STORE routing (what EXCLUDED_PUBLIC_DATA_ROOTS
@@ -256,6 +266,7 @@ const lanes = [
     label: "StockAnalysis ETF universe",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "stockanalysis (shared workflow)" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -276,6 +287,7 @@ const lanes = [
     label: "Yahoo hourly ticker snapshot",
     owner_workflow: ".github/workflows/fetch-yahoo-ticker.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "hourly", provider: "yahoo (TQQQ/SOXL keys)" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -297,6 +309,7 @@ const lanes = [
     label: "Sentiment bundle (CNN/VIX/MOVE/CFTC/crypto)",
     owner_workflow: ".github/workflows/fetch-sentiment.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "multi-source sentiment" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -319,6 +332,7 @@ const lanes = [
     label: "Nasdaq GIW SOX constituents",
     owner_workflow: ".github/workflows/fetch-nasdaq-giw-sox.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "nasdaq GIW (us_trading_days)" },
     enforcement: "live",
     privacy_class: "private",
@@ -340,6 +354,7 @@ const lanes = [
     label: "SlickCharts daily delivery (composite lane)",
     owner_workflow: ".github/workflows/slickcharts-daily.yml",
     store_kind: "payload",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "slickcharts (us_trading_days)" },
     enforcement: "live",
     privacy_class: "public_mirror",
@@ -384,6 +399,7 @@ const lanes = [
     label: "SEC EDGAR filing timeline",
     owner_workflow: ".github/workflows/fetch-edgar-filings.yml",
     store_kind: "marker",
+    lane_class: "detection_floor",
     cadence: { kind: "weekly", provider: "sec edgar (Monday 00:40Z poll)" },
     enforcement: "live",
     privacy_class: "private",
@@ -410,6 +426,7 @@ const lanes = [
     label: "SEC 13F (ownerless artifact lane)",
     owner_workflow: null,
     store_kind: "artifact_only",
+    lane_class: "detection_floor",
     cadence: { kind: "quarterly", provider: "sec 13f" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
@@ -426,6 +443,7 @@ const lanes = [
     label: "FINRA RegSHO daily short volume",
     owner_workflow: ".github/workflows/fenok-edge-daily.yml",
     store_kind: "marker",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "finra (us_trading_days)" },
     enforcement: "live",
     privacy_class: "private",
@@ -447,6 +465,7 @@ const lanes = [
     label: "OCC options volume",
     owner_workflow: ".github/workflows/fenok-edge-daily.yml",
     store_kind: "marker",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "occ (us_trading_days)" },
     enforcement: "live",
     privacy_class: "private",
@@ -471,6 +490,7 @@ const lanes = [
     label: "Yahoo private options availability",
     owner_workflow: ".github/workflows/fetch-fenok-private-options.yml",
     store_kind: "marker",
+    lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "yahoo finance targeted options (us_trading_days)" },
     enforcement: "shadow",
     privacy_class: "private",
@@ -491,6 +511,7 @@ const lanes = [
     label: "ApeWisdom attention (ownerless artifact lane)",
     owner_workflow: null,
     store_kind: "artifact_only",
+    lane_class: "detection_floor",
     cadence: { kind: "unknown", provider: "apewisdom" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
@@ -507,6 +528,7 @@ const lanes = [
     label: "GDELT news tone (ownerless artifact lane)",
     owner_workflow: null,
     store_kind: "artifact_only",
+    lane_class: "detection_floor",
     cadence: { kind: "unknown", provider: "gdelt" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
@@ -523,6 +545,7 @@ const lanes = [
     label: "Yahoo batch quote/history",
     owner_workflow: ".github/workflows/fetch-yf-finance.yml",
     store_kind: "payload",
+    lane_class: "auxiliary",
     cadence: { kind: "daily", provider: "yahoo" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
@@ -601,6 +624,7 @@ const LANE_RECORD_KEYS = Object.freeze([
   "label",
   "owner_workflow",
   "store_kind",
+  "lane_class",
   "cadence",
   "enforcement",
   "privacy_class",
@@ -644,6 +668,7 @@ function validateLaneRecord(laneValue) {
     fail(`${context} owner_workflow must be null or a .github/workflows/ path`);
   }
   if (!STORE_KINDS.includes(laneValue.store_kind)) fail(`${context} store_kind is invalid`);
+  if (!LANE_CLASSES.includes(laneValue.lane_class)) fail(`${context} lane_class is invalid`);
   if (laneValue.store_kind === "artifact_only") {
     if (laneValue.roots.admin_store !== null || laneValue.recovery_store !== null || laneValue.commit_shards.length > 0) {
       fail(`${context} artifact_only lanes must not carry store roots, commit shards, or a recovery store`);
