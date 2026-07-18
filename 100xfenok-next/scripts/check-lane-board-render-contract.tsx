@@ -35,7 +35,11 @@ const kpiLanes: LaneBoardKpiLane[] = [
     status: "ready",
     status_label: "정상",
     as_of: "2026-07-18T00:00:00Z",
-    details: { recovery_retry_set: [1, 2], recovery_recovered: [1] },
+    details: {
+      recovery_retry_set: [1, 2],
+      recovery_recovered: [1],
+      last_attempt: { event_name: "schedule", observed_at: "2026-07-18T06:30:00Z" },
+    },
   },
   // KPI-only composite gate — must land in the Platform Gates strip, not a lane row.
   {
@@ -58,6 +62,9 @@ assert(html.includes("SEC 13F"), "sec_13f label missing");
 // Joined lane surfaces its KPI status + recovery counts + metadata (Korean labels).
 assert(html.includes("정상"), "joined lane status (정상) missing");
 assert(html.includes("재시도 2 · 복구 1"), "recovery counts not joined from KPI details");
+// #365 P2: last_attempt observed_at + event render in the lane row.
+assert(html.includes("2026-07-18"), "last_attempt observed_at date should render");
+assert(html.includes("schedule"), "last_attempt event_name should render");
 assert(html.includes("공개 미러") && html.includes("실시행") && html.includes("payload"), "metadata chips missing/untranslated");
 assert(html.includes("fetch-fred-macro.yml"), "owner_workflow basename not shown");
 

@@ -23,6 +23,7 @@ export type LaneBoardKpiLane = {
   details?: {
     recovery_retry_set?: unknown[];
     recovery_recovered?: unknown[];
+    last_attempt?: { event_name?: string | null; observed_at?: string | null } | null;
   };
 };
 
@@ -127,6 +128,7 @@ export default function LaneBoard({
               <th className="border-b border-slate-200 px-3 py-2">기준일</th>
               <th className="border-b border-slate-200 px-3 py-2">상태</th>
               <th className="border-b border-slate-200 px-3 py-2">복구</th>
+              <th className="border-b border-slate-200 px-3 py-2">최근 실행</th>
             </tr>
           </thead>
           <tbody>
@@ -134,6 +136,7 @@ export default function LaneBoard({
               const kpi = kpiLanes.find((k) => k.id === lane.id) ?? null;
               const retry = countOf(kpi?.details?.recovery_retry_set);
               const recovered = countOf(kpi?.details?.recovery_recovered);
+              const lastAttempt = kpi?.details?.last_attempt ?? null;
               return (
                 <tr key={lane.id} className="align-top" data-lane-row={lane.id}>
                   <td className="border-b border-slate-100 px-3 py-3">
@@ -163,11 +166,21 @@ export default function LaneBoard({
                   <td className="border-b border-slate-100 px-3 py-3">
                     <span className="orbitron font-black tabular-nums text-slate-900">재시도 {retry} · 복구 {recovered}</span>
                   </td>
+                  <td className="border-b border-slate-100 px-3 py-3">
+                    {lastAttempt?.observed_at ? (
+                      <span className="font-semibold text-slate-500">
+                        {dateLabel(lastAttempt.observed_at)}
+                        {lastAttempt.event_name ? <span className="ml-1 text-[10px] text-slate-400">{lastAttempt.event_name}</span> : null}
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-slate-400">-</span>
+                    )}
+                  </td>
                 </tr>
               );
             }) : (
               <tr>
-                <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={5}>lane-registry-projection을 읽지 못했습니다.</td>
+                <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={6}>lane-registry-projection을 읽지 못했습니다.</td>
               </tr>
             )}
           </tbody>

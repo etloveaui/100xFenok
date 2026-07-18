@@ -27,6 +27,16 @@ function deepClone(value) {
 
 function projectLaneRecoveryDetails(doc) {
   for (const lane of Array.isArray(doc?.lanes) ? doc.lanes : []) {
+    // #365 P2: last_attempt is public-safe metadata EXCEPT the run_id runtime
+    // identity (same policy as recovery.current_attempt) — redact it for the
+    // public mirror, leaving event_name + observed_at.
+    const lastAttempt = lane?.details?.last_attempt;
+    if (lastAttempt && typeof lastAttempt === "object" && !Array.isArray(lastAttempt)) {
+      lane.details.last_attempt = {
+        event_name: lastAttempt.event_name ?? null,
+        observed_at: lastAttempt.observed_at ?? null,
+      };
+    }
     const recovered = lane?.details?.recovery_recovered;
     if (Array.isArray(recovered)) {
       lane.details.recovery_recovered = recovered.map((row) => ({

@@ -976,6 +976,34 @@ function recoveryChecks(laneId, index) {
   };
 }
 
+// #365 P2: compact per-lane last-run provenance from a recovery index's
+// current_attempt. Uniform 3-field shape for the owner dashboard; null when the
+// lane has no recovery store or has not recorded an attempt yet.
+export function compactLastAttempt(recoveryState) {
+  const current = recoveryState?.current_attempt;
+  if (!current || typeof current !== "object" || Array.isArray(current)) return null;
+  return {
+    run_id: current.run_id ?? null,
+    event_name: current.event_name ?? null,
+    observed_at: current.observed_at ?? null,
+  };
+}
+
+function lastAttemptDetail(recoveryState) {
+  const lastAttempt = compactLastAttempt(recoveryState);
+  if (lastAttempt) return { last_attempt: lastAttempt, last_attempt_reason: null };
+  const hasStore = recoveryState !== undefined && recoveryState !== null;
+  return {
+    last_attempt: null,
+    last_attempt_reason: hasStore ? "no current attempt recorded yet" : "lane has no recovery store",
+  };
+}
+
+export const LAST_ATTEMPT_STORELESS_DETAIL = Object.freeze({
+  last_attempt: null,
+  last_attempt_reason: "lane has no recovery store",
+});
+
 export function mapDetectionFloorRow(row, recoveryState = undefined) {
   const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
@@ -1028,8 +1056,8 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
   ], {
     asOf: sourceAsOf,
     details: targetRecovery
-      ? { detection_reason: row.reason, recovery: recovery.details }
-      : { recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered },
+      ? { detection_reason: row.reason, recovery: recovery.details, ...lastAttemptDetail(recoveryState) }
+      : { recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered, ...lastAttemptDetail(recoveryState) },
   });
   return {
     ...result,
@@ -2190,6 +2218,15 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     buildPublicMirrorLane(rimInputs),
     ...buildDetectionFloorLanes(detectionFloor, recoveryStates),
   ];
+  // #365 P2: last_attempt is uniform across every lane. Detection-floor lanes set
+  // it from their injected recovery state; the remaining composite/platform lanes
+  // have no recovery store -> honest null + reason (never fabricated).
+  for (const laneEntry of lanes) {
+    laneEntry.details = laneEntry.details || {};
+    if (!("last_attempt" in laneEntry.details)) {
+      Object.assign(laneEntry.details, LAST_ATTEMPT_STORELESS_DETAIL);
+    }
+  }
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])
     .filter((entry) => entry.status !== "ready")
