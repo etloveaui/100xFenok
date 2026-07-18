@@ -10,6 +10,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  applyYfForwardFallback,
+  extractYfForwardEnrichment,
+} from "./lib/yf-screener-enrichment.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -22,6 +26,7 @@ const PATHS = {
   epsConsensus: path.join(ROOT, "data/global-scouter/raw/eps_consensus_t_eps_c.json"),
   stocksDetailDir: path.join(ROOT, "data/global-scouter/stocks/detail"),
   slickchartsDir: path.join(ROOT, "data/slickcharts/stocks"),
+  yfFinanceDir: path.join(ROOT, "data/yf/finance"),
   output: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
   perBandsOutput: path.join(ROOT, "data/global-scouter/core/per_bands_index.json"),
   slickOutput: path.join(ROOT, "data/global-scouter/core/slick_index.json"),
@@ -213,6 +218,27 @@ const slickSourceDateReason = slickSourceDate
   ? null
   : `aggregate source floor unavailable: ${slickMissingSourceDates}/${slickSourceDates.length} SlickCharts rows have no observation date`;
 
+/* ── 4.6 Yahoo forward-metric fallback (existing screener fields only) ── */
+const yfForwardMap = new Map();
+
+for (const [symbol] of Object.entries(index.stocks)) {
+  let payload = null;
+  try {
+    payload = loadJson(path.join(PATHS.yfFinanceDir, `${symbol}.json`));
+  } catch {
+    // Yahoo file missing: preserve the existing null/undefined screener value.
+  }
+  const enrichment = extractYfForwardEnrichment(symbol, payload);
+  if (enrichment) yfForwardMap.set(symbol, enrichment);
+}
+
+const yfFallbackStats = {
+  matchedRows: 0,
+  peForward: 0,
+  epsForward: 0,
+  sourceDates: [],
+};
+
 /* ── 5. Merge ── */
 const merged = [];
 
@@ -221,12 +247,16 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
   const ecRec = ecMap.get(symbol);
   const pbRec = perBands[symbol];
   const slickRec = slickMap.get(symbol);
+  const yfForwardRec = yfForwardMap.get(symbol);
+  const forwardMetrics = applyYfForwardFallback(slickRec, yfForwardRec);
 
   if (!cmRec) {
     // stocks_index에 있지만 company_master에 없는 경우 skip
     // (이론상 없어야 하지만 방어적)
     continue;
   }
+
+  if (yfForwardRec) yfFallbackStats.matchedRows += 1;
 
   merged.push({
     symbol,
@@ -252,13 +282,20 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     perBandMin: pbRec?.min,
     perBandAvg: pbRec?.avg,
     perBandMax: pbRec?.max,
-    peForward: slickRec?.peForward,
-    epsForward: slickRec?.epsForward,
+    peForward: forwardMetrics.peForward,
+    epsForward: forwardMetrics.epsForward,
+    peForwardSource: forwardMetrics.peForwardSource,
+    epsForwardSource: forwardMetrics.epsForwardSource,
+    yfForwardSourceAsOf: forwardMetrics.yfFallbackUsed ? yfForwardRec?.sourceAsOf ?? null : undefined,
     dividendTtm: slickRec?.dividendTtm,
     ret1y: slickRec?.ret1y,
     ret3y: slickRec?.ret3y,
     ret5y: slickRec?.ret5y,
   });
+
+  if (forwardMetrics.peForwardSource === "yf") yfFallbackStats.peForward += 1;
+  if (forwardMetrics.epsForwardSource === "yf") yfFallbackStats.epsForward += 1;
+  if (forwardMetrics.yfFallbackUsed) yfFallbackStats.sourceDates.push(yfForwardRec?.sourceAsOf ?? null);
 }
 
 /* ── 5. Synthetic rank (pe-rank + pb-rank) ── */
@@ -294,11 +331,34 @@ for (let i = 0; i < count; i++) {
 }
 
 /* ── 7. Output ── */
+const yfFallbackSourceAsOf = completeSourceFloor(yfFallbackStats.sourceDates);
+const yfFallbackDatedRows = yfFallbackStats.sourceDates.filter(Boolean).length;
 const output = {
   generated_at: new Date().toISOString(),
   source_date: globalScouterSourceDate,
   source_date_reason: globalScouterSourceDateReason,
   source_dates: globalScouterSourceDates,
+  enrichment: {
+    yf_finance: {
+      mode: "fallback_only",
+      fields: ["peForward", "epsForward"],
+      matched_rows: yfFallbackStats.matchedRows,
+      fallback_counts: {
+        peForward: yfFallbackStats.peForward,
+        epsForward: yfFallbackStats.epsForward,
+      },
+      source_as_of: yfFallbackSourceAsOf,
+      source_date_coverage: {
+        dated_rows: yfFallbackDatedRows,
+        total_rows: yfFallbackStats.sourceDates.length,
+      },
+      source_as_of_reason: yfFallbackStats.sourceDates.length === 0
+        ? "no Yahoo fallback values were used"
+        : yfFallbackSourceAsOf
+          ? null
+          : "one or more used Yahoo fallback values have no provider source date",
+    },
+  },
   count: merged.length,
   data: merged,
 };

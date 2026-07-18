@@ -1,7 +1,7 @@
 name: Build Stocks Analyzer
 
-# Merge stocks_index + raw company_master + eps_consensus into a single
-# native-ready stocks_analyzer.json for the stock-analyzer feature.
+# Merge Global Scouter + SlickCharts with bounded Yahoo forward-metric fallbacks
+# into a single native-ready stocks_analyzer.json for the stock-analyzer feature.
 # Runs daily after the global-scouter raw export window.
 
 on:
@@ -37,7 +37,9 @@ jobs:
           node-version: '22'
 
       - name: Build stocks_analyzer.json
-        run: node scripts/build-stocks-analyzer.mjs
+        run: |
+          node scripts/test-yf-screener-enrichment.mjs
+          node scripts/build-stocks-analyzer.mjs
 
       - name: Build 13F analytics (trades ranking + portfolio views)
         run: |
