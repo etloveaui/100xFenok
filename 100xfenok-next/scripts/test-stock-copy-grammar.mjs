@@ -15,7 +15,9 @@ const stockTabs = read("src/app/stock/[ticker]/StockTabs.tsx");
 const stockDetail = read("src/app/stock/[ticker]/StockDetailClient.tsx");
 
 assert.doesNotMatch(stockTabs, /₩.*[조억]/, "StockTabs must not mix KRW 조/억 local compact money copy");
-assert.match(stockTabs, /formatCurrencyCompact/, "StockTabs must adopt shared formatCurrencyCompact");
+assert.match(stockTabs, /from "@\/lib\/format"/, "StockTabs must import the shared format module");
+assert.match(stockTabs, /export \{ formatCompactMoney, formatMoney \}/, "StockTabs must preserve its public formatter exports");
+assert.doesNotMatch(stockTabs, /function format(?:Compact)?Money\(/, "StockTabs must not redeclare shared money formatters");
 assert.doesNotMatch(stockDetail, /OHLCV/, "StockDetailClient must not expose raw OHLCV copy");
 
 console.log("[test-stock-copy-grammar] OK");

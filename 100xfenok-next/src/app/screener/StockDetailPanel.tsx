@@ -13,7 +13,12 @@ import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-bas
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
-import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
+import {
+  estimateCompletenessFromSeries,
+  estimateCompletenessTone,
+  hasEstimateGap,
+  type EstimateCompleteness,
+} from "@/lib/estimate-completeness";
 import { makeDataState } from "@/lib/data-state";
 import {
   formatCurrency,
@@ -76,6 +81,44 @@ const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] 
 const CHART_WIDTH = 300;
 const CHART_PAD_L = 44;
 const CHART_PAD_R = 30;
+
+type ChartTextAnchor = "start" | "middle" | "end";
+
+export function chartValueLabelPlacement({
+  x,
+  y,
+  rightBoundary,
+  topBoundary,
+  defaultXOffset,
+  defaultAnchor,
+}: {
+  x: number;
+  y: number;
+  rightBoundary: number;
+  topBoundary: number;
+  defaultXOffset: number;
+  defaultAnchor: Exclude<ChartTextAnchor, "end">;
+}): { x: number; y: number; anchor: ChartTextAnchor } {
+  const nearRight = x > rightBoundary - 12;
+  const nearTop = y < topBoundary + 14;
+  return {
+    x: nearRight ? x - 6 : x + defaultXOffset,
+    y: nearTop ? y + 14 : y - 10,
+    anchor: nearRight ? "end" : defaultAnchor,
+  };
+}
+
+function renderChartWithEstimateGap(chart: ReactNode, completeness: EstimateCompleteness | null): ReactNode {
+  if (!completeness || !hasEstimateGap(completeness)) return chart;
+  return (
+    <div className="space-y-1">
+      {chart}
+      <span className={`inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(completeness)}`}>
+        {completeness.label}
+      </span>
+    </div>
+  );
+}
 
 interface WeeklyPoint {
   date?: string;
@@ -875,9 +918,7 @@ export function useStockDetail(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setDetail(null);
       setLoading(false);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
     const run = async () => {
       setLoading(true);
@@ -1025,17 +1066,13 @@ export function useSlickStock(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setData(null);
       setLoading(false);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
     const cached = SLICK_STOCK_CACHE.get(symbol);
     if (cached !== undefined) {
       setData(cached);
       setLoading(false);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
 
     const run = async () => {
@@ -1077,17 +1114,13 @@ export function useMarketFacts(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setData(null);
       setLoading(false);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
     const cached = MARKET_FACTS_CACHE.get(symbol);
     if (cached !== undefined) {
       setData(cached);
       setLoading(false);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
 
     const run = async () => {
@@ -1418,13 +1451,14 @@ export function Sparkline({
   const valueLabelPlacement = (point: FiscalPoint) => {
     const x = toX(point.index);
     const y = toY(point.value);
-    const nearRight = x > width - padR - 12;
-    const nearTop = y < padT + 14;
-    return {
-      x: nearRight ? x - 6 : x + 6,
-      y: nearTop ? y + 14 : y - 10,
-      anchor: nearRight ? "end" : "start",
-    } as const;
+    return chartValueLabelPlacement({
+      x,
+      y,
+      rightBoundary: width - padR,
+      topBoundary: padT,
+      defaultXOffset: 6,
+      defaultAnchor: "start",
+    });
   };
 
   const chart = (
@@ -1495,14 +1529,7 @@ export function Sparkline({
     </svg>
   );
 
-  return estimateCompleteness && hasEstimateGap(estimateCompleteness) ? (
-    <div className="space-y-1">
-      {chart}
-      <span className={`inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(estimateCompleteness)}`}>
-        {estimateCompleteness.label}
-      </span>
-    </div>
-  ) : chart;
+  return renderChartWithEstimateGap(chart, estimateCompleteness);
 }
 
 export function PerBandChart({
@@ -1569,13 +1596,14 @@ export function PerBandChart({
   const perValueLabelPlacement = (point: FiscalPoint) => {
     const x = toX(point.index);
     const y = toY(point.value);
-    const nearRight = x > w - padR - 12;
-    const nearTop = y < padT + 14;
-    return {
-      x: nearRight ? x - 6 : x,
-      y: nearTop ? y + 14 : y - 10,
-      anchor: nearRight ? "end" : "middle",
-    } as const;
+    return chartValueLabelPlacement({
+      x,
+      y,
+      rightBoundary: w - padR,
+      topBoundary: padT,
+      defaultXOffset: 0,
+      defaultAnchor: "middle",
+    });
   };
 
   const chart = (
@@ -1767,14 +1795,7 @@ export function PerBandChart({
     </div>
   );
 
-  return estimateCompleteness && hasEstimateGap(estimateCompleteness) ? (
-    <div className="space-y-1">
-      {chart}
-      <span className={`inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(estimateCompleteness)}`}>
-        {estimateCompleteness.label}
-      </span>
-    </div>
-  ) : chart;
+  return renderChartWithEstimateGap(chart, estimateCompleteness);
 }
 
 export function fmtLarge(n: MaybeNumber): string {

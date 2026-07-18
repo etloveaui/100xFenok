@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import MetricHelp from "@/components/MetricHelp";
-import { formatCurrencyCompact, formatPlainPercent, formatSignedPercent } from "@/lib/format";
+import {
+  formatCompactMoney,
+  formatMoney,
+  formatPlainPercent,
+  formatSignedPercent,
+  normalizeCurrency,
+} from "@/lib/format";
+
+export { formatCompactMoney, formatMoney };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -46,69 +54,8 @@ function fmtSignedPct(value: unknown, isFraction = true): string {
   return formatSignedPercent(value, { digits: 1, fraction: isFraction });
 }
 
-const ZERO_DECIMAL_CURRENCIES = new Set(["KRW", "JPY", "TWD", "VND", "IDR"]);
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: "$",
-  KRW: "₩",
-  JPY: "¥",
-  HKD: "HK$",
-  TWD: "NT$",
-  CNY: "CN¥",
-  EUR: "€",
-  GBP: "£",
-};
-
-function normalizeCurrency(currency: unknown): string {
-  return typeof currency === "string" && /^[A-Z]{3}$/.test(currency.trim().toUpperCase())
-    ? currency.trim().toUpperCase()
-    : "USD";
-}
-
-function defaultCurrencyDigits(currency: string): number {
-  return ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2;
-}
-
-export function formatMoney(value: unknown, currency: unknown = "USD", digits?: number): string {
-  const v = finiteNumber(value);
-  if (v === null) return "—";
-  const code = normalizeCurrency(currency);
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: code,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: digits ?? defaultCurrencyDigits(code),
-    }).format(v);
-  } catch {
-    const symbol = CURRENCY_SYMBOLS[code] ?? `${code} `;
-    return `${symbol}${v.toLocaleString(undefined, { maximumFractionDigits: digits ?? defaultCurrencyDigits(code) })}`;
-  }
-}
-
 function getCurrencyFn(currency: string) {
   return (value: unknown) => formatCompactMoney(value, currency);
-}
-
-export function formatCompactMoney(value: unknown, currency: unknown = "USD"): string {
-  const v = finiteNumber(value);
-  if (v === null) return "—";
-  const code = normalizeCurrency(currency);
-  if (code === "USD" || code === "KRW") {
-    return formatCurrencyCompact(v, code);
-  }
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: code,
-      notation: "compact",
-      compactDisplay: "short",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 1,
-    }).format(v);
-  } catch {
-    const symbol = CURRENCY_SYMBOLS[code] ?? `${code} `;
-    return `${symbol}${fmtNum(v, 1)}`;
-  }
 }
 
 // ---------------------------------------------------------------------------
