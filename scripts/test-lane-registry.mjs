@@ -1,0 +1,212 @@
+#!/usr/bin/env node
+// Lane Registry tests (BACKLOG #366 step 1):
+//   (a) loader validation is fail-closed on malformed records/exceptions,
+//   (b) the registry digest is pinned exact-value (conscious-edit pin, DEC-266),
+//   (c) the shadow checker reports declared/undeclared/absent correctly and
+//       never fails the build,
+//   (d) registry stays consistent with the detection config (ids/enforcement)
+//       and with on-disk workflow files.
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import {
+  LANE_REGISTRY,
+  LANE_REGISTRY_SCHEMA,
+  declaredAdminRoots,
+  declaredExceptionPaths,
+  registryDigest,
+  registryLaneById,
+  validateLaneRegistry,
+} from "./lib/lane-registry.mjs";
+import { checkLaneRegistryCompleteness } from "./check-lane-registry-completeness.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const EXPECTED_PATH = path.join(REPO_ROOT, "scripts", "fixtures", "lane-registry", "registry.expected.json");
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+// --- (b) digest pin ------------------------------------------------------------
+{
+  const expected = JSON.parse(fs.readFileSync(EXPECTED_PATH, "utf8"));
+  assert.equal(expected.schema_version, "lane-registry-expected/v1");
+  assert.equal(
+    registryDigest(),
+    expected.registry_digest,
+    "registry drifted: bump scripts/fixtures/lane-registry/registry.expected.json consciously",
+  );
+}
+
+// --- (a) loader validation ------------------------------------------------------
+{
+  // the shipped registry itself validates
+  assert.equal(validateLaneRegistry(LANE_REGISTRY), true);
+
+  const base = clone(LANE_REGISTRY);
+  const cases = [
+    ["duplicate lane id", (draft) => { draft.lanes.push(clone(draft.lanes[0])); }],
+    ["unknown key on a record", (draft) => { draft.lanes[0].surprise = true; }],
+    ["bad lane id", (draft) => { draft.lanes[0].id = "Bad Id"; }],
+    ["absolute store path", (draft) => { draft.lanes[0].roots.admin_store = "/etc/passwd"; }],
+    ["path escape", (draft) => { draft.lanes[0].roots.admin_store = "data/admin/../secret"; }],
+    ["artifact_only with a store", (draft) => {
+      const lane = draft.lanes.find((row) => row.store_kind === "artifact_only");
+      lane.roots.admin_store = "data/admin/sneaky";
+    }],
+    ["recovery store outside admin root", (draft) => {
+      const lane = draft.lanes.find((row) => row.store_kind === "marker");
+      lane.recovery_store = "data/admin/other/index.json";
+    }],
+    ["wrong schema_version", (draft) => { draft.schema_version = "lane-registry/v0"; }],
+    ["undeclared exception kind", (draft) => { draft.declared_exceptions[0].kind = "directory"; }],
+    ["duplicate exception", (draft) => { draft.declared_exceptions.push(clone(draft.declared_exceptions[0])); }],
+    ["invalid cadence", (draft) => { draft.lanes[0].cadence.kind = "fortnightly"; }],
+    ["invalid privacy class", (draft) => { draft.lanes[0].privacy_class = "publicish"; }],
+    ["owner workflow outside workflows dir", (draft) => { draft.lanes[0].owner_workflow = "scripts/x.yml"; }],
+    ["duplicate commit shard", (draft) => {
+      const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
+      lane.commit_shards.push(lane.commit_shards[0]);
+    }],
+  ];
+  for (const [label, mutate] of cases) {
+    const draft = clone(base);
+    mutate(draft);
+    assert.throws(() => validateLaneRegistry(draft), /lane-registry/, `validation must reject: ${label}`);
+  }
+}
+
+// --- (d) consistency with the detection config and the tree --------------------
+{
+  const detectionIds = DATA_SUPPLY_DETECTION_CONFIG.lanes.map((lane) => lane.id).sort();
+  const registryIds = LANE_REGISTRY.lanes.map((lane) => lane.id).sort();
+  for (const id of detectionIds) {
+    assert.ok(registryIds.includes(id), `detection lane ${id} is missing from the registry`);
+  }
+  for (const lane of DATA_SUPPLY_DETECTION_CONFIG.lanes) {
+    const record = registryLaneById(lane.id);
+    assert.equal(
+      record.enforcement,
+      lane.enforcement,
+      `enforcement disagreement for ${lane.id}: registry=${record.enforcement} config=${lane.enforcement}`,
+    );
+  }
+  for (const lane of LANE_REGISTRY.lanes) {
+    if (lane.owner_workflow !== null) {
+      assert.equal(
+        fs.existsSync(path.join(REPO_ROOT, lane.owner_workflow)),
+        true,
+        `owner workflow missing on disk: ${lane.owner_workflow}`,
+      );
+    }
+    if (lane.roots.detection_attempt !== null) {
+      assert.equal(
+        lane.roots.detection_attempt.startsWith("data/admin/data-supply-state/detection-attempts/"),
+        true,
+        `detection attempt shard must live under the shared root: ${lane.id}`,
+      );
+    }
+  }
+  // shared stores declare every claimant
+  const roots = declaredAdminRoots();
+  assert.deepEqual(
+    [...(roots.get("data/admin/stockanalysis-recovery") ?? [])].sort(),
+    ["stockanalysis_etf_universe", "yahoo_etf_fallback"].sort(),
+    "the StockAnalysis recovery store must list both claimant lanes",
+  );
+  // every recovery_store-bearing lane's index lives under its admin root
+  for (const lane of LANE_REGISTRY.lanes) {
+    if (lane.recovery_store !== null && lane.roots.admin_store !== null) {
+      assert.ok(lane.recovery_store.startsWith(`${lane.roots.admin_store}/`), `${lane.id} recovery store escapes its admin root`);
+    }
+  }
+  // declared exception paths exist today (the shadow checker would warn otherwise)
+  for (const entry of LANE_REGISTRY.declared_exceptions) {
+    assert.equal(fs.existsSync(path.join(REPO_ROOT, entry.path)), true, `stale declared exception: ${entry.path}`);
+  }
+}
+
+// --- (c) checker fixtures: declared / undeclared / absent ------------------------
+{
+  function makeTree(tag, { roots = [], files = [] } = {}) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), `lane-registry-check-${tag}-`));
+    for (const dir of roots) fs.mkdirSync(path.join(root, dir), { recursive: true });
+    for (const file of files) {
+      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+      fs.writeFileSync(path.join(root, file), "{}\n");
+    }
+    return root;
+  }
+
+  // fully declared tree -> clean, no warnings
+  {
+    const roots = [...declaredAdminRoots().keys()].filter((root) => !root.includes("fred_yardeni") && !root.includes("edgar_filings") && !root.includes("occ_options_volume"));
+    const files = declaredExceptionPaths("file");
+    const tree = makeTree("clean", {
+      roots: [...roots, ...declaredExceptionPaths("root")],
+      files,
+    });
+    const warnings = [];
+    const summary = checkLaneRegistryCompleteness({
+      repoRoot: tree,
+      warn: (message) => warnings.push(message),
+      info: () => {},
+    });
+    assert.deepEqual(summary.undeclared_roots, []);
+    assert.deepEqual(summary.undeclared_files, []);
+    assert.deepEqual(summary.stale_exceptions, []);
+    assert.equal(warnings.length, summary.absent_store_roots.length, "only absent-store notes remain (pre-launch stores excluded above)");
+  }
+
+  // an undeclared root + undeclared file are reported loudly
+  {
+    const tree = makeTree("undeclared", {
+      roots: ["data/admin/data-supply-state", "data/admin/brand_new_lane"],
+      files: ["data/admin/brand-new-file.json"],
+    });
+    const warnings = [];
+    const summary = checkLaneRegistryCompleteness({
+      repoRoot: tree,
+      warn: (message) => warnings.push(message),
+      info: () => {},
+    });
+    assert.deepEqual(summary.undeclared_roots, ["data/admin/brand_new_lane"]);
+    assert.deepEqual(summary.undeclared_files, ["data/admin/brand-new-file.json"]);
+    assert.equal(summary.clean, false);
+    assert.ok(warnings.some((line) => line.includes("undeclared_root")));
+    assert.ok(warnings.some((line) => line.includes("undeclared_file")));
+    assert.ok(warnings.some((line) => line.includes("stale_exception")), "exceptions for missing paths are reported");
+  }
+
+  // a registry store absent from the tree is reported, never fatal
+  {
+    const tree = makeTree("absent", { roots: ["data/admin/data-supply-state"] });
+    const summary = checkLaneRegistryCompleteness({
+      repoRoot: tree,
+      warn: () => {},
+      info: () => {},
+    });
+    const storeLanes = LANE_REGISTRY.lanes.filter((lane) => lane.roots.admin_store !== null).length;
+    assert.equal(summary.absent_store_roots.length, storeLanes, "every store root is absent in a bare tree");
+    assert.equal(summary.clean, false);
+  }
+
+  // the real tree has no undeclared entries (only pre-launch absent stores)
+  {
+    const summary = checkLaneRegistryCompleteness({ repoRoot: REPO_ROOT, warn: () => {}, info: () => {} });
+    assert.deepEqual(summary.undeclared_roots, [], "no undeclared roots on origin/main");
+    assert.deepEqual(summary.undeclared_files, [], "no undeclared files on origin/main");
+    assert.deepEqual(summary.stale_exceptions, [], "no stale exceptions on origin/main");
+    assert.deepEqual(
+      summary.absent_store_roots.map((row) => row.lane).sort(),
+      ["edgar_filings", "fred_yardeni", "occ_options_volume"].sort(),
+      "only the three pre-launch stores are absent",
+    );
+  }
+}
+
+console.log("test-lane-registry: ok");

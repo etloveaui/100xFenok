@@ -1,0 +1,681 @@
+// Lane Registry SSOT (BACKLOG #366, migration step 1 — shadow/transcription only).
+//
+// One declarative record per current lane, transcribed from the scattered
+// hand-maintained lists (detection config, sync exclusions, KPI arrays, ~14
+// workflow git-add allowlists), so later migration steps can DERIVE those lists
+// from here instead of editing N files per lane. Every fact below was verified
+// against origin/main on 2026-07-18 (workflows' git-add blocks, store shapes,
+// public sync exclusions, KPI recovery arrays); nothing is inferred.
+//
+// Step 1 deliberately does NOT derive anything: the only consumers are the
+// shadow completeness checker (scripts/check-lane-registry-completeness.mjs)
+// and the exact-value digest fixture (scripts/fixtures/lane-registry/).
+// Conventions mirror scripts/lib/data-supply-detection-config.mjs
+// (deepFreeze + canonicalJson + sha256 digest, validating load, fail-closed).
+
+import { createHash } from "node:crypto";
+import { canonicalJson } from "./data-supply-detection-config.mjs";
+
+export const LANE_REGISTRY_SCHEMA = "lane-registry/v1";
+export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"]);
+export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
+export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
+export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
+
+function fail(message) {
+  throw new Error(`lane-registry: ${message}`);
+}
+
+function validRepoRelativePath(value) {
+  return typeof value === "string"
+    && value.length > 0
+    && !value.startsWith("/")
+    && !value.split("/").includes("..")
+    && !value.endsWith("/");
+}
+
+function record({
+  id,
+  label,
+  owner_workflow,
+  store_kind,
+  cadence,
+  enforcement,
+  privacy_class,
+  admin_store,
+  detection_attempt = null,
+  canonical_outputs = [],
+  public_mirror = [],
+  commit_shards = [],
+  recovery_store = null,
+  declared_exception = null,
+}) {
+  return {
+    id,
+    label,
+    owner_workflow,
+    store_kind,
+    cadence,
+    enforcement,
+    privacy_class,
+    roots: {
+      admin_store,
+      detection_attempt,
+      canonical_outputs,
+      public_mirror,
+    },
+    commit_shards,
+    recovery_store,
+    declared_exception,
+  };
+}
+
+const ATTEMPT_ROOT = "data/admin/data-supply-state/detection-attempts";
+const attemptShard = (laneId) => `${ATTEMPT_ROOT}/${laneId}.json`;
+
+// --- Lane records (verified against origin/main, 2026-07-18) -----------------
+
+const lanes = [
+  record({
+    id: "fred_macro",
+    label: "FRED macro",
+    owner_workflow: ".github/workflows/fetch-fred-macro.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "fred" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/fred_macro",
+    detection_attempt: attemptShard("fred_macro"),
+    canonical_outputs: ["data/macro/fred-macro.json"],
+    public_mirror: ["100xfenok-next/public/data/macro/fred-macro.json"],
+    commit_shards: [
+      attemptShard("fred_macro"),
+      "data/admin/fred_macro/index.json",
+      "data/admin/fred_macro/lkg/fred_macro.json",
+      "data/macro/fred-macro.json",
+      "100xfenok-next/public/data/macro/fred-macro.json",
+    ],
+    recovery_store: "data/admin/fred_macro/index.json",
+  }),
+  record({
+    id: "fred_banking",
+    label: "FRED banking",
+    owner_workflow: ".github/workflows/fetch-fred-banking.yml",
+    store_kind: "payload",
+    cadence: { kind: "mixed", provider: "fred (daily/weekly/monthly/quarterly series)" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/fred_banking",
+    detection_attempt: attemptShard("fred_banking"),
+    canonical_outputs: [
+      "data/macro/fred-banking-daily.json",
+      "data/macro/fred-banking-weekly.json",
+      "data/macro/fred-banking-monthly.json",
+      "data/macro/fred-banking-quarterly.json",
+    ],
+    public_mirror: [
+      "100xfenok-next/public/data/macro/fred-banking-daily.json",
+      "100xfenok-next/public/data/macro/fred-banking-weekly.json",
+      "100xfenok-next/public/data/macro/fred-banking-monthly.json",
+      "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
+    ],
+    commit_shards: [
+      attemptShard("fred_banking"),
+      "data/admin/fred_banking/index.json",
+      "data/admin/fred_banking/lkg/daily.json",
+      "data/admin/fred_banking/lkg/weekly.json",
+      "data/admin/fred_banking/lkg/monthly.json",
+      "data/admin/fred_banking/lkg/quarterly.json",
+      "data/macro/fred-banking-daily.json",
+      "data/macro/fred-banking-weekly.json",
+      "data/macro/fred-banking-monthly.json",
+      "data/macro/fred-banking-quarterly.json",
+      "100xfenok-next/public/data/macro/fred-banking-daily.json",
+      "100xfenok-next/public/data/macro/fred-banking-weekly.json",
+      "100xfenok-next/public/data/macro/fred-banking-monthly.json",
+      "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
+    ],
+    recovery_store: "data/admin/fred_banking/index.json",
+  }),
+  record({
+    id: "fred_yardeni",
+    label: "Feno Yardeni model (FRED WAAA/WBAA)",
+    owner_workflow: ".github/workflows/fetch-fred-yardeni.yml",
+    store_kind: "marker",
+    cadence: { kind: "weekly", provider: "fred weekly (Friday observations)" },
+    enforcement: "live",
+    privacy_class: "private",
+    admin_store: "data/admin/fred_yardeni",
+    detection_attempt: attemptShard("fred_yardeni"),
+    canonical_outputs: ["data/yardney/yardney_model.json"],
+    public_mirror: ["100xfenok-next/public/data/yardney/yardney_model.json"],
+    commit_shards: [
+      attemptShard("fred_yardeni"),
+      "data/admin/fred_yardeni/index.json",
+      "data/admin/fred_yardeni/current/yardney_model.json",
+      "data/admin/fred_yardeni/lkg/yardney_model.json",
+      "data/yardney/yardney_model.json",
+      "100xfenok-next/public/data/yardney/yardney_model.json",
+    ],
+    recovery_store: "data/admin/fred_yardeni/index.json",
+  }),
+  record({
+    id: "fdic_tier1",
+    label: "FDIC Tier-1",
+    owner_workflow: ".github/workflows/fetch-fdic.yml",
+    store_kind: "payload",
+    cadence: { kind: "quarterly", provider: "fdic (first-Monday cron)" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/fdic_tier1",
+    detection_attempt: attemptShard("fdic_tier1"),
+    canonical_outputs: ["data/macro/fdic-tier1.json"],
+    public_mirror: ["100xfenok-next/public/data/macro/fdic-tier1.json"],
+    commit_shards: [
+      attemptShard("fdic_tier1"),
+      "data/admin/fdic_tier1/index.json",
+      "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+      "data/macro/fdic-tier1.json",
+      "100xfenok-next/public/data/macro/fdic-tier1.json",
+    ],
+    recovery_store: "data/admin/fdic_tier1/index.json",
+  }),
+  record({
+    id: "treasury_tga",
+    label: "Treasury FiscalData TGA",
+    owner_workflow: ".github/workflows/fetch-treasury-tga.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "fiscaldata.treasury.gov" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/treasury_tga",
+    detection_attempt: attemptShard("treasury_tga"),
+    canonical_outputs: ["data/macro/tga.json"],
+    public_mirror: ["100xfenok-next/public/data/macro/tga.json"],
+    commit_shards: [
+      attemptShard("treasury_tga"),
+      "data/admin/treasury_tga/index.json",
+      "data/admin/treasury_tga/lkg/tga.json",
+      "data/macro/tga.json",
+      "100xfenok-next/public/data/macro/tga.json",
+    ],
+    recovery_store: "data/admin/treasury_tga/index.json",
+  }),
+  record({
+    id: "defillama_stablecoins",
+    label: "DefiLlama stablecoins",
+    owner_workflow: ".github/workflows/fetch-defillama.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "defillama" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/defillama_stablecoins",
+    detection_attempt: attemptShard("defillama_stablecoins"),
+    canonical_outputs: ["data/macro/stablecoins.json"],
+    public_mirror: ["100xfenok-next/public/data/macro/stablecoins.json"],
+    commit_shards: [
+      attemptShard("defillama_stablecoins"),
+      "data/admin/defillama_stablecoins/index.json",
+      "data/admin/defillama_stablecoins/lkg/stablecoins.json",
+      "data/macro/stablecoins.json",
+      "100xfenok-next/public/data/macro/stablecoins.json",
+    ],
+    recovery_store: "data/admin/defillama_stablecoins/index.json",
+  }),
+  record({
+    id: "yahoo_etf_fallback",
+    label: "Yahoo ETF fallback candidate",
+    owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "yahoo/stockanalysis (shared workflow)" },
+    enforcement: "live",
+    privacy_class: "private",
+    admin_store: "data/admin/stockanalysis-recovery",
+    detection_attempt: attemptShard("yahoo_etf_fallback"),
+    canonical_outputs: ["data/yf/etf-details"],
+    public_mirror: [],
+    commit_shards: [
+      attemptShard("yahoo_etf_fallback"),
+      "data/yf/etf-details",
+      "data/admin/stockanalysis-recovery",
+    ],
+    recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe (store is multi-kind: stock/financial/surface/universe)",
+  }),
+  record({
+    id: "stockanalysis_etf_universe",
+    label: "StockAnalysis ETF universe",
+    owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "stockanalysis (shared workflow)" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/stockanalysis-recovery",
+    detection_attempt: attemptShard("stockanalysis_etf_universe"),
+    canonical_outputs: ["data/stockanalysis/etf_universe.json"],
+    public_mirror: ["100xfenok-next/public/data/stockanalysis/etf_universe.json"],
+    commit_shards: [
+      attemptShard("stockanalysis_etf_universe"),
+      "data/stockanalysis",
+      "data/admin/stockanalysis-recovery",
+    ],
+    recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback (store is multi-kind: stock/financial/surface/universe)",
+  }),
+  record({
+    id: "yahoo_ticker_macro",
+    label: "Yahoo hourly ticker snapshot",
+    owner_workflow: ".github/workflows/fetch-yahoo-ticker.yml",
+    store_kind: "payload",
+    cadence: { kind: "hourly", provider: "yahoo (TQQQ/SOXL keys)" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/yahoo-hourly-ticker",
+    detection_attempt: attemptShard("yahoo_ticker_macro"),
+    canonical_outputs: ["data/macro/yahoo-ticker.json"],
+    public_mirror: ["100xfenok-next/public/data/macro/yahoo-ticker.json"],
+    commit_shards: [
+      attemptShard("yahoo_ticker_macro"),
+      "data/admin/yahoo-hourly-ticker",
+      "data/macro/yahoo-ticker.json",
+      "100xfenok-next/public/data/macro/yahoo-ticker.json",
+    ],
+    recovery_store: "data/admin/yahoo-hourly-ticker/index.json",
+    declared_exception: "producer-lkg-index/v2 keyed store (keys/TQQQ.json, keys/SOXL.json), projected via the KPI detectionRecovery map",
+  }),
+  record({
+    id: "sentiment",
+    label: "Sentiment bundle (CNN/VIX/MOVE/CFTC/crypto)",
+    owner_workflow: ".github/workflows/fetch-sentiment.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "multi-source sentiment" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/sentiment",
+    detection_attempt: attemptShard("sentiment"),
+    canonical_outputs: ["data/sentiment"],
+    public_mirror: ["100xfenok-next/public/data/sentiment"],
+    commit_shards: [
+      attemptShard("sentiment"),
+      "data/admin/sentiment/index.json",
+      "data/admin/sentiment/current",
+      "data/admin/sentiment/lkg",
+      "data/sentiment",
+      "100xfenok-next/public/data/sentiment",
+    ],
+    recovery_store: "data/admin/sentiment/index.json",
+  }),
+  record({
+    id: "nasdaq_giw_sox",
+    label: "Nasdaq GIW SOX constituents",
+    owner_workflow: ".github/workflows/fetch-nasdaq-giw-sox.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "nasdaq GIW (us_trading_days)" },
+    enforcement: "live",
+    privacy_class: "private",
+    admin_store: "data/admin/nasdaq_giw_sox",
+    detection_attempt: attemptShard("nasdaq_giw_sox"),
+    canonical_outputs: ["data/indices/nasdaq-giw-sox-constituents.json"],
+    public_mirror: ["100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json"],
+    commit_shards: [
+      attemptShard("nasdaq_giw_sox"),
+      "data/admin/nasdaq_giw_sox/index.json",
+      "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+      "data/admin/nasdaq_giw_sox/history/constituents.json",
+      "data/indices/nasdaq-giw-sox-constituents.json",
+    ],
+    recovery_store: "data/admin/nasdaq_giw_sox/index.json",
+  }),
+  record({
+    id: "slickcharts",
+    label: "SlickCharts daily delivery (composite lane)",
+    owner_workflow: ".github/workflows/slickcharts-daily.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "slickcharts (us_trading_days)" },
+    enforcement: "live",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/slickcharts-daily-delivery",
+    detection_attempt: attemptShard("slickcharts"),
+    canonical_outputs: [
+      "data/slickcharts/gainers.json",
+      "data/slickcharts/losers.json",
+      "data/slickcharts/treasury.json",
+      "data/slickcharts/currency.json",
+      "data/slickcharts/mortgage.json",
+    ],
+    public_mirror: ["100xfenok-next/public/data/slickcharts"],
+    commit_shards: [
+      attemptShard("slickcharts"),
+      "data/admin/slickcharts-daily-delivery",
+      "data/slickcharts/gainers.json",
+      "data/slickcharts/losers.json",
+      "data/slickcharts/treasury.json",
+      "data/slickcharts/currency.json",
+      "data/slickcharts/mortgage.json",
+    ],
+    recovery_store: "data/admin/slickcharts-daily-delivery/index.json",
+    declared_exception: "producer-lkg-index/v2 keyed store (5 delivery keys), committed via scripts/publish-slickcharts-attempt.sh; projected via the KPI detectionRecovery map",
+  }),
+  record({
+    id: "edgar_filings",
+    label: "SEC EDGAR filing timeline",
+    owner_workflow: ".github/workflows/fetch-edgar-filings.yml",
+    store_kind: "marker",
+    cadence: { kind: "weekly", provider: "sec edgar (Monday 00:40Z poll)" },
+    enforcement: "live",
+    privacy_class: "private",
+    admin_store: "data/admin/edgar_filings",
+    detection_attempt: attemptShard("edgar_filings"),
+    canonical_outputs: [
+      "data/edgar",
+      "data/edgar-korean-summaries",
+    ],
+    public_mirror: ["100xfenok-next/public/data/edgar-korean-summaries"],
+    commit_shards: [
+      attemptShard("edgar_filings"),
+      "data/admin/edgar_filings/index.json",
+      "data/admin/edgar_filings/current/edgar_filings.json",
+      "data/admin/edgar_filings/lkg/edgar_filings.json",
+      "data/edgar",
+      "data/edgar-korean-summaries",
+      "100xfenok-next/public/data/edgar-korean-summaries",
+    ],
+    recovery_store: "data/admin/edgar_filings/index.json",
+  }),
+  record({
+    id: "sec_13f",
+    label: "SEC 13F (ownerless artifact lane)",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    cadence: { kind: "quarterly", provider: "sec 13f" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    canonical_outputs: ["data/sec-13f"],
+    public_mirror: ["100xfenok-next/public/data/sec-13f"],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
+  }),
+  record({
+    id: "finra_short_volume",
+    label: "FINRA RegSHO daily short volume",
+    owner_workflow: ".github/workflows/fenok-edge-daily.yml",
+    store_kind: "marker",
+    cadence: { kind: "daily", provider: "finra (us_trading_days)" },
+    enforcement: "live",
+    privacy_class: "private",
+    admin_store: "data/admin/finra_short_volume",
+    detection_attempt: attemptShard("finra_short_volume"),
+    canonical_outputs: ["data/admin/finra_short_volume/current/regsho_daily.json"],
+    public_mirror: [],
+    commit_shards: [
+      attemptShard("finra_short_volume"),
+      "data/admin/finra_short_volume/index.json",
+      "data/admin/finra_short_volume/current/regsho_daily.json",
+      "data/admin/finra_short_volume/lkg/regsho_daily.json",
+      "data/admin/finra_short_volume/history/regsho_daily.json",
+    ],
+    recovery_store: "data/admin/finra_short_volume/index.json",
+  }),
+  record({
+    id: "occ_options_volume",
+    label: "OCC options volume",
+    owner_workflow: ".github/workflows/fenok-edge-daily.yml",
+    store_kind: "marker",
+    cadence: { kind: "daily", provider: "occ (us_trading_days)" },
+    enforcement: "live",
+    privacy_class: "private",
+    admin_store: "data/admin/occ_options_volume",
+    detection_attempt: attemptShard("occ_options_volume"),
+    canonical_outputs: [
+      "data/computed/fenok_occ_options_volume.json",
+      "data/computed/fenok_occ_options_volume_history.json",
+      "data/computed/fenok_occ_options_availability.json",
+    ],
+    public_mirror: [],
+    commit_shards: [
+      attemptShard("occ_options_volume"),
+      "data/admin/occ_options_volume/index.json",
+      "data/admin/occ_options_volume/current/occ_options_volume.json",
+      "data/admin/occ_options_volume/lkg/occ_options_volume.json",
+    ],
+    recovery_store: "data/admin/occ_options_volume/index.json",
+  }),
+  record({
+    id: "apewisdom_attention",
+    label: "ApeWisdom attention (ownerless artifact lane)",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    cadence: { kind: "unknown", provider: "apewisdom" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    canonical_outputs: [],
+    public_mirror: [],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
+  }),
+  record({
+    id: "gdelt_news_tone",
+    label: "GDELT news tone (ownerless artifact lane)",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    cadence: { kind: "unknown", provider: "gdelt" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    canonical_outputs: [],
+    public_mirror: [],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
+  }),
+  record({
+    id: "yahoo_batch_quote_history",
+    label: "Yahoo batch quote/history",
+    owner_workflow: ".github/workflows/fetch-yf-finance.yml",
+    store_kind: "payload",
+    cadence: { kind: "daily", provider: "yahoo" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/yahoo-batch-quote-history",
+    detection_attempt: null,
+    canonical_outputs: [],
+    public_mirror: [],
+    commit_shards: ["data/admin/yahoo-batch-quote-history"],
+    recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
+    declared_exception: "not a detection-floor lane; KPI surfaces it as a warn-only base lane (pre-existing 2026-05-06 staleness)",
+  }),
+];
+
+// Declared exceptions for data/admin entries that are NOT lane stores
+// (DEC-266 discipline: statically declared, never runtime-inferred).
+const declared_exceptions = [
+  {
+    path: "data/admin/data-supply-state",
+    kind: "root",
+    reason: "shared detection-floor state root (attempt shards + provider-observation objects); not a lane store",
+    owner: "detection-floor",
+  },
+  ...[
+    "data/admin/README.md",
+    "data/admin/data-usage-manifest.json",
+    "data/admin/fenok-data-health-kpi.json",
+    "data/admin/fenok-edge-coverage-index.json",
+    "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+    "data/admin/fenok-edge-etf-daily1y-readiness.json",
+    "data/admin/fenok-edge-korea-krx-daily-index.json",
+    "data/admin/fenok-etf-core-daily-basket.json",
+    "data/admin/fenok-flow-backfill-index.json",
+    "data/admin/fenok-s0-finra-occ-mapping-ledger.json",
+    "data/admin/fenok-s1-public-mutation-enable-readiness.json",
+    "data/admin/fenok-s1-stock-promotion-gate-plan.json",
+    "data/admin/fenok-s1-stock-public-promotion-dry-run.json",
+    "data/admin/pro-density-baseline.json",
+    "data/admin/product-surface-coverage.json",
+    "data/admin/stock-field-usage-manifest.json",
+    "data/admin/taiwan-data-bridge-index.json",
+  ].map((path) => ({
+    path,
+    kind: "file",
+    reason: "platform/generated control-plane artifact; not a lane store",
+    owner: "platform",
+  })),
+];
+
+// --- Validation (fail-closed, mirrors the detection config's loader) ---------
+
+const LANE_ID_RE = /^[a-z][a-z0-9_]{0,95}$/;
+const LANE_RECORD_KEYS = Object.freeze([
+  "id",
+  "label",
+  "owner_workflow",
+  "store_kind",
+  "cadence",
+  "enforcement",
+  "privacy_class",
+  "roots",
+  "commit_shards",
+  "recovery_store",
+  "declared_exception",
+]);
+
+function exactKeys(value, expected, context) {
+  const actual = Object.keys(value ?? {}).sort();
+  const want = [...expected].sort();
+  if (JSON.stringify(actual) !== JSON.stringify(want)) {
+    fail(`${context} keys must be exactly ${want.join(",")} (got ${actual.join(",")})`);
+  }
+}
+
+function validatePathList(value, context, { allowEmpty = true } = {}) {
+  if (!Array.isArray(value)) fail(`${context} must be an array`);
+  if (!allowEmpty && value.length === 0) fail(`${context} must not be empty`);
+  const seen = new Set();
+  for (const entry of value) {
+    if (!validRepoRelativePath(entry)) fail(`${context} has an unsafe path: ${String(entry)}`);
+    if (seen.has(entry)) fail(`${context} duplicates ${entry}`);
+    seen.add(entry);
+  }
+}
+
+function validateLaneRecord(laneValue) {
+  const context = `lane ${laneValue?.id ?? "<unknown>"}`;
+  exactKeys(laneValue, LANE_RECORD_KEYS, context);
+  if (!LANE_ID_RE.test(laneValue.id)) fail(`${context} id is invalid`);
+  if (typeof laneValue.label !== "string" || laneValue.label.length === 0) fail(`${context} label is required`);
+  if (laneValue.owner_workflow !== null
+    && (typeof laneValue.owner_workflow !== "string" || !laneValue.owner_workflow.startsWith(".github/workflows/"))) {
+    fail(`${context} owner_workflow must be null or a .github/workflows/ path`);
+  }
+  if (!STORE_KINDS.includes(laneValue.store_kind)) fail(`${context} store_kind is invalid`);
+  if (laneValue.store_kind === "artifact_only") {
+    if (laneValue.roots.admin_store !== null || laneValue.recovery_store !== null || laneValue.commit_shards.length > 0) {
+      fail(`${context} artifact_only lanes must not carry store roots, commit shards, or a recovery store`);
+    }
+  } else {
+    if (!validRepoRelativePath(laneValue.roots.admin_store)) fail(`${context} roots.admin_store is required for ${laneValue.store_kind} lanes`);
+  }
+  if (!ENFORCEMENTS.includes(laneValue.enforcement)) fail(`${context} enforcement is invalid`);
+  if (!PRIVACY_CLASSES.includes(laneValue.privacy_class)) fail(`${context} privacy_class is invalid`);
+  if (typeof laneValue.cadence?.kind !== "string" || !CADENCE_KINDS.includes(laneValue.cadence.kind)) {
+    fail(`${context} cadence.kind is invalid`);
+  }
+  if (laneValue.cadence.provider !== undefined && typeof laneValue.cadence.provider !== "string") {
+    fail(`${context} cadence.provider must be a string when present`);
+  }
+  exactKeys(laneValue.roots, ["admin_store", "detection_attempt", "canonical_outputs", "public_mirror"], `${context}.roots`);
+  if (laneValue.roots.admin_store !== null && !validRepoRelativePath(laneValue.roots.admin_store)) {
+    fail(`${context}.roots.admin_store is invalid`);
+  }
+  if (laneValue.roots.detection_attempt !== null && !validRepoRelativePath(laneValue.roots.detection_attempt)) {
+    fail(`${context}.roots.detection_attempt is invalid`);
+  }
+  validatePathList(laneValue.roots.canonical_outputs, `${context}.roots.canonical_outputs`);
+  validatePathList(laneValue.roots.public_mirror, `${context}.roots.public_mirror`);
+  validatePathList(laneValue.commit_shards, `${context}.commit_shards`);
+  if (laneValue.recovery_store !== null && !validRepoRelativePath(laneValue.recovery_store)) {
+    fail(`${context}.recovery_store is invalid`);
+  }
+  if (laneValue.recovery_store !== null && laneValue.roots.admin_store !== null
+    && !laneValue.recovery_store.startsWith(`${laneValue.roots.admin_store}/`)) {
+    fail(`${context}.recovery_store must live under roots.admin_store`);
+  }
+  if (laneValue.declared_exception !== null && typeof laneValue.declared_exception !== "string") {
+    fail(`${context}.declared_exception must be null or a string`);
+  }
+}
+
+export function validateLaneRegistry(registry) {
+  exactKeys(registry, ["schema_version", "lanes", "declared_exceptions"], "registry");
+  if (registry.schema_version !== LANE_REGISTRY_SCHEMA) fail("schema_version is invalid");
+  if (!Array.isArray(registry.lanes) || registry.lanes.length === 0) fail("lanes must be a non-empty array");
+  const seenIds = new Set();
+  for (const laneValue of registry.lanes) {
+    validateLaneRecord(laneValue);
+    if (seenIds.has(laneValue.id)) fail(`duplicate lane id ${laneValue.id}`);
+    seenIds.add(laneValue.id);
+  }
+  if (!Array.isArray(registry.declared_exceptions)) fail("declared_exceptions must be an array");
+  const seenExceptions = new Set();
+  for (const entry of registry.declared_exceptions) {
+    exactKeys(entry, ["path", "kind", "reason", "owner"], `declared exception ${entry?.path ?? "<unknown>"}`);
+    if (!validRepoRelativePath(entry.path)) fail(`declared exception path is invalid: ${entry.path}`);
+    if (!["root", "file"].includes(entry.kind)) fail(`declared exception kind is invalid: ${entry.path}`);
+    if (typeof entry.reason !== "string" || entry.reason.length === 0) fail(`declared exception reason is required: ${entry.path}`);
+    if (typeof entry.owner !== "string" || entry.owner.length === 0) fail(`declared exception owner is required: ${entry.path}`);
+    if (seenExceptions.has(entry.path)) fail(`duplicate declared exception ${entry.path}`);
+    seenExceptions.add(entry.path);
+  }
+  return true;
+}
+
+function deepFreeze(value) {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value)) deepFreeze(child);
+  }
+  return value;
+}
+
+const registry = {
+  schema_version: LANE_REGISTRY_SCHEMA,
+  lanes,
+  declared_exceptions,
+};
+
+validateLaneRegistry(registry);
+
+export const LANE_REGISTRY = deepFreeze(registry);
+
+export function registryDigest() {
+  validateLaneRegistry(LANE_REGISTRY);
+  return createHash("sha256").update(canonicalJson(LANE_REGISTRY), "utf8").digest("hex");
+}
+
+export function registryLaneById(id) {
+  return LANE_REGISTRY.lanes.find((laneValue) => laneValue.id === id) ?? null;
+}
+
+// Map of data/admin first-level roots -> owning lane ids (shared stores list all).
+export function declaredAdminRoots() {
+  const roots = new Map();
+  for (const laneValue of LANE_REGISTRY.lanes) {
+    const root = laneValue.roots.admin_store;
+    if (root === null) continue;
+    if (!roots.has(root)) roots.set(root, []);
+    roots.get(root).push(laneValue.id);
+  }
+  return roots;
+}
+
+export function declaredExceptionPaths(kind = null) {
+  return LANE_REGISTRY.declared_exceptions
+    .filter((entry) => kind === null || entry.kind === kind)
+    .map((entry) => entry.path);
+}
