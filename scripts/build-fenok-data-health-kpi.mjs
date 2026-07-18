@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { validateDetectionReport } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
 import { assertValidCronDeferrals, publicationGateForRuntime } from "./lib/kpi-runtime-slots.mjs";
 import {
@@ -2047,39 +2048,46 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
   });
 }
 
-// Recovery-state sources, hoisted to a single importable declaration so the
-// lane-registry cross-check gate (scripts/check-lane-registry-kpi.mjs) reads
-// exactly what buildPayload reads — the defillama class (recovery store on the
-// tree, KPI blind to it) becomes structurally unshippable. Three shapes:
-//   - general: lanes whose admin/<id>/index.json feeds the generic projection
-//   - nonstandard: producer-lkg-index/v2 keyed stores (yahoo hourly, slickcharts)
-//   - direct: recovery indexes read directly by dedicated lane builders
-export const RECOVERY_STATE_SOURCES = Object.freeze({
-  general_lane_ids: Object.freeze([
-    "fred_macro",
-    "fred_banking",
-    "fdic_tier1",
-    "sentiment",
-    "treasury_tga",
-    "finra_short_volume",
-    "occ_options_volume",
-    "yahoo_private_options",
-    "fred_yardeni",
-    "edgar_filings",
-    "defillama_stablecoins",
-  ]),
-  nonstandard: Object.freeze({
-    yahoo_ticker_macro: "admin/yahoo-hourly-ticker/index.json",
-    slickcharts: "admin/slickcharts-daily-delivery/index.json",
-  }),
-  direct: Object.freeze({
-    yahoo_batch_quote_history: "admin/yahoo-batch-quote-history/index.json",
-    stockanalysis_recovery: "admin/stockanalysis-recovery/index.json",
-    nasdaq_giw_sox: "admin/nasdaq_giw_sox/index.json",
-  }),
-});
+// Recovery-state sources DERIVE from the lane registry (#366 step: the
+// per-lane kpi_recovery_shape annotation is the SSOT — general = LaneLkgStore
+// index lanes, keyed_v2 = producer-lkg-index/v2 keyed stores, direct = stores
+// read directly by dedicated lane builders; a direct bucket key is the store
+// dir basename with hyphens underscored, and shared stores dedupe by path).
+// Order note (sol fh-143): general_lane_ids follows registry iteration order
+// (canonical det-floor order), NOT the historical append order of the old
+// literal — the consumption contract is id-keyed and provably
+// order-insensitive (permuted-source builds produce deepStrictEqual payloads,
+// pinned in test-build-fenok-data-health-kpi.mjs). The step-3 gate
+// (check-lane-registry-kpi.mjs) still cross-checks both directions as sets.
+function deriveRecoveryStateSources() {
+  const generalLaneIds = [];
+  const nonstandard = {};
+  const direct = {};
+  for (const lane of LANE_REGISTRY.lanes) {
+    if (lane.recovery_store === null) continue;
+    const relativePath = lane.recovery_store.replace(/^data\//, "");
+    if (lane.kpi_recovery_shape === "general") {
+      generalLaneIds.push(lane.id);
+    } else if (lane.kpi_recovery_shape === "keyed_v2") {
+      nonstandard[lane.id] = relativePath;
+    } else if (lane.kpi_recovery_shape === "direct") {
+      const key = lane.roots.admin_store.split("/").at(-1).replaceAll("-", "_");
+      if (direct[key] !== undefined && direct[key] !== relativePath) {
+        throw new Error(`conflicting direct recovery sources for bucket ${key}`);
+      }
+      direct[key] = relativePath;
+    }
+  }
+  return {
+    general_lane_ids: Object.freeze(generalLaneIds),
+    nonstandard: Object.freeze(nonstandard),
+    direct: Object.freeze(direct),
+  };
+}
 
-function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
+export const RECOVERY_STATE_SOURCES = Object.freeze(deriveRecoveryStateSources());
+
+export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, recoverySources = RECOVERY_STATE_SOURCES) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
   const productCoverage = readJson("admin/product-surface-coverage.json");
@@ -2087,17 +2095,17 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json");
   const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json");
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
-  const yahooBatchState = readJson(RECOVERY_STATE_SOURCES.direct.yahoo_batch_quote_history);
-  const stockanalysisRecovery = readJson(RECOVERY_STATE_SOURCES.direct.stockanalysis_recovery);
-  const nasdaqGiwSoxRecovery = readOptionalJsonStrict(RECOVERY_STATE_SOURCES.direct.nasdaq_giw_sox);
+  const yahooBatchState = readJson(recoverySources.direct.yahoo_batch_quote_history);
+  const stockanalysisRecovery = readJson(recoverySources.direct.stockanalysis_recovery);
+  const nasdaqGiwSoxRecovery = readOptionalJsonStrict(recoverySources.direct.nasdaq_giw_sox);
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const generalRecoveryStates = Object.fromEntries(
-    RECOVERY_STATE_SOURCES.general_lane_ids
+    recoverySources.general_lane_ids
       .map((laneId) => [laneId, readOptionalJsonStrict(`admin/${laneId}/index.json`)]),
   );
   const detectionRecovery = Object.fromEntries(
-    Object.entries(RECOVERY_STATE_SOURCES.nonstandard)
+    Object.entries(recoverySources.nonstandard)
       .map(([laneId, sourcePath]) => [laneId, readOptionalJsonStrict(sourcePath)]),
   );
   const recoveryStates = { ...generalRecoveryStates, ...detectionRecovery };

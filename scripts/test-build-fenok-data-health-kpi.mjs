@@ -36,9 +36,11 @@ import {
   mapDetectionFloorRow,
   buildRimLane,
   buildRuntime,
+  buildPayload,
   enumerateDueSlots,
   deriveMissedSlots,
   validateProducerRecoveryAttempt,
+  RECOVERY_STATE_SOURCES,
 } from "./build-fenok-data-health-kpi.mjs";
 import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, SLICKCHARTS_DELIVERY_GROUPS, TRACKED_CRONS, CADENCE } from "./lib/kpi-contract-constants.mjs";
 import { ETF_CORE_DAILY_BASKET_CONFIG } from "./build-fenok-etf-core-daily-basket.mjs";
@@ -3829,6 +3831,32 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(gate.registry_store_count > 0 && gate.kpi_source_count > 0, true,
     "the gate must see a non-empty source set on both sides");
   ok("lane-registry recovery-source completeness (both directions)");
+}
+
+// Recovery-source order-insensitivity proof (#366 item 3, sol fh-143 fix b):
+// RECOVERY_STATE_SOURCES is consumed strictly as an id-keyed lookup, so array
+// order must not change the built artifact. Building the same payload with a
+// fully permuted source declaration must produce a deepStrictEqual payload.
+// Sole tolerated nondeterminism: the automation_contract lane's self-stamped
+// wall-clock as_of (build time, unrelated to recovery sources) — normalized.
+{
+  const permuted = Object.freeze({
+    general_lane_ids: Object.freeze([...RECOVERY_STATE_SOURCES.general_lane_ids].reverse()),
+    nonstandard: Object.freeze(Object.fromEntries(RECOVERY_STATE_SOURCES.nonstandard ? Object.entries(RECOVERY_STATE_SOURCES.nonstandard).reverse() : [])),
+    direct: Object.freeze(Object.fromEntries(Object.entries(RECOVERY_STATE_SOURCES.direct).reverse())),
+  });
+  const nowIso = "2026-07-19T04:30:00Z";
+  const normalize = (payload) => {
+    const copy = JSON.parse(JSON.stringify(payload));
+    const automationLane = copy.lanes.find((row) => row.id === "automation_contract");
+    automationLane.as_of = "<wall-clock>";
+    return copy;
+  };
+  const canonical = normalize(buildPayload(nowIso, null, null));
+  const reordered = normalize(buildPayload(nowIso, null, null, permuted));
+  assert.deepEqual(reordered, canonical,
+    "permuted recovery sources must produce an identical payload (order-insensitive contract)");
+  ok("recovery-source ordering is provably irrelevant to the built KPI payload");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

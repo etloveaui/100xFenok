@@ -14,6 +14,7 @@ import {
   configDigest,
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
+import { registryDigest } from "./lib/lane-registry.mjs";
 import {
   ATTEMPT_SCHEMA,
   ATTEMPT_SHARD_SCHEMA,
@@ -499,6 +500,9 @@ function runConfigAndFixtureChecks() {
     }
   }
   assert.equal(configDigest(), expectedFixture.config_digest);
+  // registry digest pinned alongside config_digest (#366 step: both SSOTs are
+  // exact-value pinned so any registry/config drift is a conscious edit).
+  assert.equal(registryDigest(), expectedFixture.registry_digest);
   const digestProcess = spawnSync(process.execPath, ["-e", "import('./scripts/lib/data-supply-detection-config.mjs').then((module) => process.stdout.write(module.configDigest()))"], {
     cwd: REPO_ROOT,
     encoding: "utf8",

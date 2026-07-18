@@ -19,6 +19,7 @@ import { canonicalJson } from "./json-canonical.mjs";
 export const LANE_REGISTRY_SCHEMA = "lane-registry/v1";
 export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"]);
 export const LANE_CLASSES = Object.freeze(["detection_floor", "auxiliary"]);
+export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "direct"]);
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
 export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
@@ -54,6 +55,7 @@ function record({
   declared_exception = null,
   script_sources,
   caller_workflows,
+  kpi_recovery_shape,
 }) {
   return {
     id,
@@ -75,6 +77,7 @@ function record({
     declared_exception,
     ...(script_sources !== undefined ? { script_sources } : {}),
     ...(caller_workflows !== undefined ? { caller_workflows } : {}),
+    ...(kpi_recovery_shape !== undefined ? { kpi_recovery_shape } : {}),
   };
 }
 
@@ -105,6 +108,7 @@ const lanes = [
       "100xfenok-next/public/data/macro/fred-macro.json",
     ],
     recovery_store: "data/admin/fred_macro/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "fred_banking",
@@ -146,6 +150,7 @@ const lanes = [
       "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
     ],
     recovery_store: "data/admin/fred_banking/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "fred_yardeni",
@@ -169,6 +174,7 @@ const lanes = [
       "100xfenok-next/public/data/yardney/yardney_model.json",
     ],
     recovery_store: "data/admin/fred_yardeni/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "fdic_tier1",
@@ -191,6 +197,7 @@ const lanes = [
       "100xfenok-next/public/data/macro/fdic-tier1.json",
     ],
     recovery_store: "data/admin/fdic_tier1/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "treasury_tga",
@@ -213,6 +220,7 @@ const lanes = [
       "100xfenok-next/public/data/macro/tga.json",
     ],
     recovery_store: "data/admin/treasury_tga/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "defillama_stablecoins",
@@ -235,6 +243,7 @@ const lanes = [
       "100xfenok-next/public/data/macro/stablecoins.json",
     ],
     recovery_store: "data/admin/defillama_stablecoins/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "yahoo_etf_fallback",
@@ -259,6 +268,7 @@ const lanes = [
       "data/admin/stockanalysis-recovery",
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    kpi_recovery_shape: "direct",
     declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe (store is multi-kind: stock/financial/surface/universe)",
   }),
   record({
@@ -280,6 +290,7 @@ const lanes = [
       "data/admin/stockanalysis-recovery",
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    kpi_recovery_shape: "direct",
     declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback (store is multi-kind: stock/financial/surface/universe)",
   }),
   record({
@@ -302,6 +313,7 @@ const lanes = [
       "100xfenok-next/public/data/macro/yahoo-ticker.json",
     ],
     recovery_store: "data/admin/yahoo-hourly-ticker/index.json",
+    kpi_recovery_shape: "keyed_v2",
     declared_exception: "producer-lkg-index/v2 keyed store (keys/TQQQ.json, keys/SOXL.json), projected via the KPI detectionRecovery map",
   }),
   record({
@@ -326,6 +338,7 @@ const lanes = [
       "100xfenok-next/public/data/sentiment",
     ],
     recovery_store: "data/admin/sentiment/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "nasdaq_giw_sox",
@@ -348,6 +361,7 @@ const lanes = [
       "data/indices/nasdaq-giw-sox-constituents.json",
     ],
     recovery_store: "data/admin/nasdaq_giw_sox/index.json",
+    kpi_recovery_shape: "direct",
   }),
   record({
     id: "slickcharts",
@@ -378,6 +392,7 @@ const lanes = [
       "data/slickcharts/mortgage.json",
     ],
     recovery_store: "data/admin/slickcharts-daily-delivery/index.json",
+    kpi_recovery_shape: "keyed_v2",
     declared_exception: "producer-lkg-index/v2 keyed store (5 delivery keys), committed via scripts/publish-slickcharts-attempt.sh; projected via the KPI detectionRecovery map",
     // Script-side publisher: the commit allowlist lives in the publish script,
     // not the workflow YAML. slickcharts-daily is the primary owner and commits
@@ -420,6 +435,7 @@ const lanes = [
       "100xfenok-next/public/data/edgar-korean-summaries",
     ],
     recovery_store: "data/admin/edgar_filings/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "sec_13f",
@@ -459,6 +475,7 @@ const lanes = [
       "data/admin/finra_short_volume/history/regsho_daily.json",
     ],
     recovery_store: "data/admin/finra_short_volume/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "occ_options_volume",
@@ -484,6 +501,7 @@ const lanes = [
       "data/admin/occ_options_volume/lkg/occ_options_volume.json",
     ],
     recovery_store: "data/admin/occ_options_volume/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "yahoo_private_options",
@@ -505,6 +523,7 @@ const lanes = [
       "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
     ],
     recovery_store: "data/admin/yahoo_private_options/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "apewisdom_attention",
@@ -555,6 +574,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: ["data/admin/yahoo-batch-quote-history"],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
+    kpi_recovery_shape: "direct",
     declared_exception: "not a detection-floor lane; KPI surfaces it as a warn-only base lane (pre-existing 2026-05-06 staleness)",
   }),
 ];
@@ -633,7 +653,7 @@ const LANE_RECORD_KEYS = Object.freeze([
   "recovery_store",
   "declared_exception",
 ]);
-const LANE_RECORD_OPTIONAL_KEYS = Object.freeze(["script_sources", "caller_workflows"]);
+const LANE_RECORD_OPTIONAL_KEYS = Object.freeze(["script_sources", "caller_workflows", "kpi_recovery_shape"]);
 
 function exactKeys(value, expected, context) {
   const actual = Object.keys(value ?? {}).sort();
@@ -701,6 +721,12 @@ function validateLaneRecord(laneValue) {
     && !laneValue.recovery_store.startsWith(`${laneValue.roots.admin_store}/`)) {
     fail(`${context}.recovery_store must live under roots.admin_store`);
   }
+  if (laneValue.recovery_store !== null && !KPI_RECOVERY_SHAPES.includes(laneValue.kpi_recovery_shape)) {
+    fail(`${context}.kpi_recovery_shape is required when recovery_store is present`);
+  }
+  if (laneValue.recovery_store === null && laneValue.kpi_recovery_shape !== undefined) {
+    fail(`${context}.kpi_recovery_shape requires a recovery_store`);
+  }
   if (laneValue.declared_exception !== null && typeof laneValue.declared_exception !== "string") {
     fail(`${context}.declared_exception must be null or a string`);
   }
@@ -730,6 +756,16 @@ export function validateLaneRegistry(registry) {
     validateLaneRecord(laneValue);
     if (seenIds.has(laneValue.id)) fail(`duplicate lane id ${laneValue.id}`);
     seenIds.add(laneValue.id);
+  }
+  const directByKey = new Map();
+  for (const laneValue of registry.lanes) {
+    if (laneValue.kpi_recovery_shape !== "direct") continue;
+    const key = laneValue.roots.admin_store.split("/").at(-1).replaceAll("-", "_");
+    const prior = directByKey.get(key);
+    if (prior !== undefined && prior !== laneValue.recovery_store) {
+      fail(`direct recovery lanes disagree on bucket ${key}`);
+    }
+    directByKey.set(key, laneValue.recovery_store);
   }
   if (!Array.isArray(registry.declared_exceptions)) fail("declared_exceptions must be an array");
   const seenExceptions = new Set();

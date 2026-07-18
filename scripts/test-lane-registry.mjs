@@ -69,6 +69,19 @@ function clone(value) {
     ["invalid privacy class", (draft) => { draft.lanes[0].privacy_class = "publicish"; }],
     ["missing lane_class", (draft) => { delete draft.lanes[0].lane_class; }],
     ["invalid lane_class", (draft) => { draft.lanes[0].lane_class = "sometimes"; }],
+    ["recovery store without shape", (draft) => {
+      const lane = draft.lanes.find((row) => row.recovery_store !== null);
+      delete lane.kpi_recovery_shape;
+    }],
+    ["shape without recovery store", (draft) => {
+      const lane = draft.lanes.find((row) => row.recovery_store === null);
+      lane.kpi_recovery_shape = "general";
+    }],
+    ["direct bucket conflict", (draft) => {
+      const lane = draft.lanes.find((row) => row.kpi_recovery_shape === "direct"
+        && row.roots.admin_store === "data/admin/stockanalysis-recovery");
+      lane.recovery_store = "data/admin/stockanalysis-recovery/other-index.json";
+    }],
     ["owner workflow outside workflows dir", (draft) => { draft.lanes[0].owner_workflow = "scripts/x.yml"; }],
     ["duplicate commit shard", (draft) => {
       const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
