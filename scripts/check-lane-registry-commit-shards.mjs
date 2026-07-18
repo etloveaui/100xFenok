@@ -20,7 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY, declaredExceptionPaths } from "./lib/lane-registry.mjs";
 
-export function extractWorkflowShardAllowlist(workflowText) {
+export function extractWorkflowShardAllowlist(workflowText, { required = true } = {}) {
   // Whole-file scan: workflows commit admin state via SHARD loops, standalone
   // git add lines, globs, or var assignments — the allowlist is every
   // data/admin/ path literal in the file, normalized (globs collapsed to their
@@ -28,7 +28,7 @@ export function extractWorkflowShardAllowlist(workflowText) {
   const matches = [...workflowText.matchAll(/data\/admin\/[^\s"';\\]+/g)]
     .map((match) => match[0].replace(/\*.*$/, "").replace(/\/+$/, ""));
   const unique = [...new Set(matches)].sort();
-  if (unique.length === 0) throw new Error("no data/admin shard paths found in workflow text");
+  if (required && unique.length === 0) throw new Error("no data/admin shard paths found in workflow text");
   return unique;
 }
 
@@ -52,16 +52,42 @@ export function checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel,
   registry = LANE_REGISTRY,
+  repoRoot = null,
 }) {
   if (typeof workflowRel !== "string" || !workflowRel.startsWith(".github/workflows/")) {
     throw new Error("workflowRel must be a .github/workflows/ path");
   }
-  const allowlist = extractWorkflowShardAllowlist(workflowText);
-  const lanes = registry.lanes.filter((lane) => lane.owner_workflow === workflowRel);
-  // DEC-266: a lane-less workflow is legal only via a static workflow_classes
-  // declaration — anything else fails closed instead of silently passing.
+  // Scope resolution: a lane's primary owner_workflow, a declared caller
+  // workflow (shared-lane families like slickcharts), or a declared
+  // workflow_class for lane-less central/owner-gated workflows.
+  const primaryLanes = registry.lanes.filter((lane) => lane.owner_workflow === workflowRel);
+  let scope = null;
+  if (primaryLanes.length > 0) {
+    scope = {
+      kind: "primary",
+      lanes: primaryLanes,
+      commit_shards: primaryLanes.flatMap((lane) => lane.commit_shards),
+      script_sources: primaryLanes.flatMap((lane) => lane.script_sources ?? []),
+    };
+  } else {
+    for (const lane of registry.lanes) {
+      const caller = lane.caller_workflows?.[workflowRel];
+      if (caller) {
+        scope = {
+          kind: "caller",
+          lanes: [lane],
+          commit_shards: caller.commit_shards,
+          script_sources: caller.script_sources,
+        };
+        break;
+      }
+    }
+  }
+  const lanes = scope?.lanes ?? [];
   const workflowClass = registry.workflow_classes?.[workflowRel] ?? null;
-  if (lanes.length === 0 && workflowClass === null) {
+  const scriptSources = scope?.script_sources ?? [];
+  const allowlist = extractWorkflowShardAllowlist(workflowText, { required: scriptSources.length === 0 });
+  if (scope === null && workflowClass === null) {
     return {
       ok: false,
       workflow: workflowRel,
@@ -75,17 +101,31 @@ export function checkWorkflowCommitShardsAgainstRegistry({
     };
   }
 
-  // Direction 1 (false-green): the workflow's OWN lanes' admin shards must be
-  // covered by its allowlist.
+  // Script-side publishers: a lane may commit via a shell script instead of
+  // inline YAML git-add lines (the slickcharts family). Declared script sources
+  // are scanned alongside the workflow text when repoRoot is provided.
+  let allowlistAll = allowlist;
+  if (scriptSources.length > 0) {
+    if (repoRoot === null) throw new Error("repoRoot is required to scan declared script_sources");
+    for (const sourcePath of scriptSources) {
+      const sourceText = fs.readFileSync(path.join(repoRoot, sourcePath), "utf8");
+      const scriptAllowlist = extractWorkflowShardAllowlist(sourceText);
+      allowlistAll = [...new Set([...allowlistAll, ...scriptAllowlist])].sort();
+    }
+  }
+
+  // Direction 1 (false-green): the scope's declared admin shards must be
+  // covered by the combined allowlist.
   const ownDeclared = new Map();
   for (const lane of lanes) {
-    for (const shard of lane.commit_shards) {
+    const shards = scope.kind === "caller" ? scope.commit_shards : lane.commit_shards;
+    for (const shard of shards) {
       // Gate scope is admin control-plane state; canonical/public mirrors of a
       // lane are tracked on the registry's public_mirror axis instead.
       if (shard.startsWith("data/admin/")) ownDeclared.set(shard, lane.id);
     }
   }
-  const allowSet = new Set(allowlist);
+  const allowSet = new Set(allowlistAll);
   const missing_in_workflow = [...ownDeclared.entries()]
     .filter(([shard]) => !coversAny(shard, allowSet))
     .map(([shard, lane]) => ({ shard, lane }));
@@ -101,16 +141,17 @@ export function checkWorkflowCommitShardsAgainstRegistry({
     if (lane.roots.admin_store !== null) registryDeclared.add(lane.roots.admin_store);
   }
   for (const exception of declaredExceptionPaths()) registryDeclared.add(exception);
-  const undeclared_in_workflow = allowlist.filter((entry) => !coveredByRegistry(entry, registryDeclared));
+  const undeclared_in_workflow = allowlistAll.filter((entry) => !coveredByRegistry(entry, registryDeclared));
 
   return {
     ok: missing_in_workflow.length === 0 && undeclared_in_workflow.length === 0,
     workflow: workflowRel,
     lanes: lanes.map((lane) => lane.id),
+    scope: scope?.kind ?? "platform",
     workflow_class: workflowClass?.class ?? null,
     missing_in_workflow,
     undeclared_in_workflow,
-    allowlist_count: allowlist.length,
+    allowlist_count: allowlistAll.length,
     declared_count: ownDeclared.size,
   };
 }
@@ -121,6 +162,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const result = checkWorkflowCommitShardsAgainstRegistry({
     workflowText: fs.readFileSync(path.join(repoRoot, workflowRel), "utf8"),
     workflowRel,
+    repoRoot,
   });
   for (const row of result.missing_in_workflow) {
     console.error(`::error:: lane-registry gate: ${row.shard} (lane ${row.lane}) is declared but NOT git-added by ${result.workflow} (the false-green class)`);

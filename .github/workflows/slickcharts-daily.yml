@@ -76,6 +76,7 @@ jobs:
         run: |
           node scripts/test-producer-lkg-state.mjs
           node scripts/test-slickcharts-daily-recovery.mjs
+          node scripts/test-slickcharts-commit-shards.mjs
 
       - name: Prepare per-file LKG baseline
         run: node scripts/slickcharts-daily-recovery.mjs prepare --snapshot-dir "$SLICKCHARTS_RECOVERY_SNAPSHOT_DIR"

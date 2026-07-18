@@ -64,6 +64,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify lane-registry commit-shard contract
+        run: node scripts/test-slickcharts-commit-shards.mjs
+
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4 playwright

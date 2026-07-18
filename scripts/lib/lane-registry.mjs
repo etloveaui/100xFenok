@@ -50,6 +50,8 @@ function record({
   commit_shards = [],
   recovery_store = null,
   declared_exception = null,
+  script_sources,
+  caller_workflows,
 }) {
   return {
     id,
@@ -68,6 +70,8 @@ function record({
     commit_shards,
     recovery_store,
     declared_exception,
+    ...(script_sources !== undefined ? { script_sources } : {}),
+    ...(caller_workflows !== undefined ? { caller_workflows } : {}),
   };
 }
 
@@ -360,6 +364,20 @@ const lanes = [
     ],
     recovery_store: "data/admin/slickcharts-daily-delivery/index.json",
     declared_exception: "producer-lkg-index/v2 keyed store (5 delivery keys), committed via scripts/publish-slickcharts-attempt.sh; projected via the KPI detectionRecovery map",
+    // Script-side publisher: the commit allowlist lives in the publish script,
+    // not the workflow YAML. slickcharts-daily is the primary owner and commits
+    // the full admin store; the other four members share the same lane and
+    // commit only their merged attempt-shard row via the same script.
+    script_sources: ["scripts/publish-slickcharts-attempt.sh"],
+    caller_workflows: Object.fromEntries(
+      ["weekly", "monthly", "history", "symbols"].map((member) => [
+        `.github/workflows/slickcharts-${member}.yml`,
+        {
+          commit_shards: ["data/admin/data-supply-state/detection-attempts/slickcharts.json"],
+          script_sources: ["scripts/publish-slickcharts-attempt.sh"],
+        },
+      ]),
+    ),
   }),
   record({
     id: "edgar_filings",
@@ -591,6 +609,7 @@ const LANE_RECORD_KEYS = Object.freeze([
   "recovery_store",
   "declared_exception",
 ]);
+const LANE_RECORD_OPTIONAL_KEYS = Object.freeze(["script_sources", "caller_workflows"]);
 
 function exactKeys(value, expected, context) {
   const actual = Object.keys(value ?? {}).sort();
@@ -613,7 +632,11 @@ function validatePathList(value, context, { allowEmpty = true } = {}) {
 
 function validateLaneRecord(laneValue) {
   const context = `lane ${laneValue?.id ?? "<unknown>"}`;
-  exactKeys(laneValue, LANE_RECORD_KEYS, context);
+  const expectedKeys = [
+    ...LANE_RECORD_KEYS,
+    ...LANE_RECORD_OPTIONAL_KEYS.filter((key) => Object.hasOwn(laneValue ?? {}, key)),
+  ];
+  exactKeys(laneValue, expectedKeys, context);
   if (!LANE_ID_RE.test(laneValue.id)) fail(`${context} id is invalid`);
   if (typeof laneValue.label !== "string" || laneValue.label.length === 0) fail(`${context} label is required`);
   if (laneValue.owner_workflow !== null
@@ -655,6 +678,21 @@ function validateLaneRecord(laneValue) {
   }
   if (laneValue.declared_exception !== null && typeof laneValue.declared_exception !== "string") {
     fail(`${context}.declared_exception must be null or a string`);
+  }
+  if (laneValue.script_sources !== undefined) {
+    validatePathList(laneValue.script_sources, `${context}.script_sources`);
+  }
+  if (laneValue.caller_workflows !== undefined) {
+    if (!laneValue.caller_workflows || typeof laneValue.caller_workflows !== "object" || Array.isArray(laneValue.caller_workflows)) {
+      fail(`${context}.caller_workflows must be an object`);
+    }
+    for (const [callerRel, caller] of Object.entries(laneValue.caller_workflows)) {
+      if (!callerRel.startsWith(".github/workflows/")) fail(`${context}.caller_workflows key must be a .github/workflows/ path: ${callerRel}`);
+      if (callerRel === laneValue.owner_workflow) fail(`${context}.caller_workflows must not duplicate owner_workflow: ${callerRel}`);
+      exactKeys(caller, ["commit_shards", "script_sources"], `${context}.caller_workflows[${callerRel}]`);
+      validatePathList(caller.commit_shards, `${context}.caller_workflows[${callerRel}].commit_shards`);
+      validatePathList(caller.script_sources, `${context}.caller_workflows[${callerRel}].script_sources`);
+    }
   }
 }
 
