@@ -1,0 +1,2052 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "NUIF",
+  "source_as_of": "2026-07-14T00:00:00Z",
+  "fetched_at": "2026-07-18T22:25:03Z",
+  "endpoints": {
+    "holdings": "/etf/nuif/holdings/__data.json",
+    "overview": "/etf/nuif/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "ETR",
+        "name": "Entergy Corporation",
+        "weight_pct": 7.52,
+        "shares": 13807,
+        "raw": {
+          "no": 1,
+          "n": "Entergy Corporation",
+          "s": "$ETR",
+          "as": "7.52%",
+          "sh": "13,807"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "NEE",
+        "name": "NextEra Energy, Inc.",
+        "weight_pct": 7.44,
+        "shares": 17865,
+        "raw": {
+          "no": 2,
+          "n": "NextEra Energy, Inc.",
+          "s": "$NEE",
+          "as": "7.44%",
+          "sh": "17,865"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "AEP",
+        "name": "American Electric Power Company, Inc.",
+        "weight_pct": 7.02,
+        "shares": 10949,
+        "raw": {
+          "no": 3,
+          "n": "American Electric Power Company, Inc.",
+          "s": "$AEP",
+          "as": "7.02%",
+          "sh": "10,949"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "XEL",
+        "name": "Xcel Energy Inc.",
+        "weight_pct": 6.24,
+        "shares": 16472,
+        "raw": {
+          "no": 4,
+          "n": "Xcel Energy Inc.",
+          "s": "$XEL",
+          "as": "6.24%",
+          "sh": "16,472"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "LNT",
+        "name": "Alliant Energy Corporation",
+        "weight_pct": 4.89,
+        "shares": 13537,
+        "raw": {
+          "no": 5,
+          "n": "Alliant Energy Corporation",
+          "s": "$LNT",
+          "as": "4.89%",
+          "sh": "13,537"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "NI",
+        "name": "NiSource Inc.",
+        "weight_pct": 4.8,
+        "shares": 21625,
+        "raw": {
+          "no": 6,
+          "n": "NiSource Inc.",
+          "s": "$NI",
+          "as": "4.80%",
+          "sh": "21,625"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "WMB",
+        "name": "The Williams Companies, Inc.",
+        "weight_pct": 4.6,
+        "shares": 12966,
+        "raw": {
+          "no": 7,
+          "n": "The Williams Companies, Inc.",
+          "s": "$WMB",
+          "as": "4.60%",
+          "sh": "12,966"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!TSX/ENB",
+        "name": "Enbridge Inc.",
+        "weight_pct": 4.37,
+        "shares": 16880,
+        "raw": {
+          "no": 8,
+          "n": "Enbridge Inc.",
+          "s": "!tsx/ENB",
+          "as": "4.37%",
+          "sh": "16,880"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "LNG",
+        "name": "Cheniere Energy, Inc.",
+        "weight_pct": 4.26,
+        "shares": 3484,
+        "raw": {
+          "no": 9,
+          "n": "Cheniere Energy, Inc.",
+          "s": "$LNG",
+          "as": "4.26%",
+          "sh": "3,484"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "TRGP",
+        "name": "Targa Resources Corp.",
+        "weight_pct": 3.89,
+        "shares": 3010,
+        "raw": {
+          "no": 10,
+          "n": "Targa Resources Corp.",
+          "s": "$TRGP",
+          "as": "3.89%",
+          "sh": "3,010"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "AEE",
+        "name": "Ameren Corporation",
+        "weight_pct": 3.83,
+        "shares": 7161,
+        "raw": {
+          "no": 11,
+          "n": "Ameren Corporation",
+          "s": "$AEE",
+          "as": "3.83%",
+          "sh": "7,161"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "OKE",
+        "name": "ONEOK, Inc.",
+        "weight_pct": 2.84,
+        "shares": 6681,
+        "raw": {
+          "no": 12,
+          "n": "ONEOK, Inc.",
+          "s": "$OKE",
+          "as": "2.84%",
+          "sh": "6,681"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "CSX",
+        "name": "CSX Corporation",
+        "weight_pct": 2.74,
+        "shares": 11729,
+        "raw": {
+          "no": 13,
+          "n": "CSX Corporation",
+          "s": "$CSX",
+          "as": "2.74%",
+          "sh": "11,729"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "CNP",
+        "name": "CenterPoint Energy, Inc.",
+        "weight_pct": 2.67,
+        "shares": 12947,
+        "raw": {
+          "no": 14,
+          "n": "CenterPoint Energy, Inc.",
+          "s": "$CNP",
+          "as": "2.67%",
+          "sh": "12,947"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "NRG",
+        "name": "NRG Energy, Inc.",
+        "weight_pct": 2.62,
+        "shares": 3944,
+        "raw": {
+          "no": 15,
+          "n": "NRG Energy, Inc.",
+          "s": "$NRG",
+          "as": "2.62%",
+          "sh": "3,944"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "WM",
+        "name": "Waste Management, Inc.",
+        "weight_pct": 2.52,
+        "shares": 2283,
+        "raw": {
+          "no": 16,
+          "n": "Waste Management, Inc.",
+          "s": "$WM",
+          "as": "2.52%",
+          "sh": "2,283"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "KMI",
+        "name": "Kinder Morgan, Inc.",
+        "weight_pct": 2.48,
+        "shares": 16309,
+        "raw": {
+          "no": 17,
+          "n": "Kinder Morgan, Inc.",
+          "s": "$KMI",
+          "as": "2.48%",
+          "sh": "16,309"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "UNP",
+        "name": "Union Pacific Corporation",
+        "weight_pct": 2.41,
+        "shares": 1776,
+        "raw": {
+          "no": 18,
+          "n": "Union Pacific Corporation",
+          "s": "$UNP",
+          "as": "2.41%",
+          "sh": "1,776"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!TSX/WCN",
+        "name": "Waste Connections, Inc.",
+        "weight_pct": 2.17,
+        "shares": 2677,
+        "raw": {
+          "no": 19,
+          "n": "Waste Connections, Inc.",
+          "s": "!tsx/WCN",
+          "as": "2.17%",
+          "sh": "2,677"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!TSX/CP",
+        "name": "Canadian Pacific Kansas City Limited",
+        "weight_pct": 2.16,
+        "shares": 5056,
+        "raw": {
+          "no": 20,
+          "n": "Canadian Pacific Kansas City Limited",
+          "s": "!tsx/CP",
+          "as": "2.16%",
+          "sh": "5,056"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "ATO",
+        "name": "Atmos Energy Corporation",
+        "weight_pct": 1.94,
+        "shares": 2326,
+        "raw": {
+          "no": 21,
+          "n": "Atmos Energy Corporation",
+          "s": "$ATO",
+          "as": "1.94%",
+          "sh": "2,326"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "SO",
+        "name": "The Southern Company",
+        "weight_pct": 1.9,
+        "shares": 4204,
+        "raw": {
+          "no": 22,
+          "n": "The Southern Company",
+          "s": "$SO",
+          "as": "1.90%",
+          "sh": "4,204"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!TSX/TRP",
+        "name": "TC Energy Corporation",
+        "weight_pct": 1.7,
+        "shares": 5316,
+        "raw": {
+          "no": 23,
+          "n": "TC Energy Corporation",
+          "s": "!tsx/TRP",
+          "as": "1.70%",
+          "sh": "5,316"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "EVRG",
+        "name": "Evergy, Inc.",
+        "weight_pct": 1.65,
+        "shares": 4077,
+        "raw": {
+          "no": 24,
+          "n": "Evergy, Inc.",
+          "s": "$EVRG",
+          "as": "1.65%",
+          "sh": "4,077"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "DTM",
+        "name": "DT Midstream, Inc.",
+        "weight_pct": 1.59,
+        "shares": 2310,
+        "raw": {
+          "no": 25,
+          "n": "DT Midstream, Inc.",
+          "s": "$DTM",
+          "as": "1.59%",
+          "sh": "2,310"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Utilities",
+        "w": 55.74
+      },
+      {
+        "n": "Energy",
+        "w": 29.03
+      },
+      {
+        "n": "Industrials",
+        "w": 14.65
+      },
+      {
+        "n": "Real Estate",
+        "w": 0.58
+      }
+    ],
+    "countries": null,
+    "holding_count": 37,
+    "holdings_updated": "Jul 14, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$21.03M",
+      "expenseRatio": "0.55%",
+      "peRatio": "25.83",
+      "sharesOut": "800,000",
+      "inception": "Jun 17, 2026",
+      "provider_page": "nuveen",
+      "etf_website": "https://www.nuveen.com/en-us/exchange-traded-funds/nuif-nuveen-us-infrastructure-etf"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "NUIF",
+        "lastChecked": 1784334786839,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$21.03M",
+      "nav": null,
+      "expenseRatio": "0.55%",
+      "peRatio": "25.83",
+      "sharesOut": "800,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 37,
+      "inception": "Jun 17, 2026",
+      "chart": {
+        "expiration": null,
+        "data": [
+          {
+            "t": 1784280600
+          },
+          {
+            "t": 1784280660
+          },
+          {
+            "t": 1784280720
+          },
+          {
+            "t": 1784280780
+          },
+          {
+            "t": 1784280840
+          },
+          {
+            "t": 1784280900
+          },
+          {
+            "t": 1784280960
+          },
+          {
+            "t": 1784281020
+          },
+          {
+            "t": 1784281080
+          },
+          {
+            "t": 1784281140
+          },
+          {
+            "t": 1784281200
+          },
+          {
+            "t": 1784281260
+          },
+          {
+            "t": 1784281320
+          },
+          {
+            "t": 1784281380
+          },
+          {
+            "t": 1784281440
+          },
+          {
+            "t": 1784281500
+          },
+          {
+            "t": 1784281560
+          },
+          {
+            "t": 1784281620
+          },
+          {
+            "t": 1784281680
+          },
+          {
+            "t": 1784281740
+          },
+          {
+            "t": 1784281800
+          },
+          {
+            "t": 1784281860
+          },
+          {
+            "t": 1784281920
+          },
+          {
+            "t": 1784281980
+          },
+          {
+            "t": 1784282040
+          },
+          {
+            "t": 1784282100
+          },
+          {
+            "t": 1784282160
+          },
+          {
+            "t": 1784282220
+          },
+          {
+            "t": 1784282280
+          },
+          {
+            "t": 1784282340
+          },
+          {
+            "t": 1784282400
+          },
+          {
+            "t": 1784282460
+          },
+          {
+            "t": 1784282520
+          },
+          {
+            "t": 1784282580
+          },
+          {
+            "t": 1784282640
+          },
+          {
+            "t": 1784282700
+          },
+          {
+            "t": 1784282760
+          },
+          {
+            "t": 1784282820
+          },
+          {
+            "t": 1784282880
+          },
+          {
+            "t": 1784282940
+          },
+          {
+            "t": 1784283000
+          },
+          {
+            "t": 1784283060
+          },
+          {
+            "t": 1784283120
+          },
+          {
+            "t": 1784283180
+          },
+          {
+            "t": 1784283240
+          },
+          {
+            "t": 1784283300
+          },
+          {
+            "t": 1784283360
+          },
+          {
+            "t": 1784283420
+          },
+          {
+            "t": 1784283480
+          },
+          {
+            "t": 1784283540
+          },
+          {
+            "t": 1784283600
+          },
+          {
+            "t": 1784283660
+          },
+          {
+            "t": 1784283720
+          },
+          {
+            "c": 26.39,
+            "o": 26.39,
+            "t": 1784283780
+          },
+          {
+            "t": 1784283839
+          },
+          {
+            "t": 1784283899
+          },
+          {
+            "t": 1784283959
+          },
+          {
+            "t": 1784284019
+          },
+          {
+            "t": 1784284079
+          },
+          {
+            "t": 1784284139
+          },
+          {
+            "t": 1784284199
+          },
+          {
+            "t": 1784284259
+          },
+          {
+            "t": 1784284319
+          },
+          {
+            "t": 1784284379
+          },
+          {
+            "t": 1784284439
+          },
+          {
+            "t": 1784284499
+          },
+          {
+            "t": 1784284559
+          },
+          {
+            "t": 1784284619
+          },
+          {
+            "t": 1784284679
+          },
+          {
+            "t": 1784284739
+          },
+          {
+            "t": 1784284799
+          },
+          {
+            "t": 1784284859
+          },
+          {
+            "t": 1784284919
+          },
+          {
+            "t": 1784284979
+          },
+          {
+            "t": 1784285039
+          },
+          {
+            "t": 1784285099
+          },
+          {
+            "t": 1784285159
+          },
+          {
+            "t": 1784285219
+          },
+          {
+            "t": 1784285279
+          },
+          {
+            "t": 1784285339
+          },
+          {
+            "t": 1784285399
+          },
+          {
+            "t": 1784285459
+          },
+          {
+            "t": 1784285519
+          },
+          {
+            "t": 1784285579
+          },
+          {
+            "t": 1784285639
+          },
+          {
+            "t": 1784285699
+          },
+          {
+            "t": 1784285759
+          },
+          {
+            "t": 1784285819
+          },
+          {
+            "t": 1784285879
+          },
+          {
+            "t": 1784285939
+          },
+          {
+            "t": 1784285999
+          },
+          {
+            "t": 1784286059
+          },
+          {
+            "t": 1784286119
+          },
+          {
+            "t": 1784286179
+          },
+          {
+            "t": 1784286239
+          },
+          {
+            "t": 1784286299
+          },
+          {
+            "t": 1784286359
+          },
+          {
+            "t": 1784286419
+          },
+          {
+            "t": 1784286479
+          },
+          {
+            "t": 1784286539
+          },
+          {
+            "t": 1784286599
+          },
+          {
+            "t": 1784286659
+          },
+          {
+            "t": 1784286719
+          },
+          {
+            "t": 1784286779
+          },
+          {
+            "t": 1784286839
+          },
+          {
+            "t": 1784286899
+          },
+          {
+            "t": 1784286959
+          },
+          {
+            "t": 1784287019
+          },
+          {
+            "t": 1784287079
+          },
+          {
+            "t": 1784287139
+          },
+          {
+            "t": 1784287199
+          },
+          {
+            "t": 1784287259
+          },
+          {
+            "t": 1784287319
+          },
+          {
+            "t": 1784287379
+          },
+          {
+            "t": 1784287439
+          },
+          {
+            "t": 1784287499
+          },
+          {
+            "t": 1784287559
+          },
+          {
+            "t": 1784287619
+          },
+          {
+            "t": 1784287679
+          },
+          {
+            "t": 1784287739
+          },
+          {
+            "t": 1784287799
+          },
+          {
+            "t": 1784287859
+          },
+          {
+            "t": 1784287919
+          },
+          {
+            "t": 1784287979
+          },
+          {
+            "t": 1784288039
+          },
+          {
+            "t": 1784288099
+          },
+          {
+            "t": 1784288159
+          },
+          {
+            "t": 1784288219
+          },
+          {
+            "t": 1784288279
+          },
+          {
+            "t": 1784288339
+          },
+          {
+            "t": 1784288399
+          },
+          {
+            "t": 1784288459
+          },
+          {
+            "t": 1784288519
+          },
+          {
+            "t": 1784288579
+          },
+          {
+            "t": 1784288639
+          },
+          {
+            "t": 1784288699
+          },
+          {
+            "t": 1784288759
+          },
+          {
+            "t": 1784288819
+          },
+          {
+            "t": 1784288879
+          },
+          {
+            "t": 1784288939
+          },
+          {
+            "t": 1784288999
+          },
+          {
+            "t": 1784289059
+          },
+          {
+            "t": 1784289119
+          },
+          {
+            "t": 1784289179
+          },
+          {
+            "t": 1784289239
+          },
+          {
+            "t": 1784289299
+          },
+          {
+            "t": 1784289359
+          },
+          {
+            "t": 1784289419
+          },
+          {
+            "t": 1784289479
+          },
+          {
+            "t": 1784289539
+          },
+          {
+            "t": 1784289599
+          },
+          {
+            "t": 1784289659
+          },
+          {
+            "t": 1784289719
+          },
+          {
+            "t": 1784289779
+          },
+          {
+            "t": 1784289839
+          },
+          {
+            "t": 1784289899
+          },
+          {
+            "t": 1784289959
+          },
+          {
+            "t": 1784290019
+          },
+          {
+            "t": 1784290079
+          },
+          {
+            "t": 1784290139
+          },
+          {
+            "t": 1784290199
+          },
+          {
+            "t": 1784290259
+          },
+          {
+            "t": 1784290319
+          },
+          {
+            "t": 1784290379
+          },
+          {
+            "t": 1784290439
+          },
+          {
+            "t": 1784290499
+          },
+          {
+            "t": 1784290559
+          },
+          {
+            "t": 1784290619
+          },
+          {
+            "t": 1784290679
+          },
+          {
+            "t": 1784290739
+          },
+          {
+            "t": 1784290799
+          },
+          {
+            "t": 1784290859
+          },
+          {
+            "t": 1784290919
+          },
+          {
+            "t": 1784290979
+          },
+          {
+            "t": 1784291039
+          },
+          {
+            "t": 1784291099
+          },
+          {
+            "t": 1784291159
+          },
+          {
+            "t": 1784291219
+          },
+          {
+            "t": 1784291279
+          },
+          {
+            "t": 1784291339
+          },
+          {
+            "t": 1784291399
+          },
+          {
+            "t": 1784291459
+          },
+          {
+            "t": 1784291519
+          },
+          {
+            "t": 1784291579
+          },
+          {
+            "t": 1784291639
+          },
+          {
+            "t": 1784291699
+          },
+          {
+            "t": 1784291759
+          },
+          {
+            "t": 1784291819
+          },
+          {
+            "t": 1784291879
+          },
+          {
+            "t": 1784291939
+          },
+          {
+            "t": 1784291999
+          },
+          {
+            "t": 1784292059
+          },
+          {
+            "t": 1784292119
+          },
+          {
+            "t": 1784292179
+          },
+          {
+            "t": 1784292239
+          },
+          {
+            "t": 1784292299
+          },
+          {
+            "t": 1784292359
+          },
+          {
+            "t": 1784292419
+          },
+          {
+            "t": 1784292479
+          },
+          {
+            "t": 1784292539
+          },
+          {
+            "t": 1784292599
+          },
+          {
+            "t": 1784292659
+          },
+          {
+            "t": 1784292719
+          },
+          {
+            "t": 1784292779
+          },
+          {
+            "t": 1784292839
+          },
+          {
+            "t": 1784292899
+          },
+          {
+            "t": 1784292959
+          },
+          {
+            "t": 1784293019
+          },
+          {
+            "t": 1784293079
+          },
+          {
+            "t": 1784293139
+          },
+          {
+            "t": 1784293199
+          },
+          {
+            "t": 1784293259
+          },
+          {
+            "t": 1784293319
+          },
+          {
+            "t": 1784293379
+          },
+          {
+            "t": 1784293439
+          },
+          {
+            "t": 1784293499
+          },
+          {
+            "t": 1784293559
+          },
+          {
+            "t": 1784293619
+          },
+          {
+            "t": 1784293679
+          },
+          {
+            "t": 1784293739
+          },
+          {
+            "t": 1784293799
+          },
+          {
+            "t": 1784293859
+          },
+          {
+            "t": 1784293919
+          },
+          {
+            "t": 1784293979
+          },
+          {
+            "t": 1784294039
+          },
+          {
+            "t": 1784294099
+          },
+          {
+            "t": 1784294159
+          },
+          {
+            "t": 1784294219
+          },
+          {
+            "t": 1784294279
+          },
+          {
+            "t": 1784294339
+          },
+          {
+            "t": 1784294399
+          },
+          {
+            "t": 1784294459
+          },
+          {
+            "t": 1784294519
+          },
+          {
+            "t": 1784294579
+          },
+          {
+            "t": 1784294639
+          },
+          {
+            "t": 1784294699
+          },
+          {
+            "t": 1784294759
+          },
+          {
+            "t": 1784294819
+          },
+          {
+            "t": 1784294879
+          },
+          {
+            "t": 1784294939
+          },
+          {
+            "t": 1784294999
+          },
+          {
+            "t": 1784295059
+          },
+          {
+            "t": 1784295119
+          },
+          {
+            "t": 1784295179
+          },
+          {
+            "t": 1784295239
+          },
+          {
+            "t": 1784295299
+          },
+          {
+            "t": 1784295359
+          },
+          {
+            "t": 1784295419
+          },
+          {
+            "t": 1784295479
+          },
+          {
+            "t": 1784295539
+          },
+          {
+            "t": 1784295599
+          },
+          {
+            "t": 1784295659
+          },
+          {
+            "t": 1784295719
+          },
+          {
+            "t": 1784295779
+          },
+          {
+            "t": 1784295839
+          },
+          {
+            "t": 1784295899
+          },
+          {
+            "t": 1784295959
+          },
+          {
+            "t": 1784296019
+          },
+          {
+            "t": 1784296079
+          },
+          {
+            "t": 1784296139
+          },
+          {
+            "t": 1784296199
+          },
+          {
+            "t": 1784296259
+          },
+          {
+            "t": 1784296319
+          },
+          {
+            "t": 1784296379
+          },
+          {
+            "t": 1784296439
+          },
+          {
+            "t": 1784296499
+          },
+          {
+            "t": 1784296559
+          },
+          {
+            "t": 1784296619
+          },
+          {
+            "t": 1784296679
+          },
+          {
+            "t": 1784296739
+          },
+          {
+            "t": 1784296799
+          },
+          {
+            "t": 1784296859
+          },
+          {
+            "t": 1784296919
+          },
+          {
+            "t": 1784296979
+          },
+          {
+            "t": 1784297039
+          },
+          {
+            "t": 1784297099
+          },
+          {
+            "t": 1784297159
+          },
+          {
+            "t": 1784297219
+          },
+          {
+            "t": 1784297279
+          },
+          {
+            "t": 1784297339
+          },
+          {
+            "t": 1784297399
+          },
+          {
+            "t": 1784297459
+          },
+          {
+            "t": 1784297519
+          },
+          {
+            "t": 1784297579
+          },
+          {
+            "t": 1784297639
+          },
+          {
+            "t": 1784297699
+          },
+          {
+            "t": 1784297759
+          },
+          {
+            "t": 1784297819
+          },
+          {
+            "t": 1784297879
+          },
+          {
+            "t": 1784297939
+          },
+          {
+            "t": 1784297999
+          },
+          {
+            "t": 1784298059
+          },
+          {
+            "t": 1784298119
+          },
+          {
+            "t": 1784298179
+          },
+          {
+            "t": 1784298239
+          },
+          {
+            "t": 1784298299
+          },
+          {
+            "t": 1784298359
+          },
+          {
+            "t": 1784298419
+          },
+          {
+            "t": 1784298479
+          },
+          {
+            "t": 1784298539
+          },
+          {
+            "t": 1784298599
+          },
+          {
+            "t": 1784298659
+          },
+          {
+            "t": 1784298719
+          },
+          {
+            "t": 1784298779
+          },
+          {
+            "t": 1784298839
+          },
+          {
+            "t": 1784298899
+          },
+          {
+            "t": 1784298959
+          },
+          {
+            "t": 1784299019
+          },
+          {
+            "t": 1784299079
+          },
+          {
+            "t": 1784299139
+          },
+          {
+            "t": 1784299199
+          },
+          {
+            "t": 1784299259
+          },
+          {
+            "t": 1784299319
+          },
+          {
+            "t": 1784299379
+          },
+          {
+            "t": 1784299439
+          },
+          {
+            "t": 1784299499
+          },
+          {
+            "t": 1784299559
+          },
+          {
+            "t": 1784299619
+          },
+          {
+            "t": 1784299679
+          },
+          {
+            "t": 1784299739
+          },
+          {
+            "t": 1784299799
+          },
+          {
+            "t": 1784299859
+          },
+          {
+            "t": 1784299919
+          },
+          {
+            "t": 1784299979
+          },
+          {
+            "t": 1784300039
+          },
+          {
+            "t": 1784300099
+          },
+          {
+            "t": 1784300159
+          },
+          {
+            "t": 1784300219
+          },
+          {
+            "t": 1784300279
+          },
+          {
+            "t": 1784300339
+          },
+          {
+            "t": 1784300399
+          },
+          {
+            "t": 1784300459
+          },
+          {
+            "t": 1784300519
+          },
+          {
+            "t": 1784300579
+          },
+          {
+            "t": 1784300639
+          },
+          {
+            "t": 1784300699
+          },
+          {
+            "t": 1784300759
+          },
+          {
+            "t": 1784300819
+          },
+          {
+            "t": 1784300879
+          },
+          {
+            "t": 1784300939
+          },
+          {
+            "t": 1784300999
+          },
+          {
+            "t": 1784301059
+          },
+          {
+            "t": 1784301119
+          },
+          {
+            "t": 1784301179
+          },
+          {
+            "t": 1784301239
+          },
+          {
+            "t": 1784301299
+          },
+          {
+            "t": 1784301359
+          },
+          {
+            "t": 1784301419
+          },
+          {
+            "t": 1784301479
+          },
+          {
+            "t": 1784301539
+          },
+          {
+            "t": 1784301599
+          },
+          {
+            "t": 1784301659
+          },
+          {
+            "t": 1784301719
+          },
+          {
+            "t": 1784301779
+          },
+          {
+            "t": 1784301839
+          },
+          {
+            "t": 1784301899
+          },
+          {
+            "t": 1784301959
+          },
+          {
+            "t": 1784302019
+          },
+          {
+            "t": 1784302079
+          },
+          {
+            "t": 1784302139
+          },
+          {
+            "t": 1784302199
+          },
+          {
+            "t": 1784302259
+          },
+          {
+            "t": 1784302319
+          },
+          {
+            "t": 1784302379
+          },
+          {
+            "t": 1784302439
+          },
+          {
+            "t": 1784302499
+          },
+          {
+            "t": 1784302559
+          },
+          {
+            "t": 1784302619
+          },
+          {
+            "t": 1784302679
+          },
+          {
+            "t": 1784302739
+          },
+          {
+            "t": 1784302799
+          },
+          {
+            "t": 1784302859
+          },
+          {
+            "t": 1784302919
+          },
+          {
+            "t": 1784302979
+          },
+          {
+            "t": 1784303039
+          },
+          {
+            "t": 1784303099
+          },
+          {
+            "t": 1784303159
+          },
+          {
+            "t": 1784303219
+          },
+          {
+            "t": 1784303279
+          },
+          {
+            "t": 1784303339
+          },
+          {
+            "t": 1784303399
+          },
+          {
+            "t": 1784303459
+          },
+          {
+            "t": 1784303519
+          },
+          {
+            "t": 1784303579
+          },
+          {
+            "t": 1784303639
+          },
+          {
+            "t": 1784303699
+          },
+          {
+            "t": 1784303759
+          },
+          {
+            "t": 1784303819
+          },
+          {
+            "t": 1784303879
+          },
+          {
+            "t": 1784303939
+          },
+          {
+            "t": 1784303999
+          },
+          {
+            "t": 1784304000
+          }
+        ]
+      },
+      "description": "The Nuveen US Infrastructure ETF (NUIF) is an exchange-traded fund that mostly invests in stocks based on a particular theme. The fund is an actively managed ETF that invests in infrastructure-related companies that are economically tied to the US. NUIF was launched on Jun 17, 2026 and is issued by Nuveen.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "NUIF"
+        ],
+        [
+          "Provider",
+          "Nuveen"
+        ]
+      ],
+      "etf_website": "https://www.nuveen.com/en-us/exchange-traded-funds/nuif-nuveen-us-infrastructure-etf",
+      "provider_page": "nuveen",
+      "holdingsTable": {
+        "count": 37,
+        "updated": "Jul 14, 2026",
+        "top10": 55.03,
+        "holdings": [
+          {
+            "n": "Entergy Corporation",
+            "s": "$ETR",
+            "as": "7.52%",
+            "sh": "13,807"
+          },
+          {
+            "n": "NextEra Energy, Inc.",
+            "s": "$NEE",
+            "as": "7.44%",
+            "sh": "17,865"
+          },
+          {
+            "n": "American Electric Power Company, Inc.",
+            "s": "$AEP",
+            "as": "7.02%",
+            "sh": "10,949"
+          },
+          {
+            "n": "Xcel Energy Inc.",
+            "s": "$XEL",
+            "as": "6.24%",
+            "sh": "16,472"
+          },
+          {
+            "n": "Alliant Energy Corporation",
+            "s": "$LNT",
+            "as": "4.89%",
+            "sh": "13,537"
+          },
+          {
+            "n": "NiSource Inc.",
+            "s": "$NI",
+            "as": "4.80%",
+            "sh": "21,625"
+          },
+          {
+            "n": "The Williams Companies, Inc.",
+            "s": "$WMB",
+            "as": "4.60%",
+            "sh": "12,966"
+          },
+          {
+            "n": "Enbridge Inc.",
+            "s": "!tsx/ENB",
+            "as": "4.37%",
+            "sh": "16,880"
+          },
+          {
+            "n": "Cheniere Energy, Inc.",
+            "s": "$LNG",
+            "as": "4.26%",
+            "sh": "3,484"
+          },
+          {
+            "n": "Targa Resources Corp.",
+            "s": "$TRGP",
+            "as": "3.89%",
+            "sh": "3,010"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784483297302",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 26.243,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.061
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Entergy Corporation",
+          "s": "$ETR",
+          "as": "7.52%",
+          "sh": "13,807"
+        },
+        {
+          "no": 2,
+          "n": "NextEra Energy, Inc.",
+          "s": "$NEE",
+          "as": "7.44%",
+          "sh": "17,865"
+        },
+        {
+          "no": 3,
+          "n": "American Electric Power Company, Inc.",
+          "s": "$AEP",
+          "as": "7.02%",
+          "sh": "10,949"
+        },
+        {
+          "no": 4,
+          "n": "Xcel Energy Inc.",
+          "s": "$XEL",
+          "as": "6.24%",
+          "sh": "16,472"
+        },
+        {
+          "no": 5,
+          "n": "Alliant Energy Corporation",
+          "s": "$LNT",
+          "as": "4.89%",
+          "sh": "13,537"
+        },
+        {
+          "no": 6,
+          "n": "NiSource Inc.",
+          "s": "$NI",
+          "as": "4.80%",
+          "sh": "21,625"
+        },
+        {
+          "no": 7,
+          "n": "The Williams Companies, Inc.",
+          "s": "$WMB",
+          "as": "4.60%",
+          "sh": "12,966"
+        },
+        {
+          "no": 8,
+          "n": "Enbridge Inc.",
+          "s": "!tsx/ENB",
+          "as": "4.37%",
+          "sh": "16,880"
+        },
+        {
+          "no": 9,
+          "n": "Cheniere Energy, Inc.",
+          "s": "$LNG",
+          "as": "4.26%",
+          "sh": "3,484"
+        },
+        {
+          "no": 10,
+          "n": "Targa Resources Corp.",
+          "s": "$TRGP",
+          "as": "3.89%",
+          "sh": "3,010"
+        },
+        {
+          "no": 11,
+          "n": "Ameren Corporation",
+          "s": "$AEE",
+          "as": "3.83%",
+          "sh": "7,161"
+        },
+        {
+          "no": 12,
+          "n": "ONEOK, Inc.",
+          "s": "$OKE",
+          "as": "2.84%",
+          "sh": "6,681"
+        },
+        {
+          "no": 13,
+          "n": "CSX Corporation",
+          "s": "$CSX",
+          "as": "2.74%",
+          "sh": "11,729"
+        },
+        {
+          "no": 14,
+          "n": "CenterPoint Energy, Inc.",
+          "s": "$CNP",
+          "as": "2.67%",
+          "sh": "12,947"
+        },
+        {
+          "no": 15,
+          "n": "NRG Energy, Inc.",
+          "s": "$NRG",
+          "as": "2.62%",
+          "sh": "3,944"
+        },
+        {
+          "no": 16,
+          "n": "Waste Management, Inc.",
+          "s": "$WM",
+          "as": "2.52%",
+          "sh": "2,283"
+        },
+        {
+          "no": 17,
+          "n": "Kinder Morgan, Inc.",
+          "s": "$KMI",
+          "as": "2.48%",
+          "sh": "16,309"
+        },
+        {
+          "no": 18,
+          "n": "Union Pacific Corporation",
+          "s": "$UNP",
+          "as": "2.41%",
+          "sh": "1,776"
+        },
+        {
+          "no": 19,
+          "n": "Waste Connections, Inc.",
+          "s": "!tsx/WCN",
+          "as": "2.17%",
+          "sh": "2,677"
+        },
+        {
+          "no": 20,
+          "n": "Canadian Pacific Kansas City Limited",
+          "s": "!tsx/CP",
+          "as": "2.16%",
+          "sh": "5,056"
+        },
+        {
+          "no": 21,
+          "n": "Atmos Energy Corporation",
+          "s": "$ATO",
+          "as": "1.94%",
+          "sh": "2,326"
+        },
+        {
+          "no": 22,
+          "n": "The Southern Company",
+          "s": "$SO",
+          "as": "1.90%",
+          "sh": "4,204"
+        },
+        {
+          "no": 23,
+          "n": "TC Energy Corporation",
+          "s": "!tsx/TRP",
+          "as": "1.70%",
+          "sh": "5,316"
+        },
+        {
+          "no": 24,
+          "n": "Evergy, Inc.",
+          "s": "$EVRG",
+          "as": "1.65%",
+          "sh": "4,077"
+        },
+        {
+          "no": 25,
+          "n": "DT Midstream, Inc.",
+          "s": "$DTM",
+          "as": "1.59%",
+          "sh": "2,310"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Utilities",
+          "w": 55.74
+        },
+        {
+          "n": "Energy",
+          "w": 29.03
+        },
+        {
+          "n": "Industrials",
+          "w": 14.65
+        },
+        {
+          "n": "Real Estate",
+          "w": 0.58
+        }
+      ],
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Utilities",
+            "y": 55.74
+          },
+          {
+            "name": "Energy",
+            "y": 29.03
+          },
+          {
+            "name": "Industrials",
+            "y": 14.65
+          },
+          {
+            "name": "Real Estate",
+            "y": 0.58
+          }
+        ],
+        "assets": [],
+        "countries": []
+      },
+      "infoBox": "NUIF is an equity ETF with a total of 37 individual holdings. The top holdings are Entergy stock at 7.52%, NextEra Energy at 7.44%, American Electric Power Company at 7.02%, Xcel Energy at 6.24%, and Alliant Energy at 4.89%.",
+      "infoTable": {
+        "count": 37,
+        "top10": 55.03,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 21027600,
+        "peRatio": 25.82958
+      },
+      "date": "Jul 14, 2026",
+      "count": 37,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 14, 2026",
+        "lastChecked": 1784390663471,
+        "topic": "holdings",
+        "ticker": "NUIF",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

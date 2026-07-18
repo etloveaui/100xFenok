@@ -1,0 +1,204 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "QULL",
+  "source_as_of": "2025-10-27T00:00:00Z",
+  "fetched_at": "2026-07-18T22:44:41Z",
+  "endpoints": {
+    "holdings": "/etf/qull/holdings/__data.json",
+    "overview": "/etf/qull/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 0,
+    "holdings_updated": "Oct 27, 2025",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$6.57M",
+      "expenseRatio": "0.95%",
+      "sharesOut": "100,000",
+      "beta": "2.01",
+      "inception": "Feb 4, 2021",
+      "provider_page": "etracs",
+      "etf_website": "https://etracs.ubs.com/product/detail/index/ussymbol/QULL"
+    },
+    "performance": {
+      "tr1m": -0.13582655205577862,
+      "trYTD": 16.939,
+      "tr1y": 35.121,
+      "cagr5y": 15.168,
+      "cagr10y": null,
+      "cagrMAX": 19.148
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "QULL",
+        "lastChecked": 1784333713284,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$6.57M",
+      "nav": null,
+      "expenseRatio": "0.95%",
+      "peRatio": null,
+      "sharesOut": "100,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "+35.12%",
+      "payoutFrequency": "n/a",
+      "beta": "2.01",
+      "holdings": 0,
+      "inception": "Feb 4, 2021",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The ETRACS 2x Leveraged MSCI US Quality Factor TR ETN (QULL) is an exchange-traded note that is based on the MSCI USA Sector Neutral Quality index. The fund provides 2x leveraged exposure to an index of US large- and mid-cap quality stocks selected and weighted based on various fundamental factors. QULL was launched on Feb 4, 2021 and is issued by ETRACS.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "QULL"
+        ],
+        [
+          "Provider",
+          "ETRACS"
+        ],
+        [
+          "Index Tracked",
+          "MSCI USA Sector Neutral Quality"
+        ]
+      ],
+      "etf_website": "https://etracs.ubs.com/product/detail/index/ussymbol/QULL",
+      "provider_page": "etracs",
+      "holdingsTable": {
+        "count": 0,
+        "updated": "Oct 27, 2025",
+        "top10": 0,
+        "holdings": []
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784410444517",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 67.321,
+        "price1m": 66.335,
+        "price3m": 59.028,
+        "price6m": 59.188,
+        "priceYTD": 56.649,
+        "price1y": 49.026,
+        "price5y": 32.699,
+        "priceMAX": 25.566
+      },
+      "performance": {
+        "tr1m": -0.13582655205577862,
+        "trYTD": 16.939,
+        "tr1y": 35.121,
+        "cagr5y": 15.168,
+        "cagr10y": null,
+        "cagrMAX": 19.148
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

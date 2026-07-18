@@ -2,22 +2,30 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-18T22:01:24Z",
+  "generated_at": "2026-07-18T22:54:45Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation"
   },
   "counts": {
-    "tracked": 73,
-    "cooldown": 51,
+    "tracked": 64,
+    "cooldown": 43,
     "provider_coverage_gaps": 0,
     "updated": 0,
-    "cleared": 1
+    "cleared": 9
   },
   "updated": [],
   "cleared": [
-    "KRYP"
+    "PCEB",
+    "PHYS",
+    "PSLV",
+    "RAAR",
+    "RAAY",
+    "RCLR",
+    "RCLY",
+    "RMHY",
+    "SFGV"
   ],
   "entries": {
     "ACII": {
@@ -1178,25 +1186,6 @@
       "last_status": "error",
       "last_provider": null
     },
-    "PCEB": {
-      "ticker": "PCEB",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "PHYS": {
-      "ticker": "PHYS",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "PLOO": {
       "ticker": "PLOO",
       "last_attempt_utc": "2026-06-19T10:07:15Z",
@@ -1205,16 +1194,6 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
-    },
-    "PSLV": {
-      "ticker": "PSLV",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
     },
     "QQMY": {
       "ticker": "QQMY",
@@ -1259,46 +1238,6 @@
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
-    "RAAR": {
-      "ticker": "RAAR",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "RAAY": {
-      "ticker": "RAAY",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "RCLR": {
-      "ticker": "RCLR",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "RCLY": {
-      "ticker": "RCLY",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "REGS": {
       "ticker": "REGS",
       "last_attempt_utc": "2026-07-14T00:04:14Z",
@@ -1342,16 +1281,6 @@
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
-    "RMHY": {
-      "ticker": "RMHY",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 6,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "SCLS": {
       "ticker": "SCLS",
       "last_attempt_utc": "2026-06-19T10:07:15Z",
@@ -1360,16 +1289,6 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
-    },
-    "SFGV": {
-      "ticker": "SFGV",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
     },
     "SHRD": {
       "ticker": "SHRD",
