@@ -700,7 +700,7 @@ const config = {
         artifact("finra_flow_proxy", "data/computed/fenok_flow_proxies.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
-          assertions: [exactAssertion("formula_version", "/formula_version", "fenok-flow-proxies-v0.1-finra-daily"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
+          assertions: [exactAssertion("formula_version", "/formula_version", "fenok-flow-proxies-v0.2-finra-daily"), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
       endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array"),

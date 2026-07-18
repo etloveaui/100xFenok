@@ -22,7 +22,7 @@ const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow");
 
 const SCHEMA_VERSION = "fenok-flow-proxies/v0.1";
-const FORMULA_VERSION = "fenok-flow-proxies-v0.1-finra-daily";
+const FORMULA_VERSION = "fenok-flow-proxies-v0.2-finra-daily";
 const CONTRACT_DOCS = [
   "docs/planning/CONTRACT_fenok_short_pressure_sources_20260628.md",
   "docs/planning/CONTRACT_fenok_flow_sources_20260628.md",
@@ -248,9 +248,24 @@ function scoreShortPressure(shortRatio) {
   return round(clamp(((shortRatio - 0.35) / 0.35) * 100), 2);
 }
 
+// Off-exchange share -> 0..100 activity score (DEC-266-style declared calibration).
+// Anchored on the measured off_exchange_share distribution of
+// data/computed/fenok_flow_proxies.json (687 scored US rows, measured 2026-07-18):
+//   p5=0.251  p10=0.278  p25=0.334  p50=0.405  p75=0.482  p90=0.567  p95=0.670
+// The clamp endpoints are set at ~p5/p95 (0.25/0.65), NOT p10/p90, on purpose:
+// endpoints exactly at p10/p90 pin ~20% of the real universe at 0 or 100 by
+// construction, colliding with the distribution-sanity floor in the test. p5/p95
+// endpoints keep real-data saturation near 10% while preserving discrimination
+// across the bulk (four-bucket direction spread stays populated).
+// The retired v0.1 band [0.10, 0.40] pinned 52.8% of rows at exactly 100 because
+// the measured median share (0.405) already exceeded the old 0.40 ceiling.
+const OFF_EXCHANGE_SHARE_FLOOR = 0.25; // ~p5 of 2026-07-18 measured distribution
+const OFF_EXCHANGE_SHARE_CEIL = 0.65; // ~p95 of 2026-07-18 measured distribution
+
 function scoreOffExchangeShare(share) {
   if (!Number.isFinite(share)) return null;
-  return round(clamp(((share - 0.1) / 0.3) * 100), 2);
+  const span = OFF_EXCHANGE_SHARE_CEIL - OFF_EXCHANGE_SHARE_FLOOR;
+  return round(clamp(((share - OFF_EXCHANGE_SHARE_FLOOR) / span) * 100), 2);
 }
 
 function directionFromShortPressure(score) {
