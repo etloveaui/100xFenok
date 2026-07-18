@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-18T00:04:48Z",
+  "generated_at": "2026-07-18T02:09:49Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,58 +17,58 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5537,
+    "candidate_total": 5536,
     "source_breakdown": {
       "etf_universe": 5479,
-      "etf_screener": 5532,
+      "etf_screener": 5536,
       "new_etfs": 100
     },
-    "detail_files": 4967,
-    "covered_detail_files": 4936,
-    "missing_detail_files": 601,
-    "extra_detail_files": 31,
-    "stockanalysis_detail_files": 4967,
+    "detail_files": 4981,
+    "covered_detail_files": 4949,
+    "missing_detail_files": 587,
+    "extra_detail_files": 32,
+    "stockanalysis_detail_files": 4981,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 89.15,
-    "primary_stockanalysis_pct": 89.15,
+    "coverage_pct": 89.4,
+    "primary_stockanalysis_pct": 89.4,
     "missing_by_source": {
-      "etf_universe": 568,
-      "etf_screener": 596,
+      "etf_universe": 554,
+      "etf_screener": 587,
       "new_etfs": 0
     },
     "missing_status_breakdown": {
       "retry_cooldown": 24,
-      "retry_pending": 113,
-      "untracked": 464
+      "retry_pending": 139,
+      "untracked": 424
     },
     "missing_failure_breakdown": {
       "external_quote_type_mismatch": 37,
-      "other_error": 100,
-      "untracked": 464
+      "other_error": 126,
+      "untracked": 424
     },
     "missing_availability_breakdown": {
-      "unprobed": 464,
-      "unresolved": 137
+      "unprobed": 424,
+      "unresolved": 163
     },
-    "pending_tracked": 184,
+    "pending_tracked": 210,
     "pending_cooldown": 57,
-    "pending_tracked_missing": 137,
+    "pending_tracked_missing": 163,
     "provider_coverage_gaps": 0
   },
   "missing_reason_summary": {
     "external_quote_type_mismatch": 37,
-    "other_error": 100,
-    "untracked": 464
+    "other_error": 126,
+    "untracked": 424
   },
   "missing_status_summary": {
     "retry_cooldown": 24,
-    "retry_pending": 113,
-    "untracked": 464
+    "retry_pending": 139,
+    "untracked": 424
   },
   "missing_availability_summary": {
-    "unprobed": 464,
-    "unresolved": 137
+    "unprobed": 424,
+    "unresolved": 163
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
@@ -100,18 +100,18 @@
       "CBOY"
     ],
     "untracked": [
-      "AMMO",
       "CEFD",
-      "CRWC",
       "DGP",
       "DGZ",
       "DJP",
-      "DRMY",
       "DULL",
       "DZZ",
-      "FEBU",
-      "FETH",
-      "FGDL"
+      "GDXD",
+      "GDXU",
+      "GLDI",
+      "GMEC",
+      "GMMA",
+      "GOOW"
     ]
   },
   "missing_status_samples": {
@@ -144,34 +144,34 @@
       "CBOX"
     ],
     "untracked": [
-      "AMMO",
       "CEFD",
-      "CRWC",
       "DGP",
       "DGZ",
       "DJP",
-      "DRMY",
       "DULL",
       "DZZ",
-      "FEBU",
-      "FETH",
-      "FGDL"
+      "GDXD",
+      "GDXU",
+      "GLDI",
+      "GMEC",
+      "GMMA",
+      "GOOW"
     ]
   },
   "missing_availability_samples": {
     "unprobed": [
-      "AMMO",
       "CEFD",
-      "CRWC",
       "DGP",
       "DGZ",
       "DJP",
-      "DRMY",
       "DULL",
       "DZZ",
-      "FEBU",
-      "FETH",
-      "FGDL"
+      "GDXD",
+      "GDXU",
+      "GLDI",
+      "GMEC",
+      "GMMA",
+      "GOOW"
     ],
     "unresolved": [
       "BSEP",
@@ -189,7 +189,6 @@
     ]
   },
   "missing_tickers": [
-    "AMMO",
     "BSEP",
     "BSOL",
     "BSTP",
@@ -248,7 +247,6 @@
     "CPSY",
     "CRDD",
     "CRMX",
-    "CRWC",
     "CSEX",
     "CXRN",
     "DDSQ",
@@ -259,7 +257,6 @@
     "DHSB",
     "DJP",
     "DOJE",
-    "DRMY",
     "DRUP",
     "DULL",
     "DVIN",
@@ -310,21 +307,16 @@
     "FLAO",
     "FLJJ",
     "FLYT",
-    "FNG",
     "FPAA",
-    "FPAS",
     "FSOL",
-    "FUSD",
     "FXA",
     "FXB",
     "FXC",
     "FXE",
     "FXF",
     "FXY",
-    "GALX",
     "GAVA",
     "GBTC",
-    "GCC",
     "GDLC",
     "GDOG",
     "GDT",
@@ -332,15 +324,12 @@
     "GDXU",
     "GDXW",
     "GEVX",
-    "GFSG",
     "GLD",
     "GLDI",
     "GLDM",
     "GLDW",
     "GLNK",
     "GLTR",
-    "GLWG",
-    "GLX",
     "GLXU",
     "GMEC",
     "GMMA",
@@ -522,7 +511,6 @@
     "ORO",
     "OSSL",
     "OUNZ",
-    "OUSL",
     "PALL",
     "PAPR",
     "PATX",
@@ -717,7 +705,6 @@
     "VIXY",
     "VOOX",
     "VOXP",
-    "VPFF",
     "VSOL",
     "VXX",
     "VXZ",
@@ -778,7 +765,6 @@
     "XVO",
     "XVUG",
     "XW",
-    "YSAU",
     "ZAUG",
     "ZFEB",
     "ZHOG",
@@ -809,6 +795,7 @@
     "GAUD",
     "GLDY",
     "IGTR",
+    "LCDL",
     "MAGO",
     "MARB",
     "MSDD",
@@ -829,7 +816,6 @@
   ],
   "samples": {
     "missing": [
-      "AMMO",
       "BSEP",
       "BSOL",
       "BSTP",
@@ -878,7 +864,8 @@
       "CPSD",
       "CPSF",
       "CPSJ",
-      "CPSM"
+      "CPSM",
+      "CPSN"
     ],
     "missing_retry_cooldown": [
       "CLNK",
@@ -909,18 +896,18 @@
       "CBOX"
     ],
     "missing_untracked": [
-      "AMMO",
       "CEFD",
-      "CRWC",
       "DGP",
       "DGZ",
       "DJP",
-      "DRMY",
       "DULL",
       "DZZ",
-      "FEBU",
-      "FETH",
-      "FGDL"
+      "GDXD",
+      "GDXU",
+      "GLDI",
+      "GMEC",
+      "GMMA",
+      "GOOW"
     ],
     "missing_external_quote_type_mismatch": [
       "BSOL",
@@ -966,6 +953,7 @@
       "GAUD",
       "GLDY",
       "IGTR",
+      "LCDL",
       "MAGO",
       "MARB",
       "MSDD",
