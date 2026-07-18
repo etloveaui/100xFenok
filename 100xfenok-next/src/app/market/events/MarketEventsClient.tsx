@@ -5,6 +5,7 @@ import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
+import { EVENTS_STALE_LABEL, eventStaleSuffix, isEventBoardStale } from "@/lib/market-events/freshness";
 
 type EventTab = "earnings" | "actions" | "ipo" | "movers";
 
@@ -179,9 +180,13 @@ function completeDateFloor(values: Array<string | null | undefined>): string | n
 
 function surfaceTimeLabel(doc: SurfaceDoc | null | undefined): string {
   const sourceDate = normalizedDate(doc?.source_as_of);
-  if (sourceDate) return `기준 ${sourceDate}`;
   const collectedDate = normalizedDate(doc?.fetched_at);
-  return collectedDate ? `수집 ${collectedDate}` : "원천 기준일 미제공";
+  const base = sourceDate
+    ? `기준 ${sourceDate}`
+    : collectedDate
+      ? `수집 ${collectedDate}`
+      : "원천 기준일 미제공";
+  return `${base}${eventStaleSuffix(doc)}`;
 }
 
 function eventTimeLabel(data: EventData | null): string {
@@ -315,6 +320,10 @@ export default function MarketEventsClient({
     movers: countRows(data?.gainers) + countRows(data?.losers) + countRows(data?.active) + countRows(data?.premarket) + countRows(data?.afterhours) + countRows(data?.gainersWeek) + countRows(data?.gainersMonth) + countRows(data?.losersYtd),
   }), [data]);
   const totalEventCount = tabCounts.earnings + tabCounts.actions + tabCounts.ipo + tabCounts.movers;
+  const boardStale = useMemo(
+    () => loaded && isEventBoardStale(data ? Object.values(data) : []),
+    [data, loaded],
+  );
 
   const drilldownRows = useMemo(() => buildDrilldownRows(data), [data]);
   const drilldownSections = useMemo(() => sectionOptions(drilldownRows), [drilldownRows]);
@@ -379,7 +388,7 @@ export default function MarketEventsClient({
           </p>
         </div>
         <div className="data-shell-head-actions">
-          <span className="data-shell-pill"><span />{eventTimeLabel(data)}</span>
+          <span className={`data-shell-pill${loaded ? (boardStale ? " warn" : " ok") : ""}`}><span />{eventTimeLabel(data)}{boardStale ? ` · ${EVENTS_STALE_LABEL}` : ""}</span>
           <MarketSectionNav active="events" />
         </div>
       </section>
