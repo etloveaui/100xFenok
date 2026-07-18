@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-07-17T23:49:38.480Z",
+  "generated_at": "2026-07-18T00:10:35.279Z",
   "source_as_of": {
     "stocks_analyzer": "2026-07-10",
     "stock_action_index": "2026-07-10",
@@ -28,7 +28,7 @@
   "totals": {
     "stocks": 1065,
     "with_single_stock_etfs": 92,
-    "single_stock_etfs": 179
+    "single_stock_etfs": 182
   },
   "stocks": {
     "AAL": {
@@ -207,9 +207,9 @@
           "etf_key": "etf:IOSX",
           "target_key": "ticker:AAPL",
           "ticker": "IOSX",
-          "label": "Corgi ETF Trust I - Corgi AAPL 2x Daily ETF",
+          "label": "Corgi AAPL 2x Daily ETF",
           "route": "/etfs/IOSX",
-          "category": "-",
+          "category": "Equity",
           "confidence": "medium",
           "classification_source": "stockanalysis.etf_list.name",
           "raw_underlying": "AAPL",
@@ -569,6 +569,32 @@
           "as_of": {
             "etf_universe": null,
             "market_facts": "2026-06-18"
+          }
+        },
+        {
+          "etf_key": "etf:SKHL",
+          "target_key": "ticker:AMD",
+          "ticker": "SKHL",
+          "label": "Direxion Daily SK Hynix Bull 2x ETF",
+          "route": "/etfs/SKHL",
+          "category": "-",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-07-16"
           }
         }
       ],
@@ -1718,6 +1744,32 @@
       "ticker": "CRWD",
       "route": "/stock/CRWD",
       "single_stock_etfs": [
+        {
+          "etf_key": "etf:CRWC",
+          "target_key": "ticker:CRWD",
+          "ticker": "CRWC",
+          "label": "Corgi ETF Trust I - Corgi CRWD 2x Daily ETF",
+          "route": "/etfs/CRWC",
+          "category": "-",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "CRWD",
+          "canonical_underlying_ticker": "CRWD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "CRWD",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
+          }
+        },
         {
           "etf_key": "etf:CRWL",
           "target_key": "ticker:CRWD",
@@ -3414,7 +3466,7 @@
           "etf_key": "etf:NFX",
           "target_key": "ticker:NFLX",
           "ticker": "NFX",
-          "label": "Corgi ETF Trust I - Corgi NFLX 2x Daily ETF",
+          "label": "Corgi NFLX 2x Daily ETF",
           "route": "/etfs/NFX",
           "category": "Equity",
           "confidence": "high",
@@ -4482,9 +4534,9 @@
           "etf_key": "etf:RMBX",
           "target_key": "ticker:RMBS",
           "ticker": "RMBX",
-          "label": "Investment Managers Series Trust II - Tradr 2X Long RMBS Daily ETF",
+          "label": "Tradr 2X Long RMBS Daily ETF",
           "route": "/etfs/RMBX",
-          "category": "-",
+          "category": "Equity",
           "confidence": "medium",
           "classification_source": "stockanalysis.etf_list.name",
           "raw_underlying": "RMBS",
@@ -4869,6 +4921,32 @@
       "ticker": "SPCX",
       "route": "/stock/SPCX",
       "single_stock_etfs": [
+        {
+          "etf_key": "etf:SPAX",
+          "target_key": "ticker:SPCX",
+          "ticker": "SPAX",
+          "label": "T-REX 2X Long SPCX Daily Target ETF",
+          "route": "/etfs/SPAX",
+          "category": "Equity",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "SPCX",
+          "canonical_underlying_ticker": "SPCX",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "SPCX",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-06-30"
+          }
+        },
         {
           "etf_key": "etf:SPCQ",
           "target_key": "ticker:SPCX",
