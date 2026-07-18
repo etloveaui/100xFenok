@@ -127,7 +127,7 @@ function markerSourceAsOf(root) {
   return marker.source_as_of;
 }
 
-function runLane(root, { gen, failures, request, run }) {
+function runLane(root, { gen, failures, request, run, controlledFailureKey = "" }) {
   return runEdgarFilingTimeline({
     argv: ["--sleep", "0"],
     paths: pathsFor(root),
@@ -137,6 +137,7 @@ function runLane(root, { gen, failures, request, run }) {
     runId: run.runId,
     runAttempt: run.runAttempt,
     eventName: run.eventName,
+    controlledFailureKey,
   });
 }
 
@@ -349,6 +350,67 @@ function runLane(root, { gen, failures, request, run }) {
   });
   assert.equal(noStore.ok, true);
   assert.equal(noStore.lkg, null, "no lkgRepoRoot -> the store is never touched");
+}
+
+// --- chaos injection: dispatch-only, through the real failure paths ----------
+{
+  // injection on schedule/local events is rejected in code
+  const root0 = makeRoot("chaos-reject");
+  await assert.rejects(
+    () => runLane(root0, { gen: GEN1, run: naturalRun("sched-run", "2026-07-14T00:40:00Z"), controlledFailureKey: "edgar_filings" }),
+    /controlled failure requires workflow_dispatch/,
+    "schedule events must reject injection in code",
+  );
+  await assert.rejects(
+    () => runLane(root0, { gen: GEN1, run: { runId: "local-run", runAttempt: 1, eventName: "local", observedAt: "2026-07-14T00:40:00Z" }, controlledFailureKey: "bootstrap" }),
+    /requires workflow_dispatch/,
+    "local events must reject injection in code",
+  );
+  await assert.rejects(
+    () => runLane(root0, { gen: GEN1, run: dispatchRun("bad-key-run", "2026-07-14T00:40:00Z"), controlledFailureKey: "not_a_key" }),
+    /unknown controlled EDGAR key/,
+    "unknown tokens are rejected in code",
+  );
+  assert.equal(fs.existsSync(indexPath(root0)), false, "rejected injections never touch the store");
+
+  // chaos cycle via the partial path: one ticker injected, marker retained
+  const root = makeRoot("chaos-partial");
+  const seed = await runLane(root, { gen: GEN1, run: naturalRun("seed-run", "2026-07-14T00:40:00Z") });
+  assert.equal(seed.lkg.kind, "success");
+  const chaos = await runLane(root, { gen: GEN1, run: dispatchRun("chaos-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "edgar_filings" });
+  assert.equal(chaos.ok, true, "one surviving ticker keeps the run publishable");
+  assert.equal(chaos.lkg.kind, "failure");
+  assert.equal(chaos.lkg.reason, "transport_error", "injection rides the real transport-error path");
+  assert.equal(chaos.lkg.degraded, true);
+  assert.equal(chaos.lkg.exitCode, 0);
+  assert.deepEqual(chaos.lkg.retrySet, [EDGAR_LKG_KEY]);
+  assert.equal(markerSourceAsOf(root), "2026-07-14", "chaos must not overwrite the freshness marker");
+  assert.equal(readJson(indexPath(root)).items[EDGAR_LKG_KEY].latest_failure.run_id, "chaos-run");
+
+  const recovered = await runLane(root, { gen: GEN2, run: naturalRun("natural-recovery-run", "2026-07-21T00:40:00Z") });
+  assert.equal(recovered.lkg.kind, "success");
+  assert.equal(recovered.lkg.recovered, true);
+  const item = readJson(indexPath(root)).items[EDGAR_LKG_KEY];
+  assert.equal(item.recovered_from_run_id, "chaos-run");
+  assert.equal(item.recovery_run_id, "natural-recovery-run");
+  assert.equal(item.recovery_event_name, "schedule");
+
+  // chaos cycle via the bootstrap path: the whole poll fails, marker retained
+  const rootB = makeRoot("chaos-bootstrap");
+  const seedB = await runLane(rootB, { gen: GEN1, run: naturalRun("seed-run", "2026-07-14T00:40:00Z") });
+  assert.equal(seedB.lkg.kind, "success");
+  const chaosB = await runLane(rootB, { gen: GEN1, run: dispatchRun("chaos-bootstrap-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "bootstrap" });
+  assert.equal(chaosB.ok, false);
+  assert.equal(chaosB.lkg.kind, "failure");
+  assert.equal(chaosB.lkg.reason, "transport_error");
+  assert.equal(chaosB.lkg.degraded, true);
+  assert.equal(chaosB.lkg.exitCode, 0);
+  assert.equal(markerSourceAsOf(rootB), "2026-07-14");
+
+  // a dispatch WITHOUT the token is a normal run (byte-stable behavior)
+  const plain = await runLane(rootB, { gen: GEN1, run: dispatchRun("plain-dispatch", "2026-07-18T11:00:00Z") });
+  assert.equal(plain.ok, true);
+  assert.equal(plain.lkg.kind, "recovery_requires_schedule", "no injection = no chaos; a plain dispatch just defers recovery to the natural gate");
 }
 
 console.log("test-build-edgar-lkg-recovery: ok");

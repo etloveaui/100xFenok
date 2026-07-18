@@ -37,6 +37,11 @@ on:
         description: 'Resolve/fetch candidates without data artifacts; publish attempt telemetry'
         required: false
         default: 'false'
+      controlled_failure_key:
+        description: 'Dispatch-only chaos key (edgar_filings or bootstrap)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -79,6 +84,7 @@ jobs:
           INPUT_FORMS: ${{ github.event.inputs.forms || '10-K,10-Q,8-K,20-F,6-K' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep || '0.6' }}
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: |
           echo "EDGAR_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
           ARGS=(--filings-per-ticker "${INPUT_FILINGS_PER_TICKER:-12}" --forms "${INPUT_FORMS:-10-K,10-Q,8-K,20-F,6-K}" --sleep "${INPUT_SLEEP:-0.6}")

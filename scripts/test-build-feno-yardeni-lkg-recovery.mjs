@@ -126,7 +126,7 @@ function markerSourceAsOf(root) {
   return marker.source_as_of;
 }
 
-async function runLane(root, { series, request, run }) {
+async function runLane(root, { series, request, run, controlledFailureKey = "" }) {
   return runFenoYardeni({
     ...runPaths(root),
     seedPayload,
@@ -139,6 +139,7 @@ async function runLane(root, { series, request, run }) {
     runId: run.runId,
     runAttempt: run.runAttempt,
     eventName: run.eventName,
+    controlledFailureKey,
   });
 }
 
@@ -351,6 +352,59 @@ async function runLane(root, { series, request, run }) {
   assert.equal(noWrite.ok, true);
   assert.equal(noWrite.lkg, null, "--no-write never touches the store");
   assert.equal(fs.existsSync(indexPath(root)), false);
+}
+
+// --- chaos injection: dispatch-only, through the real failure path -----------
+{
+  // injection on schedule/local events is rejected in code
+  const root0 = makeRoot("chaos-reject");
+  await assert.rejects(
+    () => runLane(root0, { series: fredGen1, run: naturalRun("sched-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "yardney_model" }),
+    /controlled failure requires workflow_dispatch/,
+    "schedule events must reject injection in code",
+  );
+  await assert.rejects(
+    () => runLane(root0, { series: fredGen1, run: { runId: "local-run", runAttempt: 1, eventName: "local", observedAt: "2026-07-18T10:00:00Z" }, controlledFailureKey: "yardney_model" }),
+    /requires workflow_dispatch/,
+    "local events must reject injection in code",
+  );
+  await assert.rejects(
+    () => runLane(root0, { series: fredGen1, run: dispatchRun("bad-key-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "not_a_key" }),
+    /unknown controlled Yardeni key/,
+    "unknown tokens are rejected in code",
+  );
+  assert.equal(fs.existsSync(indexPath(root0)), false, "rejected injections never touch the store");
+
+  // full chaos cycle: dispatch injection -> retry parked -> natural recovery
+  const root = makeRoot("chaos-cycle");
+  const seed = await runLane(root, { series: fredGen1, run: naturalRun("seed-run", "2026-07-11T10:00:00Z") });
+  assert.equal(seed.lkg.kind, "success");
+  const chaos = await runLane(root, { series: fredGen1, run: dispatchRun("chaos-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "yardney_model" });
+  assert.equal(chaos.ok, false);
+  assert.equal(chaos.reason, "transport_error", "injection rides the real transport-error path, never a synthetic side path");
+  assert.equal(chaos.lkg.kind, "failure");
+  assert.equal(chaos.lkg.degraded, true);
+  assert.equal(chaos.lkg.exitCode, 0);
+  assert.deepEqual(chaos.lkg.retrySet, [YARDENI_LKG_KEY]);
+  assert.equal(markerSourceAsOf(root), "2010-01-08", "chaos must not overwrite the freshness marker");
+  assert.equal(readJson(indexPath(root)).items[YARDENI_LKG_KEY].latest_failure.run_id, "chaos-run");
+
+  const sameSource = await runLane(root, { series: fredGen1, run: naturalRun("same-source-run", "2026-07-18T11:00:00Z") });
+  assert.equal(sameSource.lkg.kind, "not_promotable");
+  assert.equal(sameSource.lkg.reason, "recovery_not_advanced_by_provider");
+
+  const recovered = await runLane(root, { series: fredGen2, run: naturalRun("natural-recovery-run", "2026-07-25T10:00:00Z") });
+  assert.equal(recovered.lkg.kind, "success");
+  assert.equal(recovered.lkg.recovered, true);
+  const item = readJson(indexPath(root)).items[YARDENI_LKG_KEY];
+  assert.equal(item.recovered_from_run_id, "chaos-run");
+  assert.equal(item.recovery_run_id, "natural-recovery-run");
+  assert.equal(item.recovery_event_name, "schedule");
+
+  // a dispatch WITHOUT the token is a normal run (byte-stable behavior)
+  const plain = await runLane(root, { series: fredGen2, run: dispatchRun("plain-dispatch", "2026-07-25T11:00:00Z") });
+  assert.equal(plain.ok, true);
+  assert.equal(plain.lkg.kind, "not_newer", "no injection = no chaos; dispatch is a normal (non-advancing) run");
 }
 
 console.log("test-build-feno-yardeni-lkg-recovery: ok");

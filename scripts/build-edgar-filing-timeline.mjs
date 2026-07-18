@@ -66,6 +66,21 @@ const EDGAR_PERSISTENCE_POLICY = Object.freeze({
   eviction: "oldest_filing_date_first",
 });
 
+// Dispatch-only chaos injection (owner-approved R proof): "edgar_filings"
+// fails the FIRST resolved ticker's submissions fetch through the real
+// transport-error attempt result (the partial path); "bootstrap" fails the
+// company_tickers bootstrap through the same path. Schedule/local events
+// reject injection in code — a natural run can never be poisoned by accident.
+const EDGAR_CONTROLLED_FAILURE_KEYS = Object.freeze(["edgar_filings", "bootstrap"]);
+function validateControlledEdgarFailure(value, eventName) {
+  if (!value) return null;
+  if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
+  if (!EDGAR_CONTROLLED_FAILURE_KEYS.includes(value)) {
+    throw new Error(`unknown controlled EDGAR key: ${value}`);
+  }
+  return value;
+}
+
 const DEFAULT_PATHS = Object.freeze({
   analyzerPath: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
   edgarCachePath: path.join(ROOT, "data/edgar/company_tickers.json"),
@@ -620,7 +635,10 @@ export async function runEdgarFilingTimeline({
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
 } = {}) {
+  const injected = validateControlledEdgarFailure(controlledFailureKey.trim(), eventName);
+  let injectedTickerDone = false;
   let args = null;
   const requestResults = [];
   let bootstrapResult = null;
@@ -650,8 +668,14 @@ export async function runEdgarFilingTimeline({
     );
     let company;
     try {
-      company = await loadCompanyTickers(request, observedAt);
-      bootstrapResult = company.result;
+      if (injected === "bootstrap") {
+        // Chaos injection: the bootstrap fails via the real transport-error
+        // attempt result — the same path a genuine network failure takes.
+        bootstrapResult = attemptResult("transport_error", threwTuple("transport"));
+      } else {
+        company = await loadCompanyTickers(request, observedAt);
+        bootstrapResult = company.result;
+      }
     } catch (error) {
       bootstrapResult = thrownResult(error);
     }
@@ -694,7 +718,14 @@ export async function runEdgarFilingTimeline({
       stats.resolved += 1;
       let endpointResult;
       try {
-        endpointResult = await fetchSubmissions(cikRow.cik, request);
+        if (injected === "edgar_filings" && !injectedTickerDone) {
+          // Chaos injection: the first resolved ticker's submissions fetch
+          // fails via the real transport-error attempt result (partial path).
+          injectedTickerDone = true;
+          endpointResult = attemptResult("transport_error", threwTuple("transport"));
+        } else {
+          endpointResult = await fetchSubmissions(cikRow.cik, request);
+        }
       } catch (error) {
         endpointResult = thrownResult(error);
       }

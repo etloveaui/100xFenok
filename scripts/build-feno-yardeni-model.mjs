@@ -53,6 +53,18 @@ const YARDENI_FRESHNESS_MARKER_SCHEMA = "fenok-yardeni-freshness-marker/v1";
 // strictly newer is EXPECTED ABSENCE of a fresh weekly print — never a failure.
 const YARDENI_SOURCE_CADENCE = "weekly";
 
+// Dispatch-only chaos injection (owner-approved R proof): the token
+// "yardney_model" fails the FRED fetch through the SAME attempt-result path a
+// real transport failure takes, so recordFailure/retry/recovery all exercise
+// the production code path. Schedule/local events reject injection in code —
+// a natural run can never be poisoned by accident.
+function validateControlledYardeniFailure(value, eventName) {
+  if (!value) return null;
+  if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
+  if (value !== YARDENI_LKG_KEY) throw new Error(`unknown controlled Yardeni key: ${value}`);
+  return value;
+}
+
 const FRED_SERIES = [
   { id: "WAAA", label: "Moody's Seasoned Aaa Corporate Bond Yield" },
   { id: "WBAA", label: "Moody's Seasoned Baa Corporate Bond Yield" },
@@ -608,9 +620,15 @@ export async function runFenoYardeni({
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
 } = {}) {
+  const injected = validateControlledYardeniFailure(controlledFailureKey.trim(), eventName);
   let requestResults;
-  if (!apiKey) {
+  if (injected === YARDENI_LKG_KEY) {
+    // Chaos injection: both series fail via the real transport-error attempt
+    // result, so worst != ready and the lane takes the genuine failure path.
+    requestResults = FRED_SERIES.map(() => attemptResult("transport_error", threwTuple("transport")));
+  } else if (!apiKey) {
     requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
   } else {
     requestResults = [];

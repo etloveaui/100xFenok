@@ -9,6 +9,12 @@ on:
     # UTC Saturday 10:00 = KST Saturday 19:00, after the weekly FRED print.
     - cron: '0 10 * * 6'
   workflow_dispatch:
+    inputs:
+      controlled_failure_key:
+        description: 'Dispatch-only chaos key (yardney_model)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -43,6 +49,8 @@ jobs:
 
       - name: Build Feno Yardeni model from FRED
         id: fetch_yardeni
+        env:
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: node scripts/build-feno-yardeni-model.mjs --fetch
 
       - name: Validate public payload
