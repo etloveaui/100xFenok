@@ -201,6 +201,7 @@ export function useScreenerData(): ScreenerDataResult {
           fenokSignalConfidence: fenokSignal?.confidence ?? null,
           fenokSignalCoverageRatio: fenokSignal?.coverageRatio ?? null,
           fenokSignalAsOf: fenokSignal?.asOf ?? null,
+          fenokMarketScope: fenokSignal?.marketScope ?? null,
           fenokConvictionScore: fenokSignal?.convictionScore ?? null,
           fenokConvictionCall: convictionCallFromRecord(fenokSignal?.convictionCall, fenokSignal?.convictionScore),
           fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,

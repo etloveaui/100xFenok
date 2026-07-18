@@ -43,6 +43,7 @@ export interface ScreenerStock {
   fenokSignalConfidence?: string | null;
   fenokSignalCoverageRatio?: number | null;
   fenokSignalAsOf?: string | null;
+  fenokMarketScope?: string | null;
   fenokConvictionScore?: number | null;
   fenokConvictionCall?: "집중" | "혼재" | "희석" | null;
   fenokShortTermScore?: number | null;

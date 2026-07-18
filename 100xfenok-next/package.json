@@ -104,7 +104,7 @@
     "qa:fenok-s0-daily-gated": "npm run qa:fenok-signal-lens && node ../scripts/check-fenok-edge-freshness.mjs --require-active-s0-daily-gated",
     "qa:tokens": "node scripts/check-token-foundation.mjs",
     "qa:tokens:update-allowlist": "node scripts/generate-raw-color-allowlist.mjs",
-    "qa:copy": "node scripts/lint-public-copy.mjs",
+    "qa:copy": "node scripts/test-fenok-conviction-basis-copy.mjs && node scripts/lint-public-copy.mjs",
     "qa:quote-contract": "node scripts/check-quote-contract.mjs && python3 ../scripts/test_data_spine_gas_quote_gateway.py",
     "qa:treasury-contract": "node scripts/check-treasury-data-contract.mjs",
     "qa:data-spine-contract": "npm run qa:quote-contract && npm run qa:treasury-contract",

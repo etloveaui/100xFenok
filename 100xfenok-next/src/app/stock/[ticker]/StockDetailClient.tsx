@@ -46,6 +46,7 @@ import {
   loadFenokSignalsSummaryMap,
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import {
   getEtfDataSupplyPresentation,
   parseEtfApiResponse,
@@ -2868,6 +2869,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const compositeR = round(compositeScoreRaw);
   const shortR = round(shortScore);
   const longR = round(longScore);
+  const shortTermBasis = shortTermConvictionBasisCopy(record.marketScope);
 
   const compositeVerdict = shortR !== null && longR !== null
     ? (shortR >= longR + 12 ? "단기 신호가 장기 펀더멘털을 앞섭니다" : longR >= shortR + 12 ? "장기 펀더멘털이 단기 신호를 앞섭니다" : "단기 신호와 장기 펀더멘털이 균형을 이룹니다")
@@ -2985,7 +2987,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
             </svg>
             <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{shortR ?? "—"}</strong><span>/100</span></div>
           </div>
-          <p className="cpw4-edge-score-read">단기 6축 평균 신호입니다. {worst && worst.group === "short" ? <>가장 약한 축은 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}</p>
+          <p className="cpw4-edge-score-read"><strong>{shortTermBasis.label}</strong>. {shortTermBasis.comparisonNote} {worst && worst.group === "short" ? <>가장 약한 축은 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}</p>
         </div>
 
         <div className="cpw4-edge-score-card cpw4-edge-score-card--long">

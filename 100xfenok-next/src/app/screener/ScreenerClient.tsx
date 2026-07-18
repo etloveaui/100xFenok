@@ -14,6 +14,7 @@ import { formatDataDate, makeDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
+import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import MetricHelp from "@/components/MetricHelp";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
@@ -597,14 +598,15 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
       const longScore = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
         ? Math.round(stock.fenokLongTermScore)
         : null;
+      const shortTermBasis = shortTermConvictionBasisCopy(stock.fenokMarketScope);
       const isPicks = preset === "fenokPicks";
       return (
         <span className={cx("inline-flex flex-col items-end gap-1", isPicks ? "min-w-[140px]" : "min-w-[80px]")}>
           <span className="inline-flex flex-wrap justify-end gap-1">
             <span
               className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
-              title="단기 Fenok 점수 · 투자 조언이 아닙니다"
-              aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"}`}
+              title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote} 투자 조언이 아닙니다.`}
+              aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"} · ${shortTermBasis.label}`}
             >
               <span aria-hidden="true">단기</span>
               {shortScore ?? "—"}
@@ -617,6 +619,12 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
               <span aria-hidden="true">장기</span>
               {longScore ?? "—"}
             </span>
+          </span>
+          <span
+            className="max-w-full whitespace-nowrap text-[9px] font-bold text-[var(--c-ink-3)]"
+            title={shortTermBasis.comparisonNote}
+          >
+            {shortTermBasis.label}
           </span>
           {isPicks ? (
             <span className="inline-flex flex-wrap justify-end gap-1">

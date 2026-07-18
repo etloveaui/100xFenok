@@ -9,6 +9,7 @@ import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo } from "@/lib/fenok-signals/direction-ko";
+import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
@@ -2466,6 +2467,7 @@ export default function StockDetailPanel({
   const edgeDirection = edgeDirectionLabel(stock?.fenokEdgeDirection);
   const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
+  const shortTermBasis = shortTermConvictionBasisCopy(stock?.fenokMarketScope);
 
   if (!canvasPlusPreview) {
   return (
@@ -2479,7 +2481,7 @@ export default function StockDetailPanel({
             <div className="flex flex-wrap items-center gap-1.5">
               <span
                 className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(shortTermConvictionCall)}`}
-                title="Fenok 단기 6축 종합 점수"
+                title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote}`}
               >
                 <span aria-hidden="true">{shortTermConvictionCall ?? "미정"}</span>
                 {shortTermConvictionScore ?? "—"}
@@ -2522,8 +2524,8 @@ export default function StockDetailPanel({
                   {shortTermConvictionCall ?? "미정"}
                 </span>
               </div>
-              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
-                단기 6축 · {edgeLead}
+              <div className="mt-1 text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">
+                {shortTermBasis.label} · {edgeLead}
               </div>
             </div>
             <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
@@ -2626,6 +2628,7 @@ export default function StockDetailPanel({
     longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",
     shortTermConvictionScore !== null ? `단기 ${shortTermConvictionScore}` : "단기 미확인",
     signalCoverage,
+    shortTermBasis.label,
   ].join(" · ");
   const etfCompareHref = stock?.connection?.singleStockEtfs?.length
     ? ROUTES.etfCompareTickers(stock.connection.singleStockEtfs.map((link) => link.ticker).slice(0, 4))
@@ -2683,7 +2686,7 @@ export default function StockDetailPanel({
                   {edgeDirection} · {w4DirectionEnglish(edgeDirection)}
                 </span>
                 <h3>{verdictHeadline}</h3>
-                <p>{verdictCopy}. Fenok 파생 신호는 축별 강도와 약점을 함께 보여주는 참고 지표입니다.</p>
+                <p>{verdictCopy}. {shortTermBasis.comparisonNote} Fenok 파생 신호는 축별 강도와 약점을 함께 보여주는 참고 지표입니다.</p>
               </div>
               <div className="cpw4-hero-verdict__meters">
                 <W4Meter label="단기" score={shortTermConvictionScore} call={shortTermConvictionCall ?? null} />
