@@ -72,6 +72,9 @@ jobs:
           if [[ -f data/admin/nasdaq_giw_sox/lkg/constituents.json ]]; then
             git add -- data/admin/nasdaq_giw_sox/lkg/constituents.json
           fi
+          if [[ -f data/admin/nasdaq_giw_sox/history/constituents.json ]]; then
+            git add -- data/admin/nasdaq_giw_sox/history/constituents.json
+          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             git add -- data/indices/nasdaq-giw-sox-constituents.json
           fi

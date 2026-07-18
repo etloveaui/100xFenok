@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  applyFinraLkgStore,
+  buildFreshnessMarker,
   buildManifest,
   buildPayload,
   cachePathForDate,
@@ -13,11 +15,16 @@ import {
   endpointForDate,
   expandDateRange,
   FINRA_AVAILABILITY_POLICY,
+  FINRA_PERSISTENCE_POLICY,
+  finraHistoryPathFor,
   normalizeDate,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
   reduceFinraEndpointResults,
+  retainLatestMarkerDates,
+  rotateFinraMarkerHistory,
   run,
+  validFinraHistory,
 } from "./fetch-fenok-finra-daily-private.mjs";
 
 const sample = [
@@ -192,6 +199,116 @@ assert.equal(manifest.collections.length, 1);
   assert.equal(plan.retry_policy.retries, 2);
   assert.equal(plan.public_mirror_allowed, false);
   assert.match(plan.manifest_file, /_private\/admin\/fenok-flow\/finra\/manifests\/collection_manifest\.json$/);
+}
+
+// --- Bounded persistence (P): bounded marker-history rotation ----------------
+{
+  const iso = (compact) => `${compact.slice(0, 4)}-${compact.slice(4, 6)}-${compact.slice(6, 8)}`;
+  const markerFor = (compactDate, generatedAt = `${iso(compactDate)}T04:00:00Z`) => buildFreshnessMarker({
+    payload: buildPayload({
+      yyyymmdd: compactDate,
+      sourceUrl: "https://example.test",
+      fetchedAt: generatedAt,
+      rows: [{
+        date: compactDate,
+        symbol: "NVDA",
+        short_volume: 1,
+        short_exempt_volume: 0,
+        total_volume: 2,
+        short_volume_ratio: 0.5,
+        short_exempt_ratio: 0,
+        market: "Q",
+      }],
+    }),
+    generatedAt,
+  });
+  const compactAt = (index) => {
+    const date = new Date(Date.UTC(2025, 0, 1) + index * 24 * 60 * 60 * 1000);
+    return date.toISOString().slice(0, 10).replaceAll("-", "");
+  };
+
+  // cap enforcement + eviction order: 105 distinct dates -> newest 100 retained.
+  const many = Array.from({ length: 105 }, (_, index) => markerFor(compactAt(index)));
+  const retained = retainLatestMarkerDates(many);
+  assert.equal(retained.entries.length, 100);
+  assert.equal(retained.stats.distinct_source_dates, 105);
+  assert.equal(retained.stats.pruned, 5);
+  assert.equal(retained.entries[0].source_as_of, iso(compactAt(104)), "newest date first");
+  assert.equal(retained.entries.some((entry) => entry.source_as_of === iso(compactAt(4))), false, "oldest dates evicted first");
+  assert.equal(retained.entries.some((entry) => entry.source_as_of === iso(compactAt(5))), true);
+
+  // sparse history is never pruned.
+  const sparse = retainLatestMarkerDates(many.slice(0, 3));
+  assert.equal(sparse.entries.length, 3);
+  assert.equal(sparse.stats.pruned, 0);
+
+  // duplicate dates collapse to the newest generated_at (idempotent).
+  const dupe = markerFor(compactAt(10), "2026-07-18T00:00:00Z");
+  const collapsed = retainLatestMarkerDates([many[10], dupe]);
+  assert.equal(collapsed.entries.length, 1);
+  assert.equal(collapsed.entries[0].generated_at, "2026-07-18T00:00:00Z");
+
+  // malformed entries fail closed.
+  assert.throws(() => retainLatestMarkerDates([{ source_as_of: "not-a-date" }]), /invalid FINRA history entry/);
+  assert.throws(() => retainLatestMarkerDates([], { max_distinct_source_dates: 0 }), /invalid FINRA persistence/);
+
+  // rotation round-trip: corrupt history fails closed; valid history rotates.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "finra-history-"));
+  const first = rotateFinraMarkerHistory({ repoRootDir: root, marker: markerFor(compactAt(0)), generatedAt: "2026-07-14T04:00:00Z" });
+  assert.equal(first.history.entries.length, 1);
+  assert.equal(validFinraHistory(JSON.parse(fs.readFileSync(finraHistoryPathFor(root), "utf8"))), true);
+  fs.writeFileSync(finraHistoryPathFor(root), "{corrupt", "utf8");
+  assert.throws(
+    () => rotateFinraMarkerHistory({ repoRootDir: root, marker: markerFor(compactAt(1)), generatedAt: "2026-07-15T04:00:00Z" }),
+    /corrupt/,
+    "a corrupt existing history must fail closed instead of dropping dates",
+  );
+  assert.equal(FINRA_PERSISTENCE_POLICY.max_distinct_source_dates, 100);
+}
+
+// --- P hook: a fresh-primary promotion rotates the bounded history -----------
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "finra-history-hook-"));
+  const markerPath = path.join(root, "data", "admin", "finra_short_volume", "current", "regsho_daily.json");
+  const ready = (compactDate, observedAt) => {
+    const text = [
+      "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market",
+      `${compactDate}|NVDA|123|4|1000|B,Q,N`,
+      "",
+    ].join("\n");
+    return {
+      dates: [compactDate],
+      endpointResults: [classifyFinraEndpointResponse({ statusCode: 200, body: text }, compactDate)],
+      results: [{
+        payload: buildPayload({
+          yyyymmdd: compactDate,
+          sourceUrl: "https://example.test",
+          fetchedAt: observedAt,
+          rows: parseFinraDailyShortVolume(text, compactDate),
+        }),
+      }],
+    };
+  };
+  const first = applyFinraLkgStore({
+    ...ready("20260714", "2026-07-14T04:00:00Z"),
+    repoRoot: root,
+    markerPath,
+    run: { runId: "seed-run", runAttempt: 1, eventName: "schedule", observedAt: "2026-07-14T04:00:00Z" },
+  });
+  assert.equal(first.kind, "success");
+  assert.equal(first.history.entries_retained, 1);
+  const second = applyFinraLkgStore({
+    ...ready("20260715", "2026-07-15T04:00:00Z"),
+    repoRoot: root,
+    markerPath,
+    run: { runId: "next-run", runAttempt: 1, eventName: "schedule", observedAt: "2026-07-15T04:00:00Z" },
+  });
+  assert.equal(second.kind, "success");
+  assert.equal(second.history.entries_retained, 2);
+  const history = JSON.parse(fs.readFileSync(finraHistoryPathFor(root), "utf8"));
+  assert.equal(history.entries.length, 2);
+  assert.equal(history.entries[0].source_as_of, "2026-07-15");
+  assert.equal(history.entries[1].source_as_of, "2026-07-14");
 }
 
 console.log("test-fetch-fenok-finra-daily-private: ok");

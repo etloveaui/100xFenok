@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
-import { runNasdaqGiwSox } from "./fetch-nasdaq-giw-sox-constituents.mjs";
+import { runNasdaqGiwSox, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-16T02:00:00.000Z";
@@ -344,6 +344,65 @@ await assert.rejects(() => runNasdaqGiwSox({
   runId: "sox-invalid-chaos-run",
   publicMirror: false,
 }), /workflow_dispatch/);
+
+// --- Bounded persistence (P): bounded dated-snapshot sidecar -----------------
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-history-"));
+  const paths = makePaths(root);
+  const seed = await runNasdaqGiwSox({
+    ...paths,
+    dates: DATES,
+    request: async () => response(200, weightingPayload("SOX")),
+    observedAt: OBSERVED_AT,
+    attemptId: "sox-history-seed-attempt",
+    runId: "sox-history-seed-run",
+    eventName: "schedule",
+    publicMirror: false,
+  });
+  assert.equal(seed.ok, true);
+  assert.equal(seed.history.entries_retained, 1, "a fresh-primary promotion rotates the sidecar");
+  const historyFile = soxHistoryPathFor(root);
+  assert.equal(validSoxHistory(readJson(historyFile)), true);
+
+  // cap enforcement + eviction order: 105 distinct dates -> newest 100 retained.
+  const base = readJson(paths.canonicalPath);
+  const payloadAt = (date) => ({ ...base, as_of: date, generated_at: `${date}T02:00:00.000Z` });
+  const dateAt = (index) => new Date(Date.UTC(2025, 0, 1) + index * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const entries = [];
+  for (let index = 0; index < 105; index += 1) {
+    entries.push(rotateSoxSnapshotHistory({ repoRoot: root, payload: payloadAt(dateAt(index)), generatedAt: `${dateAt(index)}T03:00:00Z` }).history.entries[0]
+      ?? null);
+  }
+  const history = readJson(historyFile);
+  assert.equal(history.entries.length, 100, "sidecar is bounded at the cap");
+  assert.equal(history.entries[0].as_of, "2026-07-16", "the seed date is the newest of the 106 distinct dates");
+  assert.equal(history.entries.some((entry) => entry.as_of === dateAt(5)), false, "oldest dates evicted first (106 -> 100)");
+  assert.equal(history.entries.some((entry) => entry.as_of === dateAt(6)), true);
+  assert.equal(history.persistence_policy.max_distinct_source_dates, 100);
+
+  // sparse history is never pruned; duplicate dates collapse (idempotent).
+  const sparse = retainLatestSnapshotDates(history.entries.slice(0, 3));
+  assert.equal(sparse.entries.length, 3);
+  assert.equal(sparse.stats.pruned, 0);
+  const dupe = rotateSoxSnapshotHistory({
+    repoRoot: root,
+    payload: { ...payloadAt(dateAt(104)), generated_at: `${dateAt(104)}T04:00:00Z` },
+    generatedAt: `${dateAt(104)}T04:00:00Z`,
+  });
+  assert.equal(dupe.history.entries.length, 100, "re-rotating the same date replaces, never duplicates");
+  assert.equal(dupe.history.entries.find((entry) => entry.as_of === dateAt(104))?.snapshot.generated_at, `${dateAt(104)}T04:00:00Z`);
+
+  // malformed entries and corrupt history fail closed.
+  assert.throws(() => retainLatestSnapshotDates([{ as_of: "not-a-date" }]), /invalid SOX history entry/);
+  assert.throws(() => retainLatestSnapshotDates([], { max_distinct_source_dates: 0 }), /invalid SOX persistence/);
+  fs.writeFileSync(historyFile, "{corrupt", "utf8");
+  assert.throws(
+    () => rotateSoxSnapshotHistory({ repoRoot: root, payload: payloadAt("2026-01-01"), generatedAt: "2026-01-01T00:00:00Z" }),
+    /corrupt/,
+    "a corrupt existing history must fail closed instead of dropping dates",
+  );
+  assert.equal(SOX_PERSISTENCE_POLICY.max_distinct_source_dates, 100);
+}
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-nasdaq-giw-sox.yml"), "utf8");

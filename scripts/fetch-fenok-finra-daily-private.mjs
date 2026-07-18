@@ -47,6 +47,18 @@ const MANIFEST_FILE = path.join(FINRA_ROOT, "manifests", "collection_manifest.js
 const FINRA_LANE_ID = "finra_short_volume";
 const FINRA_LKG_KEY = "regsho_daily";
 const FINRA_FRESHNESS_MARKER_SCHEMA = "fenok-finra-freshness-marker/v1";
+// Bounded persistence (P): alongside the single current-day marker, keep a
+// bounded history of the freshest markers — the latest 100 distinct trade
+// dates, OCC-consistent. Sparse history is never evicted; malformed dates fail
+// closed; re-rotating the same date replaces its entry (idempotent).
+const FINRA_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "finra-bounded-persistence/v1",
+  basis: "source_date",
+  scope: "per_artifact",
+  max_distinct_source_dates: 100,
+  eviction: "oldest_source_date_first",
+});
+const FINRA_HISTORY_SCHEMA = "fenok-finra-marker-history/v1";
 const DEFAULT_DATASET = "regsho-daily";
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_BACKOFF_MS = 2000;
@@ -429,6 +441,83 @@ function freshnessMarkerSourceAsOf(doc) {
   return validFreshnessMarker(doc) ? doc.source_as_of : null;
 }
 
+function finraHistoryPathFor(repoRootDir) {
+  return path.join(repoRootDir, "data", "admin", FINRA_LANE_ID, "history", `${FINRA_LKG_KEY}.json`);
+}
+
+// Retain only entries whose source_as_of is within the newest N distinct
+// dates. Fail-closed: every entry must be a valid freshness marker with a
+// parseable source_as_of; duplicate dates collapse to the newest generated_at
+// (idempotent re-rotation).
+function retainLatestMarkerDates(entries, policy = FINRA_PERSISTENCE_POLICY) {
+  const maxDates = Number(policy?.max_distinct_source_dates);
+  if (!Number.isInteger(maxDates) || maxDates <= 0) {
+    throw new Error("invalid FINRA persistence max_distinct_source_dates");
+  }
+  const rows = Array.isArray(entries) ? entries : [];
+  const byDate = new Map();
+  for (const entry of rows) {
+    if (!validFreshnessMarker(entry)) {
+      throw new Error(`invalid FINRA history entry: ${entry?.source_as_of ?? "unknown"}`);
+    }
+    const date = entry.source_as_of;
+    const prior = byDate.get(date);
+    if (!prior || String(entry.generated_at) >= String(prior.generated_at)) byDate.set(date, entry);
+  }
+  const retainedDates = new Set([...byDate.keys()].sort().reverse().slice(0, maxDates));
+  const retained = [...byDate.values()]
+    .filter((entry) => retainedDates.has(entry.source_as_of))
+    .sort((a, b) => b.source_as_of.localeCompare(a.source_as_of));
+  return {
+    entries: retained,
+    stats: {
+      distinct_source_dates: byDate.size,
+      entries_before: rows.length,
+      entries_retained: retained.length,
+      pruned: byDate.size - retained.length,
+    },
+  };
+}
+
+function validFinraHistory(doc) {
+  return Boolean(doc)
+    && typeof doc === "object"
+    && !Array.isArray(doc)
+    && doc.schema_version === FINRA_HISTORY_SCHEMA
+    && doc.lane_id === FINRA_LANE_ID
+    && doc.persistence_policy?.schema_version === FINRA_PERSISTENCE_POLICY.schema_version
+    && Array.isArray(doc.entries)
+    && doc.entries.every((entry) => validFreshnessMarker(entry));
+}
+
+// Rotate the bounded marker history after a fresh-primary promotion. The
+// history file is the lane's only record of prior trade dates (the store's
+// current/lkg slots hold at most two), so its writes are fail-closed: a
+// corrupt existing history throws instead of silently dropping dates.
+function rotateFinraMarkerHistory({ repoRootDir, historyPath = finraHistoryPathFor(repoRootDir), marker, generatedAt }) {
+  if (!validFreshnessMarker(marker)) {
+    throw new Error("FINRA history rotation requires a valid freshness marker");
+  }
+  let existing = [];
+  if (fs.existsSync(historyPath)) {
+    const doc = readJson(historyPath, null);
+    if (!validFinraHistory(doc)) {
+      throw new Error(`FINRA marker history is corrupt: ${path.relative(repoRootDir, historyPath)}`);
+    }
+    existing = doc.entries;
+  }
+  const retained = retainLatestMarkerDates([marker, ...existing]);
+  const doc = {
+    schema_version: FINRA_HISTORY_SCHEMA,
+    lane_id: FINRA_LANE_ID,
+    persistence_policy: FINRA_PERSISTENCE_POLICY,
+    generated_at: generatedAt,
+    entries: retained.entries,
+  };
+  atomicWrite(historyPath, `${JSON.stringify(doc, null, 2)}\n`);
+  return { history: doc, stats: retained.stats };
+}
+
 // The store's freshness anchor is the NEWEST expected trading date in the window.
 // Holidays/weekends are not trading dates (isUsTradingDate), so their 403s never
 // enter the failure cycle: a window with no trading date at all is EXPECTED ABSENCE,
@@ -540,7 +629,12 @@ function applyFinraLkgStore({ repoRoot: storeRepoRoot, markerPath, dates, endpoi
   atomicWrite(markerPath, serialized);
   const success = store.recordSuccess({ artifacts: [candidate], run });
   const recovered = success.state.items[FINRA_LKG_KEY]?.recovered_at === run.observedAt;
-  return { kind: "success", updated: true, recovered, sourceAsOf };
+  const history = rotateFinraMarkerHistory({
+    repoRootDir: storeRepoRoot,
+    marker,
+    generatedAt: run.observedAt,
+  });
+  return { kind: "success", updated: true, recovered, sourceAsOf, history: history.stats };
 }
 
 function cachePathForDate(yyyymmdd) {
@@ -869,8 +963,11 @@ export {
   expandDateRange,
   FINRA_AVAILABILITY_POLICY,
   FINRA_FRESHNESS_MARKER_SCHEMA,
+  FINRA_HISTORY_SCHEMA,
   FINRA_LANE_ID,
   FINRA_LKG_KEY,
+  FINRA_PERSISTENCE_POLICY,
+  finraHistoryPathFor,
   freshnessMarkerPathFor,
   freshnessMarkerSourceAsOf,
   isUsTradingDate,
@@ -878,6 +975,9 @@ export {
   parseFinraDailyShortVolume,
   rawTextPathForDate,
   reduceFinraEndpointResults,
+  retainLatestMarkerDates,
+  rotateFinraMarkerHistory,
   run,
+  validFinraHistory,
   validFreshnessMarker,
 };

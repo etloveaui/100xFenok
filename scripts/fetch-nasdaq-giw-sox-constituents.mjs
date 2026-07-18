@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -35,6 +36,19 @@ const GIW_ENDPOINT = "https://indexes.nasdaqomx.com/Index/WeightingData";
 const MIN_ROWS = 25;
 const LANE_ID = "nasdaq_giw_sox";
 const LKG_KEY = "constituents";
+
+// Bounded persistence (P): alongside the single canonical snapshot, keep a
+// bounded dated-snapshot sidecar — the latest 100 distinct trade dates,
+// OCC-consistent. Sparse history is never evicted; malformed dates fail
+// closed; re-rotating the same date replaces its entry (idempotent).
+const SOX_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "sox-bounded-persistence/v1",
+  basis: "source_date",
+  scope: "per_artifact",
+  max_distinct_source_dates: 100,
+  eviction: "oldest_source_date_first",
+});
+const SOX_HISTORY_SCHEMA = "fenok-sox-snapshot-history/v1";
 
 function parseArgs(argv) {
   const args = {
@@ -201,6 +215,104 @@ function readValidCanonical(canonicalPath) {
   } catch {
     return null;
   }
+}
+
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function soxHistoryPathFor(repoRoot) {
+  return path.join(repoRoot, "data", "admin", LANE_ID, "history", `${LKG_KEY}.json`);
+}
+
+function validSoxHistoryEntry(entry) {
+  return Boolean(entry)
+    && typeof entry === "object"
+    && !Array.isArray(entry)
+    && validDate(entry?.as_of)
+    && typeof entry?.payload_sha256 === "string" && /^[0-9a-f]{64}$/.test(entry.payload_sha256)
+    && validSoxDocument(entry?.snapshot);
+}
+
+// Retain only entries whose as_of is within the newest N distinct dates.
+// Fail-closed: every entry must be a valid dated snapshot; duplicate dates
+// collapse to the newest generated_at (idempotent re-rotation).
+function retainLatestSnapshotDates(entries, policy = SOX_PERSISTENCE_POLICY) {
+  const maxDates = Number(policy?.max_distinct_source_dates);
+  if (!Number.isInteger(maxDates) || maxDates <= 0) {
+    throw new Error("invalid SOX persistence max_distinct_source_dates");
+  }
+  const rows = Array.isArray(entries) ? entries : [];
+  const byDate = new Map();
+  for (const entry of rows) {
+    if (!validSoxHistoryEntry(entry)) {
+      throw new Error(`invalid SOX history entry: ${entry?.as_of ?? "unknown"}`);
+    }
+    const date = entry.as_of;
+    const prior = byDate.get(date);
+    if (!prior || String(entry.snapshot.generated_at) >= String(prior.snapshot.generated_at)) byDate.set(date, entry);
+  }
+  const retainedDates = new Set([...byDate.keys()].sort().reverse().slice(0, maxDates));
+  const retained = [...byDate.values()]
+    .filter((entry) => retainedDates.has(entry.as_of))
+    .sort((a, b) => b.as_of.localeCompare(a.as_of));
+  return {
+    entries: retained,
+    stats: {
+      distinct_source_dates: byDate.size,
+      entries_before: rows.length,
+      entries_retained: retained.length,
+      pruned: byDate.size - retained.length,
+    },
+  };
+}
+
+function validSoxHistory(doc) {
+  return Boolean(doc)
+    && typeof doc === "object"
+    && !Array.isArray(doc)
+    && doc.schema_version === SOX_HISTORY_SCHEMA
+    && doc.lane_id === LANE_ID
+    && doc.persistence_policy?.schema_version === SOX_PERSISTENCE_POLICY.schema_version
+    && Array.isArray(doc.entries)
+    && doc.entries.every((entry) => validSoxHistoryEntry(entry));
+}
+
+// Rotate the bounded dated-snapshot sidecar after a fresh-primary promotion.
+// Fail-closed: a corrupt existing history throws instead of silently dropping
+// dates; the entry's digest binds the snapshot bytes it carries.
+function rotateSoxSnapshotHistory({ repoRoot, historyPath = soxHistoryPathFor(repoRoot), payload, generatedAt }) {
+  if (!validSoxDocument(payload)) {
+    throw new Error("SOX history rotation requires a valid snapshot payload");
+  }
+  const entry = {
+    as_of: payload.as_of,
+    payload_sha256: sha256Hex(Buffer.from(`${JSON.stringify(payload, null, 2)}\n`, "utf8")),
+    snapshot: payload,
+  };
+  let existing = [];
+  if (fs.existsSync(historyPath)) {
+    let doc = null;
+    try {
+      doc = JSON.parse(fs.readFileSync(historyPath, "utf8"));
+    } catch {
+      doc = null;
+    }
+    if (!validSoxHistory(doc)) {
+      throw new Error(`SOX snapshot history is corrupt: ${path.relative(repoRoot, historyPath)}`);
+    }
+    existing = doc.entries;
+  }
+  const retained = retainLatestSnapshotDates([entry, ...existing]);
+  const doc = {
+    schema_version: SOX_HISTORY_SCHEMA,
+    lane_id: LANE_ID,
+    persistence_policy: SOX_PERSISTENCE_POLICY,
+    generated_at: generatedAt,
+    entries: retained.entries,
+  };
+  atomicWrite(historyPath, `${JSON.stringify(doc, null, 2)}\n`);
+  return { history: doc, stats: retained.stats };
 }
 
 function controlledFailure(controlledFailureKey, eventName) {
@@ -371,6 +483,7 @@ export async function runNasdaqGiwSox({
   if (publicMirror) atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
+  const history = rotateSoxSnapshotHistory({ repoRoot, payload, generatedAt: observedAt });
   return {
     ok: true,
     reason: "ok",
@@ -381,6 +494,7 @@ export async function runNasdaqGiwSox({
     symbols: payload.symbols,
     accessScope: payload.access_scope,
     recovered,
+    history: history.stats,
   };
 }
 
@@ -432,3 +546,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
     process.exitCode = 1;
   });
 }
+
+export {
+  retainLatestSnapshotDates,
+  rotateSoxSnapshotHistory,
+  soxHistoryPathFor,
+  validSoxHistory,
+  SOX_HISTORY_SCHEMA,
+  SOX_PERSISTENCE_POLICY,
+};
