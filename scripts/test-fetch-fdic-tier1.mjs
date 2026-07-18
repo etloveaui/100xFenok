@@ -8,7 +8,12 @@ import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
-import { runFdicTier1 } from "./fetch-fdic-tier1.mjs";
+import {
+  FDIC_PERSISTENCE_POLICY,
+  MAX_QUARTERS,
+  retainLatestQuarters,
+  runFdicTier1,
+} from "./fetch-fdic-tier1.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "fdic-tier1-20260714t123456000z-test";
@@ -50,6 +55,70 @@ function assertValidShard(shard) {
 }
 
 {
+  assert.equal(MAX_QUARTERS, 80, "20 years preserves today's 2009-present history with a hard bound");
+  assert.equal(FDIC_PERSISTENCE_POLICY.max_retained_quarters, MAX_QUARTERS);
+  const quarterEnds = ["0331", "0630", "0930", "1231"];
+  const allQuarters = Array.from({ length: MAX_QUARTERS + 1 }, (_, index) => {
+    const year = 2016 + Math.floor(index / 4);
+    return `${year}${quarterEnds[index % 4]}`;
+  });
+  const retained = retainLatestQuarters(allQuarters);
+  assert.equal(retained.quarters.length, MAX_QUARTERS);
+  assert.equal(retained.quarters.includes(allQuarters[0]), false, "oldest quarter is evicted first");
+  assert.deepEqual(retained.persistence_state, {
+    available_quarters: MAX_QUARTERS + 1,
+    retained_quarters: MAX_QUARTERS,
+    pruned_quarters: 1,
+  });
+  const retainedAgain = retainLatestQuarters(retained.quarters);
+  assert.deepEqual(retainedAgain.quarters, retained.quarters, "quarter retention is idempotent");
+  assert.equal(retainedAgain.persistence_state.pruned_quarters, 0);
+  assert.throws(
+    () => retainLatestQuarters(["20260231", ...allQuarters]),
+    /invalid FDIC quarter identifier/,
+    "malformed quarters fail closed even when they would fall outside the retained window",
+  );
+  assert.throws(() => retainLatestQuarters(["00000331", ...allQuarters]), /invalid FDIC quarter identifier/);
+  assert.throws(
+    () => retainLatestQuarters([allQuarters[0], ...allQuarters]),
+    /duplicate FDIC quarter identifier/,
+    "duplicates fail closed before oldest-quarter slicing",
+  );
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-retention-test-"));
+  const paths = makePaths(root);
+  const quarterEnds = ["0331", "0630", "0930", "1231"];
+  const allQuarters = Array.from({ length: MAX_QUARTERS + 1 }, (_, index) => {
+    const year = 2006 + Math.floor(index / 4);
+    return `${year}${quarterEnds[index % 4]}`;
+  });
+  const calls = [];
+  const result = await runFdicTier1({
+    ...paths,
+    quarters: allQuarters,
+    request: async (_url, quarter) => {
+      calls.push(quarter);
+      return response(200, fdicRows(12));
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: `${ATTEMPT_ID}-retention`,
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true);
+  assert.equal(calls.length, MAX_QUARTERS);
+  assert.equal(calls.includes(allQuarters[0]), false, "evicted quarters are not fetched or persisted");
+  const output = readJson(paths.canonicalPath);
+  assert.equal(output.data.length, MAX_QUARTERS);
+  assert.deepEqual(output.persistence_state, {
+    available_quarters: MAX_QUARTERS + 1,
+    retained_quarters: MAX_QUARTERS,
+    pruned_quarters: 1,
+  });
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-test-"));
   const paths = makePaths(root);
   const calls = [];
@@ -70,6 +139,12 @@ function assertValidShard(shard) {
   const output = readJson(paths.canonicalPath);
   assert.equal(output.source, "FDIC");
   assert.deepEqual(output.data.map((row) => row.value), [13, 15]);
+  assert.deepEqual(output.persistence_policy, FDIC_PERSISTENCE_POLICY);
+  assert.deepEqual(output.persistence_state, {
+    available_quarters: QUARTERS.length,
+    retained_quarters: QUARTERS.length,
+    pruned_quarters: 0,
+  });
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   const row = shard.attempts[0];
@@ -107,6 +182,90 @@ function assertValidShard(shard) {
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   assert.equal(shard.attempts[0].http_status, 500);
+}
+
+{
+  const data = [
+    { date: "2025-12-31", value: 13, banks: 2 },
+    { date: "2026-03-31", value: 15, banks: 2 },
+  ];
+  const state = {
+    available_quarters: 2,
+    retained_quarters: 2,
+    pruned_quarters: 0,
+  };
+  const legacy = {
+    updated: "2026-04-01T00:00:00.000Z",
+    source: "FDIC",
+    description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
+    data,
+  };
+  const metadataCases = [
+    ["legacy", legacy, true],
+    ["policy-without-state", { ...legacy, persistence_policy: FDIC_PERSISTENCE_POLICY }, false],
+    ["state-without-policy", { ...legacy, persistence_state: state }, false],
+    ["wrong-policy", {
+      ...legacy,
+      persistence_policy: { ...FDIC_PERSISTENCE_POLICY, max_retained_quarters: MAX_QUARTERS + 1 },
+      persistence_state: state,
+    }, false],
+    ["extra-policy-key", {
+      ...legacy,
+      persistence_policy: { ...FDIC_PERSISTENCE_POLICY, extra: true },
+      persistence_state: state,
+    }, false],
+    ["descending", {
+      ...legacy,
+      persistence_policy: FDIC_PERSISTENCE_POLICY,
+      persistence_state: state,
+      data: [...data].reverse(),
+    }, false],
+    ["duplicate-date", {
+      ...legacy,
+      persistence_policy: FDIC_PERSISTENCE_POLICY,
+      persistence_state: state,
+      data: [data[0], data[0]],
+    }, false],
+    ["bad-arithmetic", {
+      ...legacy,
+      persistence_policy: FDIC_PERSISTENCE_POLICY,
+      persistence_state: { ...state, pruned_quarters: 1 },
+    }, false],
+  ];
+  const overCapData = Array.from({ length: MAX_QUARTERS + 1 }, (_, index) => {
+    const date = new Date(Date.UTC(2000, index * 3 + 2, 1));
+    date.setUTCMonth(date.getUTCMonth() + 1, 0);
+    return { date: date.toISOString().slice(0, 10), value: 13, banks: 2 };
+  });
+  metadataCases.push(["over-cap", {
+    ...legacy,
+    persistence_policy: FDIC_PERSISTENCE_POLICY,
+    persistence_state: {
+      available_quarters: overCapData.length,
+      retained_quarters: overCapData.length,
+      pruned_quarters: 0,
+    },
+    data: overCapData,
+  }, false]);
+
+  for (const [name, document, validLkg] of metadataCases) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), `fetch-fdic-tier1-${name}-lkg-test-`));
+    const paths = makePaths(root);
+    fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
+    fs.writeFileSync(paths.canonicalPath, `${JSON.stringify(document, null, 2)}\n`);
+    const result = await runFdicTier1({
+      ...paths,
+      quarters: QUARTERS,
+      request: async (_url, quarter) => quarter === QUARTERS[1]
+        ? response(500, { error: "upstream" })
+        : response(200, fdicRows(12)),
+      observedAt: OBSERVED_AT,
+      attemptId: `${ATTEMPT_ID}-${name}`,
+      sleep: async () => {},
+    });
+    assert.equal(result.degraded, validLkg, `${name} LKG validity`);
+    assert.equal(result.exitCode, validLkg ? 0 : 2, `${name} LKG exit code`);
+  }
 }
 
 {

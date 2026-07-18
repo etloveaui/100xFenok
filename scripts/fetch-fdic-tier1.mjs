@@ -29,6 +29,50 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
 
+// Preserve the documented 2009-present history today and leave a full 20-year
+// quarterly window before oldest-quarter eviction begins.
+export const MAX_QUARTERS = 80;
+export const FDIC_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "fdic-bounded-persistence/v1",
+  basis: "quarter_end",
+  scope: "series",
+  max_retained_quarters: MAX_QUARTERS,
+  eviction: "oldest_quarter_first",
+});
+
+function validQuarterIdentifier(quarter) {
+  if (typeof quarter !== "string" || !/^\d{8}$/.test(quarter)) return false;
+  if (Number(quarter.slice(0, 4)) < 1) return false;
+  if (!["0331", "0630", "0930", "1231"].includes(quarter.slice(4))) return false;
+  const isoDate = `${quarter.slice(0, 4)}-${quarter.slice(4, 6)}-${quarter.slice(6, 8)}`;
+  const parsed = new Date(`${isoDate}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === isoDate;
+}
+
+export function retainLatestQuarters(quarters, policy = FDIC_PERSISTENCE_POLICY) {
+  if (!Array.isArray(quarters)) throw new Error("FDIC quarter list must be an array");
+  const maxQuarters = Number(policy?.max_retained_quarters);
+  if (!Number.isInteger(maxQuarters) || maxQuarters <= 0) {
+    throw new Error("invalid FDIC persistence max_retained_quarters");
+  }
+  const seen = new Set();
+  for (const quarter of quarters) {
+    if (!validQuarterIdentifier(quarter)) throw new Error(`invalid FDIC quarter identifier: ${quarter}`);
+    if (seen.has(quarter)) throw new Error(`duplicate FDIC quarter identifier: ${quarter}`);
+    seen.add(quarter);
+  }
+  const sorted = [...quarters].sort((a, b) => String(a).localeCompare(String(b)));
+  const retained = sorted.slice(-maxQuarters);
+  return {
+    quarters: retained,
+    persistence_state: {
+      available_quarters: sorted.length,
+      retained_quarters: retained.length,
+      pruned_quarters: sorted.length - retained.length,
+    },
+  };
+}
+
 export function generateQuarters(now = new Date()) {
   const quarterEnds = ["0331", "0630", "0930", "1231"];
   const quarters = [];
@@ -121,8 +165,17 @@ function fdicSourceAsOf(document) {
   return dates.length > 0 ? dates.sort().at(-1) : null;
 }
 
+function exactFdicPersistencePolicy(policy) {
+  if (!policy || typeof policy !== "object" || Array.isArray(policy)) return false;
+  const expectedKeys = Object.keys(FDIC_PERSISTENCE_POLICY).sort();
+  const actualKeys = Object.keys(policy).sort();
+  return actualKeys.length === expectedKeys.length
+    && actualKeys.every((key, index) => key === expectedKeys[index])
+    && expectedKeys.every((key) => policy[key] === FDIC_PERSISTENCE_POLICY[key]);
+}
+
 function validFdicDocument(document) {
-  return document?.source === "FDIC"
+  const validLegacyShape = document?.source === "FDIC"
     && Array.isArray(document?.data)
     && document.data.length > 0
     && document.data.every((row) => (
@@ -132,6 +185,30 @@ function validFdicDocument(document) {
       && row.banks > 0
     ))
     && fdicSourceAsOf(document) !== null;
+  if (!validLegacyShape) return false;
+
+  const hasPolicy = Object.prototype.hasOwnProperty.call(document, "persistence_policy");
+  const hasState = Object.prototype.hasOwnProperty.call(document, "persistence_state");
+  if (!hasPolicy && !hasState) return true;
+  if (!hasPolicy || !hasState || !exactFdicPersistencePolicy(document.persistence_policy)) return false;
+  if (document.data.length > MAX_QUARTERS) return false;
+  if (document.data.some((row) => (
+    typeof row.date !== "string" || !validQuarterIdentifier(row.date.replaceAll("-", ""))
+  ))) return false;
+  if (document.data.some((row, index) => index > 0 && document.data[index - 1].date >= row.date)) return false;
+
+  const state = document.persistence_state;
+  const available = state?.available_quarters;
+  const retained = state?.retained_quarters;
+  const pruned = state?.pruned_quarters;
+  return Number.isInteger(available)
+    && Number.isInteger(retained)
+    && Number.isInteger(pruned)
+    && available >= 0
+    && retained >= 0
+    && pruned >= 0
+    && retained === document.data.length
+    && available === retained + pruned;
 }
 
 function controlledFailureQuarter(controlledFailureKey, eventName, quarters) {
@@ -158,7 +235,9 @@ export async function runFdicTier1({
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
   if (!Array.isArray(quarters) || quarters.length === 0) throw new Error("FDIC quarter list must be non-empty");
-  const injectedQuarter = controlledFailureQuarter(controlledFailureKey.trim(), eventName, quarters);
+  const retention = retainLatestQuarters(quarters);
+  const retainedQuarters = retention.quarters;
+  const injectedQuarter = controlledFailureQuarter(controlledFailureKey.trim(), eventName, retainedQuarters);
   const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fdic_tier1" });
   const lkgArtifacts = [{
     key: "fdic_tier1",
@@ -168,9 +247,9 @@ export async function runFdicTier1({
   }];
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const requestResults = [];
-  for (const [index, quarter] of quarters.entries()) {
+  for (const [index, quarter] of retainedQuarters.entries()) {
     requestResults.push(await evaluateQuarter({ request, quarter, controlledFailureQuarter: injectedQuarter }));
-    if (index < quarters.length - 1) await sleep(300);
+    if (index < retainedQuarters.length - 1) await sleep(300);
   }
   const worst = worstRequestResult(requestResults);
   const attempt = writeAttemptShard({
@@ -194,6 +273,8 @@ export async function runFdicTier1({
     updated: observedAt,
     source: "FDIC",
     description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
+    persistence_policy: FDIC_PERSISTENCE_POLICY,
+    persistence_state: retention.persistence_state,
     data,
   };
   const serialized = `${JSON.stringify(output, null, 2)}\n`;

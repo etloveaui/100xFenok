@@ -34,6 +34,14 @@ export const DEFILLAMA_ENDPOINTS = Object.freeze([
   { key: "chart", url: "https://stablecoins.llama.fi/stablecoincharts/all" },
   { key: "stablecoins", url: "https://stablecoins.llama.fi/stablecoins?includePrices=false" },
 ]);
+export const DEFILLAMA_MAX_SERIES_DAYS = 3_650;
+export const DEFILLAMA_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "defillama-bounded-persistence/v1",
+  basis: "source_date",
+  scope: "series",
+  max_series_days: DEFILLAMA_MAX_SERIES_DAYS,
+  eviction: "oldest_source_date_first",
+});
 
 const MAX_RETRIES = 2;
 const BACKOFFS_MS = Object.freeze([1000, 2000, 4000]);
@@ -102,19 +110,92 @@ function aggregateReadyResponses(results) {
 
 function seriesFromChart(chart) {
   if (!Array.isArray(chart)) return [];
-  return chart.map((row) => {
-    const epoch = Number(row?.date) * 1000;
-    const value = Number(row?.totalCirculating?.peggedUSD);
-    if (!Number.isFinite(epoch) || !Number.isFinite(value)) return null;
+  const sourceDates = new Set();
+  return chart.map((row, index) => {
+    const rawEpoch = row?.date;
+    const rawValue = row?.totalCirculating?.peggedUSD;
+    const epoch = Number(rawEpoch) * 1000;
+    const value = Number(rawValue);
+    if (rawEpoch === null || rawEpoch === undefined || String(rawEpoch).trim() === ""
+      || rawValue === null || rawValue === undefined || String(rawValue).trim() === ""
+      || !Number.isFinite(epoch) || !Number.isFinite(value)) {
+      throw new Error(`invalid DefiLlama chart row at index ${index}`);
+    }
     const date = new Date(epoch);
-    if (Number.isNaN(date.getTime())) return null;
-    return { date: date.toISOString().slice(0, 10), val: value };
-  }).filter(Boolean);
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`invalid DefiLlama chart row at index ${index}`);
+    }
+    const sourceDate = date.toISOString().slice(0, 10);
+    if (sourceDates.has(sourceDate)) {
+      throw new Error(`duplicate DefiLlama chart source date: ${sourceDate}`);
+    }
+    sourceDates.add(sourceDate);
+    return { date: sourceDate, val: value };
+  });
+}
+
+export function boundDefillamaSeries(chart, policy = DEFILLAMA_PERSISTENCE_POLICY) {
+  const maxDays = Number(policy?.max_series_days);
+  if (!Number.isInteger(maxDays) || maxDays <= 0) {
+    throw new Error("invalid DefiLlama persistence max_series_days");
+  }
+
+  const availableSeries = seriesFromChart(chart).sort((a, b) => a.date.localeCompare(b.date));
+  const series = availableSeries.slice(-maxDays);
+  return {
+    series,
+    persistence_state: {
+      available_days: availableSeries.length,
+      retained_days: series.length,
+      pruned_days: availableSeries.length - series.length,
+    },
+  };
+}
+
+function exactFlatObject(value, expected) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const valueKeys = Object.keys(value).sort();
+  const expectedKeys = Object.keys(expected).sort();
+  return JSON.stringify(valueKeys) === JSON.stringify(expectedKeys)
+    && expectedKeys.every((key) => value[key] === expected[key]);
+}
+
+function validSourceDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function validPersistenceEnvelope(document) {
+  const hasPolicy = Object.prototype.hasOwnProperty.call(document ?? {}, "persistence_policy");
+  const hasState = Object.prototype.hasOwnProperty.call(document ?? {}, "persistence_state");
+  if (!hasPolicy && !hasState) return true;
+  if (!hasPolicy || !hasState
+    || !exactFlatObject(document.persistence_policy, DEFILLAMA_PERSISTENCE_POLICY)) return false;
+
+  const series = document.series;
+  if (!Array.isArray(series) || series.length > DEFILLAMA_MAX_SERIES_DAYS) return false;
+  for (let index = 1; index < series.length; index += 1) {
+    if (series[index - 1].date.localeCompare(series[index].date) >= 0) return false;
+  }
+  if (document.current !== series.at(-1)?.val) return false;
+
+  const state = document.persistence_state;
+  if (!state || typeof state !== "object" || Array.isArray(state)) return false;
+  const availableDays = state.available_days;
+  const retainedDays = state.retained_days;
+  const prunedDays = state.pruned_days;
+  return Number.isInteger(availableDays) && availableDays >= 0
+    && Number.isInteger(retainedDays) && retainedDays >= 0
+    && Number.isInteger(prunedDays) && prunedDays >= 0
+    && retainedDays === series.length
+    && availableDays >= retainedDays
+    && prunedDays === availableDays - retainedDays;
 }
 
 function stablecoinsSourceAsOf(document) {
   const dates = Array.isArray(document?.series)
-    ? document.series.map((row) => row?.date).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
+    ? document.series.map((row) => row?.date).filter(validSourceDate)
     : [];
   return dates.length > 0 ? dates.sort().at(-1) : null;
 }
@@ -124,11 +205,12 @@ function validStablecoinsDocument(document) {
     && Number.isFinite(document?.current)
     && Array.isArray(document?.series)
     && document.series.length > 0
-    && document.series.every((row) => /^\d{4}-\d{2}-\d{2}$/.test(row?.date) && Number.isFinite(row?.val))
+    && document.series.every((row) => validSourceDate(row?.date) && Number.isFinite(row?.val))
     && Array.isArray(document?.stablecoins)
     && Array.isArray(document?.peggedAssets)
     && document.peggedAssets.length > 0
-    && stablecoinsSourceAsOf(document) !== null;
+    && stablecoinsSourceAsOf(document) !== null
+    && validPersistenceEnvelope(document);
 }
 
 export async function runDefillama({
@@ -191,13 +273,16 @@ export async function runDefillama({
     };
   }
 
-  const series = seriesFromChart(result.document.chart);
+  const boundedSeries = boundDefillamaSeries(result.document.chart);
+  const series = boundedSeries.series;
   const stablecoinDocument = result.document.stablecoins;
   const output = {
     updated: observedAt,
     source: "DefiLlama",
     current: series.at(-1)?.val ?? 0,
     series,
+    persistence_policy: DEFILLAMA_PERSISTENCE_POLICY,
+    persistence_state: boundedSeries.persistence_state,
     stablecoins: Array.isArray(stablecoinDocument) ? stablecoinDocument : [],
     peggedAssets: Array.isArray(stablecoinDocument?.peggedAssets) ? stablecoinDocument.peggedAssets : [],
   };

@@ -38,6 +38,18 @@ const LANE_ID = "treasury_tga";
 const LKG_KEY = "tga";
 const SOURCE = "Treasury FiscalData";
 const ENDPOINT = "accounting/dts/operating_cash_balance";
+// FiscalData already limits each account-type response to 10,000 rows. Mirror
+// that ceiling locally across the combined distinct-day series so persistence
+// remains explicitly bounded without discarding the currently published
+// 2005-present history.
+export const MAX_SERIES_DAYS = 10_000;
+export const TGA_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "treasury-tga-bounded-persistence/v1",
+  basis: "record_date",
+  scope: "series_and_raw",
+  max_series_days: MAX_SERIES_DAYS,
+  eviction: "oldest_record_date_first",
+});
 
 // Keep this ordering identical to the detection-floor builder. A producer
 // request is reduced with the same worst-result rule before its single lane
@@ -281,14 +293,16 @@ function buildOutput(documents, observedAt) {
   documents.forEach((document, index) => {
     raw[BUCKETS[index].key] = document.data;
   });
-  const series = projectSeriesFromRaw(raw);
-  if (series.length === 0) return null;
+  const retained = retainLatestTgaSeriesDays(raw);
+  if (retained.series.length === 0) return null;
   return {
     updated: observedAt,
     source: SOURCE,
     endpoint: ENDPOINT,
-    series,
-    raw,
+    persistence_policy: TGA_PERSISTENCE_POLICY,
+    persistence_state: retained.stats,
+    series: retained.series,
+    raw: retained.raw,
   };
 }
 
@@ -304,6 +318,49 @@ function projectSeriesFromRaw(raw) {
   const uniqueMap = new Map();
   for (const row of allData) uniqueMap.set(row.date, row.val);
   return Array.from(uniqueMap, ([date, val]) => ({ date, val }));
+}
+
+export function retainLatestTgaSeriesDays(raw, policy = TGA_PERSISTENCE_POLICY) {
+  const maxSeriesDays = Number(policy?.max_series_days);
+  if (!Number.isInteger(maxSeriesDays) || maxSeriesDays <= 0) {
+    throw new Error("invalid Treasury TGA persistence max_series_days");
+  }
+
+  let providerRows = 0;
+  for (const bucket of BUCKETS) {
+    const rows = raw?.[bucket.key];
+    if (!Array.isArray(rows)) throw new Error(`invalid Treasury TGA persistence bucket: ${bucket.key}`);
+    providerRows += rows.length;
+    for (const row of rows) {
+      if (!validSourceDate(row?.record_date)) {
+        throw new Error(`invalid Treasury TGA persistence record_date: ${String(row?.record_date ?? "<empty>")}`);
+      }
+    }
+  }
+
+  const projectedSeries = projectSeriesFromRaw(raw);
+  const series = projectedSeries.slice(-maxSeriesDays);
+  const retainedDates = new Set(series.map((row) => row.date));
+  const retainedRaw = Object.fromEntries(BUCKETS.map((bucket) => [
+    bucket.key,
+    raw[bucket.key].filter((row) => retainedDates.has(row.record_date)),
+  ]));
+  const retainedRawRows = Object.values(retainedRaw).reduce((sum, rows) => sum + rows.length, 0);
+
+  return {
+    raw: retainedRaw,
+    series,
+    stats: {
+      provider_rows: providerRows,
+      valid_series_days: projectedSeries.length,
+      retained_series_days: series.length,
+      pruned_series_days: projectedSeries.length - series.length,
+      retained_raw_rows: retainedRawRows,
+      pruned_raw_rows: providerRows - retainedRawRows,
+      oldest_retained_date: series[0]?.date ?? null,
+      newest_retained_date: series.at(-1)?.date ?? null,
+    },
+  };
 }
 
 function validObservedAt(value) {
@@ -336,7 +393,23 @@ function validTgaDocument(document) {
       && validBalance(row.open_today_bal)
     ))) return false;
   }
-  const expectedSeries = projectSeriesFromRaw(document.raw);
+  const expectedSeries = retainLatestTgaSeriesDays(document.raw).series;
+  const hasPersistencePolicy = document.persistence_policy !== undefined;
+  const hasPersistenceState = document.persistence_state !== undefined;
+  if (hasPersistencePolicy !== hasPersistenceState) return false;
+  if (hasPersistencePolicy) {
+    if (JSON.stringify(document.persistence_policy) !== JSON.stringify(TGA_PERSISTENCE_POLICY)) return false;
+    const state = document.persistence_state;
+    const retainedRawRows = Object.values(document.raw).reduce((sum, rows) => sum + rows.length, 0);
+    if (!Number.isInteger(state?.provider_rows) || state.provider_rows < retainedRawRows
+      || !Number.isInteger(state?.valid_series_days) || state.valid_series_days < document.series.length
+      || state.retained_series_days !== document.series.length
+      || state.pruned_series_days !== state.valid_series_days - state.retained_series_days
+      || state.retained_raw_rows !== retainedRawRows
+      || state.pruned_raw_rows !== state.provider_rows - state.retained_raw_rows
+      || state.oldest_retained_date !== document.series[0]?.date
+      || state.newest_retained_date !== document.series.at(-1)?.date) return false;
+  }
   return tgaSourceAsOf(document) !== null
     && JSON.stringify(document.series) === JSON.stringify(expectedSeries);
 }

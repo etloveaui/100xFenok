@@ -9,6 +9,9 @@ import { fileURLToPath } from "node:url";
 import {
   ACCOUNT_TYPES,
   ATTEMPT_SHARD_SCHEMA,
+  MAX_SERIES_DAYS,
+  TGA_PERSISTENCE_POLICY,
+  retainLatestTgaSeriesDays,
   runTreasuryTga,
 } from "./fetch-treasury-tga.mjs";
 import { validateAttemptEvidence } from "./build-data-supply-detection-floor.mjs";
@@ -604,6 +607,55 @@ await assert.rejects(
   }),
   /controlled failure requires workflow_dispatch/,
 );
+
+{
+  const sourceDates = Array.from({ length: MAX_SERIES_DAYS + 2 }, (_, index) => {
+    const date = new Date(Date.UTC(1980, 0, 1 + index));
+    return date.toISOString().slice(0, 10);
+  });
+  const raw = Object.fromEntries(["fra", "tga", "tgaOpening"].map((key, bucketIndex) => [
+    key,
+    sourceDates.map((recordDate, rowIndex) => ({
+      record_date: recordDate,
+      open_today_bal: String((bucketIndex + 1) * 1_000_000 + rowIndex),
+    })),
+  ]));
+
+  const retained = retainLatestTgaSeriesDays(raw);
+  assert.equal(retained.series.length, MAX_SERIES_DAYS);
+  assert.equal(retained.series[0].date, sourceDates[2], "oldest source days are evicted first");
+  assert.equal(retained.series.at(-1).date, sourceDates.at(-1), "newest source day is retained");
+  assert.deepEqual(Object.values(retained.raw).map((rows) => rows.length), [
+    MAX_SERIES_DAYS,
+    MAX_SERIES_DAYS,
+    MAX_SERIES_DAYS,
+  ]);
+  assert.deepEqual(retained.stats, {
+    provider_rows: (MAX_SERIES_DAYS + 2) * 3,
+    valid_series_days: MAX_SERIES_DAYS + 2,
+    retained_series_days: MAX_SERIES_DAYS,
+    pruned_series_days: 2,
+    retained_raw_rows: MAX_SERIES_DAYS * 3,
+    pruned_raw_rows: 6,
+    oldest_retained_date: sourceDates[2],
+    newest_retained_date: sourceDates.at(-1),
+  });
+
+  const retainedAgain = retainLatestTgaSeriesDays(retained.raw);
+  assert.deepEqual(retainedAgain.raw, retained.raw, "bounded Treasury persistence is idempotent");
+  assert.deepEqual(retainedAgain.series, retained.series, "series projection is idempotent");
+  assert.equal(retainedAgain.stats.pruned_series_days, 0);
+
+  const { paths, result } = await runCase(async (_url, accountType) => response(200, {
+    data: raw[["fra", "tga", "tgaOpening"][ACCOUNT_TYPES.indexOf(accountType)]],
+  }));
+  assert.equal(result.ok, true);
+  const output = readJson(paths.canonicalPath);
+  assert.deepEqual(output.persistence_policy, TGA_PERSISTENCE_POLICY);
+  assert.deepEqual(output.persistence_state, retained.stats);
+  assert.deepEqual(output.series, retained.series);
+  assert.deepEqual(output.raw, retained.raw);
+}
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-treasury-tga.yml"), "utf8");
