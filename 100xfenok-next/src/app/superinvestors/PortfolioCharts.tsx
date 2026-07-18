@@ -10,7 +10,7 @@ import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { FactorExposureRecord, FactorExposuresSummaryData, PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { formatAsOf } from "@/lib/market-valuation/freshness";
-import { formatPercent } from "@/lib/format";
+import { formatPercent, formatPlainPercent, formatSignedPercent } from "@/lib/format";
 
 type MaybeNumber = number | null | undefined;
 const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
@@ -52,8 +52,7 @@ export { loadPortfolioViews, loadFactorExposuresSummary } from "./portfolioViews
 
 function retStr(ret: MaybeNumber): string {
   if (!isFiniteNumber(ret)) return "—";
-  const pct = (ret * 100).toFixed(1);
-  return ret >= 0 ? `+${pct}%` : `${pct}%`;
+  return formatSignedPercent(ret, { fraction: true, digits: 1 });
 }
 
 function normalizeSectorWeights(sectors: Record<string, number>): Array<[CanonicalSector, number]> {
@@ -157,7 +156,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
               const d = leafRow(item);
               if (!d) return "";
               return [
-                `비중: ${isFiniteNumber(d.weight) ? (d.weight * 100).toFixed(2) : "—"}%`,
+                `비중: ${isFiniteNumber(d.weight) ? formatPlainPercent(d.weight, { fraction: true, digits: 2 }) : "—%"}`,
                 `분기말 이후 수익률: ${retStr(d.ret)}`,
                 `섹터: ${sectorLabelKo(normalizeSuperSector(d.sector, d.sector))}`,
               ];
@@ -267,7 +266,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
             label(item: { dataset: { label?: string }; raw: unknown }) {
               const v = Number(item.raw);
               const ret = v - 100;
-              return `${item.dataset.label ?? ""}: ${v.toFixed(1)} (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`;
+              return `${item.dataset.label ?? ""}: ${v.toFixed(1)} (${formatSignedPercent(ret, { fraction: false, digits: 1 })})`;
             },
           },
         },
@@ -660,7 +659,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
               const p = ctx.raw as ScatterPoint;
               const ret = p.y * 100;
               const vol = p.x * 100;
-              return `${p.investor}: 연수익률 ${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%, 연변동성 ${vol.toFixed(1)}%`;
+              return `${p.investor}: 연수익률 ${formatSignedPercent(ret, { fraction: false, digits: 1 })}, 연변동성 ${formatPlainPercent(vol, { fraction: false, digits: 1 })}`;
             },
           },
         },
@@ -829,7 +828,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
             label: (ctx) => {
               const v = Number(ctx.raw);
               const ret = v - 100;
-              return `${ctx.dataset.label}: ${v.toFixed(1)} (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`;
+              return `${ctx.dataset.label}: ${v.toFixed(1)} (${formatSignedPercent(ret, { fraction: false, digits: 1 })})`;
             },
           },
         },
