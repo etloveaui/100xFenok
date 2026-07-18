@@ -67,6 +67,7 @@ export function checkLaneRegistryCompleteness({
   }
 
   for (const exception of registry.declared_exceptions) {
+    if (exception.may_be_absent === true) continue;
     if (!fs.existsSync(path.join(repoRoot, exception.path))) {
       stale_exceptions.push(exception.path);
     }

@@ -120,6 +120,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify lane-registry commit-shard contract
+        run: node scripts/test-fetch-yf-finance-workflow.mjs
+
       - name: Install yfinance
         run: pip install yfinance
 

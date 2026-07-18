@@ -12,6 +12,7 @@ import {
   FRED_BANKING_GROUPS,
   runFredBanking,
 } from "./fetch-fred-banking.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "fred-banking-20260714t123456000z-test";
@@ -303,6 +304,21 @@ function assertValidShard(shard) {
   assert.match(workflow, /data\/macro\/fred-banking-monthly\.json/);
   assert.match(workflow, /100xfenok-next\/public\/data\/macro\/fred-banking-monthly\.json/);
   assert.match(workflow, /- name: Commit and push owned FRED banking data\n\s+if: \$\{\{ always\(\) \}\}/);
+}
+
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-fred-banking.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-fred-banking.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), ["fred_banking"].sort(), "registry lane attribution for this workflow");
 }
 
 console.log("test-fetch-fred-banking: ok");

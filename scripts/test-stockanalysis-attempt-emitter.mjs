@@ -18,6 +18,7 @@ import {
 import {
   emitStockAnalysisAttempt,
 } from "./emit-stockanalysis-attempt.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const ATTEMPT_ID = "gh-900-1";
 const OBSERVED_AT = "2026-07-16T09:30:00.000Z";
@@ -260,5 +261,20 @@ const workflow = fs.readFileSync(new URL("../.github/workflows/fetch-stockanalys
 assert.match(workflow, /test-stockanalysis-attempt-emitter\.mjs/);
 assert.match(workflow, /detection-attempts\/yahoo_etf_fallback\.json/);
 assert.match(workflow, /detection-attempts\/stockanalysis_etf_universe\.json/);
+
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-stockanalysis.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-stockanalysis.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), ["stockanalysis_etf_universe", "yahoo_etf_fallback"].sort(), "registry lane attribution for this workflow");
+}
 
 console.log("PASS stockanalysis attempt emitter");

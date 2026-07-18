@@ -78,6 +78,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify lane-registry commit-shard contract
+        run: node scripts/test-fenok-edge-krx-daily-workflow.mjs
+
       - name: Resolve KRX bounded window
         id: window
         env:

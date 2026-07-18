@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { runNasdaqGiwSox, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-16T02:00:00.000Z";
@@ -415,6 +416,21 @@ await assert.rejects(() => runNasdaqGiwSox({
   assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/lkg\/constituents\.json/);
   assert.doesNotMatch(workflow, /git add -A/);
   assert.doesNotMatch(workflow, /public\/data\/indices\/nasdaq-giw-sox-constituents\.json/);
+}
+
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-nasdaq-giw-sox.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-nasdaq-giw-sox.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), ["nasdaq_giw_sox"].sort(), "registry lane attribution for this workflow");
 }
 
 console.log("test-fetch-nasdaq-giw-sox-constituents: ok");

@@ -17,6 +17,7 @@ import {
   runDefillama,
 } from "./fetch-defillama.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -393,6 +394,21 @@ for (const failure of [
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
+}
+
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-defillama.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-defillama.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), ["defillama_stablecoins"].sort(), "registry lane attribution for this workflow");
 }
 
 console.log("test-fetch-defillama: ok");

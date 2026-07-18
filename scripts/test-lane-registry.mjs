@@ -124,10 +124,16 @@ function clone(value) {
       assert.ok(lane.recovery_store.startsWith(`${lane.roots.admin_store}/`), `${lane.id} recovery store escapes its admin root`);
     }
   }
-  // declared exception paths exist today (the shadow checker would warn otherwise)
+  // declared exception paths exist today (the shadow checker would warn otherwise);
+  // may_be_absent entries are declared-ephemeral and exempt by contract.
   for (const entry of LANE_REGISTRY.declared_exceptions) {
+    if (entry.may_be_absent === true) continue;
     assert.equal(fs.existsSync(path.join(REPO_ROOT, entry.path)), true, `stale declared exception: ${entry.path}`);
   }
+  const floorException = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
+  assert.equal(floorException?.may_be_absent, true,
+    "the ephemeral detection-floor report must be declared may_be_absent (intentionally not committed)");
 }
 
 // --- (c) checker fixtures: declared / undeclared / absent ------------------------

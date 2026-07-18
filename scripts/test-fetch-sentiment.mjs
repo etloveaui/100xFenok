@@ -16,6 +16,7 @@ import {
   runSentiment,
 } from "./fetch-sentiment.mjs";
 import { evaluateEndpointAssertions, returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const READY_TUPLE = {
@@ -364,6 +365,21 @@ async function runCase(root, {
   assert.match(workflow, /data\/admin\/sentiment\/lkg\/\*\.json/);
   assert.match(workflow, /- name: Commit sentiment data\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.doesNotMatch(workflow, /git add -A/);
+}
+
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-sentiment.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-sentiment.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), ["sentiment"].sort(), "registry lane attribution for this workflow");
 }
 
 console.log("test-fetch-sentiment: ok");

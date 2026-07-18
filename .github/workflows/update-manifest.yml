@@ -251,6 +251,7 @@ jobs:
           npm --prefix 100xfenok-next run build:fenok-data-health-kpi
           node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
           node scripts/test-build-fenok-data-health-kpi.mjs
+          node scripts/test-update-manifest-workflow.mjs
           node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
           npm --prefix 100xfenok-next run build:static-route-manifest
 

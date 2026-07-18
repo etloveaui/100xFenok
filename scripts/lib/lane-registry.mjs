@@ -21,6 +21,7 @@ export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"])
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
 export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
+export const WORKFLOW_CLASSES = Object.freeze(["platform_no_lane", "platform_central_reconciler"]);
 
 function fail(message) {
   throw new Error(`lane-registry: ${message}`);
@@ -506,10 +507,16 @@ const declared_exceptions = [
     reason: "shared detection-floor state root (attempt shards + provider-observation objects); not a lane store",
     owner: "detection-floor",
   },
+  {
+    path: "data/admin/data-supply-detection-floor.json",
+    kind: "file",
+    reason: "ephemeral detection-floor report; referenced in workflow text but intentionally NOT committed (pinned by test-build-data-supply-detection-floor.mjs)",
+    owner: "platform",
+    may_be_absent: true,
+  },
   ...[
     "data/admin/README.md",
-    "data/admin/data-usage-manifest.json",
-    "data/admin/fenok-data-health-kpi.json",
+    "data/admin/data-usage-manifest.json",    "data/admin/fenok-data-health-kpi.json",
     "data/admin/fenok-edge-coverage-index.json",
     "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
     "data/admin/fenok-edge-etf-daily1y-readiness.json",
@@ -531,6 +538,22 @@ const declared_exceptions = [
     owner: "platform",
   })),
 ];
+
+// Declared workflow classes (DEC-266: declared, never inferred). A workflow
+// with no owning lane is legal ONLY via a static declaration here — the gate
+// fails closed on any other lane-less workflow instead of silently passing.
+const workflow_classes = {
+  ".github/workflows/fenok-edge-krx-daily.yml": {
+    class: "platform_no_lane",
+    reason: "KRX stays owner-gated (permission-walled, not code-walled); the workflow commits only the declared-exception public-safe bridge index",
+    owner: "platform",
+  },
+  ".github/workflows/update-manifest.yml": {
+    class: "platform_central_reconciler",
+    reason: "central manifest reconciler (not a lane producer); commits only registry-declared lane artifacts and platform control-plane files",
+    owner: "platform",
+  },
+};
 
 // --- Validation (fail-closed, mirrors the detection config's loader) ---------
 
@@ -616,7 +639,7 @@ function validateLaneRecord(laneValue) {
 }
 
 export function validateLaneRegistry(registry) {
-  exactKeys(registry, ["schema_version", "lanes", "declared_exceptions"], "registry");
+  exactKeys(registry, ["schema_version", "lanes", "declared_exceptions", "workflow_classes"], "registry");
   if (registry.schema_version !== LANE_REGISTRY_SCHEMA) fail("schema_version is invalid");
   if (!Array.isArray(registry.lanes) || registry.lanes.length === 0) fail("lanes must be a non-empty array");
   const seenIds = new Set();
@@ -628,13 +651,29 @@ export function validateLaneRegistry(registry) {
   if (!Array.isArray(registry.declared_exceptions)) fail("declared_exceptions must be an array");
   const seenExceptions = new Set();
   for (const entry of registry.declared_exceptions) {
-    exactKeys(entry, ["path", "kind", "reason", "owner"], `declared exception ${entry?.path ?? "<unknown>"}`);
+    const expectedKeys = entry.may_be_absent === true
+      ? ["path", "kind", "reason", "owner", "may_be_absent"]
+      : ["path", "kind", "reason", "owner"];
+    exactKeys(entry, expectedKeys, `declared exception ${entry?.path ?? "<unknown>"}`);
     if (!validRepoRelativePath(entry.path)) fail(`declared exception path is invalid: ${entry.path}`);
     if (!["root", "file"].includes(entry.kind)) fail(`declared exception kind is invalid: ${entry.path}`);
     if (typeof entry.reason !== "string" || entry.reason.length === 0) fail(`declared exception reason is required: ${entry.path}`);
     if (typeof entry.owner !== "string" || entry.owner.length === 0) fail(`declared exception owner is required: ${entry.path}`);
+    if (entry.may_be_absent !== undefined && typeof entry.may_be_absent !== "boolean") {
+      fail(`declared exception may_be_absent must be a boolean: ${entry.path}`);
+    }
     if (seenExceptions.has(entry.path)) fail(`duplicate declared exception ${entry.path}`);
     seenExceptions.add(entry.path);
+  }
+  if (!registry.workflow_classes || typeof registry.workflow_classes !== "object" || Array.isArray(registry.workflow_classes)) {
+    fail("workflow_classes must be an object");
+  }
+  for (const [workflowRel, entry] of Object.entries(registry.workflow_classes)) {
+    if (!workflowRel.startsWith(".github/workflows/")) fail(`workflow_classes key must be a .github/workflows/ path: ${workflowRel}`);
+    exactKeys(entry, ["class", "reason", "owner"], `workflow class ${workflowRel}`);
+    if (!WORKFLOW_CLASSES.includes(entry.class)) fail(`workflow class is invalid for ${workflowRel}`);
+    if (typeof entry.reason !== "string" || entry.reason.length === 0) fail(`workflow class reason is required for ${workflowRel}`);
+    if (typeof entry.owner !== "string" || entry.owner.length === 0) fail(`workflow class owner is required for ${workflowRel}`);
   }
   return true;
 }
@@ -651,6 +690,7 @@ const registry = {
   schema_version: LANE_REGISTRY_SCHEMA,
   lanes,
   declared_exceptions,
+  workflow_classes,
 };
 
 validateLaneRegistry(registry);

@@ -13,6 +13,7 @@ import {
   runYahooTicker,
   validateYahooControlledFailureTickers,
 } from "./fetch-yahoo-ticker.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-14T05:00:00Z";
@@ -649,6 +650,21 @@ for (const mutate of [
   assert.match(workflow, /data\/admin\/yahoo-hourly-ticker/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.doesNotMatch(workflow, /git add (?:-A|--all)/);
+}
+
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
+{
+  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-yahoo-ticker.yml", import.meta.url), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: ".github/workflows/fetch-yahoo-ticker.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes, ["yahoo_ticker_macro"], "the registry must attribute this lane to fetch-yahoo-ticker.yml");
 }
 
 console.log("test-fetch-yahoo-ticker: ok");
