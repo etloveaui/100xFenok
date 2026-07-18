@@ -3,6 +3,9 @@ name: Pipeline Failure Alarm
 on:
   schedule:
     - cron: '23 * * * *'
+  workflow_run:
+    workflows: ['Update Manifest', 'Deploy Worker (Cloudflare)']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
