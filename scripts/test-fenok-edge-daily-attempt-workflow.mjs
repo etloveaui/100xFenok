@@ -6,6 +6,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const workflow = fs.readFileSync(path.join(repoRoot, ".github/workflows/fenok-edge-daily.yml"), "utf8");
@@ -126,5 +128,22 @@ const noInjectionControls = runControlledFailureValidation({
   INPUT_OCC_BATCH_INDEX: "2",
 });
 assert.equal(noInjectionControls.status, 0, noInjectionControls.stderr);
+
+// Lane Registry ⇄ commit-shard completeness gate (#366 step 4 pilot): every
+// registry-declared commit shard of this workflow's lanes is git-added, and the
+// allowlist names nothing undeclared — the false-green class (produced file
+// never committed) is structurally unshippable here.
+{
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText: workflow,
+    workflowRel: ".github/workflows/fenok-edge-daily.yml",
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), ["finra_short_volume", "occ_options_volume"].sort(),
+    "the registry must attribute both edge lanes to fenok-edge-daily.yml");
+}
 
 console.log("test-fenok-edge-daily-attempt-workflow: ok");
