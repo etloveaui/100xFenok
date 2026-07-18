@@ -1,0 +1,261 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "MARU",
+  "source_as_of": "2026-07-10T00:00:00Z",
+  "fetched_at": "2026-07-18T21:49:51Z",
+  "endpoints": {
+    "holdings": "/etf/maru/holdings/__data.json",
+    "overview": "/etf/maru/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+        "weight_pct": 97.89,
+        "shares": 458,
+        "raw": {
+          "n": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+          "as": "97.89%",
+          "sh": "458"
+        }
+      },
+      {
+        "name": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+        "weight_pct": 2.87,
+        "shares": 458,
+        "raw": {
+          "n": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+          "as": "2.87%",
+          "sh": "458"
+        }
+      },
+      {
+        "name": "Us Dollars",
+        "weight_pct": 0.12,
+        "shares": 40235,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "0.12%",
+          "sh": "40,235"
+        }
+      },
+      {
+        "name": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+        "weight_pct": -0.89,
+        "shares": 458,
+        "raw": {
+          "n": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+          "as": "-0.89%",
+          "sh": "458"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 10, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$33.60M",
+      "expenseRatio": "0.74%",
+      "sharesOut": "1.13M",
+      "inception": "Feb 28, 2025",
+      "provider_page": "allianz",
+      "etf_website": "https://www.allianzim.com/etfs/maru/"
+    },
+    "performance": {
+      "tr1m": -0.8930909676942749,
+      "trYTD": 6.313,
+      "tr1y": 13.957,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 12.678
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MARU",
+        "lastChecked": 1784375998356,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$33.60M",
+      "nav": null,
+      "expenseRatio": "0.74%",
+      "peRatio": null,
+      "sharesOut": "1.13M",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "+13.96%",
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Feb 28, 2025",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The AllianzIM U.S. Equity Buffer15 Uncapped Mar ETF (MARU) is an exchange-traded fund that mostly invests in enhanced growth alternatives. The fund aims for specific buffered losses and uncapped gains on the SPDR S&P 500 ETF Trust over a one-year period. The actively managed fund holds options and collateral MARU was launched on Feb 28, 2025 and is issued by Allianz.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Alternatives"
+        ],
+        [
+          "Category",
+          "Defined Outcome"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "MARU"
+        ],
+        [
+          "Provider",
+          "Allianz"
+        ]
+      ],
+      "etf_website": "https://www.allianzim.com/etfs/maru/",
+      "provider_page": "allianz",
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 10, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+            "as": "97.89%",
+            "sh": "458"
+          },
+          {
+            "n": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+            "as": "2.87%",
+            "sh": "458"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "0.12%",
+            "sh": "40,235"
+          },
+          {
+            "n": "Option on State Street® SPDR® S&P 500® ETF Feb27",
+            "as": "-0.89%",
+            "sh": "458"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784322889924",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 29.91,
+        "price1m": 29.784,
+        "price3m": 28.264,
+        "price6m": 28.127,
+        "priceYTD": 27.766,
+        "price1y": 25.903,
+        "price5y": null,
+        "priceMAX": 24.673
+      },
+      "performance": {
+        "tr1m": -0.8930909676942749,
+        "trYTD": 6.313,
+        "tr1y": 13.957,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 12.678
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
