@@ -51,12 +51,32 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 009240.KS despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "TypeError: object of type 'NoneType' has no len()",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 607,
+      "natural": true,
+      "observed_at": "2026-07-18T00:37:10Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-17T00:28:49Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/009240.KS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/009240.KS.json",
     "payload_sha256": "d520cb92ece3c637766e0204cfa15cdcc7df8b8d540e65e104c3e364073d3b49",
     "quote_as_of": "2026-07-16T06:30:30Z",
     "source_as_of": "2026-07-16"
@@ -67,16 +87,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for 009240.KS despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 671,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 607,
     "natural": true,
-    "observed_at": "2026-07-17T00:28:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-18T00:37:10Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for 009240.KS despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-18T00:37:10Z",
+    "run_attempt": 1,
+    "run_id": "29622560422"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-17T00:28:49Z",
+    "history_as_of": "2026-07-16",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/009240.KS.json",
+    "payload_sha256": "d520cb92ece3c637766e0204cfa15cdcc7df8b8d540e65e104c3e364073d3b49",
+    "quote_as_of": "2026-07-16T06:30:30Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -90,9 +143,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "009240.KS",
-  "updated_at": "2026-07-17T00:28:16Z"
+  "updated_at": "2026-07-18T00:37:10Z"
 }

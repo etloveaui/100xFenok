@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 453,
+      "natural": true,
+      "observed_at": "2026-07-18T00:49:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-18T00:52:19Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:22:18Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-18T00:51:24Z",
+    "history_as_of": "2026-07-17",
     "path": "data/yf/finance/DTM.json",
-    "payload_sha256": "6bc5a81f0f3b181ca6f49a315e76dfb78fc2149798e9880880c926f78a46475d",
-    "quote_as_of": "2026-07-15T20:00:03Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "08f56c8999deb018c766386f07c77a7cadfd46e0d60fa46a73b9539548586962",
+    "quote_as_of": "2026-07-17T20:00:02Z",
+    "source_as_of": "2026-07-17"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 619,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-18T00:52:19Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-17",
+    "observed_at": "2026-07-18T00:49:31Z",
+    "payload_sha256": "05203d7970b98aa706bf09453936be64cf5889fb6f5243af7b585131d7508c31",
+    "quote_as_of": "2026-07-17T20:00:02Z",
+    "run_attempt": 1,
+    "run_id": "29622560422",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DTM",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-18T00:52:19Z"
 }

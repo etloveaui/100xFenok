@@ -77,12 +77,32 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for CHKP despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "TypeError: object of type 'NoneType' has no len()",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 373,
+      "natural": true,
+      "observed_at": "2026-07-18T00:49:31Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-17T00:26:11Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/CHKP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CHKP.json",
     "payload_sha256": "2fac94be6961eafd792faab379cc6fc901bcbda46c8ff6625a53d1938c67167d",
     "quote_as_of": "2026-07-16T20:00:01Z",
     "source_as_of": "2026-07-16"
@@ -92,17 +112,50 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for CHKP despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 0,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 373,
     "natural": true,
-    "observed_at": "2026-07-17T00:31:14Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-07-18T00:49:31Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for CHKP despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-18T00:49:31Z",
+    "run_attempt": 1,
+    "run_id": "29622560422"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-17T00:26:11Z",
+    "history_as_of": "2026-07-16",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CHKP.json",
+    "payload_sha256": "2fac94be6961eafd792faab379cc6fc901bcbda46c8ff6625a53d1938c67167d",
+    "quote_as_of": "2026-07-16T20:00:01Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -116,9 +169,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CHKP",
-  "updated_at": "2026-07-17T00:31:14Z"
+  "updated_at": "2026-07-18T00:49:31Z"
 }

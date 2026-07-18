@@ -77,12 +77,32 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for PFGC despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "TypeError: object of type 'NoneType' has no len()",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 542,
+      "natural": true,
+      "observed_at": "2026-07-18T00:42:07Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-17T00:20:24Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/PFGC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PFGC.json",
     "payload_sha256": "231fa857c19c9faadbe1191de86bcd6d26fd7b793190b0a7cdcbff131345fbb7",
     "quote_as_of": "2026-07-16T20:00:02Z",
     "source_as_of": "2026-07-16"
@@ -92,17 +112,50 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for PFGC despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 0,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 542,
     "natural": true,
-    "observed_at": "2026-07-17T00:21:09Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-07-18T00:42:07Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for PFGC despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-18T00:42:07Z",
+    "run_attempt": 1,
+    "run_id": "29622560422"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-17T00:20:24Z",
+    "history_as_of": "2026-07-16",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PFGC.json",
+    "payload_sha256": "231fa857c19c9faadbe1191de86bcd6d26fd7b793190b0a7cdcbff131345fbb7",
+    "quote_as_of": "2026-07-16T20:00:02Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -116,9 +169,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PFGC",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-07-18T00:42:07Z"
 }

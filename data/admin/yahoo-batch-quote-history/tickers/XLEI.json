@@ -95,65 +95,47 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 580,
+      "natural": true,
+      "observed_at": "2026-07-18T00:37:10Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:35:22Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XLEI.json",
-    "payload_sha256": "66300830822f14a76c2c1f82edc755cc0a4ebf7056b30459fd476781af87c2b1",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-07-18T00:37:52Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/yf/finance/XLEI.json",
+    "payload_sha256": "fee225d396976bfb226234ab8b77452bd9419732819a45d7170e773db21d3fb4",
+    "quote_as_of": "2026-07-17T19:59:54Z",
+    "source_as_of": "2026-07-17"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 2,
-    "error": "empty payload",
+    "attempts_used": 1,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 0,
+    "failures": [],
+    "latency_ms": 580,
     "natural": true,
-    "observed_at": "2026-07-17T00:24:27Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-18T00:37:10Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -203,8 +185,25 @@
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-17",
+    "observed_at": "2026-07-18T00:37:10Z",
+    "payload_sha256": "f4be5089d5d49bd9bf3b5a4131ad344a6ed8718f5233468fd53fd4fbb104572d",
+    "quote_as_of": "2026-07-17T19:59:54Z",
+    "run_attempt": 1,
+    "run_id": "29622560422",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17"
+  },
+  "recovered_at": "2026-07-18T00:37:10Z",
+  "recovered_from_run_id": "29544227703",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "29622560422",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 15,
@@ -217,5 +216,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "XLEI",
-  "updated_at": "2026-07-17T00:24:27Z"
+  "updated_at": "2026-07-18T00:37:10Z"
 }

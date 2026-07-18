@@ -51,12 +51,32 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for CP despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "TypeError: object of type 'NoneType' has no len()",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 622,
+      "natural": true,
+      "observed_at": "2026-07-18T00:45:55Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-16T00:16:47Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/CP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CP.json",
     "payload_sha256": "e91793e3ed3bc0ed521ece48c2ab53d0bb3088a6a4b876c11889c9361e9a8e22",
     "quote_as_of": "2026-07-15T20:00:02Z",
     "source_as_of": "2026-07-15"
@@ -67,20 +87,53 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for CP despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 913,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 622,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-18T00:45:55Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "2/5"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for CP despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "TypeError: object of type 'NoneType' has no len()",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-18T00:45:55Z",
+    "run_attempt": 1,
+    "run_id": "29622560422"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-16T00:16:47Z",
+    "history_as_of": "2026-07-15",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CP.json",
+    "payload_sha256": "e91793e3ed3bc0ed521ece48c2ab53d0bb3088a6a4b876c11889c9361e9a8e22",
+    "quote_as_of": "2026-07-15T20:00:02Z",
+    "source_as_of": "2026-07-15"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CP",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-18T00:45:55Z"
 }

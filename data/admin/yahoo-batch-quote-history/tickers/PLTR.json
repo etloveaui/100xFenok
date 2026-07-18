@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 458,
+      "natural": true,
+      "observed_at": "2026-07-18T00:49:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-18T00:52:19Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:18:22Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-18T00:51:53Z",
+    "history_as_of": "2026-07-17",
     "path": "data/yf/finance/PLTR.json",
-    "payload_sha256": "56510600983d434426ec2d6c3deb95727f783aa2657944733f0dd931818c6b79",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "928ede0fa17aeb7c950156f0b501fa34f1b359da5c51d7d07a0f8594b19cb9f5",
+    "quote_as_of": "2026-07-17T20:00:00Z",
+    "source_as_of": "2026-07-17"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 640,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-18T00:52:19Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-17",
+    "observed_at": "2026-07-18T00:49:31Z",
+    "payload_sha256": "46221f139d18fe68fc36c0df8e77add0df2c42226ad174bc12a71c1bd6246a55",
+    "quote_as_of": "2026-07-17T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29622560422",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PLTR",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-18T00:52:19Z"
 }

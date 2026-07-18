@@ -108,65 +108,73 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 495,
+      "natural": true,
+      "observed_at": "2026-07-18T00:37:10Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-18T00:45:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-18T00:52:19Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29622560422",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:14:11Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XHOA.json",
-    "payload_sha256": "6a3c0114c717416287883bd552db29ca6a72587485ca5cd047dd2e88d44b013e",
+    "fetched_at": "2026-07-18T00:37:51Z",
+    "history_as_of": "2026-07-16",
+    "path": "data/yf/finance/XHOA.json",
+    "payload_sha256": "57d59bbe4a8da56c1729d07b49699bcb702af6728cd5ff3584f79aa20d348347",
     "quote_as_of": "2026-07-15T16:49:16Z",
-    "source_as_of": "2026-07-15"
+    "source_as_of": "2026-07-15T16:49:16Z"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 2,
-    "error": "empty payload",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
+    "failures": [],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-17T00:24:27Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-18T00:52:19Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29622560422",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "4/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -216,8 +224,25 @@
     "quote_as_of": "2026-07-15T16:49:16Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-16",
+    "observed_at": "2026-07-18T00:37:10Z",
+    "payload_sha256": "d845466b23932d400a1f99a74ef92b9d5ff4652d816965d82adb3703c74b253a",
+    "quote_as_of": "2026-07-15T16:49:16Z",
+    "run_attempt": 1,
+    "run_id": "29622560422",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-15T16:49:16Z"
+  },
+  "recovered_at": "2026-07-18T00:37:10Z",
+  "recovered_from_run_id": "29544227703",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "29622560422",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 28,
@@ -230,5 +255,5 @@
     "source_as_of": "2026-06-03T16:59:52Z"
   },
   "ticker": "XHOA",
-  "updated_at": "2026-07-17T00:24:27Z"
+  "updated_at": "2026-07-18T00:52:19Z"
 }
