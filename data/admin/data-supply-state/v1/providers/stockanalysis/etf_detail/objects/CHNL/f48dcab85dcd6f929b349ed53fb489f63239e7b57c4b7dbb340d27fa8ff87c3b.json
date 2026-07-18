@@ -1,0 +1,307 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "CHNL",
+  "source_as_of": "2026-07-10T00:00:00Z",
+  "fetched_at": "2026-07-18T18:23:27Z",
+  "endpoints": {
+    "holdings": "/etf/chnl/holdings/__data.json",
+    "overview": "/etf/chnl/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "LINK Futures Jul26",
+        "weight_pct": 70.62,
+        "shares": 23,
+        "raw": {
+          "n": "LINK Futures Jul26",
+          "as": "70.62%",
+          "sh": "23"
+        }
+      },
+      {
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 35.4,
+        "shares": 495138,
+        "raw": {
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "35.40%",
+          "sh": "495,138"
+        }
+      },
+      {
+        "name": "US Bank Money Market Deposit Account",
+        "weight_pct": 29.2,
+        "shares": 408354,
+        "raw": {
+          "n": "US Bank Money Market Deposit Account",
+          "as": "29.20%",
+          "sh": "408,354"
+        }
+      },
+      {
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 24.94,
+        "shares": 348775,
+        "raw": {
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "24.94%",
+          "sh": "348,775"
+        }
+      },
+      {
+        "name": "US Bank Money Market Deposit Account",
+        "weight_pct": 4.97,
+        "shares": 69469,
+        "raw": {
+          "n": "US Bank Money Market Deposit Account",
+          "as": "4.97%",
+          "sh": "69,469"
+        }
+      },
+      {
+        "name": "Cash Offset",
+        "weight_pct": -65.13,
+        "shares": 910800,
+        "raw": {
+          "n": "Cash Offset",
+          "as": "-65.13%",
+          "sh": "910,800"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 6,
+    "holdings_updated": "Jul 10, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$190.80K",
+      "expenseRatio": "1.15%",
+      "sharesOut": "20,000",
+      "dividendYield": "0.46%",
+      "inception": "Apr 1, 2026",
+      "etf_website": "https://www.volatilityshares.com/chnl"
+    },
+    "performance": {
+      "tr1m": 2.456,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "CHNL",
+        "lastChecked": 1784362674809,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$190.80K",
+      "nav": null,
+      "expenseRatio": "1.15%",
+      "peRatio": null,
+      "sharesOut": "20,000",
+      "dps": "$0.09",
+      "dividendYield": "0.46%",
+      "payoutRatio": null,
+      "exDivDate": "Jun 17, 2026",
+      "ch1y": null,
+      "payoutFrequency": "Monthly",
+      "beta": null,
+      "holdings": 6,
+      "inception": "Apr 1, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The VolatilityShares Chainlink ETF (CHNL) is an exchange-traded fund that mostly invests in long link, short usd currency. The fund is an actively managed fund, offering price participation in LINK, the native token of the Chanlink network, using near-term futures and LINK-related instruments. CHNL was launched on Apr 1, 2026 and is issued by Volatility Shares.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Currency"
+        ],
+        [
+          "Category",
+          "Digital Assets"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "CHNL"
+        ],
+        [
+          "Provider",
+          "Volatility Shares"
+        ],
+        [
+          "Index Tracked",
+          "LINK/USD Exchange Rate - Benchmark Price Return"
+        ]
+      ],
+      "etf_website": "https://www.volatilityshares.com/chnl",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 6,
+        "updated": "Jul 10, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "LINK Futures Jul26",
+            "as": "70.62%",
+            "sh": "23"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "35.40%",
+            "sh": "495,138"
+          },
+          {
+            "n": "US Bank Money Market Deposit Account",
+            "as": "29.20%",
+            "sh": "408,354"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "24.94%",
+            "sh": "348,775"
+          },
+          {
+            "n": "US Bank Money Market Deposit Account",
+            "as": "4.97%",
+            "sh": "69,469"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-65.13%",
+            "sh": "910,800"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2026-06-17",
+          "amt": 0.037,
+          "pay": "2026-06-18"
+        },
+        {
+          "dt": "2026-05-20",
+          "amt": 0.0384,
+          "pay": "2026-05-21"
+        },
+        {
+          "dt": "2026-04-22",
+          "amt": 0.0137,
+          "pay": "2026-04-23"
+        }
+      ],
+      "news": {
+        "exp": "1784408633176",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 18.14,
+        "price1m": 18.908,
+        "price3m": 22.231,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 20.791
+      },
+      "performance": {
+        "tr1m": 2.456,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
