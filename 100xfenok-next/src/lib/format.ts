@@ -85,6 +85,23 @@ export function formatBasisPoints(value: unknown, options: NumberOptions = {}): 
   return `${fixedLocale(n, digits)}bp`;
 }
 
+export function formatShares(value: unknown, options: { compact?: boolean; empty?: string } = {}): string {
+  const { compact = false, empty = "—" } = options;
+  const n = finiteNumber(value);
+  if (n === null) return empty;
+  if (!compact) return `${n.toLocaleString("ko-KR", { maximumFractionDigits: 0 })}주`;
+  const abs = Math.abs(n);
+  if (abs >= 100_000_000) {
+    const scaled = n / 100_000_000;
+    return `${fixedLocale(scaled, compactDigits(scaled))}억주`;
+  }
+  if (abs >= 10_000) {
+    const scaled = n / 10_000;
+    return `${fixedLocale(scaled, compactDigits(scaled))}만주`;
+  }
+  return `${n.toLocaleString("ko-KR", { maximumFractionDigits: 0 })}주`;
+}
+
 export function formatCompactNumber(value: unknown, empty = "—"): string {
   const n = finiteNumber(value);
   if (n === null) return empty;
