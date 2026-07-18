@@ -18,6 +18,10 @@ on:
         description: 'Use cached/private inputs only; do not fetch remote sources'
         required: false
         default: 'false'
+      controlled_failure_lanes:
+        description: 'Optional controlled failures: occ_options_volume and/or finra_short_volume (comma-separated)'
+        required: false
+        default: ''
       finra_from:
         description: 'Optional FINRA start date override, YYYYMMDD'
         required: false
@@ -91,6 +95,7 @@ jobs:
         env:
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
           INPUT_NO_FETCH: ${{ github.event.inputs.no_fetch || 'false' }}
+          INPUT_CONTROLLED_FAILURE_LANES: ${{ github.event.inputs.controlled_failure_lanes || '' }}
           INPUT_FINRA_FROM: ${{ github.event.inputs.finra_from || '' }}
           INPUT_FINRA_TO: ${{ github.event.inputs.finra_to || '' }}
           # Sequential same-run batches keep the 1500-request guard intact per
@@ -105,6 +110,55 @@ jobs:
           INPUT_OCC_SLEEP_MS: ${{ github.event.inputs.occ_sleep_ms || '250' }}
         shell: bash
         run: |
+          CONTROLLED_FAILURE_LANES=""
+          if [ -n "$INPUT_CONTROLLED_FAILURE_LANES" ]; then
+            REMAINING_LANES="$INPUT_CONTROLLED_FAILURE_LANES"
+            NORMALIZED_LANES=()
+            while true; do
+              if [[ "$REMAINING_LANES" == *,* ]]; then
+                RAW_LANE="${REMAINING_LANES%%,*}"
+                REMAINING_LANES="${REMAINING_LANES#*,}"
+                HAS_MORE_LANES=true
+              else
+                RAW_LANE="$REMAINING_LANES"
+                HAS_MORE_LANES=false
+              fi
+              LANE="${RAW_LANE#"${RAW_LANE%%[![:space:]]*}"}"
+              LANE="${LANE%"${LANE##*[![:space:]]}"}"
+              if [ -z "$LANE" ]; then
+                echo "::error::empty controlled failure lane token is not allowed" >&2
+                exit 1
+              fi
+              case "$LANE" in
+                occ_options_volume|finra_short_volume)
+                  NORMALIZED_LANES+=("$LANE")
+                  ;;
+                *)
+                  printf '::error::unknown controlled failure lane token: %q\n' "$LANE" >&2
+                  exit 1
+                  ;;
+              esac
+              if [ "$HAS_MORE_LANES" = false ]; then break; fi
+            done
+            printf -v CONTROLLED_FAILURE_LANES '%s,' "${NORMALIZED_LANES[@]}"
+            CONTROLLED_FAILURE_LANES="${CONTROLLED_FAILURE_LANES%,}"
+            if [ "${INPUT_PLAN_ONLY:-false}" = "true" ]; then
+              echo "::error::controlled failure lanes cannot be combined with plan_only=true" >&2
+              exit 1
+            fi
+            if [ "${INPUT_NO_FETCH:-false}" = "true" ]; then
+              echo "::error::controlled failure lanes cannot be combined with no_fetch=true" >&2
+              exit 1
+            fi
+            case ",$CONTROLLED_FAILURE_LANES," in
+              *,occ_options_volume,*)
+                if [ -n "${INPUT_OCC_BATCH_INDEX:-}" ]; then
+                  echo "::error::occ_options_volume controlled failure cannot use occ_batch_index" >&2
+                  exit 1
+                fi
+                ;;
+            esac
+          fi
           OCC_BATCH_SIZE="${INPUT_OCC_BATCH_SIZE:-375}"
           OCC_BATCH_COUNT="${INPUT_OCC_BATCH_COUNT:-3}"
           # Empty index = sequential batch-count mode (default). A dispatch-time
@@ -121,6 +175,7 @@ jobs:
             echo "occ_max_requests=${INPUT_OCC_MAX_REQUESTS:-100}"
             echo "occ_fail_threshold=${INPUT_OCC_FAIL_THRESHOLD:-5}"
             echo "occ_sleep_ms=${INPUT_OCC_SLEEP_MS:-250}"
+            echo "controlled_failure_lanes=$CONTROLLED_FAILURE_LANES"
           } >> "$GITHUB_OUTPUT"
           echo "FENOK_EDGE_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
           echo "FENOK_EDGE_NO_FETCH=${INPUT_NO_FETCH:-false}" >> "$GITHUB_ENV"
@@ -139,6 +194,7 @@ jobs:
           OCC_MAX_REQUESTS: ${{ steps.window.outputs.occ_max_requests }}
           OCC_FAIL_THRESHOLD: ${{ steps.window.outputs.occ_fail_threshold }}
           OCC_SLEEP_MS: ${{ steps.window.outputs.occ_sleep_ms }}
+          INPUT_CONTROLLED_FAILURE_LANES: ${{ steps.window.outputs.controlled_failure_lanes }}
         run: |
           ARGS=(
             "--skip-news"

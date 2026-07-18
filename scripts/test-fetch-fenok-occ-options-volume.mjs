@@ -10,6 +10,7 @@ import {
   buildAvailabilitySnapshot,
   buildCoverage,
   buildOccBatchAttempt,
+  controlledOccFailureDisposition,
   buildRowsForTest,
   candidateDates,
   classifyOccEndpointResponse,
@@ -22,6 +23,7 @@ import {
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   OCC_PERSISTENCE_POLICY,
+  parseControlledFailureLanes,
   parseOccCsv,
   parseArgs,
   reduceOccEndpointResults,
@@ -30,6 +32,73 @@ import {
   summarizeDateAttempt,
   summarizeTickerAvailability,
 } from "./fetch-fenok-occ-options-volume.mjs";
+
+assert.deepEqual(parseControlledFailureLanes("", "schedule"), []);
+assert.deepEqual(
+  parseControlledFailureLanes(" occ_options_volume , finra_short_volume ", "workflow_dispatch"),
+  ["occ_options_volume", "finra_short_volume"],
+);
+assert.deepEqual(
+  parseControlledFailureLanes("finra_short_volume", "workflow_dispatch"),
+  ["finra_short_volume"],
+  "a valid FINRA-only injection must not imply OCC injection",
+);
+assert.throws(
+  () => parseControlledFailureLanes("occ_options_volume,", "workflow_dispatch"),
+  /empty controlled failure lane token/,
+);
+assert.throws(
+  () => parseControlledFailureLanes("occ_options_volume,unknown", "workflow_dispatch"),
+  /unknown controlled failure lane: unknown/,
+);
+assert.throws(
+  () => parseControlledFailureLanes("occ_options_volume", "schedule"),
+  /controlled failure lanes are allowed only for workflow_dispatch/,
+);
+assert.deepEqual(
+  controlledOccFailureDisposition({
+    args: parseArgs(["--all-eligible", "--batch-size", "2", "--batch-index", "0"]),
+    universe: { eligible_count: 5 },
+    selectedTickers: 2,
+  }),
+  {
+    action: "defer",
+    final_batch: false,
+    batch_window_end: 2,
+    remaining_after_batch_window: 3,
+  },
+);
+assert.deepEqual(
+  controlledOccFailureDisposition({
+    args: parseArgs(["--all-eligible", "--batch-size", "2", "--batch-index", "2"]),
+    universe: { eligible_count: 5 },
+    selectedTickers: 1,
+  }),
+  {
+    action: "inject",
+    final_batch: true,
+    batch_window_end: 5,
+    remaining_after_batch_window: 0,
+  },
+);
+assert.deepEqual(
+  controlledOccFailureDisposition({
+    args: parseArgs(["--all-eligible", "--batch-size", "2", "--batch-index", "3"]),
+    universe: { eligible_count: 5 },
+    selectedTickers: 0,
+  }),
+  {
+    action: "incomplete_coverage",
+    final_batch: false,
+    batch_window_end: 5,
+    remaining_after_batch_window: 0,
+  },
+  "an empty/out-of-range batch cannot claim that controlled failure was injected",
+);
+assert.throws(
+  () => parseControlledFailureLanes("finra_short_volume", "local"),
+  /controlled failure lanes are allowed only for workflow_dispatch/,
+);
 
 const callCsv = [
   "quantity,underlying,symbol,actype,porc,exchange,actdate",
@@ -291,6 +360,67 @@ assert.ok(allEligiblePlan.eligible_count > allEligiblePlan.selected_tickers);
 assert.equal(allEligiblePlan.selected_tickers, 50);
 assert.equal(allEligiblePlan.request_budget.max_requests, 100);
 assert.equal(allEligiblePlan.request_budget.status, "within_budget");
+const finraOnlyPlan = await build(parseArgs(["--all-eligible", "--plan-only"]), {
+  eventName: "workflow_dispatch",
+  controlledFailureLanes: "finra_short_volume",
+});
+assert.deepEqual(finraOnlyPlan, allEligiblePlan, "FINRA-only chaos input must leave OCC behavior byte-stable");
+const incompatibleInjectionOptions = {
+  eventName: "workflow_dispatch",
+  controlledFailureLanes: "occ_options_volume",
+};
+await assert.rejects(
+  () => build(parseArgs(["--all-eligible", "--plan-only"]), incompatibleInjectionOptions),
+  /OCC controlled failure is incompatible with: --plan-only/,
+);
+await assert.rejects(
+  () => build(parseArgs(["--all-eligible", "--no-fetch", "--plan-only"]), incompatibleInjectionOptions),
+  /--no-fetch/,
+);
+await assert.rejects(
+  () => build(parseArgs(["--all-eligible", "--no-write", "--plan-only"]), incompatibleInjectionOptions),
+  /--no-write/,
+);
+await assert.rejects(
+  () => build(parseArgs(["--all-eligible", "--date", "20260715", "--plan-only"]), incompatibleInjectionOptions),
+  /--date/,
+);
+await assert.rejects(
+  () => build(parseArgs(["--reference-only", "--plan-only"]), incompatibleInjectionOptions),
+  /--all-eligible is required/,
+);
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-controlled-deferred-"));
+  let requests = 0;
+  const deferred = await build(parseArgs([
+    "--all-eligible",
+    "--batch-size", "1",
+    "--batch-index", "0",
+  ]), {
+    ...incompatibleInjectionOptions,
+    cacheDir: path.join(root, "cache"),
+    attemptShardPath: path.join(root, "attempts", "occ_options_volume.json"),
+    lkgRepoRoot: root,
+    lkgMarkerPath: path.join(root, "marker.json"),
+    request: async () => {
+      requests += 1;
+      throw new Error("deferred controlled failure must not request OCC");
+    },
+  });
+  assert.equal(requests, 0);
+  assert.equal(deferred.controlled_failure, true);
+  assert.equal(deferred.injection_applied, false);
+  assert.equal(deferred.status, "deferred");
+  assert.equal(deferred.reason, "controlled_failure_deferred_until_final_all_eligible_batch");
+  assert.equal(deferred.wrote, false);
+  assert.equal(deferred.source_artifacts_written, false);
+  assert.equal(deferred.recovery_state_written, false);
+  assert.equal(deferred.collection_coverage.complete, false);
+  assert.equal(deferred.collection_coverage.status, "not_attempted_controlled_failure");
+  assert.equal(deferred.collection_coverage.collected_tickers, 0);
+  assert.equal(deferred.collection_coverage.final_batch, false);
+  assert.deepEqual(fs.readdirSync(root), [], "deferred injection must not create cache, attempt, or LKG files");
+}
 
 const overBudgetPlan = await build(parseArgs([
   "--all-eligible",

@@ -45,6 +45,7 @@ const HISTORY_FILE = "computed/fenok_occ_options_volume_history.json";
 const AVAILABILITY_FILE = "computed/fenok_occ_options_availability.json";
 const OCC_LANE_ID = "occ_options_volume";
 const OCC_LKG_KEY = "occ_options_volume";
+const CONTROLLED_FAILURE_LANE_IDS = Object.freeze([OCC_LANE_ID, "finra_short_volume"]);
 const OCC_FRESHNESS_MARKER_SCHEMA = "fenok-occ-freshness-marker/v1";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
@@ -136,6 +137,32 @@ function parseArgs(argv) {
     if (args.failThreshold <= 0) args.failThreshold = DEFAULT_ALL_ELIGIBLE_FAIL_THRESHOLD;
   }
   return args;
+}
+
+function parseControlledFailureLanes(value, eventName) {
+  const raw = String(value ?? "");
+  if (raw.trim() === "") return [];
+  const tokens = raw.split(",").map((token) => token.trim());
+  if (tokens.some((token) => token === "")) {
+    throw new Error("empty controlled failure lane token");
+  }
+  for (const token of tokens) {
+    if (!CONTROLLED_FAILURE_LANE_IDS.includes(token)) {
+      throw new Error(`unknown controlled failure lane: ${token}`);
+    }
+  }
+  if (eventName !== "workflow_dispatch") {
+    throw new Error("controlled failure lanes are allowed only for workflow_dispatch");
+  }
+  return [...new Set(tokens)];
+}
+
+function controlledOccFailureResult() {
+  return {
+    ...attemptResult("transport_error", threwTuple("transport")),
+    reason: "controlled_failure",
+    controlled: true,
+  };
 }
 
 function isoNow() {
@@ -1345,20 +1372,35 @@ function applyOccLkgStore({
   currentAttempt,
   endpointResults,
   run,
+  controlledFailure = false,
 }) {
   const currentMarkerPath = markerPath ?? occFreshnessMarkerPathFor(storeRepoRoot);
   const store = new LaneLkgStore({ repoRoot: storeRepoRoot, laneId: OCC_LANE_ID });
   const artifact = occLkgArtifactDescriptor(currentMarkerPath);
-  const outcome = computeOccLkgOutcome({ dates, currentAttempt, candidateDocument });
+  const effectiveCurrentAttempt = controlledFailure
+    ? { ...currentAttempt, status: "unavailable", served_source_date: null }
+    : currentAttempt;
+  const effectiveCandidateDocument = controlledFailure ? null : candidateDocument;
+  const effectiveEndpointResults = controlledFailure
+    && !(endpointResults ?? []).some((row) => row?.controlled === true)
+    ? [...(endpointResults ?? []), controlledOccFailureResult()]
+    : (endpointResults ?? []);
+  const outcome = computeOccLkgOutcome({
+    dates,
+    currentAttempt: effectiveCurrentAttempt,
+    candidateDocument: effectiveCandidateDocument,
+  });
 
   if (outcome.kind === "expected_absence") {
     return { kind: "expected_absence", updated: false };
   }
   if (outcome.kind === "failure") {
-    const reduced = reduceOccEndpointResults(endpointResults ?? []);
-    const reason = systemicLkgFailureReason((endpointResults ?? []).map((row) => row?.reason))
-      ?? reduced.reason
-      ?? "workflow_unobserved";
+    const reduced = reduceOccEndpointResults(effectiveEndpointResults);
+    const reason = controlledFailure
+      ? "controlled_failure"
+      : systemicLkgFailureReason(effectiveEndpointResults.map((row) => row?.reason))
+        ?? reduced.reason
+        ?? "workflow_unobserved";
     const failure = store.recordFailure({ artifacts: [artifact], run, reason });
     return {
       kind: "failure",
@@ -1425,6 +1467,47 @@ function shouldManageOccLkg({ args, universe, selectedTickers }) {
   return (Number(args.batchIndex) + 1) * batchSize >= Number(universe.eligible_count);
 }
 
+function validateOccControlledFailureMode(args) {
+  const incompatible = [];
+  if (args.noFetch) incompatible.push("--no-fetch");
+  if (args.noWrite) incompatible.push("--no-write");
+  if (args.planOnly) incompatible.push("--plan-only");
+  if (args.date) incompatible.push("--date");
+  if (!args.allEligible) incompatible.push("--all-eligible is required");
+  if (incompatible.length > 0) {
+    throw new Error(`OCC controlled failure is incompatible with: ${incompatible.join(", ")}`);
+  }
+}
+
+function controlledOccFailureDisposition({ args, universe, selectedTickers }) {
+  const eligibleCount = Math.max(0, Number(universe?.eligible_count) || 0);
+  const batchSize = Math.max(0, Number(args?.batchSize) || 0);
+  const batchIndex = Math.max(0, Number(args?.batchIndex) || 0);
+  const batchWindowEnd = Math.min(eligibleCount, (batchIndex + 1) * batchSize);
+  const finalBatch = shouldManageOccLkg({ args, universe, selectedTickers });
+  return {
+    action: finalBatch ? "inject" : Number(selectedTickers) > 0 ? "defer" : "incomplete_coverage",
+    final_batch: finalBatch,
+    batch_window_end: batchWindowEnd,
+    remaining_after_batch_window: Math.max(0, eligibleCount - batchWindowEnd),
+  };
+}
+
+function controlledOccCollectionCoverage({ args, universe, selectedTickers, disposition }) {
+  return {
+    complete: false,
+    status: "not_attempted_controlled_failure",
+    eligible_count: Number(universe.eligible_count),
+    selected_tickers: Number(selectedTickers),
+    collected_tickers: 0,
+    batch_index: Number(args.batchIndex),
+    batch_size: Number(args.batchSize),
+    final_batch: disposition.final_batch,
+    batch_window_end: disposition.batch_window_end,
+    remaining_after_batch_window: disposition.remaining_after_batch_window,
+  };
+}
+
 async function build(args, {
   request = fetchResponse,
   cacheDir = OCC_CACHE_DIR,
@@ -1436,7 +1519,11 @@ async function build(args, {
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureLanes = process.env.INPUT_CONTROLLED_FAILURE_LANES || "",
 } = {}) {
+  const injectedLanes = parseControlledFailureLanes(controlledFailureLanes, eventName);
+  const controlledOccFailure = injectedLanes.includes(OCC_LANE_ID);
+  if (controlledOccFailure) validateOccControlledFailureMode(args);
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
   const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
@@ -1448,6 +1535,80 @@ async function build(args, {
     observedAt,
   };
   const estimatedMaxLiveRequests = estimateMaxLiveRequests({ tickers, dates });
+  if (controlledOccFailure) {
+    const disposition = controlledOccFailureDisposition({
+      args,
+      universe,
+      selectedTickers: tickers.length,
+    });
+    const collectionCoverage = controlledOccCollectionCoverage({
+      args,
+      universe,
+      selectedTickers: tickers.length,
+      disposition,
+    });
+    if (disposition.action !== "inject") {
+      return {
+        controlled_failure: true,
+        injection_applied: false,
+        status: disposition.action === "defer" ? "deferred" : "incomplete_coverage",
+        reason: disposition.action === "defer"
+          ? "controlled_failure_deferred_until_final_all_eligible_batch"
+          : "controlled_failure_not_applied_empty_or_out_of_range_batch",
+        wrote: false,
+        source_artifacts_written: false,
+        recovery_state_written: false,
+        collection_coverage: collectionCoverage,
+      };
+    }
+
+    const controlledResult = controlledOccFailureResult();
+    const currentAttempt = {
+      attempt_ref: String(run.runId),
+      attempt_number: Number(run.runAttempt),
+      observed_at: run.observedAt,
+      target_source_date: isoFromYmd(dates[0]),
+      served_source_date: null,
+      status: "unavailable",
+      fallback_active: false,
+      selected_tickers: tickers.length,
+      message: "owner-approved workflow_dispatch OCC controlled failure",
+      batch_retention_limit: 100,
+      batches: [],
+    };
+    const lkgRecovery = applyOccLkgStore({
+      repoRoot: lkgRepoRoot,
+      markerPath: lkgMarkerPath,
+      candidateDocument: null,
+      dates,
+      currentAttempt,
+      endpointResults: [controlledResult],
+      run,
+      controlledFailure: true,
+    });
+    writeMergedAttemptShard({
+      laneId: OCC_LANE_ID,
+      attemptShardPath,
+      observedAt,
+      attemptId,
+      result: controlledResult,
+    });
+    if (lkgRecovery?.corrupt) {
+      throw new Error(`OCC controlled failure requires a valid retained marker/LKG seed: ${lkgRecovery.reason}`);
+    }
+    const injectionApplied = lkgRecovery?.kind === "failure";
+    return {
+      controlled_failure: true,
+      injection_applied: injectionApplied,
+      status: injectionApplied ? "recorded" : "not_recorded",
+      reason: injectionApplied ? "controlled_failure" : lkgRecovery?.kind ?? "controlled_failure_not_recorded",
+      wrote: false,
+      source_artifacts_written: false,
+      recovery_state_written: injectionApplied,
+      collection_coverage: collectionCoverage,
+      lkg_recovery: lkgRecovery,
+    };
+  }
   if (args.planOnly) {
     return {
       plan_only: true,
@@ -1695,6 +1856,7 @@ export {
   buildRowsForTest,
   candidateDates,
   classifyOccEndpointResponse,
+  controlledOccFailureDisposition,
   directionFromOptionsVolume,
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
@@ -1713,6 +1875,7 @@ export {
   occFreshnessMarkerSourceAsOf,
   occOutputSourceAsOf,
   parseOccCsv,
+  parseControlledFailureLanes,
   parseArgs,
   reduceOccEndpointResults,
   retainLatestTickerSourceDates,

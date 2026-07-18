@@ -59,6 +59,10 @@ const FINRA_PERSISTENCE_POLICY = Object.freeze({
   eviction: "oldest_source_date_first",
 });
 const FINRA_HISTORY_SCHEMA = "fenok-finra-marker-history/v1";
+const ALLOWED_CONTROLLED_FAILURE_LANES = Object.freeze([
+  "occ_options_volume",
+  FINRA_LANE_ID,
+]);
 const DEFAULT_DATASET = "regsho-daily";
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_BACKOFF_MS = 2000;
@@ -141,6 +145,29 @@ function parseArgs(argv) {
     else throw new Error(`Unknown argument: ${arg}`);
   }
   return args;
+}
+
+function parseControlledFailureLanes(value) {
+  const raw = value == null ? "" : String(value);
+  if (raw === "") return new Set();
+  const lanes = raw.split(",").map((token) => token.trim());
+  if (lanes.some((lane) => lane === "")) {
+    throw new Error("empty controlled failure lane token is not allowed");
+  }
+  for (const lane of lanes) {
+    if (!ALLOWED_CONTROLLED_FAILURE_LANES.includes(lane)) {
+      throw new Error(`unknown controlled failure lane: ${lane}`);
+    }
+  }
+  return new Set(lanes);
+}
+
+function validateControlledFailureLanes(value, eventName) {
+  const raw = value == null ? "" : String(value);
+  if (raw !== "" && eventName !== "workflow_dispatch") {
+    throw new Error("controlled failure requires workflow_dispatch");
+  }
+  return parseControlledFailureLanes(raw);
 }
 
 function datasetConfig(dataset) {
@@ -550,7 +577,15 @@ function finraLkgArtifactDescriptor(markerPath) {
 // mutates the detection attempt shard (that stays owned by writeAttemptShard) and
 // never rewrites a per-date payload; it only maintains the store's freshness marker,
 // LKG copy, and recovery index under data/admin/finra_short_volume/.
-function applyFinraLkgStore({ repoRoot: storeRepoRoot, markerPath, dates, endpointResults, results, run }) {
+function applyFinraLkgStore({
+  repoRoot: storeRepoRoot,
+  markerPath,
+  dates,
+  endpointResults,
+  results,
+  run,
+  controlledFailure = false,
+}) {
   const store = new LaneLkgStore({ repoRoot: storeRepoRoot, laneId: FINRA_LANE_ID });
   const artifact = finraLkgArtifactDescriptor(markerPath);
   const outcome = computeFinraLkgOutcome({ dates, results });
@@ -563,8 +598,9 @@ function applyFinraLkgStore({ repoRoot: storeRepoRoot, markerPath, dates, endpoi
     const actionableReasons = (endpointResults ?? [])
       .filter((result) => result?.expectedMissing !== true)
       .map((result) => result?.reason);
-    const reason = systemicLkgFailureReason(actionableReasons)
-      ?? reduceFinraEndpointResults(endpointResults).reason;
+    const reason = controlledFailure
+      ? "controlled_failure"
+      : systemicLkgFailureReason(actionableReasons) ?? reduceFinraEndpointResults(endpointResults).reason;
     const failure = store.recordFailure({ artifacts: [artifact], run, reason });
     return {
       kind: "failure",
@@ -799,8 +835,11 @@ async function run(argv = process.argv.slice(2), {
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureLanes = process.env.INPUT_CONTROLLED_FAILURE_LANES || "",
 } = {}) {
   const args = parseArgs(argv);
+  const injectedLanes = validateControlledFailureLanes(controlledFailureLanes, eventName);
+  const controlledFinraFailure = injectedLanes.has(FINRA_LANE_ID);
   const dataset = datasetConfig(args.dataset);
   const dates = expandDateRange(args);
   if (args.inputFile && dates.length !== 1) {
@@ -836,40 +875,51 @@ async function run(argv = process.argv.slice(2), {
   const results = [];
   const skippedDates = [];
   const endpointResults = [];
+  const storeMode = !args.noWrite && !args.inputFile && !args.date;
+  if (controlledFinraFailure && !storeMode) {
+    throw new Error("controlled FINRA failure requires recovery-store mode");
+  }
   try {
-    for (const yyyymmdd of dates) {
-      try {
-        const collected = await collectRegshoDailyDate({
-        yyyymmdd,
-        inputFile: args.inputFile,
-        noFetch: args.noFetch,
-        noWrite: args.noWrite,
-        generatedAt,
-        retries: args.retries,
-        retryBackoffMs: args.retryBackoffMs,
-        request,
-        });
-        results.push(collected);
-        if (collected.endpointResult) endpointResults.push(collected.endpointResult);
-      } catch (err) {
-        const endpointResult = err?.endpointResult ?? thrownEndpointResult(err);
-        endpointResults.push(endpointResult);
-        if (!isMissingFileError(err)) throw err;
-        // Holiday or not-yet-published file inside the window: record and move on
-        // instead of failing the whole run (and with it the downstream data push).
-        skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
-        console.warn(`[finra-daily] skip ${yyyymmdd}: file not published (HTTP ${err.httpStatus})`);
-        continue;
+    if (controlledFinraFailure) {
+      // Do not touch the provider or private cache. The synthetic unavailable
+      // observation is still published to the attempt shard, while the flag
+      // below makes the real LKG store record the explicit controlled reason.
+      endpointResults.push(attemptResult("transport_error", threwTuple("transport")));
+    } else {
+      for (const yyyymmdd of dates) {
+        try {
+          const collected = await collectRegshoDailyDate({
+            yyyymmdd,
+            inputFile: args.inputFile,
+            noFetch: args.noFetch,
+            noWrite: args.noWrite,
+            generatedAt,
+            retries: args.retries,
+            retryBackoffMs: args.retryBackoffMs,
+            request,
+          });
+          results.push(collected);
+          if (collected.endpointResult) endpointResults.push(collected.endpointResult);
+        } catch (err) {
+          const endpointResult = err?.endpointResult ?? thrownEndpointResult(err);
+          endpointResults.push(endpointResult);
+          if (!isMissingFileError(err)) throw err;
+          // Holiday or not-yet-published file inside the window: record and move on
+          // instead of failing the whole run (and with it the downstream data push).
+          skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
+          console.warn(`[finra-daily] skip ${yyyymmdd}: file not published (HTTP ${err.httpStatus})`);
+          continue;
+        }
+        if (args.sleepMs > 0) await sleep(args.sleepMs);
       }
-      if (args.sleepMs > 0) await sleep(args.sleepMs);
     }
     // Additive LKG recovery: engage only for the automatic latest/window refresh
     // (the daily cron and its dispatch overrides). Explicit single-date, input-file,
     // and no-write invocations are manual/backfill/test paths and never touch the
     // shared recovery state. This keeps every existing --no-write test unaffected.
-    const storeMode = !args.noWrite && !args.inputFile && !args.date;
+    let lkgOutcome = null;
     if (storeMode) {
-      applyFinraLkgStore({
+      lkgOutcome = applyFinraLkgStore({
         repoRoot: lkgRepoRoot,
         markerPath,
         dates,
@@ -881,7 +931,29 @@ async function run(argv = process.argv.slice(2), {
           eventName,
           observedAt,
         },
+        controlledFailure: controlledFinraFailure,
       });
+    }
+    if (controlledFinraFailure) {
+      if (lkgOutcome?.kind !== "failure") {
+        throw new Error("controlled FINRA failure did not reach the LKG failure path");
+      }
+      return {
+        dataset: dataset.dataset_id,
+        dates,
+        wrote: false,
+        no_fetch: true,
+        row_count: 0,
+        manifest_file: null,
+        skipped_dates: [],
+        outputs: [],
+        controlled_failure: true,
+        reason: lkgOutcome.reason,
+        degraded: lkgOutcome.degraded,
+        corrupt: lkgOutcome.corrupt,
+        exit_code: lkgOutcome.exitCode,
+        retry_set: lkgOutcome.retrySet,
+      };
     }
     if (results.length === 0 && dates.length > 0) {
       throw new Error(
@@ -943,6 +1015,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   run()
     .then((summary) => {
       console.log(JSON.stringify(summary, null, 2));
+      if (Number(summary.exit_code) > 0) process.exitCode = Number(summary.exit_code);
     })
     .catch((err) => {
       console.error(err.stack || err.message);
@@ -972,6 +1045,7 @@ export {
   freshnessMarkerSourceAsOf,
   isUsTradingDate,
   normalizeDate,
+  parseControlledFailureLanes,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
   reduceFinraEndpointResults,

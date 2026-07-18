@@ -6,6 +6,7 @@ import path from "node:path";
 
 import {
   applyOccLkgStore,
+  build,
   buildOccLkgCandidate,
   classifyOccEndpointResponse,
   OCC_LANE_ID,
@@ -228,6 +229,144 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   const nextTradingState = readJson(indexPath(root));
   assert.deepEqual(nextTradingState.retry_set, []);
   assert.deepEqual(projectRecoveryRecoveredSet(nextTradingState, OCC_LANE_ID), []);
+}
+
+// Owner-approved dispatch chaos uses the real OCC failure branch: the current
+// marker remains byte-identical, its public-safe LKG is retained, and retry is
+// parked against the injected run.
+{
+  const root = makeRoot("controlled-failure");
+  const seedDocument = outputDocument("2026-07-02", "seed-run");
+  writeCanonical(root, seedDocument);
+  applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: seedDocument,
+    dates: ["20260702"],
+    currentAttempt: seedDocument.current_attempt,
+    endpointResults: [],
+    run: naturalRun("seed-run", "2026-07-02T12:00:00.000Z"),
+  });
+  const markerBefore = fs.readFileSync(markerPath(root));
+
+  const candidateDocument = outputDocument("2026-07-02", "chaos-run");
+  candidateDocument.current_attempt = {
+    ...candidateDocument.current_attempt,
+    observed_at: "2026-07-03T12:00:00.000Z",
+    target_source_date: "2026-07-03",
+    served_source_date: "2026-07-02",
+    status: "degraded_walkback",
+    fallback_active: true,
+  };
+  const injected = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument,
+    dates: ["20260703", "20260702", "20260701"],
+    currentAttempt: candidateDocument.current_attempt,
+    endpointResults: [],
+    run: dispatchRun("chaos-run", "2026-07-03T12:00:00.000Z"),
+    controlledFailure: true,
+  });
+  assert.equal(injected.kind, "failure");
+  assert.equal(injected.reason, "controlled_failure");
+  assert.equal(injected.degraded, true);
+  assert.equal(injected.corrupt, false);
+  assert.deepEqual(injected.retrySet, [OCC_LKG_KEY]);
+  assert.deepEqual(fs.readFileSync(markerPath(root)), markerBefore, "controlled failure cannot advance the marker");
+  assert.deepEqual(fs.readFileSync(lkgPath(root)), markerBefore, "controlled failure retains the marker as LKG");
+  const state = readJson(indexPath(root));
+  assert.equal(state.items[OCC_LKG_KEY].resolution_state, "lkg_primary");
+  assert.equal(state.items[OCC_LKG_KEY].latest_failure.run_id, "chaos-run");
+  assert.equal(state.items[OCC_LKG_KEY].latest_failure.reason, "controlled_failure");
+}
+
+// The producer-level dispatch path must short-circuit provider/source writes,
+// record the real LKG failure on the final covered batch, and leave later empty
+// workflow batches unable to overwrite that evidence.
+{
+  const root = makeRoot("controlled-build");
+  const seedDocument = outputDocument("2026-07-16", "seed-run");
+  writeCanonical(root, seedDocument);
+  applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: seedDocument,
+    dates: ["20260716"],
+    currentAttempt: seedDocument.current_attempt,
+    endpointResults: [],
+    run: naturalRun("seed-run", "2026-07-16T12:00:00.000Z"),
+  });
+  const markerBefore = fs.readFileSync(markerPath(root));
+  const canonicalBefore = fs.readFileSync(canonicalPath(root));
+  const attemptShardPath = path.join(root, "attempts", `${OCC_LANE_ID}.json`);
+  const cacheDir = path.join(root, "cache");
+  let requests = 0;
+  const injected = await build(parseArgs([
+    "--all-eligible",
+    "--batch-size", "1000",
+    "--batch-index", "0",
+  ]), {
+    request: async () => {
+      requests += 1;
+      throw new Error("controlled OCC failure must not call the provider");
+    },
+    cacheDir,
+    attemptShardPath,
+    observedAt: "2026-07-17T12:00:00.000Z",
+    attemptId: "occ-controlled-build-attempt",
+    lkgRepoRoot: root,
+    lkgMarkerPath: markerPath(root),
+    runId: "controlled-build-run",
+    runAttempt: 1,
+    eventName: "workflow_dispatch",
+    controlledFailureLanes: "occ_options_volume",
+  });
+  assert.equal(requests, 0);
+  assert.equal(injected.controlled_failure, true);
+  assert.equal(injected.injection_applied, true);
+  assert.equal(injected.status, "recorded");
+  assert.equal(injected.reason, "controlled_failure");
+  assert.equal(injected.wrote, false);
+  assert.equal(injected.source_artifacts_written, false);
+  assert.equal(injected.recovery_state_written, true);
+  assert.equal(fs.existsSync(cacheDir), false, "controlled failure cannot create an OCC raw cache");
+  assert.deepEqual(fs.readFileSync(markerPath(root)), markerBefore);
+  assert.deepEqual(fs.readFileSync(canonicalPath(root)), canonicalBefore);
+  const attemptBeforeTail = fs.readFileSync(attemptShardPath);
+  const stateBeforeTail = fs.readFileSync(indexPath(root));
+  const state = JSON.parse(stateBeforeTail);
+  assert.equal(state.items[OCC_LKG_KEY].latest_failure.run_id, "controlled-build-run");
+  assert.equal(state.items[OCC_LKG_KEY].latest_failure.reason, "controlled_failure");
+  assert.deepEqual(state.retry_set, [OCC_LKG_KEY]);
+
+  const emptyTail = await build(parseArgs([
+    "--all-eligible",
+    "--batch-size", "250",
+    "--batch-index", "4",
+  ]), {
+    request: async () => {
+      requests += 1;
+      throw new Error("empty controlled OCC tail must not call the provider");
+    },
+    cacheDir,
+    attemptShardPath,
+    observedAt: "2026-07-17T12:05:00.000Z",
+    attemptId: "occ-controlled-empty-tail",
+    lkgRepoRoot: root,
+    lkgMarkerPath: markerPath(root),
+    runId: "controlled-build-run",
+    runAttempt: 1,
+    eventName: "workflow_dispatch",
+    controlledFailureLanes: "occ_options_volume",
+  });
+  assert.equal(emptyTail.status, "incomplete_coverage");
+  assert.equal(emptyTail.injection_applied, false);
+  assert.equal(requests, 0);
+  assert.deepEqual(fs.readFileSync(attemptShardPath), attemptBeforeTail,
+    "empty tail cannot overwrite the injected attempt evidence");
+  assert.deepEqual(fs.readFileSync(indexPath(root)), stateBeforeTail,
+    "empty tail cannot overwrite the injected recovery state");
 }
 
 // A fallback older than the newest trading date remains a real failure.

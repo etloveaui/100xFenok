@@ -25,6 +25,7 @@ import {
   freshnessMarkerPathFor,
   freshnessMarkerSourceAsOf,
   parseFinraDailyShortVolume,
+  run,
   validFreshnessMarker,
 } from "./fetch-fenok-finra-daily-private.mjs";
 import {
@@ -40,6 +41,61 @@ function sampleFor(compactDate) {
     `${compactDate}|BRK.B|50|0|200|Q`,
     "",
   ].join("\n");
+}
+
+// --- Controlled failure: real recordFailure, no request/history rotation ---
+{
+  const root = makeRoot("controlled-failure");
+  const markerPath = freshnessMarkerPathFor(root);
+  applyFinraLkgStore({
+    ...readyInputs("20260714", "2026-07-14T04:00:00Z"),
+    repoRoot: root,
+    markerPath,
+    run: naturalRun("seed-run", "2026-07-14T04:00:00Z"),
+  });
+  const markerBefore = fs.readFileSync(markerPath);
+  const historyPath = path.join(root, "data", "admin", FINRA_LANE_ID, "history", `${FINRA_LKG_KEY}.json`);
+  const historyBefore = fs.readFileSync(historyPath);
+  let requests = 0;
+  const injected = await run([
+    "--from",
+    "2026-07-15",
+    "--to",
+    "2026-07-15",
+  ], {
+    request: async () => {
+      requests += 1;
+      return { statusCode: 200, body: sampleFor("20260715") };
+    },
+    attemptShardPath: path.join(root, "attempts", `${FINRA_LANE_ID}.json`),
+    observedAt: "2026-07-15T04:00:00Z",
+    attemptId: "finra-controlled-failure-attempt",
+    lkgRepoRoot: root,
+    markerPath,
+    runId: "controlled-failure-run",
+    runAttempt: 1,
+    eventName: "workflow_dispatch",
+    controlledFailureLanes: "occ_options_volume,finra_short_volume",
+  });
+  assert.equal(requests, 0, "controlled FINRA failure must not call the provider");
+  assert.equal(injected.controlled_failure, true);
+  assert.equal(injected.reason, "controlled_failure");
+  assert.equal(injected.degraded, true);
+  assert.equal(injected.corrupt, false);
+  assert.equal(injected.exit_code, 0);
+  assert.deepEqual(injected.retry_set, [FINRA_LKG_KEY]);
+  assert.deepEqual(fs.readFileSync(markerPath), markerBefore, "failure retains the current marker byte-for-byte");
+  assert.deepEqual(fs.readFileSync(historyPath), historyBefore, "failure must not rotate marker history");
+  const attempt = readJson(path.join(root, "attempts", `${FINRA_LANE_ID}.json`));
+  assert.equal(attempt.attempts[0].execution, "threw");
+  assert.equal(attempt.attempts[0].exception_kind, "transport");
+
+  const state = readJson(indexPath(root));
+  assert.equal(state.items[FINRA_LKG_KEY].resolution_state, "lkg_primary");
+  assert.equal(state.items[FINRA_LKG_KEY].latest_failure.run_id, "controlled-failure-run");
+  assert.equal(state.items[FINRA_LKG_KEY].latest_failure.reason, "controlled_failure");
+  assert.deepEqual(state.retry_set, [FINRA_LKG_KEY]);
+  assert.equal(fs.existsSync(lkgPath(root)), true);
 }
 
 function readyInputs(compactDate, observedAt) {

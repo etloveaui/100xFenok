@@ -18,6 +18,7 @@ import {
   FINRA_PERSISTENCE_POLICY,
   finraHistoryPathFor,
   normalizeDate,
+  parseControlledFailureLanes,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
   reduceFinraEndpointResults,
@@ -45,6 +46,13 @@ assert.equal(FINRA_AVAILABILITY_POLICY.scheduler_guidance.initial_daily_run_kst,
 assert.equal(FINRA_AVAILABILITY_POLICY.kst_equivalent.edt, "next-day 07:00 KST");
 assert.ok(FINRA_AVAILABILITY_POLICY.scheduler_guidance.do_not_default_to.includes("12:45 KST"));
 assert.throws(() => datasetConfig("weekly-summary"), /Unsupported FINRA dataset/);
+assert.deepEqual([...parseControlledFailureLanes("")], []);
+assert.deepEqual(
+  [...parseControlledFailureLanes("occ_options_volume, finra_short_volume")],
+  ["occ_options_volume", "finra_short_volume"],
+);
+assert.throws(() => parseControlledFailureLanes("finra_short_volume,"), /empty controlled failure lane token/);
+assert.throws(() => parseControlledFailureLanes("unknown_lane"), /unknown controlled failure lane/);
 assert.deepEqual(
   expandDateRange({ from: "2026-06-26", to: "2026-06-29" }),
   ["20260626", "20260629"],
@@ -135,6 +143,70 @@ assert.equal(manifest.collections.length, 1);
   const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
   assert.equal(shard.lane_id, "finra_short_volume");
   assert.deepEqual(shard.attempts[0].assertions, [{ id: "regsho_rows", passed: true }]);
+}
+
+// Shared workflow input is accepted only on dispatch. An OCC-only token must
+// validate but leave the FINRA fetch path untouched.
+{
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-chaos-scope-test-"));
+  const common = {
+    attemptShardPath: path.join(tmpDir, "finra_short_volume.json"),
+    observedAt: "2026-07-15T03:10:00Z",
+    attemptId: "finra-short-volume-chaos-scope",
+  };
+  await assert.rejects(() => run([
+    "--date",
+    "2026-07-15",
+    "--no-write",
+  ], {
+    ...common,
+    controlledFailureLanes: "finra_short_volume",
+    eventName: "schedule",
+  }), /controlled failure requires workflow_dispatch/);
+  await assert.rejects(() => run([
+    "--date",
+    "2026-07-15",
+    "--no-write",
+  ], {
+    ...common,
+    controlledFailureLanes: "occ_options_volume",
+    eventName: "local",
+  }), /controlled failure requires workflow_dispatch/);
+
+  let requests = 0;
+  const result = await run([
+    "--date",
+    "2026-07-15",
+    "--no-write",
+  ], {
+    ...common,
+    controlledFailureLanes: "occ_options_volume",
+    eventName: "workflow_dispatch",
+    request: async () => {
+      requests += 1;
+      return { statusCode: 200, body: sample.replaceAll("20260626", "20260715") };
+    },
+  });
+  assert.equal(requests, 1, "OCC-only injection must not bypass the real FINRA request");
+  assert.equal(result.row_count, 2);
+  assert.equal(Object.hasOwn(result, "controlled_failure"), false, "no FINRA injection keeps the summary shape stable");
+
+  const baseline = await run([
+    "--date",
+    "2026-07-15",
+    "--no-write",
+  ], {
+    ...common,
+    attemptShardPath: path.join(tmpDir, "baseline.json"),
+    controlledFailureLanes: "",
+    eventName: "workflow_dispatch",
+    request: async () => ({ statusCode: 200, body: sample.replaceAll("20260626", "20260715") }),
+  });
+  assert.equal(
+    JSON.stringify(result),
+    JSON.stringify(baseline),
+    "an empty injection input must keep the FINRA result byte-stable",
+  );
 }
 
 {
