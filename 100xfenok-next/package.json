@@ -82,6 +82,8 @@
     "qa:data-supply-public": "python3 ../scripts/materialize_data_supply_public.py --check && node scripts/test-sync-public-data.mjs && node scripts/test-data-supply-public-redaction.mjs && node scripts/check-fenok-public-mirror-guard.mjs",
     "qa:rim-index": "node ../scripts/test-build-rim-index.mjs && node ../scripts/test-rim-sole-writer.mjs && node ../scripts/build-rim-index.mjs --check && node scripts/check-rim-index-consumer-growth-guard.mjs",
     "qa:fenok-signal-lens": "node scripts/check-fenok-signal-lens-dual-hexagon.mjs",
+    "qa:fenok-signal-lens-proxies": "node ../scripts/test-build-fenok-signal-lens-proxies.mjs",
+    "qa:fenok-signal-lens-proxies:artifacts": "node ../scripts/test-build-fenok-signal-lens-proxies.mjs --artifacts",
     "qa:fenok-etf-signal-gate": "node scripts/check-fenok-etf-signal-gate.mjs",
     "qa:fenok-etf-action-index-gate": "node scripts/check-fenok-etf-action-index.mjs",
     "qa:fenok-etf-core-daily-basket": "node ../scripts/test-build-fenok-etf-core-daily-basket.mjs && node scripts/check-fenok-etf-core-daily-basket.mjs",

@@ -20,6 +20,17 @@ const PUBLIC_ETF_SUMMARY_REL = "100xfenok-next/public/data/computed/fenok_etf_si
 const PUBLIC_ETF_SIGNALS_REL = "100xfenok-next/public/data/computed/fenok_etf_signals.json";
 const ETF_UNIVERSE_REL = "data/stockanalysis/etf_universe.json";
 const STOCK_SIGNALS_REL = "data/computed/fenok_signals.json";
+const EXPECTED_ETF_SIGNAL_SCHEMA_VERSION = 2;
+const EXPECTED_ETF_SIGNAL_FORMULA_VERSION = "fenok-etf-signals-v0.3-remove-classification-risk";
+const EXPECTED_ETF_SIGNAL_KEYS = [
+  "cost_efficiency",
+  "liquidity",
+  "tracking_quality",
+  "momentum_trend",
+  "risk_adjusted_momentum",
+  "income",
+  "diversification",
+];
 const PUBLIC_SUMMARY_FIELDS = [
   "ticker",
   "company",
@@ -132,8 +143,11 @@ export function checkEtfSignalPayload(
   if (payload?.asset_type !== "etf") {
     errors.push(`${name} asset_type must be etf, got ${payload?.asset_type}`);
   }
-  if (!Number.isInteger(payload.schema_version) || payload.schema_version < 1) {
-    errors.push(`${name} schema_version must be a positive integer`);
+  if (payload.schema_version !== EXPECTED_ETF_SIGNAL_SCHEMA_VERSION) {
+    errors.push(`${name} schema_version must be ${EXPECTED_ETF_SIGNAL_SCHEMA_VERSION}`);
+  }
+  if (payload.formula_version !== EXPECTED_ETF_SIGNAL_FORMULA_VERSION) {
+    errors.push(`${name} formula_version must be ${EXPECTED_ETF_SIGNAL_FORMULA_VERSION}`);
   }
   if (typeof payload.generated_at !== "string" || payload.generated_at.trim() === "") {
     errors.push(`${name} generated_at must be a non-empty string`);
@@ -346,9 +360,7 @@ export function runEtfSignalGateChecks(options = {}) {
       .filter(Boolean),
   );
 
-  const expectedSignalKeys = Array.isArray(etfSignals?.signal_keys)
-    ? etfSignals.signal_keys
-    : Object.keys(etfSummary?.coverage?.signal_coverage ?? {});
+  const expectedSignalKeys = EXPECTED_ETF_SIGNAL_KEYS;
   const fullRowsByTicker = new Map(
     (Array.isArray(etfSignals?.rows) ? etfSignals.rows : []).map((row) => [tickerOf(row?.ticker), row]),
   );
@@ -424,6 +436,9 @@ export function runEtfSignalGateChecks(options = {}) {
   if (publicFullLeak) errors.push("public full ETF signal payload must not exist: public/data/computed/fenok_etf_signals.json");
   if (!apiRouteReady) errors.push("ETF signal API route proof is missing or incomplete");
   if (!detailUiReady) errors.push("ETF detail UI signal card proof is missing or incomplete");
+  if (fileContains(root, "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx", ["classification_risk"])) {
+    errors.push("retired classification_risk axis must not remain in the ETF detail UI");
+  }
 
   const stockSignals = stockSignalsArtifact.value;
   if (stockSignals && !Array.isArray(stockSignals.rows)) errors.push("fenok_signals.json rows must be an array");

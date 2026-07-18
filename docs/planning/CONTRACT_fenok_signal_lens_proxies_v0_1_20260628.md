@@ -72,6 +72,14 @@ Current full US universe run:
 
 ## Semantics
 
+- Signal-lens formula `fenok-signal-lens-proxies-v0.2-ma-distance` replaces the
+  binary `80/30` MA20/50/200 components with declared close-to-MA distance
+  bands: below `-10/-5/-2%` scores `10/25/40`, `-2%..+2%` scores `50`, and
+  above `+2/+5/+10%` scores `60/75/90`.
+- Invalid or non-positive latest/MA values remain `null`; the output records
+  each MA distance percentage and band beside the component score.
+- A formula-version change starts a fresh signal-lens history series so rows
+  computed under an older formula are never relabeled as current-formula data.
 - `offExchangeActivityProxyScore` is FINRA-reported off-exchange activity
   relative to local consolidated volume. It is not true ATS-only dark-pool flow.
 - `shortPressureProxyScore` is FINRA-reported short-sale volume share. It is not
@@ -103,6 +111,7 @@ node --check scripts/build-fenok-flow-proxies.mjs
 node scripts/test-build-fenok-flow-proxies.mjs
 node --check scripts/build-fenok-signal-lens-proxies.mjs
 node scripts/test-build-fenok-signal-lens-proxies.mjs
+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts
 node --check scripts/fetch-fenok-news-tone-proxy.mjs
 node scripts/test-fetch-fenok-news-tone-proxy.mjs
 python3 -m py_compile scripts/fetch-fenok-private-options.py

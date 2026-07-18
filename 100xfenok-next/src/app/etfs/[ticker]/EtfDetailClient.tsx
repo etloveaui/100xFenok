@@ -207,7 +207,6 @@ const ETF_SIGNAL_SCORE_FIELDS = [
   { key: "risk_adjusted_momentum", label: "위험조정 추세" },
   { key: "income", label: "인컴" },
   { key: "diversification", label: "분산" },
-  { key: "classification_risk", label: "분류 안전성" },
 ] as const;
 
 const ISSUER_SLUG_LABELS: Record<string, string> = {

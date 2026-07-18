@@ -2,7 +2,7 @@
 /**
  * Separate ETF signal builder for Fenok Edge.
  *
- * Scores eligible vanilla ETFs across 8 signal families. ETFs that are
+ * Scores eligible vanilla ETFs across 7 signal families. ETFs that are
  * leveraged, inverse, or single-stock are catalogued but excluded from the
  * vanilla score denominator. Missing inputs for a signal produce a null score,
  * not zero, and that signal is excluded from the row's coverage.
@@ -20,7 +20,7 @@ const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 
-const FORMULA_VERSION = "fenok-etf-signals-v0.2-scores";
+const FORMULA_VERSION = "fenok-etf-signals-v0.3-remove-classification-risk";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md";
 const PUBLIC_SURFACE_STATUS = "phase_b_v0_2_etf_signal_scores_separate_lane";
 const SOURCE_FILE = "stockanalysis/etf_universe.json";
@@ -35,7 +35,6 @@ const SIGNAL_KEYS = [
   "risk_adjusted_momentum",
   "income",
   "diversification",
-  "classification_risk",
 ];
 
 const NON_VANILLA_ETF_PATTERNS = [
@@ -421,15 +420,6 @@ function main() {
     } else {
       scores.diversification = null;
       coverage.diversification = false;
-    }
-
-    // Classification risk: eligible vanilla ETFs are low risk.
-    if (c.classification && typeof c.classification === "object") {
-      scores.classification_risk = clampScore(100);
-      coverage.classification_risk = true;
-    } else {
-      scores.classification_risk = null;
-      coverage.classification_risk = false;
     }
 
     const scoredSignalCount = Object.values(scores).filter((s) => s != null).length;

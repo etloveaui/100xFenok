@@ -17,7 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 
-const FORMULA_VERSION = "fenok-signal-lens-proxies-v0.1";
+const FORMULA_VERSION = "fenok-signal-lens-proxies-v0.2-ma-distance";
 const OUTPUT_FILE = "computed/fenok_signal_lens_proxies.json";
 const SUMMARY_FILE = "computed/fenok_signal_lens_proxies_summary.json";
 const HISTORY_FILE = "computed/fenok_signal_lens_proxies_history.json";
@@ -202,6 +202,33 @@ function movingAverage(values, window) {
   return slice.reduce((sum, v) => sum + v, 0) / window;
 }
 
+// Declared distance-from-MA bands. The near band is neutral; progressively
+// larger positive/negative distances receive graded constructive/stressed scores.
+const MOVING_AVERAGE_POSITION_BANDS = Object.freeze([
+  Object.freeze({ upper_exclusive: -0.10, score: 10, band: "deep_below" }),
+  Object.freeze({ upper_exclusive: -0.05, score: 25, band: "below" }),
+  Object.freeze({ upper_exclusive: -0.02, score: 40, band: "slightly_below" }),
+  Object.freeze({ upper_exclusive: 0.02, score: 50, band: "near" }),
+  Object.freeze({ upper_exclusive: 0.05, score: 60, band: "slightly_above" }),
+  Object.freeze({ upper_exclusive: 0.10, score: 75, band: "above" }),
+  Object.freeze({ upper_exclusive: Infinity, score: 90, band: "far_above" }),
+]);
+
+function movingAveragePositionScore(latest, average) {
+  if (!finite(latest) || !finite(average) || latest <= 0 || average <= 0) {
+    return { score: null, distance_pct: null, band: "unavailable" };
+  }
+  // Normalize the ratio before comparing declared decimal boundaries so an
+  // exact -5% input cannot remain in the lower band as -0.050000000000000044.
+  const distance = round(latest / average - 1, 10);
+  const matched = MOVING_AVERAGE_POSITION_BANDS.find((entry) => distance < entry.upper_exclusive);
+  return {
+    score: matched.score,
+    distance_pct: round(distance * 100, 2),
+    band: matched.band,
+  };
+}
+
 function percentileRank(value, low, high) {
   return clamp(((value - low) / (high - low)) * 100);
 }
@@ -242,13 +269,16 @@ function technicalIndicatorSignal(history) {
   const rsi14 = rsi(closes, 14);
   const avgVol20 = movingAverage(volumes, 20);
   const latestVol = volumes.at(-1);
+  const ma20Position = movingAveragePositionScore(latest, ma20);
+  const ma50Position = movingAveragePositionScore(latest, ma50);
+  const ma200Position = movingAveragePositionScore(latest, ma200);
 
   const components = [
     { key: "return_20d", score: close20 ? percentileRank(latest / close20 - 1, -0.15, 0.2) : null, weight: 0.25 },
     { key: "return_60d", score: close60 ? percentileRank(latest / close60 - 1, -0.25, 0.35) : null, weight: 0.2 },
-    { key: "ma20_position", score: ma20 ? (latest >= ma20 ? 80 : 30) : null, weight: 0.15 },
-    { key: "ma50_position", score: ma50 ? (latest >= ma50 ? 80 : 30) : null, weight: 0.15 },
-    { key: "ma200_position", score: ma200 ? (latest >= ma200 ? 80 : 30) : null, weight: 0.1 },
+    { key: "ma20_position", score: ma20Position.score, weight: 0.15 },
+    { key: "ma50_position", score: ma50Position.score, weight: 0.15 },
+    { key: "ma200_position", score: ma200Position.score, weight: 0.1 },
     { key: "rsi14", score: finite(rsi14) ? (rsi14 >= 70 ? 72 : rsi14 <= 30 ? 28 : percentileRank(rsi14, 30, 70)) : null, weight: 0.1 },
     { key: "volume_surge", score: avgVol20 && latestVol ? percentileRank(latestVol / avgVol20, 0.5, 2.0) : null, weight: 0.05 },
   ];
@@ -273,6 +303,12 @@ function technicalIndicatorSignal(history) {
       ma20: round(ma20, 4),
       ma50: round(ma50, 4),
       ma200: round(ma200, 4),
+      ma20_distance_pct: ma20Position.distance_pct,
+      ma50_distance_pct: ma50Position.distance_pct,
+      ma200_distance_pct: ma200Position.distance_pct,
+      ma20_band: ma20Position.band,
+      ma50_band: ma50Position.band,
+      ma200_band: ma200Position.band,
       rsi14: round(rsi14, 2),
       latest_volume: round(latestVol, 0),
       avg_volume_20d: round(avgVol20, 0),
@@ -509,6 +545,12 @@ function buildCoverage(rows) {
   };
 }
 
+function historyRowsForCurrentFormula(history) {
+  return history?.formula_version === FORMULA_VERSION && Array.isArray(history?.rows)
+    ? history.rows
+    : [];
+}
+
 function mergeHistory(snapshot) {
   const history = readJson(HISTORY_FILE, {
     schema_version: 1,
@@ -526,7 +568,10 @@ function mergeHistory(snapshot) {
     shortPressureProxyScore: row.short_term.shortPressureProxyScore,
   }));
   const keys = new Set(current.map((row) => `${row.ticker}|${row.as_of}`));
-  const kept = (history.rows ?? []).filter((row) => !keys.has(`${row.ticker}|${row.as_of}`));
+  // A formula bump starts a fresh comparable history series; do not relabel
+  // retained rows computed under an older formula as current-formula history.
+  const priorRows = historyRowsForCurrentFormula(history);
+  const kept = priorRows.filter((row) => !keys.has(`${row.ticker}|${row.as_of}`));
   return {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
@@ -597,10 +642,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  FORMULA_VERSION,
   alignReturns,
   buildCoverage,
   buildRows,
   correlation,
+  historyRowsForCurrentFormula,
+  MOVING_AVERAGE_POSITION_BANDS,
+  movingAveragePositionScore,
   sp500TrackingSignal,
   technicalIndicatorSignal,
 };
