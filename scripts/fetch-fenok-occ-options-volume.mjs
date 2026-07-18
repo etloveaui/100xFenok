@@ -4,12 +4,14 @@
  * option-activity proxies. Raw OCC CSV files stay under _private/admin.
  */
 
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   attemptResult,
+  atomicWrite,
   classifyEndpointResponse,
   defaultAttemptId,
   returnedTuple,
@@ -19,6 +21,15 @@ import {
   worstRequestResult,
   writeMergedAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+  systemicLkgFailureReason,
+} from "./lib/data-supply-lkg-store.mjs";
+import { isUsTradingDate } from "./fetch-fenok-finra-daily-private.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -32,6 +43,9 @@ const OCC_CACHE_DIR = path.join(privateRoot, "occ_options_volume");
 const OUTPUT_FILE = "computed/fenok_occ_options_volume.json";
 const HISTORY_FILE = "computed/fenok_occ_options_volume_history.json";
 const AVAILABILITY_FILE = "computed/fenok_occ_options_availability.json";
+const OCC_LANE_ID = "occ_options_volume";
+const OCC_LKG_KEY = "occ_options_volume";
+const OCC_FRESHNESS_MARKER_SCHEMA = "fenok-occ-freshness-marker/v1";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
 const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 100;
@@ -1182,16 +1196,242 @@ function mergeHistory(snapshot) {
   };
 }
 
+function occOutputSourceAsOf(document) {
+  const dates = Array.isArray(document?.rows)
+    ? document.rows
+      .map((row) => String(row?.source_date ?? ""))
+      .filter((value) => /^\d{8}$/.test(value))
+      .map(isoFromYmd)
+    : [];
+  return dates.length > 0 ? dates.sort().at(-1) : null;
+}
+
+function validOccOutputDocument(document) {
+  if (!document || typeof document !== "object" || Array.isArray(document)
+    || document.schema_version !== 1
+    || document.formula_version !== FORMULA_VERSION
+    || document.public_surface_status !== "admin_private_derived_only_public_summary_source"
+    || document.raw_policy?.raw_cache_public !== false
+    || document.raw_policy?.third_party_raw_public !== false
+    || document.raw_policy?.full_public_mirror !== false
+    || !Array.isArray(document.rows) || document.rows.length === 0) {
+    return false;
+  }
+  if (!document.rows.every((row) => {
+    const sourceDate = String(row?.source_date ?? "");
+    if (!/^\d{8}$/.test(sourceDate) || row?.as_of !== isoFromYmd(sourceDate)) return false;
+    try {
+      assertValidSourceDate(sourceDate);
+    } catch {
+      return false;
+    }
+    return typeof row?.ticker === "string" && row.ticker.length > 0
+      && Number.isFinite(row?.options_activity_proxy?.total_volume);
+  })) return false;
+  return occOutputSourceAsOf(document) !== null;
+}
+
+function occFreshnessMarkerPathFor(storeRepoRoot) {
+  return path.join(storeRepoRoot, "data", "admin", OCC_LANE_ID, "current", `${OCC_LKG_KEY}.json`);
+}
+
+function buildOccFreshnessMarker({ candidateDocument, generatedAt }) {
+  if (!validOccOutputDocument(candidateDocument)) {
+    throw new Error("OCC freshness marker requires a valid public-safe derived payload");
+  }
+  const sourceAsOf = candidateDocument.current_attempt?.served_source_date;
+  const compactSourceDate = typeof sourceAsOf === "string" ? sourceAsOf.replaceAll("-", "") : "";
+  if (candidateDocument.current_attempt?.status !== "ready_current"
+    || !/^\d{8}$/.test(compactSourceDate)
+    || !candidateDocument.rows.some((row) => row?.source_date === compactSourceDate)) {
+    throw new Error("OCC freshness marker source date is not bound to this run's ready provider rows");
+  }
+  const payloadBytes = Buffer.from(`${JSON.stringify(candidateDocument, null, 2)}\n`, "utf8");
+  return {
+    schema_version: OCC_FRESHNESS_MARKER_SCHEMA,
+    lane_id: OCC_LANE_ID,
+    source_as_of: sourceAsOf,
+    row_count: candidateDocument.rows.length,
+    payload_sha256: createHash("sha256").update(payloadBytes).digest("hex"),
+    generated_at: generatedAt,
+    raw_public: false,
+    public_mirror_allowed: false,
+  };
+}
+
+function validOccFreshnessMarker(document) {
+  return Boolean(document)
+    && typeof document === "object"
+    && !Array.isArray(document)
+    && document.schema_version === OCC_FRESHNESS_MARKER_SCHEMA
+    && document.lane_id === OCC_LANE_ID
+    && typeof document.source_as_of === "string"
+    && /^\d{4}-\d{2}-\d{2}$/.test(document.source_as_of)
+    && Number.isFinite(Date.parse(document.source_as_of))
+    && Number.isInteger(document.row_count) && document.row_count > 0
+    && typeof document.payload_sha256 === "string" && /^[0-9a-f]{64}$/.test(document.payload_sha256)
+    && typeof document.generated_at === "string" && document.generated_at.endsWith("Z")
+    && Number.isFinite(Date.parse(document.generated_at))
+    && document.raw_public === false
+    && document.public_mirror_allowed === false;
+}
+
+function occFreshnessMarkerSourceAsOf(document) {
+  return validOccFreshnessMarker(document) ? document.source_as_of : null;
+}
+
+function occLkgArtifactDescriptor(markerPath) {
+  return {
+    key: OCC_LKG_KEY,
+    canonicalPath: markerPath,
+    validateDocument: validOccFreshnessMarker,
+    sourceAsOf: occFreshnessMarkerSourceAsOf,
+  };
+}
+
+function buildOccLkgCandidate({ repoRoot: storeRepoRoot, markerPath, candidateDocument, run }) {
+  const marker = buildOccFreshnessMarker({ candidateDocument, generatedAt: run.observedAt });
+  const serialized = `${JSON.stringify(marker, null, 2)}\n`;
+  const payloadBytes = Buffer.from(serialized, "utf8");
+  const sourceAsOf = marker.source_as_of;
+  const currentPath = markerPath ?? occFreshnessMarkerPathFor(storeRepoRoot);
+  const currentRelativePath = path.relative(storeRepoRoot, path.resolve(currentPath)).split(path.sep).join("/");
+  return {
+    key: OCC_LKG_KEY,
+    currentRelativePath,
+    payloadBytes,
+    sourceAsOf,
+    validateDocument: validOccFreshnessMarker,
+    deriveSourceAsOf: occFreshnessMarkerSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes,
+      sourceAsOf,
+      validateDocument: validOccFreshnessMarker,
+      deriveSourceAsOf: occFreshnessMarkerSourceAsOf,
+      candidateContainsObservation: (candidate, provider) => JSON.stringify(candidate) === JSON.stringify(provider),
+      run,
+    }),
+  };
+}
+
+function computeOccLkgOutcome({ dates, currentAttempt, candidateDocument }) {
+  const tradingDates = (dates ?? []).filter((date) => isUsTradingDate(date));
+  if (tradingDates.length === 0) return { kind: "expected_absence" };
+  if (currentAttempt?.status === "ready_current" && validOccOutputDocument(candidateDocument)) {
+    return { kind: "success" };
+  }
+  return { kind: "failure" };
+}
+
+function applyOccLkgStore({
+  repoRoot: storeRepoRoot,
+  markerPath,
+  candidateDocument,
+  dates,
+  currentAttempt,
+  endpointResults,
+  run,
+}) {
+  const currentMarkerPath = markerPath ?? occFreshnessMarkerPathFor(storeRepoRoot);
+  const store = new LaneLkgStore({ repoRoot: storeRepoRoot, laneId: OCC_LANE_ID });
+  const artifact = occLkgArtifactDescriptor(currentMarkerPath);
+  const outcome = computeOccLkgOutcome({ dates, currentAttempt, candidateDocument });
+
+  if (outcome.kind === "expected_absence") {
+    return { kind: "expected_absence", updated: false };
+  }
+  if (outcome.kind === "failure") {
+    const reduced = reduceOccEndpointResults(endpointResults ?? []);
+    const reason = systemicLkgFailureReason((endpointResults ?? []).map((row) => row?.reason))
+      ?? reduced.reason
+      ?? "workflow_unobserved";
+    const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+    return {
+      kind: "failure",
+      updated: false,
+      reason,
+      retrySet: failure.retrySet,
+      ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg }),
+    };
+  }
+
+  const candidate = buildOccLkgCandidate({
+    repoRoot: storeRepoRoot,
+    markerPath: currentMarkerPath,
+    candidateDocument,
+    run,
+  });
+  const snapshot = store.stateSnapshot();
+  const priorItem = snapshot.items[OCC_LKG_KEY];
+  const retryActive = priorItem?.retry === true;
+  const priorSourceAsOf = priorItem?.current?.source_as_of;
+  if (!retryActive && typeof priorSourceAsOf === "string"
+    && Number.isFinite(Date.parse(priorSourceAsOf))
+    && Date.parse(candidate.sourceAsOf) <= Date.parse(priorSourceAsOf)) {
+    return { kind: "not_newer", updated: false, sourceAsOf: candidate.sourceAsOf };
+  }
+  if (retryActive && !isNaturalScheduleRun(run)) {
+    return {
+      kind: "recovery_requires_schedule",
+      updated: false,
+      reason: "recovery_requires_schedule",
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+
+  const [decision] = store.evaluatePromotionCandidates([candidate], run);
+  if (!decision.eligible) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+    }
+    return {
+      kind: "not_promotable",
+      updated: false,
+      reason: decision.reason,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+
+  atomicWrite(currentMarkerPath, candidate.payloadBytes);
+  const success = store.recordSuccess({ artifacts: [candidate], run });
+  const recovered = success.state.items[OCC_LKG_KEY]?.recovered_at === run.observedAt;
+  return { kind: "success", updated: true, recovered, sourceAsOf: candidate.sourceAsOf, exitCode: 0 };
+}
+
+function shouldManageOccLkg({ args, universe }) {
+  if (args.noWrite || args.noFetch || args.planOnly || args.date || !args.allEligible) return false;
+  const batchSize = Number(args.batchSize);
+  if (!Number.isInteger(batchSize) || batchSize <= 0) return false;
+  return (Number(args.batchIndex) + 1) * batchSize >= Number(universe.eligible_count);
+}
+
 async function build(args, {
   request = fetchResponse,
   cacheDir = OCC_CACHE_DIR,
   attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/occ_options_volume.json"),
   observedAt = new Date().toISOString(),
   attemptId = stableAttemptId("occ-options-volume", observedAt),
+  lkgRepoRoot = repoRoot,
+  lkgMarkerPath = occFreshnessMarkerPathFor(lkgRepoRoot),
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
 } = {}) {
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
   const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
+  const manageLkg = shouldManageOccLkg({ args, universe });
+  const run = {
+    runId: String(runId),
+    runAttempt: Number(runAttempt),
+    eventName,
+    observedAt,
+  };
   const estimatedMaxLiveRequests = estimateMaxLiveRequests({ tickers, dates });
   if (args.planOnly) {
     return {
@@ -1275,10 +1515,27 @@ async function build(args, {
           dateAttempts,
         });
         const currentAttempt = mergeOccCurrentAttempt(availability.current_attempt, batchAttempt);
+        const previousOutput = readJson(OUTPUT_FILE, null);
+        const candidateDocument = previousOutput
+          ? { ...previousOutput, current_attempt: currentAttempt }
+          : null;
+        const lkgRecovery = manageLkg
+          ? applyOccLkgStore({
+            repoRoot: lkgRepoRoot,
+            markerPath: lkgMarkerPath,
+            candidateDocument,
+            dates,
+            currentAttempt,
+            endpointResults,
+            run,
+          })
+          : null;
+        if (lkgRecovery?.corrupt) {
+          throw new Error(`OCC LKG failure is corrupt: ${lkgRecovery.reason}`);
+        }
         let wrote = false;
         if (!args.noWrite && tickers.length > 0) {
           writeJson(AVAILABILITY_FILE, { ...availability, current_attempt: currentAttempt });
-          const previousOutput = readJson(OUTPUT_FILE, null);
           if (previousOutput) {
             writeJson(OUTPUT_FILE, {
               ...previousOutput,
@@ -1287,6 +1544,7 @@ async function build(args, {
           }
           wrote = true;
         }
+        if (lkgRecovery?.updated) wrote = true;
         if (currentAttempt.status === "unavailable") console.log(`::warning:: ${currentAttempt.message}`);
           return {
           output_file: `data/${OUTPUT_FILE}`,
@@ -1305,6 +1563,7 @@ async function build(args, {
           },
           date_attempts: dateAttempts,
           current_attempt: currentAttempt,
+          lkg_recovery: lkgRecovery,
           availability_summary: {
             rows: availability.rows.length,
             latest_status_counts: availability.rows.reduce((acc, row) => {
@@ -1341,6 +1600,20 @@ async function build(args, {
       current_attempt: mergeOccCurrentAttempt(availability.current_attempt, batchAttempt),
     };
       const history = mergeHistory(outputSnapshot);
+      const lkgRecovery = manageLkg
+        ? applyOccLkgStore({
+          repoRoot: lkgRepoRoot,
+          markerPath: lkgMarkerPath,
+          candidateDocument: outputSnapshot,
+          dates,
+          currentAttempt: outputSnapshot.current_attempt,
+          endpointResults,
+          run,
+        })
+        : null;
+      if (lkgRecovery?.corrupt) {
+        throw new Error(`OCC LKG failure is corrupt: ${lkgRecovery.reason}`);
+      }
       if (!args.noWrite) {
         writeJson(OUTPUT_FILE, outputSnapshot);
         writeJson(HISTORY_FILE, history);
@@ -1366,6 +1639,7 @@ async function build(args, {
       },
       date_attempts: dateAttempts,
       current_attempt: outputSnapshot.current_attempt,
+      lkg_recovery: lkgRecovery,
       reference_rows: outputSnapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
       };
     }
@@ -1395,8 +1669,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  applyOccLkgStore,
   applyTickerBatch,
   build,
+  buildOccFreshnessMarker,
+  buildOccLkgCandidate,
   buildOccBatchAttempt,
   buildCoverage,
   buildAvailabilitySnapshot,
@@ -1413,14 +1690,23 @@ export {
   mergeOccCurrentAttempt,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
+  OCC_FRESHNESS_MARKER_SCHEMA,
+  OCC_LANE_ID,
+  OCC_LKG_KEY,
   OCC_PERSISTENCE_POLICY,
+  occFreshnessMarkerPathFor,
+  occFreshnessMarkerSourceAsOf,
+  occOutputSourceAsOf,
   parseOccCsv,
   parseArgs,
   reduceOccEndpointResults,
   retainLatestTickerSourceDates,
   scoreOptionsVolume,
+  shouldManageOccLkg,
   summarizeTickerAvailability,
   summarizeDateAttempt,
+  validOccFreshnessMarker,
+  validOccOutputDocument,
 };
 
 function buildRowsForTest({ ticker, ymd, callCsv, putCsv, callStatus = "loaded", putStatus = "loaded" }) {

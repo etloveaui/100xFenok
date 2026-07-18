@@ -83,6 +83,7 @@ jobs:
           node scripts/test-fetch-fenok-finra-daily-private.mjs
           node scripts/test-fetch-fenok-finra-lkg-recovery.mjs
           node scripts/test-fetch-fenok-occ-options-volume.mjs
+          node scripts/test-fetch-fenok-occ-lkg-recovery.mjs
           node scripts/test-fenok-edge-daily-attempt-workflow.mjs
 
       - name: Resolve bounded window
@@ -169,16 +170,19 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Public-safe detection attempt shards AND the FINRA LKG recovery state
-          # (freshness marker + retained LKG copy + recovery index) are committed on
-          # every run so retry/recovery accounting survives across CI runs. These
-          # carry no private short-volume rows.
+          # Public-safe detection attempt shards and LKG recovery state are committed
+          # on every run so retry/recovery accounting survives across CI runs. FINRA
+          # and OCC store freshness markers bound to their source payloads. Neither
+          # recovery tree carries private raw rows.
           for SHARD in \
             data/admin/data-supply-state/detection-attempts/finra_short_volume.json \
             data/admin/data-supply-state/detection-attempts/occ_options_volume.json \
             data/admin/finra_short_volume/index.json \
             data/admin/finra_short_volume/current/regsho_daily.json \
-            data/admin/finra_short_volume/lkg/regsho_daily.json; do
+            data/admin/finra_short_volume/lkg/regsho_daily.json \
+            data/admin/occ_options_volume/index.json \
+            data/admin/occ_options_volume/current/occ_options_volume.json \
+            data/admin/occ_options_volume/lkg/occ_options_volume.json; do
             if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
           done
           if [ "${FENOK_EDGE_PLAN_ONLY:-false}" != "true" ] && [ "$REFRESH_OUTCOME" = "success" ]; then

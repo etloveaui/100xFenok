@@ -873,6 +873,7 @@ export {
   FINRA_LKG_KEY,
   freshnessMarkerPathFor,
   freshnessMarkerSourceAsOf,
+  isUsTradingDate,
   normalizeDate,
   parseFinraDailyShortVolume,
   rawTextPathForDate,
