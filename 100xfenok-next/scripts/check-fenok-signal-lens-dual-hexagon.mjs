@@ -2,6 +2,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  NATIVE_SIGNAL_FORMULA_VERSION,
+  buildShortTermConvictionComposite,
+  shortTermConvictionCallFromScore,
+} from "../../scripts/lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
@@ -52,6 +57,10 @@ const PUBLIC_SUMMARY_FIELDS = [
   "shortTermScore",
   "shortTermConvictionScore",
   "shortTermConvictionCall",
+  "shortTermCommonBasisScore",
+  "shortTermCommonBasisCall",
+  "shortTermInputCount",
+  "shortTermBasisCode",
   "durabilityProfitabilityScore",
   "durabilityProfitabilityCoverage",
   "upsidePotentialScore",
@@ -75,6 +84,14 @@ const PUBLIC_SUMMARY_TOP_LEVEL_KEYS = [
   "rows",
   "schema_version",
   "source_file",
+];
+const FULL_SHORT_TERM_COMPOSITE_KEYS = [
+  "common_basis_score_0_100",
+  "common_basis_call",
+  "conviction_score_0_100",
+  "conviction_call",
+  "input_count",
+  "basis_code",
 ];
 const PRIVATE_SOURCE_PUBLIC_PATH = path.join(publicDataRoot, "computed/fenok_signals.json");
 
@@ -232,15 +249,29 @@ function computeLongTermComposite(sourceRow) {
 }
 
 function computeShortTermComposite(sourceRow) {
-  const signals = sourceRow?.signals ?? {};
-  const shortPressure = signals.short_pressure_proxy?.score_0_100;
-  return average([
-    signals.technical_flow?.score_0_100,
-    signals.volume_liquidity_trend?.score_0_100,
-    signals.short_term_relative_strength?.score_0_100,
-    signals.net_options_proxy?.score_0_100,
-    finite(shortPressure) ? 100 - shortPressure : null,
-  ]);
+  return buildShortTermConvictionComposite(sourceRow?.signals, sourceRow?.market_scope);
+}
+
+function validateFullShortTermComposite(ticker, sourceRow, errors) {
+  const actual = sourceRow?.short_term_composite;
+  if (!sameKeys(actual, FULL_SHORT_TERM_COMPOSITE_KEYS)) {
+    errors.push(`${ticker}: short_term_composite must contain the exact Stage A fields`);
+    return;
+  }
+  const expectedComposite = computeShortTermComposite(sourceRow);
+  const expected = {
+    common_basis_score_0_100: expectedComposite.shortTermCommonBasisScore,
+    common_basis_call: expectedComposite.shortTermCommonBasisCall,
+    conviction_score_0_100: expectedComposite.shortTermConvictionScore,
+    conviction_call: expectedComposite.shortTermConvictionCall,
+    input_count: expectedComposite.shortTermInputCount,
+    basis_code: expectedComposite.shortTermBasisCode,
+  };
+  for (const key of FULL_SHORT_TERM_COMPOSITE_KEYS) {
+    if (actual[key] !== expected[key]) {
+      errors.push(`${ticker}: short_term_composite.${key} ${actual[key]} != recomputed ${expected[key]}`);
+    }
+  }
 }
 
 function first(items, limit = 8) {
@@ -428,6 +459,15 @@ if (sourceSummaryArtifact.value && (typeof summary.generated_at !== "string" || 
 if (sourceArtifact.value && (typeof source.generated_at !== "string" || source.generated_at.trim() === "")) {
   errors.push("Fenok signal source generated_at must be a non-empty string");
 }
+for (const [label, payload] of [
+  ["source fenok_signals", sourceArtifact.value],
+  ["root Fenok signal summary", sourceSummaryArtifact.value],
+  ["public Fenok signal summary", publicSummaryArtifact.value],
+]) {
+  if (payload && payload.formula_version !== NATIVE_SIGNAL_FORMULA_VERSION) {
+    errors.push(`${label} formula_version must be ${NATIVE_SIGNAL_FORMULA_VERSION}; got ${payload.formula_version ?? "missing"}`);
+  }
+}
 for (const [index, row] of summaryRows.entries()) {
   if (!Array.isArray(row)) errors.push(`summary row ${index} must be a compact array`);
   else if (row.length !== summaryFields.length) {
@@ -447,8 +487,16 @@ for (const [index, row] of summaryRows.entries()) {
   }
 }
 for (const [index, row] of sourceRows.entries()) {
-  if (!isObject(row)) errors.push(`source row ${index} must be an object`);
-  else if (!isObject(row.signals)) errors.push(`${tickerOf(row.ticker) || `source row ${index}`}: signals must be an object`);
+  if (!isObject(row)) {
+    errors.push(`source row ${index} must be an object`);
+    continue;
+  }
+  const ticker = tickerOf(row.ticker) || `source row ${index}`;
+  if (!isObject(row.signals)) errors.push(`${ticker}: signals must be an object`);
+  if (row.formula_version !== NATIVE_SIGNAL_FORMULA_VERSION) {
+    errors.push(`${ticker}: formula_version must be ${NATIVE_SIGNAL_FORMULA_VERSION}; got ${row.formula_version ?? "missing"}`);
+  }
+  validateFullShortTermComposite(ticker, row, errors);
 }
 
 if (stockActionArtifact.value) {
@@ -698,15 +746,15 @@ for (const ticker of analysisTickers) {
   if (shortTermScore == null) {
     counts.shortGroupMissing += 1;
     addExample(examples, "shortGroupMissing", ticker);
-    if (expectedShort !== null) {
+    if (expectedShort.shortTermConvictionScore !== null) {
       counts.summaryBehindSource += 1;
       addExample(examples, "summaryBehindSource", `${ticker}:shortTermConvictionScore`);
     }
   } else if (!validScore(shortTermScore)) {
     errors.push(`${ticker}: shortTermConvictionScore must be null or a finite 0..100 number`);
-  } else if (!nearlyEqual(shortTermScore, expectedShort)) {
+  } else if (!nearlyEqual(shortTermScore, expectedShort.shortTermConvictionScore)) {
     counts.compositeMismatch += 1;
-    errors.push(`${ticker}: false-ready shortTermConvictionScore ${shortTermScore} != recomputed ${expectedShort}`);
+    errors.push(`${ticker}: false-ready shortTermConvictionScore ${shortTermScore} != recomputed ${expectedShort.shortTermConvictionScore}`);
   }
   if (shortTermAlias == null && shortTermScore == null) {
     // Honest missing group score: the lane degrades below without inventing an alias.
@@ -718,13 +766,35 @@ for (const ticker of analysisTickers) {
 
   const longCall = fieldValue(summaryRow, summaryFields, "longTermConvictionCall");
   const shortCall = fieldValue(summaryRow, summaryFields, "shortTermConvictionCall");
+  const commonBasisScore = fieldValue(summaryRow, summaryFields, "shortTermCommonBasisScore");
+  const commonBasisCall = fieldValue(summaryRow, summaryFields, "shortTermCommonBasisCall");
+  const shortTermInputCount = fieldValue(summaryRow, summaryFields, "shortTermInputCount");
+  const shortTermBasisCode = fieldValue(summaryRow, summaryFields, "shortTermBasisCode");
   if (longCall !== convictionCallFromScore(longTermScore)) {
     counts.callMismatch += 1;
     errors.push(`${ticker}: longTermConvictionCall ${longCall} does not match score ${longTermScore}`);
   }
-  if (shortCall !== convictionCallFromScore(shortTermScore)) {
+  if (shortCall !== shortTermConvictionCallFromScore(shortTermScore)) {
     counts.callMismatch += 1;
     errors.push(`${ticker}: shortTermConvictionCall ${shortCall} does not match score ${shortTermScore}`);
+  }
+  if (commonBasisScore === null && expectedShort.shortTermCommonBasisScore === null) {
+    // Honest missing common basis: both producer and summary fail closed.
+  } else if (commonBasisScore !== null && !validScore(commonBasisScore)) {
+    errors.push(`${ticker}: shortTermCommonBasisScore must be null or a finite 0..100 number`);
+  } else if (!nearlyEqual(commonBasisScore, expectedShort.shortTermCommonBasisScore)) {
+    counts.compositeMismatch += 1;
+    errors.push(`${ticker}: shortTermCommonBasisScore ${commonBasisScore} != recomputed ${expectedShort.shortTermCommonBasisScore}`);
+  }
+  if (commonBasisCall !== shortTermConvictionCallFromScore(commonBasisScore)) {
+    counts.callMismatch += 1;
+    errors.push(`${ticker}: shortTermCommonBasisCall ${commonBasisCall} does not match score ${commonBasisScore}`);
+  }
+  if (shortTermInputCount !== expectedShort.shortTermInputCount) {
+    errors.push(`${ticker}: shortTermInputCount ${shortTermInputCount} != recomputed ${expectedShort.shortTermInputCount}`);
+  }
+  if (shortTermBasisCode !== expectedShort.shortTermBasisCode) {
+    errors.push(`${ticker}: shortTermBasisCode ${shortTermBasisCode} != recomputed ${expectedShort.shortTermBasisCode}`);
   }
 }
 

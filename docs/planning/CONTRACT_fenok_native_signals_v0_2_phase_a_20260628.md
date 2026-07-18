@@ -50,16 +50,38 @@ include a coverage-adjusted diagnostic field for admin review only.
 split from `signals.upside_downside`. Higher downside pressure means higher risk
 pressure; UI may invert it separately only as a labeled display transform.
 
+The 2026-07-19 common-basis emitter appends these backward-compatible fields:
+
+- `shortTermCommonBasisScore`
+- `shortTermCommonBasisCall`
+- `shortTermInputCount`
+- `shortTermBasisCode`
+
+The common-basis score requires all three current common axes. It is a
+composition disclosure only and must not be treated as cross-market comparable.
+US local conviction may add present options and inverted short-pressure inputs;
+Korea and Asia remain on the common three. A missing common axis produces null
+scores, calls, input count, and basis code.
+
+The private full row is the emitter SSOT and carries the same values under
+`short_term_composite`: `common_basis_score_0_100`, `common_basis_call`,
+`conviction_score_0_100`, `conviction_call`, `input_count`, and `basis_code`.
+The compact summary projects its four new public fields from that object; it
+does not independently recompute them.
+
 ## Formula Version
 
-- `formula_version`: `fenok-native-signals-v0.2.2-phase-b-flow-calibration`
+- `formula_version`: `fenok-native-signals-v0.2.3-common-basis`
 - `public_surface_status`:
   `phase_b_v0_2_stock_signal_lens_approved_summary_public`
+
+The v0.2.3 bump adds the common-basis emitter and market-aware input metadata.
+It does not add a cross-market-comparable score or flip a UI consumer.
 
 The Phase B public summary also carries the derived `net_options_proxy`,
 `off_exchange_activity_proxy`, and `short_pressure_proxy` axes. The v0.2.2
 bump marks the 2026-07-18 measured p5/p95 recalibration of those producer
-scores; these proxy axes remain outside the conviction composite.
+scores; these proxy axes remain outside the long-term conviction composite.
 
 The conviction composite remains unchanged: it averages the present
 `profitability`, `growth`, `technical_flow`, and `upside_downside` scores when at

@@ -3,8 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   FLOW_PROXY_FORMULA_VERSION,
+  NATIVE_SIGNAL_FORMULA_VERSION,
   OCC_OPTIONS_FORMULA_VERSION,
   assertProxyFormulaVersion,
+  buildShortTermConvictionComposite,
 } from "./lib/fenok-proxy-formula-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -12,7 +14,7 @@ const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 
-const FORMULA_VERSION = "fenok-native-signals-v0.2.2-phase-b-flow-calibration";
+const FORMULA_VERSION = NATIVE_SIGNAL_FORMULA_VERSION;
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md";
 const PUBLIC_SURFACE_STATUS = "phase_b_v0_2_stock_signal_lens_approved_summary_public";
 const SOURCE_FILE = "computed/stock_action_index.json";
@@ -982,24 +984,6 @@ function convictionCallFromScore(score) {
   return "mixed";
 }
 
-function buildShortTermConvictionComposite(signals) {
-  const shortPressure = signals?.short_pressure_proxy?.score_0_100;
-  const presentScores = [
-    signals?.technical_flow?.score_0_100,
-    signals?.volume_liquidity_trend?.score_0_100,
-    signals?.short_term_relative_strength?.score_0_100,
-    signals?.net_options_proxy?.score_0_100,
-    finite(shortPressure) ? 100 - shortPressure : null,
-  ].filter(finite);
-  const shortTermConvictionScore = presentScores.length > 0
-    ? round(presentScores.reduce((sum, score) => sum + score, 0) / presentScores.length, 2)
-    : null;
-  return {
-    shortTermConvictionScore,
-    shortTermConvictionCall: convictionCallFromScore(shortTermConvictionScore),
-  };
-}
-
 function buildFenokSignalsSummary(fenokSignals) {
   const fields = [
     "ticker",
@@ -1026,6 +1010,10 @@ function buildFenokSignalsSummary(fenokSignals) {
     "shortTermScore",
     "shortTermConvictionScore",
     "shortTermConvictionCall",
+    "shortTermCommonBasisScore",
+    "shortTermCommonBasisCall",
+    "shortTermInputCount",
+    "shortTermBasisCode",
     "durabilityProfitabilityScore",
     "durabilityProfitabilityCoverage",
     "upsidePotentialScore",
@@ -1049,6 +1037,9 @@ function buildFenokSignalsSummary(fenokSignals) {
     field_semantics: {
       shortTermScore: "Alias of shortTermConvictionScore for current UI group-score consumers.",
       shortTermConvictionScore: "Directional short-term mean: technical flow, volume/liquidity trend, relative strength, options-activity proxy, and inverted short-volume pressure when present. Off-exchange activity is excluded because it is non-directional.",
+      shortTermCommonBasisScore: "Mean of the same three current axes (technical flow, volume/liquidity trend, and relative strength) when all are present. This is a composition disclosure, not a cross-market-comparable score.",
+      shortTermInputCount: "Actual number of inputs used by shortTermConvictionScore; null when the required common three-input basis is unavailable.",
+      shortTermBasisCode: "common_3_v1 for three common inputs; us_enriched_v1 when one or two US-only enrichment inputs are also present.",
       volumeLiquidityTrendScore: "Local OHLCV volume/liquidity trend proxy, not true order flow.",
       shortTermRelativeStrengthScore: "Local 20d/60d relative-strength proxy versus SPY, not a forecast.",
       netOptionsProxyScore: "OCC listed-options volume skew proxy derived from underlying-level call/put quantities; not real options flow, not OPRA, and not buyer/seller direction.",
@@ -1066,7 +1057,7 @@ function buildFenokSignalsSummary(fenokSignals) {
     rows: fenokSignals.rows.map((row) => {
       const conviction = buildConvictionComposite(row.signals);
       const longTermConvictionScore = buildLongTermConvictionScore(row.signals);
-      const shortTermConviction = buildShortTermConvictionComposite(row.signals);
+      const shortTermConviction = row.short_term_composite;
       return [
         row.ticker,
         row.company,
@@ -1089,9 +1080,13 @@ function buildFenokSignalsSummary(fenokSignals) {
         conviction.convictionCall,
         longTermConvictionScore,
         convictionCallFromScore(longTermConvictionScore),
-        shortTermConviction.shortTermConvictionScore,
-        shortTermConviction.shortTermConvictionScore,
-        shortTermConviction.shortTermConvictionCall,
+        shortTermConviction.conviction_score_0_100,
+        shortTermConviction.conviction_score_0_100,
+        shortTermConviction.conviction_call,
+        shortTermConviction.common_basis_score_0_100,
+        shortTermConviction.common_basis_call,
+        shortTermConviction.input_count,
+        shortTermConviction.basis_code,
         row.signals.durability_profitability?.score_0_100 ?? null,
         row.signals.durability_profitability?.coverage_ratio ?? null,
         row.signals.upside_downside?.upside_score_0_100 ?? null,
@@ -1150,6 +1145,7 @@ function buildFenokSignals(stockActionIndex) {
       off_exchange_activity_proxy: offExchangeActivityProxy,
       short_pressure_proxy: shortPressureProxy,
     };
+    const shortTermConviction = buildShortTermConvictionComposite(signals, row.marketScope);
     const nativeCoverage = compactSignalCoverage(signals);
     vectors.set(row.symbol, buildVector(stats, row, signals));
 
@@ -1183,6 +1179,14 @@ function buildFenokSignals(stockActionIndex) {
         coverage_ratio: num(row.coverageRatio),
         confidence_label: row.confidenceLabel ?? null,
         action_bucket: row.actionBucket ?? null,
+      },
+      short_term_composite: {
+        common_basis_score_0_100: shortTermConviction.shortTermCommonBasisScore,
+        common_basis_call: shortTermConviction.shortTermCommonBasisCall,
+        conviction_score_0_100: shortTermConviction.shortTermConvictionScore,
+        conviction_call: shortTermConviction.shortTermConvictionCall,
+        input_count: shortTermConviction.shortTermInputCount,
+        basis_code: shortTermConviction.shortTermBasisCode,
       },
       signals,
     };
