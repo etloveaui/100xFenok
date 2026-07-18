@@ -493,7 +493,7 @@ const lanes = [
       "data/computed/fenok_occ_options_volume_history.json",
       "data/computed/fenok_occ_options_availability.json",
     ],
-    public_mirror: [],
+    public_mirror: ["100xfenok-next/public/data/computed/fenok_occ_options_availability.json"],
     commit_shards: [
       attemptShard("occ_options_volume"),
       "data/admin/occ_options_volume/index.json",
@@ -587,6 +587,12 @@ const declared_exceptions = [
     kind: "root",
     reason: "shared detection-floor state root (attempt shards + provider-observation objects); not a lane store",
     owner: "detection-floor",
+  },
+  {
+    path: "data/yf/migration-evidence",
+    kind: "root",
+    reason: "legacy Yahoo-migration evidence root, admin-private; not a lane store",
+    owner: "platform",
   },
   {
     path: "data/admin/data-supply-detection-floor.json",

@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   EXCLUDED_PUBLIC_DATA_FILES,
@@ -20,6 +21,55 @@ import {
   marketFactsShardUrl,
 } from "../src/lib/market-facts-shard.mjs";
 import { checkSyncExclusionsAgainstRegistry } from "../../scripts/check-lane-registry-sync.mjs";
+import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
+import {
+  deriveExcludedPublicDataFiles,
+  deriveExcludedPublicDataRoots,
+  deriveForbiddenPrivateDataSupplyRoots,
+} from "../../scripts/lib/lane-routing.mjs";
+import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
+
+// Lane-routing ⇄ hand-list parity gate (#366 item 4, shadow step): the hand
+// lists stay authoritative, but any divergence between them and the registry
+// derivation fails loudly here — before any consumer flips in later slices.
+// Equality is TRUE SET equality (both sides deduped, then compared order-free).
+{
+  const setEqual = (a, b) => JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
+  // equality semantics pinned: deduped both sides, order-free (sol fh-155 B1)
+  assert.equal(setEqual(["x"], ["x", "x"]), true, "set equality must be duplicate-insensitive");
+  assert.equal(setEqual(["x"], ["y"]), false);
+
+  // registry-parameter honored end to end (sol fh-155 B2): an injected
+  // registry with NO declared exceptions must derive accordingly.
+  const derivedRoots = deriveExcludedPublicDataRoots();
+  const derivedFiles = deriveExcludedPublicDataFiles();
+  const derivedGuardRoots = deriveForbiddenPrivateDataSupplyRoots();
+  const withoutExceptions = { ...LANE_REGISTRY, declared_exceptions: [] };
+  assert.equal(deriveExcludedPublicDataRoots(withoutExceptions).includes("admin/data-supply-state"), false,
+    "deriveExcludedPublicDataRoots must honor the injected registry's declared_exceptions");
+  assert.equal(deriveForbiddenPrivateDataSupplyRoots(withoutExceptions).includes("yf/migration-evidence"), false,
+    "deriveForbiddenPrivateDataSupplyRoots must honor the injected registry's declared_exceptions");
+  assert.equal(setEqual(derivedRoots, EXCLUDED_PUBLIC_DATA_ROOTS), true,
+    `registry-derived sync roots diverge from the hand list: derived=${JSON.stringify(derivedRoots)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
+  assert.equal(setEqual(derivedFiles, EXCLUDED_PUBLIC_DATA_FILES), true,
+    `registry-derived sync files diverge from the hand list: derived=${JSON.stringify(derivedFiles)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
+  assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
+    `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
+
+  // materialize.py coverage: every derived private root must be covered by the
+  // Python private-token lists (either path form) — the third consumer of the
+  // same fact family (#21). Content-level tokens stay hand-authored by design.
+  const materializeSource = fs.readFileSync(
+    fileURLToPath(new URL("../../scripts/materialize_data_supply_public.py", import.meta.url)),
+    "utf8",
+  );
+  for (const root of derivedGuardRoots) {
+    const bareForm = `${root}/`;
+    const dataForm = root.startsWith("admin/") ? `data/${root}/` : null;
+    const covered = materializeSource.includes(bareForm) || (dataForm !== null && materializeSource.includes(dataForm));
+    assert.equal(covered, true, `materialize_data_supply_public.py does not cover private root ${root} (#21 parity)`);
+  }
+}
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";
 const EXPECTED_PRIVATE_ROOTS = Object.freeze([

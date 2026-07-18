@@ -31,7 +31,7 @@ const FORBIDDEN_RAW_PATTERNS = [
   /(^|\/)(finra|occ|apewisdom|gdelt|reddit|social)(\/|_)/i,
 ];
 
-const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
+export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/data-supply-state",
   "yf/etf-details",
   "yf/migration-evidence",
