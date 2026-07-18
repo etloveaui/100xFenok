@@ -229,7 +229,11 @@ const lanes = [
     store_kind: "payload",
     cadence: { kind: "daily", provider: "yahoo/stockanalysis (shared workflow)" },
     enforcement: "live",
-    privacy_class: "private",
+    // privacy_class describes ADMIN-STORE routing (what EXCLUDED_PUBLIC_DATA_ROOTS
+    // withholds): the shared StockAnalysis store syncs to public today. The lane's
+    // private canonical (data/yf/etf-details) is withheld separately — visible in
+    // roots.public_mirror being empty — outside this gate's admin/* scope.
+    privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("yahoo_etf_fallback"),
     canonical_outputs: ["data/yf/etf-details"],

@@ -19,6 +19,7 @@ import {
   marketFactsShardFileName,
   marketFactsShardUrl,
 } from "../src/lib/market-facts-shard.mjs";
+import { checkSyncExclusionsAgainstRegistry } from "../../scripts/check-lane-registry-sync.mjs";
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";
 const EXPECTED_PRIVATE_ROOTS = Object.freeze([
@@ -31,6 +32,27 @@ const EXPECTED_PRIVATE_ROOTS = Object.freeze([
   "yf/etf-details",
   "yf/migration-evidence",
 ]);
+
+// Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): the hand list
+// stays authoritative, but omitting a private lane's store from it must be
+// impossible to miss (the 07-18 finra leak class). Also pin the local copy of
+// the list to the imported one so the two can never drift apart silently.
+{
+  assert.deepEqual(
+    [...EXPECTED_PRIVATE_ROOTS].sort(),
+    [...EXCLUDED_PUBLIC_DATA_ROOTS].sort(),
+    "EXPECTED_PRIVATE_ROOTS must mirror EXCLUDED_PUBLIC_DATA_ROOTS exactly",
+  );
+  const gate = checkSyncExclusionsAgainstRegistry({ excludedRoots: EXCLUDED_PUBLIC_DATA_ROOTS });
+  assert.equal(
+    gate.ok,
+    true,
+    `registry/sync exclusion mismatch: ${JSON.stringify({
+      missing_exclusions: gate.missing_exclusions,
+      undeclared_exclusions: gate.undeclared_exclusions,
+    })}`,
+  );
+}
 
 function realBaselineRootArg() {
   const index = process.argv.indexOf("--real-baseline-root");
