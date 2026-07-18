@@ -2047,6 +2047,37 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
   });
 }
 
+// Recovery-state sources, hoisted to a single importable declaration so the
+// lane-registry cross-check gate (scripts/check-lane-registry-kpi.mjs) reads
+// exactly what buildPayload reads — the defillama class (recovery store on the
+// tree, KPI blind to it) becomes structurally unshippable. Three shapes:
+//   - general: lanes whose admin/<id>/index.json feeds the generic projection
+//   - nonstandard: producer-lkg-index/v2 keyed stores (yahoo hourly, slickcharts)
+//   - direct: recovery indexes read directly by dedicated lane builders
+export const RECOVERY_STATE_SOURCES = Object.freeze({
+  general_lane_ids: Object.freeze([
+    "fred_macro",
+    "fred_banking",
+    "fdic_tier1",
+    "sentiment",
+    "treasury_tga",
+    "finra_short_volume",
+    "occ_options_volume",
+    "fred_yardeni",
+    "edgar_filings",
+    "defillama_stablecoins",
+  ]),
+  nonstandard: Object.freeze({
+    yahoo_ticker_macro: "admin/yahoo-hourly-ticker/index.json",
+    slickcharts: "admin/slickcharts-daily-delivery/index.json",
+  }),
+  direct: Object.freeze({
+    yahoo_batch_quote_history: "admin/yahoo-batch-quote-history/index.json",
+    stockanalysis_recovery: "admin/stockanalysis-recovery/index.json",
+    nasdaq_giw_sox: "admin/nasdaq_giw_sox/index.json",
+  }),
+});
+
 function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
@@ -2055,19 +2086,19 @@ function buildPayload(nowIso, priorRuntime, priorProductSurfacePending) {
   const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json");
   const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json");
   const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
-  const yahooBatchState = readJson("admin/yahoo-batch-quote-history/index.json");
-  const stockanalysisRecovery = readJson("admin/stockanalysis-recovery/index.json");
-  const nasdaqGiwSoxRecovery = readOptionalJsonStrict("admin/nasdaq_giw_sox/index.json");
+  const yahooBatchState = readJson(RECOVERY_STATE_SOURCES.direct.yahoo_batch_quote_history);
+  const stockanalysisRecovery = readJson(RECOVERY_STATE_SOURCES.direct.stockanalysis_recovery);
+  const nasdaqGiwSoxRecovery = readOptionalJsonStrict(RECOVERY_STATE_SOURCES.direct.nasdaq_giw_sox);
   const occAvailability = readJson("computed/fenok_occ_options_availability.json");
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const generalRecoveryStates = Object.fromEntries(
-    ["fred_macro", "fred_banking", "fdic_tier1", "sentiment", "treasury_tga", "finra_short_volume", "occ_options_volume", "fred_yardeni", "edgar_filings", "defillama_stablecoins"]
+    RECOVERY_STATE_SOURCES.general_lane_ids
       .map((laneId) => [laneId, readOptionalJsonStrict(`admin/${laneId}/index.json`)]),
   );
-  const detectionRecovery = {
-    yahoo_ticker_macro: readOptionalJsonStrict("admin/yahoo-hourly-ticker/index.json"),
-    slickcharts: readOptionalJsonStrict("admin/slickcharts-daily-delivery/index.json"),
-  };
+  const detectionRecovery = Object.fromEntries(
+    Object.entries(RECOVERY_STATE_SOURCES.nonstandard)
+      .map(([laneId, sourcePath]) => [laneId, readOptionalJsonStrict(sourcePath)]),
+  );
   const recoveryStates = { ...generalRecoveryStates, ...detectionRecovery };
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
 

@@ -53,6 +53,7 @@ import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-st
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
+import { checkKpiRecoverySourcesAgainstRegistry } from "./check-lane-registry-kpi.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
@@ -3813,6 +3814,21 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(runChecker(blockedTmp, now, { strict: true, context: "reconcile" }).exit, 1,
     "reconcile context cannot downgrade an ordinary platform integrity failure");
   ok("global integrity failure remains BLOCKED and cannot be downgraded to a lane warning");
+}
+
+// Lane Registry ⇄ KPI recovery-source completeness gate (#366 step 3): every
+// registry-declared recovery store is read by the KPI, and every KPI recovery
+// source is registry-declared — the defillama class (store exists, KPI blind)
+// is structurally unshippable in both directions.
+{
+  const gate = checkKpiRecoverySourcesAgainstRegistry();
+  assert.deepEqual(gate.missing_from_kpi, [],
+    `recovery stores the KPI never reads: ${JSON.stringify(gate.missing_from_kpi)}`);
+  assert.deepEqual(gate.undeclared_in_kpi, [],
+    `KPI recovery sources with no registry record: ${JSON.stringify(gate.undeclared_in_kpi)}`);
+  assert.equal(gate.registry_store_count > 0 && gate.kpi_source_count > 0, true,
+    "the gate must see a non-empty source set on both sides");
+  ok("lane-registry recovery-source completeness (both directions)");
 }
 
 console.log(`\n# ${passed} fixtures passed`);
