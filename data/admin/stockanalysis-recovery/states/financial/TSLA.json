@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "financial",
   "entity": "TSLA",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29662946566",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-18T22:56:25Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/TSLA.json",
-    "payload_sha256": "3999a6a513a992f24ded1a4992ca7385434fbd52ced74285dda0cd62f8114ed3",
+    "payload_sha256": "a8cb23dd27dc63f726ad4bf77f2aed3a483f0e4b2d600b340885d81dc55a367e",
     "source_as_of": "2026-03-31",
-    "fetched_at": "2026-07-08T22:45:40Z"
+    "fetched_at": "2026-07-18T22:56:41Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-18T22:56:25Z",
+  "last_attempt": {
+    "run_id": "29662946566",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-07-18T22:56:25Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "financial",
   "entity": "JPM",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29662946566",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-18T22:56:25Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/JPM.json",
-    "payload_sha256": "37d765545a21a98feacf3b8b54029c492b95780917d4cf23e39f9fc316ed79ff",
-    "source_as_of": "2026-03-31",
-    "fetched_at": "2026-07-08T22:45:47Z"
+    "payload_sha256": "05ac9e9be9fb64ed1acaf7636e459194948ebf88bb0f3a3ce402b489e4d617d4",
+    "source_as_of": "2026-06-30",
+    "fetched_at": "2026-07-18T22:56:44Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-18T22:56:25Z",
+  "last_attempt": {
+    "run_id": "29662946566",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-07-18T22:56:25Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

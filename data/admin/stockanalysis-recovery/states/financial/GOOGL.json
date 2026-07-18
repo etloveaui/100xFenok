@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "financial",
   "entity": "GOOGL",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29662946566",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-18T22:56:25Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/GOOGL.json",
-    "payload_sha256": "a86835c1d920b587909af9b73ee53588c1176c50e105eb82895de47b6eecbe27",
+    "payload_sha256": "34da0e3fa181a185dcee7ae115a3b9db9209cb6930e5316e0c78e898f5555117",
     "source_as_of": "2026-03-31",
-    "fetched_at": "2026-07-08T22:45:35Z"
+    "fetched_at": "2026-07-18T22:56:36Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-18T22:56:25Z",
+  "last_attempt": {
+    "run_id": "29662946566",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-07-18T22:56:25Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

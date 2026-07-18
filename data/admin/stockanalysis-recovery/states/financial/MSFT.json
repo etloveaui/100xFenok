@@ -2,14 +2,35 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "financial",
   "entity": "MSFT",
-  "attempts": [],
+  "attempts": [
+    {
+      "run_id": "29662946566",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-18T22:56:25Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/MSFT.json",
-    "payload_sha256": "c5ba636a2855acc7fed97cfe14b368305f46e3eca5207d57e2cd562204ec13db",
+    "payload_sha256": "b97b4cf86c6b1add6d278fce5c9c47bd01928193d5ca0a89e5dc50cc538ea10e",
     "source_as_of": "2026-03-31",
-    "fetched_at": "2026-07-08T22:45:31Z"
+    "fetched_at": "2026-07-18T22:56:31Z"
   },
-  "updated_at": "2026-07-15T10:41:17Z"
+  "updated_at": "2026-07-18T22:56:25Z",
+  "last_attempt": {
+    "run_id": "29662946566",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-07-18T22:56:25Z",
+    "outcome": "fresh",
+    "controlled": false
+  }
 }

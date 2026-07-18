@@ -1,29 +1,29 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-18T14:17:23Z",
+  "generated_at": "2026-07-18T22:56:25Z",
   "counts": {
     "tracked": 118,
-    "fresh": 77,
-    "lkg": 41,
+    "fresh": 86,
+    "lkg": 32,
     "unavailable": 0,
-    "retry": 41,
-    "failed": 2,
-    "recovered": 0
+    "retry": 32,
+    "failed": 0,
+    "recovered": 9
   },
   "counts_by_kind": {
     "stock": {
       "tracked": 49,
-      "fresh": 9,
-      "lkg": 40,
+      "fresh": 17,
+      "lkg": 32,
       "unavailable": 0,
-      "retry": 40
+      "retry": 32
     },
     "financial": {
       "tracked": 43,
-      "fresh": 42,
-      "lkg": 1,
+      "fresh": 43,
+      "lkg": 0,
       "unavailable": 0,
-      "retry": 1
+      "retry": 0
     },
     "surface": {
       "tracked": 25,
@@ -43,10 +43,6 @@
   "retry_artifacts": [
     {
       "artifact_kind": "stock",
-      "entity": "AAPL"
-    },
-    {
-      "artifact_kind": "stock",
       "entity": "ABBV"
     },
     {
@@ -56,10 +52,6 @@
     {
       "artifact_kind": "stock",
       "entity": "AMD"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AMZN"
     },
     {
       "artifact_kind": "stock",
@@ -111,19 +103,11 @@
     },
     {
       "artifact_kind": "stock",
-      "entity": "GOOGL"
-    },
-    {
-      "artifact_kind": "stock",
       "entity": "INTC"
     },
     {
       "artifact_kind": "stock",
       "entity": "JNJ"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "JPM"
     },
     {
       "artifact_kind": "stock",
@@ -143,15 +127,7 @@
     },
     {
       "artifact_kind": "stock",
-      "entity": "META"
-    },
-    {
-      "artifact_kind": "stock",
       "entity": "MS"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MSFT"
     },
     {
       "artifact_kind": "stock",
@@ -160,10 +136,6 @@
     {
       "artifact_kind": "stock",
       "entity": "NFLX"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "NVDA"
     },
     {
       "artifact_kind": "stock",
@@ -176,10 +148,6 @@
     {
       "artifact_kind": "stock",
       "entity": "PLTR"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "TSLA"
     },
     {
       "artifact_kind": "stock",
@@ -200,23 +168,9 @@
     {
       "artifact_kind": "stock",
       "entity": "XOM"
-    },
-    {
-      "artifact_kind": "financial",
-      "entity": "AAPL"
     }
   ],
   "degraded_details": [
-    {
-      "artifact_kind": "stock",
-      "entity": "AAPL",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "25cb07334425ff3c20edea88f9a1d4127c3b90dcf207e5ad18b91677b4195b37",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29647721523",
-      "failure_observed_at": "2026-07-18T14:17:23Z",
-      "data_loss": false
-    },
     {
       "artifact_kind": "stock",
       "entity": "ABBV",
@@ -242,16 +196,6 @@
       "entity": "AMD",
       "resolution_state": "lkg_primary",
       "payload_sha256": "a5ff95d0974773dc550147f8a937597281bc6de7e21709296a006fd53fcf71d3",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AMZN",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "9ceedb0fb53faf696a30175ee275eb099e1a376c168856a8fb313fc8656ded40",
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
@@ -379,16 +323,6 @@
     },
     {
       "artifact_kind": "stock",
-      "entity": "GOOGL",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "24ac76d0bf485d840d3567e4ca81869ecf0f52235c30f38f4262810a572a4d49",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
       "entity": "INTC",
       "resolution_state": "lkg_primary",
       "payload_sha256": "d72a2dc06a7b19774d07d1a056bf3eaef9bd7c61cc227517d44d597f2f1d2b77",
@@ -402,16 +336,6 @@
       "entity": "JNJ",
       "resolution_state": "lkg_primary",
       "payload_sha256": "f31666d6806720511b55779888d7b3447a8bb4a78aa3bfb3e1951517b8f08d1e",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "JPM",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "08c970a9016adb0199d49f1af751a872da096ab36673f6d5bb9abaa56532d8c5",
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
@@ -459,29 +383,9 @@
     },
     {
       "artifact_kind": "stock",
-      "entity": "META",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "9a20efdb7f3a7575e26dbf01cfc52342fae3bd42184337fe00fca17643bc7dfd",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
       "entity": "MS",
       "resolution_state": "lkg_primary",
       "payload_sha256": "de1e24970a3b937377e28f59f338f36afc7cd156ee6ea88dbb11b1e866bdfcaf",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MSFT",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "e635f91ebeb59055fd6411f74cf6c818bd2e3ea6824e9e342ec9ed78f853f37f",
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
@@ -502,16 +406,6 @@
       "entity": "NFLX",
       "resolution_state": "lkg_primary",
       "payload_sha256": "477689a25ae4f76452f1e5c911773caaad18981f749efed321af9efb18157090",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "NVDA",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "247ffd94e590ff3ca1f06b6a4fd8ab5ac012ae9c823a9703a88380dfa59f67e6",
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
@@ -542,16 +436,6 @@
       "entity": "PLTR",
       "resolution_state": "lkg_primary",
       "payload_sha256": "fff4e64eaff87d7d87b84b15436fe22468d607da2e5e4c7c27c84127d0a9d430",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_run_id": "29624561317",
-      "failure_observed_at": "2026-07-18T01:18:00Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "TSLA",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "32ea3eb95eb463da42ccc4febbdee0eee5ff0caf95ad3090c0f81a59e091bd9f",
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
@@ -606,24 +490,12 @@
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
       "data_loss": false
-    },
-    {
-      "artifact_kind": "financial",
-      "entity": "AAPL",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "c3e88eee2db0dcd6b31782488faa4b28ae0012e26dfe54b49269e311d1c1fcdb",
-      "source_as_of": "2026-03-28",
-      "failure_run_id": "29647721523",
-      "failure_observed_at": "2026-07-18T14:17:23Z",
-      "data_loss": false
     }
   ],
   "degraded_tickers": [
-    "AAPL",
     "ABBV",
     "AMAT",
     "AMD",
-    "AMZN",
     "ARM",
     "ASML",
     "AVGO",
@@ -636,24 +508,18 @@
     "CVX",
     "GE",
     "GOOG",
-    "GOOGL",
     "INTC",
     "JNJ",
-    "JPM",
     "KO",
     "LLY",
     "LRCX",
     "MA",
-    "META",
     "MS",
-    "MSFT",
     "MU",
     "NFLX",
-    "NVDA",
     "ORCL",
     "PG",
     "PLTR",
-    "TSLA",
     "TSM",
     "UNH",
     "V",
@@ -662,165 +528,182 @@
   ],
   "degraded_surfaces": [],
   "degraded_universes": [],
-  "recovered_details": [],
-  "recovered_tickers": [],
+  "recovered_details": [
+    {
+      "artifact_kind": "stock",
+      "entity": "AAPL",
+      "payload_sha256": "4659d4f0fa514b3de12c17847c4e8080431c7f3aa847c20b9f7fd579fb82a3b1",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29647721523",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "AMZN",
+      "payload_sha256": "6628356207be0ec6857669723174428da9779cfdee1928a8b10f7bc0cadb0af7",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "GOOGL",
+      "payload_sha256": "b63c6b21a5e88d8d2b24382d5077af5c2bff85ea2eddcfb0befb2b3290cd2a49",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "JPM",
+      "payload_sha256": "a329be944efe76d4f0fe959864453aa62d6d24b8ac4c0a31c22cfb0bb19b8a3d",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "META",
+      "payload_sha256": "60891ddaa623ed5637b070f9ac29b6e299dbf5494456bb7155f63d0288bc99b4",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "MSFT",
+      "payload_sha256": "9a87f5e3b62a873c616ed5db9f53aeb58d11a63b41e0a7e0ab50b69314a65512",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "NVDA",
+      "payload_sha256": "e402293fecf36389251fcefbb195266c860dd069d656660e1d05a01052a860a0",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "TSLA",
+      "payload_sha256": "3c82e235e977ffe609ea8349692dd3ac552277f53b93c795ad90434e01d3266e",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "recovered_from_run_id": "29624561317",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    },
+    {
+      "artifact_kind": "financial",
+      "entity": "AAPL",
+      "payload_sha256": "e813bb4f3198b83c837c61323aa1f579a95fba166bbe21b5b372c2110f73a724",
+      "source_as_of": "2026-03-28",
+      "recovered_from_run_id": "29647721523",
+      "recovered_at": "2026-07-18T22:56:25Z"
+    }
+  ],
+  "recovered_tickers": [
+    "AAPL",
+    "AMZN",
+    "GOOGL",
+    "JPM",
+    "META",
+    "MSFT",
+    "NVDA",
+    "TSLA"
+  ],
   "recovered_surfaces": [],
   "recovered_universes": [],
   "current_attempt": {
-    "run_id": "29647721523",
+    "run_id": "29662946566",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "attempted": 28,
-    "successes": 26,
-    "failed": 2,
-    "recovered": 0,
-    "errors": [
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "attempted": 16,
+    "successes": 16,
+    "failed": 0,
+    "recovered": 9,
+    "errors": [],
+    "success_rows": [
       {
         "artifact_kind": "stock",
         "entity": "AAPL",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "AMZN",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "GOOGL",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "JPM",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "META",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "MSFT",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "NVDA",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "TSLA",
+        "outcome": "recovered"
       },
       {
         "artifact_kind": "financial",
         "entity": "AAPL",
-        "error": "ValueError: source did not advance beyond the retained LKG for financial:AAPL",
-        "controlled": false,
-        "data_loss": false
-      }
-    ],
-    "success_rows": [
+        "outcome": "recovered"
+      },
       {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
+        "artifact_kind": "financial",
+        "entity": "AMZN",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
+        "artifact_kind": "financial",
+        "entity": "GOOGL",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "earnings_calendar",
+        "artifact_kind": "financial",
+        "entity": "JPM",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_blackrock",
+        "artifact_kind": "financial",
+        "entity": "META",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_proshares",
+        "artifact_kind": "financial",
+        "entity": "MSFT",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "etf_screener",
+        "artifact_kind": "financial",
+        "entity": "NVDA",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "industries",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industries_all",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industry_semiconductors",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_calendar",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_filings",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_recent",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_statistics",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_withdrawn",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "list_bitcoin_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_active",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_afterhours",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_month",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_week",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers_ytd",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_premarket",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "new_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "sector_technology",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "universe",
-        "entity": "etf_universe",
+        "artifact_kind": "financial",
+        "entity": "TSLA",
         "outcome": "fresh"
       }
     ]

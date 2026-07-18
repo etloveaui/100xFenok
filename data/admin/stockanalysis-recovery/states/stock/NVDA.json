@@ -35,29 +35,46 @@
       "outcome": "failed",
       "controlled": false,
       "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "run_id": "29662946566",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-18T22:56:25Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
+    "path": "data/stockanalysis/stocks/NVDA.json",
+    "payload_sha256": "e402293fecf36389251fcefbb195266c860dd069d656660e1d05a01052a860a0",
+    "source_as_of": "2026-07-17T20:00:00Z",
+    "fetched_at": "2026-07-18T22:56:29Z"
+  },
+  "updated_at": "2026-07-18T22:56:25Z",
+  "last_attempt": {
+    "run_id": "29662946566",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-07-18T22:56:25Z",
+    "outcome": "recovered",
+    "controlled": false
+  },
+  "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/stock/NVDA.json",
     "payload_sha256": "247ffd94e590ff3ca1f06b6a4fd8ab5ac012ae9c823a9703a88380dfa59f67e6",
     "source_as_of": "2026-07-08T00:00:00Z",
     "fetched_at": "2026-07-08T22:45:27Z"
   },
-  "updated_at": "2026-07-18T01:18:00Z",
-  "last_attempt": {
-    "run_id": "29624561317",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
-    "natural": true,
-    "observed_at": "2026-07-18T01:18:00Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "HTTPError: HTTP Error 404: Not Found"
-  },
-  "latest_failure": {
+  "recovered_from_run_id": "29624561317",
+  "recovered_at": "2026-07-18T22:56:25Z",
+  "last_recovered_failure": {
     "run_id": "29624561317",
     "run_attempt": 1,
     "observed_at": "2026-07-18T01:18:00Z",
@@ -66,11 +83,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "247ffd94e590ff3ca1f06b6a4fd8ab5ac012ae9c823a9703a88380dfa59f67e6",
     "data_loss": false
-  },
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/stock/NVDA.json",
-    "payload_sha256": "247ffd94e590ff3ca1f06b6a4fd8ab5ac012ae9c823a9703a88380dfa59f67e6",
-    "source_as_of": "2026-07-08T00:00:00Z",
-    "fetched_at": "2026-07-08T22:45:27Z"
   }
 }
