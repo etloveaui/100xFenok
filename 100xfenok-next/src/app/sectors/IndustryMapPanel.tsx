@@ -5,7 +5,7 @@ import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
-import { formatCurrencyCompact } from "@/lib/format";
+import { formatCurrencyCompact, formatInteger } from "@/lib/format";
 
 interface SurfaceDoc<T = EventRow> {
   fetched_at?: string | null;
@@ -393,7 +393,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
         <div className="panel-h">
           <h2>산업 지도</h2>
           <span className="desc">
-            {filteredIndustries.length.toLocaleString("ko-KR")} / {industryRows.length.toLocaleString("ko-KR")}개
+            {formatInteger(filteredIndustries.length)} / {formatInteger(industryRows.length)}개
           </span>
         </div>
         <div className="panel-b">
@@ -411,17 +411,17 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
             </div>
             <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
               <div className="text-[11px] font-black text-emerald-800">1년 상승</div>
-              <div className="mt-1 text-sm font-black text-emerald-800">{risingCount.toLocaleString("ko-KR")}개 산업</div>
+              <div className="mt-1 text-sm font-black text-emerald-800">{formatInteger(risingCount)}개 산업</div>
               <div className="mt-0.5 text-xs font-bold text-emerald-700">전체 산업 기준</div>
             </div>
             <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
               <div className="text-[11px] font-black text-sky-800">순이익률 플러스</div>
-              <div className="mt-1 text-sm font-black text-sky-800">{profitableCount.toLocaleString("ko-KR")}개 산업</div>
+              <div className="mt-1 text-sm font-black text-sky-800">{formatInteger(profitableCount)}개 산업</div>
               <div className="mt-0.5 text-xs font-bold text-sky-700">순이익률 0% 초과</div>
             </div>
             <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 md:col-span-3">
               <div className="text-[11px] font-black text-brand-navy">구성종목 상세</div>
-              <div className="mt-1 text-sm font-black text-brand-navy">{localSurfaceCount.toLocaleString("ko-KR")}개 자료</div>
+              <div className="mt-1 text-sm font-black text-brand-navy">{formatInteger(localSurfaceCount)}개 자료</div>
               <div className="mt-0.5 text-xs font-bold text-brand-navy">
                 산업 전체는 요약 기준, 구성종목 상세는 현재 기술 섹터와 반도체 산업부터 제공합니다.
               </div>
@@ -576,7 +576,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
                 </div>
                 <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-bold text-brand-navy">
                   {hasIndustryConstituentDetail(selectedIndustry)
-                    ? `구성종목 상세 ${selectedConstituents.length.toLocaleString("ko-KR")}개를 제공합니다.`
+                    ? `구성종목 상세 ${formatInteger(selectedConstituents.length)}개를 제공합니다.`
                     : "이 산업은 현재 요약 지표만 제공합니다. 구성종목 상세는 데이터 수집 범위를 넓히며 순차적으로 붙입니다."}
                 </div>
                 {selectedIndustry.href ? (
@@ -597,7 +597,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
         <section className="panel">
           <div className="panel-h">
             <h2>선택 산업 구성종목</h2>
-            <span className="desc">{selectedConstituents.length.toLocaleString("ko-KR")}개</span>
+            <span className="desc">{formatInteger(selectedConstituents.length)}개</span>
           </div>
           <IndustryConstituentList
             rows={selectedConstituents}
@@ -609,7 +609,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
           <section key={surface.id} className="panel">
             <div className="panel-h">
               <h2>{surface.title}</h2>
-              <span className="desc">{surfaceTimeLabel(surface.doc)} · {countRows(surface.doc).toLocaleString("ko-KR")}개</span>
+              <span className="desc">{surfaceTimeLabel(surface.doc)} · {formatInteger(countRows(surface.doc))}개</span>
             </div>
             <div className="panel-b pb-0 pt-2 text-xs font-bold text-slate-500">
               {surface.description}

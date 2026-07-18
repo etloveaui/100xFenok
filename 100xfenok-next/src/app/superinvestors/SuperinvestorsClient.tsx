@@ -470,7 +470,7 @@ function GuruDetailPanel({
         <KpiCard label="운용 자산" value={formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")} isLoading={loading} dataKey="aum" />
         <KpiCard
           label="보유 종목"
-          value={latest ? latest.holdings_count.toLocaleString() : "—"}
+          value={latest ? formatInteger(latest.holdings_count) : "—"}
           isLoading={loading}
           dataKey="holdings"
         />

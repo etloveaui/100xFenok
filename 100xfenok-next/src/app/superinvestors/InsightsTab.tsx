@@ -20,7 +20,7 @@ import type {
 } from "@/lib/superinvestors/types";
 import { loadPortfolioViews, loadFactorExposuresSummary } from "./portfolioViewsLoader";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
-import { formatCurrencyCompact } from "@/lib/format";
+import { formatCurrencyCompact, formatPlainPercent } from "@/lib/format";
 
 // Chart.js is client-only; load the chart bodies behind ssr:false so they stay
 // out of the Worker/SSR bundle. Fallback height matches the chart containers
@@ -437,7 +437,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
                     <div className="h-2 flex-1 rounded-full bg-slate-100">
                       <div className="h-2 rounded-full" style={{ width: `${Math.abs(r.pressure) * 100}%`, backgroundColor: barColor }} />
                     </div>
-                    <span className="orbitron tabular-nums text-[10px] font-bold text-slate-600">{(Math.abs(r.pressure) * 100).toFixed(0)}%</span>
+                    <span className="orbitron tabular-nums text-[10px] font-bold text-slate-600">{formatPlainPercent(Math.abs(r.pressure), { fraction: true, digits: 0 })}</span>
                   </div>
                 </td>
                 <td className="px-2 py-1.5 text-right">
@@ -496,7 +496,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
                   <span className="orbitron tabular-nums text-[10px] font-bold text-slate-900">{formatCurrencyCompact(r.position_value, "USD")}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{(r.position_weight * 100).toFixed(2)}%</span>
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatPlainPercent(r.position_weight, { fraction: true, digits: 2 })}</span>
                 </td>
               </tr>
             ))}
@@ -548,7 +548,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
                   <TickerChip ticker={r.ticker} variant="inline" />
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.market_value, "USD")}</span>
@@ -598,7 +598,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
                   )}
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.value, "USD")}</span>

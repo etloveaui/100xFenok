@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { makeDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
+import { formatInteger } from "@/lib/format";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 function fmtAmount(value: number): string {
@@ -12,7 +13,7 @@ function fmtAmount(value: number): string {
   if (abs >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
   if (abs >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
   if (abs >= 1e6) return `$${(value / 1e6).toFixed(0)}M`;
-  return `$${Math.round(value).toLocaleString()}`;
+  return `$${formatInteger(Math.round(value))}`;
 }
 
 type Topic = {

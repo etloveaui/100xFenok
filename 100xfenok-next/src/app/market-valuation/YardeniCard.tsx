@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { formatAsOf, isStaleAsOf } from "@/lib/market-valuation/freshness";
+import { formatInteger, formatPlainPercent } from "@/lib/format";
 
 interface YardneyRow {
   date: string;
@@ -37,10 +38,10 @@ function loadYardney(): Promise<YardneyDoc | null> {
 
 function verdict(p: number | null): { text: string; tone: string } {
   if (p === null) return { text: "데이터 부족", tone: "text-[var(--c-ink-4)]" };
-  if (p > 15) return { text: `적정가 대비 ${p.toFixed(1)}% 프리미엄 — 고평가 구간`, tone: "text-[var(--c-down)]" };
-  if (p > 5) return { text: `다소 프리미엄 (${p.toFixed(1)}%)`, tone: "text-[var(--c-warn)]" };
-  if (p >= -5) return { text: `적정 범위 (${p.toFixed(1)}%)`, tone: "text-[var(--c-ink-2)]" };
-  return { text: `할인 구간 (${p.toFixed(1)}%)`, tone: "text-[var(--c-up)]" };
+  if (p > 15) return { text: `적정가 대비 ${formatPlainPercent(p, { fraction: false, digits: 1 })} 프리미엄 — 고평가 구간`, tone: "text-[var(--c-down)]" };
+  if (p > 5) return { text: `다소 프리미엄 (${formatPlainPercent(p, { fraction: false, digits: 1 })})`, tone: "text-[var(--c-warn)]" };
+  if (p >= -5) return { text: `적정 범위 (${formatPlainPercent(p, { fraction: false, digits: 1 })})`, tone: "text-[var(--c-ink-2)]" };
+  return { text: `할인 구간 (${formatPlainPercent(p, { fraction: false, digits: 1 })})`, tone: "text-[var(--c-up)]" };
 }
 
 function percentile(value: number, sorted: number[]): number {
@@ -61,7 +62,7 @@ function finite(value: unknown): value is number {
 }
 
 function fmtIndex(value: number | null | undefined): string {
-  return finite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "—";
+  return finite(value) ? formatInteger(value) : "—";
 }
 
 function fmtNum(value: number | null | undefined, digits = 1): string {

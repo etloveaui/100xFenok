@@ -12,6 +12,7 @@ import {
 } from "@/components/canvas-plus/kit";
 import { formatAsOf } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
+import { formatInteger } from "@/lib/format";
 import EtfRetryCallout from "./EtfRetryCallout";
 import {
   clearEtfSurfaceCaches,
@@ -143,14 +144,14 @@ export default function EtfHeroPanel() {
             value: formatAsOf(asOf) ?? (asOfReason?.includes("publishes no aggregate source date") ? "제공자 미공개" : "미확인"),
             freshness: true,
           },
-          { id: "total", label: "전체", value: `${totalCount.toLocaleString("ko-KR")}개` },
+          { id: "total", label: "전체", value: `${formatInteger(totalCount)}개` },
         ]}
       />
 
       <div className="cpw5-etfs-hero-visuals">
         <CpBandVisual
           className="cpw5-etfs-band--neutral"
-          label={`자산군 구성비 · 전체 ${totalCount.toLocaleString("ko-KR")}개 중 최대 비중`}
+          label={`자산군 구성비 · 전체 ${formatInteger(totalCount)}개 중 최대 비중`}
           currentLabel={dominantBucket?.label ?? "-"}
           currentValue={`${dominantBucket?.pct ?? 0}%`}
           position={dominantBucket?.pct ?? 0}
@@ -167,7 +168,7 @@ export default function EtfHeroPanel() {
           tone={gaugeTone}
           sub={
             <>
-              전체 {totalCount.toLocaleString("ko-KR")}개 중 <strong>{leverageInverseCount.toLocaleString("ko-KR")}개</strong>가 레버리지 또는 인버스입니다.
+              전체 {formatInteger(totalCount)}개 중 <strong>{formatInteger(leverageInverseCount)}개</strong>가 레버리지 또는 인버스입니다.
             </>
           }
         />

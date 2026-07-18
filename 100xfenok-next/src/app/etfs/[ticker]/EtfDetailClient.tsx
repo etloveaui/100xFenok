@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import WatchStar from "@/components/WatchStar";
-import { formatSignedPercent, formatCurrency, formatCurrencyCompact, type Currency } from "@/lib/format";
+import { formatSignedPercent, formatCurrency, formatCurrencyCompact, formatInteger, type Currency } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -1689,9 +1689,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             <PerformanceView performance={performance} />
           </SectionCard>
 
-          <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${holdings.length.toLocaleString("ko-KR")}개 표시`} marker="holdings">
+          <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${formatInteger(holdings.length)}개 표시`} marker="holdings">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-              <span>{holdingCount.toLocaleString("ko-KR")}개 원장 중 표시 가능한 항목</span>
+              <span>{formatInteger(holdingCount)}개 원장 중 표시 가능한 항목</span>
               <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
               <button
                 type="button"

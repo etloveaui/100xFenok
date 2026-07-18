@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DataStateNotice from "@/components/DataStateNotice";
-import { formatSignedPercent } from "@/lib/format";
+import { formatSignedPercent, formatPlainPercent } from "@/lib/format";
 import { makeDataState } from "@/lib/data-state";
 
 type Period = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y";
@@ -110,7 +110,7 @@ export function verdict(row: MomentumRow): Verdict {
 
 function DTrack({ value, cap, kind }: { value: number | null; cap: number; kind: "eps" | "per" }) {
   const name = kind === "eps" ? "이익" : "멀티플";
-  const capText = `${(cap * 100).toFixed(0)}%`;
+  const capText = formatPlainPercent(cap, { fraction: true, digits: 0 });
   if (value === null) return <div className="db-track" role="img" aria-label={`${name} 기여 데이터 부족 · 표시 범위 ±${capText}`} />;
   const w = Math.max((Math.min(Math.abs(value), cap) / cap) * 50, 3);
   const capped = Math.abs(value) > cap;

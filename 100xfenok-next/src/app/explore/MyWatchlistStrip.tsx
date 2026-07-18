@@ -8,6 +8,7 @@ import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/
 import { makeDataState } from "@/lib/data-state";
 import { useWatchlist } from "@/lib/watchlist";
 import { ROUTES } from "@/lib/routes";
+import { formatSignedPercent, formatInteger } from "@/lib/format";
 
 interface AnalyzerLite {
   symbol: string;
@@ -78,7 +79,7 @@ export default function MyWatchlistStrip() {
       ? "관심 종목의 이름과 수익률을 읽고 있습니다."
       : rows
         ? missingCount > 0
-          ? `${missingCount.toLocaleString("ko-KR")}개 관심 종목은 기본 정보만 표시됩니다.`
+          ? `${formatInteger(missingCount)}개 관심 종목은 기본 정보만 표시됩니다.`
           : "관심 종목의 이름과 수익률을 표시할 수 있습니다."
         : "관심 종목 정보를 불러오지 못했습니다.",
   });
@@ -108,7 +109,7 @@ export default function MyWatchlistStrip() {
               </span>
               {ret !== null ? (
                 <span className={`pc num ${ret >= 0 ? "up" : "down"}`}>
-                  {ret >= 0 ? "+" : ""}{(ret * 100).toFixed(1)}%
+                  {formatSignedPercent(ret, { fraction: true, digits: 1 })}
                 </span>
               ) : null}
             </div>

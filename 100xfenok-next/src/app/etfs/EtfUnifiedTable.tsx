@@ -11,6 +11,7 @@ import {
 } from "@/app/explore/etfUniverseUtils";
 import { formatAsOf } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
+import { formatInteger } from "@/lib/format";
 import EtfRetryCallout from "./EtfRetryCallout";
 import {
   clearEtfSurfaceCaches,
@@ -322,7 +323,7 @@ export default function EtfUnifiedTable() {
   return (
     <CpSectionCard
       title="ETF 목록"
-      meta={`기준일 ${formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "-")} · ${filteredRows.length.toLocaleString("ko-KR")}개`}
+      meta={`기준일 ${formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "-")} · ${formatInteger(filteredRows.length)}개`}
       footnote="행을 선택하면 ETF 상세 페이지로 이동합니다. 투자 조언 아님."
     >
       <div className="cpw5-etfs-table-toolbar">

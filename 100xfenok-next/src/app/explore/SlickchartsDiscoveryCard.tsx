@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import TickerChip from "@/components/TickerChip";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { formatSignedPercent, formatPlainPercent } from "@/lib/format";
 
 type DiscoveryTab = "movers" | "returns" | "dividends";
 
@@ -85,7 +86,7 @@ function isFiniteNumber(value: unknown): value is number {
 }
 
 function fmtMove(value: number | null | undefined): string {
-  return isFiniteNumber(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%` : "—";
+  return isFiniteNumber(value) ? formatSignedPercent(value, { fraction: false, digits: 2 }) : "—";
 }
 
 function fmtFraction(value: number | null | undefined): string {
@@ -93,7 +94,7 @@ function fmtFraction(value: number | null | undefined): string {
 }
 
 function fmtDividendYield(value: number | null | undefined): string {
-  return isFiniteNumber(value) ? `${(value * 100).toFixed(2)}%` : "—";
+  return isFiniteNumber(value) ? formatPlainPercent(value, { fraction: true, digits: 2 }) : "—";
 }
 
 function fmtDollars(value: number | null | undefined): string {

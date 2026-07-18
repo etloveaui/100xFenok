@@ -7,6 +7,7 @@ import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { formatSignedPercent } from "@/lib/format";
 import { dateOnly, makeDataState } from "@/lib/data-state";
 import { normalizeForFilePath } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
@@ -163,7 +164,7 @@ function fmtFraction(value: number | null | undefined): string {
 }
 
 function fmtMove(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%` : "—";
+  return typeof value === "number" && Number.isFinite(value) ? formatSignedPercent(value, { fraction: false, digits: 2 }) : "—";
 }
 
 function fmtRevision(value: number | null | undefined): string {

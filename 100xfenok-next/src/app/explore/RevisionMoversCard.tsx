@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import TickerChip from "@/components/TickerChip";
+import { formatSignedPercent } from "@/lib/format";
 
 interface MoverRow {
   ticker: string;
@@ -41,7 +42,7 @@ function MoverList({ rows, tone }: { rows: MoverRow[]; tone: "up" | "down" }) {
             <div className="tk"><TickerChip ticker={r.ticker} variant="inline" /></div>
           </span>
           <span className={`pc num ${tone}`}>
-            {r.change_1w >= 0 ? "+" : ""}{(r.change_1w * 100).toFixed(1)}%
+            {formatSignedPercent(r.change_1w, { fraction: true, digits: 1 })}
           </span>
         </div>
       ))}
