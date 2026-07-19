@@ -69,6 +69,11 @@ jobs:
           if [[ "$FETCH_OUTCOME" != "success" ]]; then
             RECOVERY_EXIT=2
           fi
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-yahoo-ticker.yml \
+            --stage always_if_exists
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
           fi
@@ -76,6 +81,9 @@ jobs:
             git add -- "$STATE_ROOT"
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-yahoo-ticker.yml \
+              --stage success_if_exists
             git add -- data/macro/yahoo-ticker.json 100xfenok-next/public/data/macro/yahoo-ticker.json
           fi
           if git diff --staged --quiet; then

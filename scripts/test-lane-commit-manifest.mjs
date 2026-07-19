@@ -41,6 +41,26 @@ assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.path), 
 assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.required), [true, true]);
 assert.deepEqual(defillama.exclude, []);
 
+const yahooTicker = manifest.workflows[".github/workflows/fetch-yahoo-ticker.yml"];
+assert.deepEqual(yahooTicker.lanes, ["yahoo_ticker_macro"]);
+assert.deepEqual(yahooTicker.stages.always_if_exists, [
+  {
+    kind: "file",
+    path: "data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json",
+    required: false,
+  },
+  {
+    kind: "directory",
+    path: "data/admin/yahoo-hourly-ticker",
+    required: false,
+  },
+]);
+assert.deepEqual(yahooTicker.stages.success_if_exists.map((entry) => entry.path), [
+  "data/macro/yahoo-ticker.json",
+  "100xfenok-next/public/data/macro/yahoo-ticker.json",
+]);
+assert.deepEqual(yahooTicker.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

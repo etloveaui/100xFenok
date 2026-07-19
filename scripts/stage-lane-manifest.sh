@@ -95,6 +95,7 @@ while IFS= read -r -d '' encoded; do
 done < <(jq -j --arg workflow "$WORKFLOW" '.workflows[$workflow].exclude[]? | @base64 + "\u0000"' "$MANIFEST")
 
 declared_count=$(jq -r --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.workflows[$workflow].stages[$stage] | length' "$MANIFEST")
-staged_count=$(git diff --cached --name-only | awk 'NF { count += 1 } END { print count + 0 }')
+stage_selected=$(( ${#SELECTED_EXACT[@]} + ${#SELECTED_GLOB[@]} + ${#SELECTED_DYNAMIC[@]} ))
+staged_index_total=$(git diff --cached --name-only | awk 'NF { count += 1 } END { print count + 0 }')
 digest_prefix=${EXPECTED_DIGEST:0:12}
-printf 'lane-manifest stage proof: digest=%s workflow=%s stage=%s declared=%s staged=%s\n' "$digest_prefix" "$WORKFLOW" "$STAGE" "$declared_count" "$staged_count"
+printf 'lane-manifest stage proof: digest=%s workflow=%s stage=%s declared=%s stage_selected=%s staged_index_total=%s\n' "$digest_prefix" "$WORKFLOW" "$STAGE" "$declared_count" "$stage_selected" "$staged_index_total"
