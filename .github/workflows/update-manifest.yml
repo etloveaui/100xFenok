@@ -18,6 +18,7 @@ on:
   push:
     branches: [main]
     paths:
+      # BEGIN GENERATED lane-commit-manifest trigger_paths
       - 'data/**'
       - '!data/yf/**'
       - '!data/admin/yahoo-batch-quote-history/**'
@@ -64,6 +65,7 @@ on:
       - 'scripts/lib/kpi-runtime-slots.mjs'
       - 'scripts/lib/kpi-contract-constants.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
+      # END GENERATED lane-commit-manifest trigger_paths
   schedule:
     # UTC 02:30 = KST 11:30. Morning reconciliation.
     - cron: '30 2 * * *'
