@@ -139,7 +139,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Rebuild and verify SlickCharts projections from committed source
+      - name: Rebuild and verify SlickCharts canonical source
         env:
           REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
         run: |
@@ -147,10 +147,7 @@ jobs:
             python scripts/scrapers/membership-tracker.py --quiet
             node scripts/build-slickcharts-discovery.mjs
           fi
-          mkdir -p 100xfenok-next/public/data/slickcharts
-          rsync -a --checksum --delete data/slickcharts/ 100xfenok-next/public/data/slickcharts/
-          python3 scripts/validate-slickcharts-integrity.py
-          diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
+          python3 scripts/validate-slickcharts-integrity.py --skip-public
 
       - name: Build shared market and stock promotion state
         run: |
@@ -159,6 +156,12 @@ jobs:
           python3 scripts/build-market-source-parity.py
           python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
           node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
+
+      - name: Project manifest-owned public mirrors
+        run: |
+          node scripts/materialize-update-manifest-routes.mjs --all
+          python3 scripts/validate-slickcharts-integrity.py
+          diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
 
       - name: Export computed signals
         run: node scripts/export-computed-signals.mjs
@@ -208,22 +211,8 @@ jobs:
       - name: Build product surface coverage
         run: node scripts/generate-product-surface-coverage.mjs
 
-      - name: Project centrally owned public mirrors
-        run: |
-          mkdir -p \
-            100xfenok-next/public/data/yf/finance \
-            100xfenok-next/public/data/stockanalysis \
-            100xfenok-next/public/data/indices \
-            100xfenok-next/public/data/admin \
-            100xfenok-next/public/data/computed/market_facts \
-            100xfenok-next/public/data/computed
-          rsync -a --checksum --delete data/yf/finance/ 100xfenok-next/public/data/yf/finance/
-          rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/
-          cp data/indices/nasdaq-giw-sox-constituents.json 100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json
-          cp data/admin/fenok-edge-korea-krx-daily-index.json 100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json
-          cp data/computed/fenok_occ_options_availability.json 100xfenok-next/public/data/computed/fenok_occ_options_availability.json
-          cp data/computed/market_facts/index.json 100xfenok-next/public/data/computed/market_facts/index.json
-          (cd 100xfenok-next && node sync-static-overrides.mjs)
+      - name: Sync static overrides
+        run: (cd 100xfenok-next && node sync-static-overrides.mjs)
 
       - name: Build data supply detection floor
         run: |
@@ -342,21 +331,23 @@ jobs:
           for attempt in 1 2 3; do
             git fetch origin main
             git reset --hard origin/main
+            node scripts/test-update-manifest-materializations.mjs
+            node scripts/materialize-update-manifest-routes.mjs --all --validate-only --assert-no-untracked
 
             if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
               python scripts/scrapers/membership-tracker.py --quiet
               node scripts/build-slickcharts-discovery.mjs
             fi
-            mkdir -p 100xfenok-next/public/data/slickcharts
-            rsync -a --checksum --delete data/slickcharts/ 100xfenok-next/public/data/slickcharts/
-            python3 scripts/validate-slickcharts-integrity.py
-            diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
+            python3 scripts/validate-slickcharts-integrity.py --skip-public
 
             python3 scripts/rebuild-yf-finance-summary.py
             python3 scripts/build-market-facts.py --no-public-mirror
             python3 scripts/build-market-source-parity.py
             python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
             node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
+            node scripts/materialize-update-manifest-routes.mjs --all
+            python3 scripts/validate-slickcharts-integrity.py
+            diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
             node scripts/export-computed-signals.mjs
             node scripts/build-phase2-closeout-indexes.mjs
             node scripts/build-fenok-signals.mjs
@@ -379,19 +370,6 @@ jobs:
             node scripts/build-rim-index.mjs
             npm --prefix 100xfenok-next run build:data-entity-graph
             node scripts/generate-product-surface-coverage.mjs
-            mkdir -p \
-              100xfenok-next/public/data/yf/finance \
-              100xfenok-next/public/data/stockanalysis \
-              100xfenok-next/public/data/indices \
-              100xfenok-next/public/data/admin \
-              100xfenok-next/public/data/computed/market_facts \
-              100xfenok-next/public/data/computed
-            rsync -a --checksum --delete data/yf/finance/ 100xfenok-next/public/data/yf/finance/
-            rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/
-            cp data/indices/nasdaq-giw-sox-constituents.json 100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json
-            cp data/admin/fenok-edge-korea-krx-daily-index.json 100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json
-            cp data/computed/fenok_occ_options_availability.json 100xfenok-next/public/data/computed/fenok_occ_options_availability.json
-            cp data/computed/market_facts/index.json 100xfenok-next/public/data/computed/market_facts/index.json
             (cd 100xfenok-next && node sync-static-overrides.mjs)
             (
               set -euo pipefail
