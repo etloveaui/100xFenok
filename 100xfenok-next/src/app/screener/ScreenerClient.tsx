@@ -14,7 +14,8 @@ import { formatDataDate, makeDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
-import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
+import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
+import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import MetricHelp from "@/components/MetricHelp";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
@@ -597,13 +598,15 @@ function renderCell(
       );
     }
     case "fenokConvictionScore": {
-      const shortScore = typeof stock.fenokShortTermScore === "number" && Number.isFinite(stock.fenokShortTermScore)
-        ? Math.round(stock.fenokShortTermScore)
-        : null;
+      const shortTerm = commonBasisShortTermView(stock);
+      const shortScore = shortTerm.score;
       const longScore = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
         ? Math.round(stock.fenokLongTermScore)
         : null;
-      const shortTermBasis = shortTermConvictionBasisCopy(stock.fenokMarketScope);
+      const shortTermBasis = shortTermCommonBasisCopy(stock.fenokMarketScope, {
+        sourceInputCount: shortTerm.sourceInputCount,
+        basisCode: shortTerm.basisCode,
+      });
       const isPicks = preset === "fenokPicks";
       const isMobile = surface === "mobile";
       return (
@@ -1638,8 +1641,8 @@ export default function ScreenerClient({
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) => {
-      const av = a[sortKey];
-      const bv = b[sortKey];
+      const av = screenerSortValue(a, sortKey);
+      const bv = screenerSortValue(b, sortKey);
       if (av === null || av === undefined) return 1;
       if (bv === null || bv === undefined) return -1;
       if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * dir;

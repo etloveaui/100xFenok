@@ -9,8 +9,9 @@ import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo } from "@/lib/fenok-signals/direction-ko";
-import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
+import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { bandPct, bandClass } from "@/lib/screener/bands";
+import { commonBasisShortTermView } from "@/lib/screener/common-basis-short-term";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import {
@@ -2470,10 +2471,9 @@ export default function StockDetailPanel({
   const convictionScore = isFiniteNumber(stock?.fenokConvictionScore)
     ? Math.round(stock.fenokConvictionScore)
     : null;
-  const shortTermConvictionScore = isFiniteNumber(stock?.fenokShortTermConvictionScore)
-    ? Math.round(stock.fenokShortTermConvictionScore)
-    : null;
-  const shortTermConvictionCall = stock?.fenokShortTermConvictionCall ?? null;
+  const shortTerm = stock ? commonBasisShortTermView(stock) : null;
+  const shortTermConvictionScore = shortTerm?.score ?? null;
+  const shortTermConvictionCall = shortTerm?.call ?? null;
   const longTermConvictionScore = isFiniteNumber(stock?.fenokLongTermConvictionScore)
     ? Math.round(stock.fenokLongTermConvictionScore)
     : null;
@@ -2488,7 +2488,10 @@ export default function StockDetailPanel({
   const edgeDirection = edgeDirectionLabel(stock?.fenokEdgeDirection);
   const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
-  const shortTermBasis = shortTermConvictionBasisCopy(stock?.fenokMarketScope);
+  const shortTermBasis = shortTermCommonBasisCopy(stock?.fenokMarketScope, {
+    sourceInputCount: shortTerm?.sourceInputCount ?? null,
+    basisCode: shortTerm?.basisCode ?? null,
+  });
 
   if (!canvasPlusPreview) {
   return (

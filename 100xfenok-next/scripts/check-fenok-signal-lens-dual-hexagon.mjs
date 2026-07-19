@@ -104,9 +104,34 @@ const UI_CONTRACTS = [
     markers: [
       "loadFenokSignalsSummaryMap",
       "fenokShortTermConvictionScore",
+      "fenokShortTermCommonBasisScore",
+      "fenokShortTermCommonBasisCall",
+      "fenokShortTermInputCount",
+      "fenokShortTermBasisCode",
       "fenokLongTermConvictionScore",
       "netOptionsProxyScore",
       "shortPressureProxyScore",
+    ],
+  },
+  {
+    file: "src/lib/screener/common-basis-short-term.ts",
+    markers: [
+      "commonBasisShortTermView",
+      "fenokShortTermCommonBasisScore",
+      "fenokShortTermCommonBasisCall",
+      "fenokShortTermInputCount",
+      "fenokShortTermBasisCode",
+      "screenerSortValue",
+      "sortKey === \"fenokConvictionScore\"",
+    ],
+  },
+  {
+    file: "src/app/screener/ScreenerClient.tsx",
+    markers: [
+      "commonBasisShortTermView",
+      "shortTermCommonBasisCopy",
+      "screenerSortValue",
+      "shortTermBasis.label",
     ],
   },
   {
@@ -120,6 +145,10 @@ const UI_CONTRACTS = [
       "Fenok Edge Score",
       "Short Edge",
       "Long Edge",
+      "commonBasisShortTermView",
+      "shortTermCommonBasisCopy",
+      "shortTermConvictionScore",
+      "shortTermConvictionCall",
     ],
   },
   {
