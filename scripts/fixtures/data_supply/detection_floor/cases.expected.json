@@ -52,7 +52,7 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "5abacd4b3a3f4a95bab660764048b32abd393e50ae064312cae347d948d813d3",
+  "config_digest": "1a1798e182d42a11884c02a7c047a68d03ec6a4a15fc76ce463f4abbe9f34915",
   "logical_lane_count": 19,
   "producer_member_count": 23,
   "slickcharts_member_ids": [
@@ -82,11 +82,11 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "8d3f252b8e6d61491164a721e61691f1690dc8be19098d7aad350fb7319afb10",
+    "report_file_sha256": "d77d6832aab217c37efc6b71eacd181f14f2d8838793743cf1bd765688fc1518",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "5abacd4b3a3f4a95bab660764048b32abd393e50ae064312cae347d948d813d3",
+      "config_digest": "1a1798e182d42a11884c02a7c047a68d03ec6a4a15fc76ce463f4abbe9f34915",
       "logical_lane_count": 19,
       "producer_member_count": 23,
       "counts": {
@@ -102,8 +102,8 @@
         "producer_members_unobserved": 3
       },
       "monitoring_mode_counts": {
-        "post_fetch_artifact": 15,
-        "artifact_only": 3,
+        "post_fetch_artifact": 17,
+        "artifact_only": 1,
         "composite": 1
       },
       "lanes": [
@@ -609,7 +609,7 @@
           "label": "ApeWisdom attention",
           "enforcement": "shadow",
           "kpi_required": false,
-          "monitoring_mode": "artifact_only",
+          "monitoring_mode": "post_fetch_artifact",
           "status": "unobserved",
           "reason": "workflow_unobserved",
           "endpoint": {
@@ -622,7 +622,7 @@
             "reason": "ok",
             "source_as_of": "2026-07-10",
             "age": 1,
-            "unit": "due_window"
+            "unit": "calendar_days"
           },
           "affected_surface_ids": [
             "fenok_social_attention"
@@ -633,7 +633,7 @@
           "label": "GDELT news tone",
           "enforcement": "shadow",
           "kpi_required": false,
-          "monitoring_mode": "artifact_only",
+          "monitoring_mode": "post_fetch_artifact",
           "status": "unobserved",
           "reason": "workflow_unobserved",
           "endpoint": {
@@ -646,7 +646,7 @@
             "reason": "ok",
             "source_as_of": "2026-07-10",
             "age": 1,
-            "unit": "due_window"
+            "unit": "calendar_days"
           },
           "affected_surface_ids": [
             "fenok_news_tone"
@@ -778,5 +778,5 @@
       "expected_logical_status": "unavailable"
     }
   ],
-  "registry_digest": "c431c0781d6b278d45169975aa72725c81bf055a4b22e7e638415269e46c7235"
+  "registry_digest": "869d122a27c43321ccf24b2c0c017d038a3fca20a771ce14d6362e28f2f7549f"
 }
