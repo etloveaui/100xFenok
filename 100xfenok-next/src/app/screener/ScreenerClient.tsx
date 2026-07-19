@@ -534,7 +534,12 @@ function getMomentumClass(value: number | null): string {
   return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
-function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset): React.ReactNode {
+function renderCell(
+  stock: ScreenerStock,
+  key: ScreenerSortKey,
+  preset?: ColumnPreset,
+  surface: "desktop" | "mobile" = "desktop",
+): React.ReactNode {
   switch (key) {
     case "ticker":
       return (
@@ -600,8 +605,14 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
         : null;
       const shortTermBasis = shortTermConvictionBasisCopy(stock.fenokMarketScope);
       const isPicks = preset === "fenokPicks";
+      const isMobile = surface === "mobile";
       return (
-        <span className={cx("inline-flex flex-col items-end gap-1", isPicks ? "min-w-[140px]" : "min-w-[80px]")}>
+        <span
+          className={cx(
+            "inline-flex flex-col items-end gap-1",
+            isMobile ? "min-w-0 max-w-full" : isPicks ? "min-w-[140px]" : "min-w-[80px]",
+          )}
+        >
           <span className="inline-flex flex-wrap justify-end gap-1">
             <span
               className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
@@ -621,7 +632,10 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             </span>
           </span>
           <span
-            className="max-w-full whitespace-nowrap text-[9px] font-bold text-[var(--c-ink-3)]"
+            className={cx(
+              "max-w-full text-[9px] font-bold text-[var(--c-ink-3)]",
+              isMobile ? "whitespace-normal break-words" : "whitespace-nowrap",
+            )}
             title={shortTermBasis.comparisonNote}
           >
             {shortTermBasis.label}
@@ -816,7 +830,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
       );
     }
     default:
-      return renderCell(stock, key, preset);
+      return renderCell(stock, key, preset, "mobile");
   }
 }
 
@@ -1099,7 +1113,7 @@ function MobileStockCard({
           </span>
         </div>
       </div>
-      <div data-testid="screener-mobile-metric-grid" className="grid grid-cols-2 gap-2 border-t border-[var(--c-line-2)] px-3 py-3 sm:grid-cols-4">
+      <div data-testid="screener-mobile-metric-grid" className="grid grid-cols-2 items-start gap-2 border-t border-[var(--c-line-2)] px-3 py-3 sm:grid-cols-4">
         {metrics.map((metricKey) => (
           <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
         ))}
@@ -1115,7 +1129,7 @@ function MobileStockCard({
             {metricsExpanded ? "지표 접기 ▲" : `지표 더보기 (${restMetrics.length}) ▼`}
           </button>
           {metricsExpanded ? (
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-2 grid grid-cols-2 items-start gap-2 sm:grid-cols-4">
               {restMetrics.map((metricKey) => (
                 <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
               ))}

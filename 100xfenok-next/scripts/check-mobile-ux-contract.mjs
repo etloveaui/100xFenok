@@ -2632,6 +2632,17 @@ async function collectRouteChecks(page, route) {
             });
           }
         });
+
+        const mobileMetricGrid = document.querySelector('[data-testid="screener-mobile-metric-grid"]');
+        const mobileMetricAlign = mobileMetricGrid
+          ? window.getComputedStyle(mobileMetricGrid).alignItems
+          : null;
+        if (mobileMetricAlign && !["start", "flex-start"].includes(mobileMetricAlign)) {
+          failures.push({
+            check: "screener-mobile-metric-no-peer-stretch",
+            detail: `alignItems=${mobileMetricAlign}`,
+          });
+        }
       }
 
       const densityControl = document.querySelector("[data-screener-density-control]");
@@ -3436,6 +3447,7 @@ async function collectScreenerExpandedChecks(page, route) {
       document.body?.scrollWidth ?? 0,
     );
     const detail = document.querySelector('[id^="screener-mobile-detail"]');
+    const primaryCta = detail?.querySelector('.cpw4-primary-cta');
 
     if (!detail || detail.getBoundingClientRect().height <= 0) {
       failures.push({ check: "screener-expanded-detail-visible", detail: "expanded detail panel not visible" });
@@ -3445,6 +3457,23 @@ async function collectScreenerExpandedChecks(page, route) {
         check: "screener-expanded-no-horizontal-overflow",
         detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
       });
+    }
+    if (!primaryCta) {
+      failures.push({ check: "screener-expanded-primary-cta", detail: "expanded detail primary CTA missing" });
+    } else {
+      const style = window.getComputedStyle(primaryCta);
+      if (style.color === style.backgroundColor) {
+        failures.push({
+          check: "screener-expanded-primary-cta-contrast",
+          detail: `color=${style.color} background=${style.backgroundColor}`,
+        });
+      }
+      if (style.webkitTapHighlightColor !== "rgba(0, 0, 0, 0)") {
+        failures.push({
+          check: "screener-expanded-primary-cta-tap-highlight",
+          detail: `tapHighlight=${style.webkitTapHighlightColor}`,
+        });
+      }
     }
 
     return {
