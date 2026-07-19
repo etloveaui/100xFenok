@@ -22,6 +22,10 @@ const BRIDGE_INDEX_DEFAULT = "data/admin/fenok-edge-korea-krx-daily-index.json";
 // per-issuer rows). Public serving authorized by the owner's 2026-07-19 KRX
 // permission grant. data/computed/ is served by the public sync/mirror pipeline.
 const PUBLIC_INDEX_CLOSES_DEFAULT = "data/computed/fenok-edge-korea-krx-index-daily.json";
+// Slice 2 public-safe surface: one KOSDAQ market-level concentration aggregate.
+// It intentionally contains no issuer rows, codes, names, or private paths.
+const PUBLIC_KOSDAQ_MARKET_CAP_DEFAULT = "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json";
+const PUBLIC_KOSDAQ_TOP_N = 10;
 // Index (idx) endpoints whose aggregate rows are public-safe. Per-issuer
 // endpoints are deliberately excluded from the public surface.
 const PUBLIC_INDEX_ENDPOINTS = [
@@ -105,6 +109,7 @@ function usage() {
     "  --output-root PATH               Private output root. Default: _private/admin/fenok-edge-korea/daily/<run-id>.",
     "  --bridge-index PATH              Tracked bridge index path. Default: data/admin/fenok-edge-korea-krx-daily-index.json.",
     "  --public-index-closes PATH       Public-safe aggregate index closes path. Default: data/computed/fenok-edge-korea-krx-index-daily.json.",
+    "  --public-kosdaq-market-cap PATH  Public-safe KOSDAQ top-10 market-cap aggregate path.",
     "  --concurrency N                  Bounded request concurrency. Default: 2.",
     "  --timeout-ms N                   Per request timeout. Default: 30000.",
     "  --sleep-ms N                     Sleep after each request attempt. Default: 250.",
@@ -146,6 +151,7 @@ function parseArgs(argv) {
     noFetch: parseBooleanEnv("KRX_NO_FETCH", false),
     noWrite: parseBooleanEnv("KRX_NO_WRITE", false),
     outputRoot: process.env.KRX_OUTPUT_ROOT || "",
+    publicKosdaqMarketCap: process.env.KRX_PUBLIC_KOSDAQ_MARKET_CAP || PUBLIC_KOSDAQ_MARKET_CAP_DEFAULT,
     planOnly: parseBooleanEnv("KRX_PLAN_ONLY", false),
     runId: process.env.KRX_RUN_ID || "",
     scheduledRun: parseBooleanEnv("KRX_SCHEDULED_RUN", false),
@@ -170,6 +176,7 @@ function parseArgs(argv) {
       i = nextIndex;
       if (key === "bridge-index") args.bridgeIndex = value;
       else if (key === "public-index-closes") args.publicIndexCloses = value;
+      else if (key === "public-kosdaq-market-cap") args.publicKosdaqMarketCap = value;
       else if (key === "concurrency") args.concurrency = Number.parseInt(value, 10);
       else if (key === "days") args.days = Number.parseInt(value, 10);
       else if (key === "end-date") args.endDate = value;
@@ -325,6 +332,7 @@ function buildConfig(rawArgs) {
   const outputRoot = resolveRepoPath(rawArgs.outputRoot || path.join(DEFAULT_OUTPUT_PARENT, runId));
   const bridgeIndexPath = resolveRepoPath(rawArgs.bridgeIndex || BRIDGE_INDEX_DEFAULT);
   const publicIndexClosesPath = resolveRepoPath(rawArgs.publicIndexCloses || PUBLIC_INDEX_CLOSES_DEFAULT);
+  const publicKosdaqMarketCapPath = resolveRepoPath(rawArgs.publicKosdaqMarketCap || PUBLIC_KOSDAQ_MARKET_CAP_DEFAULT);
   const dates = generateWeekdayDates(endDate, rawArgs.days);
   const endpoints = endpointList();
   const estimatedCalls = dates.length * endpoints.length;
@@ -352,6 +360,7 @@ function buildConfig(rawArgs) {
     ...rawArgs,
     bridgeIndexPath,
     publicIndexClosesPath,
+    publicKosdaqMarketCapPath,
     dates,
     endDate,
     endpoints,
@@ -627,6 +636,62 @@ function buildKrxPublicIndexCloses(manifest, config) {
       "No per-issuer rows: any issue-coded row in the raw idx payload is excluded. Raw KRX capture stays private/admin.",
     ],
     indices,
+  };
+}
+
+// Slice 2: mirror the existing KOSPI market-cap weighting method for KOSDAQ,
+// but publish only the top-N aggregate concentration. Issuer identity and
+// issuer-level weights remain private/deferred to Slice 3.
+function buildKrxPublicKosdaqMarketCapAggregate(manifest, config) {
+  const asOf = manifest?.date_range?.end_date ?? null;
+  const dateKey = compactDate(asOf);
+  const sourcePath = dateKey
+    ? path.join(config.outputRoot, "raw", "core_stock_index", "ksq_bydd_trd", `${dateKey}.json`)
+    : null;
+  const payload = sourcePath ? readOptionalJson(sourcePath) : null;
+  const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+  const marketRows = rows.filter((row) => row?.MKT_NM === "KOSDAQ");
+  const marketCaps = marketRows
+    .map((row) => ({
+      code: String(row?.ISU_CD ?? "").trim().toUpperCase(),
+      marketCap: numberOrNull(row?.MKTCAP),
+    }))
+    .filter((row) => row.code && finite(row.marketCap) && row.marketCap > 0)
+    .map((row) => row.marketCap)
+    .sort((a, b) => b - a);
+  const totalMarketCap = marketCaps.reduce((sum, value) => sum + value, 0);
+  const topNMarketCap = marketCaps.slice(0, PUBLIC_KOSDAQ_TOP_N).reduce((sum, value) => sum + value, 0);
+  const ready = marketCaps.length > 0 && finite(totalMarketCap) && totalMarketCap > 0;
+  const topNWeight = ready ? topNMarketCap / totalMarketCap : null;
+
+  return {
+    schema_version: "fenok_krx_public_kosdaq_market_cap_aggregate.v1",
+    market: "KOSDAQ",
+    source: SOURCE,
+    source_endpoint: "sto/ksq_bydd_trd",
+    public_serving: true,
+    aggregate_only: true,
+    per_issuer_rows: false,
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+    generated_at: manifest?.completed_at ?? new Date().toISOString(),
+    as_of: asOf,
+    status: ready ? "ready" : "unavailable",
+    raw_input_row_count: rows.length,
+    excluded_non_kosdaq_rows: rows.length - marketRows.length,
+    excluded_invalid_market_cap_rows: marketRows.length - marketCaps.length,
+    issuer_count: marketCaps.length,
+    unit: "KRW",
+    weight_method: "issuer market capitalization divided by valid KOSDAQ market capitalization sum; public output is top-N aggregate only",
+    total_market_cap: ready ? totalMarketCap : null,
+    top_n: PUBLIC_KOSDAQ_TOP_N,
+    top_n_market_cap: ready ? topNMarketCap : null,
+    top_n_weight: ready ? round(topNWeight, 12) : null,
+    top_n_weight_pct: ready ? round(topNWeight * 100, 10) : null,
+    notes: [
+      "Derived KOSDAQ top-10 market-cap concentration aggregate. Public serving authorized by owner 2026-07-19.",
+      "No issuer rows, codes, names, individual weights, raw fields, or private paths are included.",
+    ],
   };
 }
 
@@ -985,6 +1050,10 @@ async function run(argv = process.argv.slice(2)) {
     const publicIndexCloses = buildKrxPublicIndexCloses(manifest, config);
     ensureDir(path.dirname(config.publicIndexClosesPath));
     fs.writeFileSync(config.publicIndexClosesPath, `${JSON.stringify(publicIndexCloses, null, 2)}\n`, "utf8");
+
+    const publicKosdaqMarketCap = buildKrxPublicKosdaqMarketCapAggregate(manifest, config);
+    ensureDir(path.dirname(config.publicKosdaqMarketCapPath));
+    fs.writeFileSync(config.publicKosdaqMarketCapPath, `${JSON.stringify(publicKosdaqMarketCap, null, 2)}\n`, "utf8");
   }
 
   const result = {
@@ -994,6 +1063,7 @@ async function run(argv = process.argv.slice(2)) {
     output_root: repoRel(config.outputRoot),
     bridge_index: repoRel(config.bridgeIndexPath),
     public_index_closes: repoRel(config.publicIndexClosesPath),
+    public_kosdaq_market_cap: repoRel(config.publicKosdaqMarketCapPath),
     summary: manifest.summary,
     validation_errors: manifest.validation_errors,
     wrote: !config.noWrite,
@@ -1017,6 +1087,7 @@ export {
   buildBridgeIndex,
   buildConfig,
   buildKrxPublicIndexCloses,
+  buildKrxPublicKosdaqMarketCapAggregate,
   buildPlan,
   endpointClass,
   generateWeekdayDates,

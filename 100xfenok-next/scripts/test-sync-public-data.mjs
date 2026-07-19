@@ -640,6 +640,8 @@ try {
   const sourceRoot = path.join(fixtureRoot, "data");
   const destinationRoot = path.join(fixtureRoot, "100xfenok-next", "public", "data");
   write(sourceRoot, "safe/keep.json", '{"safe":true}\n');
+  const krxSlice2Body = '{"schema_version":"fenok_krx_public_kosdaq_market_cap_aggregate.v1","aggregate_only":true}\n';
+  write(sourceRoot, "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", krxSlice2Body);
   const sourceReportPath = write(sourceRoot, DETECTION_FLOOR_REPORT, '{"schema_version":"data-supply-detection-floor/v1"}\n');
   write(sourceRoot, "yf/finance/AAA.json", '{"public":true}\n');
   seedPrivateRoots(sourceRoot, destinationRoot);
@@ -658,8 +660,8 @@ try {
   assert.equal(rehearsal.dryRun, true);
   assert.equal(
     rehearsal.filesCopied,
-    2,
-    "RED: canonical detection-floor report must be excluded from the copy plan",
+    3,
+    "public-safe files must copy while the canonical detection-floor report stays excluded",
   );
   // Exact-file exclusion set (order-insensitive contract; membership + count
   // are the pins, traversal order is not).
@@ -679,7 +681,7 @@ try {
   assert.equal(fs.readFileSync(safeAdminSiblingPath, "utf8"), '{"sibling":true}\n');
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
-  assert.equal(result.filesCopied, 2);
+  assert.equal(result.filesCopied, 3);
   assert.equal(result.excludedSourceRoots, 11);
   assert.equal(result.excludedSourceFiles, 5);
   assert.equal(result.removedDestinationRoots, 11);
@@ -688,6 +690,11 @@ try {
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(fs.readFileSync(path.join(destinationRoot, "safe/keep.json"), "utf8"), '{"safe":true}\n');
+  assert.equal(
+    fs.readFileSync(path.join(destinationRoot, "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"), "utf8"),
+    krxSlice2Body,
+    "Slice 2 canonical aggregate must be copied byte-identically to the public mirror",
+  );
   assert.equal(fs.readFileSync(path.join(destinationRoot, "yf/finance/AAA.json"), "utf8"), '{"public":true}\n');
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/data-supply-state")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/finra_short_volume")), false);
@@ -705,7 +712,7 @@ try {
 
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
-  assert.equal(rerun.filesCopied, 2);
+  assert.equal(rerun.filesCopied, 3);
   assert.equal(rerun.excludedSourceRoots, 11);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);

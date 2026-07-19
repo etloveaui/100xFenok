@@ -16,6 +16,7 @@ const WORKFLOW = ".github/workflows/fetch-defillama.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
+const KRX_WORKFLOW = ".github/workflows/fenok-edge-krx-daily.yml";
 const YF_FINANCE_WORKFLOW = ".github/workflows/fetch-yf-finance.yml";
 const STOCKANALYSIS_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
 const YARDENI_WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
@@ -340,6 +341,25 @@ function cached(root) {
   assert.equal(success.status, 0, success.stderr);
   assert.match(success.stdout, /stage_selected=4 staged_index_total=10/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
+}
+
+// KRX publishes exactly the admin bridge plus the two aggregate-only slices.
+{
+  const fixture = makeFixture({ workflow: KRX_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], KRX_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.deepEqual(cached(fixture.root), [
+    "data/admin/fenok-edge-korea-krx-daily-index.json",
+    "data/computed/fenok-edge-korea-krx-index-daily.json",
+    "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+  ].sort());
+
+  const missing = makeFixture({ workflow: KRX_WORKFLOW });
+  fs.rmSync(path.join(missing.root, "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"));
+  const failed = run(missing.root, "always_if_exists", [], KRX_WORKFLOW);
+  assert.notEqual(failed.status, 0, "required Slice 2 aggregate must fail closed when absent");
+  assert.deepEqual(cached(missing.root), [], "required-path failure must happen before any staging mutation");
 }
 
 // Pilot contract: each stage is selected independently and the applied set is exact.

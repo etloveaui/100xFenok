@@ -26,6 +26,8 @@ assert.deepEqual(gate.allowlist_count, 1,
 // aggregate index closes and stages it manifest-natively alongside the hand list.
 assert.match(workflowText, /data\/computed\/fenok-edge-korea-krx-index-daily\.json/,
   "the KRX workflow must commit the Slice 1 public index closes");
+assert.match(workflowText, /data\/computed\/fenok-edge-korea-krx-kosdaq-market-cap-aggregate\.json/,
+  "the KRX workflow must commit the aggregate-only Slice 2 KOSDAQ market-cap summary");
 assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/,
   "the KRX workflow must stage via the lane manifest (parity defense)");
 assert.match(workflowText, /--stage always_if_exists/);

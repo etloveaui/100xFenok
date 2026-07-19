@@ -8,6 +8,7 @@ import {
   buildBridgeIndex,
   buildConfig,
   buildKrxPublicIndexCloses,
+  buildKrxPublicKosdaqMarketCapAggregate,
   endpointClass,
   generateWeekdayDates,
   getRowCount,
@@ -217,6 +218,104 @@ assert.equal(getRowCount({ respCode: "NO_DATA", respMsg: "empty" }), 0);
   assert.match(artifact.license_or_terms_note, /2026-07-19/);
   assert.match(artifact.license_or_terms_note, /public serving/i);
   assert.equal(artifact.raw_public, false);
+
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+}
+
+// Slice 2: KOSDAQ top-N market-cap concentration — derived aggregate only.
+{
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-public-kosdaq-mktcap-"));
+  const rawDir = path.join(tmpDir, "raw/core_stock_index/ksq_bydd_trd");
+  fs.mkdirSync(rawDir, { recursive: true });
+  const kosdaqRows = Array.from({ length: 12 }, (_, index) => ({
+    MKT_NM: "KOSDAQ",
+    ISU_CD: `KQ${String(index + 1).padStart(4, "0")}`,
+    ISU_NM: `비공개종목${index + 1}`,
+    MKTCAP: String((12 - index) * 100),
+    TDD_CLSPRC: String(10000 + index),
+    LIST_SHRS: String(1000000 + index),
+  }));
+  fs.writeFileSync(path.join(rawDir, "20260629.json"), `${JSON.stringify({
+    OutBlock_1: [
+      ...kosdaqRows,
+      { MKT_NM: "KOSPI", ISU_CD: "005930", ISU_NM: "삼성전자", MKTCAP: "99999" },
+      { MKT_NM: "KOSDAQ", ISU_CD: "BAD000", ISU_NM: "무효행", MKTCAP: "0" },
+    ],
+  }, null, 2)}\n`);
+
+  const config = buildConfig(parseArgs(["--end-date", "20260629", "--output-root", tmpDir]));
+  const manifest = { completed_at: "2026-06-29T10:00:00.000Z", date_range: { end_date: "2026-06-29" } };
+  const artifact = buildKrxPublicKosdaqMarketCapAggregate(manifest, config);
+
+  assert.equal(artifact.schema_version, "fenok_krx_public_kosdaq_market_cap_aggregate.v1");
+  assert.equal(artifact.status, "ready");
+  assert.equal(artifact.market, "KOSDAQ");
+  assert.equal(artifact.aggregate_only, true);
+  assert.equal(artifact.per_issuer_rows, false);
+  assert.equal(artifact.issuer_count, 12);
+  assert.equal(artifact.top_n, 10);
+  assert.equal(artifact.total_market_cap, 7800);
+  assert.equal(artifact.top_n_market_cap, 7500);
+  assert.equal(artifact.top_n_weight, 0.961538461538);
+  assert.equal(artifact.top_n_weight_pct, 96.1538461538);
+  assert.equal(artifact.excluded_non_kosdaq_rows, 1);
+  assert.equal(artifact.excluded_invalid_market_cap_rows, 1);
+  assert.equal(artifact.generated_at, manifest.completed_at);
+  assert.equal(artifact.as_of, "2026-06-29");
+
+  // No issuer identity, row, raw field name, or private path may leak.
+  const serialized = JSON.stringify(artifact);
+  for (const forbidden of [
+    "KQ0001",
+    "비공개종목1",
+    "005930",
+    "삼성전자",
+    "MKTCAP",
+    "TDD_CLSPRC",
+    "LIST_SHRS",
+    "_private/",
+  ]) {
+    assert.equal(serialized.includes(forbidden), false, `public Slice 2 artifact leaked ${forbidden}`);
+  }
+  assert.deepEqual(
+    Object.keys(artifact).sort(),
+    [
+      "aggregate_only",
+      "as_of",
+      "excluded_invalid_market_cap_rows",
+      "excluded_non_kosdaq_rows",
+      "generated_at",
+      "issuer_count",
+      "license_or_terms_note",
+      "market",
+      "notes",
+      "per_issuer_rows",
+      "public_serving",
+      "raw_input_row_count",
+      "raw_public",
+      "schema_version",
+      "source",
+      "source_endpoint",
+      "status",
+      "top_n",
+      "top_n_market_cap",
+      "top_n_weight",
+      "top_n_weight_pct",
+      "total_market_cap",
+      "unit",
+      "weight_method",
+    ].sort(),
+    "public Slice 2 schema must remain aggregate-only and allowlist-shaped",
+  );
+
+  fs.rmSync(path.join(rawDir, "20260629.json"));
+  const unavailable = buildKrxPublicKosdaqMarketCapAggregate(manifest, config);
+  assert.equal(unavailable.status, "unavailable");
+  assert.equal(unavailable.issuer_count, 0);
+  assert.equal(unavailable.total_market_cap, null);
+  assert.equal(unavailable.top_n_market_cap, null);
+  assert.equal(unavailable.top_n_weight, null);
+  assert.equal(unavailable.top_n_weight_pct, null);
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
 }

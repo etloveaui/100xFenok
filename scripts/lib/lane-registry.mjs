@@ -920,6 +920,8 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy([], {
     commitSpec("data/admin/fenok-edge-korea-krx-daily-index.json", "file", true),
     // Slice 1 public-safe aggregate index closes (owner grant 2026-07-19).
     commitSpec("data/computed/fenok-edge-korea-krx-index-daily.json", "file", true),
+    // Slice 2 public-safe KOSDAQ top-10 market-cap aggregate; no issuer rows.
+    commitSpec("data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", "file", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy([], {
