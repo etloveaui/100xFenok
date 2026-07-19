@@ -7,11 +7,14 @@
 //
 // Derivation rules (all paths returned data/-stripped, matching the consumers):
 //   - excluded public data ROOTS (sync-public-data): declared exception roots
-//     + admin_store of every privacy_class:"private" lane + non-admin
-//     canonical_outputs of private lanes whose public_mirror is empty;
+//     + admin_store of every privacy_class:"private" lane + directory-shaped
+//     non-admin canonical_outputs of private lanes whose public_mirror is
+//     empty;
 //   - excluded public data FILES (sync-public-data): declared exception files
 //     explicitly flagged public_sync:"exclude" (may_be_absent remains a
-//     compatibility shorthand for the historical detection-floor report);
+//     compatibility shorthand for the historical detection-floor report)
+//     + file-shaped (.json) non-admin canonical_outputs of mirrorless private
+//     lanes — the sync consumer requires roots to be directories on disk;
 //   - forbidden private data-supply roots (mirror guard): declared exception
 //     roots + non-admin canonical_outputs of private lanes whose public_mirror
 //     is empty (lane admin stores are NOT here by design — they never reach
@@ -53,20 +56,31 @@ function exceptionRootsOf(registry) {
   return declaredExceptionPaths("root", registry);
 }
 
+function isFileShapedCanonical(candidate) {
+  // sync-public-data hard-splits its exclusion lists: ROOTS entries present on
+  // disk must be directories, FILES entries must be regular files. Canonical
+  // outputs are directory stores unless they are single JSON artifacts, so the
+  // derivation must make the same split (2026-07-19 deploy-crash class: a
+  // file-shaped canonical in the roots list crashes the build the moment the
+  // lane's first successful run commits the artifact).
+  return candidate.endsWith(".json");
+}
+
 export function deriveExcludedPublicDataRoots(registry = LANE_REGISTRY) {
   return uniqueSorted([
     ...exceptionRootsOf(registry),
     ...laneAdminRoots(registry),
-    ...laneCanonicalPrivateRoots(registry),
+    ...laneCanonicalPrivateRoots(registry).filter((candidate) => !isFileShapedCanonical(candidate)),
   ].map(stripDataPrefix));
 }
 
 export function deriveExcludedPublicDataFiles(registry = LANE_REGISTRY) {
-  return uniqueSorted(
-    registry.declared_exceptions
+  return uniqueSorted([
+    ...registry.declared_exceptions
       .filter((entry) => entry.kind === "file" && (entry.public_sync === "exclude" || entry.may_be_absent === true))
-      .map((entry) => stripDataPrefix(entry.path)),
-  );
+      .map((entry) => entry.path),
+    ...laneCanonicalPrivateRoots(registry).filter(isFileShapedCanonical),
+  ].map(stripDataPrefix));
 }
 
 export function deriveForbiddenPrivateDataSupplyRoots(registry = LANE_REGISTRY) {

@@ -82,12 +82,15 @@ const EXPECTED_PRIVATE_ROOTS = Object.freeze([
   "admin/fred_yardeni",
   "admin/edgar_filings",
   "admin/nasdaq_giw_sox",
+  "yf/etf-details",
+  "yf/migration-evidence",
+]);
+
+const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_news_tone_proxy.json",
   "computed/fenok_news_tone_proxy_history.json",
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
-  "yf/etf-details",
-  "yf/migration-evidence",
 ]);
 
 // Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): the hand list
@@ -109,6 +112,53 @@ const EXPECTED_PRIVATE_ROOTS = Object.freeze([
       undeclared_exclusions: gate.undeclared_exclusions,
     })}`,
   );
+}
+
+// Root/file shape split (2026-07-19 deploy-crash class): sync-public-data's
+// visit() hard-requires every EXCLUDED_PUBLIC_DATA_ROOTS entry that exists on
+// disk to be a directory. A file-shaped entry stays latent until its lane's
+// first successful run commits the artifact, then every build crashes
+// ("excluded source root must be a directory" — the apewisdom
+// fenok_social_attention_proxy.json firing). File-shaped private canonicals
+// must therefore live in the FILES list, on both the hand lists and the
+// registry derivations.
+{
+  for (const [label, list] of [
+    ["EXCLUDED_PUBLIC_DATA_ROOTS", EXCLUDED_PUBLIC_DATA_ROOTS],
+    ["deriveExcludedPublicDataRoots()", deriveExcludedPublicDataRoots()],
+  ]) {
+    for (const entry of list) {
+      assert.equal(entry.endsWith(".json"), false, `${label} carries a file-shaped path: ${entry}`);
+    }
+  }
+  for (const expectedFile of EXPECTED_PRIVATE_PROXY_FILES) {
+    assert.equal(
+      EXCLUDED_PUBLIC_DATA_FILES.includes(expectedFile),
+      true,
+      `private proxy file missing from EXCLUDED_PUBLIC_DATA_FILES: ${expectedFile}`,
+    );
+  }
+
+  // Value-changing derivation case: a mirrorless private lane with one
+  // file-shaped and one directory-shaped canonical must split across the two
+  // derived lists instead of both landing in roots.
+  const probe = JSON.parse(JSON.stringify(LANE_REGISTRY.lanes.find((lane) => lane.id === "apewisdom_attention")));
+  probe.id = "zz_shape_split_probe";
+  probe.roots.canonical_outputs = [
+    "data/computed/zz_shape_split_probe.json",
+    "data/computed/zz_shape_split_probe_store",
+  ];
+  const probeRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, probe] };
+  assert.equal(deriveExcludedPublicDataRoots(probeRegistry).includes("computed/zz_shape_split_probe.json"), false,
+    "file-shaped canonical must NOT derive into the sync roots list");
+  assert.equal(deriveExcludedPublicDataFiles(probeRegistry).includes("computed/zz_shape_split_probe.json"), true,
+    "file-shaped canonical must derive into the sync files list");
+  assert.equal(deriveExcludedPublicDataRoots(probeRegistry).includes("computed/zz_shape_split_probe_store"), true,
+    "directory-shaped canonical must stay in the sync roots list");
+  // The mirror guard is a shape-agnostic presence check, so file-shaped
+  // canonicals stay in its forbidden list unchanged.
+  assert.equal(deriveForbiddenPrivateDataSupplyRoots(probeRegistry).includes("computed/zz_shape_split_probe.json"), true,
+    "mirror-guard derivation must keep forbidding file-shaped private canonicals");
 }
 
 function realBaselineRootArg() {
@@ -193,6 +243,14 @@ function seedPrivateRoots(sourceRoot, destinationRoot) {
   for (const relativeRoot of EXPECTED_PRIVATE_ROOTS) {
     write(sourceRoot, `${relativeRoot}/private.json`, '{"secret":true}\n');
     write(destinationRoot, `${relativeRoot}/stale.json`, '{"stale":true}\n');
+  }
+  // File-shaped private proxies are seeded as REGULAR FILES so the fixture
+  // exercises the root/file split (2026-07-19 deploy-crash class): on the
+  // source side they must be withheld as excluded exact files, and stale
+  // destination copies must be removed as exact files.
+  for (const relativeFile of EXPECTED_PRIVATE_PROXY_FILES) {
+    write(sourceRoot, relativeFile, '{"secret":true}\n');
+    write(destinationRoot, relativeFile, '{"stale":true}\n');
   }
 }
 
@@ -571,8 +629,12 @@ try {
   );
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_FILES,
-    [DETECTION_FLOOR_REPORT, "admin/lane-commit-manifest.json"],
-    "the exact-file exclusion allowlist must include the detection-floor report and private lane commit manifest",
+    [
+      DETECTION_FLOOR_REPORT,
+      "admin/lane-commit-manifest.json",
+      ...EXPECTED_PRIVATE_PROXY_FILES,
+    ],
+    "the exact-file exclusion allowlist must include the detection-floor report, private lane commit manifest, and file-shaped private proxies",
   );
   const sourceRoot = path.join(fixtureRoot, "data");
   const destinationRoot = path.join(fixtureRoot, "100xfenok-next", "public", "data");
@@ -598,13 +660,16 @@ try {
     2,
     "RED: canonical detection-floor report must be excluded from the copy plan",
   );
-  assert.equal(rehearsal.excludedSourceFiles, 1);
-  assert.equal(rehearsal.removedDestinationExactFiles, 1);
-  assert.deepEqual(rehearsal.excludedSourceFilePaths, [DETECTION_FLOOR_REPORT]);
-  assert.deepEqual(rehearsal.removedDestinationExactFilePaths, [DETECTION_FLOOR_REPORT]);
-  assert.equal(rehearsal.excludedSourceRoots, 15);
-  assert.equal(rehearsal.removedDestinationRoots, 15);
-  assert.equal(rehearsal.removedDestinationFiles, 15);
+  // Exact-file exclusion set (order-insensitive contract; membership + count
+  // are the pins, traversal order is not).
+  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_PROXY_FILES].sort();
+  assert.equal(rehearsal.excludedSourceFiles, 5);
+  assert.equal(rehearsal.removedDestinationExactFiles, 5);
+  assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
+  assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
+  assert.equal(rehearsal.excludedSourceRoots, 11);
+  assert.equal(rehearsal.removedDestinationRoots, 11);
+  assert.equal(rehearsal.removedDestinationFiles, 11);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -614,13 +679,13 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 2);
-  assert.equal(result.excludedSourceRoots, 15);
-  assert.equal(result.excludedSourceFiles, 1);
-  assert.equal(result.removedDestinationRoots, 15);
-  assert.equal(result.removedDestinationFiles, 15);
-  assert.equal(result.removedDestinationExactFiles, 1);
-  assert.deepEqual(result.excludedSourceFilePaths, [DETECTION_FLOOR_REPORT]);
-  assert.deepEqual(result.removedDestinationExactFilePaths, [DETECTION_FLOOR_REPORT]);
+  assert.equal(result.excludedSourceRoots, 11);
+  assert.equal(result.excludedSourceFiles, 5);
+  assert.equal(result.removedDestinationRoots, 11);
+  assert.equal(result.removedDestinationFiles, 11);
+  assert.equal(result.removedDestinationExactFiles, 5);
+  assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
+  assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(fs.readFileSync(path.join(destinationRoot, "safe/keep.json"), "utf8"), '{"safe":true}\n');
   assert.equal(fs.readFileSync(path.join(destinationRoot, "yf/finance/AAA.json"), "utf8"), '{"public":true}\n');
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/data-supply-state")), false);
@@ -640,12 +705,12 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 2);
-  assert.equal(rerun.excludedSourceRoots, 15);
-  assert.equal(rerun.excludedSourceFiles, 1);
+  assert.equal(rerun.excludedSourceRoots, 11);
+  assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
   assert.equal(rerun.removedDestinationExactFiles, 0);
-  assert.deepEqual(rerun.excludedSourceFilePaths, [DETECTION_FLOOR_REPORT]);
+  assert.deepEqual([...rerun.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual(rerun.removedDestinationExactFilePaths, []);
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeRerun, "second sync must be byte-idempotent");
 
