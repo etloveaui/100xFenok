@@ -17,6 +17,7 @@ const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
 const YF_FINANCE_WORKFLOW = ".github/workflows/fetch-yf-finance.yml";
+const STOCKANALYSIS_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -49,6 +50,14 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
         }
         continue;
       }
+      if (entry.kind === "dynamic_set") {
+        const file = `${entry.path}/dynamic.json`;
+        const target = path.join(root, file);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, "{}\n");
+        output.push(file);
+        continue;
+      }
       const target = path.join(root, entry.path);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       if (entry.kind === "directory") {
@@ -78,6 +87,30 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// StockAnalysis combines four required directories, optional attempt shards,
+// a modified/untracked YF dynamic set, and two exclusions nested inside staged roots.
+{
+  const fixture = makeFixture({ workflow: STOCKANALYSIS_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=7 stage_selected=8 staged_index_total=7/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  for (const excluded of fixture.materialized.exclude) {
+    assert.equal(cached(fixture.root).includes(excluded), false, `${excluded} must remain unstaged`);
+  }
+
+  const tracked = makeFixture({ workflow: STOCKANALYSIS_WORKFLOW });
+  execFileSync("git", ["add", "-A"], { cwd: tracked.root });
+  execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: tracked.root });
+  for (const file of [...tracked.materialized.always, ...tracked.materialized.exclude]) {
+    fs.appendFileSync(path.join(tracked.root, file), "changed\n");
+  }
+  const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
+  assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
+  assert.match(trackedAlways.stdout, /declared=7 stage_selected=8 staged_index_total=7/);
+  assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
 // Required Yahoo directories stage their concrete files while the declared

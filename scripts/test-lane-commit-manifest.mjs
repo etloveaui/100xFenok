@@ -199,6 +199,23 @@ assert.deepEqual(yfFinance.exclude, [
   { kind: "file", path: "data/yf/finance/_summary.json", required: false },
 ]);
 
+const stockanalysis = manifest.workflows[".github/workflows/fetch-stockanalysis.yml"];
+assert.deepEqual(stockanalysis.lanes, ["yahoo_etf_fallback", "stockanalysis_etf_universe"]);
+assert.deepEqual(stockanalysis.stages.always_if_exists, [
+  { kind: "directory", path: "data/stockanalysis", required: true },
+  { kind: "directory", path: "data/yf/etf-details", required: true },
+  { kind: "directory", path: "data/admin/data-supply-state/v1", required: true },
+  { kind: "directory", path: "data/admin/stockanalysis-recovery", required: true },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", required: false },
+  { kind: "dynamic_set", path: "data/yf/finance", required: false },
+]);
+assert.deepEqual(stockanalysis.stages.success_if_exists, []);
+assert.deepEqual(stockanalysis.exclude, [
+  { kind: "file", path: "data/stockanalysis/backfill/history_gap_report_latest.json", required: false },
+  { kind: "file", path: "data/yf/finance/_summary.json", required: false },
+]);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

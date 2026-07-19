@@ -100,6 +100,26 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIsNotNone(required_periods_input)
         self.assertIn("default: 'daily_1y'", required_periods_input.group("body"))
 
+    def test_manifest_staging_keeps_dynamic_yf_selection_before_exclusions(self) -> None:
+        commit_step = re.search(
+            r"- name: Commit and push\n\s+run: \|\n(?P<body>.*?)(?=\n\s+- name:)",
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(commit_step)
+        body = commit_step.group("body")
+        manifest_call = "scripts/stage-lane-manifest.sh"
+        legacy_add = "git add -- \\\n            data/stockanalysis"
+        dynamic_add = "git ls-files --modified --others --exclude-standard -z -- data/yf/finance"
+        restore = "git restore --staged --worktree --"
+        for expected in (manifest_call, "--stage always_if_exists", legacy_add, dynamic_add, restore):
+            self.assertIn(expected, body)
+        self.assertLess(body.index(manifest_call), body.index(legacy_add))
+        self.assertLess(body.index(dynamic_add), body.index(restore))
+        restore_body = body[body.index(restore):]
+        self.assertIn("data/stockanalysis/backfill/history_gap_report_latest.json", restore_body)
+        self.assertIn("data/yf/finance/_summary.json", restore_body)
+
 
 if __name__ == "__main__":
     unittest.main()
