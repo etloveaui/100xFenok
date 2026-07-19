@@ -686,6 +686,10 @@ await assert.rejects(
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
   assert.match(workflow, /data\/admin\/treasury_tga\/index\.json/);
   assert.match(workflow, /data\/admin\/treasury_tga\/lkg\/tga\.json/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.doesNotMatch(workflow, /git add -A/);
   assert.doesNotMatch(workflow, /data-supply-detection-floor\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);

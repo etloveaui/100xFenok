@@ -61,6 +61,19 @@ assert.deepEqual(yahooTicker.stages.success_if_exists.map((entry) => entry.path)
 ]);
 assert.deepEqual(yahooTicker.exclude, []);
 
+const treasuryTga = manifest.workflows[".github/workflows/fetch-treasury-tga.yml"];
+assert.deepEqual(treasuryTga.lanes, ["treasury_tga"]);
+assert.deepEqual(treasuryTga.stages.always_if_exists.map((entry) => entry.path), [
+  "data/admin/data-supply-state/detection-attempts/treasury_tga.json",
+  "data/admin/treasury_tga/index.json",
+  "data/admin/treasury_tga/lkg/tga.json",
+]);
+assert.deepEqual(treasuryTga.stages.success_if_exists.map((entry) => entry.path), [
+  "data/macro/tga.json",
+  "100xfenok-next/public/data/macro/tga.json",
+]);
+assert.deepEqual(treasuryTga.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],
