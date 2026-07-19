@@ -279,6 +279,8 @@ export interface ScreenerDataResult {
   failed: boolean;
   /** stocks_analyzer source_date (data freshness), or null. */
   sourceDate: string | null;
+  /** market_facts source date used for the header's per-source display. */
+  marketFactsDate: string | null;
   /** entity_graph_stock_index generated_at, or null when unavailable. */
   connectionIndexDate: string | null;
   connectionIndexReady: boolean;

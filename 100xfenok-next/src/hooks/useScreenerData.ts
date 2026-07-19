@@ -141,6 +141,7 @@ const EMPTY: ScreenerDataResult = {
   dataReady: false,
   failed: false,
   sourceDate: null,
+  marketFactsDate: null,
   connectionIndexDate: null,
   connectionIndexReady: false,
   sectors: [],
@@ -310,12 +311,14 @@ export function useScreenerData(): ScreenerDataResult {
         connectionIndex?.source_as_of?.stock_action_index,
         connectionIndex?.source_as_of?.market_facts,
       ]);
+      const marketFactsDate = normalizedSourceDate(connectionIndex?.source_as_of?.market_facts);
 
       setResult({
         stocks,
         dataReady: true,
         failed: false,
         sourceDate: provider.getSourceDate(),
+        marketFactsDate,
         connectionIndexDate,
         connectionIndexReady: Boolean(connectionIndex),
         sectors,

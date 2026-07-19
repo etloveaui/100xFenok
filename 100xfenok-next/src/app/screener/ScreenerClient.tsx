@@ -16,6 +16,7 @@ import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGa
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/common-basis-short-term";
+import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
 import MetricHelp from "@/components/MetricHelp";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
@@ -1288,6 +1289,7 @@ export default function ScreenerClient({
     dataReady,
     failed,
     sourceDate,
+    marketFactsDate,
     connectionIndexDate,
     connectionIndexReady,
     sectors,
@@ -2082,8 +2084,9 @@ export default function ScreenerClient({
   const filterPreviewLabel = activeFilterChips.length > 0
     ? activeFilterChips.slice(0, 5).map((chip) => chip.label).join(" · ")
     : "종목 범위 · 가치 조건 · 성장·수익 · 품질·신호";
-  const sourceDateLabel = screenerSourceDate
-    ?? (connectionIndexReady ? "원천 기준일 미제공" : sourceDate ?? "확인 중");
+  const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
+    pending: !dataReady && !connectionIndexReady,
+  });
   const densityClass = DENSITY_TABLE_CLASS[density];
 
   useEffect(() => {
@@ -2144,9 +2147,9 @@ export default function ScreenerClient({
               <p className="cpw4-kicker">SCREENER</p>
               <h1>종목 스크리너</h1>
             </div>
-            <div className="cpw4-freshness" aria-label={`데이터 기준 ${sourceDateLabel}`}>
+            <div className="cpw4-freshness" aria-label={`데이터 원천 ${sourceDateLabel}`}>
               <span className="cpw4-freshness__dot" aria-hidden="true" />
-              기준 {sourceDateLabel}
+              {sourceDateLabel}
             </div>
           </div>
 
