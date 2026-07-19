@@ -498,6 +498,9 @@ class StockAnalysisRecoveryStateStore:
         if recovered:
             state["recovered_from_run_id"] = str(previous_run_id)
             state["recovered_at"] = attempt["observed_at"]
+            state["recovery_run_id"] = attempt["run_id"]
+            state["recovery_run_attempt"] = attempt["run_attempt"]
+            state["recovery_event_name"] = attempt["event_name"]
             state["last_recovered_failure"] = latest_failure
         state.pop("latest_failure", None)
         _atomic_write_json(self._state_path(kind, entity), state)
@@ -585,6 +588,9 @@ class StockAnalysisRecoveryStateStore:
                             "payload_sha256": (state.get("current") or {}).get("payload_sha256"),
                             "source_as_of": (state.get("current") or {}).get("source_as_of"),
                             "recovered_from_run_id": state.get("recovered_from_run_id"),
+                            "recovery_run_id": state.get("recovery_run_id"),
+                            "recovery_run_attempt": state.get("recovery_run_attempt"),
+                            "recovery_event_name": state.get("recovery_event_name"),
                             "recovered_at": state.get("recovered_at"),
                         })
 

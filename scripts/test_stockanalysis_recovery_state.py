@@ -245,6 +245,79 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertEqual(index["recovered_surfaces"], ["actions_recent"])
         self.assertEqual(self.store.assess_current_attempt(index)["status"], "ready")
 
+    def test_recovery_run_metadata_changes_with_the_natural_run_and_surfaces_in_index(self) -> None:
+        write_json(
+            self.data_root / "stocks" / "AAPL.json",
+            stock_payload("AAPL", "2026-07-14T20:00:00Z"),
+        )
+        self.store.bootstrap_existing(self.run_context("bootstrap"))
+
+        first_failure = {
+            **self.run_context("chaos-1"),
+            "observed_at": "2026-07-15T08:00:00Z",
+        }
+        self.store.record_failure(
+            "stock", "AAPL", "controlled failure injection", first_failure, controlled=True
+        )
+        first_payload = stock_payload("AAPL", "2026-07-15T20:00:00Z")
+        write_json(self.store.canonical_path("stock", "AAPL"), first_payload)
+        first_recovery = {
+            **self.run_context("natural-recovery-1"),
+            "event_name": "schedule",
+            "natural": True,
+            "observed_at": "2026-07-15T23:40:00Z",
+        }
+        first_state = self.store.record_success(
+            "stock", "AAPL", first_payload, first_recovery
+        )
+        self.assertEqual(first_state["recovery_run_id"], "natural-recovery-1")
+        self.assertEqual(first_state["recovery_run_attempt"], 1)
+        self.assertEqual(first_state["recovery_event_name"], "schedule")
+
+        second_failure = {
+            **self.run_context("chaos-2"),
+            "observed_at": "2026-07-16T08:00:00Z",
+        }
+        self.store.record_failure(
+            "stock", "AAPL", "controlled failure injection", second_failure, controlled=True
+        )
+        second_payload = stock_payload("AAPL", "2026-07-16T20:00:00Z")
+        write_json(self.store.canonical_path("stock", "AAPL"), second_payload)
+        second_recovery = {
+            **self.run_context("natural-recovery-2"),
+            "event_name": "schedule",
+            "natural": True,
+            "observed_at": "2026-07-16T23:40:00Z",
+        }
+        second_state = self.store.record_success(
+            "stock", "AAPL", second_payload, second_recovery
+        )
+        self.assertNotEqual(
+            first_state.get("recovery_run_id"), second_state.get("recovery_run_id")
+        )
+        self.assertEqual(second_state["recovery_run_id"], "natural-recovery-2")
+        self.assertEqual(second_state["recovery_run_attempt"], 1)
+        self.assertEqual(second_state["recovery_event_name"], "schedule")
+        self.assertEqual(second_state["recovered_at"], "2026-07-16T23:40:00Z")
+
+        index = self.store.rebuild_index(second_recovery)
+        self.assertEqual(
+            index["recovered_details"],
+            [
+                {
+                    "artifact_kind": "stock",
+                    "entity": "AAPL",
+                    "payload_sha256": second_state["current"]["payload_sha256"],
+                    "source_as_of": "2026-07-16T20:00:00Z",
+                    "recovered_from_run_id": "chaos-2",
+                    "recovery_run_id": "natural-recovery-2",
+                    "recovery_run_attempt": 1,
+                    "recovery_event_name": "schedule",
+                    "recovered_at": "2026-07-16T23:40:00Z",
+                }
+            ],
+        )
+
     def test_financial_recovery_accepts_new_collection_of_same_fiscal_source_only(self) -> None:
         self.seed_lane()
         self.store.bootstrap_existing(self.run_context("bootstrap"))
