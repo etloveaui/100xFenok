@@ -344,6 +344,9 @@ jobs:
             history \
             "$RUNNER_TEMP/slickcharts-history-row.json" \
             "chore: update SlickCharts stock history $(date -u +%Y-%m-%d)" \
+            --manifest-workflow .github/workflows/slickcharts-history.yml \
+            --manifest-always always_if_exists \
+            -- \
             data/slickcharts/stocks-returns.json \
             data/slickcharts/stocks-dividends.json \
             data/slickcharts/stocks-dividends-recent.json \

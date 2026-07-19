@@ -81,4 +81,19 @@ for (const member of ["history", "symbols"]) {
   assert.match(monthly, /paths\+=\(data\/slickcharts\/1929crash\.json\)/);
 }
 
+{
+  const history = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-history.yml"), "utf8");
+  assert.equal(
+    (history.match(/--manifest-workflow \.github\/workflows\/slickcharts-history\.yml/g) ?? []).length,
+    1,
+    "only the full history merge may opt into the workflow-wide manifest stage",
+  );
+  assert.match(
+    history,
+    /- name: Commit and push changes[\s\S]*?scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-history\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/stocks-returns\.json[\s\S]*?data\/slickcharts\/stocks\//,
+  );
+  const singleAttempt = history.slice(history.indexOf("- name: Commit history attempt"));
+  assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol history attempt must remain shard-only");
+}
+
 console.log("test-slickcharts-attempt-workflows: ok");
