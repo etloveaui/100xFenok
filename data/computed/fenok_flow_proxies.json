@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-18T18:05:46.711Z",
+  "generated_at": "2026-07-19T14:26:43.640Z",
   "formula_version": "fenok-flow-proxies-v0.3-short-pressure-calibration",
   "contract_docs": [
     "docs/planning/CONTRACT_fenok_short_pressure_sources_20260628.md",
@@ -36,7 +36,7 @@
   },
   "rows": [
     {
-      "ticker": "MRK",
+      "ticker": "ASML",
       "as_of": "2026-07-17",
       "source_date": "20260717",
       "confidence": "high",
@@ -50,22 +50,124 @@
         "local data/yf/finance history_1y volume"
       ],
       "short_pressure_proxy": {
-        "score_0_100": 41.49,
-        "direction": "normal",
-        "short_volume_ratio": 0.483282,
-        "short_exempt_ratio": 0.010249,
-        "short_volume": 2501433.9685,
-        "short_exempt_volume": 53046,
-        "total_volume": 5175927.7151,
+        "score_0_100": 14.45,
+        "direction": "muted",
+        "short_volume_ratio": 0.350827,
+        "short_exempt_ratio": 0.004099,
+        "short_volume": 309573.5489,
+        "short_exempt_volume": 3617,
+        "total_volume": 882409.767,
         "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
       },
       "off_exchange_activity_proxy": {
-        "score_0_100": 58.53,
-        "direction": "elevated_activity",
-        "off_exchange_share": 0.484132,
-        "finra_total_volume": 5175927.7151,
-        "consolidated_volume": 10691155,
+        "score_0_100": 37.53,
+        "direction": "normal_activity",
+        "off_exchange_share": 0.400123,
+        "finra_total_volume": 882409.767,
+        "consolidated_volume": 2205347,
         "consolidated_volume_date": "2026-07-17",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "COIN",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 50.6,
+        "direction": "watch",
+        "short_volume_ratio": 0.527937,
+        "short_exempt_ratio": 0.000798,
+        "short_volume": 1382827.19,
+        "short_exempt_volume": 2089,
+        "total_volume": 2619301.5689,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 40.63,
+        "direction": "normal_activity",
+        "off_exchange_share": 0.412521,
+        "finra_total_volume": 2619301.5689,
+        "consolidated_volume": 6349498,
+        "consolidated_volume_date": "2026-07-17",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "HON",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 39.92,
+        "direction": "normal",
+        "short_volume_ratio": 0.475625,
+        "short_exempt_ratio": 0.002402,
+        "short_volume": 529178.7993,
+        "short_exempt_volume": 2672,
+        "total_volume": 1112597.0594,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 53.26,
+        "direction": "elevated_activity",
+        "off_exchange_share": 0.463026,
+        "finra_total_volume": 1112597.0594,
+        "consolidated_volume": 2402884,
+        "consolidated_volume_date": "2026-07-16",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "JPM",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 55.7,
+        "direction": "watch",
+        "short_volume_ratio": 0.552929,
+        "short_exempt_ratio": 0.000353,
+        "short_volume": 1505588.7901,
+        "short_exempt_volume": 960,
+        "total_volume": 2722931.8847,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 0,
+        "direction": "low_activity",
+        "off_exchange_share": 0.220594,
+        "finra_total_volume": 2722931.8847,
+        "consolidated_volume": 12343656,
+        "consolidated_volume_date": "2026-07-16",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
@@ -1187,40 +1289,6 @@
         "off_exchange_share": 0.405172,
         "finra_total_volume": 3201836.7465,
         "consolidated_volume": 7902420,
-        "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
-      "ticker": "ASML",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 14.45,
-        "direction": "muted",
-        "short_volume_ratio": 0.350827,
-        "short_exempt_ratio": 0.004099,
-        "short_volume": 309573.5489,
-        "short_exempt_volume": 3617,
-        "total_volume": 882409.767,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 37.53,
-        "direction": "normal_activity",
-        "off_exchange_share": 0.400123,
-        "finra_total_volume": 882409.767,
-        "consolidated_volume": 2205347,
         "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
@@ -2649,40 +2717,6 @@
         "off_exchange_share": 0.361057,
         "finra_total_volume": 2148506.5407,
         "consolidated_volume": 5950597,
-        "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
-      "ticker": "COIN",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 50.6,
-        "direction": "watch",
-        "short_volume_ratio": 0.527937,
-        "short_exempt_ratio": 0.000798,
-        "short_volume": 1382827.19,
-        "short_exempt_volume": 2089,
-        "total_volume": 2619301.5689,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 40.63,
-        "direction": "normal_activity",
-        "off_exchange_share": 0.412521,
-        "finra_total_volume": 2619301.5689,
-        "consolidated_volume": 6349498,
         "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
@@ -5850,40 +5884,6 @@
       }
     },
     {
-      "ticker": "HON",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 39.92,
-        "direction": "normal",
-        "short_volume_ratio": 0.475625,
-        "short_exempt_ratio": 0.002402,
-        "short_volume": 529178.7993,
-        "short_exempt_volume": 2672,
-        "total_volume": 1112597.0594,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 53.26,
-        "direction": "elevated_activity",
-        "off_exchange_share": 0.463026,
-        "finra_total_volume": 1112597.0594,
-        "consolidated_volume": 2402884,
-        "consolidated_volume_date": "2026-07-16",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
       "ticker": "HOOD",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -6730,40 +6730,6 @@
         "finra_total_volume": 2537915.5939,
         "consolidated_volume": 7516376,
         "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
-      "ticker": "JPM",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 55.7,
-        "direction": "watch",
-        "short_volume_ratio": 0.552929,
-        "short_exempt_ratio": 0.000353,
-        "short_volume": 1505588.7901,
-        "short_exempt_volume": 960,
-        "total_volume": 2722931.8847,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 0,
-        "direction": "low_activity",
-        "off_exchange_share": 0.220594,
-        "finra_total_volume": 2722931.8847,
-        "consolidated_volume": 12343656,
-        "consolidated_volume_date": "2026-07-16",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
@@ -8294,6 +8260,40 @@
         "finra_total_volume": 269396.3765,
         "consolidated_volume": 888494,
         "consolidated_volume_date": "2026-07-16",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "MRK",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 41.49,
+        "direction": "normal",
+        "short_volume_ratio": 0.483282,
+        "short_exempt_ratio": 0.010249,
+        "short_volume": 2501433.9685,
+        "short_exempt_volume": 53046,
+        "total_volume": 5175927.7151,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 58.53,
+        "direction": "elevated_activity",
+        "off_exchange_share": 0.484132,
+        "finra_total_volume": 5175927.7151,
+        "consolidated_volume": 10691155,
+        "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
@@ -13058,6 +13058,40 @@
       }
     },
     {
+      "ticker": "GS",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 45.29,
+        "direction": "normal",
+        "short_volume_ratio": 0.501919,
+        "short_exempt_ratio": 0.000238,
+        "short_volume": 329101.3609,
+        "short_exempt_volume": 156,
+        "total_volume": 655686.3763,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 11.72,
+        "direction": "low_activity",
+        "off_exchange_share": 0.296866,
+        "finra_total_volume": 655686.3763,
+        "consolidated_volume": 2208692,
+        "consolidated_volume_date": "2026-07-16",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
       "ticker": "TPL",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -13156,40 +13190,6 @@
         "finra_total_volume": 311546.9944,
         "consolidated_volume": 617139,
         "consolidated_volume_date": "2026-07-16",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
-      "ticker": "BA",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 50.97,
-        "direction": "watch",
-        "short_volume_ratio": 0.529766,
-        "short_exempt_ratio": 0.001257,
-        "short_volume": 819625.2118,
-        "short_exempt_volume": 1945,
-        "total_volume": 1547145.6505,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 29.27,
-        "direction": "normal_activity",
-        "off_exchange_share": 0.367072,
-        "finra_total_volume": 1547145.6505,
-        "consolidated_volume": 4214833,
-        "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
@@ -13500,40 +13500,6 @@
       }
     },
     {
-      "ticker": "GS",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 45.29,
-        "direction": "normal",
-        "short_volume_ratio": 0.501919,
-        "short_exempt_ratio": 0.000238,
-        "short_volume": 329101.3609,
-        "short_exempt_volume": 156,
-        "total_volume": 655686.3763,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 11.72,
-        "direction": "low_activity",
-        "off_exchange_share": 0.296866,
-        "finra_total_volume": 655686.3763,
-        "consolidated_volume": 2208692,
-        "consolidated_volume_date": "2026-07-16",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
       "ticker": "MET",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -13840,40 +13806,6 @@
       }
     },
     {
-      "ticker": "AAL",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 38.78,
-        "direction": "normal",
-        "short_volume_ratio": 0.47001,
-        "short_exempt_ratio": 0.000404,
-        "short_volume": 73198137.848,
-        "short_exempt_volume": 62895,
-        "total_volume": 155737331.5771,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 100,
-        "direction": "high_activity",
-        "off_exchange_share": 0.881256,
-        "finra_total_volume": 155737331.5771,
-        "consolidated_volume": 176722073,
-        "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
       "ticker": "CPNG",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -13942,40 +13874,6 @@
       }
     },
     {
-      "ticker": "MIDD",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 32.3,
-        "direction": "normal",
-        "short_volume_ratio": 0.438277,
-        "short_exempt_ratio": 0.000189,
-        "short_volume": 129865.9821,
-        "short_exempt_volume": 56,
-        "total_volume": 296310.0613,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 62.9,
-        "direction": "elevated_activity",
-        "off_exchange_share": 0.501582,
-        "finra_total_volume": 296310.0613,
-        "consolidated_volume": 590751,
-        "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
       "ticker": "ALAB",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -14039,6 +13937,40 @@
         "off_exchange_share": 0.359153,
         "finra_total_volume": 489481.5873,
         "consolidated_volume": 1362876,
+        "consolidated_volume_date": "2026-07-17",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "BA",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 50.97,
+        "direction": "watch",
+        "short_volume_ratio": 0.529766,
+        "short_exempt_ratio": 0.001257,
+        "short_volume": 819625.2118,
+        "short_exempt_volume": 1945,
+        "total_volume": 1547145.6505,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 29.27,
+        "direction": "normal_activity",
+        "off_exchange_share": 0.367072,
+        "finra_total_volume": 1547145.6505,
+        "consolidated_volume": 4214833,
         "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
@@ -14243,6 +14175,40 @@
         "off_exchange_share": 0.374091,
         "finra_total_volume": 4362923.0618,
         "consolidated_volume": 11662743,
+        "consolidated_volume_date": "2026-07-17",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "AAL",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 38.78,
+        "direction": "normal",
+        "short_volume_ratio": 0.47001,
+        "short_exempt_ratio": 0.000404,
+        "short_volume": 73198137.848,
+        "short_exempt_volume": 62895,
+        "total_volume": 155737331.5771,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 100,
+        "direction": "high_activity",
+        "off_exchange_share": 0.881256,
+        "finra_total_volume": 155737331.5771,
+        "consolidated_volume": 176722073,
         "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
@@ -16216,6 +16182,40 @@
         "finra_total_volume": 380573.5726,
         "consolidated_volume": 1232623,
         "consolidated_volume_date": "2026-07-16",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "MIDD",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 32.3,
+        "direction": "normal",
+        "short_volume_ratio": 0.438277,
+        "short_exempt_ratio": 0.000189,
+        "short_volume": 129865.9821,
+        "short_exempt_volume": 56,
+        "total_volume": 296310.0613,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 62.9,
+        "direction": "elevated_activity",
+        "off_exchange_share": 0.501582,
+        "finra_total_volume": 296310.0613,
+        "consolidated_volume": 590751,
+        "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
@@ -18566,74 +18566,6 @@
       }
     },
     {
-      "ticker": "FLUT",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 57.82,
-        "direction": "watch",
-        "short_volume_ratio": 0.563296,
-        "short_exempt_ratio": 0,
-        "short_volume": 496394.9376,
-        "short_exempt_volume": 0,
-        "total_volume": 881232.7169,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 63.51,
-        "direction": "elevated_activity",
-        "off_exchange_share": 0.504024,
-        "finra_total_volume": 881232.7169,
-        "consolidated_volume": 1748396,
-        "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
-      "ticker": "GRAB",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "high",
-      "coverage_ratio": 1,
-      "freshness": {
-        "daily_finra_short_volume": "daily",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": 0,
-        "direction": "muted",
-        "short_volume_ratio": 0.254303,
-        "short_exempt_ratio": 0.000249,
-        "short_volume": 6208053.285,
-        "short_exempt_volume": 6083,
-        "total_volume": 24412004.1292,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": 86.14,
-        "direction": "high_activity",
-        "off_exchange_share": 0.594567,
-        "finra_total_volume": 24412004.1292,
-        "consolidated_volume": 41058482,
-        "consolidated_volume_date": "2026-07-17",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
       "ticker": "AMH",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -19174,6 +19106,40 @@
         "finra_total_volume": 4157072.4268,
         "consolidated_volume": 8836894,
         "consolidated_volume_date": "2026-07-16",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "GRAB",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 0,
+        "direction": "muted",
+        "short_volume_ratio": 0.254303,
+        "short_exempt_ratio": 0.000249,
+        "short_volume": 6208053.285,
+        "short_exempt_volume": 6083,
+        "total_volume": 24412004.1292,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 86.14,
+        "direction": "high_activity",
+        "off_exchange_share": 0.594567,
+        "finra_total_volume": 24412004.1292,
+        "consolidated_volume": 41058482,
+        "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
@@ -19853,6 +19819,40 @@
         "off_exchange_share": 0.391542,
         "finra_total_volume": 1161837.8253,
         "consolidated_volume": 2967339,
+        "consolidated_volume_date": "2026-07-17",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "FLUT",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "high",
+      "coverage_ratio": 1,
+      "freshness": {
+        "daily_finra_short_volume": "daily",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": 57.82,
+        "direction": "watch",
+        "short_volume_ratio": 0.563296,
+        "short_exempt_ratio": 0,
+        "short_volume": 496394.9376,
+        "short_exempt_volume": 0,
+        "total_volume": 881232.7169,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": 63.51,
+        "direction": "elevated_activity",
+        "off_exchange_share": 0.504024,
+        "finra_total_volume": 881232.7169,
+        "consolidated_volume": 1748396,
         "consolidated_volume_date": "2026-07-17",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
@@ -22714,40 +22714,6 @@
       }
     },
     {
-      "ticker": "SATS",
-      "as_of": "2026-07-17",
-      "source_date": "20260717",
-      "confidence": "low",
-      "coverage_ratio": 0,
-      "freshness": {
-        "daily_finra_short_volume": "missing",
-        "consolidated_volume": "local_yf_history_1y"
-      },
-      "source_families": [
-        "FINRA Daily Short Sale Volume Files",
-        "local data/yf/finance history_1y volume"
-      ],
-      "short_pressure_proxy": {
-        "score_0_100": null,
-        "direction": "unavailable",
-        "short_volume_ratio": null,
-        "short_exempt_ratio": null,
-        "short_volume": null,
-        "short_exempt_volume": null,
-        "total_volume": null,
-        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
-      },
-      "off_exchange_activity_proxy": {
-        "score_0_100": null,
-        "direction": "unavailable",
-        "off_exchange_share": null,
-        "finra_total_volume": null,
-        "consolidated_volume": 23935943,
-        "consolidated_volume_date": "2026-06-26",
-        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
-      }
-    },
-    {
       "ticker": "SNA",
       "as_of": "2026-07-17",
       "source_date": "20260717",
@@ -23730,6 +23696,40 @@
         "finra_total_volume": 314052.56,
         "consolidated_volume": 916078,
         "consolidated_volume_date": "2026-07-16",
+        "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+      }
+    },
+    {
+      "ticker": "SATS",
+      "as_of": "2026-07-17",
+      "source_date": "20260717",
+      "confidence": "low",
+      "coverage_ratio": 0,
+      "freshness": {
+        "daily_finra_short_volume": "missing",
+        "consolidated_volume": "local_yf_history_1y"
+      },
+      "source_families": [
+        "FINRA Daily Short Sale Volume Files",
+        "local data/yf/finance history_1y volume"
+      ],
+      "short_pressure_proxy": {
+        "score_0_100": null,
+        "direction": "unavailable",
+        "short_volume_ratio": null,
+        "short_exempt_ratio": null,
+        "short_volume": null,
+        "short_exempt_volume": null,
+        "total_volume": null,
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      "off_exchange_activity_proxy": {
+        "score_0_100": null,
+        "direction": "unavailable",
+        "off_exchange_share": null,
+        "finra_total_volume": null,
+        "consolidated_volume": 23935943,
+        "consolidated_volume_date": "2026-06-26",
         "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
       }
     },
