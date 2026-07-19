@@ -49,4 +49,13 @@ for (const member of ["history", "symbols"]) {
   }
 }
 
+{
+  const weekly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-weekly.yml"), "utf8");
+  assert.match(
+    weekly,
+    /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-weekly\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/sp500\.json[\s\S]*?data\/slickcharts\/berkshire\.json/,
+    "weekly must opt into its always manifest stage while retaining all positional data paths",
+  );
+}
+
 console.log("test-slickcharts-attempt-workflows: ok");

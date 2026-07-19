@@ -22,6 +22,7 @@ const YARDENI_WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
 const EDGAR_WORKFLOW = ".github/workflows/fetch-edgar-filings.yml";
 const FDIC_WORKFLOW = ".github/workflows/fetch-fdic.yml";
 const SLICKCHARTS_DAILY_WORKFLOW = ".github/workflows/slickcharts-daily.yml";
+const SLICKCHARTS_WEEKLY_WORKFLOW = ".github/workflows/slickcharts-weekly.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -91,6 +92,16 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// Weekly SlickCharts has no degraded-data branch: its attempt shard and four
+// required checked-in outputs are one always-published manifest stage.
+{
+  const fixture = makeFixture({ workflow: SLICKCHARTS_WEEKLY_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=5 stage_selected=5 staged_index_total=5/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
 // Daily SlickCharts always persists the merged attempt/recovery state, while

@@ -125,6 +125,9 @@ jobs:
             weekly \
             "$RUNNER_TEMP/slickcharts-weekly-row.json" \
             "chore: update SlickCharts weekly data $(date -u +%Y-%m-%d)" \
+            --manifest-workflow .github/workflows/slickcharts-weekly.yml \
+            --manifest-always always_if_exists \
+            -- \
             data/slickcharts/sp500.json \
             data/slickcharts/magnificent7.json \
             data/slickcharts/etf.json \
