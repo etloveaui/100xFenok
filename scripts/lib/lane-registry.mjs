@@ -16,14 +16,21 @@
 import { createHash } from "node:crypto";
 import { canonicalJson } from "./json-canonical.mjs";
 
-export const LANE_REGISTRY_SCHEMA = "lane-registry/v1";
+export const LANE_REGISTRY_SCHEMA = "lane-registry/v2";
 export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"]);
 export const LANE_CLASSES = Object.freeze(["detection_floor", "auxiliary"]);
 export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "direct"]);
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
 export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
-export const WORKFLOW_CLASSES = Object.freeze(["platform_no_lane", "platform_central_reconciler"]);
+export const WORKFLOW_CLASSES = Object.freeze(["platform_no_lane", "platform_central_reconciler", "platform_publisher"]);
+export const COMMIT_PATH_KINDS = Object.freeze(["file", "directory", "glob", "dynamic_set"]);
+export const COMMIT_STAGE_KEYS = Object.freeze([
+  "always_if_exists",
+  "success_if_exists",
+  "success_verify_not_plan_if_exists",
+  "required_on_success",
+]);
 
 function fail(message) {
   throw new Error(`lane-registry: ${message}`);
@@ -600,6 +607,7 @@ const declared_exceptions = [
     reason: "ephemeral detection-floor report; referenced in workflow text but intentionally NOT committed (pinned by test-build-data-supply-detection-floor.mjs)",
     owner: "platform",
     may_be_absent: true,
+    public_sync: "exclude",
   },
   {
     path: "data/admin/lane-registry-projection.json",
@@ -612,6 +620,13 @@ const declared_exceptions = [
     kind: "file",
     reason: "public mirror of the #365 lane-metadata projection (metadata-only, KPI-mirror precedent); not a lane store",
     owner: "platform",
+  },
+  {
+    path: "data/admin/lane-commit-manifest.json",
+    kind: "file",
+    reason: "private deterministic workflow commit/routing manifest; generated from this registry and intentionally excluded from public sync and Update Manifest self-triggering",
+    owner: "platform",
+    public_sync: "exclude",
   },
   {
     path: "data/admin/alarm-state.json",
@@ -664,7 +679,229 @@ const workflow_classes = {
     reason: "central manifest reconciler (not a lane producer); commits only registry-declared lane artifacts and platform control-plane files",
     owner: "platform",
   },
+  ".github/workflows/build-stocks-analyzer.yml": {
+    class: "platform_central_reconciler",
+    reason: "platform-owned Stocks Analyzer and SEC 13F materialization publisher",
+    owner: "platform",
+  },
+  ".github/workflows/pipeline-failure-alarm.yml": {
+    class: "platform_central_reconciler",
+    reason: "platform-owned failure alarm state publisher; always/continue-on-error semantics are load-bearing",
+    owner: "platform",
+  },
 };
+
+// Structured workflow-scoped staging policy. This is the registry SSOT for the
+// generated manifest; workflows remain literal consumers until their individual
+// migration gates pass. The default policy preserves the existing flat shard
+// declaration for simple lanes, while the explicit overrides below retain
+// path-kind, conditional, dynamic, and exclusion semantics that a flat union
+// cannot represent.
+function commitSpec(path, kind, required = false) {
+  return { path, kind, required };
+}
+
+function pathKind(path) {
+  if (path.includes("*")) return "glob";
+  const basename = path.split("/").at(-1);
+  return basename.includes(".") ? "file" : "directory";
+}
+
+function defaultWorkflowPolicy(laneIds) {
+  const paths = laneIds
+    .flatMap((laneId) => lanes.find((laneValue) => laneValue.id === laneId)?.commit_shards ?? []);
+  const unique = [...new Set(paths)];
+  return {
+    lanes: [...laneIds],
+    stages: {
+      always_if_exists: unique.filter((pathValue) => pathValue.startsWith("data/admin/")).map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
+      success_if_exists: unique.filter((pathValue) => !pathValue.startsWith("data/admin/")).map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
+      success_verify_not_plan_if_exists: [],
+      required_on_success: [],
+    },
+    exclude: [],
+  };
+}
+
+function policy(lanesForWorkflow, stages, exclude = []) {
+  return {
+    lanes: [...lanesForWorkflow],
+    stages: {
+      always_if_exists: stages.always_if_exists ?? [],
+      success_if_exists: stages.success_if_exists ?? [],
+      success_verify_not_plan_if_exists: stages.success_verify_not_plan_if_exists ?? [],
+      required_on_success: stages.required_on_success ?? [],
+    },
+    exclude,
+  };
+}
+
+const workflow_policies = Object.fromEntries(
+  [...new Set(lanes.map((laneValue) => laneValue.owner_workflow).filter(Boolean))]
+    .map((workflowRel) => [
+      workflowRel,
+      defaultWorkflowPolicy(lanes.filter((laneValue) => laneValue.owner_workflow === workflowRel).map((laneValue) => laneValue.id)),
+    ]),
+);
+
+// Shared SlickCharts publisher callers have their own path policy. The helper
+// still owns the actual staging operation; these entries are shadow/check-only
+// until each caller is migrated independently.
+Object.assign(workflow_policies, {
+  ".github/workflows/slickcharts-weekly.yml": policy(["slickcharts"], {
+    always_if_exists: [
+      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/slickcharts/sp500.json", "file", true),
+      commitSpec("data/slickcharts/magnificent7.json", "file", true),
+      commitSpec("data/slickcharts/etf.json", "file", true),
+      commitSpec("data/slickcharts/berkshire.json", "file", true),
+    ],
+  }),
+  ".github/workflows/slickcharts-symbols.yml": policy(["slickcharts"], {
+    always_if_exists: [
+      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/slickcharts/symbols.json", "file", true),
+    ],
+  }),
+  ".github/workflows/slickcharts-history.yml": policy(["slickcharts"], {
+    always_if_exists: [
+      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/slickcharts/stocks-returns.json", "file", true),
+      commitSpec("data/slickcharts/stocks-dividends.json", "file", true),
+      commitSpec("data/slickcharts/stocks-dividends-recent.json", "file", true),
+      commitSpec("data/slickcharts/stocks-dividends-historical.json", "file", true),
+      commitSpec("data/slickcharts/stocks", "directory", true),
+    ],
+  }),
+  ".github/workflows/slickcharts-monthly.yml": policy(["slickcharts"], {
+    always_if_exists: [
+      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      ...[
+        "sp500-returns.json",
+        "sp500-returns-details.json",
+        "nasdaq100-returns.json",
+        "dowjones-returns.json",
+        "sp500-drawdown.json",
+        "btc-returns.json",
+        "eth-returns.json",
+        "sp500-performance.json",
+        "nasdaq100-performance.json",
+        "dowjones-performance.json",
+        "sp500-yield.json",
+        "nasdaq100-yield.json",
+        "dowjones-yield.json",
+        "sp500-analysis.json",
+        "nasdaq100-analysis.json",
+        "dowjones-analysis.json",
+        "sp500-marketcap.json",
+        "nasdaq100-ratio.json",
+        "nasdaq100.json",
+        "dowjones.json",
+        "inflation.json",
+      ].map((name) => commitSpec(`data/slickcharts/${name}`, "file", true)),
+      commitSpec("data/slickcharts/1929crash.json", "file", false),
+    ],
+  }),
+});
+
+// Rich producer policies whose current YAML uses directory/glob/dynamic
+// pathspecs or explicit restore exclusions.
+workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"], {
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/sentiment.json", "file"),
+    commitSpec("data/admin/sentiment/index.json", "file"),
+    commitSpec("data/admin/sentiment/current/*.json", "glob"),
+    commitSpec("data/admin/sentiment/lkg/*.json", "glob"),
+  ],
+  success_if_exists: [
+    commitSpec("data/sentiment/*.json", "glob"),
+    commitSpec("100xfenok-next/public/data/sentiment/*.json", "glob"),
+  ],
+});
+workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_short_volume", "occ_options_volume"], {
+  always_if_exists: [
+    "finra_short_volume",
+    "occ_options_volume",
+  ].flatMap((laneId) => lanes.find((laneValue) => laneValue.id === laneId)?.commit_shards ?? []).map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
+  success_verify_not_plan_if_exists: [
+    commitSpec("data/computed/fenok_flow_proxies*.json", "glob"),
+    commitSpec("data/computed/fenok_occ_options_availability.json", "file"),
+    commitSpec("data/computed/fenok_occ_options_volume*.json", "glob"),
+    commitSpec("data/computed/fenok_signal_lens_proxies*.json", "glob"),
+  ],
+});
+workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_batch_quote_history"], {
+  always_if_exists: [
+    commitSpec("data/yf/finance", "directory", true),
+    commitSpec("data/yf/quarter_closes.json", "file", true),
+    commitSpec("data/admin/yahoo-batch-quote-history", "directory", true),
+    commitSpec("100xfenok-next/public/data/yf/quarter_closes.json", "file", true),
+  ],
+}, [commitSpec("data/yf/finance/_summary.json", "file")]);
+workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe"], {
+  always_if_exists: [
+    commitSpec("data/stockanalysis", "directory", true),
+    commitSpec("data/yf/etf-details", "directory", true),
+    commitSpec("data/admin/data-supply-state/v1", "directory", true),
+    commitSpec("data/admin/stockanalysis-recovery", "directory", true),
+    commitSpec("data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "file"),
+    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "file"),
+    commitSpec("data/yf/finance", "dynamic_set"),
+  ],
+}, [
+  commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
+  commitSpec("data/yf/finance/_summary.json", "file"),
+]);
+workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy([], {
+  always_if_exists: [commitSpec("data/admin/fenok-edge-korea-krx-daily-index.json", "file", true)],
+});
+workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
+  always_if_exists: [
+    ...[
+      "data/global-scouter/core/stocks_analyzer.json",
+      "data/global-scouter/core/per_bands_index.json",
+      "data/global-scouter/core/slick_index.json",
+      "data/sec-13f/by_ticker.json",
+      "data/sec-13f/by_sector.json",
+      "data/sec-13f/summary.json",
+      "data/sec-13f/investors/*.json",
+      "data/sec-13f/analytics/consensus.json",
+      "data/sec-13f/analytics/ticker_aliases.json",
+      "data/sec-13f/analytics/trades_ranking.json",
+      "data/sec-13f/analytics/portfolio_views.json",
+      "data/sec-13f/analytics/guru_holders_index.json",
+      "data/global-scouter/core/revision_movers.json",
+      "data/damodaran/industry_benchmarks.json",
+      "data/calendar/prev-values.json",
+      "100xfenok-next/public/data/calendar/prev-values.json",
+      "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+      "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+      "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+      "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+      "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+      "100xfenok-next/public/data/global-scouter/README.md",
+      "100xfenok-next/public/data/global-scouter/schema.json",
+      "100xfenok-next/public/data/sec-13f/by_ticker.json",
+      "100xfenok-next/public/data/sec-13f/by_sector.json",
+      "100xfenok-next/public/data/sec-13f/summary.json",
+      "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+      "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
+      "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
+      "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+      "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+      "100xfenok-next/public/data/sec-13f/investors",
+    ].map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
+  ],
+}, [commitSpec("100xfenok-next/public/data/sec-13f/investors/griffin.json", "file")]);
+workflow_policies[".github/workflows/pipeline-failure-alarm.yml"] = policy([], {
+  always_if_exists: [
+    commitSpec("data/admin/alarm-state.json", "file"),
+    commitSpec("100xfenok-next/public/data/admin/alarm-state.json", "file"),
+  ],
+});
+workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
+  always_if_exists: [],
+});
 
 // --- Validation (fail-closed, mirrors the detection config's loader) ---------
 
@@ -701,6 +938,47 @@ function validatePathList(value, context, { allowEmpty = true } = {}) {
     if (!validRepoRelativePath(entry)) fail(`${context} has an unsafe path: ${String(entry)}`);
     if (seen.has(entry)) fail(`${context} duplicates ${entry}`);
     seen.add(entry);
+  }
+}
+
+function validateCommitSpec(specValue, context) {
+  exactKeys(specValue, ["path", "kind", "required"], context);
+  if (!validRepoRelativePath(specValue.path) || /[\u0000-\u001f\u007f]/.test(specValue.path)) {
+    fail(`${context}.path is unsafe`);
+  }
+  if (!COMMIT_PATH_KINDS.includes(specValue.kind)) fail(`${context}.kind is invalid`);
+  if (typeof specValue.required !== "boolean") fail(`${context}.required must be boolean`);
+}
+
+function validateWorkflowPolicy(policyValue, workflowRel, registry) {
+  const context = `workflow policy ${workflowRel}`;
+  exactKeys(policyValue, ["lanes", "stages", "exclude"], context);
+  if (!Array.isArray(policyValue.lanes)) fail(`${context}.lanes must be an array`);
+  const seenLanes = new Set();
+  for (const laneId of policyValue.lanes) {
+    if (typeof laneId !== "string" || !registry.lanes.some((laneValue) => laneValue.id === laneId)) {
+      fail(`${context}.lanes contains unknown lane ${String(laneId)}`);
+    }
+    if (seenLanes.has(laneId)) fail(`${context}.lanes duplicates ${laneId}`);
+    seenLanes.add(laneId);
+  }
+  exactKeys(policyValue.stages, COMMIT_STAGE_KEYS, `${context}.stages`);
+  for (const stage of COMMIT_STAGE_KEYS) {
+    const entries = policyValue.stages[stage];
+    if (!Array.isArray(entries)) fail(`${context}.stages.${stage} must be an array`);
+    const seenPaths = new Set();
+    for (const entry of entries) {
+      validateCommitSpec(entry, `${context}.stages.${stage}`);
+      if (seenPaths.has(entry.path)) fail(`${context}.stages.${stage} duplicates ${entry.path}`);
+      seenPaths.add(entry.path);
+    }
+  }
+  if (!Array.isArray(policyValue.exclude)) fail(`${context}.exclude must be an array`);
+  const seenExclusions = new Set();
+  for (const entry of policyValue.exclude) {
+    validateCommitSpec(entry, `${context}.exclude`);
+    if (seenExclusions.has(entry.path)) fail(`${context}.exclude duplicates ${entry.path}`);
+    seenExclusions.add(entry.path);
   }
 }
 
@@ -778,7 +1056,7 @@ function validateLaneRecord(laneValue) {
 }
 
 export function validateLaneRegistry(registry) {
-  exactKeys(registry, ["schema_version", "lanes", "declared_exceptions", "workflow_classes"], "registry");
+  exactKeys(registry, ["schema_version", "lanes", "declared_exceptions", "workflow_classes", "workflow_policies"], "registry");
   if (registry.schema_version !== LANE_REGISTRY_SCHEMA) fail("schema_version is invalid");
   if (!Array.isArray(registry.lanes) || registry.lanes.length === 0) fail("lanes must be a non-empty array");
   const seenIds = new Set();
@@ -800,9 +1078,14 @@ export function validateLaneRegistry(registry) {
   if (!Array.isArray(registry.declared_exceptions)) fail("declared_exceptions must be an array");
   const seenExceptions = new Set();
   for (const entry of registry.declared_exceptions) {
-    const expectedKeys = entry.may_be_absent === true
-      ? ["path", "kind", "reason", "owner", "may_be_absent"]
-      : ["path", "kind", "reason", "owner"];
+    const expectedKeys = [
+      "path",
+      "kind",
+      "reason",
+      "owner",
+      ...(entry.may_be_absent === true ? ["may_be_absent"] : []),
+      ...(entry.public_sync !== undefined ? ["public_sync"] : []),
+    ];
     exactKeys(entry, expectedKeys, `declared exception ${entry?.path ?? "<unknown>"}`);
     if (!validRepoRelativePath(entry.path)) fail(`declared exception path is invalid: ${entry.path}`);
     if (!["root", "file"].includes(entry.kind)) fail(`declared exception kind is invalid: ${entry.path}`);
@@ -810,6 +1093,9 @@ export function validateLaneRegistry(registry) {
     if (typeof entry.owner !== "string" || entry.owner.length === 0) fail(`declared exception owner is required: ${entry.path}`);
     if (entry.may_be_absent !== undefined && typeof entry.may_be_absent !== "boolean") {
       fail(`declared exception may_be_absent must be a boolean: ${entry.path}`);
+    }
+    if (entry.public_sync !== undefined && entry.public_sync !== "exclude") {
+      fail(`declared exception public_sync must be exclude when present: ${entry.path}`);
     }
     if (seenExceptions.has(entry.path)) fail(`duplicate declared exception ${entry.path}`);
     seenExceptions.add(entry.path);
@@ -823,6 +1109,23 @@ export function validateLaneRegistry(registry) {
     if (!WORKFLOW_CLASSES.includes(entry.class)) fail(`workflow class is invalid for ${workflowRel}`);
     if (typeof entry.reason !== "string" || entry.reason.length === 0) fail(`workflow class reason is required for ${workflowRel}`);
     if (typeof entry.owner !== "string" || entry.owner.length === 0) fail(`workflow class owner is required for ${workflowRel}`);
+  }
+  if (!registry.workflow_policies || typeof registry.workflow_policies !== "object" || Array.isArray(registry.workflow_policies)) {
+    fail("workflow_policies must be an object");
+  }
+  for (const [workflowRel, policyValue] of Object.entries(registry.workflow_policies)) {
+    if (!workflowRel.startsWith(".github/workflows/")) fail(`workflow_policies key must be a .github/workflows/ path: ${workflowRel}`);
+    validateWorkflowPolicy(policyValue, workflowRel, registry);
+  }
+  const expectedWorkflowKeys = new Set([
+    ...registry.lanes.map((laneValue) => laneValue.owner_workflow).filter(Boolean),
+    ...Object.values(registry.lanes).flatMap((laneValue) => Object.keys(laneValue.caller_workflows ?? {})),
+    ...Object.keys(registry.workflow_classes),
+  ]);
+  for (const workflowRel of expectedWorkflowKeys) {
+    if (!Object.hasOwn(registry.workflow_policies, workflowRel)) {
+      fail(`workflow policy missing for ${workflowRel}`);
+    }
   }
   return true;
 }
@@ -840,6 +1143,7 @@ const registry = {
   lanes,
   declared_exceptions,
   workflow_classes,
+  workflow_policies,
 };
 
 validateLaneRegistry(registry);

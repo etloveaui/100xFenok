@@ -24,6 +24,7 @@ export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
 
 export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze([
   "admin/data-supply-detection-floor.json",
+  "admin/lane-commit-manifest.json",
 ]);
 
 const MARKET_FACTS_TICKER_ROOT = "computed/market_facts/tickers";

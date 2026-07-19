@@ -86,7 +86,14 @@ export function checkWorkflowCommitShardsAgainstRegistry({
   const lanes = scope?.lanes ?? [];
   const workflowClass = registry.workflow_classes?.[workflowRel] ?? null;
   const scriptSources = scope?.script_sources ?? [];
-  const allowlist = extractWorkflowShardAllowlist(workflowText, { required: scriptSources.length === 0 });
+  // A declared platform workflow may legitimately publish only canonical or
+  // public paths (for example build-stocks-analyzer.yml), so the legacy admin
+  // extractor must not fail before the new full manifest gate can evaluate it.
+  // Lane-owned workflows and undeclared lane-less workflows retain the old
+  // fail-closed requirement.
+  const allowlist = extractWorkflowShardAllowlist(workflowText, {
+    required: scope === null && workflowClass === null ? scriptSources.length === 0 : false,
+  });
   if (scope === null && workflowClass === null) {
     return {
       ok: false,

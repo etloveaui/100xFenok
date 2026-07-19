@@ -10,7 +10,8 @@
 //     + admin_store of every privacy_class:"private" lane + non-admin
 //     canonical_outputs of private lanes whose public_mirror is empty;
 //   - excluded public data FILES (sync-public-data): declared exception files
-//     flagged may_be_absent (ephemeral, intentionally not committed);
+//     explicitly flagged public_sync:"exclude" (may_be_absent remains a
+//     compatibility shorthand for the historical detection-floor report);
 //   - forbidden private data-supply roots (mirror guard): declared exception
 //     roots + non-admin canonical_outputs of private lanes whose public_mirror
 //     is empty (lane admin stores are NOT here by design — they never reach
@@ -63,7 +64,7 @@ export function deriveExcludedPublicDataRoots(registry = LANE_REGISTRY) {
 export function deriveExcludedPublicDataFiles(registry = LANE_REGISTRY) {
   return uniqueSorted(
     registry.declared_exceptions
-      .filter((entry) => entry.kind === "file" && entry.may_be_absent === true)
+      .filter((entry) => entry.kind === "file" && (entry.public_sync === "exclude" || entry.may_be_absent === true))
       .map((entry) => stripDataPrefix(entry.path)),
   );
 }

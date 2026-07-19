@@ -565,8 +565,8 @@ try {
   );
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_FILES,
-    [DETECTION_FLOOR_REPORT],
-    "the exact-file exclusion allowlist must contain only the detection-floor report",
+    [DETECTION_FLOOR_REPORT, "admin/lane-commit-manifest.json"],
+    "the exact-file exclusion allowlist must include the detection-floor report and private lane commit manifest",
   );
   const sourceRoot = path.join(fixtureRoot, "data");
   const destinationRoot = path.join(fixtureRoot, "100xfenok-next", "public", "data");

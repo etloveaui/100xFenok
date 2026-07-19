@@ -1,0 +1,1645 @@
+{
+  "registry_digest": "62eefcef0e4bbbe425f139636fd2146e4fb68260b11dea41da694616bb84e32f",
+  "registry_schema": "lane-registry/v2",
+  "schema_version": "lane-commit-manifest/v1",
+  "update_manifest": {
+    "central_commit_paths": [
+      "data/computed/signals.json",
+      "data/computed/stock_action_index.json",
+      "data/computed/stock_action_summary.json",
+      "data/computed/fenok_signals.json",
+      "data/computed/fenok_signals_summary.json",
+      "data/computed/fenok_etf_signals.json",
+      "data/computed/fenok_etf_signals_summary.json",
+      "data/computed/etf_action_index.json",
+      "data/computed/fenok_etf_core_daily_basket_summary.json",
+      "data/computed/market_facts",
+      "data/computed/market_source_parity.json",
+      "data/computed/market_data_audit.json",
+      "data/computed/entity_graph.json",
+      "data/computed/entity_graph_stock_index.json",
+      "data/computed/entity_graph_stock_services.json",
+      "data/computed/market_structure_index.json",
+      "data/computed/rim-index/inputs.json",
+      "data/yf/finance/_summary.json",
+      "data/stockanalysis/backfill/history_gap_report_latest.json",
+      "data/slickcharts/discovery-summary.json",
+      "data/slickcharts/membership-changes.json",
+      "data/slickcharts/universe.json",
+      "data/admin/fenok-s1-stock-public-promotion-dry-run.json",
+      "data/admin/fenok-edge-coverage-index.json",
+      "data/admin/fenok-s0-finra-occ-mapping-ledger.json",
+      "data/admin/fenok-edge-etf-daily1y-readiness.json",
+      "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+      "data/admin/fenok-etf-core-daily-basket.json",
+      "data/admin/data-usage-manifest.json",
+      "data/admin/product-surface-coverage.json",
+      "data/admin/fenok-data-health-kpi.json",
+      "data/admin/lane-registry-projection.json",
+      "data/manifest.json",
+      "100xfenok-next/public/data/computed/signals.json",
+      "100xfenok-next/public/data/computed/stock_action_index.json",
+      "100xfenok-next/public/data/computed/stock_action_summary.json",
+      "100xfenok-next/public/data/computed/fenok_signals_summary.json",
+      "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
+      "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json",
+      "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
+      "100xfenok-next/public/data/computed/market_facts/index.json",
+      "100xfenok-next/public/data/computed/market_source_parity.json",
+      "100xfenok-next/public/data/computed/market_data_audit.json",
+      "100xfenok-next/public/data/computed/entity_graph.json",
+      "100xfenok-next/public/data/computed/entity_graph_stock_index.json",
+      "100xfenok-next/public/data/computed/entity_graph_stock_services.json",
+      "100xfenok-next/public/data/computed/market_structure_index.json",
+      "100xfenok-next/public/data/computed/rim-index/inputs.json",
+      "100xfenok-next/public/data/yf/finance",
+      "100xfenok-next/public/data/stockanalysis",
+      "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
+      "100xfenok-next/public/data/slickcharts",
+      "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+      "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json",
+      "100xfenok-next/public/data/admin/data-usage-manifest.json",
+      "100xfenok-next/public/data/admin/product-surface-coverage.json",
+      "100xfenok-next/public/data/admin/fenok-data-health-kpi.json",
+      "100xfenok-next/public/data/admin/lane-registry-projection.json",
+      "100xfenok-next/public/data/manifest.json",
+      "100xfenok-next/src/generated/static-route-manifest.ts"
+    ],
+    "materializations": [
+      {
+        "delete": true,
+        "destination": "100xfenok-next/public/data/slickcharts",
+        "mode": "rsync_tree",
+        "required": true,
+        "source": "data/slickcharts",
+        "trailing_slash": true
+      },
+      {
+        "delete": true,
+        "destination": "100xfenok-next/public/data/yf/finance",
+        "mode": "rsync_tree",
+        "required": true,
+        "source": "data/yf/finance",
+        "trailing_slash": true
+      },
+      {
+        "delete": true,
+        "destination": "100xfenok-next/public/data/stockanalysis",
+        "mode": "rsync_tree",
+        "required": true,
+        "source": "data/stockanalysis",
+        "trailing_slash": true
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/indices/nasdaq-giw-sox-constituents.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/computed/fenok_occ_options_availability.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/computed/market_facts/index.json",
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/computed/market_facts/index.json",
+        "trailing_slash": false
+      }
+    ],
+    "trigger_paths": [
+      "data/**",
+      "!data/yf/**",
+      "!data/admin/yahoo-batch-quote-history/**",
+      "!data/manifest.json",
+      "!data/computed/**",
+      "!data/admin/data-usage-manifest.json",
+      "!data/admin/product-surface-coverage.json",
+      "!data/admin/fenok-data-health-kpi.json",
+      "!data/admin/fenok-s1-stock-public-promotion-dry-run.json",
+      "!data/admin/fenok-edge-coverage-index.json",
+      "!data/admin/fenok-s0-finra-occ-mapping-ledger.json",
+      "!data/admin/fenok-edge-etf-daily1y-readiness.json",
+      "!data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+      "!data/admin/fenok-etf-core-daily-basket.json",
+      "!data/admin/fenok-edge-korea-krx-daily-index.json",
+      "!data/admin/data-supply-state/**",
+      "!data/admin/lane-registry-projection.json",
+      "!data/admin/lane-commit-manifest.json",
+      "!data/admin/alarm-state.json",
+      "!data/stockanalysis/**",
+      "!data/slickcharts/discovery-summary.json",
+      "!data/slickcharts/membership-changes.json",
+      "!data/slickcharts/universe.json",
+      "scripts/update-manifest.py",
+      "scripts/export-computed-signals.mjs",
+      "scripts/build-phase2-closeout-indexes.mjs",
+      "scripts/build-fenok-signals.mjs",
+      "scripts/build-slickcharts-discovery.mjs",
+      "scripts/scrapers/membership-tracker.py",
+      "scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs",
+      "scripts/build-fenok-edge-coverage-index.mjs",
+      "scripts/audit-fenok-s0-source-gaps.mjs",
+      "scripts/write-fenok-etf-daily1y-readiness.mjs",
+      "scripts/audit-fenok-stock-promotion-candidates.mjs",
+      "scripts/stock-action-score-core.mjs",
+      "scripts/build-rim-index.mjs",
+      "scripts/test-build-rim-index.mjs",
+      "scripts/fetch-nasdaq-giw-sox-constituents.mjs",
+      "scripts/generate-product-surface-coverage.mjs",
+      "scripts/build-fenok-data-health-kpi.mjs",
+      "scripts/lib/market-calendar.mjs",
+      "scripts/lib/kpi-runtime-projection.mjs",
+      "scripts/lib/kpi-runtime-slots.mjs",
+      "scripts/lib/kpi-contract-constants.mjs",
+      "tools/macro-monitor/shared/signals-core.mjs"
+    ]
+  },
+  "workflows": {
+    ".github/workflows/build-stocks-analyzer.yml": {
+      "exclude": [
+        {
+          "kind": "file",
+          "path": "100xfenok-next/public/data/sec-13f/investors/griffin.json",
+          "required": false
+        }
+      ],
+      "lanes": [],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/global-scouter/core/stocks_analyzer.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/global-scouter/core/per_bands_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/global-scouter/core/slick_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/by_ticker.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/by_sector.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/summary.json",
+            "required": false
+          },
+          {
+            "kind": "glob",
+            "path": "data/sec-13f/investors/*.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/analytics/consensus.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/analytics/ticker_aliases.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/analytics/trades_ranking.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/analytics/portfolio_views.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/analytics/guru_holders_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/global-scouter/core/revision_movers.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/damodaran/industry_benchmarks.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/calendar/prev-values.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/calendar/prev-values.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/global-scouter/README.md",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/global-scouter/schema.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/by_ticker.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/by_sector.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/sec-13f/investors",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fenok-edge-daily.yml": {
+      "exclude": [],
+      "lanes": [
+        "finra_short_volume",
+        "occ_options_volume"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/finra_short_volume.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/finra_short_volume/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/finra_short_volume/current/regsho_daily.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/finra_short_volume/lkg/regsho_daily.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/finra_short_volume/history/regsho_daily.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/occ_options_volume.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/occ_options_volume/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/occ_options_volume/current/occ_options_volume.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/occ_options_volume/lkg/occ_options_volume.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": [
+          {
+            "kind": "glob",
+            "path": "data/computed/fenok_flow_proxies*.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_occ_options_availability.json",
+            "required": false
+          },
+          {
+            "kind": "glob",
+            "path": "data/computed/fenok_occ_options_volume*.json",
+            "required": false
+          },
+          {
+            "kind": "glob",
+            "path": "data/computed/fenok_signal_lens_proxies*.json",
+            "required": false
+          }
+        ]
+      }
+    },
+    ".github/workflows/fenok-edge-krx-daily.yml": {
+      "exclude": [],
+      "lanes": [],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+            "required": true
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-defillama.yml": {
+      "exclude": [],
+      "lanes": [
+        "defillama_stablecoins"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/defillama_stablecoins/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/defillama_stablecoins/lkg/stablecoins.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/macro/stablecoins.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/stablecoins.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-edgar-filings.yml": {
+      "exclude": [],
+      "lanes": [
+        "edgar_filings"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/edgar_filings.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/edgar_filings/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/edgar_filings/current/edgar_filings.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/edgar_filings/lkg/edgar_filings.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "directory",
+            "path": "data/edgar",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/edgar-korean-summaries",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/edgar-korean-summaries",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fdic.yml": {
+      "exclude": [],
+      "lanes": [
+        "fdic_tier1"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/fdic_tier1.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fdic_tier1/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/macro/fdic-tier1.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/fdic-tier1.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fenok-private-options.yml": {
+      "exclude": [],
+      "lanes": [
+        "yahoo_private_options"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/yahoo_private_options.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/yahoo_private_options",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_yahoo_private_options_availability.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fred-banking.yml": {
+      "exclude": [],
+      "lanes": [
+        "fred_banking"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/fred_banking.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_banking/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_banking/lkg/daily.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_banking/lkg/weekly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_banking/lkg/monthly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_banking/lkg/quarterly.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/macro/fred-banking-daily.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/macro/fred-banking-weekly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/macro/fred-banking-monthly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/macro/fred-banking-quarterly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/fred-banking-daily.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/fred-banking-weekly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/fred-banking-monthly.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fred-macro.yml": {
+      "exclude": [],
+      "lanes": [
+        "fred_macro"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/fred_macro.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_macro/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_macro/lkg/fred_macro.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/macro/fred-macro.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/fred-macro.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fred-yardeni.yml": {
+      "exclude": [],
+      "lanes": [
+        "fred_yardeni"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/fred_yardeni.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_yardeni/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_yardeni/current/yardney_model.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fred_yardeni/lkg/yardney_model.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/yardney/yardney_model.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/yardney/yardney_model.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-nasdaq-giw-sox.yml": {
+      "exclude": [],
+      "lanes": [
+        "nasdaq_giw_sox"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/nasdaq_giw_sox.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/nasdaq_giw_sox/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/nasdaq_giw_sox/history/constituents.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/indices/nasdaq-giw-sox-constituents.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-sentiment.yml": {
+      "exclude": [],
+      "lanes": [
+        "sentiment"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/sentiment.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/sentiment/index.json",
+            "required": false
+          },
+          {
+            "kind": "glob",
+            "path": "data/admin/sentiment/current/*.json",
+            "required": false
+          },
+          {
+            "kind": "glob",
+            "path": "data/admin/sentiment/lkg/*.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "glob",
+            "path": "data/sentiment/*.json",
+            "required": false
+          },
+          {
+            "kind": "glob",
+            "path": "100xfenok-next/public/data/sentiment/*.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-stockanalysis.yml": {
+      "exclude": [
+        {
+          "kind": "file",
+          "path": "data/stockanalysis/backfill/history_gap_report_latest.json",
+          "required": false
+        },
+        {
+          "kind": "file",
+          "path": "data/yf/finance/_summary.json",
+          "required": false
+        }
+      ],
+      "lanes": [
+        "yahoo_etf_fallback",
+        "stockanalysis_etf_universe"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "directory",
+            "path": "data/stockanalysis",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/yf/etf-details",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/data-supply-state/v1",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/stockanalysis-recovery",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json",
+            "required": false
+          },
+          {
+            "kind": "dynamic_set",
+            "path": "data/yf/finance",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-treasury-tga.yml": {
+      "exclude": [],
+      "lanes": [
+        "treasury_tga"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/treasury_tga.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/treasury_tga/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/treasury_tga/lkg/tga.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/macro/tga.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/tga.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-yahoo-ticker.yml": {
+      "exclude": [],
+      "lanes": [
+        "yahoo_ticker_macro"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/yahoo-hourly-ticker",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/macro/yahoo-ticker.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/macro/yahoo-ticker.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-yf-finance.yml": {
+      "exclude": [
+        {
+          "kind": "file",
+          "path": "data/yf/finance/_summary.json",
+          "required": false
+        }
+      ],
+      "lanes": [
+        "yahoo_batch_quote_history"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "directory",
+            "path": "data/yf/finance",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/yf/quarter_closes.json",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/yahoo-batch-quote-history",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/yf/quarter_closes.json",
+            "required": true
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/pipeline-failure-alarm.yml": {
+      "exclude": [],
+      "lanes": [],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/alarm-state.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/alarm-state.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/slickcharts-daily.yml": {
+      "exclude": [],
+      "lanes": [
+        "slickcharts"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/slickcharts-daily-delivery",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/slickcharts/gainers.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/losers.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/treasury.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/currency.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/mortgage.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/slickcharts-history.yml": {
+      "exclude": [],
+      "lanes": [
+        "slickcharts"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/stocks-returns.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/stocks-dividends.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/stocks-dividends-recent.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/stocks-dividends-historical.json",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/slickcharts/stocks",
+            "required": true
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/slickcharts-monthly.yml": {
+      "exclude": [],
+      "lanes": [
+        "slickcharts"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-returns.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-returns-details.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/nasdaq100-returns.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/dowjones-returns.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-drawdown.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/btc-returns.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/eth-returns.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-performance.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/nasdaq100-performance.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/dowjones-performance.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-yield.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/nasdaq100-yield.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/dowjones-yield.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-analysis.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/nasdaq100-analysis.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/dowjones-analysis.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500-marketcap.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/nasdaq100-ratio.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/nasdaq100.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/dowjones.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/inflation.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/1929crash.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/slickcharts-symbols.yml": {
+      "exclude": [],
+      "lanes": [
+        "slickcharts"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/symbols.json",
+            "required": true
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/slickcharts-weekly.yml": {
+      "exclude": [],
+      "lanes": [
+        "slickcharts"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/sp500.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/magnificent7.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/etf.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/berkshire.json",
+            "required": true
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/update-manifest.yml": {
+      "exclude": [],
+      "lanes": [],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/computed/signals.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/stock_action_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/stock_action_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_signals.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_signals_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_etf_signals.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_etf_signals_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/etf_action_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_etf_core_daily_basket_summary.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/computed/market_facts",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/market_source_parity.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/market_data_audit.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/entity_graph.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/entity_graph_stock_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/entity_graph_stock_services.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/market_structure_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/rim-index/inputs.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/yf/finance/_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/stockanalysis/backfill/history_gap_report_latest.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/discovery-summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/membership-changes.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/universe.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-s1-stock-public-promotion-dry-run.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-edge-coverage-index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-s0-finra-occ-mapping-ledger.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-edge-etf-daily1y-readiness.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-etf-core-daily-basket.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-usage-manifest.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/product-surface-coverage.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-data-health-kpi.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/lane-registry-projection.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/manifest.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/signals.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/stock_action_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/stock_action_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/fenok_signals_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/market_facts/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/market_source_parity.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/market_data_audit.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/entity_graph.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/entity_graph_stock_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/entity_graph_stock_services.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/market_structure_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/rim-index/inputs.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/yf/finance",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/stockanalysis",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/slickcharts",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/data-usage-manifest.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/product-surface-coverage.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/fenok-data-health-kpi.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/lane-registry-projection.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/manifest.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/src/generated/static-route-manifest.ts",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    }
+  }
+}
