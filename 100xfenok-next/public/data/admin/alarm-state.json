@@ -1,9 +1,17 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-19T00:13:07.614Z",
-  "status": "clear",
-  "open_incident_count": 0,
-  "open_incidents": [],
+  "generated_at": "2026-07-19T01:07:18.958Z",
+  "status": "open",
+  "open_incident_count": 1,
+  "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker",
+      "streak": 3,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null
+    }
+  ],
   "watched_workflows": [
     {
       "file": "update-manifest.yml",
@@ -14,6 +22,15 @@
       "label": "Deploy Worker"
     }
   ],
-  "last_firing": null,
+  "last_firing": {
+    "run_id": "29668059857",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29668059857",
+    "observed_at": "2026-07-19T01:07:18.958Z",
+    "event": "workflow_run",
+    "workflows": [
+      "deploy-worker.yml"
+    ],
+    "title": "100xFenok pipeline job failure alarm"
+  },
   "last_resolved_at": null
 }
