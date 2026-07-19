@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLVI",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-19T01:03:49Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -122,6 +122,28 @@
       ],
       "candidate_count": 2
     },
+    "total_assets": {
+      "value": 17860000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:48:55Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 17860000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:48:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "trailing_pe": {
       "value": 28.469212,
       "source": "yf",
@@ -139,6 +161,55 @@
           "as_of": "2026-07-17",
           "fetched_at": "2026-07-18T00:03:52Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 11.93,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:48:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 11.93,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:48:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.35,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:48:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.35,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:48:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -164,9 +235,17 @@
           "fetched_at": "2026-07-18T00:03:52Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 3.42,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:48:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 8.46844178034864,
@@ -213,9 +292,17 @@
           "fetched_at": "2026-07-18T00:03:52Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 5.864,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:48:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
       "value": 19.389737888412697,
@@ -252,25 +339,139 @@
       "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 8,
+    "holdings_updated": "Jul 9, 2026",
+    "top_holdings": [
+      {
+        "symbol": "#XLV",
+        "name": "State Street Health Care Select Sector SPDR ETF",
+        "weight_pct": 103.32,
+        "shares": 113595,
+        "raw": {
+          "n": "State Street Health Care Select Sector SPDR ETF",
+          "s": "#XLV",
+          "as": "103.32%",
+          "sh": "113,595"
+        }
+      },
+      {
+        "symbol": "XLV260821C00170000",
+        "name": "STATE STREET HEALTH CARE SELEC AUG26 170 CALL",
+        "weight_pct": -0.01,
+        "shares": -1500,
+        "raw": {
+          "n": "STATE STREET HEALTH CARE SELEC AUG26 170 CALL",
+          "s": "XLV260821C00170000",
+          "as": "-0.01%",
+          "sh": "-1,500"
+        }
+      },
+      {
+        "symbol": "XLV260717C00162000",
+        "name": "STATE STREET HEALTH CARE SELEC JUL26 162 CALL",
+        "weight_pct": -0.01,
+        "shares": -1500,
+        "raw": {
+          "n": "STATE STREET HEALTH CARE SELEC JUL26 162 CALL",
+          "s": "XLV260717C00162000",
+          "as": "-0.01%",
+          "sh": "-1,500"
+        }
+      },
+      {
+        "symbol": "XLV260717C00158000",
+        "name": "STATE STREET HEALTH CARE SELEC JUL26 158 CALL",
+        "weight_pct": -0.04,
+        "shares": -1600,
+        "raw": {
+          "n": "STATE STREET HEALTH CARE SELEC JUL26 158 CALL",
+          "s": "XLV260717C00158000",
+          "as": "-0.04%",
+          "sh": "-1,600"
+        }
+      },
+      {
+        "symbol": "-",
+        "name": "US DOLLAR",
+        "weight_pct": -0.04,
+        "shares": -7634,
+        "raw": {
+          "n": "US DOLLAR",
+          "s": "-",
+          "as": "-0.04%",
+          "sh": "-7,634"
+        }
+      },
+      {
+        "symbol": "XLV260821C00168000",
+        "name": "STATE STREET HEALTH CARE SELEC AUG26 168 CALL",
+        "weight_pct": -0.09,
+        "shares": -9500,
+        "raw": {
+          "n": "STATE STREET HEALTH CARE SELEC AUG26 168 CALL",
+          "s": "XLV260821C00168000",
+          "as": "-0.09%",
+          "sh": "-9,500"
+        }
+      },
+      {
+        "symbol": "XLV260717C00159000",
+        "name": "STATE STREET HEALTH CARE SELEC JUL26 159 CALL",
+        "weight_pct": -0.1,
+        "shares": -5100,
+        "raw": {
+          "n": "STATE STREET HEALTH CARE SELEC JUL26 159 CALL",
+          "s": "XLV260717C00159000",
+          "as": "-0.10%",
+          "sh": "-5,100"
+        }
+      },
+      {
+        "symbol": "XLV260717C00157000",
+        "name": "STATE STREET HEALTH CARE SELEC JUL26 157 CALL",
+        "weight_pct": -3.15,
+        "shares": -94000,
+        "raw": {
+          "n": "STATE STREET HEALTH CARE SELEC JUL26 157 CALL",
+          "s": "XLV260717C00157000",
+          "as": "-3.15%",
+          "sh": "-94,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLVI.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLVI.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",

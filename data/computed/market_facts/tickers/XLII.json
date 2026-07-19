@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLII",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-19T01:03:49Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -122,6 +122,28 @@
       ],
       "candidate_count": 2
     },
+    "total_assets": {
+      "value": 8520000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:46:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 8520000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:46:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "trailing_pe": {
       "value": 30.902643,
       "source": "yf",
@@ -139,6 +161,55 @@
           "as_of": "2026-07-17",
           "fetched_at": "2026-07-18T00:03:49Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 12.14,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:46:23Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 12.14,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:46:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.35,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:46:23Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.35,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:46:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -164,9 +235,17 @@
           "fetched_at": "2026-07-18T00:03:49Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 0.7501,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:46:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 7.611177883898483,
@@ -213,9 +292,17 @@
           "fetched_at": "2026-07-18T00:03:49Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 11.374,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:46:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
       "value": 18.752761767752524,
@@ -252,25 +339,95 @@
       "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 5,
+    "holdings_updated": "Jul 9, 2026",
+    "top_holdings": [
+      {
+        "symbol": "#XLI",
+        "name": "State Street Industrial Select Sector SPDR ETF",
+        "weight_pct": 100.4,
+        "shares": 47284,
+        "raw": {
+          "n": "State Street Industrial Select Sector SPDR ETF",
+          "s": "#XLI",
+          "as": "100.40%",
+          "sh": "47,284"
+        }
+      },
+      {
+        "name": "Ssi Us Gov Money Market Class State Street Inst Us Gov",
+        "weight_pct": 0.02,
+        "shares": 1975,
+        "raw": {
+          "n": "Ssi Us Gov Money Market Class State Street Inst Us Gov",
+          "as": "0.02%",
+          "sh": "1,975"
+        }
+      },
+      {
+        "name": "State Street Industrial Select Jul26 190 Call",
+        "weight_pct": -0.03,
+        "shares": 4100,
+        "raw": {
+          "n": "State Street Industrial Select Jul26 190 Call",
+          "as": "-0.03%",
+          "sh": "4,100"
+        }
+      },
+      {
+        "name": "State Street Industrial Select Jul26 188 Call",
+        "weight_pct": -0.03,
+        "shares": 4100,
+        "raw": {
+          "n": "State Street Industrial Select Jul26 188 Call",
+          "as": "-0.03%",
+          "sh": "4,100"
+        }
+      },
+      {
+        "name": "State Street Industrial Select Jul26 186 Call",
+        "weight_pct": -0.37,
+        "shares": 39000,
+        "raw": {
+          "n": "State Street Industrial Select Jul26 186 Call",
+          "as": "-0.37%",
+          "sh": "39,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLII.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLII.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XRPZ",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-19T01:03:49Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -122,6 +122,28 @@
       ],
       "candidate_count": 2
     },
+    "total_assets": {
+      "value": 253360000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-19T00:52:32Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 253360000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:52:32Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
       "value": -10.490568628850973,
       "source": "yf.history_1y",
@@ -143,9 +165,17 @@
           "fetched_at": "2026-07-18T00:03:55Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -10.490566037735851,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:52:32Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": -25.595985138714443,
@@ -192,9 +222,17 @@
           "fetched_at": "2026-07-18T00:03:55Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -40.431943746860874,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-19T00:52:32Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
       "value": -51.798415454880754,
@@ -231,25 +269,53 @@
       "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 1,
+    "holdings_updated": "Jul 16, 2026",
+    "top_holdings": [
+      {
+        "name": "Xrp",
+        "weight_pct": 100.0,
+        "shares": 228047448,
+        "raw": {
+          "n": "Xrp",
+          "as": "100.00%",
+          "sh": "228,047,448"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XRPZ.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XRPZ.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",
