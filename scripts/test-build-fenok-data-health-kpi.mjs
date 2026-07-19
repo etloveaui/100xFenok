@@ -20,6 +20,7 @@ import {
   PUBLIC_RUNTIME_DENY_KEYS,
 } from "./lib/kpi-runtime-projection.mjs";
 import {
+  classifyRuntimeSlotRecoveries,
   classifyRuntimeSlots,
   publicationGateForRuntime,
   validateCronDeferrals,
@@ -3497,9 +3498,58 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
   }];
   const classification = classifyRuntimeSlots(runtime);
-  assert.equal(classification.status, "degraded");
-  assert.deepEqual(classification.recovered_missed_slot_keys, [miss]);
-  assert.deepEqual(classification.unrecovered_missed_slot_keys, []);
+  assert.deepEqual(classification, {
+    status: "degraded",
+    missed_slot_keys: [miss],
+    recovered_missed_slot_keys: [miss],
+    unrecovered_missed_slot_keys: [],
+    blocking_unrecovered_missed_slot_keys: [],
+    lane_local_unrecovered_missed_slot_keys: [],
+  }, "scheduled-slot classification output stays byte-for-byte unchanged");
+  assert.deepEqual(classifyRuntimeSlotRecoveries(runtime), [{
+    missed_slot_key: miss,
+    recovered_by: "scheduled_slot",
+  }], "scheduled recovery keeps its explicit evidence label");
+
+  const dispatchRuntime = structuredClone(runtime);
+  dispatchRuntime.slots.satisfied_slot_keys = [];
+  dispatchRuntime.successful_snapshot_history = [{
+    built_at: "2026-07-12T10:51:19.151Z", slot_key: null, run_id: "dispatch-recovery",
+    run_attempt: 1, workflow: "Update Manifest", status: "blocked", duration_ms: 30,
+  }];
+  assert.equal(classifyRuntimeSlots(dispatchRuntime).status, "blocked",
+    "a dispatch snapshot that is not ready cannot recover the miss");
+  assert.deepEqual(classifyRuntimeSlotRecoveries(dispatchRuntime), [],
+    "not-ready dispatch evidence is rejected");
+
+  dispatchRuntime.successful_snapshot_history[0].status = "ready";
+  assert.equal(classifyRuntimeSlots(dispatchRuntime).status, "degraded",
+    "a ready attempt-1 dispatch snapshot recovers the full-snapshot miss");
+  assert.deepEqual(classifyRuntimeSlotRecoveries(dispatchRuntime), [{
+    missed_slot_key: miss,
+    recovered_by: "dispatch_snapshot",
+  }], "dispatch recovery is never silently labeled as a scheduled slot");
+  assert.match(projectRuntime(dispatchRuntime, "2026-07-12T13:00:00.000Z").status_message, /dispatch_snapshot/,
+    "public runtime message names dispatch recovery evidence");
+  assert.match(publicationGateForRuntime(dispatchRuntime).status_message, /dispatch_snapshot/,
+    "publication-gate message names dispatch recovery evidence");
+  const dispatchErrors = [];
+  const dispatchWarnings = [];
+  checkV2Runtime(v2Doc(dispatchRuntime), { errors: dispatchErrors, warnings: dispatchWarnings },
+    "2026-07-12T13:00:00.000Z");
+  assert.deepEqual(dispatchErrors, [], "dispatch recovery satisfies the checker without weakening structural gates");
+  assert.ok(dispatchWarnings.some((message) => /dispatch_snapshot:1/.test(message)),
+    "checker warning names dispatch recovery evidence");
+
+  dispatchRuntime.successful_snapshot_history[0].run_attempt = 2;
+  assert.equal(classifyRuntimeSlots(dispatchRuntime).status, "blocked",
+    "dispatch retries do not weaken the run_attempt===1 bar");
+  dispatchRuntime.successful_snapshot_history[0].run_attempt = 1;
+  dispatchRuntime.successful_snapshot_history[0].built_at = "2026-07-12T02:29:59.999Z";
+  assert.equal(classifyRuntimeSlots(dispatchRuntime).status, "blocked",
+    "a dispatch snapshot built before the missed occurrence cannot recover it");
+  assert.deepEqual(classifyRuntimeSlotRecoveries(dispatchRuntime), [],
+    "pre-miss dispatch evidence is rejected");
 
   const pub = projectPublicKpi(v2Doc(runtime), "2026-07-12T13:00:00.000Z");
   assert.equal(pub.runtime.slot_status, "degraded");

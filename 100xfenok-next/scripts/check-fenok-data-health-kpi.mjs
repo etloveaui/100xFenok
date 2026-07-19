@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { projectPublicKpi, projectRuntime } from "../../scripts/lib/kpi-runtime-projection.mjs";
 import {
+  classifyRuntimeSlotRecoveries,
   classifyRuntimeSlots,
   isCanonicalRuntimeSlotKey,
   parseRuntimeSlotKey,
@@ -867,7 +868,12 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
     warnings.push(`incremental/owner-gated missed slot(s) remain lane-local degraded; deployment_blocking:false: ${slotClassification.lane_local_unrecovered_missed_slot_keys.join(", ")}`);
   }
   if (slotClassification.recovered_missed_slot_keys.length > 0) {
-    warnings.push(`${slotClassification.recovered_missed_slot_keys.length} retained missed slot(s) recovered by later authoritative ready full snapshot(s)`);
+    const recoveryEvidence = classifyRuntimeSlotRecoveries(runtime);
+    const dispatchCount = recoveryEvidence.filter((entry) => entry.recovered_by === "dispatch_snapshot").length;
+    const scheduledCount = recoveryEvidence.filter((entry) => entry.recovered_by === "scheduled_slot").length;
+    warnings.push(dispatchCount > 0
+      ? `${slotClassification.recovered_missed_slot_keys.length} retained missed slot(s) recovered by later authoritative ready full snapshot(s); recovery evidence dispatch_snapshot:${dispatchCount}, scheduled_slot:${scheduledCount}`
+      : `${slotClassification.recovered_missed_slot_keys.length} retained missed slot(s) recovered by later authoritative ready full snapshot(s)`);
   }
 
   // Producer freshness judged against the CHECKER'S CURRENT clock (not the doc's

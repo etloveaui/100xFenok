@@ -115,22 +115,32 @@ export function assertValidCronDeferrals(cronDeferrals, options) {
 function recoveryForMiss(miss, history, satisfied) {
   const parsedMiss = parseRuntimeSlotKey(miss);
   if (!parsedMiss) return null;
-  return history.find((entry) => {
+  for (const entry of history) {
     const parsedRecovery = parseRuntimeSlotKey(entry?.slot_key);
     const builtAtMs = new Date(entry?.built_at).getTime();
-    return isCanonicalTrackedSlot(parsedRecovery)
-      && parsedRecovery.workflow_file === parsedMiss.workflow_file
-      && parsedRecovery.occurrence_ms > parsedMiss.occurrence_ms
-      && satisfied.has(entry.slot_key)
-      && Number.isFinite(builtAtMs)
+    const readyAttempt = Number.isFinite(builtAtMs)
       && builtAtMs > parsedMiss.occurrence_ms
       && entry?.workflow === KPI_SNAPSHOT_WORKFLOW
       && entry?.status === "ready"
       && Number(entry?.run_attempt) === 1;
-  }) ?? null;
+    if (!readyAttempt) continue;
+
+    if (isCanonicalTrackedSlot(parsedRecovery)
+      && parsedRecovery.workflow_file === parsedMiss.workflow_file
+      && parsedRecovery.occurrence_ms > parsedMiss.occurrence_ms
+      && satisfied.has(entry.slot_key)) {
+      return { entry, recovered_by: "scheduled_slot" };
+    }
+
+    if (entry?.slot_key == null
+      && FULL_SNAPSHOT_RECOVERY_WORKFLOWS[parsedMiss.workflow_file] === entry.workflow) {
+      return { entry, recovered_by: "dispatch_snapshot" };
+    }
+  }
+  return null;
 }
 
-export function classifyRuntimeSlots(runtime) {
+export function classifyRuntimeSlotRecoveries(runtime) {
   const missed = Array.isArray(runtime?.slots?.missed_slot_keys)
     ? [...new Set(runtime.slots.missed_slot_keys)].sort()
     : [];
@@ -140,12 +150,19 @@ export function classifyRuntimeSlots(runtime) {
   const satisfied = new Set(Array.isArray(runtime?.slots?.satisfied_slot_keys)
     ? runtime.slots.satisfied_slot_keys
     : []);
-  const recovered = [];
-  const unrecovered = [];
-  for (const miss of missed) {
-    if (recoveryForMiss(miss, history, satisfied)) recovered.push(miss);
-    else unrecovered.push(miss);
-  }
+  return missed.flatMap((missedSlotKey) => {
+    const recovery = recoveryForMiss(missedSlotKey, history, satisfied);
+    return recovery ? [{ missed_slot_key: missedSlotKey, recovered_by: recovery.recovered_by }] : [];
+  });
+}
+
+export function classifyRuntimeSlots(runtime) {
+  const missed = Array.isArray(runtime?.slots?.missed_slot_keys)
+    ? [...new Set(runtime.slots.missed_slot_keys)].sort()
+    : [];
+  const recovered = classifyRuntimeSlotRecoveries(runtime).map((entry) => entry.missed_slot_key);
+  const recoveredSet = new Set(recovered);
+  const unrecovered = missed.filter((miss) => !recoveredSet.has(miss));
   const blockingUnrecovered = unrecovered.filter((miss) => {
     const parsed = parseRuntimeSlotKey(miss);
     return Boolean(parsed && FULL_SNAPSHOT_RECOVERY_WORKFLOWS[parsed.workflow_file]);
@@ -164,8 +181,10 @@ export function classifyRuntimeSlots(runtime) {
 
 export function publicationGateForRuntime(runtime) {
   const classification = classifyRuntimeSlots(runtime);
+  const recoveryEvidence = classifyRuntimeSlotRecoveries(runtime);
   const blocking = classification.blocking_unrecovered_missed_slot_keys;
   const publicationHalted = blocking.length > 0;
+  const dispatchRecoveryCount = recoveryEvidence.filter((entry) => entry.recovered_by === "dispatch_snapshot").length;
   return {
     status: publicationHalted ? "halted" : "open",
     publication_halted: publicationHalted,
@@ -173,6 +192,8 @@ export function publicationGateForRuntime(runtime) {
     blocking_unrecovered_missed_slot_keys: blocking,
     status_message: publicationHalted
       ? `Publication halted: unrecovered full-snapshot missed slot(s): ${blocking.join(", ")}`
-      : "Publication open: no unrecovered full-snapshot missed slots.",
+      : dispatchRecoveryCount > 0
+        ? `Publication open: no unrecovered full-snapshot missed slots. Recovery evidence includes dispatch_snapshot (${dispatchRecoveryCount}).`
+        : "Publication open: no unrecovered full-snapshot missed slots.",
   };
 }

@@ -13,7 +13,7 @@
  */
 
 import { PUBLIC_RUNTIME_DENY_KEYS } from "./kpi-contract-constants.mjs";
-import { classifyRuntimeSlots } from "./kpi-runtime-slots.mjs";
+import { classifyRuntimeSlotRecoveries, classifyRuntimeSlots } from "./kpi-runtime-slots.mjs";
 
 export const PUBLIC_PROJECTION_VERSION = "kpi_runtime_projection.v2";
 
@@ -98,11 +98,17 @@ export function projectRuntime(runtime, nowIso) {
   const builtAt = producerContext && producerContext.built_at ? producerContext.built_at : null;
   const hardMaxAgeHours = Number(cadence.hard_max_age_hours);
   const slotClassification = classifyRuntimeSlots(runtime);
+  const recoveryEvidence = classifyRuntimeSlotRecoveries(runtime);
   const missedSlotCount = slotClassification.missed_slot_keys.length;
   const recoveredMissedSlotCount = slotClassification.recovered_missed_slot_keys.length;
   const unrecoveredMissedSlotCount = slotClassification.unrecovered_missed_slot_keys.length;
   const blockingUnrecoveredMissedSlotCount = slotClassification.blocking_unrecovered_missed_slot_keys.length;
   const laneLocalUnrecoveredMissedSlotCount = slotClassification.lane_local_unrecovered_missed_slot_keys.length;
+  const dispatchRecoveryCount = recoveryEvidence.filter((entry) => entry.recovered_by === "dispatch_snapshot").length;
+  const scheduledRecoveryCount = recoveryEvidence.filter((entry) => entry.recovered_by === "scheduled_slot").length;
+  const recoverySuffix = dispatchRecoveryCount > 0
+    ? ` Recovery evidence: dispatch_snapshot:${dispatchRecoveryCount}, scheduled_slot:${scheduledRecoveryCount}.`
+    : "";
 
   let hardAgeOk = false;
   if (builtAt && Number.isFinite(hardMaxAgeHours)) {
@@ -119,8 +125,8 @@ export function projectRuntime(runtime, nowIso) {
       ? "No retained missed slots; the current producer snapshot is fresh."
       : slotStatus === "degraded"
         ? laneLocalUnrecoveredMissedSlotCount > 0
-          ? `${laneLocalUnrecoveredMissedSlotCount} retained missed slot(s) remain lane-local degradation for incremental/owner-gated workflow(s); deployment_blocking:false.${recoveredMissedSlotCount > 0 ? ` ${recoveredMissedSlotCount} other retained miss(es) recovered.` : ""}`
-          : `${recoveredMissedSlotCount} retained missed slot(s) recovered by later authoritative ready full snapshot(s).`
+          ? `${laneLocalUnrecoveredMissedSlotCount} retained missed slot(s) remain lane-local degradation for incremental/owner-gated workflow(s); deployment_blocking:false.${recoveredMissedSlotCount > 0 ? ` ${recoveredMissedSlotCount} other retained miss(es) recovered.${recoverySuffix}` : ""}`
+          : `${recoveredMissedSlotCount} retained missed slot(s) recovered by later authoritative ready full snapshot(s).${recoverySuffix}`
         : `Publication halted: ${blockingUnrecoveredMissedSlotCount} retained full-snapshot missed slot(s) have no later authoritative ready recovery.`;
 
   return {
