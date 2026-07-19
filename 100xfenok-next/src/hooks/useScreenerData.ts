@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
-import { loadFenokSignalsSummaryMap } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import {
+  loadFenokSignalsSummaryMap,
+  type FenokSignalsSummaryRecord,
+} from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
 import {
   getStockConnection,
   getStockServices,
@@ -50,6 +53,37 @@ function convictionCallFromRecord(
   if (score >= 70) return "집중";
   if (score >= 41) return "혼재";
   return "희석";
+}
+
+type FenokShortTermFields = Pick<
+  ScreenerStock,
+  | "fenokShortTermScore"
+  | "fenokShortTermConvictionScore"
+  | "fenokShortTermConvictionCall"
+  | "fenokShortTermCommonBasisScore"
+  | "fenokShortTermCommonBasisCall"
+  | "fenokShortTermInputCount"
+  | "fenokShortTermBasisCode"
+>;
+
+export function projectFenokShortTermFields(
+  fenokSignal: FenokSignalsSummaryRecord | null | undefined,
+): FenokShortTermFields {
+  return {
+    fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
+    fenokShortTermConvictionScore: fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
+    fenokShortTermConvictionCall: convictionCallFromRecord(
+      fenokSignal?.shortTermConvictionCall,
+      fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore,
+    ),
+    fenokShortTermCommonBasisScore: fenokSignal?.shortTermCommonBasisScore ?? null,
+    fenokShortTermCommonBasisCall: convictionCallFromRecord(
+      fenokSignal?.shortTermCommonBasisCall,
+      fenokSignal?.shortTermCommonBasisScore,
+    ),
+    fenokShortTermInputCount: fenokSignal?.shortTermInputCount ?? null,
+    fenokShortTermBasisCode: fenokSignal?.shortTermBasisCode ?? null,
+  };
 }
 
 const provider = new StaticStockAnalyzerDataProvider();
@@ -140,6 +174,7 @@ export function useScreenerData(): ScreenerDataResult {
         const connectionEntry = getStockConnection(connectionIndex, ticker);
         const servicesEntry = getStockServices(servicesIndex, ticker);
         const fenokSignal = fenokSignals?.get(tickerKey) ?? null;
+        const fenokShortTermFields = projectFenokShortTermFields(fenokSignal);
         const connectionCount = stockConnectionCount(connectionEntry);
         const serviceLinks = servicesEntry?.single_stock_etfs ?? [];
         const connection = connectionEntry ? {
@@ -204,12 +239,7 @@ export function useScreenerData(): ScreenerDataResult {
           fenokMarketScope: fenokSignal?.marketScope ?? null,
           fenokConvictionScore: fenokSignal?.convictionScore ?? null,
           fenokConvictionCall: convictionCallFromRecord(fenokSignal?.convictionCall, fenokSignal?.convictionScore),
-          fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
-          fenokShortTermConvictionScore: fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
-          fenokShortTermConvictionCall: convictionCallFromRecord(
-            fenokSignal?.shortTermConvictionCall,
-            fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore,
-          ),
+          ...fenokShortTermFields,
           fenokLongTermScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.longTermScore ?? fenokSignal?.convictionScore ?? null,
           fenokLongTermConvictionScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
           fenokLongTermConvictionCall: convictionCallFromRecord(

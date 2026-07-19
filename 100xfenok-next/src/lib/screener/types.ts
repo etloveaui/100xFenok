@@ -49,6 +49,10 @@ export interface ScreenerStock {
   fenokShortTermScore?: number | null;
   fenokShortTermConvictionScore?: number | null;
   fenokShortTermConvictionCall?: "집중" | "혼재" | "희석" | null;
+  fenokShortTermCommonBasisScore?: number | null;
+  fenokShortTermCommonBasisCall?: "집중" | "혼재" | "희석" | null;
+  fenokShortTermInputCount?: number | null;
+  fenokShortTermBasisCode?: string | null;
   fenokLongTermScore?: number | null;
   fenokLongTermConvictionScore?: number | null;
   fenokLongTermConvictionCall?: "집중" | "혼재" | "희석" | null;
