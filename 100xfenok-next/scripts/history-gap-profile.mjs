@@ -16,6 +16,14 @@ export function historyProfileKey(periods) {
     .join(",");
 }
 
+export function isCanonicalHistoryProfile(periods) {
+  return historyProfileKey(periods) === historyProfileKey(DAILY_1Y_HISTORY_PROFILE);
+}
+
+export function canonicalHistoryStateAfterRun(currentState, candidateState, periods) {
+  return isCanonicalHistoryProfile(periods) ? candidateState : currentState;
+}
+
 export function reportProfile(payload) {
   const periods = payload?.report_profile?.required_history_periods ?? payload?.required_history_periods;
   return {

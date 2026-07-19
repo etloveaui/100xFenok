@@ -2493,6 +2493,18 @@ def write_payload(rel_path: str, payload: dict, mirror_public: bool) -> None:
         write_json(PUBLIC_DIR / rel_path, payload)
 
 
+def write_canonical_incremental_plan(
+    payload: dict,
+    required_history_periods: tuple[str, ...],
+    history_gaps_only: bool,
+    mirror_public: bool,
+) -> bool:
+    if not is_daily_1y_history_gap_mode(required_history_periods, history_gaps_only):
+        return False
+    write_payload(INCREMENTAL_PLAN_REL_PATH, payload, mirror_public)
+    return True
+
+
 def validate_aware_timestamp(value, label: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} is missing")
@@ -5514,7 +5526,17 @@ def _main() -> None:
                 args.history_gaps_only,
             )
             if args.write_plan:
-                write_payload(INCREMENTAL_PLAN_REL_PATH, plan_payload, mirror_public)
+                wrote_plan = write_canonical_incremental_plan(
+                    plan_payload,
+                    required_history_periods,
+                    args.history_gaps_only,
+                    mirror_public,
+                )
+                if not wrote_plan:
+                    print(
+                        "[incremental-etf-backfill] skipped canonical plan write for non-default history profile",
+                        flush=True,
+                    )
             print(json.dumps(plan_payload, ensure_ascii=False, indent=2), flush=True)
             return
         etfs = planned_etfs

@@ -81,6 +81,25 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             branch.group("body"),
         )
 
+    def test_only_daily_1y_profile_requests_canonical_plan_write(self) -> None:
+        self.assertNotIn("--history-gaps-only --plan-only --write-plan", self.text)
+        self.assertIn(
+            'if [ "$INPUT_REQUIRED_HISTORY_PERIODS" = "daily_1y" ]; then ARGS="$ARGS --write-plan"; fi',
+            self.text,
+        )
+        self.assertIn(
+            'if [ "$REQUIRED_HISTORY_PERIODS" = "daily_1y" ]; then ARGS="$ARGS --write-plan"; fi',
+            self.text,
+        )
+
+    def test_bare_dispatch_defaults_to_canonical_daily_1y_profile(self) -> None:
+        required_periods_input = re.search(
+            r"required_history_periods:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
+        self.assertIsNotNone(required_periods_input)
+        self.assertIn("default: 'daily_1y'", required_periods_input.group("body"))
+
 
 if __name__ == "__main__":
     unittest.main()

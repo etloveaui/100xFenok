@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import path from "node:path";
 
 import { buildHistoryGapRecommendedDispatch } from "./stockanalysis-dispatch-status.mjs";
+import { canonicalHistoryStateAfterRun } from "./history-gap-profile.mjs";
 import { createEffectiveEtfDetailReader } from "../../scripts/effective-etf-detail-reader.mjs";
 import {
   classifyDaily1yShortHistory,
@@ -794,10 +795,16 @@ function main() {
   console.log(JSON.stringify(report, null, 2));
 
   if (WRITE_REPORT) {
-    writeJson(REPORT_PATH, report);
-    writeJson(PUBLIC_REPORT_PATH, report);
-    console.error(`wrote ${REPORT_PATH}`);
-    console.error(`wrote ${PUBLIC_REPORT_PATH}`);
+    const canonicalReport = readJsonOrNull(REPORT_PATH);
+    const nextCanonicalReport = canonicalHistoryStateAfterRun(canonicalReport, report, REQUIRED_PERIODS);
+    if (nextCanonicalReport === report) {
+      writeJson(REPORT_PATH, report);
+      writeJson(PUBLIC_REPORT_PATH, report);
+      console.error(`wrote ${REPORT_PATH}`);
+      console.error(`wrote ${PUBLIC_REPORT_PATH}`);
+    } else {
+      console.error(`skipped canonical history-gap report write for non-default profile: ${REPORT_PROFILE.key}`);
+    }
   }
 
   if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.fetchable) {

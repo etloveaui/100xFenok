@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import {
+  canonicalHistoryStateAfterRun,
   isDaily1yReport,
   isProfileConsistent,
   reportClassificationDate,
@@ -37,4 +38,25 @@ assert.equal(isProfileConsistent({
   report_profile: { ...report.report_profile, classification_as_of: "2026-07-10T00:00:00.001Z" },
 }), false);
 assert.equal(isProfileConsistent({ ...report, report_profile: undefined }), false);
+
+const canonicalState = {
+  report: { generated_at: "canonical-report", counts: { fetchable: 17 } },
+  plan: { generated_at: "canonical-plan", required_history_periods: ["daily_1y"], tickers: ["AAA"] },
+};
+const nonDefaultCandidate = {
+  report: { generated_at: "non-default-report", counts: { fetchable: 999 } },
+  plan: { generated_at: "non-default-plan", required_history_periods: ["monthly_3y", "monthly_5y"], tickers: ["BBB"] },
+};
+const canonicalCandidate = {
+  report: { generated_at: "next-canonical-report", counts: { fetchable: 23 } },
+  plan: { generated_at: "next-canonical-plan", required_history_periods: ["daily_1y"], tickers: ["CCC"] },
+};
+assert.deepStrictEqual(
+  canonicalHistoryStateAfterRun(canonicalState, nonDefaultCandidate, ["monthly_3y", "monthly_5y"]),
+  canonicalState,
+);
+assert.deepStrictEqual(
+  canonicalHistoryStateAfterRun(canonicalState, canonicalCandidate, ["daily_1y"]),
+  canonicalCandidate,
+);
 console.log("test-history-gap-profile: ok");

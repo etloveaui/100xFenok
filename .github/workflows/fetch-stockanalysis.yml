@@ -74,7 +74,7 @@ on:
       required_history_periods:
         description: 'Comma-separated history periods required for history gap selection'
         required: false
-        default: 'monthly_3y,monthly_5y'
+        default: 'daily_1y'
       yf_etf_fallback:
         description: 'Use Yahoo ETF/fund fallback when StockAnalysis ETF detail endpoints are 404'
         required: false
@@ -266,12 +266,13 @@ jobs:
             if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
           elif [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
-            ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"
+            ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only"
             PLAN_LIMIT="${INPUT_INCREMENTAL_ETF_LIMIT:-0}"
             if [ "$PLAN_LIMIT" = "120" ]; then PLAN_LIMIT="0"; fi
             ARGS="$ARGS --incremental-etf-limit $PLAN_LIMIT"
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
             if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+            if [ "$INPUT_REQUIRED_HISTORY_PERIODS" = "daily_1y" ]; then ARGS="$ARGS --write-plan"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
           elif [ "${INPUT_HISTORY_GAPS_ONLY:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --incremental-etf-backfill --incremental-etf-only --history-gaps-only"
@@ -327,8 +328,9 @@ jobs:
         run: |
           REQUIRED_HISTORY_PERIODS="${EFFECTIVE_REQUIRED_HISTORY_PERIODS:-${INPUT_REQUIRED_HISTORY_PERIODS:-}}"
           MAX_AGE_HOURS="${EFFECTIVE_INCREMENTAL_ETF_MAX_AGE_HOURS:-${INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS:-}}"
-          ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
+          ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --incremental-etf-limit 0"
           if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
+          if [ "$REQUIRED_HISTORY_PERIODS" = "daily_1y" ]; then ARGS="$ARGS --write-plan"; fi
           if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
           python3 scripts/fetch-stockanalysis.py $ARGS --no-public-mirror
 

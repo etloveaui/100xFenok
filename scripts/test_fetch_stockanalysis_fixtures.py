@@ -2296,6 +2296,57 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.PUBLIC_DIR = original_public_dir
 
+    def test_non_daily_profile_cannot_overwrite_canonical_incremental_plan(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                tmp_path = Path(tmp)
+                self.fetcher.OUT_DIR = tmp_path / "stockanalysis"
+                self.fetcher.PUBLIC_DIR = tmp_path / "public" / "stockanalysis"
+                canonical = {
+                    "generated_at": "canonical-plan",
+                    "required_history_periods": ["daily_1y"],
+                    "etfs": ["AAA"],
+                }
+                candidate = {
+                    "generated_at": "non-default-plan",
+                    "required_history_periods": ["monthly_3y", "monthly_5y"],
+                    "etfs": ["BBB"],
+                }
+                self.fetcher.write_payload(self.fetcher.INCREMENTAL_PLAN_REL_PATH, canonical, mirror_public=True)
+
+                wrote = self.fetcher.write_canonical_incremental_plan(
+                    candidate,
+                    ("monthly_3y", "monthly_5y"),
+                    history_gaps_only=True,
+                    mirror_public=True,
+                )
+
+                source_path = self.fetcher.OUT_DIR / self.fetcher.INCREMENTAL_PLAN_REL_PATH
+                public_path = self.fetcher.PUBLIC_DIR / self.fetcher.INCREMENTAL_PLAN_REL_PATH
+                self.assertFalse(wrote)
+                self.assertEqual(json.loads(source_path.read_text(encoding="utf-8")), canonical)
+                self.assertEqual(json.loads(public_path.read_text(encoding="utf-8")), canonical)
+
+                next_canonical = {
+                    "generated_at": "next-canonical-plan",
+                    "required_history_periods": ["daily_1y"],
+                    "etfs": ["CCC"],
+                }
+                wrote = self.fetcher.write_canonical_incremental_plan(
+                    next_canonical,
+                    ("daily_1y",),
+                    history_gaps_only=True,
+                    mirror_public=True,
+                )
+                self.assertTrue(wrote)
+                self.assertEqual(json.loads(source_path.read_text(encoding="utf-8")), next_canonical)
+                self.assertEqual(json.loads(public_path.read_text(encoding="utf-8")), next_canonical)
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
     def test_incremental_etf_backfill_skips_pending_ledger_cooldown(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
