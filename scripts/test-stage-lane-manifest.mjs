@@ -20,6 +20,7 @@ const YF_FINANCE_WORKFLOW = ".github/workflows/fetch-yf-finance.yml";
 const STOCKANALYSIS_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
 const YARDENI_WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
 const EDGAR_WORKFLOW = ".github/workflows/fetch-edgar-filings.yml";
+const FDIC_WORKFLOW = ".github/workflows/fetch-fdic.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -89,6 +90,21 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// Monthly FDIC recovery state and successful canonical/public outputs remain
+// optional so degraded evidence can still be committed without false failure.
+{
+  const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], FDIC_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+
+  const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=5/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // EDGAR's non-admin directory outputs use the default success stage, while

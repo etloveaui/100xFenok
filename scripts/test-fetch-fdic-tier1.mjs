@@ -389,6 +389,13 @@ function assertValidShard(shard) {
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes, ["fdic_tier1"], "the registry must attribute this lane to fetch-fdic.yml");
+  assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflowText, /--stage always_if_exists/);
+  assert.match(
+    workflowText,
+    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
+    "canonical and public FDIC outputs must be manifest-staged only on fetch success, alongside the legacy hand list",
+  );
 }
 
 console.log("test-fetch-fdic-tier1: ok");

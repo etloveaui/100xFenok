@@ -58,6 +58,11 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-fdic.yml \
+            --stage always_if_exists
           SHARD="data/admin/data-supply-state/detection-attempts/fdic_tier1.json"
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
@@ -69,6 +74,9 @@ jobs:
             git add -- data/admin/fdic_tier1/lkg/fdic_tier1.json
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-fdic.yml \
+              --stage success_if_exists
             git add -- data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json
           fi
           if git diff --staged --quiet; then
