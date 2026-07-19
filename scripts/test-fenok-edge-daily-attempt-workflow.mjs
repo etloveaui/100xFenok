@@ -65,6 +65,14 @@ assert.match(workflow, /node scripts\/test-fetch-fenok-finra-daily-private\.mjs/
 assert.match(workflow, /node scripts\/test-fetch-fenok-occ-options-volume\.mjs/);
 assert.match(workflow, /detection-attempts\/finra_short_volume\.json/);
 assert.match(workflow, /detection-attempts\/occ_options_volume\.json/);
+assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+assert.match(workflow, /--stage always_if_exists/);
+assert.match(workflow, /--stage success_verify_not_plan_if_exists/);
+assert.match(
+  workflow,
+  /if \[ "\$\{FENOK_EDGE_PLAN_ONLY:-false\}" != "true" \] && \[ "\$REFRESH_OUTCOME" = "success" \]; then[\s\S]*?--stage success_verify_not_plan_if_exists/,
+  "computed artifacts must be manifest-staged only after a non-plan successful refresh",
+);
 assert.match(workflow, /- name: Commit and push owned source artifacts\n\s+if: \$\{\{ always\(\) \}\}/);
 assert.doesNotMatch(workflow, /git add -A/);
 

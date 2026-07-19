@@ -164,6 +164,28 @@ assert.deepEqual(sentiment.stages.success_if_exists, [
 ]);
 assert.deepEqual(sentiment.exclude, []);
 
+const fenokEdgeDaily = manifest.workflows[".github/workflows/fenok-edge-daily.yml"];
+assert.deepEqual(fenokEdgeDaily.lanes, ["finra_short_volume", "occ_options_volume"]);
+assert.deepEqual(fenokEdgeDaily.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/finra_short_volume.json", required: false },
+  { kind: "file", path: "data/admin/finra_short_volume/index.json", required: false },
+  { kind: "file", path: "data/admin/finra_short_volume/current/regsho_daily.json", required: false },
+  { kind: "file", path: "data/admin/finra_short_volume/lkg/regsho_daily.json", required: false },
+  { kind: "file", path: "data/admin/finra_short_volume/history/regsho_daily.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/occ_options_volume.json", required: false },
+  { kind: "file", path: "data/admin/occ_options_volume/index.json", required: false },
+  { kind: "file", path: "data/admin/occ_options_volume/current/occ_options_volume.json", required: false },
+  { kind: "file", path: "data/admin/occ_options_volume/lkg/occ_options_volume.json", required: false },
+]);
+assert.deepEqual(fenokEdgeDaily.stages.success_if_exists, []);
+assert.deepEqual(fenokEdgeDaily.stages.success_verify_not_plan_if_exists, [
+  { kind: "glob", path: "data/computed/fenok_flow_proxies*.json", required: false },
+  { kind: "file", path: "data/computed/fenok_occ_options_availability.json", required: false },
+  { kind: "glob", path: "data/computed/fenok_occ_options_volume*.json", required: false },
+  { kind: "glob", path: "data/computed/fenok_signal_lens_proxies*.json", required: false },
+]);
+assert.deepEqual(fenokEdgeDaily.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

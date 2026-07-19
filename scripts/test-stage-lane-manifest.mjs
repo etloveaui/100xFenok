@@ -15,6 +15,7 @@ const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
 const WORKFLOW = ".github/workflows/fetch-defillama.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
+const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -22,7 +23,7 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function makeFixture({ workflow = WORKFLOW, includeSuccess = true } = {}) {
+function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage = "success_if_exists" } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "stage-lane-manifest-"));
   execFileSync("git", ["init", "-q", "--initial-branch=main"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
@@ -31,7 +32,7 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true } = {}) {
   writeJson(path.join(root, "data/admin/lane-commit-manifest.json"), manifest);
   const paths = {
     always: manifest.workflows[workflow].stages.always_if_exists.map((entry) => entry.path),
-    success: manifest.workflows[workflow].stages.success_if_exists.map((entry) => entry.path),
+    success: manifest.workflows[workflow].stages[successStage].map((entry) => entry.path),
   };
   const materialized = { always: [], success: [] };
   const materialize = (entries, output) => {
@@ -61,7 +62,7 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true } = {}) {
     }
   };
   materialize(manifest.workflows[workflow].stages.always_if_exists, materialized.always);
-  if (includeSuccess) materialize(manifest.workflows[workflow].stages.success_if_exists, materialized.success);
+  if (includeSuccess) materialize(manifest.workflows[workflow].stages[successStage], materialized.success);
   return { root, manifest, paths, materialized };
 }
 
@@ -96,6 +97,23 @@ function cached(root) {
     `${fixture.paths.always[1]}/fixture.json`,
     ...fixture.paths.success,
   ].sort());
+}
+
+// Multi-lane policy combines file recovery shards with computed globs and only
+// permits the computed stage after a successful, non-plan refresh.
+{
+  const fixture = makeFixture({ workflow: EDGE_WORKFLOW, successStage: "success_verify_not_plan_if_exists" });
+  const always = run(fixture.root, "always_if_exists", [], EDGE_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  const alwaysCount = fixture.materialized.always.length;
+  assert.match(always.stdout, new RegExp(`stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+
+  const success = run(fixture.root, "success_verify_not_plan_if_exists", [], EDGE_WORKFLOW);
+  assert.equal(success.status, 0, success.stderr);
+  const successCount = fixture.materialized.success.length;
+  assert.match(success.stdout, new RegExp(`stage_selected=${successCount} staged_index_total=${alwaysCount + successCount}`));
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Glob policy expands each matching file while the proof keeps selection and

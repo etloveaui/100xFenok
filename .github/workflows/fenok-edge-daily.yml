@@ -230,6 +230,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fenok-edge-daily.yml \
+            --stage always_if_exists
           # Public-safe detection attempt shards and LKG recovery state are committed
           # on every run so retry/recovery accounting survives across CI runs. FINRA
           # and OCC store freshness markers bound to their source payloads. Neither
@@ -247,6 +252,9 @@ jobs:
             if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
           done
           if [ "${FENOK_EDGE_PLAN_ONLY:-false}" != "true" ] && [ "$REFRESH_OUTCOME" = "success" ]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fenok-edge-daily.yml \
+              --stage success_verify_not_plan_if_exists
             git add -- \
               data/computed/fenok_flow_proxies*.json \
               data/computed/fenok_occ_options_availability.json \
