@@ -651,6 +651,13 @@ const declared_exceptions = [
     public_sync: "exclude",
   },
   {
+    path: "data/admin/damodaran-shadow-parity.json",
+    kind: "file",
+    reason: "private Damodaran shadow parity report; checker-only evidence with no canonical ownership or public mirror",
+    owner: "platform",
+    public_sync: "exclude",
+  },
+  {
     path: "data/admin/alarm-state.json",
     kind: "file",
     reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); committed by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",
@@ -691,6 +698,11 @@ const declared_exceptions = [
 // with no owning lane is legal ONLY via a static declaration here — the gate
 // fails closed on any other lane-less workflow instead of silently passing.
 const workflow_classes = {
+  ".github/workflows/fetch-damodaran-shadow.yml": {
+    class: "platform_no_lane",
+    reason: "shadow-only Damodaran parity checker; does not own or publish canonical Damodaran payloads",
+    owner: "platform",
+  },
   ".github/workflows/fenok-edge-krx-daily.yml": {
     class: "platform_no_lane",
     reason: "KRX stays owner-gated (permission-walled, not code-walled); the workflow commits only the declared-exception public-safe bridge index",
@@ -909,6 +921,9 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy([], {
     // Slice 1 public-safe aggregate index closes (owner grant 2026-07-19).
     commitSpec("data/computed/fenok-edge-korea-krx-index-daily.json", "file", true),
   ],
+});
+workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy([], {
+  always_if_exists: [commitSpec("data/admin/damodaran-shadow-parity.json", "file", true)],
 });
 workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
   always_if_exists: [

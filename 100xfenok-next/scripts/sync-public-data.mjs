@@ -26,6 +26,7 @@ export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
 
 export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze([
   "admin/data-supply-detection-floor.json",
+  "admin/damodaran-shadow-parity.json",
   "admin/lane-commit-manifest.json",
   // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes,
   // public_mirror:[]). Withheld from the public mirror; the fetch scripts

@@ -631,10 +631,11 @@ try {
     EXCLUDED_PUBLIC_DATA_FILES,
     [
       DETECTION_FLOOR_REPORT,
+      "admin/damodaran-shadow-parity.json",
       "admin/lane-commit-manifest.json",
       ...EXPECTED_PRIVATE_PROXY_FILES,
     ],
-    "the exact-file exclusion allowlist must include the detection-floor report, private lane commit manifest, and file-shaped private proxies",
+    "the exact-file exclusion allowlist must include all private flat admin reports and file-shaped private proxies",
   );
   const sourceRoot = path.join(fixtureRoot, "data");
   const destinationRoot = path.join(fixtureRoot, "100xfenok-next", "public", "data");

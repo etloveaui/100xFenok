@@ -32,6 +32,7 @@ const UPDATE_MANIFEST_TRIGGER_PATHS = [
   "!data/admin/data-usage-manifest.json",
   "!data/admin/product-surface-coverage.json",
   "!data/admin/fenok-data-health-kpi.json",
+  "!data/admin/damodaran-shadow-parity.json",
   "!data/admin/fenok-s1-stock-public-promotion-dry-run.json",
   "!data/admin/fenok-edge-coverage-index.json",
   "!data/admin/fenok-s0-finra-occ-mapping-ledger.json",
