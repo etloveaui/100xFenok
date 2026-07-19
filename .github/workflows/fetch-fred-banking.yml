@@ -70,6 +70,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           SHARD="data/admin/data-supply-state/detection-attempts/fred_banking.json"
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-fred-banking.yml \
+            --stage always_if_exists
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
           fi
@@ -86,6 +91,9 @@ jobs:
             fi
           done
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-fred-banking.yml \
+              --stage success_if_exists
             for CANONICAL_FILE in \
               data/macro/fred-banking-daily.json \
               data/macro/fred-banking-weekly.json \

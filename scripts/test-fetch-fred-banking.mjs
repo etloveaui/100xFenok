@@ -303,6 +303,10 @@ function assertValidShard(shard) {
   assert.match(workflow, /data\/admin\/fred_banking\/lkg\/quarterly\.json/);
   assert.match(workflow, /data\/macro\/fred-banking-monthly\.json/);
   assert.match(workflow, /100xfenok-next\/public\/data\/macro\/fred-banking-monthly\.json/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit and push owned FRED banking data\n\s+if: \$\{\{ always\(\) \}\}/);
 }
 

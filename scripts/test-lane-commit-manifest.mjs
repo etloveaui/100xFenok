@@ -87,6 +87,28 @@ assert.deepEqual(fredMacro.stages.success_if_exists.map((entry) => entry.path), 
 ]);
 assert.deepEqual(fredMacro.exclude, []);
 
+const fredBanking = manifest.workflows[".github/workflows/fetch-fred-banking.yml"];
+assert.deepEqual(fredBanking.lanes, ["fred_banking"]);
+assert.deepEqual(fredBanking.stages.always_if_exists.map((entry) => entry.path), [
+  "data/admin/data-supply-state/detection-attempts/fred_banking.json",
+  "data/admin/fred_banking/index.json",
+  "data/admin/fred_banking/lkg/daily.json",
+  "data/admin/fred_banking/lkg/weekly.json",
+  "data/admin/fred_banking/lkg/monthly.json",
+  "data/admin/fred_banking/lkg/quarterly.json",
+]);
+assert.deepEqual(fredBanking.stages.success_if_exists.map((entry) => entry.path), [
+  "data/macro/fred-banking-daily.json",
+  "data/macro/fred-banking-weekly.json",
+  "data/macro/fred-banking-monthly.json",
+  "data/macro/fred-banking-quarterly.json",
+  "100xfenok-next/public/data/macro/fred-banking-daily.json",
+  "100xfenok-next/public/data/macro/fred-banking-weekly.json",
+  "100xfenok-next/public/data/macro/fred-banking-monthly.json",
+  "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
+]);
+assert.deepEqual(fredBanking.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],
