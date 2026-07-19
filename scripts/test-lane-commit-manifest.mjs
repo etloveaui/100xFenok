@@ -337,6 +337,48 @@ assert.deepEqual(slickchartsHistory.stages.always_if_exists, [
 assert.deepEqual(slickchartsHistory.stages.success_if_exists, []);
 assert.deepEqual(slickchartsHistory.exclude, []);
 
+const buildStocksAnalyzer = manifest.workflows[".github/workflows/build-stocks-analyzer.yml"];
+assert.deepEqual(buildStocksAnalyzer.lanes, []);
+assert.deepEqual(buildStocksAnalyzer.stages.always_if_exists.map(({ kind, path: entryPath }) => `${kind}:${entryPath}`), [
+  "file:data/global-scouter/core/stocks_analyzer.json",
+  "file:data/global-scouter/core/per_bands_index.json",
+  "file:data/global-scouter/core/slick_index.json",
+  "file:data/sec-13f/by_ticker.json",
+  "file:data/sec-13f/by_sector.json",
+  "file:data/sec-13f/summary.json",
+  "glob:data/sec-13f/investors/*.json",
+  "file:data/sec-13f/analytics/consensus.json",
+  "file:data/sec-13f/analytics/ticker_aliases.json",
+  "file:data/sec-13f/analytics/trades_ranking.json",
+  "file:data/sec-13f/analytics/portfolio_views.json",
+  "file:data/sec-13f/analytics/guru_holders_index.json",
+  "file:data/global-scouter/core/revision_movers.json",
+  "file:data/damodaran/industry_benchmarks.json",
+  "file:data/calendar/prev-values.json",
+  "file:100xfenok-next/public/data/calendar/prev-values.json",
+  "file:100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+  "file:100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+  "file:100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+  "file:100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+  "file:100xfenok-next/public/data/global-scouter/core/slick_index.json",
+  "file:100xfenok-next/public/data/global-scouter/README.md",
+  "file:100xfenok-next/public/data/global-scouter/schema.json",
+  "file:100xfenok-next/public/data/sec-13f/by_ticker.json",
+  "file:100xfenok-next/public/data/sec-13f/by_sector.json",
+  "file:100xfenok-next/public/data/sec-13f/summary.json",
+  "file:100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+  "file:100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
+  "file:100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
+  "file:100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+  "file:100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+  "glob:100xfenok-next/public/data/sec-13f/investors/*.json",
+]);
+assert.ok(buildStocksAnalyzer.stages.always_if_exists.every((entry) => entry.required === false));
+assert.deepEqual(buildStocksAnalyzer.stages.success_if_exists, []);
+assert.deepEqual(buildStocksAnalyzer.exclude, [
+  { kind: "file", path: "100xfenok-next/public/data/sec-13f/investors/griffin.json", required: false },
+]);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

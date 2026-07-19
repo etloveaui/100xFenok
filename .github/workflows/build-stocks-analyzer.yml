@@ -80,6 +80,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/build-stocks-analyzer.yml \
+            --stage always_if_exists
           git add \
             data/global-scouter/core/stocks_analyzer.json \
             data/global-scouter/core/per_bands_index.json \

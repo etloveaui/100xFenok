@@ -959,7 +959,7 @@ workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
       "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
       "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
       "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-      "100xfenok-next/public/data/sec-13f/investors",
+      "100xfenok-next/public/data/sec-13f/investors/*.json",
     ].map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
   ],
 }, [commitSpec("100xfenok-next/public/data/sec-13f/investors/griffin.json", "file")]);

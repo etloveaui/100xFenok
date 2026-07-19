@@ -12,6 +12,15 @@ import { enumerateCommitCapableWorkflows } from "./check-lane-commit-manifest-in
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = buildLaneCommitManifest(LANE_REGISTRY);
 
+function sourceRepresentsSpec(sourceText, spec) {
+  if (sourceText.includes(spec.path)) return true;
+  if (spec.kind !== "glob") return false;
+  const directory = path.posix.dirname(spec.path);
+  const pattern = path.posix.basename(spec.path);
+  return sourceText.includes(directory)
+    && (sourceText.includes(`-name '${pattern}'`) || sourceText.includes(`-name "${pattern}"`));
+}
+
 for (const workflowRel of enumerateCommitCapableWorkflows()) {
   const workflowText = fs.readFileSync(path.join(REPO_ROOT, workflowRel), "utf8");
   const scriptSources = new Set();
@@ -26,7 +35,7 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
   for (const [stage, specs] of Object.entries(entry.stages)) {
     for (const spec of specs) {
       if (spec.kind === "dynamic_set") continue;
-      assert.ok(sourceText.includes(spec.path), `${workflowRel} ${stage} path is not present in workflow/script source: ${spec.path}`);
+      assert.ok(sourceRepresentsSpec(sourceText, spec), `${workflowRel} ${stage} path is not present in workflow/script source: ${spec.path}`);
     }
   }
   for (const spec of entry.exclude) {
