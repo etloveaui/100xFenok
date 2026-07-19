@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "TOT",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-19T00:04:33Z",
   "source_as_of": "2026-07-16",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -122,6 +122,28 @@
       ],
       "candidate_count": 2
     },
+    "total_assets": {
+      "value": 10060000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T23:43:51Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 10060000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:43:51Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "trailing_pe": {
       "value": 26.12035,
       "source": "yf",
@@ -139,6 +161,30 @@
           "as_of": "2026-07-16",
           "fetched_at": "2026-07-18T00:03:21Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.07,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T23:43:51Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.07,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:43:51Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -164,9 +210,17 @@
           "fetched_at": "2026-07-18T00:03:21Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -0.5810604777231916,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:43:51Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 7.537484686399738,
@@ -213,9 +267,17 @@
           "fetched_at": "2026-07-18T00:03:21Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 9.989,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:43:51Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
       "value": 17.750364774142724,
@@ -252,25 +314,77 @@
       "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 3,
+    "holdings_updated": "Jul 8, 2026",
+    "top_holdings": [
+      {
+        "symbol": "#ITOT",
+        "name": "iShares Core S&P Total U.S. Stock Market ETF",
+        "weight_pct": 99.93,
+        "shares": 60744,
+        "raw": {
+          "n": "iShares Core S&P Total U.S. Stock Market ETF",
+          "s": "#ITOT",
+          "as": "99.93%",
+          "sh": "60,744"
+        }
+      },
+      {
+        "symbol": "!MUTF/FXFXX",
+        "name": "First American Treasury Obligations Fund",
+        "weight_pct": 0.07,
+        "shares": 7083,
+        "raw": {
+          "n": "First American Treasury Obligations Fund",
+          "s": "!mutf/FXFXX",
+          "as": "0.07%",
+          "sh": "7,083"
+        }
+      },
+      {
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.0,
+        "shares": 93,
+        "raw": {
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.00%",
+          "sh": "93"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/TOT.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/TOT.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",

@@ -2,30 +2,25 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-18T22:54:45Z",
+  "generated_at": "2026-07-18T23:59:00Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation"
   },
   "counts": {
-    "tracked": 64,
-    "cooldown": 43,
+    "tracked": 60,
+    "cooldown": 41,
     "provider_coverage_gaps": 0,
     "updated": 0,
-    "cleared": 9
+    "cleared": 4
   },
   "updated": [],
   "cleared": [
-    "PCEB",
-    "PHYS",
-    "PSLV",
-    "RAAR",
-    "RAAY",
-    "RCLR",
-    "RCLY",
-    "RMHY",
-    "SFGV"
+    "SPPP",
+    "STXF",
+    "THYP",
+    "TOT"
   ],
   "entries": {
     "ACII": {
@@ -1376,16 +1371,6 @@
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
-    "SPPP": {
-      "ticker": "SPPP",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 9,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "STRC": {
       "ticker": "STRC",
       "last_attempt_utc": "2026-07-17T07:23:14Z",
@@ -1393,15 +1378,6 @@
       "failure_class": "hard_error",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "STXF": {
-      "ticker": "STXF",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
@@ -1448,15 +1424,6 @@
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
-    "THYP": {
-      "ticker": "THYP",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 2,
-      "next_attempt_after_utc": null,
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "TLG": {
       "ticker": "TLG",
       "last_attempt_utc": "2026-07-14T00:04:14Z",
@@ -1499,16 +1466,6 @@
       "next_attempt_after_utc": "2026-07-21T00:04:14Z",
       "last_status": "ok",
       "last_provider": "stockanalysis"
-    },
-    "TOT": {
-      "ticker": "TOT",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
     },
     "TPUT": {
       "ticker": "TPUT",

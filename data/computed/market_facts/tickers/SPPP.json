@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "SPPP",
-  "asset_type": "stock",
-  "generated_at": "2026-07-18T00:06:59Z",
+  "asset_type": "etf",
+  "generated_at": "2026-07-19T00:04:33Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -165,6 +165,28 @@
       ],
       "candidate_count": 1
     },
+    "beta": {
+      "value": 0.25,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-07-18T23:34:27Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.25,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
       "value": -9.55055954028611,
       "source": "yf.history_1y",
@@ -186,9 +208,17 @@
           "fetched_at": "2026-07-18T00:03:19Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -9.550561797752804,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": -22.08106727517201,
@@ -235,9 +265,17 @@
           "fetched_at": "2026-07-18T00:03:19Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -23.515439429928737,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
       "value": -0.46367440408066496,
@@ -263,6 +301,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 1.178,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 0.3091216,
           "source": "yf",
           "as_of": "2026-07-17",
@@ -271,28 +317,118 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
+    },
+    "return_5y_avg": {
+      "value": -6.865659722449912,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-18T23:34:27Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": -6.865659722449912,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_10y_avg": {
+      "value": 5.685,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-18T23:34:27Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 5.685,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_max_avg": {
+      "value": 2.284,
+      "source": "stockanalysis.detail.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-18T23:34:27Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 2.284,
+          "source": "stockanalysis.detail.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-18T23:34:27Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 0,
+    "holdings_updated": "Oct 31, 2025",
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/SPPP.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/SPPP.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "stockanalysis:strict_unenrolled",
     "field_source_policy": {
       "price": [
         "yf",
