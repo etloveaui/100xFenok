@@ -616,6 +616,7 @@ const Renderer = (function() {
   }
 
   function renderEtfCoverageGapAudit(coverage) {
+    if (!coverage) return '';
     const samples = coverage?.samples || {};
     const counts = coverage?.counts || {};
     const reasonSummary = coverage?.missing_reason_summary || counts.missing_failure_breakdown || {};
@@ -628,7 +629,9 @@ const Renderer = (function() {
     const cooldown = sampleTickers(statusSamples.retry_cooldown, samples.missing_retry_cooldown, 24);
     const retryPending = sampleTickers(statusSamples.retry_pending, samples.missing_retry_pending, 24);
     const yahooFallback = Array.isArray(samples.yahoo_fallback) ? samples.yahoo_fallback.filter(Boolean).slice(0, 36) : [];
-    if (!missing.length && !yahooFallback.length) return '';
+    const rawMissingCount = Number(counts.missing_detail_files ?? missing.length);
+    const missingCount = Number.isFinite(rawMissingCount) ? rawMissingCount : missing.length;
+    const coverageComplete = missingCount === 0;
 
     return `
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
@@ -637,8 +640,8 @@ const Renderer = (function() {
             <h3 class="font-semibold text-gray-800">ETF 상세 누락 샘플</h3>
             <p class="text-xs text-gray-500 mt-1">coverage/etf_detail.json · 신규 ETF/ETF 목록/스크리너 기준</p>
           </div>
-          <span class="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">
-            ${Formatters.formatNumber(counts.missing_detail_files || missing.length, 0)}개 누락
+          <span class="shrink-0 rounded-full border px-2 py-1 text-xs font-bold ${coverageComplete ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}">
+            ${coverageComplete ? '누락 0건 · 완료' : `${Formatters.formatNumber(missingCount, 0)}개 누락`}
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -670,7 +673,9 @@ const Renderer = (function() {
           </div>
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          이 항목들은 서로 배타적인 합계가 아니라 진단용 분류입니다. 실제 누락 수는 위의 상세 누락 수를 기준으로 보고, ETF 페이지는 먼저 요약 정보로 열리며 다음 수집 또는 보조 가격 상세가 갱신되면 이 분류도 자동으로 바뀝니다.
+          ${coverageComplete
+            ? '상세 누락 0건으로 현재 후보 전체 수집이 완료되었습니다. 아래 진단 항목은 현재 0건 상태를 유지합니다.'
+            : '이 항목들은 서로 배타적인 합계가 아니라 진단용 분류입니다. 실제 누락 수는 위의 상세 누락 수를 기준으로 보고, ETF 페이지는 먼저 요약 정보로 열리며 다음 수집 또는 보조 가격 상세가 갱신되면 이 분류도 자동으로 바뀝니다.'}
         </p>
       </section>
     `;

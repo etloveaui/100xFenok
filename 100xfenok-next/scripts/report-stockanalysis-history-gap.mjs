@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
+import { buildHistoryGapRecommendedDispatch } from "./stockanalysis-dispatch-status.mjs";
 import { createEffectiveEtfDetailReader } from "../../scripts/effective-etf-detail-reader.mjs";
 import {
   classifyDaily1yShortHistory,
@@ -781,36 +781,12 @@ function main() {
       etf_denominator: Number(denominators.etf || 0),
       stockanalysis_universe_denominator: Number(denominators.stockanalysis_universe || 0),
     },
-    recommended_dispatch: fetchableGapRows.length > 0 && REQUIRED_PERIODS.join(",") !== "daily_1y"
-      ? {
-          status: DISPATCH_STATUS.MANUAL_DISPATCH_RECOMMENDED,
-          workflow: "fetch-stockanalysis.yml",
-          inputs: {
-            history_gaps_only: "true",
-            required_history_periods: REQUIRED_PERIODS.join(","),
-            incremental_etf_limit: "120",
-          },
-          note: "Default multi-year required-history gaps are not the daily 1Y scheduled catch-up lane; external manual dispatch still requires explicit owner approval.",
-        }
-      : scoredDaily1yFetchableRows.length > 0
-        ? {
-            status: DISPATCH_STATUS.SCHEDULED_BACKFILL_ACTIVE,
-            workflow: "fetch-stockanalysis.yml",
-            schedule: "50 22 * * 1-5",
-            schedule_kst: "Tue-Sat 07:50",
-            inputs: {
-              history_gaps_only: "true",
-              required_history_periods: "daily_1y",
-              incremental_etf_limit: "120",
-            },
-            note: "The weekday scheduled lane drains scored ETF daily 1Y continuity gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate.",
-          }
-        : {
-            status: DISPATCH_STATUS.NOT_RECOMMENDED,
-            workflow: "fetch-stockanalysis.yml",
-            inputs: null,
-            note: "No current scored ETF daily 1Y gap is immediately fetchable. Remaining gaps are inception-limited or recent terminal provider-limited states that the scheduled lane will revisit as they age or cooldown expires.",
-          },
+    recommended_dispatch: buildHistoryGapRecommendedDispatch({
+      fetchableRequiredHistory: fetchableGapRows.length,
+      fetchableTickers: fetchableGapRows.map((row) => row.ticker),
+      requiredHistoryPeriods: REQUIRED_PERIODS,
+      scoredDaily1yFetchable: scoredDaily1yFetchableRows.length,
+    }),
   };
   report.report_profile.generated_at = report.generated_at;
   report.report_profile.classification_as_of = report.classification_as_of;

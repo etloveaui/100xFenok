@@ -69,6 +69,18 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("exit 64", self.text)
         self.assertIn('--natural-recovery-kinds $NATURAL_RECOVERY_KINDS', self.text)
 
+    def test_history_gap_dispatch_forwards_explicit_ticker_shards(self) -> None:
+        branch = re.search(
+            r'elif \[ "\$\{INPUT_HISTORY_GAPS_ONLY:-false\}" = "true" \]; then(?P<body>.*?)\n\s*else',
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(branch)
+        self.assertIn(
+            'if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi',
+            branch.group("body"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

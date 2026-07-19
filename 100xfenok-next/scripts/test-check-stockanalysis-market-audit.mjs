@@ -23,7 +23,10 @@ import {
   assertStockCandidatePair,
 } from "./smoke-stockanalysis-routes.mjs";
 import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
-import { DISPATCH_STATUS } from "./stockanalysis-dispatch-status.mjs";
+import {
+  buildHistoryGapRecommendedDispatch,
+  DISPATCH_STATUS,
+} from "./stockanalysis-dispatch-status.mjs";
 
 let passed = 0;
 const ok = (label) => { passed += 1; console.log(`  ok - ${label}`); };
@@ -98,6 +101,35 @@ console.log("# stockanalysis market-audit history-gap dispatch fixtures");
   ok("(j) stock-only run with etfs_requested=0 keeps the latest ETF refresh card visible");
 }
 
+// A successful zero-missing coverage result is still reportable state. The renderer
+// must keep the checker-pinned diagnostics visible and name completion explicitly.
+{
+  const html = renderMarketAuditHtml({
+    coverage: {
+      counts: {
+        candidate_total: 5480,
+        covered_detail_files: 5480,
+        missing_detail_files: 0,
+        coverage_pct: 100,
+        yahoo_fallback_files: 0,
+        missing_by_source: {
+          new_etfs: 0,
+          etf_universe: 0,
+          etf_screener: 0,
+        },
+      },
+      missing_reason_summary: {},
+      missing_status_summary: {},
+      samples: { missing: [], yahoo_fallback: [] },
+    },
+  });
+  for (const label of ["ETF 상세 누락 샘플", "ETF로 인식되지 않음", "다음 수집 후보", "보조 가격 임시 적용"]) {
+    assert.ok(html.includes(label), `zero-missing coverage must keep ${label} visible`);
+  }
+  assert.ok(html.includes("누락 0건 · 완료"), "zero-missing coverage must name the completed state honestly");
+  ok("(j2) zero-missing coverage keeps pinned diagnostics as an honest completed empty state");
+}
+
 // (a) Branch-B — the exact GOLI-drain state: full-scan fetchable_required=0 while SCORED
 // daily_1y continuity gaps remain, status scheduled_backfill_active. Must PASS.
 {
@@ -129,6 +161,38 @@ console.log("# stockanalysis market-audit history-gap dispatch fixtures");
   const multiYear = run(baseReport({ periods: ["monthly_1y"], fetchable: 2, status: DISPATCH_STATUS.MANUAL_DISPATCH_RECOMMENDED, inputs: { history_gaps_only: "true", required_history_periods: "monthly_1y" } }));
   assert.equal(multiYear.length, 0, `multi-year manual dispatch if-branch must pass, got: ${multiYear.join("; ")}`);
   ok("(d) fetchable_required>0 if-branch unaffected (daily_1y + multi-year) -> PASSES");
+}
+
+// (d2) The generator must not confuse the narrower scored subset with the full
+// daily_1y fetchable queue. The latter needs explicit owner-gated shards because
+// the scheduled selector consumes only the exact scored-ETF plan.
+{
+  const fetchableTickers = Array.from({ length: 205 }, (_, index) => `ETF${String(index + 1).padStart(3, "0")}`);
+  const dispatch = buildHistoryGapRecommendedDispatch({
+    fetchableRequiredHistory: fetchableTickers.length,
+    fetchableTickers,
+    requiredHistoryPeriods: ["daily_1y"],
+    scoredDaily1yFetchable: 0,
+  });
+  assert.equal(dispatch.status, DISPATCH_STATUS.MANUAL_DISPATCH_RECOMMENDED);
+  assert.equal(dispatch.inputs.history_gaps_only, "true");
+  assert.equal(dispatch.inputs.required_history_periods, "daily_1y");
+  assert.equal(dispatch.dispatch_plan.status, "ready");
+  assert.equal(dispatch.dispatch_plan.single_writer, true);
+  assert.equal(dispatch.dispatch_plan.shard_size, 100);
+  assert.deepEqual(dispatch.dispatch_plan.shards.map((shard) => shard.ticker_count), [100, 100, 5]);
+  assert.deepEqual(
+    dispatch.dispatch_plan.shards.flatMap((shard) => shard.inputs.etfs.split(",")),
+    fetchableTickers,
+  );
+  const errors = run(baseReport({
+    fetchable: fetchableTickers.length,
+    scoredDailyFetchable: 0,
+    status: dispatch.status,
+    inputs: dispatch.inputs,
+  }));
+  assert.deepEqual(errors, [], `full daily_1y fetchable queue must emit auditable manual inputs: ${errors.join("; ")}`);
+  ok("(d2) full daily_1y queue -> explicit <=100 ticker single-writer shards");
 }
 
 // (e) Drift guard: any status outside the shared enum hard-fails loudly.
