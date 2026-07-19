@@ -464,6 +464,7 @@ function runConfigAndFixtureChecks() {
     "edgar_filings",
     "finra_short_volume",
     "occ_options_volume",
+    "apewisdom_attention",
   ], "only attempt-proven lanes are live");
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);

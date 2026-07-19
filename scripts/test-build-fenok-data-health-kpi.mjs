@@ -548,10 +548,22 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "edgar_filings",
     "finra_short_volume",
     "occ_options_volume",
+    "apewisdom_attention",
   ];
   assert.deepEqual(liveConfigs.map((item) => item.id), liveLaneIds);
   const report = (laneId = null, overrides = {}) => {
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
+    // The canonical baseline keeps ApeWisdom honestly unobserved because its
+    // fixture has no attempt row. Adapter unit cases need an all-ready live
+    // projection, so synthesize only that row and keep aggregates coherent.
+    const ape = value.lanes.find((item) => item.id === "apewisdom_attention");
+    ape.status = "ready";
+    ape.reason = "ok";
+    ape.endpoint = { status: "ready", reason: "ok", observed_at: value.generated_at };
+    value.counts.ready += 1;
+    value.counts.unobserved -= 1;
+    value.counts.producer_members_ready += 1;
+    value.counts.producer_members_unobserved -= 1;
     if (laneId !== null) {
       const index = value.lanes.findIndex((item) => item.id === laneId);
       value.lanes[index] = { ...value.lanes[index], ...overrides };
@@ -1456,12 +1468,13 @@ console.log("# KPI v2 runtime self-proof fixtures");
     "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
   ]);
   const { root, public: pub } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 25);
+  assert.equal(root.totals.lanes, 26);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);
-    assert.equal(mapped.status, "ready");
-    assert.equal(mapped.reason, "ok");
+    const baselineUnobserved = laneConfig.id === "apewisdom_attention";
+    assert.equal(mapped.status, baselineUnobserved ? "degraded" : "ready");
+    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : "ok");
     assert.equal(mapped.artifact.source_as_of, sourceRow.artifact.source_as_of);
     assert.equal(mapped.deployment_blocking, false);
     assert.equal(root.deployment_integrity.blockers.some((item) => item.lane_id === laneConfig.id), false);

@@ -540,13 +540,13 @@ const lanes = [
     // run, so there is no upstream payload to promote — republishing a stale
     // computed file as "recovery" would serve stale attention as current. The
     // honest attempt shard is the detection-floor evidence; admin_store is
-    // reserved (private-withheld) for future recovery state. Enforcement stays
-    // shadow until cc flips after a real committed attempt shard.
+    // reserved (private-withheld) for future recovery state. Flip evidence:
+    // committed shard 06df6f18be from scheduled run 29691115685 (DEC-266).
     owner_workflow: ".github/workflows/fetch-fenok-apewisdom.yml",
     store_kind: "marker",
     lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "apewisdom" },
-    enforcement: "shadow",
+    enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/apewisdom_attention",
     detection_attempt: attemptShard("apewisdom_attention"),
