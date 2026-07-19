@@ -294,6 +294,35 @@ assert.deepEqual(slickchartsSymbols.stages.always_if_exists, [
 ]);
 assert.deepEqual(slickchartsSymbols.stages.success_if_exists, []);
 assert.deepEqual(slickchartsSymbols.exclude, []);
+const slickchartsMonthly = manifest.workflows[".github/workflows/slickcharts-monthly.yml"];
+assert.deepEqual(slickchartsMonthly.lanes, ["slickcharts"]);
+assert.deepEqual(slickchartsMonthly.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/slickcharts/sp500-returns.json", required: true },
+  { kind: "file", path: "data/slickcharts/sp500-returns-details.json", required: true },
+  { kind: "file", path: "data/slickcharts/nasdaq100-returns.json", required: true },
+  { kind: "file", path: "data/slickcharts/dowjones-returns.json", required: true },
+  { kind: "file", path: "data/slickcharts/sp500-drawdown.json", required: true },
+  { kind: "file", path: "data/slickcharts/btc-returns.json", required: true },
+  { kind: "file", path: "data/slickcharts/eth-returns.json", required: true },
+  { kind: "file", path: "data/slickcharts/sp500-performance.json", required: true },
+  { kind: "file", path: "data/slickcharts/nasdaq100-performance.json", required: true },
+  { kind: "file", path: "data/slickcharts/dowjones-performance.json", required: true },
+  { kind: "file", path: "data/slickcharts/sp500-yield.json", required: true },
+  { kind: "file", path: "data/slickcharts/nasdaq100-yield.json", required: true },
+  { kind: "file", path: "data/slickcharts/dowjones-yield.json", required: true },
+  { kind: "file", path: "data/slickcharts/sp500-analysis.json", required: true },
+  { kind: "file", path: "data/slickcharts/nasdaq100-analysis.json", required: true },
+  { kind: "file", path: "data/slickcharts/dowjones-analysis.json", required: true },
+  { kind: "file", path: "data/slickcharts/sp500-marketcap.json", required: true },
+  { kind: "file", path: "data/slickcharts/nasdaq100-ratio.json", required: true },
+  { kind: "file", path: "data/slickcharts/nasdaq100.json", required: true },
+  { kind: "file", path: "data/slickcharts/dowjones.json", required: true },
+  { kind: "file", path: "data/slickcharts/inflation.json", required: true },
+  { kind: "file", path: "data/slickcharts/1929crash.json", required: false },
+]);
+assert.deepEqual(slickchartsMonthly.stages.success_if_exists, []);
+assert.deepEqual(slickchartsMonthly.exclude, []);
 
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [

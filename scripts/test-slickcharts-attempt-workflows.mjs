@@ -71,6 +71,14 @@ for (const member of ["history", "symbols"]) {
   );
   const singleAttempt = symbols.slice(symbols.indexOf("- name: Commit symbols attempt"));
   assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol attempt must remain shard-only");
+  const monthly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-monthly.yml"), "utf8");
+  assert.match(
+    monthly,
+    /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-monthly\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?"\$\{paths\[@\]\}"/,
+    "monthly must opt into its always manifest stage while retaining the dynamic positional-path array",
+  );
+  assert.match(monthly, /paths=\([\s\S]*?data\/slickcharts\/inflation\.json[\s\S]*?\)/);
+  assert.match(monthly, /paths\+=\(data\/slickcharts\/1929crash\.json\)/);
 }
 
 console.log("test-slickcharts-attempt-workflows: ok");

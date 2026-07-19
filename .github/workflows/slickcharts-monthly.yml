@@ -317,4 +317,7 @@ jobs:
             monthly \
             "$RUNNER_TEMP/slickcharts-monthly-row.json" \
             "chore: update SlickCharts monthly data $(date -u +%Y-%m-%d)" \
+            --manifest-workflow .github/workflows/slickcharts-monthly.yml \
+            --manifest-always always_if_exists \
+            -- \
             "${paths[@]}"

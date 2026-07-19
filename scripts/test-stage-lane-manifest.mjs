@@ -24,6 +24,7 @@ const FDIC_WORKFLOW = ".github/workflows/fetch-fdic.yml";
 const SLICKCHARTS_DAILY_WORKFLOW = ".github/workflows/slickcharts-daily.yml";
 const SLICKCHARTS_WEEKLY_WORKFLOW = ".github/workflows/slickcharts-weekly.yml";
 const SLICKCHARTS_SYMBOLS_WORKFLOW = ".github/workflows/slickcharts-symbols.yml";
+const SLICKCHARTS_MONTHLY_WORKFLOW = ".github/workflows/slickcharts-monthly.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -102,6 +103,13 @@ function cached(root) {
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
   assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+// Monthly SlickCharts stages the attempt shard, 21 required outputs, and the
+// optional one-off 1929 crash output through one always-published stage.
+{
+  const fixture = makeFixture({ workflow: SLICKCHARTS_MONTHLY_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=23 stage_selected=23 staged_index_total=23/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
