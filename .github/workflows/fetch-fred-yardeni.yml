@@ -71,6 +71,11 @@ jobs:
           # (freshness marker + retained LKG copy + recovery index) are committed on
           # every run so retry/recovery accounting survives across CI runs. These
           # carry no FRED bond-yield components.
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-fred-yardeni.yml \
+            --stage always_if_exists
           for SHARD in \
             data/admin/data-supply-state/detection-attempts/fred_yardeni.json \
             data/admin/fred_yardeni/index.json \
@@ -79,6 +84,9 @@ jobs:
             if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
           done
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-fred-yardeni.yml \
+              --stage success_if_exists
             git add -- \
               data/yardney/yardney_model.json \
               100xfenok-next/public/data/yardney/yardney_model.json

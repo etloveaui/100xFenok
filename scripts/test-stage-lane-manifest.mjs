@@ -18,6 +18,7 @@ const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
 const YF_FINANCE_WORKFLOW = ".github/workflows/fetch-yf-finance.yml";
 const STOCKANALYSIS_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
+const YARDENI_WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -87,6 +88,21 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// Weekly Yardeni recovery state is always optional, and public/canonical
+// outputs are selected only by the workflow's successful outcome branch.
+{
+  const fixture = makeFixture({ workflow: YARDENI_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], YARDENI_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+
+  const success = run(fixture.root, "success_if_exists", [], YARDENI_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=6/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // StockAnalysis combines four required directories, optional attempt shards,

@@ -216,6 +216,20 @@ assert.deepEqual(stockanalysis.exclude, [
   { kind: "file", path: "data/yf/finance/_summary.json", required: false },
 ]);
 
+const fredYardeni = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"];
+assert.deepEqual(fredYardeni.lanes, ["fred_yardeni"]);
+assert.deepEqual(fredYardeni.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/fred_yardeni.json", required: false },
+  { kind: "file", path: "data/admin/fred_yardeni/index.json", required: false },
+  { kind: "file", path: "data/admin/fred_yardeni/current/yardney_model.json", required: false },
+  { kind: "file", path: "data/admin/fred_yardeni/lkg/yardney_model.json", required: false },
+]);
+assert.deepEqual(fredYardeni.stages.success_if_exists, [
+  { kind: "file", path: "data/yardney/yardney_model.json", required: false },
+  { kind: "file", path: "100xfenok-next/public/data/yardney/yardney_model.json", required: false },
+]);
+assert.deepEqual(fredYardeni.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

@@ -420,6 +420,13 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes, ["fred_yardeni"], "the registry must attribute this lane to fetch-fred-yardeni.yml");
+  assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflowText, /--stage always_if_exists/);
+  assert.match(
+    workflowText,
+    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
+    "canonical and public Yardeni outputs must be manifest-staged only on success, alongside the legacy hand list",
+  );
 }
 
 console.log("test-build-feno-yardeni-lkg-recovery: ok");
