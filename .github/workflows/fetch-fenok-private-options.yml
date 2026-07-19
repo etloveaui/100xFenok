@@ -65,9 +65,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           ATTEMPT="data/admin/data-supply-state/detection-attempts/yahoo_private_options.json"
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-fenok-private-options.yml \
+            --stage always_if_exists
           if [[ -f "$ATTEMPT" ]]; then git add -- "$ATTEMPT"; fi
           if [[ -d data/admin/yahoo_private_options ]]; then git add -- data/admin/yahoo_private_options; fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-fenok-private-options.yml \
+              --stage success_if_exists
             git add -- \
               data/computed/fenok_yahoo_private_options_availability.json \
               100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json

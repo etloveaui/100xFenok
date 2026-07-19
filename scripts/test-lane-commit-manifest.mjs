@@ -122,6 +122,26 @@ assert.deepEqual(nasdaqGiwSox.stages.success_if_exists.map((entry) => entry.path
 ]);
 assert.deepEqual(nasdaqGiwSox.exclude, []);
 
+const privateOptions = manifest.workflows[".github/workflows/fetch-fenok-private-options.yml"];
+assert.deepEqual(privateOptions.lanes, ["yahoo_private_options"]);
+assert.deepEqual(privateOptions.stages.always_if_exists, [
+  {
+    kind: "file",
+    path: "data/admin/data-supply-state/detection-attempts/yahoo_private_options.json",
+    required: false,
+  },
+  {
+    kind: "directory",
+    path: "data/admin/yahoo_private_options",
+    required: false,
+  },
+]);
+assert.deepEqual(privateOptions.stages.success_if_exists.map((entry) => entry.path), [
+  "data/computed/fenok_yahoo_private_options_availability.json",
+  "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
+]);
+assert.deepEqual(privateOptions.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],
