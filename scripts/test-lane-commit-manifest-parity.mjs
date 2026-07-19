@@ -11,6 +11,14 @@ import { enumerateCommitCapableWorkflows } from "./check-lane-commit-manifest-in
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = buildLaneCommitManifest(LANE_REGISTRY);
+const UPDATE_MANIFEST_WORKFLOW = ".github/workflows/update-manifest.yml";
+const UPDATE_MANIFEST_CENTRAL_HELPER = "scripts/stage-update-manifest-central.mjs";
+const UPDATE_MANIFEST_CENTRAL_DIRECTORIES = [
+  "data/computed/market_facts",
+  "100xfenok-next/public/data/yf/finance",
+  "100xfenok-next/public/data/stockanalysis",
+  "100xfenok-next/public/data/slickcharts",
+];
 
 function sourceRepresentsSpec(sourceText, spec) {
   if (sourceText.includes(spec.path)) return true;
@@ -33,6 +41,14 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
   const sourceText = [workflowText, ...[...scriptSources].map((source) => fs.readFileSync(path.join(REPO_ROOT, source), "utf8"))].join("\n");
   const entry = manifest.workflows[workflowRel];
   for (const [stage, specs] of Object.entries(entry.stages)) {
+    if (workflowRel === UPDATE_MANIFEST_WORKFLOW && stage === "always_if_exists") {
+      assert.deepEqual(specs.map((spec) => spec.path), manifest.update_manifest.central_commit_paths);
+      assert.deepEqual(specs.filter((spec) => spec.kind === "directory").map((spec) => spec.path), UPDATE_MANIFEST_CENTRAL_DIRECTORIES);
+      assert.equal(specs.filter((spec) => spec.kind === "file").length, 56);
+      assert.equal(specs.every((spec) => spec.required === false), true);
+      assert.match(workflowText, /node scripts\/stage-update-manifest-central\.mjs --(?:check|stage)/);
+      continue;
+    }
     for (const spec of specs) {
       if (spec.kind === "dynamic_set") continue;
       assert.ok(sourceRepresentsSpec(sourceText, spec), `${workflowRel} ${stage} path is not present in workflow/script source: ${spec.path}`);
@@ -45,13 +61,15 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
   }
 }
 
-const updateManifestText = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/update-manifest.yml"), "utf8");
+const updateManifestText = fs.readFileSync(path.join(REPO_ROOT, UPDATE_MANIFEST_WORKFLOW), "utf8");
 for (const triggerPath of manifest.update_manifest.trigger_paths) {
   assert.ok(updateManifestText.includes(triggerPath), `update-manifest trigger path is not represented in YAML: ${triggerPath}`);
 }
-for (const pathValue of manifest.update_manifest.central_commit_paths) {
-  const text = updateManifestText;
-  assert.ok(text.includes(pathValue), `update-manifest central path is not represented in YAML: ${pathValue}`);
-}
+const centralHelperText = fs.readFileSync(path.join(REPO_ROOT, UPDATE_MANIFEST_CENTRAL_HELPER), "utf8");
+assert.match(centralHelperText, /manifest\.update_manifest\.central_commit_paths/);
+assert.match(centralHelperText, /buildLaneCommitManifest\(\)\.update_manifest\.central_commit_paths/);
+assert.match(centralHelperText, /central_commit_paths must contain exactly 60 unique paths/);
+assert.match(updateManifestText, /stage-update-manifest-central\.mjs --check/);
+assert.match(updateManifestText, /stage-update-manifest-central\.mjs --stage/);
 
-console.log("test-lane-commit-manifest-parity: ok (all declared concrete paths represented in current producer surfaces)");
+console.log("test-lane-commit-manifest-parity: ok (declared paths represented by literal or exact manifest-driven consumers)");
