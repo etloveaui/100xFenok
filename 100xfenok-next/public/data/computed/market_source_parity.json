@@ -1,21 +1,21 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-07-19T09:39:55Z",
+  "generated_at": "2026-07-19T10:40:13Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
-    "inspected_ticker_files": 6754,
+    "inspected_ticker_files": 6755,
     "fields": 19,
     "multi_candidate_fields": 26099,
     "divergence_rows": 26096,
     "percent_scale_warnings": 16,
     "diagnosis_counts": {
-      "agreement": 23303,
+      "agreement": 23351,
       "scale_mismatch": 16,
       "sign_divergence": 91,
-      "stale": 1146,
-      "value_drift": 1540
+      "stale": 1450,
+      "value_drift": 1188
     },
-    "stale_rows": 1146,
+    "stale_rows": 1450,
     "scale_mismatch_rows": 16,
     "sign_divergence_rows": 91
   },
@@ -64,10 +64,10 @@
       }
     },
     "dividend_yield": {
-      "ticker_count": 5146,
+      "ticker_count": 5147,
       "multi_candidate_count": 469,
       "selected_sources": {
-        "slickcharts": 104,
+        "slickcharts": 105,
         "stockanalysis.overview": 3787,
         "yf": 960,
         "yf.stockanalysis_fallback.overview": 295
@@ -92,10 +92,10 @@
       }
     },
     "forward_pe": {
-      "ticker_count": 1138,
+      "ticker_count": 1139,
       "multi_candidate_count": 514,
       "selected_sources": {
-        "slickcharts": 3,
+        "slickcharts": 4,
         "stockanalysis.overview": 1,
         "yf": 1134
       },
@@ -106,10 +106,10 @@
       }
     },
     "market_cap": {
-      "ticker_count": 1186,
+      "ticker_count": 1187,
       "multi_candidate_count": 521,
       "selected_sources": {
-        "slickcharts": 3,
+        "slickcharts": 4,
         "stockanalysis.overview": 1,
         "yf": 1182
       },
@@ -133,10 +133,10 @@
       }
     },
     "price": {
-      "ticker_count": 6535,
+      "ticker_count": 6536,
       "multi_candidate_count": 522,
       "selected_sources": {
-        "slickcharts": 3,
+        "slickcharts": 4,
         "stockanalysis.quote": 4822,
         "yf": 1204,
         "yf.stockanalysis_fallback.quote": 506
@@ -1223,48 +1223,6 @@
       }
     },
     {
-      "ticker": "DOC",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 3,
-      "relative_spread_pct": 176.564628,
-      "values": [
-        {
-          "source": "yf",
-          "value": -150.06667
-        },
-        {
-          "source": "stockanalysis.overview",
-          "value": 160.82
-        },
-        {
-          "source": "slickcharts",
-          "value": 196.0
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 176.564628,
-      "fresh_spread_pct": 176.564628,
-      "stale_sources": [
-        "stockanalysis.overview"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "stockanalysis.overview": 18.0,
-        "slickcharts": 3.0
-      }
-    },
-    {
       "ticker": "BEG",
       "asset_type": "etf",
       "field": "return_1m",
@@ -2081,6 +2039,48 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "DOC",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 162.527779,
+      "values": [
+        {
+          "source": "yf",
+          "value": -150.06667
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 160.82
+        },
+        {
+          "source": "slickcharts",
+          "value": 240.0
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 162.527779,
+      "fresh_spread_pct": 162.527779,
+      "stale_sources": [
+        "stockanalysis.overview"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 2.0,
+        "stockanalysis.overview": 20.0,
+        "slickcharts": 0.0
       }
     },
     {
@@ -4670,7 +4670,7 @@
       "field": "dividend_yield",
       "selected_source": "yf",
       "candidate_count": 2,
-      "relative_spread_pct": 98.906977,
+      "relative_spread_pct": 98.853659,
       "values": [
         {
           "source": "yf",
@@ -4678,15 +4678,15 @@
         },
         {
           "source": "slickcharts",
-          "value": 2.58
+          "value": 2.46
         }
       ],
       "diagnosis": "scale_mismatch",
-      "spread_pct": 98.906977,
-      "fresh_spread_pct": 98.906977,
+      "spread_pct": 98.853659,
+      "fresh_spread_pct": 98.853659,
       "stale_sources": [],
       "scale_mismatch": true,
-      "scale_factor": 91,
+      "scale_factor": 87,
       "sign_divergence": false,
       "selected_rationale": {
         "selected": "yf",
@@ -4695,8 +4695,8 @@
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
-        "yf": 0.0,
-        "slickcharts": 3.0
+        "yf": 2.0,
+        "slickcharts": 0.0
       }
     },
     {
@@ -9203,48 +9203,6 @@
       }
     },
     {
-      "ticker": "DOC",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 3,
-      "relative_spread_pct": 176.564628,
-      "values": [
-        {
-          "source": "yf",
-          "value": -150.06667
-        },
-        {
-          "source": "stockanalysis.overview",
-          "value": 160.82
-        },
-        {
-          "source": "slickcharts",
-          "value": 196.0
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 176.564628,
-      "fresh_spread_pct": 176.564628,
-      "stale_sources": [
-        "stockanalysis.overview"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "stockanalysis.overview": 18.0,
-        "slickcharts": 3.0
-      }
-    },
-    {
       "ticker": "BEG",
       "asset_type": "etf",
       "field": "return_1m",
@@ -9649,6 +9607,48 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "DOC",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 162.527779,
+      "values": [
+        {
+          "source": "yf",
+          "value": -150.06667
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 160.82
+        },
+        {
+          "source": "slickcharts",
+          "value": 240.0
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 162.527779,
+      "fresh_spread_pct": 162.527779,
+      "stale_sources": [
+        "stockanalysis.overview"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 2.0,
+        "stockanalysis.overview": 20.0,
+        "slickcharts": 0.0
       }
     },
     {
