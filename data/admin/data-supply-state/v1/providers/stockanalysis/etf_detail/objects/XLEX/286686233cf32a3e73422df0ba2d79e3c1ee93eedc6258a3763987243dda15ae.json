@@ -1,0 +1,354 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "XLEX",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-19T00:45:18Z",
+  "endpoints": {
+    "holdings": "/etf/xlex/holdings/__data.json",
+    "overview": "/etf/xlex/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "STATE STREET ENERGY SELECT SECTOR SPDR ETF-SWAP-CANT-L",
+        "weight_pct": 198.25,
+        "shares": 12539,
+        "raw": {
+          "no": 1,
+          "n": "STATE STREET ENERGY SELECT SECTOR SPDR ETF-SWAP-CANT-L",
+          "as": "198.25%",
+          "sh": "12,539"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 94.41,
+        "shares": 340484,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "94.41%",
+          "sh": "340,484"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 6.53,
+        "shares": 23540,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "6.53%",
+          "sh": "23,540"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.78,
+        "shares": 2827,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.78%",
+          "sh": "2,827"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -198.4,
+        "shares": 715525,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-198.40%",
+          "sh": "715,525"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$354.24K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "15,000",
+      "inception": "Jun 3, 2026",
+      "etf_website": "https://corgifunds.com/products"
+    },
+    "performance": {
+      "tr1m": 8.981,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "XLEX",
+        "lastChecked": 1784340693107,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$354.24K",
+      "nav": null,
+      "expenseRatio": "0.45%",
+      "peRatio": null,
+      "sharesOut": "15,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 5,
+      "inception": "Jun 3, 2026",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The Corgi U.S. Energy 2x Daily ETF (XLEX) is an exchange-traded fund that mostly invests in energy equity. The fund aims to provide 2x leveraged exposure to the daily price movement of the Energy Select Sector SPDR Fund (Ticker: XLE), which provides exposure to US energy stocks. XLEX was launched on Jun 3, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "XLEX"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/products",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "STATE STREET ENERGY SELECT SECTOR SPDR ETF-SWAP-CANT-L",
+            "as": "198.25%",
+            "sh": "12,539"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "94.41%",
+            "sh": "340,484"
+          },
+          {
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "6.53%",
+            "sh": "23,540"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "-0.78%",
+            "sh": "2,827"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-198.40%",
+            "sh": "715,525"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784474687817",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 22.483,
+        "price1m": 22.593,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.777
+      },
+      "performance": {
+        "tr1m": 8.981,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "STATE STREET ENERGY SELECT SECTOR SPDR ETF-SWAP-CANT-L",
+          "as": "198.25%",
+          "sh": "12,539"
+        },
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "94.41%",
+          "sh": "340,484"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "6.53%",
+          "sh": "23,540"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.78%",
+          "sh": "2,827"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-198.40%",
+          "sh": "715,525"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 354241.5,
+        "peRatio": null
+      },
+      "date": "Jul 16, 2026",
+      "count": 5,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 16, 2026",
+        "lastChecked": 1784396025158,
+        "topic": "holdings",
+        "ticker": "XLEX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

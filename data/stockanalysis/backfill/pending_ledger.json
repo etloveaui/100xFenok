@@ -2,25 +2,34 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-18T23:59:00Z",
+  "generated_at": "2026-07-19T00:58:18Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation"
   },
   "counts": {
-    "tracked": 60,
-    "cooldown": 41,
+    "tracked": 47,
+    "cooldown": 33,
     "provider_coverage_gaps": 0,
     "updated": 0,
-    "cleared": 4
+    "cleared": 13
   },
   "updated": [],
   "cleared": [
-    "SPPP",
-    "STXF",
-    "THYP",
-    "TOT"
+    "UXRP",
+    "WTIB",
+    "XLBI",
+    "XLCI",
+    "XLEI",
+    "XLFI",
+    "XLII",
+    "XLRI",
+    "XLSI",
+    "XLVI",
+    "XLYI",
+    "XRP",
+    "XRPZ"
   ],
   "entries": {
     "ACII": {
@@ -1519,15 +1528,6 @@
       "last_status": "error",
       "last_provider": null
     },
-    "UXRP": {
-      "ticker": "UXRP",
-      "last_attempt_utc": "2026-07-09T02:26:45Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 5,
-      "next_attempt_after_utc": "2026-07-16T02:26:45Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "WDE": {
       "ticker": "WDE",
       "last_attempt_utc": "2026-07-15T23:46:13Z",
@@ -1577,122 +1577,6 @@
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "WTIB": {
-      "ticker": "WTIB",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLBI": {
-      "ticker": "XLBI",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLCI": {
-      "ticker": "XLCI",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLEI": {
-      "ticker": "XLEI",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLFI": {
-      "ticker": "XLFI",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLII": {
-      "ticker": "XLII",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLRI": {
-      "ticker": "XLRI",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLSI": {
-      "ticker": "XLSI",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLVI": {
-      "ticker": "XLVI",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XLYI": {
-      "ticker": "XLYI",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XRP": {
-      "ticker": "XRP",
-      "last_attempt_utc": "2026-07-09T09:26:06Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-16T09:26:06Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "XRPZ": {
-      "ticker": "XRPZ",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 8,
-      "next_attempt_after_utc": "2026-07-25T00:04:41Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
     }
