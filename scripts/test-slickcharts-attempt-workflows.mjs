@@ -39,6 +39,11 @@ for (const member of ["history", "symbols"]) {
   assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs prepare/);
   assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs finalize/);
   assert.match(daily, /node scripts\/test-slickcharts-daily-recovery\.mjs/);
+  assert.match(
+    daily,
+    /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-daily\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--manifest-data success_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/gainers\.json/,
+    "daily must opt into manifest mode while retaining positional data paths",
+  );
   for (const key of ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]) {
     assert.match(daily, new RegExp(`--key ${key.replace(".", "\\.")}`));
   }

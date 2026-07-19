@@ -21,6 +21,7 @@ const STOCKANALYSIS_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
 const YARDENI_WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
 const EDGAR_WORKFLOW = ".github/workflows/fetch-edgar-filings.yml";
 const FDIC_WORKFLOW = ".github/workflows/fetch-fdic.yml";
+const SLICKCHARTS_DAILY_WORKFLOW = ".github/workflows/slickcharts-daily.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -90,6 +91,21 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// Daily SlickCharts always persists the merged attempt/recovery state, while
+// the five scraper outputs are selected only when recovery permits publishing.
+{
+  const fixture = makeFixture({ workflow: SLICKCHARTS_DAILY_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=7/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Monthly FDIC recovery state and successful canonical/public outputs remain

@@ -192,6 +192,10 @@ jobs:
             daily \
             "$RUNNER_TEMP/slickcharts-daily-row.json" \
             "chore: update SlickCharts daily data $(date -u +%Y-%m-%d)" \
+            --manifest-workflow .github/workflows/slickcharts-daily.yml \
+            --manifest-always always_if_exists \
+            --manifest-data success_if_exists \
+            -- \
             data/slickcharts/gainers.json \
             data/slickcharts/losers.json \
             data/slickcharts/treasury.json \

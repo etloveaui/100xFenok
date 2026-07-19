@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 3 ]]; then
-  echo "usage: $0 <member> <row-json> <commit-message> [data-path ...]" >&2
+  echo "usage: $0 <member> <row-json> <commit-message> [--manifest-workflow <workflow> --manifest-always <stage> [--manifest-data <stage>] --] [data-path ...]" >&2
   exit 2
 fi
 
@@ -10,6 +10,30 @@ member=$1
 row_path=$2
 commit_message=$3
 shift 3
+
+manifest_workflow=""
+manifest_always=""
+manifest_data=""
+if [[ "${1:-}" == "--manifest-workflow" ]]; then
+  [[ $# -ge 4 && -n "${2:-}" ]] || { echo "manifest workflow is missing" >&2; exit 2; }
+  manifest_workflow=$2
+  shift 2
+  [[ "${1:-}" == "--manifest-always" && -n "${2:-}" ]] || { echo "manifest always stage is missing" >&2; exit 2; }
+  manifest_always=$2
+  shift 2
+  if [[ "${1:-}" == "--manifest-data" ]]; then
+    [[ -n "${2:-}" ]] || { echo "manifest data stage is missing" >&2; exit 2; }
+    manifest_data=$2
+    shift 2
+  fi
+  [[ "${1:-}" == "--" ]] || { echo "manifest options must end with --" >&2; exit 2; }
+  shift
+  expected_workflow=".github/workflows/slickcharts-${member}.yml"
+  [[ "$manifest_workflow" == "$expected_workflow" ]] || { echo "manifest workflow does not match member" >&2; exit 2; }
+elif [[ "${1:-}" == --manifest-* ]]; then
+  echo "manifest options must start with --manifest-workflow" >&2
+  exit 2
+fi
 
 shard_path="data/admin/data-supply-state/detection-attempts/slickcharts.json"
 state_root="data/admin/slickcharts-daily-delivery"
@@ -49,7 +73,20 @@ stage_owned_paths() {
   fi
 }
 
+stage_manifest_paths() {
+  [[ -n "$manifest_workflow" ]] || return 0
+  scripts/stage-lane-manifest.sh \
+    --workflow "$manifest_workflow" \
+    --stage "$manifest_always"
+  if [[ "$publish_data" == "true" && -n "$manifest_data" ]]; then
+    scripts/stage-lane-manifest.sh \
+      --workflow "$manifest_workflow" \
+      --stage "$manifest_data"
+  fi
+}
+
 merge_saved_row
+stage_manifest_paths
 stage_owned_paths "$@"
 if git diff --staged --quiet; then
   echo "No SlickCharts ${member} changes to publish"

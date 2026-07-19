@@ -19,5 +19,19 @@ assert.match(script, /SLICKCHARTS_RECOVERY_STATUS_PATH/);
 assert.match(script, /data\/admin\/slickcharts-daily-delivery/);
 assert.match(script, /publish_data/);
 assert.match(script, /recovery_exit/);
+assert.match(script, /\[--manifest-workflow <workflow> --manifest-always <stage> \[--manifest-data <stage>\] --\]/);
+assert.match(script, /expected_workflow="\.github\/workflows\/slickcharts-\$\{member\}\.yml"/);
+assert.match(script, /scripts\/stage-lane-manifest\.sh/);
+assert.match(script, /--stage "\$manifest_always"/);
+assert.match(
+  script,
+  /if \[\[ "\$publish_data" == "true" && -n "\$manifest_data" \]\][\s\S]*?--stage "\$manifest_data"/,
+  "manifest success outputs must stay behind the existing publish_data gate",
+);
+assert.match(
+  script,
+  /stage_manifest_paths\nstage_owned_paths "\$@"/,
+  "manifest staging must run before the retained positional-path parity defense",
+);
 
 console.log("test-publish-slickcharts-attempt: ok");
