@@ -392,6 +392,10 @@ for (const failure of [
   assert.match(workflow, new RegExp(`data/admin/${DEFILLAMA_LANE_ID}/index\\.json`));
   assert.match(workflow, new RegExp(`data/admin/${DEFILLAMA_LANE_ID}/lkg/stablecoins\\.json`));
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
 }

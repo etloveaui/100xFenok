@@ -806,6 +806,17 @@ Object.assign(workflow_policies, {
 
 // Rich producer policies whose current YAML uses directory/glob/dynamic
 // pathspecs or explicit restore exclusions.
+workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_stablecoins"], {
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json", "file"),
+    commitSpec("data/admin/defillama_stablecoins/index.json", "file"),
+    commitSpec("data/admin/defillama_stablecoins/lkg/stablecoins.json", "file"),
+  ],
+  success_if_exists: [
+    commitSpec("data/macro/stablecoins.json", "file", true),
+    commitSpec("100xfenok-next/public/data/macro/stablecoins.json", "file", true),
+  ],
+});
 workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/sentiment.json", "file"),

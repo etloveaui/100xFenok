@@ -38,6 +38,7 @@ assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.path), 
   "data/macro/stablecoins.json",
   "100xfenok-next/public/data/macro/stablecoins.json",
 ]);
+assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.required), [true, true]);
 assert.deepEqual(defillama.exclude, []);
 
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.

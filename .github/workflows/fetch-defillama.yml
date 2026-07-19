@@ -61,6 +61,11 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Phase 1 pilot: validate the generated manifest and stage only the
+          # always-on policy before the legacy hand list runs as parity defense.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-defillama.yml \
+            --stage always_if_exists
           SHARD="data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json"
           if [[ -f "$SHARD" ]]; then
             git add -- "$SHARD"
@@ -72,6 +77,11 @@ jobs:
             git add -- data/admin/defillama_stablecoins/lkg/stablecoins.json
           fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            # Select the success policy independently; never flatten it into
+            # the always/recovery stage above.
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-defillama.yml \
+              --stage success_if_exists
             git add -- data/macro/stablecoins.json 100xfenok-next/public/data/macro/stablecoins.json
           fi
           if git diff --staged --quiet; then
