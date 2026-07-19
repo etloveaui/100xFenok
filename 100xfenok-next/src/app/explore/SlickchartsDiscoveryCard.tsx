@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import TickerChip from "@/components/TickerChip";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
-import { formatSignedPercent, formatPlainPercent } from "@/lib/format";
+import { formatCurrency, formatSignedPercent, formatPlainPercent } from "@/lib/format";
 
 type DiscoveryTab = "movers" | "returns" | "dividends";
 
@@ -98,7 +98,7 @@ function fmtDividendYield(value: number | null | undefined): string {
 }
 
 function fmtDollars(value: number | null | undefined): string {
-  return isFiniteNumber(value) ? `$${value.toFixed(2)}` : "—";
+  return formatCurrency(value, "USD");
 }
 
 function datePart(value: string | null | undefined): string | null {

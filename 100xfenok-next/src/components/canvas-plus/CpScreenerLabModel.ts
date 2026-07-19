@@ -1,3 +1,5 @@
+import { formatCurrencyCompact, formatDecimal, formatInteger } from "@/lib/format";
+
 export const CP_SCREENER_ROW_TARGET = 1173;
 
 export const CP_SCREENER_NUMERIC_FIELDS = [
@@ -158,24 +160,21 @@ export async function loadCpScreenerFixture(): Promise<CpScreenerFixture> {
 }
 
 export function formatCompactMarketCap(value: number | null): string {
-  if (value === null) return "-";
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}T`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}B`;
-  return `$${Math.round(value)}M`;
+  return formatCurrencyCompact(value === null ? null : value * 1_000_000, "USD");
 }
 
 export function formatNumber(value: number | null, digits = 2): string {
-  return value === null ? "-" : value.toFixed(digits);
+  return formatDecimal(value, { digits });
 }
 
 export function formatPercent(value: number | null, digits = 1): string {
-  if (value === null) return "-";
+  if (value === null) return "—";
   const sign = value > 0 ? "+" : value < 0 ? "-" : "";
   return `${sign}${Math.abs(value * 100).toFixed(digits)}%`;
 }
 
 export function formatScore(value: number | null): string {
-  return value === null ? "-" : Math.round(value).toString();
+  return formatInteger(value);
 }
 
 export function numericTone(value: number | null): "positive" | "negative" | "neutral" {

@@ -26,6 +26,7 @@ import {
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
+import { formatDecimal } from "@/lib/format";
 
 function pct(value: number | null | undefined, digits = 1): string {
   return typeof value !== "number" || !Number.isFinite(value) ? "—" : formatSignedPercentDecimal(value, digits);
@@ -94,7 +95,7 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
     return <span className="text-sm font-bold text-[var(--cp-text-soft)]">—</span>;
   }
   if (!band) {
-    return <span className="text-sm font-bold text-[var(--cp-text-strong)]">{value.toFixed(1)}</span>;
+    return <span className="text-sm font-bold text-[var(--cp-text-strong)]">{formatDecimal(value, { digits: 1 })}</span>;
   }
   const span = band.max - band.min;
   const position = span > 0 ? Math.min(100, Math.max(0, ((value - band.min) / span) * 100)) : 50;
@@ -103,10 +104,10 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
   return (
     <div
       className="ml-auto w-full max-w-[190px]"
-      title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
+      title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${formatDecimal(band.min, { digits: 1 })}~${formatDecimal(band.max, { digits: 1 })}`}
     >
       <div className="mb-1 flex items-center justify-end gap-2">
-        <span className="text-sm font-black tabular-nums text-[var(--cp-text-strong)]">{value.toFixed(1)}</span>
+        <span className="text-sm font-black tabular-nums text-[var(--cp-text-strong)]">{formatDecimal(value, { digits: 1 })}</span>
         <span
           className="rounded-full px-2 py-0.5 text-[10px] font-black"
           style={{
@@ -127,9 +128,9 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
         />
       </div>
       <div className="mt-1 flex justify-between text-[9px] font-bold text-[var(--cp-text-soft)]">
-        <span>{band.min.toFixed(1)}</span>
+        <span>{formatDecimal(band.min, { digits: 1 })}</span>
         <span>{percentile}%</span>
-        <span>{band.max.toFixed(1)}</span>
+        <span>{formatDecimal(band.max, { digits: 1 })}</span>
       </div>
     </div>
   );
@@ -214,7 +215,7 @@ function EtfCard({ row }: { row: SectorRow }) {
         <span className="cpw5-sectors-card__cell">YTD {pct(etf?.returns.ytd, 1)}</span>
         <span className="cpw5-sectors-card__cell">1Y {pct(etf?.returns["1y"], 1)}</span>
         <span className="cpw5-sectors-card__cell">3Y {pct(etf?.cagr["3y"], 1)}</span>
-        <span className="cpw5-sectors-card__cell">Beta {typeof etf?.beta === "number" ? etf.beta.toFixed(2) : "—"}</span>
+        <span className="cpw5-sectors-card__cell">Beta {formatDecimal(etf?.beta, { digits: 2 })}</span>
         <span className="cpw5-sectors-card__cell">보수 {typeof etf?.expenseRatio === "number" ? formatPercent(etf.expenseRatio * 100, 2) : "—"}</span>
         <span className="cpw5-sectors-card__cell">{etf ? "추적 중" : "ETF 없음"}</span>
       </div>
@@ -235,8 +236,8 @@ function ValuationCard({ row }: { row: SectorRow }) {
         <span className="cpw5-sectors-card__badge" data-tone={tone.tone}>{tone.label}</span>
       </div>
       <div className="cpw5-sectors-card__grid">
-        <span className="cpw5-sectors-card__cell">Fwd P/E {typeof value?.pe === "number" ? value.pe.toFixed(1) : "—"}</span>
-        <span className="cpw5-sectors-card__cell">P/B {typeof value?.pb === "number" ? value.pb.toFixed(2) : "—"}</span>
+        <span className="cpw5-sectors-card__cell">Fwd P/E {formatDecimal(value?.pe, { digits: 1 })}</span>
+        <span className="cpw5-sectors-card__cell">P/B {formatDecimal(value?.pb, { digits: 2 })}</span>
         <span className="cpw5-sectors-card__cell">ROE {typeof value?.roe === "number" ? formatPercent(value.roe * 100, 1) : "—"}</span>
       </div>
     </article>
@@ -509,7 +510,7 @@ export default function SectorsClient() {
                   {
                     key: "beta",
                     header: "Beta",
-                    render: (row: SectorRow) => (typeof row.etfInfo?.beta === "number" ? row.etfInfo.beta.toFixed(2) : "—"),
+                    render: (row: SectorRow) => formatDecimal(row.etfInfo?.beta, { digits: 2 }),
                   },
                   {
                     key: "expense",
@@ -561,7 +562,7 @@ export default function SectorsClient() {
                     P/B
                   </abbr>
                 ),
-                render: (row: SectorRow) => (typeof row.valuation?.pb === "number" ? row.valuation.pb.toFixed(2) : "—"),
+                render: (row: SectorRow) => formatDecimal(row.valuation?.pb, { digits: 2 }),
               },
               {
                 key: "roe",

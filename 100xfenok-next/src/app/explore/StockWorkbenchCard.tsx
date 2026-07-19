@@ -7,7 +7,7 @@ import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
-import { formatSignedPercent } from "@/lib/format";
+import { formatCurrency, formatInteger, formatSignedPercent } from "@/lib/format";
 import { dateOnly, makeDataState } from "@/lib/data-state";
 import { normalizeForFilePath } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
@@ -152,11 +152,11 @@ function completeDateFloor(values: Array<string | null | undefined>): string | n
 }
 
 function fmtCount(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
+  return formatInteger(value);
 }
 
 function fmtScore(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? Math.round(value).toString() : "—";
+  return formatInteger(value);
 }
 
 function fmtFraction(value: number | null | undefined): string {
@@ -178,7 +178,7 @@ function fmtDividendYield(value: number | null | undefined): string {
 }
 
 function fmtDollars(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(2)}` : "—";
+  return formatCurrency(value, "USD");
 }
 
 function numberOrNull(value: unknown): number | null {

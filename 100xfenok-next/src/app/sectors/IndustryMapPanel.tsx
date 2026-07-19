@@ -96,7 +96,7 @@ function rowsOf<T extends EventRow = EventRow>(doc: SurfaceDoc<T> | null | undef
   return [...records, ...tableRows];
 }
 
-function text(value: unknown, fallback = "-"): string {
+function text(value: unknown, fallback = "—"): string {
   if (value === null || value === undefined) return fallback;
   const next = String(value).trim();
   return next && next !== "-" ? next : fallback;
@@ -229,7 +229,7 @@ function hasIndustryConstituentDetail(row: IndustryMapRow | null | undefined): b
 }
 
 function industryDetailStatus(row: IndustryMapRow | null | undefined): string {
-  if (!row) return "-";
+  if (!row) return "—";
   return hasIndustryConstituentDetail(row) ? "구성종목 상세 있음" : "기본 정보";
 }
 
@@ -406,7 +406,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
           <div className="grid gap-2 md:grid-cols-3">
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <div className="text-[11px] font-black text-slate-600">가장 큰 산업</div>
-              <div className="mt-1 truncate text-sm font-black text-slate-800">{topIndustry?.name ?? "-"}</div>
+              <div className="mt-1 truncate text-sm font-black text-slate-800">{topIndustry?.name ?? "—"}</div>
               <div className="mt-0.5 text-xs font-bold text-slate-500">{topIndustry?.marketCap !== null && topIndustry?.marketCap !== undefined ? formatCurrencyCompact(topIndustry.marketCap, "USD") : "—"}</div>
             </div>
             <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">

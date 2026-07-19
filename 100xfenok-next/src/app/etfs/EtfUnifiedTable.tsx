@@ -107,7 +107,7 @@ function EtfMobileList({
             <div className="cpw5-etfs-mobile-card__head">
               <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="cpw5-etfs-mobile-title">
                 <strong>{row.ticker}</strong>
-                <span>{row.name && row.name !== row.ticker ? row.name : "-"}</span>
+                <span>{row.name && row.name !== row.ticker ? row.name : "—"}</span>
               </TransitionLink>
               <span className="cpw5-etfs-mobile-category">{row.category ?? "미분류"}</span>
             </div>
@@ -123,7 +123,7 @@ function EtfMobileList({
               </div>
               <div>
                 <dt>보수</dt>
-                <dd>{formatPercentPointsValue(normalizedExpenseRatioValue(row)) ?? "-"}</dd>
+                <dd>{formatPercentPointsValue(normalizedExpenseRatioValue(row)) ?? "—"}</dd>
               </div>
               <div>
                 <dt>1년</dt>
@@ -275,7 +275,7 @@ export default function EtfUnifiedTable() {
       render: (row) => (
         <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="cpw5-etfs-table-ticker">
           <strong>{row.ticker}</strong>
-          <span>{row.name && row.name !== row.ticker ? row.name : "-"}</span>
+          <span>{row.name && row.name !== row.ticker ? row.name : "—"}</span>
         </TransitionLink>
       ),
     },
@@ -306,7 +306,7 @@ export default function EtfUnifiedTable() {
     {
       key: "expense",
       header: "보수",
-      render: (row) => formatPercentPointsValue(normalizedExpenseRatioValue(row)) ?? "-",
+      render: (row) => formatPercentPointsValue(normalizedExpenseRatioValue(row)) ?? "—",
     },
     {
       key: "tr1y",
@@ -323,7 +323,7 @@ export default function EtfUnifiedTable() {
   return (
     <CpSectionCard
       title="ETF 목록"
-      meta={`기준일 ${formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "-")} · ${formatInteger(filteredRows.length)}개`}
+      meta={`기준일 ${formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "—")} · ${formatInteger(filteredRows.length)}개`}
       footnote="행을 선택하면 ETF 상세 페이지로 이동합니다. 투자 조언 아님."
     >
       <div className="cpw5-etfs-table-toolbar">

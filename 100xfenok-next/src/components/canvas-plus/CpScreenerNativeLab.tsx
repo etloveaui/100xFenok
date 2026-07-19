@@ -181,11 +181,11 @@ export default function CpScreenerNativeLab() {
       <section className="cp-screener-lab__stats" aria-label="Fixture stats">
         <div>
           <span>Fixture</span>
-          <strong className="cp-screener-num">{fixture ? fixture.rows.length : "-"}</strong>
+          <strong className="cp-screener-num">{fixture ? fixture.rows.length : "—"}</strong>
         </div>
         <div>
           <span>Source + shadow</span>
-          <strong className="cp-screener-num">{fixture ? `${fixture.sourceCount}+${fixture.shadowCount}` : "-"}</strong>
+          <strong className="cp-screener-num">{fixture ? `${fixture.sourceCount}+${fixture.shadowCount}` : "—"}</strong>
         </div>
         <div>
           <span>Row mode</span>

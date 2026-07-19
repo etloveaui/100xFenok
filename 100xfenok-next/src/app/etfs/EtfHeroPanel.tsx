@@ -152,7 +152,7 @@ export default function EtfHeroPanel() {
         <CpBandVisual
           className="cpw5-etfs-band--neutral"
           label={`자산군 구성비 · 전체 ${formatInteger(totalCount)}개 중 최대 비중`}
-          currentLabel={dominantBucket?.label ?? "-"}
+          currentLabel={dominantBucket?.label ?? "—"}
           currentValue={`${dominantBucket?.pct ?? 0}%`}
           position={dominantBucket?.pct ?? 0}
           lowLabel="0%"
@@ -188,7 +188,7 @@ export default function EtfHeroPanel() {
             newPreview.length > 0 ? (
               <span className="cpw5-etfs-mini-list">
                 {newPreview.map((row) => (
-                  <MoverLink key={`new-${row.s}`} ticker={row.s} valueLabel={row.inceptionDate ?? "-"} />
+                  <MoverLink key={`new-${row.s}`} ticker={row.s} valueLabel={row.inceptionDate ?? "—"} />
                 ))}
               </span>
             ) : (

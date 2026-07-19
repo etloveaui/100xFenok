@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { todayKST } from "@/lib/data-state";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
+import { formatCurrency } from "@/lib/format";
 import {
   isInverseEtf,
   isLeveragedEtf,
@@ -124,20 +125,20 @@ function loadCoverage(): Promise<EtfCoveragePayload | null> {
 }
 
 function fmtDate(value: string | null | undefined): string {
-  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "-";
+  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
 }
 
 function collectionDateLabel(value: string | null | undefined): string {
   const date = fmtDate(value);
-  return date === "-" ? "수집 시각 미제공" : `수집 ${date}`;
+  return date === "—" ? "수집 시각 미제공" : `수집 ${date}`;
 }
 
 function fmtPrice(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(2)}` : "-";
+  return formatCurrency(value, "USD");
 }
 
 function fmtChange(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 

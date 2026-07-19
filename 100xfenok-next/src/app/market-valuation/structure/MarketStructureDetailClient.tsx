@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import TransitionLink from "@/components/TransitionLink";
+import { formatCurrencyCompact, formatDecimal } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from "@/lib/product-nav";
 import {
@@ -36,21 +37,20 @@ function cx(...parts: Array<string | false | undefined>): string {
 }
 
 function fmt(value: number | null | undefined, digits = 1, suffix = ""): string {
-  return typeof value === "number" && Number.isFinite(value)
-    ? `${value.toFixed(digits)}${suffix}`
-    : "—";
+  const formatted = formatDecimal(value, { digits });
+  return formatted === "—" ? formatted : `${formatted}${suffix}`;
 }
 
 function fmtUsdBillions(value: unknown): string {
   return typeof value === "number" && Number.isFinite(value)
-    ? `$${value.toFixed(0)}B`
+    ? formatCurrencyCompact(value * 1_000_000_000, "USD")
     : "—";
 }
 
 function fmtSignedUsdBillions(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "—";
   const sign = value >= 0 ? "+" : "-";
-  return `${sign}$${Math.abs(value).toFixed(0)}B`;
+  return `${sign}${formatCurrencyCompact(Math.abs(value) * 1_000_000_000, "USD")}`;
 }
 
 function spreadTone(value: number | null | undefined): string {

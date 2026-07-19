@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import WatchStar from "@/components/WatchStar";
-import { formatSignedPercent, formatCurrency, formatCurrencyCompact, formatInteger, type Currency } from "@/lib/format";
+import { formatSignedPercent, formatCurrency, formatCurrencyCompact, formatDecimal, formatInteger, formatMultiple, type Currency } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -544,7 +544,7 @@ function classificationLabels(classification: EtfClassification | null | undefin
   if (!classification) return [];
   const labels: string[] = [];
   if (classification.is_leveraged) {
-    labels.push(isFiniteNumber(classification.leverage_factor) ? `${classification.leverage_factor}x 레버리지` : "레버리지");
+    labels.push(isFiniteNumber(classification.leverage_factor) ? `${formatMultiple(classification.leverage_factor, { digits: classification.leverage_factor % 1 === 0 ? 0 : 2 })} 레버리지` : "레버리지");
   }
   if (classification.is_inverse) labels.push("인버스");
   if (classification.is_single_stock) {
@@ -745,7 +745,7 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
   const oneYear = row.performance && isFiniteNumber(row.performance.tr1y) ? fmtCompactSignedPercent(row.performance.tr1y) : null;
   const classification = row.classification && typeof row.classification === "object" ? row.classification : null;
   const typeLabels = [
-    classification?.is_leveraged ? (isFiniteNumber(classification.leverage_factor) ? `${classification.leverage_factor}x` : "레버리지") : null,
+    classification?.is_leveraged ? (isFiniteNumber(classification.leverage_factor) ? formatMultiple(classification.leverage_factor, { digits: classification.leverage_factor % 1 === 0 ? 0 : 2 }) : "레버리지") : null,
     classification?.is_inverse ? "인버스" : null,
     classification?.is_single_stock ? "단일종목" : null,
   ].filter((label): label is string => Boolean(label));
@@ -1431,9 +1431,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "상장일", value: inceptionDate, note: "상장 시작일" },
     { label: "발행 주식 수", value: sharesOutstanding, note: "현재 원장 기준" },
-    { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "시장 민감도" },
+    { label: "베타", value: beta !== null ? formatDecimal(beta, { digits: 2 }) : rawText(overview.beta), note: "시장 민감도" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
-    { label: "PER", value: trailingPe !== null ? trailingPe.toFixed(1) : rawText(overview.peRatio), note: "최근 실적 기준" },
+    { label: "PER", value: trailingPe !== null ? formatDecimal(trailingPe, { digits: 1 }) : rawText(overview.peRatio), note: "최근 실적 기준" },
     { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatCurrency(quote.h52, currency as Currency) : "—", note: "최근 52주 고점" },
     { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatCurrency(quote.l52, currency as Currency) : "—", note: "최근 52주 저점" },
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },

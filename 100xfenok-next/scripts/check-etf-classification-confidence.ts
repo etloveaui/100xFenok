@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 
 import {
+  etfClassificationLabels,
   formatTypeHint,
   isInverseEtf,
   isLeveragedEtf,
@@ -66,7 +67,8 @@ const mediumConfidencePositiveSignal = fixture({
   },
 });
 assert.equal(isLeveragedEtf(mediumConfidencePositiveSignal), true, "medium-confidence positive leveraged signal should remain authoritative");
-assert.match(formatTypeHint(mediumConfidencePositiveSignal), /2x/, "stored leverage factor should remain visible");
+assert.match(formatTypeHint(mediumConfidencePositiveSignal), /2배/, "stored leverage factor should remain visible");
+assert.deepEqual(etfClassificationLabels(mediumConfidencePositiveSignal), ["2배 레버리지"], "stored leverage label should use the shared multiple language");
 
 const legacyFlatClassification = fixture({
   name: "Plain Equity ETF",
@@ -74,6 +76,6 @@ const legacyFlatClassification = fixture({
   leverage_factor: 3,
 });
 assert.equal(isLeveragedEtf(legacyFlatClassification), true, "legacy flat classification fields should still work");
-assert.match(formatTypeHint(legacyFlatClassification), /3x/, "legacy flat leverage factor should remain visible");
+assert.match(formatTypeHint(legacyFlatClassification), /3배/, "legacy flat leverage factor should remain visible");
 
 console.log("ETF classification confidence check passed (5 fixtures)");

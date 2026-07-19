@@ -9,6 +9,7 @@
 //   fixes the 760px fixed-width clipping — feedback #8.
 
 import { useEffect, useMemo, useState } from "react";
+import { formatInteger } from "@/lib/format";
 
 import {
   annualReturnsModel,
@@ -100,9 +101,7 @@ function fmtMetric(value: number | null, digits = 1, suffix = ""): string {
 }
 
 function fmtIndex(value: number | null): string {
-  return value === null
-    ? "—"
-    : value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  return formatInteger(value);
 }
 
 function fmtSigned(value: number | null, digits = 1): string {

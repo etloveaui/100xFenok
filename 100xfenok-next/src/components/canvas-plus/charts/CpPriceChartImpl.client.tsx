@@ -15,6 +15,7 @@ import {
 } from "lightweight-charts";
 
 import type { CpChartDatum, CpPriceChartProps } from "@/components/canvas-plus/charts/types";
+import { formatCompactNumber, formatCurrency as formatSharedCurrency, formatDecimal, formatInteger, normalizeCurrency } from "@/lib/format";
 
 function cpClassNames(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
@@ -41,47 +42,39 @@ function chartLow(datum: CpChartDatum): number | null {
 }
 
 function formatCurrency(value: number | null, currency = "USD"): string {
-  if (!isFiniteNumber(value)) return "-";
-  const currencyCode = /^[A-Z]{3}$/.test(currency) ? currency : "USD";
+  if (!isFiniteNumber(value)) return "—";
+  const currencyCode = normalizeCurrency(currency);
+  if (currencyCode === "USD") return formatSharedCurrency(value, "USD");
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currencyCode,
-    maximumFractionDigits: Math.abs(value) >= 100 ? 2 : 2,
+    maximumFractionDigits: 2,
   }).format(value);
 }
 
 function formatPlainNumber(value: number | null, digits = 2): string {
-  if (!isFiniteNumber(value)) return "-";
-  return value.toLocaleString("en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
+  return formatDecimal(value, { digits });
 }
 
 function formatSignedPercent(value: number | null, digits = 1, mode: "fraction" | "percent" = "fraction"): string {
-  if (!isFiniteNumber(value)) return "-";
+  if (!isFiniteNumber(value)) return "—";
   const pct = mode === "percent" ? value : value * 100;
   const sign = pct > 0 ? "+" : "";
   return `${sign}${pct.toFixed(digits)}%`;
 }
 
 function formatUnsignedPercent(value: number | null, digits = 1, mode: "fraction" | "percent" = "fraction"): string {
-  if (!isFiniteNumber(value)) return "-";
+  if (!isFiniteNumber(value)) return "—";
   const pct = Math.abs(mode === "percent" ? value : value * 100);
   return `${pct.toFixed(digits)}%`;
 }
 
 function formatVolume(value: number | null): string {
-  if (!isFiniteNumber(value)) return "-";
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return Math.round(value).toLocaleString("ko-KR");
+  return formatCompactNumber(value);
 }
 
 function formatDateLabel(value: string | null | undefined): string {
-  if (!value) return "-";
+  if (!value) return "—";
   return value.slice(0, 10);
 }
 
@@ -365,7 +358,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
                   <td>{formatPlainNumber(isFiniteNumber(latest?.high) ? latest.high : null)}</td>
                   <td>{formatPlainNumber(isFiniteNumber(latest?.low) ? latest.low : null)}</td>
                   <td>{formatPlainNumber(latestClose)}</td>
-                  <td>{isFiniteNumber(latest?.volume) ? latest.volume.toLocaleString("ko-KR") : "-"}</td>
+                  <td>{formatInteger(latest?.volume)}</td>
                 </tr>
               </tbody>
             </table>

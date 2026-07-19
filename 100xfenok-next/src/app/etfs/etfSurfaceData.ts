@@ -12,6 +12,7 @@ import {
   issuerNameFromEtfName,
   type EtfUniverseRecord,
 } from "@/app/explore/etfUniverseUtils";
+import { formatCompactNumber, formatCurrency, formatInteger } from "@/lib/format";
 
 export type { EtfUniverseRecord } from "@/app/explore/etfUniverseUtils";
 
@@ -315,22 +316,18 @@ export {
 };
 
 export function fmtCompactNumber(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "-";
+  return formatInteger(value);
 }
 
 export function fmtPriceUsd(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
-  return value >= 100 ? `$${value.toFixed(0)}` : `$${value.toFixed(2)}`;
+  return formatCurrency(value, "USD");
 }
 
 export function fmtSignedPct(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 export function fmtVolumeCompact(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return value.toLocaleString("ko-KR");
+  return formatCompactNumber(value);
 }

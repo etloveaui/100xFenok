@@ -10,7 +10,7 @@ import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { FactorExposureRecord, FactorExposuresSummaryData, PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { formatAsOf } from "@/lib/market-valuation/freshness";
-import { formatPercent, formatPlainPercent, formatSignedPercent } from "@/lib/format";
+import { formatDecimal, formatInteger, formatPercent, formatPlainPercent, formatSignedPercent } from "@/lib/format";
 
 type MaybeNumber = number | null | undefined;
 const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
@@ -266,7 +266,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
             label(item: { dataset: { label?: string }; raw: unknown }) {
               const v = Number(item.raw);
               const ret = v - 100;
-              return `${item.dataset.label ?? ""}: ${v.toFixed(1)} (${formatSignedPercent(ret, { fraction: false, digits: 1 })})`;
+              return `${item.dataset.label ?? ""}: ${formatDecimal(v, { digits: 1 })} (${formatSignedPercent(ret, { fraction: false, digits: 1 })})`;
             },
           },
         },
@@ -828,7 +828,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
             label: (ctx) => {
               const v = Number(ctx.raw);
               const ret = v - 100;
-              return `${ctx.dataset.label}: ${v.toFixed(1)} (${formatSignedPercent(ret, { fraction: false, digits: 1 })})`;
+              return `${ctx.dataset.label}: ${formatDecimal(v, { digits: 1 })} (${formatSignedPercent(ret, { fraction: false, digits: 1 })})`;
             },
           },
         },
@@ -1011,7 +1011,7 @@ export function FactorExposureRadar({ data }: FactorExposureRadarProps) {
             const axis = FACTOR_RADAR_AXES[ctx.dataIndex];
             const score = Number(ctx.raw);
             const beta = selected ? selected[axis.betaKey] : null;
-            return `${axis.label}: ${score.toFixed(0)} / beta ${isFiniteNumber(beta) ? beta.toFixed(2) : "—"}`;
+            return `${axis.label}: ${formatInteger(score)} / beta ${formatDecimal(beta, { digits: 2 })}`;
           },
         },
       },
@@ -1097,9 +1097,9 @@ export function FactorExposureRadar({ data }: FactorExposureRadarProps) {
               <div key={axis.scoreKey} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
                 <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-600">{axis.label}</span>
                 <span className="text-[11px] font-black tabular-nums text-slate-900">
-                  {isFiniteNumber(score) ? score.toFixed(0) : "—"}
+                  {formatInteger(score)}
                   <span className="ml-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-                    β {isFiniteNumber(beta) ? beta.toFixed(2) : "—"}
+                    β {formatDecimal(beta, { digits: 2 })}
                   </span>
                 </span>
               </div>

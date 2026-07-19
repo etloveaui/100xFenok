@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { formatAsOf, isStaleAsOf } from "@/lib/market-valuation/freshness";
-import { formatInteger, formatPlainPercent } from "@/lib/format";
+import { formatDecimal, formatInteger, formatMultiple, formatPlainPercent } from "@/lib/format";
 
 interface YardneyRow {
   date: string;
@@ -66,7 +66,7 @@ function fmtIndex(value: number | null | undefined): string {
 }
 
 function fmtNum(value: number | null | undefined, digits = 1): string {
-  return finite(value) ? value.toFixed(digits) : "—";
+  return formatDecimal(value, { digits });
 }
 
 function AsOfPill({ value }: { value: string | null | undefined }) {
@@ -243,7 +243,7 @@ export default function YardeniCard() {
           <div className="mt-3 grid gap-2 sm:grid-cols-4">
             {[
               ["EPS", `$${fmtNum(active.eps, 2)}`],
-              ["채권 PER", `${fmtNum(active.bond_per, 1)}x`],
+              ["채권 PER", formatMultiple(active.bond_per, { digits: 1 })],
               ["프리미엄", `${fmtNum(active.premium_pct, 1)}%`],
               ["기준일", formatAsOf(active.date) ?? "—"],
             ].map(([label, value]) => (

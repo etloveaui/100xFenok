@@ -1,4 +1,4 @@
-import { finiteNumber, formatCurrencyCompact } from "@/lib/format";
+import { finiteNumber, formatCurrencyCompact, formatInteger, formatMultiple } from "@/lib/format";
 
 export interface EtfUniverseRecord {
   ticker?: string;
@@ -91,7 +91,7 @@ export function issuerNameFromEtfName(value: string | null | undefined): string 
 }
 
 export function formatNumber(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
+  return formatInteger(value);
 }
 
 export function formatAum(row: EtfUniverseRecord): string {
@@ -232,7 +232,7 @@ export function formatTypeHint(
   }
   const factor = classification?.leverage_factor;
   if (typeof factor === "number" && Number.isFinite(factor)) {
-    parts.push(`${factor.toFixed(factor % 1 === 0 ? 0 : 2)}x`);
+    parts.push(formatMultiple(factor, { digits: factor % 1 === 0 ? 0 : 2 }));
   } else if (isLeveragedEtf(row)) {
     parts.push("레버리지");
   }
@@ -269,7 +269,7 @@ export function etfClassificationLabels(row: EtfUniverseRecord): string[] {
   if (classification.is_leveraged) {
     labels.push(
       typeof classification.leverage_factor === "number" && Number.isFinite(classification.leverage_factor)
-        ? `${classification.leverage_factor}x 레버리지`
+        ? `${formatMultiple(classification.leverage_factor, { digits: classification.leverage_factor % 1 === 0 ? 0 : 2 })} 레버리지`
         : "레버리지",
     );
   }

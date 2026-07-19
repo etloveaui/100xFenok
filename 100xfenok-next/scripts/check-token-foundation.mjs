@@ -428,6 +428,7 @@ expectDeclarations(
     "--shell-gain": "#0f8a5f",
     "--shell-loss": "#d1344c",
     "--shell-warn": "#d97706",
+    "--c-warn-ink": "#a3560d",
     "--shell-flat": "#64748b",
   },
   "app-shell light snapshot",
