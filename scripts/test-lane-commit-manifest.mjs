@@ -230,6 +230,22 @@ assert.deepEqual(fredYardeni.stages.success_if_exists, [
 ]);
 assert.deepEqual(fredYardeni.exclude, []);
 
+const edgarFilings = manifest.workflows[".github/workflows/fetch-edgar-filings.yml"];
+assert.deepEqual(edgarFilings.lanes, ["edgar_filings"]);
+assert.deepEqual(edgarFilings.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/edgar_filings.json", required: false },
+  { kind: "file", path: "data/admin/edgar_filings/index.json", required: false },
+  { kind: "file", path: "data/admin/edgar_filings/current/edgar_filings.json", required: false },
+  { kind: "file", path: "data/admin/edgar_filings/lkg/edgar_filings.json", required: false },
+]);
+assert.deepEqual(edgarFilings.stages.success_if_exists, [
+  { kind: "directory", path: "data/edgar", required: false },
+  { kind: "directory", path: "data/edgar-korean-summaries", required: false },
+  { kind: "directory", path: "100xfenok-next/public/data/edgar-korean-summaries", required: false },
+]);
+assert.deepEqual(edgarFilings.stages.success_verify_not_plan_if_exists, []);
+assert.deepEqual(edgarFilings.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

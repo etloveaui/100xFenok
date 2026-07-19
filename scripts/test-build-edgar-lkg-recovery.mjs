@@ -442,6 +442,13 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes, ["edgar_filings"], "the registry must attribute this lane to fetch-edgar-filings.yml");
+  assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflowText, /--stage always_if_exists/);
+  assert.match(
+    workflowText,
+    /if \[ "\$\{EDGAR_PLAN_ONLY:-false\}" != "true" \] && \[ "\$FETCH_OUTCOME" = "success" \] && \[ "\$VERIFY_OUTCOME" = "success" \]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
+    "EDGAR directories must be manifest-staged inside the verified non-plan success branch",
+  );
 }
 
 console.log("test-build-edgar-lkg-recovery: ok");
