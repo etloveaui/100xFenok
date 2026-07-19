@@ -7,6 +7,7 @@ import path from "node:path";
 import {
   buildBridgeIndex,
   buildConfig,
+  buildKrxPublicIndexCloses,
   endpointClass,
   generateWeekdayDates,
   getRowCount,
@@ -156,6 +157,68 @@ assert.equal(getRowCount({ respCode: "NO_DATA", respMsg: "empty" }), 0);
   assert.equal(result.wrote, false);
   assert.equal(result.summary.failed_files, 31);
   assert.ok(result.validation_errors.some((item) => item.includes("failed_files=31")));
+}
+
+// Slice 1: public-safe aggregate index closes — value-changing exclusion proof.
+{
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-public-index-"));
+  const dir = (apiId) => path.join(tmpDir, "raw/core_stock_index", apiId);
+  for (const apiId of ["krx_dd_trd", "kospi_dd_trd", "kosdaq_dd_trd"]) {
+    fs.mkdirSync(dir(apiId), { recursive: true });
+  }
+  // All-market file carries TWO aggregate index rows AND one per-issuer row that
+  // MUST be excluded from the public surface.
+  fs.writeFileSync(path.join(dir("krx_dd_trd"), "20260629.json"), `${JSON.stringify({
+    OutBlock_1: [
+      { IDX_CLSS: "KRX", IDX_NM: "KRX 300", CLSPRC_IDX: "1650.25", CMPPREVDD_IDX: "5.5", FLUC_RT: "0.33", ACC_TRDVOL: "120000", ACC_TRDVAL: "900000" },
+      { IDX_CLSS: "KRX", IDX_NM: "KTOP 30", CLSPRC_IDX: "12000.10", CMPPREVDD_IDX: "-30.0", FLUC_RT: "-0.25", ACC_TRDVOL: "80000", ACC_TRDVAL: "700000" },
+      // Per-issuer contamination — MUST be rejected (carries ISU_CD / ISU_NM).
+      { ISU_CD: "005930", ISU_NM: "삼성전자", MKTCAP: "500000000", CLSPRC_IDX: "71000" },
+    ],
+  }, null, 2)}\n`);
+  fs.writeFileSync(path.join(dir("kospi_dd_trd"), "20260629.json"), `${JSON.stringify({
+    OutBlock_1: [
+      { IDX_CLSS: "KOSPI", IDX_NM: "코스피", CLSPRC_IDX: "2500.50", CMPPREVDD_IDX: "10.5", FLUC_RT: "0.42", ACC_TRDVOL: "500000", ACC_TRDVAL: "8000000" },
+    ],
+  }, null, 2)}\n`);
+  fs.writeFileSync(path.join(dir("kosdaq_dd_trd"), "20260629.json"), `${JSON.stringify({
+    OutBlock_1: [
+      { IDX_CLSS: "KOSDAQ", IDX_NM: "코스닥", CLSPRC_IDX: "850.75", CMPPREVDD_IDX: "-2.1", FLUC_RT: "-0.25", ACC_TRDVOL: "300000", ACC_TRDVAL: "3000000" },
+    ],
+  }, null, 2)}\n`);
+
+  const config = buildConfig(parseArgs(["--end-date", "20260629", "--output-root", tmpDir]));
+  const manifest = { completed_at: "2026-06-29T10:00:00.000Z", date_range: { end_date: "2026-06-29" } };
+  const artifact = buildKrxPublicIndexCloses(manifest, config);
+
+  // Index rows flow through to the public artifact.
+  assert.equal(artifact.status, "ready");
+  assert.equal(artifact.row_count, 4, "2 all-market + 1 KOSPI + 1 KOSDAQ index rows");
+  assert.equal(artifact.raw_input_row_count, 5, "5 raw rows observed (incl. the issuer row)");
+  const kospi = artifact.indices.find((row) => row.index_name === "코스피");
+  assert.ok(kospi, "KOSPI index row present");
+  assert.equal(kospi.close, 2500.5);
+  assert.equal(kospi.change, 10.5);
+  assert.equal(kospi.change_pct, 0.42);
+  assert.equal(kospi.market, "KOSPI");
+
+  // Per-issuer rows CANNOT flow to the public surface.
+  assert.equal(artifact.excluded_issuer_rows, 1, "the issuer row was rejected");
+  assert.equal(artifact.per_issuer_rows, false);
+  assert.equal(artifact.aggregate_only, true);
+  assert.ok(artifact.indices.every((row) => !("market_cap" in row) && !("code" in row)));
+  const serialized = JSON.stringify(artifact);
+  assert.equal(serialized.includes("005930"), false, "issuer code must not appear");
+  assert.equal(serialized.includes("삼성전자"), false, "issuer name must not appear");
+  assert.equal(serialized.includes("MKTCAP"), false, "per-issuer market cap must not appear");
+  assert.equal(serialized.includes("_private/"), false, "no private path may leak into the public surface");
+
+  // Owner-grant license wording rides this artifact.
+  assert.match(artifact.license_or_terms_note, /2026-07-19/);
+  assert.match(artifact.license_or_terms_note, /public serving/i);
+  assert.equal(artifact.raw_public, false);
+
+  fs.rmSync(tmpDir, { recursive: true, force: true });
 }
 
 console.log("test-fetch-fenok-krx-daily-private: ok");

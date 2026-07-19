@@ -904,7 +904,11 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy([], {
-  always_if_exists: [commitSpec("data/admin/fenok-edge-korea-krx-daily-index.json", "file", true)],
+  always_if_exists: [
+    commitSpec("data/admin/fenok-edge-korea-krx-daily-index.json", "file", true),
+    // Slice 1 public-safe aggregate index closes (owner grant 2026-07-19).
+    commitSpec("data/computed/fenok-edge-korea-krx-index-daily.json", "file", true),
+  ],
 });
 workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
   always_if_exists: [

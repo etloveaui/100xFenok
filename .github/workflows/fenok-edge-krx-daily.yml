@@ -157,7 +157,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Manifest-native staging (parity defense) plus the explicit legacy
+          # hand list. Stages the admin bridge index AND the Slice 1 public-safe
+          # aggregate index closes (data/computed, mirrored).
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fenok-edge-krx-daily.yml \
+            --stage always_if_exists
           git add -- data/admin/fenok-edge-korea-krx-daily-index.json
+          git add -- data/computed/fenok-edge-korea-krx-index-daily.json
           git diff --staged --quiet || git commit -m "chore: update fenok edge krx daily data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then

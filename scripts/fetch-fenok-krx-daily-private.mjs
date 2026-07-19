@@ -18,6 +18,17 @@ const SOURCE = "KRX_OPEN_API";
 const BASE_URL = "https://data-dbg.krx.co.kr/svc/apis";
 const SCRIPT_PATH = "scripts/fetch-fenok-krx-daily-private.mjs";
 const BRIDGE_INDEX_DEFAULT = "data/admin/fenok-edge-korea-krx-daily-index.json";
+// Slice 1 public-safe surface: aggregate index-level daily closes only (no
+// per-issuer rows). Public serving authorized by the owner's 2026-07-19 KRX
+// permission grant. data/computed/ is served by the public sync/mirror pipeline.
+const PUBLIC_INDEX_CLOSES_DEFAULT = "data/computed/fenok-edge-korea-krx-index-daily.json";
+// Index (idx) endpoints whose aggregate rows are public-safe. Per-issuer
+// endpoints are deliberately excluded from the public surface.
+const PUBLIC_INDEX_ENDPOINTS = [
+  { api_id: "krx_dd_trd", market: "KRX_ALL" },
+  { api_id: "kospi_dd_trd", market: "KOSPI" },
+  { api_id: "kosdaq_dd_trd", market: "KOSDAQ" },
+];
 const DEFAULT_OUTPUT_PARENT = "_private/admin/fenok-edge-korea/daily";
 const DEFAULT_DAYS = 1;
 const FULL_TARGET_TRADING_DAYS = 252;
@@ -27,7 +38,7 @@ const DEFAULT_SLEEP_MS = 250;
 const DEFAULT_MAX_CALLS = 40;
 const DEFAULT_FAIL_THRESHOLD = 0;
 const LICENSE_OR_TERMS_NOTE =
-  "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.";
+  "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.";
 const SNAPSHOT_ENDPOINTS = new Set(["sri_bond_info", "esg_index_info", "esg_etp_info"]);
 const REQUIRED_DAILY_ISSUER_ENDPOINTS = new Set(["stk_bydd_trd", "ksq_bydd_trd"]);
 
@@ -93,6 +104,7 @@ function usage() {
     "  --run-id ID                      Run id. Default: krx_daily_<end-date>.",
     "  --output-root PATH               Private output root. Default: _private/admin/fenok-edge-korea/daily/<run-id>.",
     "  --bridge-index PATH              Tracked bridge index path. Default: data/admin/fenok-edge-korea-krx-daily-index.json.",
+    "  --public-index-closes PATH       Public-safe aggregate index closes path. Default: data/computed/fenok-edge-korea-krx-index-daily.json.",
     "  --concurrency N                  Bounded request concurrency. Default: 2.",
     "  --timeout-ms N                   Per request timeout. Default: 30000.",
     "  --sleep-ms N                     Sleep after each request attempt. Default: 250.",
@@ -157,6 +169,7 @@ function parseArgs(argv) {
       const [key, value, nextIndex] = readFlag(argv, i);
       i = nextIndex;
       if (key === "bridge-index") args.bridgeIndex = value;
+      else if (key === "public-index-closes") args.publicIndexCloses = value;
       else if (key === "concurrency") args.concurrency = Number.parseInt(value, 10);
       else if (key === "days") args.days = Number.parseInt(value, 10);
       else if (key === "end-date") args.endDate = value;
@@ -311,6 +324,7 @@ function buildConfig(rawArgs) {
   const runId = rawArgs.runId || `krx_daily_${endDate}`;
   const outputRoot = resolveRepoPath(rawArgs.outputRoot || path.join(DEFAULT_OUTPUT_PARENT, runId));
   const bridgeIndexPath = resolveRepoPath(rawArgs.bridgeIndex || BRIDGE_INDEX_DEFAULT);
+  const publicIndexClosesPath = resolveRepoPath(rawArgs.publicIndexCloses || PUBLIC_INDEX_CLOSES_DEFAULT);
   const dates = generateWeekdayDates(endDate, rawArgs.days);
   const endpoints = endpointList();
   const estimatedCalls = dates.length * endpoints.length;
@@ -337,6 +351,7 @@ function buildConfig(rawArgs) {
   return {
     ...rawArgs,
     bridgeIndexPath,
+    publicIndexClosesPath,
     dates,
     endDate,
     endpoints,
@@ -542,6 +557,76 @@ function buildKrxKospiDerivedWeights(manifest, config) {
         weight_pct: round(weight * 100, 10),
       };
     }),
+  };
+}
+
+// Slice 1: aggregate index-level daily closes from the idx endpoints only.
+// Public-safe by construction — index rows carry NO issue code/name, and any
+// per-issuer row that appears is explicitly excluded (defense in depth). Field
+// names follow the KRX Open API idx schema (IDX_NM / CLSPRC_IDX / CMPPREVDD_IDX
+// / FLUC_RT / ACC_TRDVOL / ACC_TRDVAL, class IDX_CLSS); web-corroborated but
+// NOT yet verified against a live idx payload (KRX secret is owner-held) — the
+// row_count / raw_input_row_count fields make any field-name mismatch loud.
+function buildKrxPublicIndexCloses(manifest, config) {
+  const asOf = manifest?.date_range?.end_date ?? null;
+  const dateKey = compactDate(asOf);
+  const indices = [];
+  let rawInputRowCount = 0;
+  let excludedIssuerRows = 0;
+  if (dateKey) {
+    for (const endpoint of PUBLIC_INDEX_ENDPOINTS) {
+      const sourcePath = path.join(config.outputRoot, "raw", "core_stock_index", endpoint.api_id, `${dateKey}.json`);
+      const payload = readOptionalJson(sourcePath);
+      const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+      rawInputRowCount += rows.length;
+      for (const row of rows) {
+        // Aggregate index-level only: reject any per-issuer row outright.
+        if (row?.ISU_CD != null || row?.ISU_NM != null) {
+          excludedIssuerRows += 1;
+          continue;
+        }
+        const indexName = String(row?.IDX_NM ?? "").trim();
+        const close = numberOrNull(row?.CLSPRC_IDX);
+        if (!indexName || !finite(close)) continue;
+        indices.push({
+          market: endpoint.market,
+          index_class: String(row?.IDX_CLSS ?? "").trim() || null,
+          index_name: indexName,
+          date: asOf,
+          close,
+          change: numberOrNull(row?.CMPPREVDD_IDX),
+          change_pct: numberOrNull(row?.FLUC_RT),
+          open: numberOrNull(row?.OPNPRC_IDX),
+          high: numberOrNull(row?.HGPRC_IDX),
+          low: numberOrNull(row?.LWPRC_IDX),
+          acc_trade_volume: numberOrNull(row?.ACC_TRDVOL),
+          acc_trade_value: numberOrNull(row?.ACC_TRDVAL),
+        });
+      }
+    }
+  }
+  indices.sort((a, b) => a.market.localeCompare(b.market) || a.index_name.localeCompare(b.index_name));
+  return {
+    schema_version: "fenok_krx_public_index_daily.v1",
+    market: MARKET,
+    source: SOURCE,
+    source_endpoints: PUBLIC_INDEX_ENDPOINTS.map((endpoint) => `idx/${endpoint.api_id}`),
+    public_serving: true,
+    aggregate_only: true,
+    per_issuer_rows: false,
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+    generated_at: manifest?.completed_at ?? new Date().toISOString(),
+    as_of: asOf,
+    status: indices.length > 0 ? "ready" : "unavailable",
+    row_count: indices.length,
+    raw_input_row_count: rawInputRowCount,
+    excluded_issuer_rows: excludedIssuerRows,
+    notes: [
+      "Aggregate KRX index-level daily closes (all-market / KOSPI / KOSDAQ index series). Public serving authorized by owner 2026-07-19.",
+      "No per-issuer rows: any issue-coded row in the raw idx payload is excluded. Raw KRX capture stays private/admin.",
+    ],
+    indices,
   };
 }
 
@@ -895,6 +980,11 @@ async function run(argv = process.argv.slice(2)) {
     const bridgeIndex = buildBridgeIndex(manifest, groupManifests, config);
     ensureDir(path.dirname(config.bridgeIndexPath));
     fs.writeFileSync(config.bridgeIndexPath, `${JSON.stringify(bridgeIndex, null, 2)}\n`, "utf8");
+
+    // Slice 1: public-safe aggregate index closes (data/computed, mirrored).
+    const publicIndexCloses = buildKrxPublicIndexCloses(manifest, config);
+    ensureDir(path.dirname(config.publicIndexClosesPath));
+    fs.writeFileSync(config.publicIndexClosesPath, `${JSON.stringify(publicIndexCloses, null, 2)}\n`, "utf8");
   }
 
   const result = {
@@ -903,6 +993,7 @@ async function run(argv = process.argv.slice(2)) {
     dates: config.dates,
     output_root: repoRel(config.outputRoot),
     bridge_index: repoRel(config.bridgeIndexPath),
+    public_index_closes: repoRel(config.publicIndexClosesPath),
     summary: manifest.summary,
     validation_errors: manifest.validation_errors,
     wrote: !config.noWrite,
@@ -925,6 +1016,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 export {
   buildBridgeIndex,
   buildConfig,
+  buildKrxPublicIndexCloses,
   buildPlan,
   endpointClass,
   generateWeekdayDates,

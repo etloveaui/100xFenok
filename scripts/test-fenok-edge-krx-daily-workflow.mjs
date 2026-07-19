@@ -19,6 +19,16 @@ assert.deepEqual(gate.missing_in_workflow, [],
   `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
 assert.deepEqual(gate.undeclared_in_workflow, [],
   `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-assert.deepEqual(gate.allowlist_count, 1, "the KRX workflow commits exactly the public-safe bridge index");
+assert.deepEqual(gate.allowlist_count, 1,
+  "the KRX workflow commits exactly one admin path (the public-safe bridge index); the Slice 1 file is data/computed, not admin");
+
+// Slice 1 (owner grant 2026-07-19): the workflow also commits the public-safe
+// aggregate index closes and stages it manifest-natively alongside the hand list.
+assert.match(workflowText, /data\/computed\/fenok-edge-korea-krx-index-daily\.json/,
+  "the KRX workflow must commit the Slice 1 public index closes");
+assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/,
+  "the KRX workflow must stage via the lane manifest (parity defense)");
+assert.match(workflowText, /--stage always_if_exists/);
+assert.doesNotMatch(workflowText, /git add -A/);
 
 console.log("test-fenok-edge-krx-daily-workflow: ok");
