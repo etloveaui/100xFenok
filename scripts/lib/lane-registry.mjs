@@ -844,8 +844,8 @@ workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apew
     commitSpec("data/admin/data-supply-state/detection-attempts/apewisdom_attention.json", "file"),
   ],
   success_if_exists: [
-    commitSpec("data/computed/fenok_social_attention_proxy.json", "file", true),
-    commitSpec("data/computed/fenok_social_attention_proxy_history.json", "file", true),
+    commitSpec("data/computed/fenok_social_attention_proxy.json", "file"),
+    commitSpec("data/computed/fenok_social_attention_proxy_history.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdelt_news_tone"], {
@@ -853,8 +853,8 @@ workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdel
     commitSpec("data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "file"),
   ],
   success_if_exists: [
-    commitSpec("data/computed/fenok_news_tone_proxy.json", "file", true),
-    commitSpec("data/computed/fenok_news_tone_proxy_history.json", "file", true),
+    commitSpec("data/computed/fenok_news_tone_proxy.json", "file"),
+    commitSpec("data/computed/fenok_news_tone_proxy_history.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"], {
