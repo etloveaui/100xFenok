@@ -23,6 +23,7 @@ const EDGAR_WORKFLOW = ".github/workflows/fetch-edgar-filings.yml";
 const FDIC_WORKFLOW = ".github/workflows/fetch-fdic.yml";
 const SLICKCHARTS_DAILY_WORKFLOW = ".github/workflows/slickcharts-daily.yml";
 const SLICKCHARTS_WEEKLY_WORKFLOW = ".github/workflows/slickcharts-weekly.yml";
+const SLICKCHARTS_SYMBOLS_WORKFLOW = ".github/workflows/slickcharts-symbols.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -92,6 +93,16 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// The full symbols merge publishes its attempt shard and canonical aggregate;
+// shard-only/single-symbol calls must not opt into this workflow-wide stage.
+{
+  const fixture = makeFixture({ workflow: SLICKCHARTS_SYMBOLS_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
 // Weekly SlickCharts has no degraded-data branch: its attempt shard and four

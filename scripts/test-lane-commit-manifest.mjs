@@ -286,6 +286,15 @@ assert.deepEqual(slickchartsWeekly.stages.always_if_exists, [
 assert.deepEqual(slickchartsWeekly.stages.success_if_exists, []);
 assert.deepEqual(slickchartsWeekly.exclude, []);
 
+const slickchartsSymbols = manifest.workflows[".github/workflows/slickcharts-symbols.yml"];
+assert.deepEqual(slickchartsSymbols.lanes, ["slickcharts"]);
+assert.deepEqual(slickchartsSymbols.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/slickcharts/symbols.json", required: true },
+]);
+assert.deepEqual(slickchartsSymbols.stages.success_if_exists, []);
+assert.deepEqual(slickchartsSymbols.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

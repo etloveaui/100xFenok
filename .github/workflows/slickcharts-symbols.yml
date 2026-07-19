@@ -189,6 +189,9 @@ jobs:
             symbols \
             "$RUNNER_TEMP/slickcharts-symbols-row.json" \
             "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)" \
+            --manifest-workflow .github/workflows/slickcharts-symbols.yml \
+            --manifest-always always_if_exists \
+            -- \
             data/slickcharts/symbols.json
 
   # Single symbol scraping for testing

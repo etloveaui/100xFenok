@@ -58,4 +58,19 @@ for (const member of ["history", "symbols"]) {
   );
 }
 
+{
+  const symbols = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-symbols.yml"), "utf8");
+  assert.equal(
+    (symbols.match(/--manifest-workflow \.github\/workflows\/slickcharts-symbols\.yml/g) ?? []).length,
+    1,
+    "only the full symbols merge may opt into the workflow-wide manifest stage",
+  );
+  assert.match(
+    symbols,
+    /- name: Commit and push changes[\s\S]*?scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-symbols\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/symbols\.json/,
+  );
+  const singleAttempt = symbols.slice(symbols.indexOf("- name: Commit symbols attempt"));
+  assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol attempt must remain shard-only");
+}
+
 console.log("test-slickcharts-attempt-workflows: ok");
