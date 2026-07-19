@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "ASMZ",
   "asset_type": "etf",
-  "generated_at": "2026-07-16T03:38:48Z",
-  "source_as_of": null,
+  "generated_at": "2026-07-19T06:37:18Z",
+  "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "ASMZ",
     "exchange": null,
@@ -15,7 +15,122 @@
     "fund_family": null,
     "category": null
   },
-  "facts": {},
+  "facts": {
+    "price": {
+      "value": 21.0378,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-07-17",
+      "fetched_at": "2026-07-19T05:57:11Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 21.0378,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-07-17",
+          "fetched_at": "2026-07-19T05:57:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 21.04,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-07-17",
+      "fetched_at": "2026-07-19T05:57:11Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 21.04,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-07-17",
+          "fetched_at": "2026-07-19T05:57:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -0.84,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-07-17",
+      "fetched_at": "2026-07-19T05:57:11Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.84,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-07-17",
+          "fetched_at": "2026-07-19T05:57:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -3.85,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-07-17",
+      "fetched_at": "2026-07-19T05:57:11Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -3.85,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-07-17",
+          "fetched_at": "2026-07-19T05:57:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": "$217.26K",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-07-17",
+      "fetched_at": "2026-07-19T05:57:11Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": "$217.26K",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-07-17",
+          "fetched_at": "2026-07-19T05:57:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
   "etf": {
     "holdings_count": null,
     "holdings_updated": null,
@@ -25,7 +140,7 @@
     "countries": null,
     "classification": {
       "is_leveraged": true,
-      "leverage_factor": null,
+      "leverage_factor": 2.0,
       "is_inverse": false,
       "is_single_stock": false,
       "underlying": null,

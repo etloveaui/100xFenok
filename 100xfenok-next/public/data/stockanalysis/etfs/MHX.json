@@ -3,13 +3,20 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "MHX",
-  "source_as_of": null,
-  "fetched_at": "2026-07-18T21:51:25Z",
+  "source_as_of": "2026-07-17T20:00:00Z",
+  "fetched_at": "2026-07-19T06:25:21Z",
   "endpoints": {
     "holdings": "/etf/mhx/holdings/__data.json",
     "overview": "/etf/mhx/__data.json",
-    "quote": null,
-    "history_periods": {}
+    "quote": "/api/quotes/e/MHX",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/MHX/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/MHX/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/MHX/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/MHX/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/MHX/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/MHX/history?range=5Y&period=Monthly"
+    }
   },
   "endpoint_contracts": {
     "overview": {
@@ -58,9 +65,80 @@
       "cagr10y": null,
       "cagrMAX": null
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "p": 18.9759,
+      "pd": 18.98,
+      "c": -2.78,
+      "cp": -12.79,
+      "cl": 21.76,
+      "cdr": -1,
+      "o": 19.48,
+      "h": 19.48,
+      "l": 18.98,
+      "v": 306.025,
+      "ts": 1784318400000,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "td": "2026-07-17",
+      "h52": 25.298,
+      "l52": 18.9759,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1784332804554.4185,
+      "etd": null,
+      "epv": null,
+      "days": 1,
+      "exp": 1784535300000,
+      "symbol": "MHX",
+      "uid": "MHX"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-17",
+          "o": 19.48,
+          "h": 19.48,
+          "l": 18.976,
+          "c": 18.976,
+          "a": 18.9759,
+          "v": 306,
+          "ch": -12.79
+        },
+        {
+          "t": "2026-07-16",
+          "o": 21.759,
+          "h": 21.759,
+          "l": 21.759,
+          "c": 21.759,
+          "a": 21.7594,
+          "v": 7,
+          "ch": -13.99
+        },
+        {
+          "t": "2026-07-15",
+          "o": 25.298,
+          "h": 25.298,
+          "l": 25.298,
+          "c": 25.298,
+          "a": 25.2977,
+          "v": 18,
+          "ch": 1.24
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "raw": {
     "overview": {
@@ -1723,18 +1801,86 @@
       }
     },
     "holdings": {},
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "p": 18.9759,
+      "pd": 18.98,
+      "c": -2.78,
+      "cp": -12.79,
+      "cl": 21.76,
+      "cdr": -1,
+      "o": 19.48,
+      "h": 19.48,
+      "l": 18.98,
+      "v": 306.025,
+      "ts": 1784318400000,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "td": "2026-07-17",
+      "h52": 25.298,
+      "l52": 18.9759,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1784332804554.4185,
+      "etd": null,
+      "epv": null,
+      "days": 1,
+      "exp": 1784535300000,
+      "symbol": "MHX",
+      "uid": "MHX"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-17",
+          "o": 19.48,
+          "h": 19.48,
+          "l": 18.976,
+          "c": 18.976,
+          "a": 18.9759,
+          "v": 306,
+          "ch": -12.79
+        },
+        {
+          "t": "2026-07-16",
+          "o": 21.759,
+          "h": 21.759,
+          "l": 21.759,
+          "c": 21.759,
+          "a": 21.7594,
+          "v": 7,
+          "ch": -13.99
+        },
+        {
+          "t": "2026-07-15",
+          "o": 25.298,
+          "h": 25.298,
+          "l": 25.298,
+          "c": 25.298,
+          "a": 25.2977,
+          "v": 18,
+          "ch": 1.24
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "detail_status": "stockanalysis_partial",
   "partial_reason_codes": [
     "holdings_unavailable",
     "holdings_count_unavailable",
     "holdings_date_unavailable",
-    "holdings_countries_unavailable",
-    "history_deferred_initial_reconcile",
-    "quote_deferred_initial_reconcile"
-  ],
-  "source_as_of_reason": "provider detail response carries no market or holdings observation date"
+    "holdings_countries_unavailable"
+  ]
 }
