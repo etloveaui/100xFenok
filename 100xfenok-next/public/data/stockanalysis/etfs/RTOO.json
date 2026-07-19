@@ -3,13 +3,20 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "RTOO",
-  "source_as_of": null,
-  "fetched_at": "2026-07-18T22:47:44Z",
+  "source_as_of": "2026-07-17T20:00:00Z",
+  "fetched_at": "2026-07-19T06:52:36Z",
   "endpoints": {
     "holdings": "/etf/rtoo/holdings/__data.json",
     "overview": "/etf/rtoo/__data.json",
-    "quote": null,
-    "history_periods": {}
+    "quote": "/api/quotes/e/RTOO",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/RTOO/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/RTOO/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/RTOO/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/RTOO/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/RTOO/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/RTOO/history?range=5Y&period=Monthly"
+    }
   },
   "endpoint_contracts": {
     "overview": {
@@ -58,9 +65,56 @@
       "cagr10y": null,
       "cagrMAX": null
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": -1.24,
+      "e": false,
+      "h": 26.01,
+      "l": 23.46,
+      "o": 26.01,
+      "p": 23.848,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 56905,
+      "cl": 25.09,
+      "cp": -4.95,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 23.85,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1784332800031.5166,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 27.58,
+      "l52": 23.46,
+      "uid": "RTOO",
+      "days": 0,
+      "symbol": "RTOO"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-17",
+          "o": 26.01,
+          "h": 26.01,
+          "l": 23.46,
+          "c": 23.848,
+          "a": 23.848,
+          "v": 56905,
+          "ch": -4.95
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "raw": {
     "overview": {
@@ -1725,18 +1779,62 @@
       }
     },
     "holdings": {},
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": -1.24,
+      "e": false,
+      "h": 26.01,
+      "l": 23.46,
+      "o": 26.01,
+      "p": 23.848,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 56905,
+      "cl": 25.09,
+      "cp": -4.95,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 23.85,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1784332800031.5166,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 27.58,
+      "l52": 23.46,
+      "uid": "RTOO",
+      "days": 0,
+      "symbol": "RTOO"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-17",
+          "o": 26.01,
+          "h": 26.01,
+          "l": 23.46,
+          "c": 23.848,
+          "a": 23.848,
+          "v": 56905,
+          "ch": -4.95
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "detail_status": "stockanalysis_partial",
   "partial_reason_codes": [
     "holdings_unavailable",
     "holdings_count_unavailable",
     "holdings_date_unavailable",
-    "holdings_countries_unavailable",
-    "history_deferred_initial_reconcile",
-    "quote_deferred_initial_reconcile"
-  ],
-  "source_as_of_reason": "provider detail response carries no market or holdings observation date"
+    "holdings_countries_unavailable"
+  ]
 }

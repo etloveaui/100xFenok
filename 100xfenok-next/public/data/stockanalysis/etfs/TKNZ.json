@@ -3,13 +3,20 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "TKNZ",
-  "source_as_of": null,
-  "fetched_at": "2026-07-18T23:43:06Z",
+  "source_as_of": "2026-07-17T20:00:00Z",
+  "fetched_at": "2026-07-19T06:59:33Z",
   "endpoints": {
     "holdings": "/etf/tknz/holdings/__data.json",
     "overview": "/etf/tknz/__data.json",
-    "quote": null,
-    "history_periods": {}
+    "quote": "/api/quotes/e/TKNZ",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/TKNZ/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/TKNZ/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/TKNZ/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/TKNZ/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/TKNZ/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/TKNZ/history?range=5Y&period=Monthly"
+    }
   },
   "endpoint_contracts": {
     "overview": {
@@ -58,9 +65,56 @@
       "cagr10y": null,
       "cagrMAX": null
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": -0.3,
+      "e": false,
+      "h": 25.45,
+      "l": 23.76,
+      "o": 24.01,
+      "p": 24.3507,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 10927.961324,
+      "cl": 24.65,
+      "cp": -1.21,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 24.35,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1784332800049.4243,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 25.45,
+      "l52": 23.76,
+      "uid": "TKNZ",
+      "days": 0,
+      "symbol": "TKNZ"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-17",
+          "o": 24.01,
+          "h": 25.445,
+          "l": 23.76,
+          "c": 24.351,
+          "a": 24.3507,
+          "v": 10863,
+          "ch": -1.21
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "raw": {
     "overview": {
@@ -1706,7 +1760,7 @@
       },
       "dividendTable": null,
       "news": {
-        "exp": "1784423335177",
+        "exp": "1784444979228",
         "data": [
           {
             "url": "https://www.etftrends.com/active-etf-content-hub/t-rowe-price-launches-first-active-multi-token-spot-crypto-etp-tknz/",
@@ -1757,18 +1811,62 @@
       }
     },
     "holdings": {},
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": -0.3,
+      "e": false,
+      "h": 25.45,
+      "l": 23.76,
+      "o": 24.01,
+      "p": 24.3507,
+      "u": "Jul 17, 2026, 4:00 PM EDT",
+      "v": 10927.961324,
+      "cl": 24.65,
+      "cp": -1.21,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 24.35,
+      "td": "2026-07-17",
+      "ts": 1784318400000,
+      "cdr": -1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1784332800049.4243,
+      "exp": 1784535300000,
+      "fms": "closed",
+      "h52": 25.45,
+      "l52": 23.76,
+      "uid": "TKNZ",
+      "days": 0,
+      "symbol": "TKNZ"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-17",
+          "o": 24.01,
+          "h": 25.445,
+          "l": 23.76,
+          "c": 24.351,
+          "a": 24.3507,
+          "v": 10863,
+          "ch": -1.21
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "detail_status": "stockanalysis_partial",
   "partial_reason_codes": [
     "holdings_unavailable",
     "holdings_count_unavailable",
     "holdings_date_unavailable",
-    "holdings_countries_unavailable",
-    "history_deferred_initial_reconcile",
-    "quote_deferred_initial_reconcile"
-  ],
-  "source_as_of_reason": "provider detail response carries no market or holdings observation date"
+    "holdings_countries_unavailable"
+  ]
 }

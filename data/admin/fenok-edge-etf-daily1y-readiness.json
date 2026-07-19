@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-19T06:44:09.776Z",
-  "classification_as_of": "2026-07-19T06:43:41.658Z",
+  "generated_at": "2026-07-19T07:37:41.057Z",
+  "classification_as_of": "2026-07-19T07:37:05.066Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -37,8 +37,8 @@
     "terminal_limited_breakdown": {
       "data_supply_unavailable": 26,
       "provider_history_start_limited": 10,
-      "provider_rejected_non_etf": 2,
-      "stockanalysis_recent_short_rows": 29,
+      "provider_rejected_non_etf": 5,
+      "stockanalysis_recent_short_rows": 26,
       "successful_short_history_cooldown": 5
     },
     "etf_no_fetchable_daily_1y_gap": 0,
@@ -304,17 +304,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 37,
+      "ticker_count": 34,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 37,
+          "ticker_count": 34,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "100",
-            "etfs": "AAPR,AAPW,AAPX,ACVU,AETH,AIOO,AJAN,AJUL,AKAF,AMJB,AMUB,AMZW,APOC,ARKB,ARLU,ATMP,AUGU,BBB,BCCC,BDCX,BDCZ,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,FEAT,FIVY,YBTC,YETH,ZALT,ZAPR,ZDEK,ZJAN"
+            "etfs": "AAPR,AAPW,AAPX,ACVU,AETH,AIOO,AJAN,AJUL,AKAF,AMJB,AMZW,APOC,APPX,ARKB,ARLU,AUGU,BBB,BCCC,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,FEAT,FIVY,YBTC,YETH,ZALT,ZAPR,ZDEK,ZJAN"
           }
         }
       ]

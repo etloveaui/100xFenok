@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-07-19T06:43:27Z",
+  "generated_at": "2026-07-19T07:36:46Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6754,
@@ -34,10 +34,10 @@
       }
     },
     "change": {
-      "ticker_count": 6531,
+      "ticker_count": 6533,
       "multi_candidate_count": 1201,
       "selected_sources": {
-        "stockanalysis.quote": 4869,
+        "stockanalysis.quote": 4871,
         "yf": 1153,
         "yf.derived": 3,
         "yf.stockanalysis_fallback.quote": 506
@@ -49,10 +49,10 @@
       }
     },
     "change_pct": {
-      "ticker_count": 6530,
+      "ticker_count": 6532,
       "multi_candidate_count": 1201,
       "selected_sources": {
-        "stockanalysis.quote": 4869,
+        "stockanalysis.quote": 4871,
         "yf": 1153,
         "yf.derived": 2,
         "yf.stockanalysis_fallback.quote": 506
@@ -120,10 +120,10 @@
       }
     },
     "previous_close": {
-      "ticker_count": 6533,
+      "ticker_count": 6535,
       "multi_candidate_count": 227,
       "selected_sources": {
-        "stockanalysis.quote": 4642,
+        "stockanalysis.quote": 4644,
         "yf": 1385,
         "yf.stockanalysis_fallback.quote": 506
       },
@@ -133,11 +133,11 @@
       }
     },
     "price": {
-      "ticker_count": 6533,
+      "ticker_count": 6535,
       "multi_candidate_count": 522,
       "selected_sources": {
         "slickcharts": 3,
-        "stockanalysis.quote": 4820,
+        "stockanalysis.quote": 4822,
         "yf": 1204,
         "yf.stockanalysis_fallback.quote": 506
       },
@@ -503,6 +503,45 @@
       "diagnosis": "sign_divergence",
       "spread_pct": 196.529298,
       "fresh_spread_pct": 196.529298,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "SPPP",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 190.428726,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -0.46367440408066496
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 1.178
+        },
+        {
+          "source": "yf",
+          "value": -1.3026834
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 190.428726,
+      "fresh_spread_pct": 190.428726,
       "stale_sources": [],
       "scale_mismatch": false,
       "scale_factor": null,
@@ -3696,45 +3735,6 @@
         "yf.history_1y": 20.0,
         "stockanalysis.detail.performance": 0.0,
         "yf": 20.0
-      }
-    },
-    {
-      "ticker": "SPPP",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 139.361155,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -0.46367440408066496
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 1.178
-        },
-        {
-          "source": "yf",
-          "value": 0.3091216
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 139.361155,
-      "fresh_spread_pct": 139.361155,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
       }
     },
     {
@@ -8978,6 +8978,45 @@
       }
     },
     {
+      "ticker": "SPPP",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 190.428726,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -0.46367440408066496
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 1.178
+        },
+        {
+          "source": "yf",
+          "value": -1.3026834
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 190.428726,
+      "fresh_spread_pct": 190.428726,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "SNDC",
       "asset_type": "etf",
       "field": "return_1y",
@@ -10371,45 +10410,6 @@
       "diagnosis": "sign_divergence",
       "spread_pct": 140.11613,
       "fresh_spread_pct": 140.11613,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "SPPP",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 139.361155,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -0.46367440408066496
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 1.178
-        },
-        {
-          "source": "yf",
-          "value": 0.3091216
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 139.361155,
-      "fresh_spread_pct": 139.361155,
       "stale_sources": [],
       "scale_mismatch": false,
       "scale_factor": null,
