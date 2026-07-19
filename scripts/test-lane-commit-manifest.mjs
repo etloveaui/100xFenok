@@ -186,6 +186,19 @@ assert.deepEqual(fenokEdgeDaily.stages.success_verify_not_plan_if_exists, [
 ]);
 assert.deepEqual(fenokEdgeDaily.exclude, []);
 
+const yfFinance = manifest.workflows[".github/workflows/fetch-yf-finance.yml"];
+assert.deepEqual(yfFinance.lanes, ["yahoo_batch_quote_history"]);
+assert.deepEqual(yfFinance.stages.always_if_exists, [
+  { kind: "directory", path: "data/yf/finance", required: true },
+  { kind: "file", path: "data/yf/quarter_closes.json", required: true },
+  { kind: "directory", path: "data/admin/yahoo-batch-quote-history", required: true },
+  { kind: "file", path: "100xfenok-next/public/data/yf/quarter_closes.json", required: true },
+]);
+assert.deepEqual(yfFinance.stages.success_if_exists, []);
+assert.deepEqual(yfFinance.exclude, [
+  { kind: "file", path: "data/yf/finance/_summary.json", required: false },
+]);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

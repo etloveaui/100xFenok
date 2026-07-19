@@ -91,7 +91,12 @@ if [[ ${#SELECTED_DYNAMIC[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_DYNAMIC[@
 
 while IFS= read -r -d '' encoded; do
   spec=$(printf '%s' "$encoded" | base64 --decode)
-  git restore --staged -- "$(jq -r '.path' <<<"$spec")" 2>/dev/null || true
+  exclude_path=$(jq -r '.path' <<<"$spec")
+  if git cat-file -e "HEAD:$exclude_path" 2>/dev/null; then
+    git restore --staged -- "$exclude_path"
+  else
+    git rm -r --cached --ignore-unmatch -- "$exclude_path" >/dev/null
+  fi
 done < <(jq -j --arg workflow "$WORKFLOW" '.workflows[$workflow].exclude[]? | @base64 + "\u0000"' "$MANIFEST")
 
 declared_count=$(jq -r --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.workflows[$workflow].stages[$stage] | length' "$MANIFEST")

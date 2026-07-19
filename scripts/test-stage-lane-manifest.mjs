@@ -16,6 +16,7 @@ const WORKFLOW = ".github/workflows/fetch-defillama.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
+const YF_FINANCE_WORKFLOW = ".github/workflows/fetch-yf-finance.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -34,7 +35,7 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
     always: manifest.workflows[workflow].stages.always_if_exists.map((entry) => entry.path),
     success: manifest.workflows[workflow].stages[successStage].map((entry) => entry.path),
   };
-  const materialized = { always: [], success: [] };
+  const materialized = { always: [], success: [], exclude: [] };
   const materialize = (entries, output) => {
     for (const entry of entries) {
       if (entry.kind === "glob") {
@@ -63,6 +64,7 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
   };
   materialize(manifest.workflows[workflow].stages.always_if_exists, materialized.always);
   if (includeSuccess) materialize(manifest.workflows[workflow].stages[successStage], materialized.success);
+  materialize(manifest.workflows[workflow].exclude, materialized.exclude);
   return { root, manifest, paths, materialized };
 }
 
@@ -76,6 +78,32 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+// Required Yahoo directories stage their concrete files while the declared
+// summary exclusion is removed from the index by the manifest helper itself.
+{
+  const fixture = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /stage_selected=4 staged_index_total=4/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  assert.equal(
+    cached(fixture.root).includes("data/yf/finance/_summary.json"),
+    false,
+    "the manifest exclusion must keep the generated YF summary unstaged",
+  );
+
+  const tracked = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
+  execFileSync("git", ["add", "-A"], { cwd: tracked.root });
+  execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: tracked.root });
+  for (const file of [...tracked.materialized.always, ...tracked.materialized.exclude]) {
+    fs.appendFileSync(path.join(tracked.root, file), "changed\n");
+  }
+  const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
+  assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
+  assert.match(trackedAlways.stdout, /stage_selected=4 staged_index_total=4/);
+  assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
 // Directory policy selects one manifest entry while git stages its concrete files.

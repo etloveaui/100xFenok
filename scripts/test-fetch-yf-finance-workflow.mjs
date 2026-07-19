@@ -17,5 +17,12 @@ assert.deepEqual(gate.missing_in_workflow, [],
 assert.deepEqual(gate.undeclared_in_workflow, [],
   `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
 assert.deepEqual(gate.lanes, ["yahoo_batch_quote_history"], "the registry must attribute this lane to fetch-yf-finance.yml");
+assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
+assert.match(workflowText, /--stage always_if_exists/);
+assert.match(
+  workflowText,
+  /if: \$\{\{ always\(\) && env\.YF_PLAN_ONLY != 'true' \}\}[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage always_if_exists[\s\S]*?git add --[\s\S]*?git restore --staged --worktree -- data\/yf\/finance\/_summary\.json/,
+  "manifest staging must remain inside the non-plan persist step, alongside the legacy hand list and before the summary exclusion",
+);
 
 console.log("test-fetch-yf-finance-workflow: ok");

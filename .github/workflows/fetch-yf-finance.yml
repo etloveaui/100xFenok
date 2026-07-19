@@ -252,6 +252,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Phase 1: consume the generated policy while retaining the legacy
+          # hand list as parity defense until this workflow's natural proof.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-yf-finance.yml \
+            --stage always_if_exists
           git add -- \
             data/yf/finance \
             data/yf/quarter_closes.json \
