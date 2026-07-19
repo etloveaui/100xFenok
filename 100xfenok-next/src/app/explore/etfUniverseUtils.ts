@@ -111,7 +111,7 @@ function formatPrice(value: number | null | undefined): string | null {
 
 function formatSignedPercent(value: number | null | undefined): string | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 export function percentPointsValue(value: string | number | null | undefined): number | null {

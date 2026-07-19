@@ -65,6 +65,8 @@ eq(formatPercent(0.1234, { digits: 2 }), "12.34%", "percent 2 digits");
 eq(formatPercent(12.3, { fraction: false }), "12.3%", "percent already-scaled");
 eq(formatSignedPercent(0.05), "+5.0%", "signed percent positive gets +");
 eq(formatSignedPercent(-0.05), "-5.0%", "signed percent negative (existing ASCII minus)");
+eq(formatSignedPercent(0), "0.0%", "signed percent exact zero has no sign");
+eq(formatSignedPercent(-0), "0.0%", "signed percent negative zero has no sign");
 eq(formatPercent(null), "—", "percent null -> em dash, never 0");
 eq(formatPercent("abc"), "—", "percent non-numeric -> em dash");
 eq(formatPercent(0), "0.0%", "percent zero is a real value");
@@ -141,6 +143,11 @@ eq(formatCpScreenerScore(1234.5), "1,235", "CpScreener integer grouping");
 eq(formatCpScreenerPercent(0), "0.0%", "CpScreener zero-sign behavior remains unchanged");
 
 eq(formatEtfUniverseNumber(1234567), "1,234,567", "ETF universe integer uses shared locale pin");
+eq(
+  formatTypeHint({ ticker: "ZERO", category: "테스트", change: 0, performance: { tr1y: 0 } }),
+  "ZERO · 테스트 · 변동률 0.00% · 1년 0.00%",
+  "ETF universe local signed percent exact zero has no sign",
+);
 assert.match(
   formatTypeHint({
     ticker: "TST",

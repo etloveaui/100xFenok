@@ -24,7 +24,7 @@ export function formatPercent(value: unknown, options: PercentOptions = {}): str
   const n = finiteNumber(value);
   if (n === null) return empty;
   const pct = fraction ? n * 100 : n;
-  const sign = signed && pct >= 0 ? "+" : "";
+  const sign = signed && pct > 0 ? "+" : "";
   return `${sign}${pct.toFixed(digits)}%`;
 }
 
