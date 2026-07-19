@@ -109,6 +109,19 @@ assert.deepEqual(fredBanking.stages.success_if_exists.map((entry) => entry.path)
 ]);
 assert.deepEqual(fredBanking.exclude, []);
 
+const nasdaqGiwSox = manifest.workflows[".github/workflows/fetch-nasdaq-giw-sox.yml"];
+assert.deepEqual(nasdaqGiwSox.lanes, ["nasdaq_giw_sox"]);
+assert.deepEqual(nasdaqGiwSox.stages.always_if_exists.map((entry) => entry.path), [
+  "data/admin/data-supply-state/detection-attempts/nasdaq_giw_sox.json",
+  "data/admin/nasdaq_giw_sox/index.json",
+  "data/admin/nasdaq_giw_sox/lkg/constituents.json",
+  "data/admin/nasdaq_giw_sox/history/constituents.json",
+]);
+assert.deepEqual(nasdaqGiwSox.stages.success_if_exists.map((entry) => entry.path), [
+  "data/indices/nasdaq-giw-sox-constituents.json",
+]);
+assert.deepEqual(nasdaqGiwSox.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

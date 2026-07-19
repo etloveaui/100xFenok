@@ -414,6 +414,10 @@ await assert.rejects(() => runNasdaqGiwSox({
   assert.match(workflow, /detection-attempts\/nasdaq_giw_sox\.json/);
   assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/index\.json/);
   assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/lkg\/constituents\.json/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.doesNotMatch(workflow, /git add -A/);
   assert.doesNotMatch(workflow, /public\/data\/indices\/nasdaq-giw-sox-constituents\.json/);
 }
