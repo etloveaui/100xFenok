@@ -41,7 +41,7 @@ function cx(...parts: Array<string | false | undefined>) {
 
 /** Map a history percentile to a rich/cheap verdict. */
 function valuationMeta(pct: number | null): { label: string; tone: string; dot: string } {
-  if (pct === null) return { label: "—", tone: "text-[var(--c-ink-4)]", dot: "bg-[var(--c-line)]" };
+  if (pct === null) return { label: "—", tone: "text-[var(--c-ink-3)]", dot: "bg-[var(--c-line)]" };
   if (pct >= 80) return { label: "고평가", tone: "text-[var(--c-down)]", dot: "bg-[var(--c-down)]" };
   if (pct >= 60) return { label: "다소 높음", tone: "text-[var(--c-warn)]", dot: "bg-[var(--c-warn)]" };
   if (pct >= 40) return { label: "역사적 중립", tone: "text-[var(--c-ink-2)]", dot: "bg-[var(--c-line)]" };
@@ -69,7 +69,7 @@ function toneDotClass(tone: MarketTone): string {
 }
 
 function EmptyPanel({ label }: { label: string }) {
-  return <div className="px-[var(--panel-pad)] py-5 text-sm font-semibold text-[var(--c-ink-4)]">{label}</div>;
+  return <div className="px-[var(--panel-pad)] py-5 text-sm font-semibold text-[var(--c-ink-3)]">{label}</div>;
 }
 
 function AsOfBadge({ value, prefix = "기준" }: { value: string | null | undefined; prefix?: string }) {
@@ -95,11 +95,11 @@ function PanelShell({
         <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
         {asOf ? (
           <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-            <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{subtitle}</span>
+            <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{subtitle}</span>
             <AsOfBadge value={asOf} prefix={asOfPrefix} />
           </span>
         ) : (
-          <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{subtitle}</span>
+          <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{subtitle}</span>
         )}
       </header>
       {children}
@@ -372,9 +372,9 @@ function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; f
               </div>
               <div className="mt-2 flex min-w-0 items-end gap-1">
                 <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{formatDecimal(item.value, { digits: 1 })}</span>
-                <span className="pb-1 text-[10px] font-bold uppercase text-[var(--c-ink-4)]">{item.unit}</span>
+                <span className="pb-1 text-[10px] font-bold uppercase text-[var(--c-ink-3)]">{item.unit}</span>
               </div>
-              <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-4)]">{formatAsOf(item.releaseDate ?? item.period) ?? "—"}</p>
+              <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-3)]">{formatAsOf(item.releaseDate ?? item.period) ?? "—"}</p>
               <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{item.detail}</p>
             </div>
           ))}
@@ -400,7 +400,7 @@ function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
                 </div>
                 <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(item.tone))}>{item.statusLabel}</span>
               </div>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{item.asOf ?? "—"}</p>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.asOf ?? "—"}</p>
             </div>
           ))}
         </div>
@@ -622,7 +622,7 @@ function MomentumCell({ label, value }: { label: string; value: number | null })
   const positive = value !== null && value >= 0;
   return (
     <div className="rounded-xl border border-[var(--c-line)] bg-white/70 px-3 py-2">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
       <p className={cx("orbitron mt-1 text-sm font-black tabular-nums", value === null ? "text-[var(--c-line-2)]" : positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
         {formatSignedPercent(value)}
       </p>
@@ -644,9 +644,9 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
         <span className={cx("inline-flex items-center gap-1", meta.tone)} data-market-valuation-verdict>
           <span className={cx("h-1.5 w-1.5 rounded-full", meta.dot)} />
           {meta.label}
-          {band.percentile !== null ? <span className="text-[var(--c-ink-4)]">· 역사 {band.percentile}%</span> : null}
+          {band.percentile !== null ? <span className="text-[var(--c-ink-3)]">· 역사 {band.percentile}%</span> : null}
         </span>
-        <span className="tabular-nums text-[var(--c-ink-4)]">
+        <span className="tabular-nums text-[var(--c-ink-3)]">
           {formatDecimal(band.min, { digits })} ~ {formatDecimal(band.max, { digits })}
         </span>
       </div>

@@ -63,7 +63,7 @@ const SUPERINVESTOR_TABS: Array<TabItem<SuperInvestorsTab>> = [
 ];
 
 const ChartLoading = () => (
-  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-4)]">
+  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
     차트 로딩 중
   </div>
 );

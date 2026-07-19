@@ -17,7 +17,7 @@ const FenokSignalRadarHexagonChart = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex min-w-0 max-w-full flex-col items-center gap-2">
-        <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">
+        <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
           &nbsp;
         </span>
         <div

@@ -74,7 +74,7 @@ function MetricCard({
       className="min-w-0 rounded-[1rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3"
       data-market-structure-summary-card="true"
     >
-      <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)]">{label}</p>
+      <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</p>
       <p className="orbitron mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
         {value}
       </p>
@@ -104,7 +104,7 @@ function SlotShell({
     >
       <header className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
-        <span className="min-w-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">
+        <span className="min-w-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
           {subtitle}
         </span>
       </header>
@@ -115,7 +115,7 @@ function SlotShell({
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-xs font-bold leading-5 text-[var(--c-ink-4)]">
+    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-xs font-bold leading-5 text-[var(--c-ink-3)]">
       {children}
     </div>
   );
@@ -179,7 +179,7 @@ export default function MarketStructureDetailClient({
     <div className="data-shell-page">
       <section className="panel data-shell-header" data-market-structure-header="true">
         <div className="data-shell-head-main">
-          <div className="mb-2 hidden items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)] md:flex">
+          <div className="mb-2 hidden items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] md:flex">
             <TransitionLink href={ROUTES.market} className="hover:text-[var(--c-brand)]">
               시장 밸류에이션
             </TransitionLink>
@@ -219,7 +219,7 @@ export default function MarketStructureDetailClient({
       </section>
 
       {state === "loading" ? (
-        <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-8 text-center text-sm font-bold text-[var(--c-ink-4)]">
+        <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-8 text-center text-sm font-bold text-[var(--c-ink-3)]">
           시장 구조 데이터를 불러오는 중입니다.
         </div>
       ) : null}

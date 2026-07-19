@@ -90,9 +90,9 @@ const perComplete = renderToStaticMarkup(createElement(PerBandChart, {
   estimates: { fy1: 26, fy2: 27, fy3: 28 },
 }));
 
-assert.equal(sha256(sparkIncomplete), "a79233b3a340e3f72f721ffd146c3c48fedda017efe7248d695ee85d4260959e");
-assert.equal(sha256(sparkComplete), "aa2bc152f59ebecb38fa6921f4bbeeab3d8246595d431ee110101f1844c2bbed");
-assert.equal(sha256(perIncomplete), "0031cdbb244a13126fe718459fe508465c157398252ea6207c65d610baaf098d");
-assert.equal(sha256(perComplete), "f5055426e837a56d1deeeb0c3b8e8df1985c44e12065b42532ffb3c7eb0f440c");
+assert.equal(sha256(sparkIncomplete), "c6b2aa3b8253190c8c9fb02a93ebf31a76bf3cfb50eb0cfaef2729e500b207b2");
+assert.equal(sha256(sparkComplete), "e6f9745693172f5f152c34b20655057f9e24c60f5080efa1ce1f1321f62bb655");
+assert.equal(sha256(perIncomplete), "e33cbdd9ec65e367287b0a61979631b7a28bd809ba0b58e654045cd4808c7db3");
+assert.equal(sha256(perComplete), "cb4c4f8773a4cabebe1603a8e12a94953b8169f357415062ac93e1b74c1e281a");
 
 console.log("[test-stock-detail-panel-dedupe] OK");

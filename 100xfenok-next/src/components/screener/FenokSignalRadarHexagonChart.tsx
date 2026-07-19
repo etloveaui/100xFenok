@@ -173,7 +173,7 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
           pointLabels: {
             color: (ctx) => {
               const axis = safeAxes[ctx.index];
-              return axis?.score === null ? theme.token("ink4") : theme.token("ink2");
+              return axis?.score === null ? theme.token("ink3") : theme.token("ink2");
             },
             font: { size: FONT_SIZE[effectiveSize], weight: "bold" as const },
             padding: POINT_LABEL_PADDING[effectiveSize],

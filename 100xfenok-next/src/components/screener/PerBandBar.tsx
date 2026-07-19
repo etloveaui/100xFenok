@@ -26,7 +26,7 @@ function cx(...parts: Array<string | false | undefined>) {
 export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) {
   const band = normalizeBandTuple(current, min, max);
   if (!band) {
-    return <span className="text-[var(--c-ink-4)]">—</span>;
+    return <span className="text-[var(--c-ink-3)]">—</span>;
   }
   const [safeCurrent, safeMin, safeMax] = band;
   const pct = bandPct(safeCurrent, safeMin, safeMax);
@@ -82,7 +82,7 @@ export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) 
           {label} {Math.round(pct * 100)}%
         </span>
       </div>
-      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-4)]">
+      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
         평균 {safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y {safeMin.toFixed(1)}~{safeMax.toFixed(1)}
       </span>
     </div>

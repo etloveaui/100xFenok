@@ -145,7 +145,7 @@ export default function FenokSignalHelpPopover({
           );
         })}
       </div>
-      <p className="text-[9px] font-bold text-[var(--c-ink-4)]">
+      <p className="text-[9px] font-bold text-[var(--c-ink-3)]">
         Fenok 파생 신호 · 매수 권유 아님
       </p>
     </div>

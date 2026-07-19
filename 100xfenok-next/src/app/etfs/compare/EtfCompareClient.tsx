@@ -232,7 +232,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
             data-etf-compare-control="csv"
             onClick={() => downloadCompareCsv(rows, overlaps)}
             disabled={loading || rows.length === 0}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
           >
             CSV 저장
           </button>

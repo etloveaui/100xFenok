@@ -178,7 +178,7 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
             marginLeft: "auto",
             fontFamily: "'JetBrains Mono',monospace",
             fontSize: 10,
-            color: "var(--c-ink-4)",
+            color: "var(--c-ink-3)",
           }}
         >
           {data.sourceKey ?? "—"}
@@ -206,7 +206,7 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
         style={{
           marginTop: 6,
           fontSize: 10,
-          color: tone.dot,
+          color: data.tone === "offline" ? "var(--c-ink-3)" : tone.dot,
           fontWeight: 700,
           fontFamily: "'JetBrains Mono',monospace",
         }}

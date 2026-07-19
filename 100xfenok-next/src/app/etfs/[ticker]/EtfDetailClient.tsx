@@ -967,7 +967,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
                   {item.symbol ? (
                     <span className="orbitron text-xs font-black text-[var(--c-ink)]">{item.symbol}</span>
                   ) : null}
-                  <span className="block truncate max-w-[14rem] text-[11px] font-semibold text-[var(--c-ink-4)]" title={item.name ?? undefined}>
+                  <span className="block truncate max-w-[14rem] text-[11px] font-semibold text-[var(--c-ink-3)]" title={item.name ?? undefined}>
                     {item.name ?? "—"}
                   </span>
                 </th>
@@ -1697,7 +1697,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 type="button"
                 onClick={() => downloadHoldingsCsv(symbol, holdings, holdingsUpdated)}
                 disabled={holdings.length === 0}
-                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
                 data-etf-detail-holdings-csv="true"
               >
                 CSV 저장

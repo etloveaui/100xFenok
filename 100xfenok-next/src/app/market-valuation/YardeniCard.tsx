@@ -37,7 +37,7 @@ function loadYardney(): Promise<YardneyDoc | null> {
 }
 
 function verdict(p: number | null): { text: string; tone: string } {
-  if (p === null) return { text: "데이터 부족", tone: "text-[var(--c-ink-4)]" };
+  if (p === null) return { text: "데이터 부족", tone: "text-[var(--c-ink-3)]" };
   if (p > 15) return { text: `적정가 대비 ${formatPlainPercent(p, { fraction: false, digits: 1 })} 프리미엄 — 고평가 구간`, tone: "text-[var(--c-down)]" };
   if (p > 5) return { text: `다소 프리미엄 (${formatPlainPercent(p, { fraction: false, digits: 1 })})`, tone: "text-[var(--c-warn)]" };
   if (p >= -5) return { text: `적정 범위 (${formatPlainPercent(p, { fraction: false, digits: 1 })})`, tone: "text-[var(--c-ink-2)]" };
@@ -234,7 +234,7 @@ export default function YardeniCard() {
               </circle>
             ))}
           </svg>
-          <div className="mt-1 flex justify-between text-[9px] font-bold tabular-nums text-[var(--c-ink-4)]">
+          <div className="mt-1 flex justify-between text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
             <span>최저 {fmtIndex(chart.minV)}</span>
             <span className="text-[var(--c-brand)]">S&P 500</span>
             <span className="text-[var(--c-ink-3)]">적정가</span>
@@ -248,7 +248,7 @@ export default function YardeniCard() {
               ["기준일", formatAsOf(active.date) ?? "—"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{label}</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
                 <p className="orbitron mt-1 text-xs font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
               </div>
             ))}
@@ -262,7 +262,7 @@ export default function YardeniCard() {
         </p>
       ) : null}
 
-      <p className="mt-3 text-[9px] font-semibold text-[var(--c-ink-4)]">
+      <p className="mt-3 text-[9px] font-semibold text-[var(--c-ink-3)]">
         Yardeni Bond PER 파생값 · 주간 · 참고용 · 기준 {formatAsOf(latest.date) ?? "—"}
       </p>
     </div>

@@ -213,7 +213,7 @@ export default function RegimeSparkline({
             fontSize: 9,
             fontWeight: 700,
             letterSpacing: ".1em",
-            color: "var(--c-ink-4)",
+            color: "var(--c-ink-3)",
             background: "color-mix(in srgb, var(--c-panel) 78%, transparent)",
             padding: "1px 4px",
             borderRadius: 3,
@@ -226,7 +226,7 @@ export default function RegimeSparkline({
             style={{
               fontFamily: "'Noto Sans KR',sans-serif",
               fontSize: 10.5,
-              color: "var(--c-ink-4)",
+              color: "var(--c-ink-3)",
               fontWeight: 500,
             }}
           >

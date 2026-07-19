@@ -108,6 +108,7 @@
     "qa:fenok-edge-public-bundle": "node ../scripts/test-check-fenok-edge-freshness.mjs && node ../scripts/check-fenok-edge-freshness.mjs --public-bundle && npm run qa:rim-index && npm run qa:fenok-stock-promotion-audit && npm run qa:fenok-s1-promotion-gate && npm run qa:fenok-daily-accumulation && npm run qa:fenok-occ-options && npm run qa:fenok-s0-source-gaps && npm run qa:fenok-signal-lens && npm run qa:fenok-etf-signal-gate && npm run qa:fenok-etf-action-index-gate && npm run qa:fenok-etf-core-daily-basket && npm run qa:fenok-etf-new-radar-gate && npm run qa:fenok-etf-daily1y-readiness && npm run qa:fenok-etf-daily1y-dispatch-plan-gate && npm run qa:fenok-data-health-kpi",
     "qa:fenok-s0-daily-gated": "npm run qa:fenok-signal-lens && node ../scripts/check-fenok-edge-freshness.mjs --require-active-s0-daily-gated",
     "qa:tokens": "node scripts/check-token-foundation.mjs",
+    "qa:ink4-contrast": "node scripts/check-ink4-contrast-contract.mjs",
     "qa:tokens:update-allowlist": "node scripts/generate-raw-color-allowlist.mjs",
     "qa:copy": "node scripts/test-fenok-conviction-basis-copy.mjs && node scripts/lint-public-copy.mjs",
     "qa:quote-contract": "node scripts/check-quote-contract.mjs && python3 ../scripts/test_data_spine_gas_quote_gateway.py",

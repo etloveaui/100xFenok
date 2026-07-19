@@ -532,7 +532,7 @@ function ConnectionPills({ stock, compact = false }: { stock: ScreenerStock; com
 }
 
 function getMomentumClass(value: number | null): string {
-  if (value === null) return "text-[var(--c-ink-4)]";
+  if (value === null) return "text-[var(--c-ink-3)]";
   return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
@@ -576,7 +576,7 @@ function renderCell(
           {estimateSummary ? (
             <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-brand)]">{estimateSummary}</span>
           ) : stock.actionReasons?.[0] ? (
-            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-4)]">{stock.actionReasons[0]}</span>
+            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{stock.actionReasons[0]}</span>
           ) : null}
         </span>
       );

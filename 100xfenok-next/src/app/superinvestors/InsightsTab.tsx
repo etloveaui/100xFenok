@@ -26,7 +26,7 @@ import { formatCurrencyCompact, formatPlainPercent } from "@/lib/format";
 // out of the Worker/SSR bundle. Fallback height matches the chart containers
 // (h-[300px]) to avoid layout jump.
 const InsightsChartLoading = () => (
-  <div className="grid h-[300px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-4)]">
+  <div className="grid h-[300px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
     {`차트 ${DATA_STATE_LABELS.pending}`}
   </div>
 );

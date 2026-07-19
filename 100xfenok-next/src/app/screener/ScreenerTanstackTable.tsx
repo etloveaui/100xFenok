@@ -169,7 +169,7 @@ function TickerCell({
         }}
         className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
       >
-        <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+        <span className="w-5 text-center text-[12px] text-[var(--c-ink-3)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
         <span className="truncate">{stock.ticker}</span>
       </button>
       {renderGuruHolderBadge(stock)}

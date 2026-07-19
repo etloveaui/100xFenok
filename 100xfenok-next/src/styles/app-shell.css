@@ -6,7 +6,7 @@
  */
 .fnk-shell{
     --shell-background:#f4f6f9; --shell-panel:#fff; --shell-surface-muted:#f8fafc; --shell-rail:#f8fafc; --shell-rail-active:rgba(27,115,211,0.06);
-    --shell-foreground:#0f172a; --shell-foreground-muted:#475569; --shell-foreground-subtle:#64748b; --shell-foreground-faint:#94a3b8;
+    --shell-foreground:#0f172a; --shell-foreground-muted:#475569; --shell-foreground-subtle:#64748b; --shell-foreground-faint:#767f8c;
     --shell-border:rgba(14,23,38,0.06); --shell-border-muted:rgba(14,23,38,0.03);
     --shell-brand:#1B73D3; --shell-brand-soft:rgba(27,115,211,0.06);
     --shell-gain:#0f8a5f; --shell-gain-soft:#e2f6ee; --shell-loss:#d1344c; --shell-loss-soft:#fcebee;
@@ -92,7 +92,7 @@
 .fnk-shell .gsearch svg{width:18px; height:18px; color:var(--c-ink-3); flex:none}
 .fnk-shell .gsearch input{flex:1; min-width:0; border:0; outline:0; background:transparent; font-family:var(--font); font-size:15px; color:var(--c-ink)}
 .fnk-shell .gsearch input::placeholder{color:var(--c-ink-3)}
-.fnk-shell .gsearch .kbd{font-size:12px; font-weight:600; color:var(--c-ink-4); border:1px solid var(--c-line); border-radius:6px; padding:1px 7px; background:#fff}
+.fnk-shell .gsearch .kbd{font-size:12px; font-weight:600; color:var(--c-ink-3); border:1px solid var(--c-line); border-radius:6px; padding:1px 7px; background:#fff}
 .fnk-shell .topbar .spacer{flex:1}
 .fnk-shell .mstatus{display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--c-ink-2); background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:var(--r-pill); padding:6px 12px; white-space:nowrap}
 .fnk-shell .mstatus .dot{width:7px; height:7px; border-radius:50%; background:var(--c-neutral)}
@@ -170,7 +170,7 @@
 .fnk-shell .sb-verdict .vm .big{font-size:24px; color:var(--c-up)}
 .fnk-shell .sb-verdict .vm em{font-style:normal}
 .fnk-shell .sb-verdict .vr{font-size:13px; color:var(--c-ink-2)}
-.fnk-shell .sb-cap{display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:var(--c-ink-4); padding:8px var(--panel-pad); border-top:1px solid var(--c-line-2); background:var(--c-panel)}
+.fnk-shell .sb-cap{display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:var(--c-ink-3); padding:8px var(--panel-pad); border-top:1px solid var(--c-line-2); background:var(--c-panel)}
 
   /* ─── workspace columns ─── */
 .fnk-shell .cols{display:grid; grid-template-columns:1fr; gap:var(--s4); min-width:0}
@@ -272,13 +272,13 @@
 .fnk-shell .stock-star{min-width:36px; min-height:36px; flex:none}
 .fnk-shell .stock-meta{display:flex; align-items:center; flex-wrap:wrap; gap:var(--s2); margin-top:4px; font-size:14px; color:var(--c-ink-2); font-weight:500}
 .fnk-shell .stock-meta .entity-name{min-width:0; max-width:100%; line-height:1.35; overflow-wrap:anywhere}
-.fnk-shell .stock-meta .x{color:var(--c-ink-4)}
+.fnk-shell .stock-meta .x{color:var(--c-ink-3)}
 .fnk-shell .stock-price{margin-left:auto; display:flex; align-items:flex-end; justify-content:flex-end; flex-wrap:wrap; gap:var(--s2); min-width:0}
 .fnk-shell .stock-price .big{font-size:30px; font-weight:700; line-height:1; letter-spacing:-.02em}
 .fnk-shell .stock-chip{display:inline-flex; align-items:center; border-radius:var(--r-pill); padding:5px 11px; font-size:14px; font-weight:700; white-space:nowrap}
 .fnk-shell .stock-chip.up{background:var(--c-up-soft); color:var(--c-up)}
 .fnk-shell .stock-chip.down{background:var(--c-down-soft); color:var(--c-down)}
-.fnk-shell .stock-price .delay{font-size:12px; color:var(--c-ink-4); padding-bottom:3px; white-space:nowrap}
+.fnk-shell .stock-price .delay{font-size:12px; color:var(--c-ink-3); padding-bottom:3px; white-space:nowrap}
 .fnk-shell .stock-market-links{justify-content:flex-start; border-top:1px solid var(--c-line-2); padding:var(--s3) var(--panel-pad) 0}
 .fnk-shell .stock-tabs{position:relative; display:flex; align-items:flex-end; gap:var(--s1); padding:var(--s4) var(--panel-pad) 0; overflow-x:auto; scrollbar-width:none; scroll-padding-right:var(--s6)}
 .fnk-shell .stock-tabs.can-scroll{box-shadow:inset -24px 0 18px -22px rgba(15,23,42,.38)}
@@ -287,7 +287,7 @@
 .fnk-shell .stock-tab:hover{color:var(--c-ink-2)}
 .fnk-shell .stock-tab.on{color:var(--c-ink)}
 .fnk-shell .stock-tab.on::after{content:""; position:absolute; left:var(--s3); right:var(--s3); bottom:0; height:2.5px; border-radius:3px 3px 0 0; background:var(--c-brand)}
-.fnk-shell .stock-tab-note{margin-left:auto; align-self:center; font-size:12px; font-weight:600; color:var(--c-ink-4); white-space:nowrap}
+.fnk-shell .stock-tab-note{margin-left:auto; align-self:center; font-size:12px; font-weight:600; color:var(--c-ink-3); white-space:nowrap}
 .fnk-shell .stock-body{display:flex; flex-direction:column; gap:var(--s4); min-width:0}
 .fnk-shell .stock-summary-stack{display:flex; flex-direction:column; gap:var(--s3); min-width:0}
 .fnk-shell .stock-overview-grid{display:grid; grid-template-columns:1fr; gap:var(--s4); align-items:start; min-width:0}

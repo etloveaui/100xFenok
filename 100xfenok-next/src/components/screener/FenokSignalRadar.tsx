@@ -18,7 +18,7 @@ const FenokSignalRadarChart = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="grid h-[160px] w-[160px] animate-pulse place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[9px] font-bold text-[var(--c-ink-4)]"
+        className="grid h-[160px] w-[160px] animate-pulse place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[9px] font-bold text-[var(--c-ink-3)]"
         aria-hidden
       />
     ),
