@@ -379,6 +379,15 @@ assert.deepEqual(buildStocksAnalyzer.exclude, [
   { kind: "file", path: "100xfenok-next/public/data/sec-13f/investors/griffin.json", required: false },
 ]);
 
+const pipelineFailureAlarm = manifest.workflows[".github/workflows/pipeline-failure-alarm.yml"];
+assert.deepEqual(pipelineFailureAlarm.lanes, []);
+assert.deepEqual(pipelineFailureAlarm.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/alarm-state.json", required: false },
+  { kind: "file", path: "100xfenok-next/public/data/admin/alarm-state.json", required: false },
+]);
+assert.deepEqual(pipelineFailureAlarm.stages.success_if_exists, []);
+assert.deepEqual(pipelineFailureAlarm.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

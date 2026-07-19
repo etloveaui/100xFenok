@@ -27,6 +27,7 @@ const SLICKCHARTS_SYMBOLS_WORKFLOW = ".github/workflows/slickcharts-symbols.yml"
 const SLICKCHARTS_MONTHLY_WORKFLOW = ".github/workflows/slickcharts-monthly.yml";
 const SLICKCHARTS_HISTORY_WORKFLOW = ".github/workflows/slickcharts-history.yml";
 const BUILD_STOCKS_ANALYZER_WORKFLOW = ".github/workflows/build-stocks-analyzer.yml";
+const PIPELINE_FAILURE_ALARM_WORKFLOW = ".github/workflows/pipeline-failure-alarm.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -103,6 +104,16 @@ function cached(root) {
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_SYMBOLS_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+}
+
+// Alarm-state publication is optional and non-primary: the manifest stages
+// only the private/public state pair while the workflow preserves its issue path.
+{
+  const fixture = makeFixture({ workflow: PIPELINE_FAILURE_ALARM_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], PIPELINE_FAILURE_ALARM_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
   assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
