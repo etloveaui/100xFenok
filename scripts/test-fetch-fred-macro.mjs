@@ -333,6 +333,10 @@ for (const failure of [
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
   assert.match(workflow, /data\/admin\/fred_macro\/index\.json/);
   assert.match(workflow, /data\/admin\/fred_macro\/lkg\/fred_macro\.json/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit and push macro FRED data\n\s+if: \$\{\{ always\(\) \}\}/);
 }
 

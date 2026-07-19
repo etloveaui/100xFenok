@@ -74,6 +74,19 @@ assert.deepEqual(treasuryTga.stages.success_if_exists.map((entry) => entry.path)
 ]);
 assert.deepEqual(treasuryTga.exclude, []);
 
+const fredMacro = manifest.workflows[".github/workflows/fetch-fred-macro.yml"];
+assert.deepEqual(fredMacro.lanes, ["fred_macro"]);
+assert.deepEqual(fredMacro.stages.always_if_exists.map((entry) => entry.path), [
+  "data/admin/data-supply-state/detection-attempts/fred_macro.json",
+  "data/admin/fred_macro/index.json",
+  "data/admin/fred_macro/lkg/fred_macro.json",
+]);
+assert.deepEqual(fredMacro.stages.success_if_exists.map((entry) => entry.path), [
+  "data/macro/fred-macro.json",
+  "100xfenok-next/public/data/macro/fred-macro.json",
+]);
+assert.deepEqual(fredMacro.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],
