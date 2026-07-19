@@ -5,6 +5,7 @@ import BrandLogo from "@/components/BrandLogo";
 import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
+import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
 import {
   getStockConnection,
   getStockServices,
@@ -21,6 +22,7 @@ import {
   WORKBENCH_NAV_LABEL,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
+import type { DataState } from "@/lib/data-state";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
@@ -479,11 +481,13 @@ export default function AppShell({
   active,
   title,
   backHref,
+  freshness,
   children,
 }: {
   active?: ShellPage;
   title: string;
   backHref?: string;
+  freshness?: DataState | null;
   children: ReactNode;
 }) {
   const [searching, setSearching] = useState(false);
@@ -560,6 +564,7 @@ export default function AppShell({
               <span className="dot" style={{ background: status.dot }} /> {status.text}
             </span>
           ) : null}
+          <AppShellFreshnessPill state={freshness} />
           <button className="ic-btn" aria-label="알림">
             <BellIcon />
           </button>
@@ -591,6 +596,7 @@ export default function AppShell({
               <span className="dot" style={{ background: status.dot }} /> {status.text}
             </span>
           ) : null}
+          <AppShellFreshnessPill state={freshness} />
           <span className="grow" />
           <button className="ic-btn" aria-label="검색" onClick={() => setSearching((v) => !v)}>
             <SearchIcon />

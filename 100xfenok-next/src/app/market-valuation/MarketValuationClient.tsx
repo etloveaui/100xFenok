@@ -32,7 +32,7 @@ import {
 } from "@/lib/format";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
-import { formatAsOf as formatDataAsOf, freshnessDataState, DATA_STATE_LABELS } from "@/lib/data-state";
+import { formatAsOf as formatDataAsOf, freshnessDataState, DATA_STATE_LABELS, type DataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -845,7 +845,11 @@ function ContextAccordion({
   );
 }
 
-export default function MarketValuationClient() {
+export default function MarketValuationClient({
+  onFreshnessChange,
+}: {
+  onFreshnessChange?: (state: DataState | null) => void;
+}) {
   const {
     indices,
     macroPulses,
@@ -860,6 +864,19 @@ export default function MarketValuationClient() {
     failed,
     sourceDate,
   } = useMarketValuation();
+  useEffect(() => {
+    if (!onFreshnessChange) return;
+    if (!dataReady && !failed) {
+      onFreshnessChange(null);
+      return;
+    }
+    onFreshnessChange(freshnessDataState({
+      asOf: sourceDate,
+      readyLabel: DATA_STATE_LABELS.ready,
+      staleLabel: DATA_STATE_LABELS.stale,
+      unavailableLabel: DATA_STATE_LABELS.unavailable,
+    }));
+  }, [dataReady, failed, onFreshnessChange, sourceDate]);
   const sp500 = indices.find((index) => index.id === "sp500") ?? indices[0];
   const headerVerdict = buildVerdict(sp500);
 

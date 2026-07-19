@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import AppShell from "@/components/shell/AppShell";
-import { ROUTES } from "@/lib/routes";
-import MarketValuationClient from "./MarketValuationClient";
+import MarketValuationShell from "./MarketValuationShell";
 import "@/styles/cp-w5-market-valuation.css";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +12,7 @@ export const metadata: Metadata = {
 export default function MarketValuationPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="market" title="시장" backHref={ROUTES.home}>
-        <MarketValuationClient />
-      </AppShell>
+      <MarketValuationShell />
     </div>
   );
 }
