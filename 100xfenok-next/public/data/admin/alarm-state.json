@@ -1,9 +1,17 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-19T06:34:16.762Z",
-  "status": "clear",
-  "open_incident_count": 0,
-  "open_incidents": [],
+  "generated_at": "2026-07-19T06:45:27.958Z",
+  "status": "open",
+  "open_incident_count": 1,
+  "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker",
+      "streak": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null
+    }
+  ],
   "watched_workflows": [
     {
       "file": "update-manifest.yml",
@@ -15,9 +23,9 @@
     }
   ],
   "last_firing": {
-    "run_id": "29672604725",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29672604725",
-    "observed_at": "2026-07-19T04:00:03.344Z",
+    "run_id": "29676935060",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29676935060",
+    "observed_at": "2026-07-19T06:45:27.958Z",
     "event": "schedule",
     "workflows": [
       "deploy-worker.yml"
