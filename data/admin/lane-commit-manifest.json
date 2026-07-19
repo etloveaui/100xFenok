@@ -1,5 +1,5 @@
 {
-  "registry_digest": "a2aa94dcb2b83261d487a360e39e51ece9888b6c7165ec127a5943422d7cb6be",
+  "registry_digest": "6f09fd1add750ee80f815e103055900bad1560c139dcad3ca778186c0a9e1f49",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -567,6 +567,64 @@
             "kind": "file",
             "path": "100xfenok-next/public/data/macro/fdic-tier1.json",
             "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fenok-apewisdom.yml": {
+      "exclude": [],
+      "lanes": [
+        "apewisdom_attention"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/apewisdom_attention.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_social_attention_proxy.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_social_attention_proxy_history.json",
+            "required": true
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-fenok-news-tone.yml": {
+      "exclude": [],
+      "lanes": [
+        "gdelt_news_tone"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_news_tone_proxy.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok_news_tone_proxy_history.json",
+            "required": true
           }
         ],
         "success_verify_not_plan_if_exists": []

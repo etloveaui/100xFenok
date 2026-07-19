@@ -235,7 +235,17 @@ function clone(value) {
     // Absent stores are time-dependent: each lane's store appears on its first
     // natural run, so assert the pending set is a SUBSET of the known
     // pre-launch lanes rather than an exact list.
-    const pendingLanes = new Set(["edgar_filings", "fred_yardeni", "occ_options_volume", "yahoo_private_options"]);
+    const pendingLanes = new Set([
+      "edgar_filings",
+      "fred_yardeni",
+      "occ_options_volume",
+      "yahoo_private_options",
+      // #366 proxy-lane wiring (2026-07-19): admin stores are declared but
+      // reserved — shard-only producers write nothing there until a future
+      // recovery-state slice; they stay pending indefinitely by design.
+      "apewisdom_attention",
+      "gdelt_news_tone",
+    ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);
     }

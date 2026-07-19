@@ -12,10 +12,24 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  attemptResult,
+  classifyEndpointResponse,
+  defaultAttemptId,
+  threwTuple,
+  transportError,
+  writeAttemptShard,
+} from "./lib/data-supply-attempt-shard.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow", "apewisdom");
+
+const LANE_ID = "apewisdom_attention";
+const ATTEMPT_SHARD_PATH = path.join(
+  repoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`,
+);
 
 const DEFAULT_FILTER = "all-stocks";
 const SCHEMA_VERSION = "fenok-social-attention-proxy/v0.1";
@@ -148,6 +162,43 @@ function fetchJson(url, { timeoutMs = 30000 } = {}) {
     req.on("error", reject);
     req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
   });
+}
+
+// Raw HTTP GET that preserves the status code so the detection-floor attempt
+// shard can classify the provider observation honestly (fail-closed).
+function rawGet(url, { timeoutMs = 30000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers: { "User-Agent": "FenokResearch/1.0" } }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
+      res.on("end", () => resolve({ statusCode: res.statusCode ?? 0, body }));
+    });
+    req.on("error", reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
+  });
+}
+
+// Observe the ApeWisdom aggregate (page 1) and classify it into a detection
+// attempt result. A dispatch-only controlled failure forces an honest transport
+// failure so the failure path can be exercised without faking success.
+async function observeAttempt({ filter, controlledFailure }) {
+  if (controlledFailure) {
+    return { result: attemptResult("transport_error", threwTuple("transport")), document: null };
+  }
+  try {
+    const raw = await rawGet(apeWisdomUrl(filter, 1));
+    const result = classifyEndpointResponse(raw, { laneId: LANE_ID });
+    return { result, document: result.document ?? null };
+  } catch (err) {
+    const kind = transportError(err) ? "transport" : "unexpected";
+    return {
+      result: attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+      document: null,
+    };
+  }
 }
 
 function loadTickerUniverse({ tickers, limit }) {
@@ -320,8 +371,7 @@ function mergeHistory(snapshot) {
   };
 }
 
-async function build(args) {
-  const cacheDate = ymdNow();
+async function build(args, { cacheDate = ymdNow() } = {}) {
   const pages = await loadPages({
     filter: args.filter,
     maxPages: args.maxPages,
@@ -366,8 +416,37 @@ async function build(args) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const result = await build(args);
-  console.log(JSON.stringify(result, null, 2));
+  const observedAt = isoNow();
+  const cacheDate = ymdNow();
+  const controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport";
+
+  // Detection floor first: observe the provider and publish an honest attempt
+  // shard on every run (ready OR failure). Never fake success.
+  const { result, document } = await observeAttempt({ filter: args.filter, controlledFailure });
+  if (!args.noWrite) {
+    writeAttemptShard({
+      laneId: LANE_ID,
+      attemptShardPath: ATTEMPT_SHARD_PATH,
+      observedAt,
+      attemptId: defaultAttemptId("apewisdom-attention", observedAt),
+      result,
+    });
+  }
+  if (result.status !== "ready") {
+    // Degraded, not corrupt: the honest attempt shard is the detection-floor
+    // signal (KPI reads shard status, not exit code). Stay green so a shadow,
+    // non-KPI proxy lane does not trip the pipeline-failure alarm.
+    console.error(`[degraded] ApeWisdom attention provider ${result.reason}; attempt shard recorded, computed output withheld`);
+    return;
+  }
+
+  // Seed the private page-1 cache so the producer reuses the exact observed
+  // payload instead of issuing a second request.
+  if (document && !args.noWrite) {
+    writePrivateJson(path.join(privateRoot, args.filter, cacheDate, "page-1.json"), document);
+  }
+  const outcome = await build(args, { cacheDate });
+  console.log(JSON.stringify(outcome, null, 2));
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

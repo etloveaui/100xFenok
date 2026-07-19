@@ -726,21 +726,22 @@ const config = {
     lane({
       id: "apewisdom_attention",
       label: "ApeWisdom attention",
-      ownerWorkflow: null,
-      monitoringMode: "artifact_only",
-      members: [member("apewisdom_attention", null, [], [
+      members: [member("apewisdom_attention", ".github/workflows/fetch-fenok-apewisdom.yml", ["17 13 * * *"], [
         artifact("apewisdom_attention", "data/computed/fenok_social_attention_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: pointerSource("/source/source_date", "yyyymmdd"),
           assertions: [typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ])],
-      endpointContract: endpoint("apewisdom"),
+      endpointContract: endpointAssertions("apewisdom", [
+        typeAssertion("results_array", "/results", "array"),
+        minRowsAssertion("results_non_empty", "/results"),
+      ]),
       freshnessPolicy: freshness({
         fold: "latest",
-        unit: "due_window",
+        unit: "calendar_days",
         calendar: "utc",
-        duePolicy: { kind: "unowned", age_unit: "calendar_days" },
+        maxStaleness: 3,
       }),
       affectedSurfaceIds: ["fenok_social_attention"],
       visibility: "admin_only",
@@ -748,21 +749,21 @@ const config = {
     lane({
       id: "gdelt_news_tone",
       label: "GDELT news tone",
-      ownerWorkflow: null,
-      monitoringMode: "artifact_only",
-      members: [member("gdelt_news_tone", null, [], [
+      members: [member("gdelt_news_tone", ".github/workflows/fetch-fenok-news-tone.yml", ["43 14 * * *"], [
         artifact("gdelt_news_tone", "data/computed/fenok_news_tone_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
           assertions: [typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ])],
-      endpointContract: endpoint("gdelt_doc"),
+      endpointContract: endpointAssertions("gdelt_doc", [
+        typeAssertion("articles_array", "/articles", "array"),
+      ]),
       freshnessPolicy: freshness({
         fold: "latest",
-        unit: "due_window",
+        unit: "calendar_days",
         calendar: "utc",
-        duePolicy: { kind: "unowned", age_unit: "calendar_days" },
+        maxStaleness: 3,
       }),
       affectedSurfaceIds: ["fenok_news_tone"],
       visibility: "admin_only",

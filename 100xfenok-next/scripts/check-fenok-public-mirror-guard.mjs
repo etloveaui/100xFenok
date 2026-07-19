@@ -33,6 +33,12 @@ const FORBIDDEN_RAW_PATTERNS = [
 
 export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/data-supply-state",
+  // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes) must
+  // never reach the public mirror.
+  "computed/fenok_news_tone_proxy.json",
+  "computed/fenok_news_tone_proxy_history.json",
+  "computed/fenok_social_attention_proxy.json",
+  "computed/fenok_social_attention_proxy_history.json",
   "yf/etf-details",
   "yf/migration-evidence",
 ];

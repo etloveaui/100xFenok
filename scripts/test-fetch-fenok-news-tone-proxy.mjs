@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   articleSeenAt,
@@ -8,6 +11,11 @@ import {
   cueCounts,
   queryForTicker,
 } from "./fetch-fenok-news-tone-proxy.mjs";
+import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const LANE_ID = "gdelt_news_tone";
+const WORKFLOW_REL = ".github/workflows/fetch-fenok-news-tone.yml";
 
 assert.equal(cleanCompanyName("NVIDIA CORP Class A"), "NVIDIA A");
 assert.equal(queryForTicker("NVDA", "NVIDIA CORP"), '"NVIDIA"');
@@ -40,5 +48,38 @@ assert.equal(empty.direct_news_tone_proxy.score_0_100, null);
 assert.equal(empty.confidence, "very_low");
 assert.equal(empty.as_of, null);
 assert.match(empty.as_of_reason, /seendate/);
+
+// --- Workflow contract (owned producer wiring, #366) ------------------------
+{
+  const workflow = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
+  assert.match(workflow, /node scripts\/test-fetch-fenok-news-tone-proxy\.mjs/);
+  assert.match(workflow, /node scripts\/fetch-fenok-news-tone-proxy\.mjs/);
+  assert.match(workflow, /controlled_failure/);
+  assert.match(workflow, /INPUT_CONTROLLED_FAILURE/);
+  assert.match(workflow, new RegExp(`detection-attempts/${LANE_ID}\\.json`));
+  assert.match(workflow, /data\/computed\/fenok_news_tone_proxy\.json/);
+  assert.match(workflow, /data\/computed\/fenok_news_tone_proxy_history\.json/);
+  assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
+  assert.doesNotMatch(workflow, /node << ['"]?EOF/);
+  assert.doesNotMatch(workflow, /git add -A/);
+}
+
+// --- Lane Registry ⇄ commit-shard completeness gate (#366 step 4) -----------
+{
+  const workflowText = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
+  const gate = checkWorkflowCommitShardsAgainstRegistry({
+    workflowText,
+    workflowRel: WORKFLOW_REL,
+  });
+  assert.deepEqual(gate.missing_in_workflow, [],
+    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
+  assert.deepEqual(gate.undeclared_in_workflow, [],
+    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  assert.deepEqual(gate.lanes.sort(), [LANE_ID].sort(), "registry lane attribution for this workflow");
+}
 
 console.log("test-fetch-fenok-news-tone-proxy: ok");

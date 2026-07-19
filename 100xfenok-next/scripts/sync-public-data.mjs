@@ -11,13 +11,22 @@ import {
 } from "../src/lib/market-facts-shard.mjs";
 
 export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
+  "admin/apewisdom_attention",
   "admin/data-supply-state",
   "admin/finra_short_volume",
+  "admin/gdelt_news_tone",
   "admin/occ_options_volume",
   "admin/yahoo_private_options",
   "admin/fred_yardeni",
   "admin/edgar_filings",
   "admin/nasdaq_giw_sox",
+  // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes,
+  // public_mirror:[]). Withheld from the public mirror; the fetch scripts
+  // declare these admin_private_derived_only_not_public.
+  "computed/fenok_news_tone_proxy.json",
+  "computed/fenok_news_tone_proxy_history.json",
+  "computed/fenok_social_attention_proxy.json",
+  "computed/fenok_social_attention_proxy_history.json",
   "yf/etf-details",
   "yf/migration-evidence",
 ]);

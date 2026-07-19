@@ -11,10 +11,24 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  attemptResult,
+  classifyEndpointResponse,
+  defaultAttemptId,
+  threwTuple,
+  transportError,
+  writeAttemptShard,
+} from "./lib/data-supply-attempt-shard.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow", "gdelt_news");
+
+const LANE_ID = "gdelt_news_tone";
+const ATTEMPT_SHARD_PATH = path.join(
+  repoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`,
+);
 
 const FORMULA_VERSION = "fenok-news-tone-proxy-v0.1-gdelt-headlines";
 const OUTPUT_FILE = "computed/fenok_news_tone_proxy.json";
@@ -158,6 +172,52 @@ async function fetchJsonWithRetry(url, { retries, retryBackoffMs }) {
     }
   }
   throw lastErr;
+}
+
+// Raw HTTP GET preserving the status code for honest attempt classification.
+function rawGet(url, { timeoutMs = 30000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers: { "User-Agent": "FenokResearch/1.0" } }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
+      res.on("end", () => resolve({ statusCode: res.statusCode ?? 0, body }));
+    });
+    req.on("error", reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
+  });
+}
+
+function gdeltDocUrl(query, maxRecords) {
+  const url = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
+  url.searchParams.set("query", query);
+  url.searchParams.set("mode", "ArtList");
+  url.searchParams.set("maxrecords", String(maxRecords));
+  url.searchParams.set("format", "json");
+  url.searchParams.set("sort", "HybridRel");
+  return url.toString();
+}
+
+// Observe GDELT reachability with one stable reference query and classify it
+// into a detection attempt result. A dispatch-only controlled failure forces an
+// honest transport failure. A valid `{articles:[...]}` response (even zero
+// articles for the probe query) counts as a reachable provider.
+async function observeAttempt({ maxRecords, controlledFailure }) {
+  if (controlledFailure) {
+    return { result: attemptResult("transport_error", threwTuple("transport")) };
+  }
+  const query = queryForTicker("DASH", "DoorDash");
+  try {
+    const raw = await rawGet(gdeltDocUrl(query, maxRecords));
+    return { result: classifyEndpointResponse(raw, { laneId: LANE_ID }) };
+  } catch (err) {
+    const kind = transportError(err) ? "transport" : "unexpected";
+    return {
+      result: attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+    };
+  }
 }
 
 function queryForTicker(ticker, company) {
@@ -377,6 +437,29 @@ function mergeHistory(snapshot) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const observedAt = isoNow();
+  const controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport";
+
+  // Detection floor first: observe the provider and publish an honest attempt
+  // shard on every run (ready OR failure). Never fake success.
+  const { result } = await observeAttempt({ maxRecords: args.maxRecords, controlledFailure });
+  if (!args.noWrite) {
+    writeAttemptShard({
+      laneId: LANE_ID,
+      attemptShardPath: ATTEMPT_SHARD_PATH,
+      observedAt,
+      attemptId: defaultAttemptId("gdelt-news-tone", observedAt),
+      result,
+    });
+  }
+  if (result.status !== "ready") {
+    // Degraded, not corrupt: the honest attempt shard is the detection-floor
+    // signal (KPI reads shard status, not exit code). Stay green so a shadow,
+    // non-KPI proxy lane does not trip the pipeline-failure alarm.
+    console.error(`[degraded] GDELT news tone provider ${result.reason}; attempt shard recorded, computed output withheld`);
+    return;
+  }
+
   const snapshot = await build(args);
   console.log(JSON.stringify({
     output_file: `data/${OUTPUT_FILE}`,

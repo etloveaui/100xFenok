@@ -534,37 +534,59 @@ const lanes = [
   }),
   record({
     id: "apewisdom_attention",
-    label: "ApeWisdom attention (ownerless artifact lane)",
-    owner_workflow: null,
-    store_kind: "artifact_only",
+    label: "ApeWisdom attention proxy",
+    // Owned shard-only producer (#366 wiring). No LKG recovery store: the proxy
+    // recomputes derived attention scores from the live ApeWisdom aggregate each
+    // run, so there is no upstream payload to promote — republishing a stale
+    // computed file as "recovery" would serve stale attention as current. The
+    // honest attempt shard is the detection-floor evidence; admin_store is
+    // reserved (private-withheld) for future recovery state. Enforcement stays
+    // shadow until cc flips after a real committed attempt shard.
+    owner_workflow: ".github/workflows/fetch-fenok-apewisdom.yml",
+    store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "unknown", provider: "apewisdom" },
+    cadence: { kind: "daily", provider: "apewisdom" },
     enforcement: "shadow",
-    privacy_class: "public_mirror",
-    admin_store: null,
-    detection_attempt: null,
-    canonical_outputs: [],
+    privacy_class: "private",
+    admin_store: "data/admin/apewisdom_attention",
+    detection_attempt: attemptShard("apewisdom_attention"),
+    canonical_outputs: [
+      "data/computed/fenok_social_attention_proxy.json",
+      "data/computed/fenok_social_attention_proxy_history.json",
+    ],
     public_mirror: [],
-    commit_shards: [],
+    commit_shards: [
+      attemptShard("apewisdom_attention"),
+      "data/computed/fenok_social_attention_proxy.json",
+      "data/computed/fenok_social_attention_proxy_history.json",
+    ],
     recovery_store: null,
-    declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
   }),
   record({
     id: "gdelt_news_tone",
-    label: "GDELT news tone (ownerless artifact lane)",
-    owner_workflow: null,
-    store_kind: "artifact_only",
+    label: "GDELT news tone proxy",
+    // Owned shard-only producer (#366 wiring). Shard-only for the same reason as
+    // apewisdom_attention: the tone proxy recomputes from live GDELT headlines
+    // each run. See that lane's note.
+    owner_workflow: ".github/workflows/fetch-fenok-news-tone.yml",
+    store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "unknown", provider: "gdelt" },
+    cadence: { kind: "daily", provider: "gdelt" },
     enforcement: "shadow",
-    privacy_class: "public_mirror",
-    admin_store: null,
-    detection_attempt: null,
-    canonical_outputs: [],
+    privacy_class: "private",
+    admin_store: "data/admin/gdelt_news_tone",
+    detection_attempt: attemptShard("gdelt_news_tone"),
+    canonical_outputs: [
+      "data/computed/fenok_news_tone_proxy.json",
+      "data/computed/fenok_news_tone_proxy_history.json",
+    ],
     public_mirror: [],
-    commit_shards: [],
+    commit_shards: [
+      attemptShard("gdelt_news_tone"),
+      "data/computed/fenok_news_tone_proxy.json",
+      "data/computed/fenok_news_tone_proxy_history.json",
+    ],
     recovery_store: null,
-    declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
   }),
   record({
     id: "yahoo_batch_quote_history",
@@ -815,6 +837,24 @@ workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_
   success_if_exists: [
     commitSpec("data/macro/stablecoins.json", "file", true),
     commitSpec("100xfenok-next/public/data/macro/stablecoins.json", "file", true),
+  ],
+});
+workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apewisdom_attention"], {
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/apewisdom_attention.json", "file"),
+  ],
+  success_if_exists: [
+    commitSpec("data/computed/fenok_social_attention_proxy.json", "file", true),
+    commitSpec("data/computed/fenok_social_attention_proxy_history.json", "file", true),
+  ],
+});
+workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdelt_news_tone"], {
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "file"),
+  ],
+  success_if_exists: [
+    commitSpec("data/computed/fenok_news_tone_proxy.json", "file", true),
+    commitSpec("data/computed/fenok_news_tone_proxy_history.json", "file", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"], {

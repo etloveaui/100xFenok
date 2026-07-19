@@ -1,0 +1,100 @@
+name: Fetch Fenok GDELT News Tone Proxy
+
+on:
+  schedule:
+    # Daily 14:43 UTC (23:43 KST) — off-peak, offset from the ApeWisdom lane and
+    # away from the top-of-hour and US-close cluster on the single writer queue.
+    - cron: '43 14 * * *'
+  workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only chaos: set to "transport" to force an honest provider failure shard'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  fetch-news-tone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Test GDELT news tone producer contracts
+        run: node scripts/test-fetch-fenok-news-tone-proxy.mjs
+
+      - name: Fetch GDELT news tone proxy
+        id: fetch_news_tone
+        env:
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
+        # Bounded reference universe keeps the single-writer queue polite; the
+        # full universe with per-ticker GDELT throttling would jam the queue.
+        run: node scripts/fetch-fenok-news-tone-proxy.mjs --reference-only
+
+      - name: Commit and push
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_news_tone.outcome }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Always publish the honest detection attempt shard first; then the
+          # computed proxy only when the producer step reported success.
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-fenok-news-tone.yml \
+            --stage always_if_exists
+          SHARD="data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json"
+          if [[ -f "$SHARD" ]]; then
+            git add -- "$SHARD"
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-fenok-news-tone.yml \
+              --stage success_if_exists
+            git add -- \
+              data/computed/fenok_news_tone_proxy.json \
+              data/computed/fenok_news_tone_proxy_history.json
+          fi
+          if git diff --staged --quiet; then
+            echo "No GDELT news tone changes to publish"
+            exit 0
+          fi
+          git commit -m "data: update fenok gdelt news tone proxy"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

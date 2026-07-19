@@ -47,6 +47,13 @@ FORBIDDEN_PUBLIC_TOKENS = (
     b"yf/migration-evidence/",
     b"yf/etf-details/",
     b"providers/",
+    # Private derived proxies (apewisdom_attention / gdelt_news_tone lanes,
+    # public_mirror:[]). File-granular private canonical outputs registered here
+    # as forbidden prefixes for parity with the lane-registry derivation.
+    b"computed/fenok_news_tone_proxy.json/",
+    b"computed/fenok_news_tone_proxy_history.json/",
+    b"computed/fenok_social_attention_proxy.json/",
+    b"computed/fenok_social_attention_proxy_history.json/",
 )
 USAGE_MANIFEST_TOKENS = (
     b"admin/data-supply-state/",
