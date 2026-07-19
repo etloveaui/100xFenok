@@ -7,6 +7,7 @@ import {
   commonBasisShortTermView,
   screenerSortValue,
 } from "../src/lib/screener/common-basis-short-term";
+import { commonBasisSignalSummaryView } from "../src/lib/fenok-signals/common-basis-signal-summary";
 import type { ScreenerStock } from "../src/lib/screener/types";
 
 const usEnrichedSignal = {
@@ -36,6 +37,13 @@ assert.deepStrictEqual(
     fenokShortTermBasisCode: "us_enriched_v1",
   },
 );
+
+assert.deepStrictEqual(commonBasisSignalSummaryView(usEnrichedSignal), {
+  score: 61,
+  call: "mixed",
+  sourceInputCount: 5,
+  basisCode: "us_enriched_v1",
+});
 
 assert.deepStrictEqual(
   {
@@ -91,10 +99,8 @@ for (const relativePath of [
   assert.match(source, /commonBasisShortTermView/, `${relativePath} must render the common-basis selector`);
 }
 const stockDetailClient = fs.readFileSync(path.join(appRoot, "src/app/stock/[ticker]/StockDetailClient.tsx"), "utf8");
-assert.doesNotMatch(
-  stockDetailClient,
-  /commonBasisShortTermView|shortTermCommonBasisCopy/,
-  "the direct stock-detail path remains on legacy basis until slice 3",
-);
+assert.match(stockDetailClient, /commonBasisSignalSummaryView/, "the direct stock-detail path must use the common-basis selector");
+assert.match(stockDetailClient, /shortTermCommonBasisCopy/, "the direct stock-detail path must use common-basis disclosure");
+assert.doesNotMatch(stockDetailClient, /record\.shortTermConvictionScore|record\.shortTermScore/, "the direct stock-detail path must not render legacy short-term scores");
 
 console.log("test-screener-common-basis-plumbing: ok");

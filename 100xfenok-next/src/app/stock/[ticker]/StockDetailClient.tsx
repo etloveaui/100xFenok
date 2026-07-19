@@ -46,7 +46,8 @@ import {
   loadFenokSignalsSummaryMap,
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
-import { shortTermConvictionBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
+import { commonBasisSignalSummaryView } from "@/lib/fenok-signals/common-basis-signal-summary";
+import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import {
   getEtfDataSupplyPresentation,
   parseEtfApiResponse,
@@ -599,12 +600,12 @@ function stockChartSummary(data: readonly CpChartDatum[], currency: string, rang
 }
 
 function resolveFenokEdgeScore(record: FenokSignalsSummaryRecord | null | undefined): number | null {
+  const commonShortTermScore = record ? commonBasisSignalSummaryView(record).score : null;
   const candidates = [
     record?.convictionScore,
     record?.longTermScore,
     record?.longTermConvictionScore,
-    record?.shortTermScore,
-    record?.shortTermConvictionScore,
+    commonShortTermScore,
   ];
   const score = candidates.find(isFiniteNumber);
   return isFiniteNumber(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
@@ -2856,8 +2857,8 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const allAxes = [...shortAxes, ...longAxes];
   if (!allAxes.some((a) => a.score !== null)) return null;
 
-  const shortScore = isFiniteNumber(record.shortTermConvictionScore) ? record.shortTermConvictionScore
-    : isFiniteNumber(record.shortTermScore) ? record.shortTermScore : null;
+  const shortTerm = commonBasisSignalSummaryView(record);
+  const shortScore = shortTerm.score;
   const longScore = isFiniteNumber(record.longTermConvictionScore) ? record.longTermConvictionScore
     : isFiniteNumber(record.longTermScore) ? record.longTermScore : null;
   const compositeScoreRaw = isFiniteNumber(record.convictionScore) ? record.convictionScore
@@ -2868,7 +2869,10 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const compositeR = round(compositeScoreRaw);
   const shortR = round(shortScore);
   const longR = round(longScore);
-  const shortTermBasis = shortTermConvictionBasisCopy(record.marketScope);
+  const shortTermBasis = shortTermCommonBasisCopy(record.marketScope, {
+    sourceInputCount: shortTerm.sourceInputCount,
+    basisCode: shortTerm.basisCode,
+  });
 
   const compositeVerdict = shortR !== null && longR !== null
     ? (shortR >= longR + 12 ? "단기 신호가 장기 펀더멘털을 앞섭니다" : longR >= shortR + 12 ? "장기 펀더멘털이 단기 신호를 앞섭니다" : "단기 신호와 장기 펀더멘털이 균형을 이룹니다")

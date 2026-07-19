@@ -126,6 +126,16 @@ const UI_CONTRACTS = [
     ],
   },
   {
+    file: "src/lib/fenok-signals/common-basis-signal-summary.ts",
+    markers: [
+      "commonBasisSignalSummaryView",
+      "shortTermCommonBasisScore",
+      "shortTermCommonBasisCall",
+      "shortTermInputCount",
+      "shortTermBasisCode",
+    ],
+  },
+  {
     file: "src/app/screener/ScreenerClient.tsx",
     markers: [
       "commonBasisShortTermView",
@@ -149,6 +159,16 @@ const UI_CONTRACTS = [
       "shortTermCommonBasisCopy",
       "shortTermConvictionScore",
       "shortTermConvictionCall",
+    ],
+  },
+  {
+    file: "src/app/stock/[ticker]/StockDetailClient.tsx",
+    markers: [
+      "commonBasisSignalSummaryView",
+      "shortTermCommonBasisCopy",
+      "shortTerm.sourceInputCount",
+      "shortTerm.basisCode",
+      "const shortScore = shortTerm.score",
     ],
   },
   {
