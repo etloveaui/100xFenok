@@ -363,6 +363,10 @@ async function runCase(root, {
   assert.match(workflow, /data\/admin\/sentiment\/index\.json/);
   assert.match(workflow, /data\/admin\/sentiment\/current\/\*\.json/);
   assert.match(workflow, /data\/admin\/sentiment\/lkg\/\*\.json/);
+  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
+  assert.match(workflow, /--stage always_if_exists/);
+  assert.match(workflow, /--stage success_if_exists/);
+  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit sentiment data\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.doesNotMatch(workflow, /git add -A/);
 }

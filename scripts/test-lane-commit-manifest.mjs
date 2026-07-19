@@ -142,6 +142,28 @@ assert.deepEqual(privateOptions.stages.success_if_exists.map((entry) => entry.pa
 ]);
 assert.deepEqual(privateOptions.exclude, []);
 
+const sentiment = manifest.workflows[".github/workflows/fetch-sentiment.yml"];
+assert.deepEqual(sentiment.lanes, ["sentiment"]);
+assert.deepEqual(sentiment.stages.always_if_exists, [
+  {
+    kind: "file",
+    path: "data/admin/data-supply-state/detection-attempts/sentiment.json",
+    required: false,
+  },
+  {
+    kind: "file",
+    path: "data/admin/sentiment/index.json",
+    required: false,
+  },
+  { kind: "glob", path: "data/admin/sentiment/current/*.json", required: false },
+  { kind: "glob", path: "data/admin/sentiment/lkg/*.json", required: false },
+]);
+assert.deepEqual(sentiment.stages.success_if_exists, [
+  { kind: "glob", path: "data/sentiment/*.json", required: false },
+  { kind: "glob", path: "100xfenok-next/public/data/sentiment/*.json", required: false },
+]);
+assert.deepEqual(sentiment.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],

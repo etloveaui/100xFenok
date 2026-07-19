@@ -14,6 +14,7 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
 const WORKFLOW = ".github/workflows/fetch-defillama.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
+const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
@@ -32,24 +33,36 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true } = {}) {
     always: manifest.workflows[workflow].stages.always_if_exists.map((entry) => entry.path),
     success: manifest.workflows[workflow].stages.success_if_exists.map((entry) => entry.path),
   };
-  for (const entry of manifest.workflows[workflow].stages.always_if_exists) {
-    const target = path.join(root, entry.path);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    if (entry.kind === "directory") {
-      fs.mkdirSync(target, { recursive: true });
-      fs.writeFileSync(path.join(target, "fixture.json"), "{}\n");
-    } else {
-      fs.writeFileSync(target, "{}\n");
-    }
-  }
-  if (includeSuccess) {
-    for (const file of paths.success) {
-      const target = path.join(root, file);
+  const materialized = { always: [], success: [] };
+  const materialize = (entries, output) => {
+    for (const entry of entries) {
+      if (entry.kind === "glob") {
+        const base = entry.path.slice(0, entry.path.indexOf("*"));
+        for (const name of ["fixture-a.json", "fixture-b.json"]) {
+          const file = `${base}${name}`;
+          const target = path.join(root, file);
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.writeFileSync(target, "{}\n");
+          output.push(file);
+        }
+        continue;
+      }
+      const target = path.join(root, entry.path);
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, "{}\n");
+      if (entry.kind === "directory") {
+        fs.mkdirSync(target, { recursive: true });
+        const file = `${entry.path}/fixture.json`;
+        fs.writeFileSync(path.join(target, "fixture.json"), "{}\n");
+        output.push(file);
+      } else {
+        fs.writeFileSync(target, "{}\n");
+        output.push(entry.path);
+      }
     }
-  }
-  return { root, manifest, paths };
+  };
+  materialize(manifest.workflows[workflow].stages.always_if_exists, materialized.always);
+  if (includeSuccess) materialize(manifest.workflows[workflow].stages.success_if_exists, materialized.success);
+  return { root, manifest, paths, materialized };
 }
 
 function run(root, stage, extra = [], workflow = WORKFLOW) {
@@ -83,6 +96,21 @@ function cached(root) {
     `${fixture.paths.always[1]}/fixture.json`,
     ...fixture.paths.success,
   ].sort());
+}
+
+// Glob policy expands each matching file while the proof keeps selection and
+// cumulative index totals separate.
+{
+  const fixture = makeFixture({ workflow: SENTIMENT_WORKFLOW });
+  const always = run(fixture.root, "always_if_exists", [], SENTIMENT_WORKFLOW);
+  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
+  assert.match(always.stdout, /stage_selected=6 staged_index_total=6/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+
+  const success = run(fixture.root, "success_if_exists", [], SENTIMENT_WORKFLOW);
+  assert.equal(success.status, 0, success.stderr);
+  assert.match(success.stdout, /stage_selected=4 staged_index_total=10/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Pilot contract: each stage is selected independently and the applied set is exact.
