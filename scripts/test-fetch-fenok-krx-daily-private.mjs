@@ -14,6 +14,7 @@ import {
   getRowCount,
   parseArgs,
   run,
+  validateRun,
 } from "./fetch-fenok-krx-daily-private.mjs";
 
 assert.deepEqual(generateWeekdayDates("20260629", 3), ["20260625", "20260626", "20260629"]);
@@ -317,7 +318,33 @@ assert.equal(getRowCount({ respCode: "NO_DATA", respMsg: "empty" }), 0);
   assert.equal(unavailable.top_n_weight, null);
   assert.equal(unavailable.top_n_weight_pct, null);
 
+  fs.writeFileSync(path.join(rawDir, "20260629.json"), `${JSON.stringify({
+    OutBlock_1: [{ MKT_NM: "KOSDAQ", ISU_CD: "ONLY01", ISU_NM: "부족", MKTCAP: "100" }],
+  }, null, 2)}\n`);
+  const underfilled = buildKrxPublicKosdaqMarketCapAggregate(manifest, config);
+  assert.equal(underfilled.status, "unavailable", "fewer than 10 valid issuers cannot claim a top-10 aggregate");
+  assert.equal(underfilled.issuer_count, 1);
+  assert.equal(underfilled.total_market_cap, null);
+  assert.equal(underfilled.top_n_market_cap, null);
+  assert.equal(underfilled.top_n_weight, null);
+  assert.equal(underfilled.top_n_weight_pct, null);
+
   fs.rmSync(tmpDir, { recursive: true, force: true });
+}
+
+// KOSPI rows cannot mask a missing KOSDAQ daily input; Slice 2 requires at
+// least 10 valid KOSDAQ rows even though both issuer endpoints are fetched.
+{
+  const config = buildConfig(parseArgs(["--end-date", "20260629"]));
+  const errors = validateRun({
+    summary: { failed_files: 0 },
+    files: [
+      { date: "2026-06-29", api_id: "stk_bydd_trd", row_count: 944 },
+      { date: "2026-06-29", api_id: "ksq_bydd_trd", row_count: 0 },
+    ],
+  }, config);
+  assert.ok(errors.some((item) => item.includes("endpoint=ksq_bydd_trd") && item.includes("minimum=10")));
+  assert.equal(errors.some((item) => item.includes("endpoint=stk_bydd_trd")), false);
 }
 
 console.log("test-fetch-fenok-krx-daily-private: ok");

@@ -661,7 +661,7 @@ function buildKrxPublicKosdaqMarketCapAggregate(manifest, config) {
     .sort((a, b) => b - a);
   const totalMarketCap = marketCaps.reduce((sum, value) => sum + value, 0);
   const topNMarketCap = marketCaps.slice(0, PUBLIC_KOSDAQ_TOP_N).reduce((sum, value) => sum + value, 0);
-  const ready = marketCaps.length > 0 && finite(totalMarketCap) && totalMarketCap > 0;
+  const ready = marketCaps.length >= PUBLIC_KOSDAQ_TOP_N && finite(totalMarketCap) && totalMarketCap > 0;
   const topNWeight = ready ? topNMarketCap / totalMarketCap : null;
 
   return {
@@ -934,12 +934,24 @@ function validateRun(manifest, config) {
   }
   if (!config.allowEmptyDaily) {
     for (const date of config.dates.map(isoDate)) {
-      const requiredRows = manifest.files
-        .filter((file) => file.date === date && REQUIRED_DAILY_ISSUER_ENDPOINTS.has(file.api_id))
-        .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
-      if (requiredRows <= 0) {
-        errors.push(`required KRX issuer daily rows are empty for ${date}`);
+      for (const apiId of REQUIRED_DAILY_ISSUER_ENDPOINTS) {
+        const requiredRows = manifest.files
+          .filter((file) => file.date === date && file.api_id === apiId)
+          .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
+        if (requiredRows <= 0) {
+          errors.push(`required KRX issuer daily rows are empty for ${date}: endpoint=${apiId}`);
+        }
       }
+    }
+  }
+  // Slice 2 is a required top-10 public aggregate. It must stay fail-closed
+  // even when allow-empty-daily is used for broader private/admin diagnostics.
+  for (const date of config.dates.map(isoDate)) {
+    const kosdaqRows = manifest.files
+      .filter((file) => file.date === date && file.api_id === "ksq_bydd_trd")
+      .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
+    if (kosdaqRows < PUBLIC_KOSDAQ_TOP_N) {
+      errors.push(`public KOSDAQ top-10 aggregate is incomplete for ${date}: endpoint=ksq_bydd_trd rows=${kosdaqRows} minimum=${PUBLIC_KOSDAQ_TOP_N}`);
     }
   }
   return errors;
@@ -1095,4 +1107,5 @@ export {
   latestKstWeekday,
   parseArgs,
   run,
+  validateRun,
 };
