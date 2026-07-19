@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1053,
+      "natural": true,
+      "observed_at": "2026-07-19T22:59:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29707016827",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T14:34:52Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ACMM.json",
-    "payload_sha256": "a21502ee8d727a0ced3eba3520d4bbd50aa0342b9026f38f09e96831b9e08f0a",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-07-19T23:00:33Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/yf/finance/ACMM.json",
+    "payload_sha256": "a346b21e14321bbf1e0f3825d52100c2cf125717ba2d868fa94f7350db579ac8",
+    "quote_as_of": "2026-07-17T13:52:53Z",
+    "source_as_of": "2026-07-17"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1053,
+    "natural": true,
+    "observed_at": "2026-07-19T22:59:54Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29707016827",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T14:34:52Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-17",
+    "observed_at": "2026-07-19T22:59:54Z",
+    "payload_sha256": "9d55d2b946a059731efb8aea8a71854a6310de8b76e86a903fe85250e40b5858",
+    "quote_as_of": "2026-07-17T13:52:53Z",
+    "run_attempt": 1,
+    "run_id": "29707016827",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-30"
   },
   "ticker": "ACMM",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-19T22:59:54Z"
 }

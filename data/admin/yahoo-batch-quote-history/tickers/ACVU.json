@@ -12,31 +12,106 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: ACVU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ACVU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ACVU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ACVU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ACVU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ACVU: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1294,
+      "natural": true,
+      "observed_at": "2026-07-19T22:59:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29707016827",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:05:35Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ACVU.json",
-    "payload_sha256": "1432852b86d85ae89c6d737b81c1c5ac0a5865ae2c0926153b05058c7a14d634",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-19T23:00:36Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/yf/finance/ACVU.json",
+    "payload_sha256": "4f3cc0a41acd010a07ab42478f4dcd742fff0d5eee4daee03ab34dafb6953387",
+    "quote_as_of": "2026-07-17T19:41:08Z",
+    "source_as_of": "2026-07-17"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1294,
+    "natural": true,
+    "observed_at": "2026-07-19T22:59:54Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29707016827",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:05:35Z",
@@ -46,8 +121,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-17",
+    "observed_at": "2026-07-19T22:59:54Z",
+    "payload_sha256": "71ae3f9ebbfaa0272fc422a1e45982ce85b8123c1d6d1ab475105709d168f13b",
+    "quote_as_of": "2026-07-17T19:41:08Z",
+    "run_attempt": 1,
+    "run_id": "29707016827",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +147,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "ACVU",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-19T22:59:54Z"
 }

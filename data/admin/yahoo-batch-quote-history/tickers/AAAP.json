@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1081,
+      "natural": true,
+      "observed_at": "2026-07-19T22:59:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29707016827",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T23:53:31Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AAAP.json",
-    "payload_sha256": "50b3ff9781d625c0eecebc8148f86ef6a9444456f7ae1743a9b377166e7f6231",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-07-19T23:00:08Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/yf/finance/AAAP.json",
+    "payload_sha256": "05333eb59becee82631121ced9a585600c366d4255b8d44ebeced281d420b8a5",
+    "quote_as_of": "2026-07-17T20:00:00Z",
+    "source_as_of": "2026-07-17"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1081,
+    "natural": true,
+    "observed_at": "2026-07-19T22:59:54Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29707016827",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T23:53:31Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-17",
+    "observed_at": "2026-07-19T22:59:54Z",
+    "payload_sha256": "e0abe50556d3f3006945798639bef0fd8eb37e24fb71893d3c05972de7b45a12",
+    "quote_as_of": "2026-07-17T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29707016827",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-30"
   },
   "ticker": "AAAP",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-19T22:59:54Z"
 }
