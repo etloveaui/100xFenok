@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-20T13:57:24.429Z",
+  "generated_at": "2026-07-20T14:20:09.678Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 20,
+  "lane_count": 21,
   "lanes": [
     {
       "id": "fred_macro",
@@ -174,6 +174,18 @@
       "owner_workflow": null
     },
     {
+      "id": "damodaran",
+      "label": "Damodaran valuation data",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "NYU Stern Damodaran"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-damodaran-shadow.yml"
+    },
+    {
       "id": "finra_short_volume",
       "label": "FINRA RegSHO daily short volume",
       "store_kind": "marker",
@@ -217,7 +229,7 @@
         "kind": "daily",
         "provider": "apewisdom"
       },
-      "enforcement": "shadow",
+      "enforcement": "live",
       "privacy_class": "private",
       "owner_workflow": "fetch-fenok-apewisdom.yml"
     },

@@ -462,6 +462,54 @@ const lanes = [
     declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
   }),
   record({
+    id: "damodaran",
+    label: "Damodaran valuation data",
+    owner_workflow: ".github/workflows/fetch-damodaran-shadow.yml",
+    store_kind: "payload",
+    lane_class: "auxiliary",
+    cadence: { kind: "weekly", provider: "NYU Stern Damodaran" },
+    // Registry enforcement is the detection-floor switch, not producer
+    // ownership. This auxiliary lane has a fail-closed owner guard instead.
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/damodaran",
+    detection_attempt: null,
+    canonical_outputs: [
+      "data/damodaran/industries.json",
+      "data/damodaran/historical_erp.json",
+      "data/damodaran/credit_ratings.json",
+      "data/damodaran/erp.json",
+      "data/damodaran/industry_metrics.json",
+      "data/damodaran/industry_metrics_regions.json",
+    ],
+    public_mirror: [
+      "100xfenok-next/public/data/damodaran/industries.json",
+      "100xfenok-next/public/data/damodaran/historical_erp.json",
+      "100xfenok-next/public/data/damodaran/credit_ratings.json",
+      "100xfenok-next/public/data/damodaran/erp.json",
+      "100xfenok-next/public/data/damodaran/industry_metrics.json",
+      "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
+    ],
+    commit_shards: [
+      "data/admin/damodaran/owner-guard.json",
+      "data/damodaran/industries.json",
+      "data/damodaran/historical_erp.json",
+      "data/damodaran/credit_ratings.json",
+      "data/damodaran/erp.json",
+      "data/damodaran/industry_metrics.json",
+      "data/damodaran/industry_metrics_regions.json",
+      "100xfenok-next/public/data/damodaran/industries.json",
+      "100xfenok-next/public/data/damodaran/historical_erp.json",
+      "100xfenok-next/public/data/damodaran/credit_ratings.json",
+      "100xfenok-next/public/data/damodaran/erp.json",
+      "100xfenok-next/public/data/damodaran/industry_metrics.json",
+      "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
+    ],
+    recovery_store: null,
+    declared_exception: "owner-guard honesty store has no LKG promotion path; exact six-file producer and canonical/public parity are fail-closed",
+    script_sources: ["scripts/fetch-damodaran-shadow.mjs"],
+  }),
+  record({
     id: "finra_short_volume",
     label: "FINRA RegSHO daily short volume",
     owner_workflow: ".github/workflows/fenok-edge-daily.yml",
@@ -653,7 +701,7 @@ const declared_exceptions = [
   {
     path: "data/admin/damodaran-shadow-parity.json",
     kind: "file",
-    reason: "private Damodaran shadow parity report; checker-only evidence with no canonical ownership or public mirror",
+    reason: "legacy private shadow-parity proof retained after ownership flip; the live owner guard moved under data/admin/damodaran",
     owner: "platform",
     public_sync: "exclude",
   },
@@ -698,11 +746,6 @@ const declared_exceptions = [
 // with no owning lane is legal ONLY via a static declaration here — the gate
 // fails closed on any other lane-less workflow instead of silently passing.
 const workflow_classes = {
-  ".github/workflows/fetch-damodaran-shadow.yml": {
-    class: "platform_no_lane",
-    reason: "shadow-only Damodaran parity checker; does not own or publish canonical Damodaran payloads",
-    owner: "platform",
-  },
   ".github/workflows/fenok-edge-krx-daily.yml": {
     class: "platform_no_lane",
     reason: "KRX stays owner-gated (permission-walled, not code-walled); the workflow commits only the declared-exception public-safe bridge index",
@@ -924,8 +967,21 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy([], {
     commitSpec("data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", "file", true),
   ],
 });
-workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy([], {
-  always_if_exists: [commitSpec("data/admin/damodaran-shadow-parity.json", "file", true)],
+workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy(["damodaran"], {
+  required_on_success: [
+    commitSpec("data/admin/damodaran/owner-guard.json", "file", true),
+    ...[
+      "industries.json",
+      "historical_erp.json",
+      "credit_ratings.json",
+      "erp.json",
+      "industry_metrics.json",
+      "industry_metrics_regions.json",
+    ].flatMap((file) => [
+      commitSpec(`data/damodaran/${file}`, "file", true),
+      commitSpec(`100xfenok-next/public/data/damodaran/${file}`, "file", true),
+    ]),
+  ],
 });
 workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
   always_if_exists: [

@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 
-export const SCHEMA_VERSION = "damodaran-shadow-parity/v1";
+export const SCHEMA_VERSION = "damodaran-owner-guard/v1";
 export const FILE_NAMES = Object.freeze([
   "industries.json",
   "historical_erp.json",
@@ -17,11 +17,27 @@ export const FILE_NAMES = Object.freeze([
   "industry_metrics.json",
   "industry_metrics_regions.json",
 ]);
+export const CANONICAL_RELATIVE_PATHS = Object.freeze([
+  "data/damodaran/industries.json",
+  "data/damodaran/historical_erp.json",
+  "data/damodaran/credit_ratings.json",
+  "data/damodaran/erp.json",
+  "data/damodaran/industry_metrics.json",
+  "data/damodaran/industry_metrics_regions.json",
+]);
+export const PUBLIC_MIRROR_RELATIVE_PATHS = Object.freeze([
+  "100xfenok-next/public/data/damodaran/industries.json",
+  "100xfenok-next/public/data/damodaran/historical_erp.json",
+  "100xfenok-next/public/data/damodaran/credit_ratings.json",
+  "100xfenok-next/public/data/damodaran/erp.json",
+  "100xfenok-next/public/data/damodaran/industry_metrics.json",
+  "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
+]);
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 export const REPORT_RELATIVE_PATH = process.env.DAMODARAN_SHADOW_REPORT
-  ?? "data/admin/damodaran-shadow-parity.json";
+  ?? "data/admin/damodaran/owner-guard.json";
 const REPORT_PATH = path.join(REPO_ROOT, REPORT_RELATIVE_PATH);
 const PRODUCER_PATH = path.join(
   SCRIPT_DIR,
@@ -107,6 +123,7 @@ function readJson(filePath) {
 
 function atomicWriteJson(filePath, payload) {
   const temporaryPath = `${filePath}.${process.pid}.tmp`;
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(temporaryPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   fs.renameSync(temporaryPath, filePath);
 }
@@ -121,7 +138,7 @@ function blockedRows(message) {
   }));
 }
 
-export function buildReport(bundle, producerResult) {
+export function guardProducedFiles(bundle, producedRoot) {
   const files = FILE_NAMES.map((file) => {
     const sourceRows = bundle.sources?.[file] ?? [];
     const sourceUrls = [...new Set(sourceRows.map((row) => row.url))];
@@ -137,11 +154,23 @@ export function buildReport(bundle, producerResult) {
       };
     }
 
-    const committedPath = path.join(REPO_ROOT, "data", "damodaran", file);
+    const producedPath = path.join(producedRoot, file);
     try {
+      const produced = readJson(producedPath);
+      let comparison;
+      try {
+        assert.deepStrictEqual(fresh, produced);
+        comparison = { status: "match", first_divergent_paths: [] };
+      } catch (error) {
+        if (error?.code !== "ERR_ASSERTION") throw error;
+        comparison = {
+          status: "mismatch",
+          first_divergent_paths: firstDivergentPaths(fresh, produced),
+        };
+      }
       return {
         file,
-        ...comparePayloads(fresh, readJson(committedPath)),
+        ...comparison,
         source_urls: sourceUrls,
         error: null,
       };
@@ -162,25 +191,62 @@ export function buildReport(bundle, producerResult) {
       ? "mismatch"
       : "match";
   return {
+    status,
+    summary: {
+      match: files.filter((row) => row.status === "match").length,
+      mismatch: files.filter((row) => row.status === "mismatch").length,
+      blocked: files.filter((row) => row.status === "blocked").length,
+    },
+    files,
+  };
+}
+
+export function promoteProducedFiles({ bundle, producedRoot, canonicalRoot }) {
+  const guard = guardProducedFiles(bundle, producedRoot);
+  if (guard.status !== "match") {
+    throw new Error(`Damodaran owner guard failed: ${guard.status}`);
+  }
+
+  fs.mkdirSync(canonicalRoot, { recursive: true });
+  const temporaryFiles = [];
+  try {
+    for (const file of FILE_NAMES) {
+      const temporaryPath = path.join(canonicalRoot, `.${file}.${process.pid}.tmp`);
+      fs.copyFileSync(path.join(producedRoot, file), temporaryPath);
+      temporaryFiles.push([temporaryPath, path.join(canonicalRoot, file)]);
+    }
+    for (const [temporaryPath, targetPath] of temporaryFiles) {
+      fs.renameSync(temporaryPath, targetPath);
+    }
+  } finally {
+    for (const [temporaryPath] of temporaryFiles) {
+      if (fs.existsSync(temporaryPath)) fs.rmSync(temporaryPath, { force: true });
+    }
+  }
+  return guard;
+}
+
+export function buildReport(bundle, producerResult, guard) {
+  return {
     schema_version: SCHEMA_VERSION,
     fetched_at: bundle.fetched_at,
-    status,
-    mode: "shadow_only",
-    ownership_flip: false,
+    status: guard.status,
+    mode: "owner_guard",
+    ownership_flip: true,
+    guard_target: "producer_bundle_vs_generated_files",
     committed_root: "data/damodaran",
-    ignored_compare_paths: ["/metadata/generated_at"],
+    public_mirror: "100xfenok-next/public/data/damodaran",
+    ignored_compare_paths: [],
     conditional_get: bundle.conditional_get,
     producer: {
       exit_code: producerResult.status,
       signal: producerResult.signal,
     },
     summary: {
-      match: files.filter((row) => row.status === "match").length,
-      mismatch: files.filter((row) => row.status === "mismatch").length,
-      blocked: files.filter((row) => row.status === "blocked").length,
+      ...guard.summary,
       request_count: Object.values(bundle.sources ?? {}).reduce((sum, rows) => sum + rows.length, 0),
     },
-    files,
+    files: guard.files,
   };
 }
 
@@ -188,6 +254,7 @@ export function main() {
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-shadow-"));
   const outputDir = path.join(temporaryRoot, "converter-output");
   const bundlePath = path.join(temporaryRoot, "bundle.json");
+  const canonicalRoot = path.join(REPO_ROOT, "data", "damodaran");
   let report;
 
   try {
@@ -203,7 +270,26 @@ export function main() {
     );
 
     if (fs.existsSync(bundlePath)) {
-      report = buildReport(readJson(bundlePath), producerResult);
+      const bundle = readJson(bundlePath);
+      let guard = guardProducedFiles(bundle, outputDir);
+      if (producerResult.status === 0 && guard.status === "match") {
+        try {
+          guard = promoteProducedFiles({ bundle, producedRoot: outputDir, canonicalRoot });
+        } catch (error) {
+          guard = {
+            status: "blocked",
+            summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length },
+            files: blockedRows(`${error.name}: ${error.message}`),
+          };
+        }
+      } else if (producerResult.status !== 0 && guard.status === "match") {
+        guard = {
+          status: "blocked",
+          summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length },
+          files: blockedRows(`producer exited ${producerResult.status ?? "without status"}`),
+        };
+      }
+      report = buildReport(bundle, producerResult, guard);
     } else {
       const reason = producerResult.error
         ? `${producerResult.error.name}: ${producerResult.error.message}`
@@ -212,10 +298,12 @@ export function main() {
         schema_version: SCHEMA_VERSION,
         fetched_at: new Date().toISOString(),
         status: "blocked",
-        mode: "shadow_only",
-        ownership_flip: false,
+        mode: "owner_guard",
+        ownership_flip: true,
+        guard_target: "producer_bundle_vs_generated_files",
         committed_root: "data/damodaran",
-        ignored_compare_paths: ["/metadata/generated_at"],
+        public_mirror: "100xfenok-next/public/data/damodaran",
+        ignored_compare_paths: [],
         conditional_get: { used: false, reason: "producer did not return a bundle" },
         producer: {
           exit_code: producerResult.status,

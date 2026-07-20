@@ -145,15 +145,17 @@ function clone(value) {
     if (entry.may_be_absent === true) continue;
     assert.equal(fs.existsSync(path.join(REPO_ROOT, entry.path)), true, `stale declared exception: ${entry.path}`);
   }
-  // lane_class: exactly one auxiliary lane today; everything else is detection_floor
+  // lane_class: absorbed Damodaran joins the existing auxiliary lane; everything else is detection_floor
   {
     const byClass = LANE_REGISTRY.lanes.reduce((acc, lane) => {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 19, auxiliary: 1 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 19, auxiliary: 2 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
-      "yahoo_batch_quote_history is the only auxiliary lane (not a detection-floor lane)");
+      "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
+    assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",
+      "Damodaran is an owned auxiliary producer outside the detection floor");
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
@@ -245,6 +247,7 @@ function clone(value) {
       // recovery-state slice; they stay pending indefinitely by design.
       "apewisdom_attention",
       "gdelt_news_tone",
+      "damodaran",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);
