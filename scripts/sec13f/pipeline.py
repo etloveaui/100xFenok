@@ -147,8 +147,9 @@ def _resolve_references(
 
 
 def _pipeline_reason(error: Exception) -> str:
-    if isinstance(error, (Sec13FParseError, AmendmentError)):
-        return error.reason
+    reason = getattr(error, "reason", None)
+    if isinstance(reason, str) and reason:
+        return reason
     message = str(error).lower()
     if "information table is missing" in message:
         return "missing_information_table"
@@ -159,7 +160,8 @@ def _pipeline_reason(error: Exception) -> str:
 
 def build_investor_run(
     *,
-    client: SecClient,
+    client: SecClient | None,
+    filing_source: Any | None = None,
     investor_id: str,
     investor: Mapping[str, Any],
     reference_mapping: Mapping[str, Mapping[str, str]],
@@ -173,8 +175,15 @@ def build_investor_run(
         raise PipelineError("invalid_registry", investor_id=investor_id, detail="cik")
 
     try:
-        discovered = discover_filings(client, cik)
-    except SecClientError as exc:
+        if filing_source is None:
+            if client is None:
+                raise SecClientError("SEC client or filing source is required")
+            discovered = discover_filings(client, cik)
+        else:
+            discovered = filing_source.discover(cik)
+    except Exception as exc:
+        if not isinstance(exc, SecClientError) and not hasattr(exc, "reason"):
+            raise
         raise PipelineError(
             _pipeline_reason(exc), investor_id=investor_id, detail=str(exc)
         ) from exc
@@ -186,9 +195,14 @@ def build_investor_run(
     filing_date_by_accession: dict[str, str] = {}
     form_by_accession: dict[str, str] = {}
 
-    for filing in discovered:
+    for component_order, filing in enumerate(discovered):
         try:
-            documents = fetch_filing_components(client, cik, filing)
+            if filing_source is None:
+                if client is None:
+                    raise SecClientError("SEC client or filing source is required")
+                documents = fetch_filing_components(client, cik, filing)
+            else:
+                documents = filing_source.components(cik, filing)
             cover = parse_cover_xml(documents["primary"], accession=filing.accession)
             component = {
                 "accession": filing.accession,
@@ -200,6 +214,20 @@ def build_investor_run(
                 "cover_xml": documents["primary"],
             }
             parsed = parse_filing_component(component, documents["information_table"])
+            if not parsed["holdings"] and not parsed["cover"]["is_confidential_omitted"]:
+                raise PipelineError(
+                    "unexplained_zero_holdings",
+                    investor_id=investor_id,
+                    accession=filing.accession,
+                )
+            if filing_source is not None and hasattr(filing_source, "record_semantics"):
+                filing_source.record_semantics(
+                    cik,
+                    filing,
+                    amendment_type=parsed["amendment_type"],
+                    amendment_number=parsed["amendment_number"],
+                    component_order=component_order,
+                )
             decision = _unit_decision(unit_resolver, parsed, investor_id=investor_id)
             normalized = normalize_values(
                 parsed["holdings"],
@@ -213,8 +241,10 @@ def build_investor_run(
                 investor_id=investor_id,
                 accession=filing.accession,
             )
-        except (SecClientError, Sec13FParseError, NormalizationError, PipelineError) as exc:
+        except Exception as exc:
             if isinstance(exc, PipelineError):
+                raise
+            if not isinstance(exc, (SecClientError, Sec13FParseError, NormalizationError)) and not hasattr(exc, "reason"):
                 raise
             raise PipelineError(
                 _pipeline_reason(exc),
@@ -307,7 +337,8 @@ def _registry_investors(registry: Mapping[str, Any]) -> Mapping[str, Mapping[str
 
 def build_investor_runs(
     *,
-    client: SecClient,
+    client: SecClient | None,
+    filing_source: Any | None = None,
     registry: Mapping[str, Any],
     reference_mapping: Mapping[str, Mapping[str, str]],
     unit_resolver: UnitResolver,
@@ -319,6 +350,7 @@ def build_investor_runs(
     return {
         investor_id: build_investor_run(
             client=client,
+            filing_source=filing_source,
             investor_id=investor_id,
             investor=investor,
             reference_mapping=reference_mapping,

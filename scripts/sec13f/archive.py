@@ -71,9 +71,12 @@ def filing_base_url(cik: str, accession: str) -> str:
     return f"{ARCHIVE_BASE}/{int(cik)}/{accession.replace('-', '')}"
 
 
-def fetch_filing_components(client: SecClient, cik: str, filing: Filing) -> dict[str, bytes]:
+def fetch_filing_documents(client: SecClient, cik: str, filing: Filing) -> list[dict[str, object]]:
+    """Fetch one filing as role-addressed documents suitable for raw caching."""
+
     base = filing_base_url(cik, filing.accession)
-    index_bytes = client.get_bytes(f"{base}/index.json")
+    index_url = f"{base}/index.json"
+    index_bytes = client.get_bytes(index_url)
     try:
         index = json.loads(index_bytes.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
@@ -93,8 +96,28 @@ def fetch_filing_components(client: SecClient, cik: str, filing: Filing) -> dict
         table = next((name for name in safe_names if name.lower().endswith(".xml") and name != primary), None)
     if table is None:
         raise SecClientError("SEC information table is missing from archive index")
+    return [
+        {"role": "archive_index", "name": "index.json", "url": index_url, "content": index_bytes},
+        {
+            "role": "primary",
+            "name": primary,
+            "url": f"{base}/{primary}",
+            "content": client.get_bytes(f"{base}/{primary}"),
+        },
+        {
+            "role": "information_table",
+            "name": table,
+            "url": f"{base}/{table}",
+            "content": client.get_bytes(f"{base}/{table}"),
+        },
+    ]
+
+
+def fetch_filing_components(client: SecClient, cik: str, filing: Filing) -> dict[str, bytes]:
+    documents = fetch_filing_documents(client, cik, filing)
+    by_role = {str(row["role"]): row["content"] for row in documents}
     return {
-        "index.json": index_bytes,
-        "primary": client.get_bytes(f"{base}/{primary}"),
-        "information_table": client.get_bytes(f"{base}/{table}"),
+        "index.json": by_role["archive_index"],
+        "primary": by_role["primary"],
+        "information_table": by_role["information_table"],
     }

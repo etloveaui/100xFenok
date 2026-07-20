@@ -88,3 +88,35 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/sec13f/freeze_slice_a_oracle.py \
 
 PYTHONDONTWRITEBYTECODE=1 python3 tests/sec13f/test_slice_a_end_to_end.py
 ```
+
+## Slice B acquisition and recovery boundary
+
+Slice B keeps ownership and publication unchanged while hardening the private
+acquisition path. Live callers must use `SecClient.production(...)`, whose
+default rate gate is shared across production clients; fixtures use the
+explicit `SecClient.fixture(...)` constructor. Timeout, 429, and selected 5xx
+responses retry with bounded backoff, while 401/403 stop immediately.
+
+`RawCache` stores immutable CIK/accession document sets with per-document
+digests. `CachedFilingSource` validates the cache before every read and permits
+offline resume only from an explicitly retained discovery list. Corrupt cache
+content never falls back to the network silently.
+
+`IncrementalLedger` publishes only to its private immutable run root. The
+transaction is acquisition/cache -> prepared input -> fresh staging output ->
+73-file manifest verification -> immutable run manifest -> one atomic
+`state.json` swap containing both current and LKG. Attempts and failpoint
+candidates are separate from the active pointer, so failures and abandoned
+runs cannot advance completion. An identical verified source set is replayed
+without regenerating or rewriting active bytes.
+
+This slice does not add a workflow, register a live lane, write canonical
+`data/sec-13f`, or change the public mirror. All tests are hermetic:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
+  tests.sec13f.test_slice_b_client_faults \
+  tests.sec13f.test_slice_b_cache \
+  tests.sec13f.test_slice_b_source \
+  tests.sec13f.test_slice_b_ledger
+```

@@ -67,7 +67,26 @@ def _validated_components(components: Iterable[dict[str, Any]]) -> list[dict[str
     report_dates = {component.get("report_date") for component in unique}
     if len(report_dates) != 1 or None in report_dates or "" in report_dates:
         raise AmendmentError("report_date_mismatch")
-    return sorted(unique, key=component_sort_key)
+    ordered = sorted(unique, key=component_sort_key)
+    amendment_order: dict[tuple[str, str, int], str] = {}
+    for component in ordered:
+        amendment_number = component.get("amendment_number")
+        if component.get("form") != "13F-HR/A" or not isinstance(amendment_number, int):
+            continue
+        key = (
+            str(component.get("report_date", "")),
+            str(component.get("filing_date", "")),
+            amendment_number,
+        )
+        prior = amendment_order.get(key)
+        if prior is not None and prior != component["accession"]:
+            raise AmendmentError(
+                "ambiguous_same_day_amendment_order",
+                accession=component["accession"],
+                detail=f"conflicts with {prior}",
+            )
+        amendment_order[key] = component["accession"]
+    return ordered
 
 
 def compose_amendments(components: Iterable[dict[str, Any]]) -> dict[str, Any]:
