@@ -1,0 +1,652 @@
+{
+  "schema_version": "sec13f-slice0-fixtures/v1",
+  "provenance": {
+    "classification": "synthetic_sanitized",
+    "created_on": "2026-07-20",
+    "source_contracts": [
+      "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+      "https://www.sec.gov/rules-regulations/staff-guidance/division-investment-management-frequently-asked-questions/frequently-asked-questions-about-form-13f"
+    ],
+    "note": "Synthetic issuer names, CUSIPs, CIK, accessions, values, and shares; no credentials or live filer data."
+  },
+  "synthetic_filer": {
+    "cik": "0000000001",
+    "entity": "SYNTHETIC 13F TEST FILER"
+  },
+  "contract": {
+    "forms": [
+      "13F-HR",
+      "13F-HR/A"
+    ],
+    "component_order": [
+      "report_date:asc",
+      "filing_date:asc",
+      "amendment_number:asc",
+      "accession:asc"
+    ],
+    "amendment_semantics": {
+      "13F-HR": "replace_active_state",
+      "RESTATEMENT": "replace_active_state",
+      "NEW HOLDINGS": "append_to_active_state",
+      "unknown_or_missing": "fail_closed"
+    },
+    "duplicate_rows": "preserve_unless_same_accession_row_identity_is_explicitly_proven",
+    "holding_row_order": "preserve_xml_order_then_amendment_append_order",
+    "unit_rules": {
+      "allowed_units": [
+        "dollars",
+        "thousands"
+      ],
+      "multipliers": {
+        "dollars": 1,
+        "thousands": 1000
+      },
+      "require_evidence_and_confidence": true,
+      "unresolved": "fail_closed"
+    },
+    "weight_filter_order": [
+      "market_value / filing_total_value",
+      "round_to_4_decimal_places",
+      "keep_if_weight_greater_than_or_equal_to_0.001"
+    ],
+    "accumulated_history": {
+      "fresh_fetch_quarters": 21,
+      "frozen_accumulated_quarters": 30,
+      "compare_separately": true
+    },
+    "output_boundary": {
+      "base": {
+        "root_indexes": 3,
+        "investors": 60,
+        "analytics": 10,
+        "total": 73
+      },
+      "platform_derived": 5,
+      "schema": "separate_non_runtime_contract"
+    },
+    "declared_cch_volatile_paths": [
+      {
+        "file_patterns": [
+          "summary.json",
+          "investors/*.json",
+          "analytics/conviction.json"
+        ],
+        "json_path": "$.metadata.generated_at",
+        "measured_occurrences": 62
+      }
+    ],
+    "non_volatile_provenance_paths": [
+      "accession_numbers",
+      "filing_date",
+      "report_date",
+      "amendment_types",
+      "holding_values",
+      "enrichment_input_dates"
+    ],
+    "set_order_semantics": [
+      "sector_investor_ids:lexicographic",
+      "new_position_ties:-value,investor_id,ticker",
+      "buying_pressure_keys:lexicographic",
+      "multi_quarter_tickers:lexicographic",
+      "streak_ties:-streak_quarters,ticker,direction,start_quarter,end_quarter"
+    ],
+    "json_compatibility": {
+      "encoding": "utf-8",
+      "ensure_ascii": false,
+      "indent": 2,
+      "trailing_newline": false
+    }
+  },
+  "cases": [
+    {
+      "id": "base_filing",
+      "accessions": [
+        "0000000001-26-000001"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000001",
+          "form": "13F-HR",
+          "filing_date": "2026-05-15",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>2</tableEntryTotal><tableValueTotal>3000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000001",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable><infoTable><nameOfIssuer>SYNTHETIC BETA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000BB2</cusip><value>2000</value><shrsOrPrnAmt><sshPrnamt>20</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>20</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            },
+            {
+              "name": "SYNTHETIC BETA INC",
+              "cusip": "000000BB2",
+              "title_of_class": "COM",
+              "value": 2000,
+              "shares": 20,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 20,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "pass",
+        "composition": "base",
+        "holding_count": 2
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "tests/test_parser.py:96-120",
+          "tests/test_parser.py:580-604"
+        ]
+      }
+    },
+    {
+      "id": "restatement",
+      "accessions": [
+        "0000000001-26-000001",
+        "0000000001-26-000002"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000001",
+          "form": "13F-HR",
+          "filing_date": "2026-05-15",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>2</tableEntryTotal><tableValueTotal>3000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        },
+        {
+          "accession": "0000000001-26-000002",
+          "form": "13F-HR/A",
+          "filing_date": "2026-05-20",
+          "report_date": "2026-03-31",
+          "amendment_type": "RESTATEMENT",
+          "amendment_number": 1,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1500</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted><amendmentType>RESTATEMENT</amendmentType><amendmentNumber>1</amendmentNumber></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000001",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable><infoTable><nameOfIssuer>SYNTHETIC BETA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000BB2</cusip><value>2000</value><shrsOrPrnAmt><sshPrnamt>20</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>20</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            },
+            {
+              "name": "SYNTHETIC BETA INC",
+              "cusip": "000000BB2",
+              "title_of_class": "COM",
+              "value": 2000,
+              "shares": 20,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 20,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        },
+        {
+          "accession": "0000000001-26-000002",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC GAMMA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000CC3</cusip><value>1500</value><shrsOrPrnAmt><sshPrnamt>15</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>15</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC GAMMA INC",
+              "cusip": "000000CC3",
+              "title_of_class": "COM",
+              "value": 1500,
+              "shares": 15,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 15,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "pass",
+        "composition": "restatement",
+        "holding_count": 1
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "tests/test_parser.py:707-725"
+        ]
+      }
+    },
+    {
+      "id": "add_new_holdings",
+      "accessions": [
+        "0000000001-26-000001",
+        "0000000001-26-000003"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000001",
+          "form": "13F-HR",
+          "filing_date": "2026-05-15",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        },
+        {
+          "accession": "0000000001-26-000003",
+          "form": "13F-HR/A",
+          "filing_date": "2026-05-21",
+          "report_date": "2026-03-31",
+          "amendment_type": "NEW HOLDINGS",
+          "amendment_number": 1,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>2000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted><amendmentType>NEW HOLDINGS</amendmentType><amendmentNumber>1</amendmentNumber></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000001",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        },
+        {
+          "accession": "0000000001-26-000003",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC BETA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000BB2</cusip><value>2000</value><shrsOrPrnAmt><sshPrnamt>20</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>20</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC BETA INC",
+              "cusip": "000000BB2",
+              "title_of_class": "COM",
+              "value": 2000,
+              "shares": 20,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 20,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "pass",
+        "composition": "base_plus_addition",
+        "holding_count": 2
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "tests/test_parser.py:660-705"
+        ]
+      }
+    },
+    {
+      "id": "restatement_then_addition",
+      "accessions": [
+        "0000000001-26-000001",
+        "0000000001-26-000002",
+        "0000000001-26-000003"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000001",
+          "form": "13F-HR",
+          "filing_date": "2026-05-15",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        },
+        {
+          "accession": "0000000001-26-000002",
+          "form": "13F-HR/A",
+          "filing_date": "2026-05-20",
+          "report_date": "2026-03-31",
+          "amendment_type": "RESTATEMENT",
+          "amendment_number": 1,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1500</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted><amendmentType>RESTATEMENT</amendmentType><amendmentNumber>1</amendmentNumber></summaryPage></edgarSubmission>"
+        },
+        {
+          "accession": "0000000001-26-000003",
+          "form": "13F-HR/A",
+          "filing_date": "2026-05-21",
+          "report_date": "2026-03-31",
+          "amendment_type": "NEW HOLDINGS",
+          "amendment_number": 2,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>2000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted><amendmentType>NEW HOLDINGS</amendmentType><amendmentNumber>2</amendmentNumber></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000001",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        },
+        {
+          "accession": "0000000001-26-000002",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC GAMMA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000CC3</cusip><value>1500</value><shrsOrPrnAmt><sshPrnamt>15</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>15</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC GAMMA INC",
+              "cusip": "000000CC3",
+              "title_of_class": "COM",
+              "value": 1500,
+              "shares": 15,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 15,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        },
+        {
+          "accession": "0000000001-26-000003",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC BETA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000BB2</cusip><value>2000</value><shrsOrPrnAmt><sshPrnamt>20</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>20</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC BETA INC",
+              "cusip": "000000BB2",
+              "title_of_class": "COM",
+              "value": 2000,
+              "shares": 20,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 20,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "pass",
+        "composition": "restatement_plus_addition",
+        "holding_count": 2
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "tests/test_parser.py:707-753"
+        ]
+      }
+    },
+    {
+      "id": "confidential_omission",
+      "accessions": [
+        "0000000001-26-000004"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000004",
+          "form": "13F-HR",
+          "filing_date": "2026-05-22",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1000</tableValueTotal><isConfidentialOmitted>true</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000004",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "pass",
+        "confidential_omission": true,
+        "holding_count": 1
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "parser.py:329-339"
+        ]
+      }
+    },
+    {
+      "id": "absent_information_table",
+      "accessions": [
+        "0000000001-26-000005"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000005",
+          "form": "13F-HR",
+          "filing_date": "2026-05-23",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [],
+      "expected": {
+        "result": "blocked",
+        "reason": "missing_information_table"
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "parser.py:240-249",
+          "parser.py:655-664"
+        ]
+      }
+    },
+    {
+      "id": "malformed_xml",
+      "accessions": [
+        "0000000001-26-000006"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000006",
+          "form": "13F-HR",
+          "filing_date": "2026-05-24",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>1</tableEntryTotal><tableValueTotal>1000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000006",
+          "xml": "<informationTable><infoTable></informationTable>",
+          "rows": []
+        }
+      ],
+      "expected": {
+        "result": "blocked",
+        "reason": "malformed_information_table_xml"
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "tests/test_parser.py:181-190",
+          "parser.py:404-407"
+        ]
+      }
+    },
+    {
+      "id": "duplicate_rows",
+      "accessions": [
+        "0000000001-26-000007"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000007",
+          "form": "13F-HR",
+          "filing_date": "2026-05-25",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>2</tableEntryTotal><tableValueTotal>2000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000007",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            },
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "pass",
+        "duplicate_policy": "preserve",
+        "holding_count": 2
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "tests/test_parser.py:660-703"
+        ]
+      }
+    },
+    {
+      "id": "cover_count_mismatch",
+      "accessions": [
+        "0000000001-26-000008"
+      ],
+      "components": [
+        {
+          "accession": "0000000001-26-000008",
+          "form": "13F-HR",
+          "filing_date": "2026-05-26",
+          "report_date": "2026-03-31",
+          "amendment_type": null,
+          "amendment_number": null,
+          "cover_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><edgarSubmission><summaryPage><tableEntryTotal>2</tableEntryTotal><tableValueTotal>3000</tableValueTotal><isConfidentialOmitted>false</isConfidentialOmitted></summaryPage></edgarSubmission>"
+        }
+      ],
+      "information_tables": [
+        {
+          "accession": "0000000001-26-000008",
+          "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><informationTable xmlns=\"http://www.sec.gov/edgar/document/thirteenf/informationtable\"><infoTable><nameOfIssuer>SYNTHETIC ALPHA INC</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>000000AA1</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt><investmentDiscretion>SOLE</investmentDiscretion><votingAuthority><Sole>10</Sole><Shared>0</Shared><None>0</None></votingAuthority></infoTable></informationTable>",
+          "rows": [
+            {
+              "name": "SYNTHETIC ALPHA INC",
+              "cusip": "000000AA1",
+              "title_of_class": "COM",
+              "value": 1000,
+              "shares": 10,
+              "share_type": "SH",
+              "investment_discretion": "SOLE",
+              "voting_sole": 10,
+              "voting_shared": 0,
+              "voting_none": 0
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "result": "blocked",
+        "reason": "cover_count_mismatch"
+      },
+      "provenance": {
+        "classification": "synthetic_sanitized",
+        "cch_evidence": [
+          "parser.py:666-677",
+          "verify_output.py:124-162"
+        ]
+      }
+    }
+  ],
+  "content_digest": "605dc8a6a096e2968c9af05f4f84a2185f621d580c49b96fdc2a4df611caf085"
+}

@@ -1,0 +1,497 @@
+# SEC 13F Converter Configuration v3.1.0
+#
+# This file defines all investors tracked by the SEC 13F converter.
+# CIKs are verified against SEC EDGAR.
+#
+# Version: 3.1.0
+# Last Updated: 2026-06-17
+
+version: "3.1.0"
+
+defaults:
+  quarters: 21  # 2021-Q1 through 2026-Q1 fresh fetch window
+  min_weight_threshold: 0.001  # 0.1% filter for Cloudflare limits
+
+# Investor Groups
+groups:
+  value:
+    display: "Value Investing"
+    color: "#2E7D32"
+  macro:
+    display: "Macro/Global"
+    color: "#1565C0"
+  hedge:
+    display: "Hedge Fund"
+    color: "#7B1FA2"
+  quant:
+    display: "Quantitative"
+    color: "#00838F"
+  growth:
+    display: "Growth"
+    color: "#F57C00"
+  activist:
+    display: "Activist"
+    color: "#C62828"
+  event:
+    display: "Event-Driven"
+    color: "#6A1B9A"
+  tiger:
+    display: "Tiger Cubs"
+    color: "#FF6F00"
+  passive:
+    display: "Passive/Mega Manager"
+    color: "#455A64"
+  institutional:
+    display: "Institutional Active"
+    color: "#3949AB"
+
+# Investors (60 total)
+investors:
+  # ============================================================================
+  # EXISTING INVESTORS (17)
+  # ============================================================================
+
+  # --- Value Investing (4) ---
+  buffett:
+    name: "Warren Buffett"
+    entity: "Berkshire Hathaway Inc"
+    cik: "0001067983"
+    group: "value"
+    active: true
+
+  marks:
+    name: "Howard Marks"
+    entity: "Oaktree Capital Management LP"
+    cik: "0000949509"
+    group: "value"
+    active: true
+
+  klarman:
+    name: "Seth Klarman"
+    entity: "Baupost Group"
+    cik: "0001061768"
+    group: "value"
+    active: true
+
+  fidelity:
+    name: "Fidelity (Lynch)"
+    entity: "FMR LLC"
+    cik: "0000315066"
+    group: "value"
+    active: true
+
+  # --- Macro/Global (3) ---
+  druckenmiller:
+    name: "Stanley Druckenmiller"
+    entity: "Duquesne Family Office"
+    cik: "0001536411"
+    group: "macro"
+    active: true
+
+  soros:
+    name: "George Soros"
+    entity: "Soros Fund Management"
+    cik: "0001029160"
+    group: "macro"
+    active: true
+
+  dalio:
+    name: "Ray Dalio"
+    entity: "Bridgewater Associates"
+    cik: "0001350694"
+    group: "macro"
+    active: true
+
+  # --- Hedge Fund (4) ---
+  griffin:
+    name: "Ken Griffin"
+    entity: "Citadel Advisors"
+    cik: "0001423053"
+    group: "hedge"
+    active: true
+
+  cohen:
+    name: "Steve Cohen"
+    entity: "Point72 Asset Management"
+    cik: "0001603466"
+    group: "hedge"
+    active: true
+
+  hohn:
+    name: "Chris Hohn"
+    entity: "TCI Fund Management"
+    cik: "0001647251"
+    group: "hedge"
+    active: true
+
+  laffont:
+    name: "Philippe Laffont"
+    entity: "Coatue Management"
+    cik: "0001135730"
+    group: "hedge"
+    active: true
+
+  # --- Quantitative (2) ---
+  fisher:
+    name: "Ken Fisher"
+    entity: "Fisher Investments"
+    cik: "0000850529"
+    group: "quant"
+    active: true
+
+  asness:
+    name: "Cliff Asness"
+    entity: "AQR Capital Management"
+    cik: "0001167557"
+    group: "quant"
+    active: true
+
+  # --- Growth (1) ---
+  wood:
+    name: "Cathie Wood"
+    entity: "ARK Investment Management LLC"
+    cik: "0001697748"
+    group: "growth"
+    active: true
+
+  # --- Activist (1) ---
+  ackman:
+    name: "Bill Ackman"
+    entity: "Pershing Square Capital"
+    cik: "0001336528"
+    group: "activist"
+    active: true
+
+  # --- Event-Driven (2) ---
+  tepper:
+    name: "David Tepper"
+    entity: "Appaloosa Management"
+    cik: "0001656456"
+    group: "event"
+    active: true
+
+  loeb:
+    name: "Dan Loeb"
+    entity: "Third Point"
+    cik: "0001040273"
+    group: "event"
+    active: true
+
+  # ============================================================================
+  # NEW INVESTORS (13) - v3.0.0
+  # ============================================================================
+
+  # --- Value Investing (+5) ---
+  greenblatt:
+    name: "Joel Greenblatt"
+    entity: "GOTHAM ASSET MANAGEMENT, LLC"
+    cik: "0001510387"
+    group: "value"
+    active: true
+
+  einhorn:
+    name: "David Einhorn"
+    entity: "GREENLIGHT CAPITAL INC"
+    cik: "0001079114"
+    group: "value"
+    active: true
+
+  pabrai:
+    name: "Mohnish Pabrai"
+    entity: "DALAL STREET, LLC"
+    cik: "0001549575"
+    group: "value"
+    active: true
+
+  gayner:
+    name: "Tom Gayner"
+    entity: "MARKEL GROUP INC."
+    cik: "0001096343"
+    group: "value"
+    active: true
+
+  russo:
+    name: "Tom Russo"
+    entity: "GARDNER RUSSO & QUINN LLC"
+    cik: "0000860643"
+    group: "value"
+    active: true
+
+  miller:
+    name: "Bill Miller"
+    entity: "MILLER VALUE PARTNERS, LLC"
+    cik: "0001135778"
+    group: "value"
+    active: true
+
+  # --- Activist (+2) ---
+  icahn:
+    name: "Carl Icahn"
+    entity: "ICAHN CARL C"
+    cik: "0000921669"
+    group: "activist"
+    active: true
+
+  peltz:
+    name: "Nelson Peltz"
+    entity: "TRIAN FUND MANAGEMENT, L.P."
+    cik: "0001345471"
+    group: "activist"
+    active: true
+
+  # --- Tiger Cubs (+3) ---
+  halvorsen:
+    name: "Andreas Halvorsen"
+    entity: "VIKING GLOBAL INVESTORS LP"
+    cik: "0001103804"
+    group: "tiger"
+    active: true
+
+  coleman:
+    name: "Chase Coleman"
+    entity: "TIGER GLOBAL MANAGEMENT LLC"
+    cik: "0001167483"
+    group: "tiger"
+    active: true
+
+  mandel:
+    name: "Stephen Mandel"
+    entity: "LONE PINE CAPITAL LLC"
+    cik: "0001061165"
+    group: "tiger"
+    active: true
+
+  # --- Macro (+1) ---
+  tudor:
+    name: "Paul Tudor Jones"
+    entity: "TUDOR INVESTMENT CORP ET AL"
+    cik: "0000923093"
+    group: "macro"
+    active: true
+
+  # --- Event-Driven (+1) ---
+  singer:
+    name: "Paul Singer"
+    entity: "ELLIOTT INVESTMENT MANAGEMENT L.P."
+    cik: "0001791786"
+    group: "event"
+    active: true
+
+  # ============================================================================
+  # MEGA MANAGERS AND HIGH-SKILL INVESTORS (+30) - v3.1.0
+  # ============================================================================
+
+  # --- Passive / Mega Managers (+6) ---
+  blackrock:
+    name: "BlackRock"
+    entity: "BlackRock, Inc."
+    cik: "0002012383"
+    group: "passive"
+    active: true
+
+  vanguard:
+    name: "Vanguard"
+    entity: "VANGUARD GROUP INC"
+    cik: "0000102909"
+    group: "passive"
+    active: true
+
+  state_street:
+    name: "State Street"
+    entity: "STATE STREET CORP"
+    cik: "0000093751"
+    group: "passive"
+    active: true
+
+  geode:
+    name: "Geode Capital"
+    entity: "GEODE CAPITAL MANAGEMENT, LLC"
+    cik: "0001214717"
+    group: "passive"
+    active: true
+
+  northern_trust:
+    name: "Northern Trust"
+    entity: "NORTHERN TRUST CORP"
+    cik: "0000073124"
+    group: "passive"
+    active: true
+
+  norges:
+    name: "Norges Bank"
+    entity: "NORGES BANK"
+    cik: "0001374170"
+    group: "passive"
+    active: true
+
+  # --- Institutional Active (+4) ---
+  wellington:
+    name: "Wellington Management"
+    entity: "WELLINGTON MANAGEMENT GROUP LLP"
+    cik: "0000902219"
+    group: "institutional"
+    active: true
+
+  trowe:
+    name: "T. Rowe Price"
+    entity: "PRICE T ROWE ASSOCIATES INC /MD/"
+    cik: "0000080255"
+    group: "institutional"
+    active: true
+
+  capital_world:
+    name: "Capital World Investors"
+    entity: "Capital World Investors"
+    cik: "0001422849"
+    group: "institutional"
+    active: true
+
+  capital_research_global:
+    name: "Capital Research Global Investors"
+    entity: "Capital Research Global Investors"
+    cik: "0001422848"
+    group: "institutional"
+    active: true
+
+  # --- Quantitative / Multi-Strategy (+3) ---
+  renaissance:
+    name: "Jim Simons / Renaissance"
+    entity: "RENAISSANCE TECHNOLOGIES LLC"
+    cik: "0001037389"
+    group: "quant"
+    active: true
+
+  de_shaw:
+    name: "D. E. Shaw"
+    entity: "D. E. Shaw & Co., Inc."
+    cik: "0001009207"
+    group: "quant"
+    active: true
+
+  two_sigma:
+    name: "Two Sigma"
+    entity: "TWO SIGMA INVESTMENTS, LP"
+    cik: "0001179392"
+    group: "quant"
+    active: true
+
+  # --- Hedge / High-Conviction (+6) ---
+  millennium:
+    name: "Millennium Management"
+    entity: "MILLENNIUM MANAGEMENT LLC"
+    cik: "0001273087"
+    group: "hedge"
+    active: true
+
+  scion:
+    name: "Michael Burry / Scion"
+    entity: "Scion Asset Management, LLC"
+    cik: "0001649339"
+    group: "hedge"
+    active: true
+
+  d1:
+    name: "D1 Capital"
+    entity: "D1 Capital Partners L.P."
+    cik: "0001747057"
+    group: "hedge"
+    active: true
+
+  altimeter:
+    name: "Altimeter Capital"
+    entity: "Altimeter Capital Management, LP"
+    cik: "0001541617"
+    group: "hedge"
+    active: true
+
+  whale_rock:
+    name: "Whale Rock Capital"
+    entity: "Whale Rock Capital Management LLC"
+    cik: "0001387322"
+    group: "hedge"
+    active: true
+
+  balyasny:
+    name: "Balyasny Asset Management"
+    entity: "BALYASNY ASSET MANAGEMENT L.P."
+    cik: "0001218710"
+    group: "hedge"
+    active: true
+
+  abdiel:
+    name: "Abdiel Capital"
+    entity: "Abdiel Capital Advisors, LP"
+    cik: "0001578684"
+    group: "hedge"
+    active: true
+
+  # --- Quality Growth (+10) ---
+  akre:
+    name: "Chuck Akre"
+    entity: "AKRE CAPITAL MANAGEMENT LLC"
+    cik: "0001112520"
+    group: "growth"
+    active: true
+
+  polen:
+    name: "Polen Capital"
+    entity: "POLEN CAPITAL MANAGEMENT LLC"
+    cik: "0001034524"
+    group: "growth"
+    active: true
+
+  hhlr:
+    name: "HHLR Advisors"
+    entity: "HHLR ADVISORS, LTD."
+    cik: "0001762304"
+    group: "growth"
+    active: true
+
+  sands:
+    name: "Sands Capital"
+    entity: "SANDS CAPITAL MANAGEMENT, LLC"
+    cik: "0001020066"
+    group: "growth"
+    active: true
+
+  fundsmith:
+    name: "Fundsmith"
+    entity: "Fundsmith LLP"
+    cik: "0001569205"
+    group: "growth"
+    active: true
+
+  edgewood:
+    name: "Edgewood Management"
+    entity: "EDGEWOOD MANAGEMENT LLC"
+    cik: "0000860561"
+    group: "growth"
+    active: true
+
+  wcm:
+    name: "WCM Investment Management"
+    entity: "WCM INVESTMENT MANAGEMENT, LLC"
+    cik: "0001061186"
+    group: "growth"
+    active: true
+
+  dorsey:
+    name: "Dorsey Asset Management"
+    entity: "Dorsey Asset Management, LLC"
+    cik: "0001671657"
+    group: "growth"
+    active: true
+
+  durable:
+    name: "Durable Capital"
+    entity: "Durable Capital Partners LP"
+    cik: "0001798849"
+    group: "growth"
+    active: true
+
+  dragoneer:
+    name: "Dragoneer"
+    entity: "Dragoneer Investment Group, LLC"
+    cik: "0001602189"
+    group: "growth"
+    active: true
