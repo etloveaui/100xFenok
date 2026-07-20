@@ -18,6 +18,7 @@
       "sentiment",
       "nasdaq_giw_sox",
       "us_indices_daily",
+      "oecd_cli",
       "slickcharts",
       "edgar_filings",
       "sec_13f",
@@ -40,6 +41,7 @@
       "sentiment",
       "nasdaq_giw_sox",
       "us_indices_daily",
+      "oecd_cli",
       "daily",
       "weekly",
       "monthly",
@@ -54,9 +56,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "d7190a57453e1945f09e0784d355ccfc91e96abfeec3bfe1f0d306a47f2daca4",
-  "logical_lane_count": 20,
-  "producer_member_count": 24,
+  "config_digest": "758859adfb759fa14c78a66dbbf2afeafeb98c712ee7e85e566da6c716374e02",
+  "logical_lane_count": 21,
+  "producer_member_count": 25,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -84,17 +86,17 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "34e279353159d1459af08455f64149e4cc0fb619ad4053748228cf3c9201b775",
+    "report_file_sha256": "f4fadef8daf2f1685aae3bf2e13c6355d3bbc7753f3eea1af31c5ae2881b164d",
     "expected_report": {
-      "config_digest": "d7190a57453e1945f09e0784d355ccfc91e96abfeec3bfe1f0d306a47f2daca4",
+      "config_digest": "758859adfb759fa14c78a66dbbf2afeafeb98c712ee7e85e566da6c716374e02",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 21,
+        "producer_members_ready": 22,
         "producer_members_stale": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3,
-        "ready": 17,
+        "ready": 18,
         "stale": 0,
         "unavailable": 0,
         "unobserved": 3
@@ -393,6 +395,30 @@
         },
         {
           "affected_surface_ids": [
+            "activity_surveys"
+          ],
+          "artifact": {
+            "age": 40,
+            "reason": "ok",
+            "source_as_of": "2026-06-01",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "oecd_cli",
+          "kpi_required": false,
+          "label": "OECD composite leading indicators shadow",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
             "slickcharts_discovery",
             "stock_signals"
           ],
@@ -672,13 +698,13 @@
           "status": "unobserved"
         }
       ],
-      "logical_lane_count": 20,
+      "logical_lane_count": 21,
       "monitoring_mode_counts": {
         "artifact_only": 1,
         "composite": 1,
-        "post_fetch_artifact": 18
+        "post_fetch_artifact": 19
       },
-      "producer_member_count": 24,
+      "producer_member_count": 25,
       "schema_version": "data-supply-detection-floor/v1"
     }
   },
@@ -805,5 +831,5 @@
       "expected_logical_status": "unavailable"
     }
   ],
-  "registry_digest": "50d8446ae6d83bacf68095ed36dab68ee43dc0974489c32a4fedc3b1b787136c"
+  "registry_digest": "4dc83535ca109482344720bcd0bbcea97a483c20cfdf537fd13ef360df1066c5"
 }

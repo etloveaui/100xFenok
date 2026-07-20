@@ -20,6 +20,7 @@ export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
   "admin/fred_yardeni",
   "admin/edgar_filings",
   "admin/nasdaq_giw_sox",
+  "admin/oecd_cli",
   "yf/etf-details",
   "yf/migration-evidence",
 ]);

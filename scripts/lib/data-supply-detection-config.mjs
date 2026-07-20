@@ -39,6 +39,7 @@ const MEMBER_IDS = Object.freeze([
   "sentiment",
   "nasdaq_giw_sox",
   "us_indices_daily",
+  "oecd_cli",
   "daily",
   "weekly",
   "monthly",
@@ -275,8 +276,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 20,
-  producer_member_count: 24,
+  logical_lane_count: 21,
+  producer_member_count: 25,
   lanes: [
     lane({
       id: "fred_macro",
@@ -564,6 +565,21 @@ const config = {
       endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs", "macro_index_charts"],
+      visibility: "admin_only",
+    }),
+    lane({
+      id: "oecd_cli",
+      label: "OECD composite leading indicators shadow",
+      members: [member("oecd_cli", ".github/workflows/fetch-oecd-cli.yml", ["0 8 1 * *"], [
+        artifact("oecd_cli_shadow", "data/admin/oecd_cli/shadow/oecd-cli.json", {
+          schemaVersion: schemaVersion("/schema_version", "oecd-cli-shadow/v1"),
+          sourceSelector: pointerSource("/latest_date", "date"),
+          assertions: [typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 22), typeAssertion("records_array", "/records", "array"), minRowsAssertion("records_non_empty", "/records")],
+        }),
+      ])],
+      endpointContract: endpoint("oecd_sdmx", "sdmx_cli_rows", "/data", "array"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 70 }),
+      affectedSurfaceIds: ["activity_surveys"],
       visibility: "admin_only",
     }),
     lane({
@@ -1130,8 +1146,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 20 || configValue.producer_member_count !== 24) fail("denominator must be 20/24");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 20) fail("lanes must contain exactly 20 rows");
+  if (configValue.logical_lane_count !== 21 || configValue.producer_member_count !== 25) fail("denominator must be 21/25");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 21) fail("lanes must contain exactly 21 rows");
   const uncoveredLive = LIVE_LANE_IDS.filter((id) => !LANE_IDS.includes(id));
   if (uncoveredLive.length > 0) fail(`live registry lanes must have detection rows: ${uncoveredLive.join(", ")}`);
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
@@ -1147,7 +1163,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 24 || new Set(memberIds).size !== 24 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 25 || new Set(memberIds).size !== 25 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);

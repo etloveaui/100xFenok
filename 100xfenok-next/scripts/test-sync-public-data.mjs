@@ -82,6 +82,7 @@ const EXPECTED_PRIVATE_ROOTS = Object.freeze([
   "admin/fred_yardeni",
   "admin/edgar_filings",
   "admin/nasdaq_giw_sox",
+  "admin/oecd_cli",
   "yf/etf-details",
   "yf/migration-evidence",
 ]);
@@ -670,9 +671,9 @@ try {
   assert.equal(rehearsal.removedDestinationExactFiles, 5);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
-  assert.equal(rehearsal.excludedSourceRoots, 11);
-  assert.equal(rehearsal.removedDestinationRoots, 11);
-  assert.equal(rehearsal.removedDestinationFiles, 11);
+  assert.equal(rehearsal.excludedSourceRoots, 12);
+  assert.equal(rehearsal.removedDestinationRoots, 12);
+  assert.equal(rehearsal.removedDestinationFiles, 12);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -682,10 +683,10 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 3);
-  assert.equal(result.excludedSourceRoots, 11);
+  assert.equal(result.excludedSourceRoots, 12);
   assert.equal(result.excludedSourceFiles, 5);
-  assert.equal(result.removedDestinationRoots, 11);
-  assert.equal(result.removedDestinationFiles, 11);
+  assert.equal(result.removedDestinationRoots, 12);
+  assert.equal(result.removedDestinationFiles, 12);
   assert.equal(result.removedDestinationExactFiles, 5);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
@@ -703,6 +704,7 @@ try {
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/fred_yardeni")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/edgar_filings")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/nasdaq_giw_sox")), false);
+  assert.equal(fs.existsSync(path.join(destinationRoot, "admin/oecd_cli")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/etf-details")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/migration-evidence")), false);
   assert.equal(lstatIfPresent(destinationReportPath), null);
@@ -713,7 +715,7 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 3);
-  assert.equal(rerun.excludedSourceRoots, 11);
+  assert.equal(rerun.excludedSourceRoots, 12);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);

@@ -396,6 +396,24 @@ const lanes = [
     script_sources: ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],
   }),
   record({
+    id: "oecd_cli",
+    label: "OECD composite leading indicators",
+    owner_workflow: ".github/workflows/fetch-oecd-cli.yml",
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "monthly", provider: "OECD SDMX DF_CLI" },
+    enforcement: "shadow",
+    privacy_class: "private",
+    admin_store: "data/admin/oecd_cli",
+    detection_attempt: attemptShard("oecd_cli"),
+    canonical_outputs: ["data/admin/oecd_cli/shadow/oecd-cli.json"],
+    public_mirror: [],
+    commit_shards: [attemptShard("oecd_cli"), "data/admin/oecd_cli/shadow/oecd-cli.json", "data/admin/oecd_cli/parity-report.json"],
+    recovery_store: null,
+    declared_exception: "admin-only shadow until composite activity-surveys ownership and OECD redistribution terms are resolved",
+    script_sources: ["scripts/fetch-oecd-cli.mjs"],
+  }),
+  record({
     id: "slickcharts",
     label: "SlickCharts daily delivery (composite lane)",
     owner_workflow: ".github/workflows/slickcharts-daily.yml",
@@ -1015,6 +1033,13 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/us_indices_daily.json", "file"),
     commitSpec("data/admin/us-indices-daily", "directory"),
+  ],
+});
+workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {
+  always_if_exists: [commitSpec("data/admin/data-supply-state/detection-attempts/oecd_cli.json", "file")],
+  success_if_exists: [
+    commitSpec("data/admin/oecd_cli/shadow/oecd-cli.json", "file"),
+    commitSpec("data/admin/oecd_cli/parity-report.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_short_volume", "occ_options_volume"], {

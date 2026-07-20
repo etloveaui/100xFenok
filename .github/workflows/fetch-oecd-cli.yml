@@ -1,0 +1,54 @@
+name: Fetch OECD CLI Shadow
+
+on:
+  schedule:
+    - cron: '0 8 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  fetch-oecd-cli:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6
+        with:
+          node-version: '20'
+      - name: Test OECD CLI producer
+        run: node scripts/test-fetch-oecd-cli.mjs
+      - name: Fetch OECD CLI shadow
+        id: fetch_oecd
+        run: node scripts/fetch-oecd-cli.mjs
+      - name: Commit OECD evidence
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_oecd.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          RECOVERY_EXIT=0
+          if [[ "$FETCH_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2; fi
+          scripts/stage-lane-manifest.sh --workflow .github/workflows/fetch-oecd-cli.yml --stage always_if_exists
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh --workflow .github/workflows/fetch-oecd-cli.yml --stage success_if_exists
+          fi
+          if git diff --staged --quiet; then exit "$RECOVERY_EXIT"; fi
+          git commit -m "data: refresh OECD CLI shadow"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then git rebase --abort >/dev/null 2>&1 || true; sleep 3; continue; fi
+            if git push; then gh workflow run update-manifest.yml --ref main; exit "$RECOVERY_EXIT"; fi
+            sleep 3
+          done
+          exit 1

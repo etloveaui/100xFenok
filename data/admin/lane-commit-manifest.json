@@ -1,5 +1,5 @@
 {
-  "registry_digest": "50d8446ae6d83bacf68095ed36dab68ee43dc0974489c32a4fedc3b1b787136c",
+  "registry_digest": "4dc83535ca109482344720bcd0bbcea97a483c20cfdf537fd13ef360df1066c5",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -953,6 +953,35 @@
           {
             "kind": "file",
             "path": "data/indices/nasdaq-giw-sox-constituents.json",
+            "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-oecd-cli.yml": {
+      "exclude": [],
+      "lanes": [
+        "oecd_cli"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/oecd_cli.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/oecd_cli/shadow/oecd-cli.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/oecd_cli/parity-report.json",
             "required": false
           }
         ],

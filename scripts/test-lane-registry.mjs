@@ -152,7 +152,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 20, auxiliary: 5 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 21, auxiliary: 5 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
     assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",
@@ -200,6 +200,10 @@ function clone(value) {
       "data/admin/us-indices-daily/shadow/nasdaq.json",
     ], "shadow phase must not claim GAS-owned canonical index paths");
     assert.deepEqual(indices.roots.public_mirror, [], "shadow phase must not write the stale public mirror");
+    const oecd = registryLaneById("oecd_cli");
+    assert.equal(oecd.enforcement, "shadow");
+    assert.deepEqual(oecd.roots.canonical_outputs, ["data/admin/oecd_cli/shadow/oecd-cli.json"]);
+    assert.deepEqual(oecd.roots.public_mirror, []);
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
@@ -293,6 +297,7 @@ function clone(value) {
       "gdelt_news_tone",
       "damodaran",
       "us_indices_daily",
+      "oecd_cli",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);

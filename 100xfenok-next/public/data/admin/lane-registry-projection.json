@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-20T14:20:10.589Z",
+  "generated_at": "2026-07-20T14:20:11.018Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 25,
+  "lane_count": 26,
   "lanes": [
     {
       "id": "fred_macro",
@@ -148,6 +148,18 @@
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
       "owner_workflow": "fetch-us-indices-daily.yml"
+    },
+    {
+      "id": "oecd_cli",
+      "label": "OECD composite leading indicators",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "monthly",
+        "provider": "OECD SDMX DF_CLI"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-oecd-cli.yml"
     },
     {
       "id": "slickcharts",
