@@ -145,17 +145,54 @@ function clone(value) {
     if (entry.may_be_absent === true) continue;
     assert.equal(fs.existsSync(path.join(REPO_ROOT, entry.path)), true, `stale declared exception: ${entry.path}`);
   }
-  // lane_class: absorbed Damodaran joins the existing auxiliary lane; everything else is detection_floor
+  // lane_class: financial-source detection floor stays fixed while owned and
+  // private/runtime domains are registered as auxiliary lanes.
   {
     const byClass = LANE_REGISTRY.lanes.reduce((acc, lane) => {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 19, auxiliary: 2 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 19, auxiliary: 5 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
     assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",
       "Damodaran is an owned auxiliary producer outside the detection floor");
+    for (const id of ["admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv"]) {
+      const lane = registryLaneById(id);
+      assert.ok(lane, `private/runtime denominator lane missing: ${id}`);
+      assert.equal(detectionIds.includes(id), false, `${id} must not enter the financial detection floor`);
+      assert.deepEqual(
+        {
+          owner_workflow: lane.owner_workflow,
+          store_kind: lane.store_kind,
+          lane_class: lane.lane_class,
+          cadence: lane.cadence,
+          enforcement: lane.enforcement,
+          privacy_class: lane.privacy_class,
+          roots: lane.roots,
+          commit_shards: lane.commit_shards,
+          recovery_store: lane.recovery_store,
+        },
+        {
+          owner_workflow: null,
+          store_kind: "artifact_only",
+          lane_class: "auxiliary",
+          cadence: { kind: "unknown" },
+          enforcement: "shadow",
+          privacy_class: "private",
+          roots: {
+            admin_store: null,
+            detection_attempt: null,
+            canonical_outputs: [],
+            public_mirror: [],
+          },
+          commit_shards: [],
+          recovery_store: null,
+        },
+        `${id} must remain an honest repo/CI-unobservable auxiliary artifact lane`,
+      );
+      assert.ok(lane.declared_exception?.length > 0, `${id} must explain its observability exception`);
+    }
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");

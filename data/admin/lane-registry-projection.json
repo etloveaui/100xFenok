@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-20T14:20:09.678Z",
+  "generated_at": "2026-07-20T14:20:10.183Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 21,
+  "lane_count": 24,
   "lanes": [
     {
       "id": "fred_macro",
@@ -171,6 +171,42 @@
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
+      "owner_workflow": null
+    },
+    {
+      "id": "admin_live_voice_logs",
+      "label": "Admin Live conversation logs (Mac mini bridge, local-only)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "unknown",
+        "provider": null
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
+      "owner_workflow": null
+    },
+    {
+      "id": "mona_production_study_state",
+      "label": "Mona production study state (mona-life SSOT, symlinked)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "unknown",
+        "provider": null
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
+      "owner_workflow": null
+    },
+    {
+      "id": "mona_vnext_kv",
+      "label": "Mona vNext KV / local namespace (owner-test only, production writes disabled)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "unknown",
+        "provider": null
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
       "owner_workflow": null
     },
     {

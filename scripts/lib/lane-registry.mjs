@@ -462,6 +462,68 @@ const lanes = [
     declared_exception: "ownerless artifact_only lane (no producer workflow); correctly kept shadow per the ownership ledger",
   }),
   record({
+    id: "admin_live_voice_logs",
+    label: "Admin Live conversation logs (Mac mini bridge, local-only)",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    lane_class: "auxiliary",
+    cadence: { kind: "unknown" },
+    enforcement: "shadow",
+    privacy_class: "private",
+    admin_store: null,
+    canonical_outputs: [],
+    public_mirror: [],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception:
+      "no repo artifact exists or is ever committed (gitignored Mac mini bridge local file, "
+      + "100xfenok-next/data/voice-logs/); enforcement can never be 'live' because no CI/repo "
+      + "signal can observe writer health, freshness, or content — documented at "
+      + "100xfenok-next/docs/admin-live-skill-bridge.md:20-24,44",
+  }),
+  record({
+    id: "mona_production_study_state",
+    label: "Mona production study state (mona-life SSOT, symlinked)",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    lane_class: "auxiliary",
+    cadence: { kind: "unknown" },
+    enforcement: "shadow",
+    privacy_class: "private",
+    admin_store: null,
+    canonical_outputs: [],
+    public_mirror: [],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception:
+      "no repo artifact exists or is ever committed (gitignored symlink "
+      + "100xfenok-next/data/mona-english -> mona-life SSOT, read-only at runtime by the Mac "
+      + "mini bridge); enforcement can never be 'live' for the same reason as admin_live_voice_logs; "
+      + "documented at 100xfenok-next/src/lib/server/mona-study-tools.ts:4-7",
+  }),
+  record({
+    id: "mona_vnext_kv",
+    label: "Mona vNext KV / local namespace (owner-test only, production writes disabled)",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    lane_class: "auxiliary",
+    cadence: { kind: "unknown" },
+    enforcement: "shadow",
+    privacy_class: "private",
+    admin_store: null,
+    canonical_outputs: [],
+    public_mirror: [],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception:
+      "data lives in Cloudflare KV binding MONA_VNEXT_KV (wrangler.jsonc:16-19) or a local dev "
+      + "fallback, never in the git tree; enforcement can never be 'live' — no repo/CI signal can "
+      + "observe KV content, freshness, or key counts; productionWriteEnabled=false today so "
+      + "production Mona data is unaffected; documented at "
+      + "100xfenok-next/src/features/mona-vnext/storage/objectStore.ts and "
+      + "100xfenok-next/docs/admin-live-skill-bridge.md:82-108",
+  }),
+  record({
     id: "damodaran",
     label: "Damodaran valuation data",
     owner_workflow: ".github/workflows/fetch-damodaran-shadow.yml",
