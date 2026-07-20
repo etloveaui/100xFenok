@@ -3957,8 +3957,12 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 // RECOVERY_STATE_SOURCES is consumed strictly as an id-keyed lookup, so array
 // order must not change the built artifact. Building the same payload with a
 // fully permuted source declaration must produce a deepStrictEqual payload.
-// Sole tolerated nondeterminism: the automation_contract lane's self-stamped
-// wall-clock as_of (build time, unrelated to recovery sources) — normalized.
+// Tolerated nondeterminism (normalized, never asserted): the
+// automation_contract lane's self-stamped wall-clock as_of, and every
+// duration_ms telemetry field — duration is Date.now()-SCRIPT_START_MS, so
+// the two permutation builds legitimately measure different elapsed times
+// (CI run 29720103791 failed on a 232ms delta; the order-insensitive
+// CONTRACT covers payload semantics, not run telemetry).
 {
   const permuted = Object.freeze({
     general_lane_ids: Object.freeze([...RECOVERY_STATE_SOURCES.general_lane_ids].reverse()),
@@ -3966,10 +3970,18 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     direct: Object.freeze(Object.fromEntries(Object.entries(RECOVERY_STATE_SOURCES.direct).reverse())),
   });
   const nowIso = "2026-07-19T04:30:00Z";
+  const scrubDurations = (node) => {
+    if (Array.isArray(node)) { for (const item of node) scrubDurations(item); return; }
+    if (node && typeof node === "object") {
+      if ("duration_ms" in node) node.duration_ms = "<telemetry>";
+      for (const value of Object.values(node)) scrubDurations(value);
+    }
+  };
   const normalize = (payload) => {
     const copy = JSON.parse(JSON.stringify(payload));
     const automationLane = copy.lanes.find((row) => row.id === "automation_contract");
     automationLane.as_of = "<wall-clock>";
+    scrubDurations(copy);
     return copy;
   };
   const canonical = normalize(buildPayload(nowIso, null, null));
