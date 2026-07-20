@@ -838,6 +838,13 @@ const declared_exceptions = [
     public_sync: "exclude",
   },
   {
+    path: "data/admin/sec-13f-shadow-parity.json",
+    kind: "file",
+    reason: "private fixture-oracle parity proof for the pre-ownership SEC 13F absorption gate; not a lane store or public artifact",
+    owner: "platform",
+    public_sync: "exclude",
+  },
+  {
     path: "data/admin/alarm-state.json",
     kind: "file",
     reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); committed by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",

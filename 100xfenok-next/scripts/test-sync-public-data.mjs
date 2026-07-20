@@ -633,6 +633,7 @@ try {
     [
       DETECTION_FLOOR_REPORT,
       "admin/damodaran-shadow-parity.json",
+      "admin/sec-13f-shadow-parity.json",
       "admin/lane-commit-manifest.json",
       ...EXPECTED_PRIVATE_PROXY_FILES,
     ],
