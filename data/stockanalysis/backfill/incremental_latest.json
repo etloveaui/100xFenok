@@ -2,45 +2,399 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-07-19T09:31:07Z",
+  "generated_at": "2026-07-20T00:16:19Z",
   "policy": {
-    "limit": 120,
-    "offset": 0,
-    "max_age_hours": null,
+    "limit": 40,
+    "max_age_hours": 168.0,
     "cooldown_days": 7,
     "cooldown_failure_threshold": 3,
-    "required_history_periods": [
-      "daily_1y"
-    ],
-    "history_gaps_only": true,
-    "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
-    "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "min_daily_1y_rows": 200
+    "required_history_periods": [],
+    "history_gaps_only": false,
+    "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
   },
   "counts": {
-    "candidates": 0,
-    "selected": 0,
+    "candidates": 4523,
+    "selected": 40,
     "missing": 0,
     "fallback_retry": 0,
     "history_gap": 0,
     "inception_limited_history_gap": 0,
+    "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "stale": 0,
+    "stale": 4523,
     "cooldown_skipped": 0,
-    "prior_failed_candidates": 0,
-    "daily_1y_missing_file": 0,
-    "daily_1y_short_rows": 0,
-    "offset_skipped": 0,
-    "scheduled_plan_rows": 0,
+    "prior_failed_candidates": 3,
     "ledger_tracked": 260,
     "ledger_cooldown": 33
   },
-  "selected": [],
+  "selected": [
+    {
+      "ticker": "AAA",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAAA",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAAC",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AADR",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAEQ",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AALG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAOG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAPD",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAPU",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAPY",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAUA",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAUS",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAVM",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AAXJ",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABCS",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABEQ",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABFL",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABI",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABIG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABLD",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABLG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABLS",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABNG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABOT",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ABUF",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACEI",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACEP",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACES",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACIO",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACKY",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACSG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACSI",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.2,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACSV",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACTS",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACVF",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACVT",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACWI",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACWV",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ACYN",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "ADBG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 736.19,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    }
+  ],
   "cooldown": [],
   "inception_limited": [],
+  "terminal_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-07-19T09:31:07Z",
+    "generated_at": "2026-07-20T01:06:10Z",
     "counts": {
       "tracked": 260,
       "cooldown": 33,
