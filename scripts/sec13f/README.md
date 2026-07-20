@@ -38,3 +38,32 @@ repository/path metadata and digests, never an absolute local path.
 The validators also pin each frozen artifact digest in `contract.py`. A refresh
 that changes any source, cache, fixture, path, or output must fail until the new
 artifact and its pin are reviewed and updated together.
+
+## Slice A shadow boundary
+
+Slice A adds a bounded, injectable SEC client, recent/history-shard discovery,
+archive component retrieval, safe cover/information-table parsing, deterministic
+amendment composition, explicit value normalization, and exact 73-output parity.
+It does not own a workflow, lane registration, canonical/public generation, or
+publication.
+
+The live SEC path requires an explicitly configured real contact identity and is
+not run by the fixture suite. A parity report is printed by default; file output
+is restricted to the private control-plane path
+`data/admin/sec-13f-shadow-parity.json`:
+
+```bash
+python3 scripts/sec13f/shadow.py \
+  --cch-root /explicit/path/to/cch/output \
+  --platform-root data/sec-13f
+
+python3 tests/sec13f/test_slice_a_client.py
+python3 tests/sec13f/test_slice_a_parser.py
+python3 tests/sec13f/test_slice_a_normalization.py
+python3 tests/sec13f/test_slice_a_parity.py
+python3 tests/sec13f/test_slice_a_shadow.py
+```
+
+An explicitly dispatched live sample must supply its compared accession numbers
+with repeated `--accession` arguments. No live request or shadow-report write is
+performed by the tests.
