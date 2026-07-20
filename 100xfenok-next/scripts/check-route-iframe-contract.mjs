@@ -7,10 +7,13 @@
  * This is read-only and localhost-only by default.
  */
 
+import { pathToFileURL } from "node:url";
 import { EXPECTED_IFRAME_SRC_BY_ROUTE } from "./qa-route-catalog.mjs";
+import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:3105";
 const REQUEST_TIMEOUT_MS = Number(process.env.QA_ROUTE_IFRAME_TIMEOUT_MS ?? 15000);
+const ROUTE_FETCH_RETRY_DELAY_MS = Number(process.env.QA_ROUTE_IFRAME_RETRY_DELAY_MS ?? 1500);
 
 function parseArgs(argv) {
   const args = {
@@ -110,17 +113,23 @@ function requestHeaders(cookieHeader) {
   return cookieHeader ? { Cookie: cookieHeader } : {};
 }
 
-async function fetchRouteHtml(baseUrl, route, cookieHeader) {
+export async function fetchRouteHtml(baseUrl, route, cookieHeader, options = {}) {
   const url = new URL(route, baseUrl);
-  const response = await withTimeout(
-    (signal) => fetch(url, {
+  const { response, text } = await fetchTextWithBoundedRetry(
+    url,
+    {
       headers: requestHeaders(cookieHeader),
       redirect: "follow",
-      signal,
-    }),
-    `GET ${route}`,
+    },
+    {
+      attempts: options.attempts ?? DEPLOY_SMOKE_ATTEMPTS,
+      delayMs: options.delayMs ?? ROUTE_FETCH_RETRY_DELAY_MS,
+      fetchImpl: options.fetchImpl,
+      label: `GET ${route}`,
+      sleep: options.sleep,
+      timeoutMs: options.timeoutMs ?? REQUEST_TIMEOUT_MS,
+    },
   );
-  const text = await response.text();
   return {
     status: response.status,
     finalUrl: response.url,
@@ -128,21 +137,28 @@ async function fetchRouteHtml(baseUrl, route, cookieHeader) {
   };
 }
 
-async function fetchAssetStatus(baseUrl, iframeSrc, cookieHeader) {
+export async function fetchAssetStatus(baseUrl, iframeSrc, cookieHeader, options = {}) {
   const url = new URL(iframeSrc.replaceAll("&amp;", "&"), baseUrl);
-  const response = await withTimeout(
-    (signal) => fetch(url, {
+  const { response } = await fetchTextWithBoundedRetry(
+    url,
+    {
       method: "HEAD",
       headers: requestHeaders(cookieHeader),
       redirect: "manual",
-      signal,
-    }),
-    `HEAD ${url.pathname}${url.search}`,
+    },
+    {
+      attempts: options.attempts ?? DEPLOY_SMOKE_ATTEMPTS,
+      delayMs: options.delayMs ?? ROUTE_FETCH_RETRY_DELAY_MS,
+      fetchImpl: options.fetchImpl,
+      label: `HEAD ${url.pathname}${url.search}`,
+      sleep: options.sleep,
+      timeoutMs: options.timeoutMs ?? REQUEST_TIMEOUT_MS,
+    },
   );
   return response.status;
 }
 
-function firstIframeSrc(html) {
+export function firstIframeSrc(html) {
   return html.match(/<iframe\b[^>]*\bsrc="([^"]+)"/i)?.[1] ?? null;
 }
 
@@ -160,7 +176,7 @@ function normalizePathAndSearch(src, baseUrl) {
   return `${url.pathname}${url.search}`;
 }
 
-function checkIframeTarget(baseUrl, route, expectedTarget, iframeSrc) {
+export function checkIframeTarget(baseUrl, route, expectedTarget, iframeSrc) {
   const actualUrl = new URL(iframeSrc.replaceAll("&amp;", "&"), baseUrl);
   const expectedUrl = new URL(expectedTarget, baseUrl);
   const errors = [];
@@ -231,7 +247,10 @@ async function main() {
         continue;
       }
 
-      errors.push(...checkIframeTarget(baseUrl, route, expectedTarget, iframeSrc));
+      const targetErrors = checkIframeTarget(baseUrl, route, expectedTarget, iframeSrc);
+      errors.push(...targetErrors);
+      if (targetErrors.length > 0) continue;
+
       const assetStatus = await fetchAssetStatus(baseUrl, iframeSrc, adminCookie);
       row.asset_status = assetStatus;
       if (assetStatus < 200 || assetStatus >= 300) {
@@ -261,7 +280,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(`[qa:route-iframe-contract] ${error instanceof Error ? error.message : String(error)}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(`[qa:route-iframe-contract] ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  });
+}

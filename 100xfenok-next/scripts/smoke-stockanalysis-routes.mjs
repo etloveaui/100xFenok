@@ -2,6 +2,7 @@
 
 import { pathToFileURL } from "node:url";
 import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
+import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
 import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 
@@ -9,6 +10,7 @@ const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
 const RETRIES = Number(process.env.QA_STOCKANALYSIS_RETRIES || 2);
 const RETRY_DELAY_MS = Number(process.env.QA_STOCKANALYSIS_RETRY_DELAY_MS || 2500);
+const PRODUCER_READ_RETRY_DELAY_MS = Number(process.env.QA_STOCKANALYSIS_PRODUCER_RETRY_DELAY_MS || 1500);
 const PRODUCT_SURFACE_COVERAGE_PATH = "/data/admin/product-surface-coverage.json";
 const PRODUCER_SOURCE_PATHS = {
   marketFacts: "/data/computed/market_facts/index.json",
@@ -305,6 +307,30 @@ async function fetchJsonResponse(url) {
   return { response, payload };
 }
 
+export async function fetchProducerJson(url, options = {}) {
+  const { response, text } = await fetchTextWithBoundedRetry(
+    url,
+    {},
+    {
+      attempts: options.attempts ?? DEPLOY_SMOKE_ATTEMPTS,
+      delayMs: options.delayMs ?? PRODUCER_READ_RETRY_DELAY_MS,
+      fetchImpl: options.fetchImpl,
+      label: `GET ${url}`,
+      sleep: options.sleep,
+      timeoutMs: options.timeoutMs ?? TIMEOUT_MS,
+    },
+  );
+  if (!response.ok) fail(`${url} returned HTTP ${response.status}`);
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (error) {
+    fail(`${url} did not return JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  assertFiniteNumbers(payload, url);
+  return payload;
+}
+
 export async function checkBundleIdentity(root) {
   const expected = argValue("--expected-build-id")
     || process.env.QA_EXPECTED_BUILD_ID
@@ -331,7 +357,7 @@ export async function checkBundleIdentity(root) {
   fail(`stale bundle rejected: expected BUILD_ID ${expected}, observed ${observed}`);
 }
 
-function buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer }) {
+export function buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer }) {
   const marketFactsDay = producerSourceDay(
     marketFacts?.core_surface_source_as_of,
     "market_facts.core_surface_source_as_of",
@@ -465,9 +491,9 @@ export async function checkProductSurfaceFreshness(root) {
       || process.env.EXPECTED_BUILD_ID
       || `stockanalysis-${Date.now()}-${process.pid}`,
   );
-  const readPublicJson = (pathname) => fetchJson(`${root}${pathname}?cb=${cacheBust}`);
+  const readPublicJson = (pathname) => fetchProducerJson(`${root}${pathname}?cb=${cacheBust}`);
   const [coverage, marketFacts, rimInputs, yardeni, stocksAnalyzer] = await Promise.all([
-    readPublicJson(PRODUCT_SURFACE_COVERAGE_PATH),
+    fetchJson(`${root}${PRODUCT_SURFACE_COVERAGE_PATH}?cb=${cacheBust}`),
     readPublicJson(PRODUCER_SOURCE_PATHS.marketFacts),
     readPublicJson(PRODUCER_SOURCE_PATHS.rimInputs),
     readPublicJson(PRODUCER_SOURCE_PATHS.yardeni),
