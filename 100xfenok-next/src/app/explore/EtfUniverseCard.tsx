@@ -11,7 +11,6 @@ import {
   expenseRatioValue,
   formatAum,
   formatNumber,
-  formatPercentPointsValue,
   formatTypeHint,
   isInverseEtf,
   isLeveragedEtf,
@@ -21,6 +20,7 @@ import {
   type EtfTypeFilter,
   type EtfUniverseRecord,
 } from "./etfUniverseUtils";
+import { formatPlainPercent } from "@/lib/format";
 
 export type { EtfClassification, EtfTypeFilter, EtfUniverseRecord } from "./etfUniverseUtils";
 export {
@@ -688,7 +688,7 @@ export default function EtfUniverseCard({
                 </span>
                 <span className="pc num neutral">
                   {formatAum(row)}
-                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-[var(--c-ink-3)]">보수 {formatPercentPointsValue(expenseRatioValue(row))}</small> : null}
+                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-[var(--c-ink-3)]">보수 {formatPlainPercent(expenseRatioValue(row), { digits: 2, fraction: false })}</small> : null}
                 </span>
               </TransitionLink>
             );

@@ -9,6 +9,7 @@
 // one (e.g. toLocaleString(undefined, ...)), a non-ko_KR CI would break these.
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -23,6 +24,7 @@ import {
   formatMoney,
   formatMultiple,
   formatPercent,
+  formatPlainPercent,
   formatShares,
   formatSignedDecimal,
   formatSignedPercent,
@@ -143,6 +145,101 @@ eq(formatCpScreenerScore(1234.5), "1,235", "CpScreener integer grouping");
 eq(formatCpScreenerPercent(0), "0.0%", "CpScreener zero-sign behavior remains unchanged");
 
 eq(formatEtfUniverseNumber(1234567), "1,234,567", "ETF universe integer uses shared locale pin");
+for (const [value, expected, label] of [
+  [null, "—", "null"],
+  [undefined, "—", "undefined"],
+  [NaN, "—", "NaN"],
+  [Infinity, "—", "Infinity"],
+  [0, "0.00%", "zero"],
+  [1.25, "1.25%", "positive"],
+  [-1.25, "-1.25%", "negative"],
+] as const) {
+  eq(
+    formatPlainPercent(value, { digits: 2, fraction: false }),
+    expected,
+    `ETF percent-points ${label}`,
+  );
+}
+eq(
+  formatPlainPercent(1.25, { digits: 1, fraction: false }),
+  "1.3%",
+  "ETF percent-points non-default digits",
+);
+eq(
+  formatTypeHint({ ticker: "MISS", category: "테스트" }),
+  "MISS · 테스트",
+  "ETF type hint omits every missing optional metric",
+);
+eq(
+  formatTypeHint({
+    ticker: "INVALID",
+    category: "테스트",
+    price: NaN,
+    change: Infinity,
+    volume: NaN,
+    expenseRatio: "invalid",
+    performance: { tr1y: Infinity },
+  }),
+  "INVALID · 테스트",
+  "ETF type hint omits every invalid optional metric",
+);
+eq(
+  formatTypeHint({
+    ticker: "STRING",
+    category: "테스트",
+    price: "100" as unknown as number,
+    change: "1.25" as unknown as number,
+    volume: "1000" as unknown as number,
+    performance: { tr1y: "3" as unknown as number },
+  }),
+  "STRING · 테스트",
+  "ETF type hint preserves omission for runtime numeric strings",
+);
+eq(
+  formatTypeHint({ ticker: "UP", category: "테스트", change: 1.25 }),
+  "UP · 테스트 · 변동률 +1.25%",
+  "ETF type hint preserves positive signed-percent bytes",
+);
+eq(
+  formatTypeHint({ ticker: "PRICE", category: "테스트", price: 99.99 }),
+  "PRICE · 테스트 · 가격 $99.99",
+  "ETF type hint preserves sub-100 price bytes",
+);
+eq(
+  formatTypeHint({ ticker: "PRICE", category: "테스트", price: 100 }),
+  "PRICE · 테스트 · 가격 $100",
+  "ETF type hint preserves 100 price bytes",
+);
+eq(
+  formatTypeHint({ ticker: "PRICE", category: "테스트", price: 1_234 }),
+  "PRICE · 테스트 · 가격 $1234",
+  "ETF type hint preserves legacy ungrouped price bytes",
+);
+for (const [volume, expected] of [
+  [999, "999"],
+  [1_000, "1.0K"],
+  [1_000_000, "1.0M"],
+  [1_000_000_000, "1000.0M"],
+] as const) {
+  eq(
+    formatTypeHint({ ticker: "VOL", category: "테스트", volume }),
+    `VOL · 테스트 · 거래량 ${expected}`,
+    `ETF type hint preserves volume ${volume} bytes`,
+  );
+}
+eq(
+  formatTypeHint({
+    ticker: "ALL",
+    category: "테스트",
+    price: 99.99,
+    change: -1.25,
+    volume: 1_000,
+    expenseRatio: 0.25,
+    performance: { tr1y: 3 },
+  }),
+  "ALL · 테스트 · 가격 $99.99 · 변동률 -1.25% · 거래량 1.0K · 보수 0.25% · 1년 +3.00%",
+  "ETF type hint all-metrics serialization stays byte-identical",
+);
 eq(
   formatTypeHint({ ticker: "ZERO", category: "테스트", change: 0, performance: { tr1y: 0 } }),
   "ZERO · 테스트 · 변동률 0.00% · 1년 0.00%",
@@ -188,7 +285,7 @@ const adoptionContracts: Array<[string, string[]]> = [
   ["src/app/market-valuation/structure/MarketStructureDetailClient.tsx", ["value * 1_000_000_000", "formatDecimal(value, { digits })"]],
   ["src/app/superinvestors/PortfolioCharts.tsx", ["formatInteger(score)", "formatDecimal(beta, { digits: 2 })"]],
   ["src/lib/market-valuation/charts/ledgerChartPanels.tsx", ["return formatInteger(value);"]],
-  ["src/app/etfs/EtfUnifiedTable.tsx", ["?? \"—\""]],
+  ["src/app/etfs/EtfUnifiedTable.tsx", ["formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false })"]],
   ["src/app/etfs/EtfHeroPanel.tsx", ["?? \"—\""]],
   ["src/app/sectors/IndustryMapPanel.tsx", ["fallback = \"—\""]],
   ["src/components/canvas-plus/CpScreenerNativeLab.tsx", [": \"—\""]],
@@ -203,7 +300,33 @@ for (const [path, snippets] of adoptionContracts) {
 }
 
 const heldEtfUniverseSource = readFileSync(resolve(process.cwd(), "src/app/explore/etfUniverseUtils.ts"), "utf8");
-assert.ok(heldEtfUniverseSource.includes("function formatPrice(value: number | null | undefined): string | null"), "c-1 price null-return contract stays HOLD");
-assert.ok(heldEtfUniverseSource.includes("function formatCompactVolume(value: number | null | undefined): string | null"), "c-1 volume null-return contract stays HOLD");
+assert.ok(heldEtfUniverseSource.includes("function formatPrice(value: number | null | undefined): string {"), "c-1 price helper returns a total string contract");
+assert.ok(heldEtfUniverseSource.includes("function formatSignedPercent(value: number | null | undefined): string {"), "c-1 signed-percent helper returns a total string contract");
+assert.ok(heldEtfUniverseSource.includes("function formatCompactVolume(value: number | null | undefined): string {"), "c-1 volume helper returns a total string contract");
+assert.equal(heldEtfUniverseSource.includes("formatPercentPointsValue"), false, "c-1 retires the local percent-points wrapper");
+
+const unifiedTableSource = readFileSync(resolve(process.cwd(), "src/app/etfs/EtfUnifiedTable.tsx"), "utf8");
+assert.equal(
+  unifiedTableSource.split("formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false })").length - 1,
+  2,
+  "c-1 migrates mobile and desktop expense cells atomically",
+);
+assert.equal(unifiedTableSource.includes("formatPercentPointsValue"), false, "UnifiedTable retires the local wrapper import");
+
+const cardSource = readFileSync(resolve(process.cwd(), "src/app/explore/EtfUniverseCard.tsx"), "utf8");
+assert.ok(cardSource.includes("expenseRatioValue(row) !== null"), "Card keeps the missing expense label omission guard");
+assert.ok(
+  cardSource.includes("formatPlainPercent(expenseRatioValue(row), { digits: 2, fraction: false })"),
+  "Card finite expense rendering uses the shared percent route",
+);
+
+const sha256 = (path: string) => createHash("sha256").update(readFileSync(resolve(process.cwd(), path))).digest("hex");
+for (const [path, expected] of [
+  ["src/app/etfs/etfSurfaceData.ts", "d9c6c19a2fca55e602472efdc16d4d7f92edb200f6818daca4fd3ffe1c1f7e62"],
+  ["src/app/etfs/[ticker]/EtfDetailClient.tsx", "77de2473309111a87c0c513d0b47410a91fbf03e83440a6167dd1d92a1db77ab"],
+  ["src/app/etfs/new/NewEtfsList.tsx", "7f12eabd8ba246c0e10bab26e14342f3bd4883352af080464810349d8081c08b"],
+] as const) {
+  assert.equal(sha256(path), expected, `${path} must remain byte-identical to current k3 HEAD`);
+}
 
 console.log(JSON.stringify({ ok: true, suite: "shared number formatter (src/lib/format.ts) contract" }, null, 2));

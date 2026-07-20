@@ -1,4 +1,11 @@
-import { finiteNumber, formatCurrencyCompact, formatInteger, formatMultiple } from "@/lib/format";
+import {
+  finiteNumber,
+  formatCurrencyCompact,
+  formatInteger,
+  formatMultiple,
+  formatPlainPercent,
+  formatSignedPercent as formatSharedSignedPercent,
+} from "@/lib/format";
 
 export interface EtfUniverseRecord {
   ticker?: string;
@@ -104,14 +111,13 @@ export function asOfDate(value: string | null | undefined): string {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
 }
 
-function formatPrice(value: number | null | undefined): string | null {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+function formatPrice(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
   return value >= 100 ? `$${value.toFixed(0)}` : `$${value.toFixed(2)}`;
 }
 
-function formatSignedPercent(value: number | null | undefined): string | null {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
-  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
+function formatSignedPercent(value: number | null | undefined): string {
+  return formatSharedSignedPercent(value, { digits: 2, fraction: false });
 }
 
 export function percentPointsValue(value: string | number | null | undefined): number | null {
@@ -125,16 +131,15 @@ export function expenseRatioValue(row: EtfUniverseRecord): number | null {
   return percentPointsValue(row.expense_ratio ?? row.expenseRatio);
 }
 
-export function formatPercentPointsValue(value: number | null | undefined, digits = 2): string | null {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
-  return `${value.toFixed(digits)}%`;
-}
-
-function formatCompactVolume(value: number | null | undefined): string | null {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+function formatCompactVolume(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
   return value.toLocaleString("ko-KR");
+}
+
+function finiteMetric(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function etfSearchText(row: EtfUniverseRecord): string {
@@ -246,16 +251,18 @@ export function formatTypeHint(
   if (row.is_new) {
     parts.push(row.inceptionDate ? `신규 상장 ${row.inceptionDate}` : "신규 상장");
   }
-  const price = formatPrice(row.price);
-  const change = formatSignedPercent(row.change);
-  const volume = formatCompactVolume(row.volume);
-  if (price) parts.push(`가격 ${price}`);
-  if (change) parts.push(`변동률 ${change}`);
-  if (volume) parts.push(`거래량 ${volume}`);
-  const expenseRatio = formatPercentPointsValue(expenseRatioValue(row));
-  if (expenseRatio) parts.push(`보수 ${expenseRatio}`);
-  const oneYearReturn = formatSignedPercent(row.performance?.tr1y ?? null);
-  if (oneYearReturn) parts.push(`1년 ${oneYearReturn}`);
+  const price = finiteMetric(row.price);
+  if (price !== null) parts.push(`가격 ${formatPrice(price)}`);
+  const change = finiteMetric(row.change);
+  if (change !== null) parts.push(`변동률 ${formatSignedPercent(change)}`);
+  const volume = finiteMetric(row.volume);
+  if (volume !== null) parts.push(`거래량 ${formatCompactVolume(volume)}`);
+  const expenseRatio = expenseRatioValue(row);
+  if (expenseRatio !== null) {
+    parts.push(`보수 ${formatPlainPercent(expenseRatio, { digits: 2, fraction: false })}`);
+  }
+  const oneYearReturn = finiteMetric(row.performance?.tr1y);
+  if (oneYearReturn !== null) parts.push(`1년 ${formatSignedPercent(oneYearReturn)}`);
   if (typeof row.holdings === "number" && Number.isFinite(row.holdings)) {
     parts.push(`보유 ${formatNumber(row.holdings)}`);
   }

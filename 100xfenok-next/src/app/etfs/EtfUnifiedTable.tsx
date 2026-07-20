@@ -6,12 +6,11 @@ import { CpAccordion, CpDataTable, CpEmptyState, CpSectionCard, type CpDataTable
 import {
   etfClassificationLabels,
   formatAum,
-  formatPercentPointsValue,
   percentPointsValue,
 } from "@/app/explore/etfUniverseUtils";
 import { formatAsOf } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
-import { formatInteger } from "@/lib/format";
+import { formatInteger, formatPlainPercent } from "@/lib/format";
 import EtfRetryCallout from "./EtfRetryCallout";
 import {
   clearEtfSurfaceCaches,
@@ -123,7 +122,7 @@ function EtfMobileList({
               </div>
               <div>
                 <dt>보수</dt>
-                <dd>{formatPercentPointsValue(normalizedExpenseRatioValue(row)) ?? "—"}</dd>
+                <dd>{formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false })}</dd>
               </div>
               <div>
                 <dt>1년</dt>
@@ -306,7 +305,7 @@ export default function EtfUnifiedTable() {
     {
       key: "expense",
       header: "보수",
-      render: (row) => formatPercentPointsValue(normalizedExpenseRatioValue(row)) ?? "—",
+      render: (row) => formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false }),
     },
     {
       key: "tr1y",
