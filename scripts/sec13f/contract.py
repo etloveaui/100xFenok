@@ -24,8 +24,10 @@ PINNED_CONTENT_DIGESTS = {
     "sec13f-cch-cache-manifest/v1": "346e63bab2dcfacf6430adfaf2c29e0e85a2e5df7739b5bb41279b6ab0bb3ff5",
     "sec13f-cch-output-manifest/v1": "4decc214b9ffbfdf163b1289c2a98983bae602f7761bdf83888181e23be75c8b",
     "sec13f-cch-platform-baseline/v1": "4b356d6ce689d720bc2b28abb3bfc3a72f188decda79c9d249311e0cc2fc8478",
+    "sec13f-cch-fixture-oracle/v1": "1139c6ac8007d0134b48956192d5aaaf8dee282028f43cefb0886362633baf9a",
     "sec13f-cch-snapshot/v1": "25ac11ff90bd5eaf8fcfbfa8e873a1d90803ac08668ac3e7eba9f344016b452c",
     "sec13f-platform-derived-manifest/v1": "6c2f3664b34651e2d3ce02d808afb79576b7477eb757eb4996788b852fc6dd23",
+    "sec13f-generator-input/v1": "9f9d13eb9ce4980757fb4c69945bc644331ff3011cb631973c1d19213ddb56d9",
     "sec13f-slice0-fixtures/v1": "605dc8a6a096e2968c9af05f4f84a2185f621d580c49b96fdc2a4df611caf085",
 }
 
@@ -262,15 +264,59 @@ def validate_fixture_contract(payload: dict[str, Any]) -> None:
     _validate_pinned_digest(payload, "SEC fixture contract")
 
 
+def validate_generator_input(payload: dict[str, Any], *, registry: dict[str, Any] | None = None) -> None:
+    _validate_self_digest(payload, "generator input")
+    if payload.get("registry_sha256") != EXPECTED_REGISTRY_SHA256:
+        raise ContractError("generator input: registry digest mismatch")
+    investors = payload.get("investors_data")
+    if not isinstance(investors, dict) or len(investors) != EXPECTED_INVESTOR_COUNT:
+        raise ContractError("generator input: exact 60 investors are required")
+    if registry is not None and set(investors) != set(registry["investors"]):
+        raise ContractError("generator input: investor identities do not match registry")
+    if any(not isinstance(row, dict) or len(row.get("filings", [])) != 4 for row in investors.values()):
+        raise ContractError("generator input: every investor requires four parsed quarters")
+    if payload.get("quarters_covered") != ["2026-Q1", "2025-Q4", "2025-Q3", "2025-Q2"]:
+        raise ContractError("generator input: frozen quarter coverage changed")
+    if payload.get("generated_at") != "2026-07-20T12:00:00":
+        raise ContractError("generator input: fixed generated_at changed")
+    accessions = payload.get("accessions_compared")
+    if not isinstance(accessions, list) or len(accessions) != 480 or len(set(accessions)) != 480:
+        raise ContractError("generator input: exact 480 unique parsed accessions are required")
+    if any(re.fullmatch(r"\d{10}-\d{2}-\d{6}", value) is None for value in accessions):
+        raise ContractError("generator input: invalid accession")
+    lineage = {
+        accession
+        for investor in investors.values()
+        for filing in investor["filings"]
+        for accession in filing.get("accession_numbers", [])
+    }
+    if lineage != set(accessions):
+        raise ContractError("generator input: accession lineage mismatch")
+    case_results = payload.get("case_results")
+    if not isinstance(case_results, list) or len(case_results) != 9:
+        raise ContractError("generator input: exact nine measured case results are required")
+    statuses = [row.get("status") for row in case_results if isinstance(row, dict)]
+    if statuses.count("pass") != 6 or statuses.count("blocked") != 3:
+        raise ContractError("generator input: measured case result counts changed")
+    _validate_pinned_digest(payload, "generator input")
+
+
 def load_and_validate_all(root: Path) -> None:
     fixture_root = root / "tests" / "sec13f" / "fixtures"
-    validate_registry(root / "scripts" / "sec13f" / "config" / "investors.yaml")
+    registry = validate_registry(root / "scripts" / "sec13f" / "config" / "investors.yaml")
     validate_fixture_contract(load_json(fixture_root / "sec_filing_cases.json"))
+    validate_generator_input(load_json(fixture_root / "generator_input.json"), registry=registry)
     validate_source_manifest(load_json(fixture_root / "cch_source_manifest.json"))
     validate_detached_manifest(
         load_json(fixture_root / "cch_cache_manifest.json"),
         expected_count=62,
         label="CCH cache manifest",
+    )
+    validate_output_manifest(
+        load_json(fixture_root / "cch_fixture_oracle_manifest.json"),
+        fixture_root / "cch_fixture_oracle",
+        expected_count=EXPECTED_BASE_OUTPUT_COUNT,
+        label="CCH fixture oracle",
     )
     validate_detached_manifest(
         load_json(fixture_root / "cch_output_manifest.json"),

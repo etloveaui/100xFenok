@@ -67,3 +67,24 @@ python3 tests/sec13f/test_slice_a_shadow.py
 An explicitly dispatched live sample must supply its compared accession numbers
 with repeated `--accession` arguments. No live request or shadow-report write is
 performed by the tests.
+
+The hermetic closure gate rebuilds four quarters for all 60 registry investors
+through the in-memory SEC transport, proves the nine declared fixture outcomes,
+and compares the independently generated 73 payloads with a detached CCH oracle.
+The frozen input includes 480 parsed accessions and one below-threshold position
+per investor to prove that pre-filter AUM and counts survive generation.
+
+Normal tests never import sibling CCH code. Oracle refresh is a manual operation
+that validates the pinned CCH source manifest, injects the fixed fixture timestamp,
+normalizes only the declared sector-investor set ordering, and refuses any output
+or manifest path overlapping canonical/public data:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/sec13f/freeze_slice_a_oracle.py \
+  --cch-root ../claude-code-hub/docs/products/converters/sec-13f \
+  --input tests/sec13f/fixtures/generator_input.json \
+  --output /explicit/empty/oracle-dir \
+  --manifest /explicit/oracle-manifest.json
+
+PYTHONDONTWRITEBYTECODE=1 python3 tests/sec13f/test_slice_a_end_to_end.py
+```

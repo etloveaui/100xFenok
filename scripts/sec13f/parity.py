@@ -155,6 +155,60 @@ def _remove_generated_at(payload: dict[str, Any]) -> bool:
     return False
 
 
+def _normalize_declared_set_orders(logical_path: str, payload: Any) -> None:
+    """Apply only the set-order semantics frozen in sec_filing_cases.json."""
+
+    if not isinstance(payload, dict):
+        return
+    if logical_path == "by_sector.json":
+        for sector in payload.values():
+            if isinstance(sector, dict) and isinstance(sector.get("investors"), list):
+                sector["investors"].sort()
+    elif logical_path == "analytics/new_positions.json":
+        rows = payload.get("new_positions")
+        if isinstance(rows, list):
+            rows.sort(
+                key=lambda row: (
+                    -row.get("position_value", 0),
+                    row.get("investor", ""),
+                    row.get("ticker", ""),
+                )
+            )
+    elif logical_path == "analytics/buying_pressure.json":
+        for key in ("top_buying", "top_selling"):
+            rows = payload.get(key)
+            if isinstance(rows, list):
+                pressures = [row.get("pressure") for row in rows if isinstance(row, dict)]
+                expected = sorted(pressures, reverse=key == "top_buying")
+                if len(pressures) != len(rows) or pressures != expected:
+                    continue
+                start = 0
+                while start < len(rows):
+                    end = start + 1
+                    while end < len(rows) and rows[end].get("pressure") == rows[start].get("pressure"):
+                        end += 1
+                    rows[start:end] = sorted(
+                        rows[start:end],
+                        key=lambda row: json.dumps(row, ensure_ascii=False, sort_keys=True),
+                    )
+                    start = end
+    elif logical_path == "analytics/multi_quarter_trends.json":
+        by_investor = payload.get("by_investor")
+        if isinstance(by_investor, dict):
+            for trend in by_investor.values():
+                rows = trend.get("streaks") if isinstance(trend, dict) else None
+                if isinstance(rows, list):
+                    rows.sort(
+                        key=lambda row: (
+                            -row.get("streak_quarters", 0),
+                            row.get("ticker", ""),
+                            row.get("direction", ""),
+                            row.get("start_quarter", ""),
+                            row.get("end_quarter", ""),
+                        )
+                    )
+
+
 def _json_path(tokens: tuple[str | int, ...]) -> str:
     value = "$"
     for token in tokens:
@@ -198,6 +252,7 @@ class _DiffCollector:
         self.sample_limit = sample_limit
         self.count = 0
         self.samples: list[dict[str, Any]] = []
+        self.row_keys: set[tuple[str, str]] = set()
 
     def add(
         self,
@@ -211,10 +266,17 @@ class _DiffCollector:
         row_identity: dict[str, Any] | None,
     ) -> None:
         self.count += 1
-        if len(self.samples) >= self.sample_limit:
-            return
         field = tokens[-1] if tokens and isinstance(tokens[-1], str) else None
         row_tokens = tokens[:-1] if field is not None else tokens
+        if row_identity is not None or kind.startswith("row_"):
+            self.row_keys.add(
+                (
+                    _json_path(row_tokens),
+                    json.dumps(row_identity, ensure_ascii=False, sort_keys=True),
+                )
+            )
+        if len(self.samples) >= self.sample_limit:
+            return
         self.samples.append(
             {
                 "json_path": _json_path(tokens),
@@ -324,6 +386,7 @@ def _boundary_report(
             "normalized_equal_files": 0,
             "mismatched_files": 0,
             "mismatch_count": 0,
+            "row_mismatch_count": 0,
         },
         "boundary": {
             "missing": {
@@ -408,6 +471,8 @@ def compare_parity(
                 cch_occurrences += int(_remove_generated_at(cch_payload))
             if isinstance(platform_payload, dict):
                 platform_occurrences += int(_remove_generated_at(platform_payload))
+        _normalize_declared_set_orders(logical_path, cch_payload)
+        _normalize_declared_set_orders(logical_path, platform_payload)
 
         collector = _DiffCollector(mismatch_sample_limit)
         _diff_json(cch_payload, platform_payload, collector)
@@ -426,6 +491,7 @@ def compare_parity(
                 "normalized": logical_path in normalized_files,
                 "normalized_equal": normalized_equal,
                 "mismatch_count": collector.count,
+                "row_mismatch_count": len(collector.row_keys),
                 "mismatches_truncated": collector.count > len(collector.samples),
                 "mismatches": collector.samples,
             }
@@ -441,6 +507,7 @@ def compare_parity(
             "normalized_equal_files": normalized_equal_files,
             "mismatched_files": mismatched_files,
             "mismatch_count": mismatch_count,
+            "row_mismatch_count": sum(row["row_mismatch_count"] for row in files),
         },
         "boundary": boundary["boundary"],
         "normalization": {

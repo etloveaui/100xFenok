@@ -132,6 +132,7 @@ class SliceAParityTest(unittest.TestCase):
                     "normalized_equal_files": 73,
                     "mismatched_files": 0,
                     "mismatch_count": 0,
+                    "row_mismatch_count": 0,
                 },
             )
             self.assertEqual(report["boundary"], {"missing": {"cch": [], "platform": []}, "extra": {"cch": [], "platform": []}})
