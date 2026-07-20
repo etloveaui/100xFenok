@@ -88,6 +88,23 @@ function ageHours(fromIso, nowIso) {
   return (now - from) / 3600000;
 }
 
+function projectFetchCronSkipDetection(diagnostic) {
+  const rows = Array.isArray(diagnostic?.rows) ? diagnostic.rows : [];
+  const laneIds = (state) => [...new Set(rows
+    .filter((row) => row?.state === state && typeof row?.lane_id === "string")
+    .map((row) => row.lane_id))].sort();
+  return {
+    schema_version: diagnostic?.schema_version ?? null,
+    mode: diagnostic?.mode ?? null,
+    evaluated_at: diagnostic?.evaluated_at ?? null,
+    status: diagnostic?.status ?? null,
+    deployment_blocking: diagnostic?.deployment_blocking === true,
+    counts: deepClone(diagnostic?.counts ?? null),
+    suspected_skip_lane_ids: laneIds("suspected_skip"),
+    attempt_gap_lane_ids: laneIds("attempt_gap"),
+  };
+}
+
 /**
  * Project a root runtime block into the public allowlist evaluated at nowIso.
  * Returns the public runtime object only (allowlist).
@@ -145,6 +162,9 @@ export function projectRuntime(runtime, nowIso) {
     blocking_unrecovered_missed_slot_count: blockingUnrecoveredMissedSlotCount,
     lane_local_unrecovered_missed_slot_count: laneLocalUnrecoveredMissedSlotCount,
     hard_age_ok: hardAgeOk,
+    ...(runtime?.fetch_cron_skip_detection
+      ? { fetch_cron_skip_detection: projectFetchCronSkipDetection(runtime.fetch_cron_skip_detection) }
+      : {}),
   };
 }
 

@@ -54,6 +54,7 @@ import {
 } from "../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs";
 import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { buildFetchCronAttemptCoverage } from "./build-data-supply-detection-floor.mjs";
 import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
 import { checkKpiRecoverySourcesAgainstRegistry } from "./check-lane-registry-kpi.mjs";
@@ -63,7 +64,25 @@ const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
 const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
 const UPDATE_MANIFEST_WORKFLOW = path.join(__dirname, "..", ".github", "workflows", "update-manifest.yml");
 const DETECTION_EXPECTED = path.join(__dirname, "fixtures", "data_supply", "detection_floor", "cases.expected.json");
+const DETECTION_CALENDARS = path.join(__dirname, "fixtures", "data_supply", "detection_floor", "calendars.fixture.json");
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
+const DETECTION_BASELINE_REPORT = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
+const DETECTION_CALENDAR_FIXTURE = JSON.parse(fs.readFileSync(DETECTION_CALENDARS, "utf8"));
+function fixtureDetectionReport(evaluatedAt) {
+  const report = structuredClone(DETECTION_BASELINE_REPORT);
+  report.generated_at = typeof evaluatedAt === "string"
+    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(evaluatedAt)
+    && Number.isFinite(new Date(evaluatedAt).getTime())
+    ? evaluatedAt
+    : DETECTION_BASELINE_REPORT.generated_at;
+  return report;
+}
+function fixtureFetchCronCoverage(evaluatedAt) {
+  return buildFetchCronAttemptCoverage({
+    report: fixtureDetectionReport(evaluatedAt),
+    calendars: DETECTION_CALENDAR_FIXTURE,
+  });
+}
 const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
 assert.equal(PRODUCT_SURFACE_SLA?.unit, "business_days");
 assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadence + grace must fit inside the product-surface SLA");
@@ -1151,6 +1170,8 @@ function readyCoreV2(now) {
 // checker's status/lane gate is satisfied and only runtime/sla/projection is exercised.
 function seedReadyV2(tmp, { now, runtime, sla }) {
   writeReadyTargetRecoveryIndexes(tmp, now);
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), fixtureDetectionReport(now));
+  runtime.fetch_cron_skip_detection = fixtureFetchCronCoverage(now);
   runtime.publication_gate = publicationGateForRuntime(runtime);
   const root = { ...readyCoreV2(now), runtime, source_sla: sla };
   const pub = projectPublicKpi(root, now);
@@ -1403,14 +1424,17 @@ function makeProducerRuntime({ builtAt, slotKey, runId }) {
     cadence: { crons_utc: ["30 2 * * *", "30 9 * * *"], slot_grace_minutes: 360, hard_max_age_hours: 26, slot_retention_days: 14, v2_activated_at: builtAt, calendar_version: "market-calendar/v1-2026" },
     slots: { satisfied_slot_keys: slotKey ? [slotKey] : [], last_satisfied_slot_key: slotKey, missed_slot_keys: [], cron_deferrals: [] },
     successful_snapshot_history: [{ built_at: builtAt, slot_key: slotKey, run_id: runId, run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 12 }],
+    fetch_cron_skip_detection: fixtureFetchCronCoverage(builtAt),
   };
 }
 
 function v2Doc(runtime, extra = {}) {
+  const generatedAt = runtime.producer_context?.built_at ?? "2026-07-10T00:00:00.000Z";
+  runtime.fetch_cron_skip_detection ??= fixtureFetchCronCoverage(generatedAt);
   runtime.publication_gate = publicationGateForRuntime(runtime);
   return {
     schema_version: "fenok-data-health-kpi/v2",
-    generated_at: runtime.producer_context?.built_at ?? "2026-07-10T00:00:00.000Z",
+    generated_at: generatedAt,
     status: "ready",
     runtime,
     ...extra,
@@ -1494,6 +1518,24 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal("run_id" in publicYahooRecovery.current_attempt, false);
   assert.deepEqual(publicYahooRecovery.promotion_deferral_details, []);
   assert.equal(JSON.stringify(publicYahooRecovery).includes("payload_sha256"), false);
+  const rootCronShadow = root.runtime.fetch_cron_skip_detection;
+  const publicCronShadow = pub.runtime.fetch_cron_skip_detection;
+  assert.equal(rootCronShadow.mode, "shadow");
+  assert.equal(rootCronShadow.deployment_blocking, false);
+  assert.deepEqual(rootCronShadow.counts, {
+    scheduled_members: 25,
+    schedule_bindings: 27,
+    observed: 25,
+    suspected_skips: 2,
+    attempt_gaps: 0,
+  });
+  assert.equal(rootCronShadow.rows.length, 27);
+  assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "gdelt_news_tone"]);
+  assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
+  assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
+  assert.equal(JSON.stringify(publicCronShadow).includes(".github/workflows/"), false);
+  assert.equal(JSON.stringify(publicCronShadow).includes("43 14 * * *"), false);
+  assert.equal(root.deployment_integrity.blockers.some((item) => /fetch_cron/i.test(`${item.lane_id}/${item.check_id}`)), false);
 
   const malformed = mkTmp("detection-floor-live-malformed-json");
   fs.writeFileSync(path.join(malformed, "data", "admin", "data-supply-detection-floor.json"), "{", "utf8");
@@ -1879,6 +1921,68 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(runChecker(tmp, now).exit, 0, "checker green on ready v2 doc (fresh sources)");
   assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict mode also green when everything fresh");
   ok("checker passes end-to-end on a ready v2 doc in both warn-only and strict modes");
+}
+
+// 4b1. Fetch-cron shadow findings never block, while contract tampering does.
+{
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "cron-shadow" });
+  const validErrors = [];
+  const validWarnings = [];
+  checkV2Runtime(v2Doc(runtime), { errors: validErrors, warnings: validWarnings }, now);
+  assert.deepEqual(validErrors, []);
+  assert.ok(validWarnings.some((message) => /fetch cron attempt coverage warning; deployment_blocking:false/.test(message)));
+
+  const blockingTamper = structuredClone(runtime);
+  blockingTamper.fetch_cron_skip_detection.deployment_blocking = true;
+  const blockingErrors = [];
+  checkV2Runtime(v2Doc(blockingTamper), { errors: blockingErrors, warnings: [] }, now);
+  assert.ok(blockingErrors.some((message) => /must remain deployment_blocking:false/.test(message)));
+
+  const countTamper = structuredClone(runtime);
+  countTamper.fetch_cron_skip_detection.counts.suspected_skips += 1;
+  const countErrors = [];
+  checkV2Runtime(v2Doc(countTamper), { errors: countErrors, warnings: [] }, now);
+  assert.ok(countErrors.some((message) => /counts mismatch/.test(message)));
+  ok("fetch-cron shadow warning is non-blocking; deployment/count tampering fails closed");
+}
+
+// 4b1b. Source parity independently kills internally self-consistent slot tamper.
+{
+  const tmp = mkTmp("cron-shadow-source-parity");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "cron-parity" });
+  runtime.cadence.v2_activated_at = now;
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const mutations = [
+    (doc) => { doc.runtime.fetch_cron_skip_detection.rows[0].schedule_id = "bogus_schedule"; },
+    (doc) => { doc.runtime.fetch_cron_skip_detection.rows[0].expected_at = "2020-01-01T00:00:00.000Z"; },
+    (doc) => { doc.runtime.fetch_cron_skip_detection.rows[0].observed_at = null; },
+    (doc) => { doc.runtime.fetch_cron_skip_detection.evaluated_at = "2026-07-10T02:34:00.000Z"; },
+  ];
+  for (const mutate of mutations) {
+    const tampered = structuredClone(root);
+    mutate(tampered);
+    writeJson(path.join(tmp, "data", KPI_REL), tampered);
+    writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(tampered, now));
+    const result = runChecker(tmp, now, { strict: true, context: "reconcile" });
+    assert.equal(result.exit, 1);
+    assert.match(result.stderr, /does not match canonical detection-floor projection/);
+  }
+  ok("fetch-cron schedule/expected/observed/evaluated tamper is rejected against source parity");
+}
+
+// 4b1c. The detection-floor report is intentionally ephemeral/uncommitted.
+// A later checkout retains canonical schedule validation but cannot claim source parity.
+{
+  const tmp = mkTmp("cron-shadow-ephemeral-source-absent");
+  const now = "2026-07-10T02:35:00.000Z";
+  const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "cron-ephemeral" });
+  runtime.cadence.v2_activated_at = now;
+  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  fs.unlinkSync(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"));
+  assert.equal(runChecker(tmp, now, { strict: true, context: "reconcile" }).exit, 0);
+  ok("missing ephemeral detection-floor source is warn-only while canonical schedule checks remain active");
 }
 
 // 4b2. Checker independently compares bounded KPI recovery evidence to the source index.
@@ -3845,6 +3949,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   root.totals = { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length - 1, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
   const tmp = mkTmp("lane-degraded");
   writeReadyTargetRecoveryIndexes(tmp, now);
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), fixtureDetectionReport(now));
   writeJson(path.join(tmp, "data", KPI_REL), root);
   writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
   assert.equal(runChecker(tmp, now, { strict: true }).exit, 0,

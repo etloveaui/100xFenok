@@ -741,6 +741,104 @@ export function evaluateAttemptCadence(observedAt, cronSchedules, calendarId, no
   return worstResult(results);
 }
 
+// Point-in-time attempt coverage only: shard v1 has neither event_name nor
+// retained history, so a manual attempt can satisfy a slot and a later attempt
+// can hide an older gap. The public contract calls missing rows "suspected".
+export function buildFetchCronAttemptCoverage({
+  report,
+  calendars,
+  nowValue = null,
+  config = DATA_SUPPLY_DETECTION_CONFIG,
+}) {
+  if (report !== null && report !== undefined) validateDetectionReport(report, config);
+  validateConfigCalendarBindings(config, calendars);
+  const evaluatedAt = report?.generated_at ?? nowValue;
+  const now = strictUtc(evaluatedAt, report ? "report.generated_at" : "nowValue");
+  const rows = [];
+  let scheduledMembers = 0;
+
+  config.lanes.forEach((lane, laneIndex) => {
+    const reportLane = report?.lanes[laneIndex] ?? null;
+    lane.producer_members.forEach((member, memberIndex) => {
+      const scheduled = member.cadence_declaration?.kind === "github_workflow"
+        && member.schedule.length > 0;
+      if (!scheduled) return;
+      scheduledMembers += 1;
+      const reportMember = lane.monitoring_mode === "composite"
+        ? reportLane?.members[memberIndex] ?? null
+        : reportLane;
+      const endpoint = reportMember?.endpoint ?? {
+        status: "unobserved",
+        reason: "workflow_unobserved",
+        observed_at: null,
+      };
+      const observedEpoch = endpoint.observed_at === null
+        ? null
+        : strictUtc(endpoint.observed_at, `${lane.id}:${member.id}.observed_at`).epoch;
+      const calendar = calendarById(calendars, member.cadence_calendar);
+
+      for (const cron of member.schedule) {
+        const matches = calendars.schedules.filter((schedule) => (
+          schedule.cron === cron && schedule.calendar_id === member.cadence_calendar
+        ));
+        if (matches.length !== 1) {
+          fail("calendar_error", `cron ${cron} must have exactly one grace contract`);
+        }
+        const schedule = matches[0];
+        const expectedEpoch = latestDueOccurrence(schedule, now.epoch, calendar, calendars);
+        rows.push({
+          lane_id: lane.id,
+          member_id: member.id,
+          workflow: member.workflow,
+          schedule_id: schedule.id,
+          cron,
+          calendar_id: member.cadence_calendar,
+          expected_at: new Date(expectedEpoch).toISOString(),
+          observed_at: endpoint.observed_at,
+          state: observedEpoch !== null && observedEpoch <= now.epoch && observedEpoch >= expectedEpoch
+            ? "observed"
+            : null,
+          producer_status: endpoint.status,
+          producer_reason: endpoint.reason,
+        });
+      }
+    });
+  });
+
+  const groupObserved = new Map();
+  for (const row of rows) {
+    const key = `${row.workflow}\u0000${row.cron}`;
+    groupObserved.set(key, groupObserved.get(key) === true || row.state === "observed");
+  }
+  for (const row of rows) {
+    if (row.state === "observed") continue;
+    row.state = groupObserved.get(`${row.workflow}\u0000${row.cron}`)
+      ? "attempt_gap"
+      : "suspected_skip";
+  }
+
+  const counts = {
+    scheduled_members: scheduledMembers,
+    schedule_bindings: rows.length,
+    observed: rows.filter((row) => row.state === "observed").length,
+    suspected_skips: rows.filter((row) => row.state === "suspected_skip").length,
+    attempt_gaps: rows.filter((row) => row.state === "attempt_gap").length,
+  };
+  if (counts.observed + counts.suspected_skips + counts.attempt_gaps !== counts.schedule_bindings) {
+    fail("schema_error", "fetch cron attempt coverage counts are inconsistent");
+  }
+
+  return {
+    schema_version: "fetch-cron-attempt-coverage/v1",
+    mode: "shadow",
+    evaluated_at: now.value,
+    status: counts.suspected_skips > 0 || counts.attempt_gaps > 0 ? "warning" : "ready",
+    deployment_blocking: false,
+    counts,
+    rows,
+  };
+}
+
 export function evaluateFreshness(sourceAsOf, policy, nowValue, calendars) {
   if (sourceAsOf == null) return reasonResult("schema_drift", { source_as_of: null, age: null, unit: policy.unit });
   const source = strictUtc(sourceAsOf, "source_as_of", { allowDate: true });

@@ -43,11 +43,16 @@ import {
   validateProducerRecoveryAttempt,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
+import { buildFetchCronAttemptCoverage } from "../../scripts/build-data-supply-detection-floor.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
 const SCHEMA_VERSION_V1 = "fenok-data-health-kpi/v1";
 const SCHEMA_VERSION_V2 = "fenok-data-health-kpi/v2";
+const FETCH_CRON_CALENDARS = JSON.parse(fs.readFileSync(
+  path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json"),
+  "utf8",
+));
 // Phase A is warn-only; Phase B flips producer-null / stale-required / over-ceiling
 // age into hard failures. Default OFF so this commit stays warn-only. NOTE: a
 // DEFINITION tamper (cadence/SLA table not matching canonical) is ALWAYS a hard
@@ -125,6 +130,155 @@ function readOptionalJson(filePath) {
 
 function push(list, condition, message) {
   if (!condition) list.push(message);
+}
+
+function hasExactKeys(value, expected) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
+}
+
+function checkFetchCronSkipDetection(runtime, { errors, warnings }, buildNow) {
+  const diagnostic = runtime?.fetch_cron_skip_detection;
+  if (diagnostic === undefined) {
+    warnings.push("fetch cron attempt coverage is absent on a pre-shadow KPI; deployment_blocking:false");
+    return;
+  }
+  push(errors, diagnostic && typeof diagnostic === "object" && !Array.isArray(diagnostic),
+    "runtime.fetch_cron_skip_detection must be an object when present");
+  if (!diagnostic || typeof diagnostic !== "object" || Array.isArray(diagnostic)) return;
+
+  push(errors, hasExactKeys(diagnostic, [
+    "schema_version", "mode", "evaluated_at", "status", "deployment_blocking", "counts", "rows",
+  ]), "fetch cron shadow diagnostic shape is not exact");
+  push(errors, diagnostic.schema_version === "fetch-cron-attempt-coverage/v1",
+    "fetch cron shadow schema_version is invalid");
+  push(errors, diagnostic.mode === "shadow", "fetch cron diagnostic mode must remain shadow");
+  push(errors, diagnostic.deployment_blocking === false,
+    "fetch cron shadow diagnostic must remain deployment_blocking:false");
+  push(errors, ["ready", "warning"].includes(diagnostic.status),
+    `fetch cron shadow status is invalid: ${diagnostic.status}`);
+  push(errors, typeof diagnostic.evaluated_at === "string"
+    && Number.isFinite(new Date(diagnostic.evaluated_at).getTime()),
+  "fetch cron shadow evaluated_at must be a timestamp");
+  push(errors, Number.isFinite(new Date(diagnostic.evaluated_at).getTime())
+    && Number.isFinite(new Date(buildNow).getTime())
+    && new Date(diagnostic.evaluated_at).getTime() <= new Date(buildNow).getTime(),
+  "fetch cron shadow evaluated_at exceeds KPI generated_at");
+
+  let canonicalDefinition = null;
+  try {
+    canonicalDefinition = buildFetchCronAttemptCoverage({
+      report: null,
+      calendars: FETCH_CRON_CALENDARS,
+      nowValue: diagnostic.evaluated_at,
+    });
+  } catch (error) {
+    errors.push(`fetch cron canonical schedule projection failed: ${error.message}`);
+  }
+  const expectedBindings = canonicalDefinition?.rows ?? [];
+  const expectedMembers = canonicalDefinition?.counts?.scheduled_members ?? 0;
+  const rows = Array.isArray(diagnostic.rows) ? diagnostic.rows : [];
+  push(errors, Array.isArray(diagnostic.rows), "fetch cron shadow rows must be an array");
+  push(errors, rows.length === expectedBindings.length,
+    `fetch cron shadow binding denominator mismatch: ${rows.length} vs ${expectedBindings.length}`);
+
+  const states = { observed: 0, suspected_skip: 0, attempt_gap: 0 };
+  const groupObserved = new Map();
+  const evaluatedMs = new Date(diagnostic.evaluated_at).getTime();
+  rows.forEach((row, index) => {
+    push(errors, hasExactKeys(row, [
+      "lane_id", "member_id", "workflow", "schedule_id", "cron", "calendar_id",
+      "expected_at", "observed_at", "state", "producer_status", "producer_reason",
+    ]), `fetch cron rows[${index}] shape is not exact`);
+    const expected = expectedBindings[index];
+    push(errors, Boolean(expected)
+      && row?.lane_id === expected.lane_id
+      && row?.member_id === expected.member_id
+      && row?.workflow === expected.workflow
+      && row?.schedule_id === expected.schedule_id
+      && row?.cron === expected.cron
+      && row?.calendar_id === expected.calendar_id
+      && row?.expected_at === expected.expected_at,
+    `fetch cron rows[${index}] identity/schedule/expected_at does not match canonical calendar projection`);
+    const expectedMs = new Date(row?.expected_at).getTime();
+    const observedMs = row?.observed_at === null ? null : new Date(row?.observed_at).getTime();
+    push(errors, Number.isFinite(expectedMs), `fetch cron rows[${index}].expected_at is invalid`);
+    push(errors, observedMs === null || Number.isFinite(observedMs),
+      `fetch cron rows[${index}].observed_at is invalid`);
+    push(errors, Number.isFinite(expectedMs) && Number.isFinite(evaluatedMs) && expectedMs <= evaluatedMs,
+      `fetch cron rows[${index}].expected_at exceeds evaluated_at`);
+    push(errors, ["ready", "unobserved", "stale", "drift", "unavailable"].includes(row?.producer_status),
+      `fetch cron rows[${index}].producer_status is invalid`);
+    push(errors, DETECTION_KPI_REASONS.has(row?.producer_reason) && row.producer_reason !== "recovery_degraded",
+      `fetch cron rows[${index}].producer_reason is invalid`);
+    push(errors, Object.hasOwn(states, row?.state), `fetch cron rows[${index}].state is invalid`);
+    if (Object.hasOwn(states, row?.state)) states[row.state] += 1;
+    const observed = observedMs !== null && Number.isFinite(expectedMs) && Number.isFinite(evaluatedMs)
+      && observedMs <= evaluatedMs && observedMs >= expectedMs;
+    push(errors, (row?.state === "observed") === observed,
+      `fetch cron rows[${index}] observed state contradicts timestamps`);
+    const groupKey = `${row?.workflow}\u0000${row?.cron}`;
+    groupObserved.set(groupKey, groupObserved.get(groupKey) === true || observed);
+  });
+  rows.forEach((row, index) => {
+    if (row?.state === "observed") return;
+    const expectedState = groupObserved.get(`${row?.workflow}\u0000${row?.cron}`)
+      ? "attempt_gap"
+      : "suspected_skip";
+    push(errors, row?.state === expectedState,
+      `fetch cron rows[${index}] missing-evidence state must be ${expectedState}`);
+  });
+
+  const counts = diagnostic.counts;
+  push(errors, hasExactKeys(counts, [
+    "scheduled_members", "schedule_bindings", "observed", "suspected_skips", "attempt_gaps",
+  ]), "fetch cron shadow counts shape is not exact");
+  const expectedCounts = {
+    scheduled_members: expectedMembers,
+    schedule_bindings: expectedBindings.length,
+    observed: states.observed,
+    suspected_skips: states.suspected_skip,
+    attempt_gaps: states.attempt_gap,
+  };
+  push(errors, JSON.stringify(counts) === JSON.stringify(expectedCounts),
+    `fetch cron shadow counts mismatch: ${JSON.stringify(counts)} vs ${JSON.stringify(expectedCounts)}`);
+  const expectedStatus = states.suspected_skip > 0 || states.attempt_gap > 0 ? "warning" : "ready";
+  push(errors, diagnostic.status === expectedStatus,
+    `fetch cron shadow status mismatch: ${diagnostic.status} vs ${expectedStatus}`);
+  if (expectedStatus === "warning") {
+    const laneIds = [...new Set(rows.filter((row) => row.state !== "observed").map((row) => row.lane_id))].sort();
+    warnings.push(`fetch cron attempt coverage warning; deployment_blocking:false; lanes: ${laneIds.join(", ")}`);
+  }
+}
+
+export function checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings }) {
+  const diagnostic = rootDoc?.runtime?.fetch_cron_skip_detection;
+  if (diagnostic === undefined) return;
+  const reportPath = path.join(path.dirname(rootKpiPath), "data-supply-detection-floor.json");
+  let report;
+  try {
+    report = readOptionalJson(reportPath);
+  } catch (error) {
+    errors.push(`fetch cron source report is invalid: ${error.message}`);
+    return;
+  }
+  if (report === null) {
+    warnings.push("fetch cron source report is absent; schedule metadata is canonical but attempt-source parity is not verified");
+    return;
+  }
+  let expected;
+  try {
+    expected = buildFetchCronAttemptCoverage({
+      report,
+      calendars: FETCH_CRON_CALENDARS,
+      nowValue: rootDoc.generated_at,
+    });
+  } catch (error) {
+    errors.push(`fetch cron source projection failed: ${error.message}`);
+    return;
+  }
+  push(errors, JSON.stringify(diagnostic) === JSON.stringify(expected),
+    "runtime.fetch_cron_skip_detection does not match canonical detection-floor projection");
 }
 
 const DETECTION_KPI_REASONS = new Set([
@@ -755,6 +909,7 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
   const runtime = rootDoc?.runtime;
   push(errors, runtime && typeof runtime === "object", "runtime block is required in v2");
   if (!runtime || typeof runtime !== "object") return;
+  checkFetchCronSkipDetection(runtime, { errors, warnings }, rootDoc.generated_at);
   push(errors, context === "deploy" || context === "reconcile",
     `checker context must be deploy or reconcile, got ${JSON.stringify(context)}`);
 
@@ -1167,6 +1322,7 @@ function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, co
   validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context });
+  checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings });
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
   checkRecoveryStateSources(rootDoc, rootKpiPath, errors);
   checkPublicProjection(rootDoc, publicDoc, { errors, warnings });

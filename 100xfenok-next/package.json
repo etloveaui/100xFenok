@@ -120,7 +120,7 @@
     "qa:market-audit": "node scripts/test-check-stockanalysis-market-audit.mjs && node scripts/check-stockanalysis-market-audit.mjs",
     "qa:data-graph": "node scripts/check-data-graph.mjs",
     "qa:data-freshness": "node scripts/check-data-freshness.mjs",
-    "qa:fenok-data-health-kpi": "node ../scripts/test-build-fenok-data-health-kpi.mjs && node scripts/check-fenok-data-health-kpi.mjs --strict",
+    "qa:fenok-data-health-kpi": "node ../scripts/test-fetch-cron-attempt-coverage.mjs && node ../scripts/test-build-fenok-data-health-kpi.mjs && node scripts/check-fenok-data-health-kpi.mjs --strict",
     "qa:data-state": "tsx scripts/check-data-state-render-contract.tsx",
     "qa:lane-registry-projection": "node ../scripts/test-lane-registry-projection.mjs",
     "qa:lane-board": "tsx scripts/check-lane-board-render-contract.tsx",

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { validateDetectionReport } from "./build-data-supply-detection-floor.mjs";
+import {
+  buildFetchCronAttemptCoverage,
+  validateDetectionReport,
+} from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { EXCLUDED_PUBLIC_DATA_FILES, EXCLUDED_PUBLIC_DATA_ROOTS } from "../100xfenok-next/scripts/sync-public-data.mjs";
@@ -38,6 +41,10 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..")
 const SCHEMA_VERSION = "fenok-data-health-kpi/v2";
 const KPI_REL_PATH = "admin/fenok-data-health-kpi.json";
 const SCRIPT_START_MS = Date.now();
+const FETCH_CRON_CALENDARS = JSON.parse(fs.readFileSync(
+  path.join(ROOT, "scripts", "lib", "data-supply-detection-calendars.json"),
+  "utf8",
+));
 
 function getArg(flag) {
   const eq = process.argv.find((a) => a.startsWith(`${flag}=`));
@@ -2255,6 +2262,11 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     env: process.env,
     priorRuntime,
     snapshotStatus: deploymentIntegrity.status,
+  });
+  runtime.fetch_cron_skip_detection = buildFetchCronAttemptCoverage({
+    report: detectionFloor,
+    calendars: FETCH_CRON_CALENDARS,
+    nowValue: nowIso,
   });
   runtime.publication_gate = publicationGateForRuntime(runtime);
 
