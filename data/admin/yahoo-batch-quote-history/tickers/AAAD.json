@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-19T23:01:35Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/AAAD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AAAD.json",
     "payload_sha256": "e80f549b5bc3b98ddf5c2e0a7434eabda26ead58161c3b1429656e3b792d0e39",
     "quote_as_of": "2026-07-09T15:19:46Z",
     "source_as_of": "2026-07-09T15:19:46Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 0",
     "shard": "0/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-19T23:01:35Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AAAD.json",
+    "payload_sha256": "e80f549b5bc3b98ddf5c2e0a7434eabda26ead58161c3b1429656e3b792d0e39",
+    "quote_as_of": "2026-07-09T15:19:46Z",
+    "source_as_of": "2026-07-09T15:19:46Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-09T15:19:46Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-20T23:03:20Z",
+    "classified_run_id": "29785605821",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AAAD holds LKG because Yahoo source date 2026-07-09T15:19:46Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-09T15:19:46Z"
+  },
   "ticker": "AAAD",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-07-20T23:03:20Z"
 }

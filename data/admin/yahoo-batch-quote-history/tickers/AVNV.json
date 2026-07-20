@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 799,
+      "natural": true,
+      "observed_at": "2026-07-20T23:03:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29785605821",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:07:08Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVNV.json",
-    "payload_sha256": "6bf946061c69919d9b11b8810f6b2a44223de7405ca3d970b5340bfde8d2eeb6",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-20T23:04:02Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/AVNV.json",
+    "payload_sha256": "f1158fb6f8c85641642590c1a02a9784194fe839e817c630ad4a15f251d193ab",
+    "quote_as_of": "2026-07-20T19:52:10Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 799,
+    "natural": true,
+    "observed_at": "2026-07-20T23:03:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29785605821",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:07:08Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-20T23:03:20Z",
+    "payload_sha256": "21082b81b277c86f190bf78047d8eceaf35c27e40bd10e94df04e397935803bd",
+    "quote_as_of": "2026-07-20T19:52:10Z",
+    "run_attempt": 1,
+    "run_id": "29785605821",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "AVNV",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-20T23:03:20Z"
 }

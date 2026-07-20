@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1368,
+      "natural": true,
+      "observed_at": "2026-07-20T23:03:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29785605821",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:07:46Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BETH.json",
-    "payload_sha256": "d54b52e52da893e611b6dee451e383b04a8c5f40c36f3cbb76410a7918f390c2",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-20T23:04:35Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/BETH.json",
+    "payload_sha256": "2a5281706dc385d7b0cea9108aff97f6bb9554f2d3351edfadcaee4c9d4626e6",
+    "quote_as_of": "2026-07-20T19:13:42Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1368,
+    "natural": true,
+    "observed_at": "2026-07-20T23:03:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29785605821",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:07:46Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-20T23:03:20Z",
+    "payload_sha256": "e03ee45c3a76fba6bbb17fadfaaa7b793149f7f67dd4ffef7c2656319024448f",
+    "quote_as_of": "2026-07-20T19:13:42Z",
+    "run_attempt": 1,
+    "run_id": "29785605821",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "BETH",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-20T23:03:20Z"
 }

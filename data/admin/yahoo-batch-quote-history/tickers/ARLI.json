@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1370,
+      "natural": true,
+      "observed_at": "2026-07-20T23:03:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29785605821",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:20:03Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ARLI.json",
-    "payload_sha256": "0b51a14fcb22945a69cce9a7a13cb3a1135e734cea03ee186fc17bcaf531505d",
-    "quote_as_of": "2026-07-01T14:30:17Z",
-    "source_as_of": "2026-07-01T14:30:17Z"
+    "fetched_at": "2026-07-20T23:03:35Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/ARLI.json",
+    "payload_sha256": "fe47a4f43282631ab91989d9626ec696522da2dfbd55d9d9a3e04852d15922ab",
+    "quote_as_of": "2026-07-20T19:11:38Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1370,
+    "natural": true,
+    "observed_at": "2026-07-20T23:03:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29785605821",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:20:03Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-01T14:30:17Z",
     "source_as_of": "2026-07-01T14:30:17Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-20T23:03:20Z",
+    "payload_sha256": "e269a191917b45b862ebe3d2e15f7769eb2f0f70e422ab3ab5e62475bdb03e30",
+    "quote_as_of": "2026-07-20T19:11:38Z",
+    "run_attempt": 1,
+    "run_id": "29785605821",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-01T14:30:17Z"
   },
   "ticker": "ARLI",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-20T23:03:20Z"
 }

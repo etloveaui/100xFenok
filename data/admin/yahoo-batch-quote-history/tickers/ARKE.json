@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 979,
+      "natural": true,
+      "observed_at": "2026-07-20T23:03:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29785605821",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:20:01Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ARKE.json",
-    "payload_sha256": "51ab37eee8251edcdc6c4642f464fb30644782a67101c77b29c0c84a80dcd804",
-    "quote_as_of": "2026-07-08T19:55:21Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-20T23:03:33Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/ARKE.json",
+    "payload_sha256": "e69f920ed65f65e85d8f4b59fb56f7dac7df15a91fc63b5f1e38bda90dd3576c",
+    "quote_as_of": "2026-07-20T19:02:17Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 979,
+    "natural": true,
+    "observed_at": "2026-07-20T23:03:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29785605821",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:20:01Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T19:55:21Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-20T23:03:20Z",
+    "payload_sha256": "1d482616f7a365f5ff40dfabe30483ee8670bc4a825637877ce4ef279beedea2",
+    "quote_as_of": "2026-07-20T19:02:17Z",
+    "run_attempt": 1,
+    "run_id": "29785605821",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ARKE",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-20T23:03:20Z"
 }
