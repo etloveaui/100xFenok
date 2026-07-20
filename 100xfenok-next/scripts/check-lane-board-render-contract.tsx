@@ -52,6 +52,7 @@ const kpiLanes: LaneBoardKpiLane[] = [
 ];
 
 const html = renderToStaticMarkup(<LaneBoard projection={projection} kpiLanes={kpiLanes} />);
+const legacyAttemptMarkup = '<span class="font-semibold text-slate-500">2026-07-18<span class="ml-1 text-[10px] text-slate-500">schedule</span></span>';
 
 // Both registry lanes render as rows.
 assert(html.includes('data-lane-row="fred_macro"'), "fred_macro lane row missing");
@@ -65,6 +66,24 @@ assert(html.includes("재시도 2 · 복구 1"), "recovery counts not joined fro
 // #365 P2: last_attempt observed_at + event render in the lane row.
 assert(html.includes("2026-07-18"), "last_attempt observed_at date should render");
 assert(html.includes("schedule"), "last_attempt event_name should render");
+assert(html.includes(legacyAttemptMarkup), "no-runId last_attempt markup must retain the exact legacy bytes");
+assert(!html.includes("actions/runs/"), "default LaneBoard render must not fabricate a run deep link");
+
+const explicitNoRunIdHtml = renderToStaticMarkup(
+  <LaneBoard projection={projection} kpiLanes={kpiLanes} runIds={{}} />,
+);
+assert(explicitNoRunIdHtml === html, "an explicit empty run-id map must remain byte-identical to the legacy render");
+
+const runIdHtml = renderToStaticMarkup(
+  <LaneBoard projection={projection} kpiLanes={kpiLanes} runIds={{ fred_macro: "29681166769" }} />,
+);
+assert(
+  runIdHtml.includes('href="https://github.com/etloveaui/100xFenok/actions/runs/29681166769"'),
+  "a present runId must render the exact private-repo Actions deep link",
+);
+assert(runIdHtml.includes('data-lane-run-id="29681166769"'), "run-id anchor marker missing");
+assert(runIdHtml.includes(legacyAttemptMarkup), "run-id anchor must not rewrite the existing event+date span");
+assert((runIdHtml.match(/actions\/runs\//g) || []).length === 1, "only the mapped lane may render a run deep link");
 assert(html.includes("공개 미러") && html.includes("실시행") && html.includes("payload"), "metadata chips missing/untranslated");
 assert(html.includes("fetch-fred-macro.yml"), "owner_workflow basename not shown");
 

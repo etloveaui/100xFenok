@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { LANE_RUN_ID_MAP } from "@/generated/lane-runid-map";
 import { ROUTES } from "@/lib/routes";
 import { readPublicAssetText } from "@/lib/server/public-assets";
 import LaneBoard, { type AlarmState, type LaneProjection } from "./LaneBoard";
@@ -56,6 +57,9 @@ type DataHealthLane = {
   as_of?: string | null;
   counts?: Record<string, unknown>;
   checks?: DataHealthCheck[];
+  details?: {
+    last_attempt?: { event_name?: string | null; observed_at?: string | null } | null;
+  };
 };
 
 type DataHealthKpi = {
@@ -151,6 +155,15 @@ export default async function AdminDataLabPage() {
   const laneProjection = await readLaneRegistryProjection();
   const alarmState = await readAlarmState();
   const kpiLanes = dataHealthKpi?.lanes || [];
+  const laneRunIds = Object.fromEntries(kpiLanes.flatMap((lane) => {
+    const laneId = lane.id || "";
+    const lastAttempt = lane.details?.last_attempt;
+    const privateAttempt = LANE_RUN_ID_MAP[laneId];
+    if (!laneId || !lastAttempt || !privateAttempt) return [];
+    if (privateAttempt.event_name !== (lastAttempt.event_name ?? null)
+      || privateAttempt.observed_at !== (lastAttempt.observed_at ?? null)) return [];
+    return [[laneId, privateAttempt.run_id]];
+  }));
   const s0Lane = laneById(dataHealthKpi, "stock_s0_active_daily_gate");
   const etfLane = laneById(dataHealthKpi, "etf_public_and_daily_gate");
   const rimLane = laneById(dataHealthKpi, "rim_inputs");
@@ -298,7 +311,7 @@ export default async function AdminDataLabPage() {
         </div>
       </section>
 
-      <LaneBoard projection={laneProjection} kpiLanes={kpiLanes} alarm={alarmState} />
+      <LaneBoard projection={laneProjection} kpiLanes={kpiLanes} alarm={alarmState} runIds={laneRunIds} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-lab-coverage="true">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

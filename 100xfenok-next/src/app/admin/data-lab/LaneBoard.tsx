@@ -72,14 +72,22 @@ function countOf(list?: unknown[]) {
   return Array.isArray(list) ? list.length : 0;
 }
 
+const GITHUB_ACTIONS_RUN_BASE = "https://github.com/etloveaui/100xFenok/actions/runs";
+
+function githubRunHref(runId?: string) {
+  return runId && /^\d+$/.test(runId) ? `${GITHUB_ACTIONS_RUN_BASE}/${runId}` : null;
+}
+
 export default function LaneBoard({
   projection,
   kpiLanes,
   alarm = null,
+  runIds = {},
 }: {
   projection: LaneProjection[] | null;
   kpiLanes: LaneBoardKpiLane[];
   alarm?: AlarmState | null;
+  runIds?: Readonly<Record<string, string>>;
 }) {
   const projectionIds = new Set((projection ?? []).map((lane) => lane.id));
   const platformGates = kpiLanes.filter((lane) => lane.id && !projectionIds.has(lane.id));
@@ -137,6 +145,16 @@ export default function LaneBoard({
               const retry = countOf(kpi?.details?.recovery_retry_set);
               const recovered = countOf(kpi?.details?.recovery_recovered);
               const lastAttempt = kpi?.details?.last_attempt ?? null;
+              const runId = runIds[lane.id];
+              const runHref = githubRunHref(runId);
+              const lastAttemptLabel = lastAttempt?.observed_at ? (
+                <span className="font-semibold text-slate-500">
+                  {dateLabel(lastAttempt.observed_at)}
+                  {lastAttempt.event_name ? <span className="ml-1 text-[10px] text-slate-500">{lastAttempt.event_name}</span> : null}
+                </span>
+              ) : (
+                <span className="font-semibold text-slate-500">-</span>
+              );
               return (
                 <tr key={lane.id} className="align-top" data-lane-row={lane.id}>
                   <td className="border-b border-slate-100 px-3 py-3">
@@ -167,14 +185,21 @@ export default function LaneBoard({
                     <span className="orbitron font-black tabular-nums text-slate-900">재시도 {retry} · 복구 {recovered}</span>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    {lastAttempt?.observed_at ? (
-                      <span className="font-semibold text-slate-500">
-                        {dateLabel(lastAttempt.observed_at)}
-                        {lastAttempt.event_name ? <span className="ml-1 text-[10px] text-slate-500">{lastAttempt.event_name}</span> : null}
+                    {runHref ? (
+                      <span className="inline-flex flex-wrap items-center gap-1.5">
+                        {lastAttemptLabel}
+                        <a
+                          href={runHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          data-lane-run-id={runId}
+                          className="inline-flex min-h-8 items-center rounded-full border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                          aria-label={`${lane.label || lane.id} GitHub Actions 실행 ${runId}`}
+                        >
+                          실행 ↗
+                        </a>
                       </span>
-                    ) : (
-                      <span className="font-semibold text-slate-500">-</span>
-                    )}
+                    ) : lastAttemptLabel}
                   </td>
                 </tr>
               );
