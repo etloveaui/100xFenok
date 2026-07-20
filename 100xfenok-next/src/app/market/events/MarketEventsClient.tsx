@@ -420,7 +420,7 @@ export default function MarketEventsClient({
                   }`}
                 >
                   <span>{item.label}</span>
-                  <span className={selected ? "text-white/80" : "text-slate-400"}>{tabCounts[item.key].toLocaleString("ko-KR")}</span>
+                  <span className={selected ? "text-white/80" : "text-slate-500"}>{tabCounts[item.key].toLocaleString("ko-KR")}</span>
                 </button>
               );
             })}

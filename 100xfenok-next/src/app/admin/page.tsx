@@ -114,7 +114,7 @@ export default function AdminRootPage() {
         ))}
       </section>
 
-      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Personal</p>
+      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Personal</p>
       <section className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
         <Link
           href="/admin/personal"

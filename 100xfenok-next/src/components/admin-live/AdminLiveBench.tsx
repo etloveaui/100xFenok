@@ -3093,7 +3093,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             <h1 className="mt-1 text-2xl font-black text-slate-950">Voice Lab</h1>
           </div>
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700">
-            <span className={`size-2 rounded-full ${status === "listening" ? "bg-emerald-500" : metrics.lastError || status === "blocked" ? "bg-red-500" : status === "connecting" ? "bg-amber-500" : "bg-slate-400"}`} />
+            <span className={`size-2 rounded-full ${status === "listening" ? "bg-emerald-500" : metrics.lastError || status === "blocked" ? "bg-red-500" : status === "connecting" ? "bg-amber-500" : "bg-slate-500"}`} />
             {statusLabel}
           </div>
         </header>
@@ -3138,7 +3138,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             <button
               type="button"
               disabled
-              className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-black text-slate-400"
+              className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-black text-slate-500"
               title="카메라/이미지 입력 준비 중"
             >
               CAM
@@ -3359,7 +3359,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           </div>
           <div ref={transcriptScrollRef} className="mt-3 max-h-[40vh] space-y-2 overflow-y-auto" aria-live="polite">
             {logs.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm font-semibold text-slate-400">
+              <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm font-semibold text-slate-500">
                 아직 대화가 없습니다.
               </p>
             ) : logs.map((log) => (
@@ -3370,7 +3370,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                   }`}>
                     {LOG_ROLE_TEXT[log.role]}
                   </span>
-                  <span className="text-xs font-semibold text-slate-400">{log.at}</span>
+                  <span className="text-xs font-semibold text-slate-500">{log.at}</span>
                 </div>
                 <p className="mt-1 text-sm leading-6 text-slate-700">{log.text}</p>
               </div>
@@ -3449,7 +3449,7 @@ function BuildVersionBadge({ onCopy }: { onCopy: () => void }) {
       onClick={onCopy}
       title="클라이언트 빌드 버전 복사"
       aria-label={`클라이언트 빌드 버전 ${BUILD_VERSION}`}
-      className="fixed bottom-[max(env(safe-area-inset-bottom),0.75rem)] right-3 z-[80] rounded-md border border-slate-200/70 bg-white/75 px-2 py-1 text-[10px] font-semibold text-slate-400 shadow-sm backdrop-blur transition hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+      className="fixed bottom-[max(env(safe-area-inset-bottom),0.75rem)] right-3 z-[80] rounded-md border border-slate-200/70 bg-white/75 px-2 py-1 text-[10px] font-semibold text-slate-500 shadow-sm backdrop-blur transition hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
     >
       {BUILD_VERSION}
     </button>
@@ -3691,7 +3691,7 @@ function ToolBoard({
                           enabled
                             ? "bg-emerald-500"
                             : tool.status === "available"
-                              ? "bg-slate-400"
+                              ? "bg-slate-500"
                               : tool.status === "locked"
                                 ? "bg-red-400"
                                 : "bg-amber-400"
@@ -3740,7 +3740,7 @@ function ExpressionCardView({ card }: { card: ExpressionCard | null }) {
         <p className="mt-1 text-lg font-bold text-emerald-700">{card.en}</p>
       )}
       {card.state === "reveal" && card.pron && (
-        <p className="mt-1 text-sm font-semibold text-slate-400">{card.pron}</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">{card.pron}</p>
       )}
       {card.state === "drill" && card.drillHint && (
         <p className="mt-1 text-sm font-bold text-amber-700">{card.drillHint}</p>

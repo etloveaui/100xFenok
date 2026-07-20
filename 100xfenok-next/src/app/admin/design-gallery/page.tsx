@@ -1474,7 +1474,7 @@ export default function DesignGalleryPage() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-sm font-bold text-slate-900">
-                        <span className="mr-1.5 text-xs text-slate-400">#{item.id}</span>
+                        <span className="mr-1.5 text-xs text-slate-500">#{item.id}</span>
                         {item.name}
                       </h3>
                       <DifficultyBadge level={item.difficulty} />
@@ -1515,7 +1515,7 @@ export default function DesignGalleryPage() {
           <p className="text-sm font-bold text-slate-700">
             Total: {ITEMS.length} patterns across {CATEGORIES.length} categories
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-500">
             Continuously updated — 2026-03-13 audit
           </p>
         </div>

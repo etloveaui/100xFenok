@@ -593,7 +593,7 @@ function ChangeFeedPreview({ isPhone }: PreviewContext) {
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${
-                        item.tone === "up" ? "bg-emerald-500" : item.tone === "down" ? "bg-rose-500" : "bg-slate-400"
+                        item.tone === "up" ? "bg-emerald-500" : item.tone === "down" ? "bg-rose-500" : "bg-slate-500"
                       }`}
                     />
                     <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{item.impact}</span>

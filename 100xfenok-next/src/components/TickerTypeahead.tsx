@@ -256,7 +256,7 @@ export default function TickerTypeahead({
           className="absolute left-0 top-full z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
         >
           {loading ? (
-            <li className="px-4 py-3 text-xs text-slate-400">검색 중…</li>
+            <li className="px-4 py-3 text-xs text-slate-500">검색 중…</li>
           ) : (
             suggestions.map((s) => {
               if (s.type === "divider") {
@@ -280,7 +280,7 @@ export default function TickerTypeahead({
                         <TickerChip ticker={s.stock.symbol} variant="inline" />
                       </span>
                       <span className="truncate text-xs font-semibold text-slate-600">{s.stock.companyName}</span>
-                      <span className="ml-auto shrink-0 text-[10px] text-slate-400">{s.stock.sector}</span>
+                      <span className="ml-auto shrink-0 text-[10px] text-slate-500">{s.stock.sector}</span>
                     </>
                   ) : s.type === "guru" && s.guru ? (
                     <>

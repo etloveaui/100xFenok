@@ -517,7 +517,7 @@ export default function IndustryMapPanel({ bridgeText }: { bridgeText?: string |
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/70">
                       <div
-                        className={tone === "down" ? "h-full rounded-full bg-rose-500" : tone === "up" ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-slate-400"}
+                        className={tone === "down" ? "h-full rounded-full bg-rose-500" : tone === "up" ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-slate-500"}
                         style={{ width: `${row.sizePct}%` } as CSSProperties}
                       />
                     </div>

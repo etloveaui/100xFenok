@@ -90,9 +90,15 @@ const perComplete = renderToStaticMarkup(createElement(PerBandChart, {
   estimates: { fy1: 26, fy2: 27, fy3: 28 },
 }));
 
-assert.equal(sha256(sparkIncomplete), "c6b2aa3b8253190c8c9fb02a93ebf31a76bf3cfb50eb0cfaef2729e500b207b2");
-assert.equal(sha256(sparkComplete), "e6f9745693172f5f152c34b20655057f9e24c60f5080efa1ce1f1321f62bb655");
-assert.equal(sha256(perIncomplete), "e33cbdd9ec65e367287b0a61979631b7a28bd809ba0b58e654045cd4808c7db3");
-assert.equal(sha256(perComplete), "cb4c4f8773a4cabebe1603a8e12a94953b8169f357415062ac93e1b74c1e281a");
+const renderHashes = {
+  sparkIncomplete: sha256(sparkIncomplete),
+  sparkComplete: sha256(sparkComplete),
+  perIncomplete: sha256(perIncomplete),
+  perComplete: sha256(perComplete),
+};
+assert.equal(renderHashes.sparkIncomplete, "c6b2aa3b8253190c8c9fb02a93ebf31a76bf3cfb50eb0cfaef2729e500b207b2");
+assert.equal(renderHashes.sparkComplete, "e6f9745693172f5f152c34b20655057f9e24c60f5080efa1ce1f1321f62bb655");
+assert.equal(renderHashes.perIncomplete, "e33cbdd9ec65e367287b0a61979631b7a28bd809ba0b58e654045cd4808c7db3");
+assert.equal(renderHashes.perComplete, "cb4c4f8773a4cabebe1603a8e12a94953b8169f357415062ac93e1b74c1e281a");
 
 console.log("[test-stock-detail-panel-dedupe] OK");

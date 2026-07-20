@@ -515,7 +515,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             onClick={handleConnectionExport}
             disabled={holdingRows.length === 0}
             data-portfolio-connection-csv-action
-            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 sm:min-h-8"
+            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 sm:min-h-8"
           >
             연결 CSV
           </button>
@@ -664,7 +664,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             }}
             className="mt-2 text-sm font-bold text-slate-700 hover:text-brand-interactive"
           >
-            <span className="tabular-nums">{formatCurrency(active?.cash ?? 0, "USD")}</span> <span className="text-[10px] text-slate-400">편집</span>
+            <span className="tabular-nums">{formatCurrency(active?.cash ?? 0, "USD")}</span> <span className="text-[10px] text-slate-500">편집</span>
           </button>
         )}
       </div>
@@ -744,7 +744,7 @@ function Kpi({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
       <p className={`mt-1 orbitron text-sm font-black tabular-nums text-slate-900 ${valueClass ?? ""}`}>
         {value}
       </p>
@@ -1136,7 +1136,7 @@ function MobileHoldingCard({
               <button
                 type="button"
                 onClick={() => onDelete(row.ticker)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg font-black text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                 aria-label={`${row.ticker} 삭제`}
               >
                 ×
@@ -1167,10 +1167,10 @@ function MobileHoldingCard({
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-        <span className={`orbitron font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-400"}`}>
+        <span className={`orbitron font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-500"}`}>
           {row.gain != null ? formatCurrency(row.gain, "USD") : "—"}
         </span>
-        <span className={`orbitron font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-400"}`}>
+        <span className={`orbitron font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-500"}`}>
           {row.gainPct != null ? formatSignedPercent(row.gainPct, { digits: 2 }) : "—"}
         </span>
         <span className="orbitron tabular-nums text-xs font-bold text-slate-500">
@@ -1229,10 +1229,10 @@ function HoldingsTable({
             <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-900">
               {r.marketValue != null ? formatCurrency(r.marketValue, "USD") : "—"}
             </td>
-            <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-400"}`}>
+            <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-500"}`}>
               {r.gain != null ? formatCurrency(r.gain, "USD") : "—"}
             </td>
-            <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-400"}`}>
+            <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-500"}`}>
               {r.gainPct != null ? formatSignedPercent(r.gainPct, { digits: 2 }) : "—"}
             </td>
             <td className="px-2 py-2 text-right orbitron tabular-nums text-slate-500">
@@ -1243,7 +1243,7 @@ function HoldingsTable({
                 <button
                   type="button"
                   onClick={() => onDelete(r.ticker)}
-                  className="inline-flex min-h-9 items-center rounded-lg px-2 text-[10px] font-black text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  className="inline-flex min-h-9 items-center rounded-lg px-2 text-[10px] font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                   aria-label={`${r.ticker} 삭제`}
                 >
                   삭제

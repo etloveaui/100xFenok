@@ -423,6 +423,7 @@ expectDeclarations(
     "--shell-foreground": "#0f172a",
     "--shell-foreground-muted": "#475569",
     "--shell-foreground-subtle": "#64748b",
+    "--shell-foreground-faint": "#767f8c",
     "--shell-border": "rgba(14,23,38,0.06)",
     "--shell-brand": "#1B73D3",
     "--shell-gain": "#0f8a5f",

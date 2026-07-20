@@ -1570,7 +1570,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
                       className="inline-flex flex-col text-left text-[10px] font-black text-brand-interactive hover:underline"
                     >
                       <span>{h.investor}</span>
-                      <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-400">포트폴리오</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">포트폴리오</span>
                     </TransitionLink>
                   </td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">

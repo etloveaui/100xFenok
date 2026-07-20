@@ -154,7 +154,7 @@ function FinancialsTab({ data }: { data: YfData }) {
   ) {
     const sourceDates = Object.keys(source ?? {}).sort();
     const revDates = [...sourceDates].reverse();
-    if (!source || revDates.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
+    if (!source || revDates.length === 0) return <p className="text-xs text-slate-500">데이터 없음</p>;
     return (
       <div className="-mx-1 overflow-x-auto px-1">
         <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-xs">
@@ -213,7 +213,7 @@ function FinancialsTab({ data }: { data: YfData }) {
             {p === "annual" ? "연간" : "분기"}
           </button>
         ))}
-        <span className="ml-auto text-[10px] font-semibold text-slate-400">{currency}</span>
+        <span className="ml-auto text-[10px] font-semibold text-slate-500">{currency}</span>
       </div>
 
       <div>
@@ -260,7 +260,7 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
               <span className="orbitron tabular-nums text-[11px] font-black">
                 <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
                 <span className="mx-1 font-semibold text-slate-300">/</span>
-                <span className="font-bold text-slate-400">산업 {fmt(r.ind as number, r.isFraction)}</span>
+                <span className="font-bold text-slate-500">산업 {fmt(r.ind as number, r.isFraction)}</span>
               </span>
             </div>
           );
@@ -419,7 +419,7 @@ function OwnershipTab({ data }: { data: YfData }) {
                       <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
                       <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
                       <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-400"}`}>
+                      <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
                       <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[10px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>

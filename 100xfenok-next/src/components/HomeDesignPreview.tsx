@@ -394,7 +394,7 @@ function PreviewVariant({ variant }: { variant: (typeof variantTones)[number] })
           </div>
           <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">{variant.summary}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{variant.emphasis}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-right">
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">추천 포인트</p>
@@ -469,7 +469,7 @@ function StrongPreviewVariant({
             </div>
             <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h3>
             <p className="mt-2 text-sm text-slate-600">{variant.summary}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{variant.emphasis}</p>
           </div>
         </div>
 
@@ -557,7 +557,7 @@ function StrongPreviewVariant({
             </div>
             <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h3>
             <p className="mt-2 text-sm text-slate-600">{variant.summary}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{variant.emphasis}</p>
           </div>
         </div>
 
@@ -622,7 +622,7 @@ function StrongPreviewVariant({
           </div>
           <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h3>
           <p className="mt-2 text-sm text-slate-600">{variant.summary}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{variant.emphasis}</p>
         </div>
       </div>
 

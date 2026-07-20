@@ -170,10 +170,10 @@ export default function LaneBoard({
                     {lastAttempt?.observed_at ? (
                       <span className="font-semibold text-slate-500">
                         {dateLabel(lastAttempt.observed_at)}
-                        {lastAttempt.event_name ? <span className="ml-1 text-[10px] text-slate-400">{lastAttempt.event_name}</span> : null}
+                        {lastAttempt.event_name ? <span className="ml-1 text-[10px] text-slate-500">{lastAttempt.event_name}</span> : null}
                       </span>
                     ) : (
-                      <span className="font-semibold text-slate-400">-</span>
+                      <span className="font-semibold text-slate-500">-</span>
                     )}
                   </td>
                 </tr>
