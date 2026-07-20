@@ -152,7 +152,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 21, auxiliary: 5 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 22, auxiliary: 5 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
     assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",
@@ -204,6 +204,10 @@ function clone(value) {
     assert.equal(oecd.enforcement, "shadow");
     assert.deepEqual(oecd.roots.canonical_outputs, ["data/admin/oecd_cli/shadow/oecd-cli.json"]);
     assert.deepEqual(oecd.roots.public_mirror, []);
+    const krx = registryLaneById("krx");
+    assert.equal(krx.enforcement, "shadow", "KRX stays shadow until a natural workflow run commits attempt evidence");
+    assert.equal(krx.roots.detection_attempt, "data/admin/data-supply-state/detection-attempts/krx.json");
+    assert.deepEqual(krx.roots.public_mirror, ["100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json"]);
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
@@ -298,6 +302,7 @@ function clone(value) {
       "damodaran",
       "us_indices_daily",
       "oecd_cli",
+      "krx",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);

@@ -40,6 +40,7 @@ const MEMBER_IDS = Object.freeze([
   "nasdaq_giw_sox",
   "us_indices_daily",
   "oecd_cli",
+  "krx",
   "daily",
   "weekly",
   "monthly",
@@ -276,8 +277,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 21,
-  producer_member_count: 25,
+  logical_lane_count: 22,
+  producer_member_count: 26,
   lanes: [
     lane({
       id: "fred_macro",
@@ -581,6 +582,34 @@ const config = {
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 70 }),
       affectedSurfaceIds: ["activity_surveys"],
       visibility: "admin_only",
+    }),
+    lane({
+      id: "krx",
+      label: "KRX Open API daily shadow",
+      members: [member("krx", ".github/workflows/fenok-edge-krx-daily.yml", ["30 10 * * 1-5"], [
+        artifact("krx_daily_bridge", "data/admin/fenok-edge-korea-krx-daily-index.json", {
+          schemaVersion: schemaVersion("/schema_version", "fenok-edge-korea-krx-bridge/v1"),
+          sourceSelector: pointerSource("/as_of", "date"),
+          assertions: [
+            exactAssertion("source_krx_open_api", "/source", "KRX_OPEN_API"),
+            exactAssertion("raw_public_false", "/raw_public", false),
+            typeAssertion("latest_run_object", "/latest_run", "object"),
+            typeAssertion("derived_rim_inputs_object", "/derived_rim_inputs", "object"),
+          ],
+        }),
+      ], "utc")],
+      endpointContract: endpointAssertion(
+        "krx_private_fetcher",
+        objectFieldsAssertion("krx_bridge_contract", "", {
+          schema_version: "string",
+          source: "string",
+          as_of: "string",
+          latest_run: "object",
+        }),
+        "library",
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 4 }),
+      affectedSurfaceIds: ["rim_index_inputs"],
     }),
     lane({
       id: "slickcharts",
@@ -1146,8 +1175,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 21 || configValue.producer_member_count !== 25) fail("denominator must be 21/25");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 21) fail("lanes must contain exactly 21 rows");
+  if (configValue.logical_lane_count !== 22 || configValue.producer_member_count !== 26) fail("denominator must be 22/26");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 22) fail("lanes must contain exactly 22 rows");
   const uncoveredLive = LIVE_LANE_IDS.filter((id) => !LANE_IDS.includes(id));
   if (uncoveredLive.length > 0) fail(`live registry lanes must have detection rows: ${uncoveredLive.join(", ")}`);
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
@@ -1163,7 +1192,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 25 || new Set(memberIds).size !== 25 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 26 || new Set(memberIds).size !== 26 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);

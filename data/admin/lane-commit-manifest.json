@@ -1,5 +1,5 @@
 {
-  "registry_digest": "4dc83535ca109482344720bcd0bbcea97a483c20cfdf537fd13ef360df1066c5",
+  "registry_digest": "4fd237c0a55367669941316a3e9676ab5c697bbe12612d7a0376ac08637af5cb",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -432,9 +432,19 @@
     },
     ".github/workflows/fenok-edge-krx-daily.yml": {
       "exclude": [],
-      "lanes": [],
+      "lanes": [
+        "krx"
+      ],
       "stages": {
         "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/krx.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
           {
             "kind": "file",
             "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
@@ -451,8 +461,6 @@
             "required": true
           }
         ],
-        "required_on_success": [],
-        "success_if_exists": [],
         "success_verify_not_plan_if_exists": []
       }
     },

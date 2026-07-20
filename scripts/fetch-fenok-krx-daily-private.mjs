@@ -107,7 +107,7 @@ function usage() {
     "  --days N                         Weekday count. Default: 1.",
     "  --run-id ID                      Run id. Default: krx_daily_<end-date>.",
     "  --output-root PATH               Private output root. Default: _private/admin/fenok-edge-korea/daily/<run-id>.",
-    "  --bridge-index PATH              Tracked bridge index path. Default: data/admin/fenok-edge-korea-krx-daily-index.json.",
+    "  --bridge-index PATH              Tracked bridge index path. Default: data/admin/fenok-edge-korea-krx-daily-index.json",
     "  --public-index-closes PATH       Public-safe aggregate index closes path. Default: data/computed/fenok-edge-korea-krx-index-daily.json.",
     "  --public-kosdaq-market-cap PATH  Public-safe KOSDAQ top-10 market-cap aggregate path.",
     "  --concurrency N                  Bounded request concurrency. Default: 2.",

@@ -309,6 +309,22 @@
         },
         "records": [{ "date": "2026-06-01", "values": { "korea": 102.8698 } }]
       }
+    },
+    {
+      "id": "krx_daily_bridge",
+      "encoding": "json",
+      "content": {
+        "schema_version": "fenok-edge-korea-krx-bridge/v1",
+        "generated_at": "2026-07-11T00:00:00Z",
+        "source": "KRX_OPEN_API",
+        "as_of": "2026-07-10",
+        "raw_public": false,
+        "latest_run": {
+          "attempted_call_count": 31,
+          "summary": { "total_files": 31, "success_files": 31, "empty_files": 0, "failed_files": 0 }
+        },
+        "derived_rim_inputs": {}
+      }
     }
   ],
   "layouts": [
@@ -394,6 +410,11 @@
           "path": "data/admin/oecd_cli/shadow/oecd-cli.json",
           "node_type": "regular",
           "document_id": "oecd_cli_shadow"
+        },
+        {
+          "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+          "node_type": "regular",
+          "document_id": "krx_daily_bridge"
         },
         {
           "path": "data/slickcharts/gainers.json",

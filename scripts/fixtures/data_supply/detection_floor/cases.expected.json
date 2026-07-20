@@ -19,6 +19,7 @@
       "nasdaq_giw_sox",
       "us_indices_daily",
       "oecd_cli",
+      "krx",
       "slickcharts",
       "edgar_filings",
       "sec_13f",
@@ -42,6 +43,7 @@
       "nasdaq_giw_sox",
       "us_indices_daily",
       "oecd_cli",
+      "krx",
       "daily",
       "weekly",
       "monthly",
@@ -56,9 +58,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "758859adfb759fa14c78a66dbbf2afeafeb98c712ee7e85e566da6c716374e02",
-  "logical_lane_count": 21,
-  "producer_member_count": 25,
+  "config_digest": "5d1be486a918da1e6619f0ea2707cdda82bea8ac6ce295f336fb1f1fa35bd89f",
+  "logical_lane_count": 22,
+  "producer_member_count": 26,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -86,17 +88,17 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "f4fadef8daf2f1685aae3bf2e13c6355d3bbc7753f3eea1af31c5ae2881b164d",
+    "report_file_sha256": "02a4d4691d92f4064663ba08845fe6664d8feb79e60f2ad499b5edf6e64a47eb",
     "expected_report": {
-      "config_digest": "758859adfb759fa14c78a66dbbf2afeafeb98c712ee7e85e566da6c716374e02",
+      "config_digest": "5d1be486a918da1e6619f0ea2707cdda82bea8ac6ce295f336fb1f1fa35bd89f",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 22,
+        "producer_members_ready": 23,
         "producer_members_stale": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3,
-        "ready": 18,
+        "ready": 19,
         "stale": 0,
         "unavailable": 0,
         "unobserved": 3
@@ -419,6 +421,30 @@
         },
         {
           "affected_surface_ids": [
+            "rim_index_inputs"
+          ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "krx",
+          "kpi_required": false,
+          "label": "KRX Open API daily shadow",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
             "slickcharts_discovery",
             "stock_signals"
           ],
@@ -698,13 +724,13 @@
           "status": "unobserved"
         }
       ],
-      "logical_lane_count": 21,
+      "logical_lane_count": 22,
       "monitoring_mode_counts": {
         "artifact_only": 1,
         "composite": 1,
-        "post_fetch_artifact": 19
+        "post_fetch_artifact": 20
       },
-      "producer_member_count": 25,
+      "producer_member_count": 26,
       "schema_version": "data-supply-detection-floor/v1"
     }
   },
@@ -831,5 +857,5 @@
       "expected_logical_status": "unavailable"
     }
   ],
-  "registry_digest": "4dc83535ca109482344720bcd0bbcea97a483c20cfdf537fd13ef360df1066c5"
+  "registry_digest": "4fd237c0a55367669941316a3e9676ab5c697bbe12612d7a0376ac08637af5cb"
 }

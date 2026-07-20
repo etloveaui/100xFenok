@@ -414,6 +414,33 @@ const lanes = [
     script_sources: ["scripts/fetch-oecd-cli.mjs"],
   }),
   record({
+    id: "krx",
+    label: "KRX Open API daily",
+    owner_workflow: ".github/workflows/fenok-edge-krx-daily.yml",
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "daily", provider: "KRX Open API (Korea trading days)" },
+    enforcement: "shadow",
+    privacy_class: "public_safe_aggregate",
+    admin_store: "data/admin/fenok-edge-korea-krx",
+    detection_attempt: attemptShard("krx"),
+    canonical_outputs: [
+      "data/admin/fenok-edge-korea-krx-daily-index.json",
+      "data/computed/fenok-edge-korea-krx-index-daily.json",
+      "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+    ],
+    public_mirror: ["100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json"],
+    commit_shards: [
+      attemptShard("krx"),
+      "data/admin/fenok-edge-korea-krx-daily-index.json",
+      "data/computed/fenok-edge-korea-krx-index-daily.json",
+      "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+    ],
+    recovery_store: null,
+    declared_exception: "emitter-first shadow lane; promote only after a natural workflow run commits valid attempt evidence",
+    script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs", "scripts/emit-fenok-krx-attempt.mjs"],
+  }),
+  record({
     id: "slickcharts",
     label: "SlickCharts daily delivery (composite lane)",
     owner_workflow: ".github/workflows/slickcharts-daily.yml",
@@ -851,11 +878,6 @@ const declared_exceptions = [
 // with no owning lane is legal ONLY via a static declaration here — the gate
 // fails closed on any other lane-less workflow instead of silently passing.
 const workflow_classes = {
-  ".github/workflows/fenok-edge-krx-daily.yml": {
-    class: "platform_no_lane",
-    reason: "KRX stays owner-gated (permission-walled, not code-walled); the workflow commits only the declared-exception public-safe bridge index",
-    owner: "platform",
-  },
   ".github/workflows/update-manifest.yml": {
     class: "platform_central_reconciler",
     reason: "central manifest reconciler (not a lane producer); commits only registry-declared lane artifacts and platform control-plane files",
@@ -1076,8 +1098,11 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
-workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy([], {
+workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"], {
   always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),
+  ],
+  success_if_exists: [
     commitSpec("data/admin/fenok-edge-korea-krx-daily-index.json", "file", true),
     // Slice 1 public-safe aggregate index closes (owner grant 2026-07-19).
     commitSpec("data/computed/fenok-edge-korea-krx-index-daily.json", "file", true),

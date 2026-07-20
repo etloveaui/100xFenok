@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-20T14:20:11.018Z",
+  "generated_at": "2026-07-20T14:20:11.536Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 26,
+  "lane_count": 27,
   "lanes": [
     {
       "id": "fred_macro",
@@ -160,6 +160,18 @@
       "enforcement": "shadow",
       "privacy_class": "private",
       "owner_workflow": "fetch-oecd-cli.yml"
+    },
+    {
+      "id": "krx",
+      "label": "KRX Open API daily",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "KRX Open API (Korea trading days)"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_safe_aggregate",
+      "owner_workflow": "fenok-edge-krx-daily.yml"
     },
     {
       "id": "slickcharts",

@@ -117,6 +117,7 @@ jobs:
           echo "FENOK_KRX_ALLOW_EMPTY_DAILY=${INPUT_ALLOW_EMPTY_DAILY:-false}" >> "$GITHUB_ENV"
 
       - name: Refresh KRX private daily source
+        id: krx_fetch
         env:
           KRX_OPEN_API_AUTH_KEY: ${{ secrets.KRX_OPEN_API_AUTH_KEY }}
         shell: bash
@@ -151,8 +152,22 @@ jobs:
           echo "KRX fetch failed for ${BASE_END} and ${WALKBACK_DAYS} walkback day(s)"
           exit 1
 
+      - name: Emit KRX detection attempt
+        if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
+        env:
+          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outcome }}
+        run: |
+          node scripts/emit-fenok-krx-attempt.mjs \
+            --outcome "$KRX_FETCH_OUTCOME" \
+            --bridge-index data/admin/fenok-edge-korea-krx-daily-index.json \
+            --attempt-shard data/admin/data-supply-state/detection-attempts/krx.json \
+            --attempt-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --observed-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+
       - name: Commit and push KRX source evidence
-        if: ${{ env.FENOK_KRX_PLAN_ONLY != 'true' }}
+        if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
+        env:
+          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outcome }}
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -164,9 +179,14 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fenok-edge-krx-daily.yml \
             --stage always_if_exists
-          git add -- data/admin/fenok-edge-korea-krx-daily-index.json
-          git add -- data/computed/fenok-edge-korea-krx-index-daily.json
-          git add -- data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json
+          if [ "$KRX_FETCH_OUTCOME" = "success" ]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fenok-edge-krx-daily.yml \
+              --stage success_if_exists
+            git add -- data/admin/fenok-edge-korea-krx-daily-index.json
+            git add -- data/computed/fenok-edge-korea-krx-index-daily.json
+            git add -- data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json
+          fi
           git diff --staged --quiet || git commit -m "chore: update fenok edge krx daily data"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
