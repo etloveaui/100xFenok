@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "LTTI",
   "asset_type": "etf",
-  "generated_at": "2026-07-14T04:12:01Z",
+  "generated_at": "2026-07-20T12:04:41Z",
   "source_as_of": "2026-06-29",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -201,6 +201,31 @@
       ],
       "candidate_count": 1
     },
+    "return_1m": {
+      "value": -1.5411274735290614,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-20T00:15:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": -1.5411274735290614,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_3m": {
       "value": 2.9370813923939854,
       "source": "stockanalysis.detail.history",
@@ -219,6 +244,82 @@
           "as_of": "2026-06-29",
           "fetched_at": "2026-06-30T00:02:43Z",
           "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -1.504858113604344,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-20T00:15:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -1.504858113604344,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 3.332,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-20T00:15:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 3.332,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_max_avg": {
+      "value": 0.6235,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-07-20T00:15:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 0.6235,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -255,14 +356,14 @@
     "yf": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/LTTI.json",
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

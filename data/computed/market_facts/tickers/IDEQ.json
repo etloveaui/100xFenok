@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "IDEQ",
   "asset_type": "etf",
-  "generated_at": "2026-07-19T08:59:09Z",
+  "generated_at": "2026-07-20T12:04:41Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -222,9 +222,17 @@
           "fetched_at": "2026-07-18T20:49:58Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": -4.084817821012616,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 0.591630286816715,
@@ -279,9 +287,17 @@
           "fetched_at": "2026-07-18T20:49:58Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 12.823,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": 30.1927913658147,
@@ -315,6 +331,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 30.149,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 27.085674,
           "source": "yf",
           "as_of": "2026-07-17",
@@ -323,7 +347,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_max_avg": {
       "value": 31.909,
@@ -345,9 +369,17 @@
           "fetched_at": "2026-07-18T20:49:58Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 31.909,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -373,14 +405,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/IDEQ.json",
     "stockanalysis": "stockanalysis/etfs/IDEQ.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

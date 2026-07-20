@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-19T10:57:41.385Z",
+  "generated_at": "2026-07-20T12:06:42.780Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
   "lane_count": 20,
@@ -211,27 +211,27 @@
     },
     {
       "id": "apewisdom_attention",
-      "label": "ApeWisdom attention (ownerless artifact lane)",
-      "store_kind": "artifact_only",
+      "label": "ApeWisdom attention proxy",
+      "store_kind": "marker",
       "cadence": {
-        "kind": "unknown",
+        "kind": "daily",
         "provider": "apewisdom"
       },
       "enforcement": "shadow",
-      "privacy_class": "public_mirror",
-      "owner_workflow": null
+      "privacy_class": "private",
+      "owner_workflow": "fetch-fenok-apewisdom.yml"
     },
     {
       "id": "gdelt_news_tone",
-      "label": "GDELT news tone (ownerless artifact lane)",
-      "store_kind": "artifact_only",
+      "label": "GDELT news tone proxy",
+      "store_kind": "marker",
       "cadence": {
-        "kind": "unknown",
+        "kind": "daily",
         "provider": "gdelt"
       },
       "enforcement": "shadow",
-      "privacy_class": "public_mirror",
-      "owner_workflow": null
+      "privacy_class": "private",
+      "owner_workflow": "fetch-fenok-news-tone.yml"
     },
     {
       "id": "yahoo_batch_quote_history",

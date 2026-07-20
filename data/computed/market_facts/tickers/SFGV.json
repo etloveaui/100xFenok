@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SFGV",
   "asset_type": "etf",
-  "generated_at": "2026-07-18T23:02:23Z",
+  "generated_at": "2026-07-20T12:04:41Z",
   "source_as_of": "2026-07-17",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -244,9 +244,17 @@
           "fetched_at": "2026-07-18T22:49:58Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": -0.016336110472123497,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 4.227194693367609,
@@ -301,9 +309,17 @@
           "fetched_at": "2026-07-18T22:49:58Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 13.028,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": 23.149674221276246,
@@ -337,6 +353,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 23.32,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 20.743454,
           "source": "yf",
           "as_of": "2026-07-17",
@@ -345,7 +369,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_max_avg": {
       "value": 17.385,
@@ -367,9 +391,17 @@
           "fetched_at": "2026-07-18T22:49:58Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 17.385,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-07-20T00:15:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -395,14 +427,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/SFGV.json",
     "stockanalysis": "stockanalysis/etfs/SFGV.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
