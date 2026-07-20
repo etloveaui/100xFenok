@@ -1,0 +1,81 @@
+name: Fetch US Index Daily Close Shadow
+
+on:
+  schedule:
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  fetch-us-indices-daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+
+      - name: Test US indices shadow producer
+        run: node scripts/test-fetch-us-indices-daily.mjs
+
+      - name: Fetch Yahoo index closes and compare with GAS
+        id: fetch_indices
+        run: node scripts/fetch-us-indices-daily.mjs
+
+      - name: Preserve parity report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: us-indices-shadow-parity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/admin/us-indices-daily/parity-report.json
+          if-no-files-found: ignore
+          retention-days: 21
+
+      - name: Commit shadow evidence
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_indices.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          RECOVERY_EXIT=0
+          if [[ "$FETCH_OUTCOME" != "success" ]]; then
+            RECOVERY_EXIT=2
+          fi
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-us-indices-daily.yml \
+            --stage always_if_exists
+          if git diff --staged --quiet; then
+            echo "No US indices shadow evidence to publish"
+            exit "$RECOVERY_EXIT"
+          fi
+          git commit -m "data: refresh US indices shadow parity"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit "$RECOVERY_EXIT"
+            fi
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

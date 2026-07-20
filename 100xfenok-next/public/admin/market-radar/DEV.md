@@ -97,6 +97,8 @@ admin/market-radar/
 ## Data Sources
 
 ### Indices
+
+> `fetch-us-indices-daily.yml` is an admin-only Yahoo shadow-parity successor. GAS remains the canonical writer until the 10-trading-day acceptance window and a separate live flip.
 | 파일 | 레코드 | 기간 | 소스 |
 |------|--------|------|------|
 | `data/indices/sp500.json` | 11,594+ | 1980-01-02 ~ | GOOGLEFINANCE |

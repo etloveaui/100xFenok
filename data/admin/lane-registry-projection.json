@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-20T14:20:10.183Z",
+  "generated_at": "2026-07-20T14:20:10.589Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 24,
+  "lane_count": 25,
   "lanes": [
     {
       "id": "fred_macro",
@@ -136,6 +136,18 @@
       "enforcement": "live",
       "privacy_class": "private",
       "owner_workflow": "fetch-nasdaq-giw-sox.yml"
+    },
+    {
+      "id": "us_indices_daily",
+      "label": "US index daily close (S&P 500 / NASDAQ)",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "yahoo chart v8 (^GSPC/^IXIC, us_trading_days)"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-us-indices-daily.yml"
     },
     {
       "id": "slickcharts",

@@ -17,6 +17,7 @@
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
+      "us_indices_daily",
       "slickcharts",
       "edgar_filings",
       "sec_13f",
@@ -38,6 +39,7 @@
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
+      "us_indices_daily",
       "daily",
       "weekly",
       "monthly",
@@ -52,9 +54,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "6b93ba2ce9d0b87be2ac91d3664347f4919381200da0fa5d77289e3a60f98df9",
-  "logical_lane_count": 19,
-  "producer_member_count": 23,
+  "config_digest": "d7190a57453e1945f09e0784d355ccfc91e96abfeec3bfe1f0d306a47f2daca4",
+  "logical_lane_count": 20,
+  "producer_member_count": 24,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -82,577 +84,602 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "dc6b049f2333f9f3ff6f0cccb711fe95bf9788951860c44af15202616a07168c",
+    "report_file_sha256": "34e279353159d1459af08455f64149e4cc0fb619ad4053748228cf3c9201b775",
     "expected_report": {
-      "schema_version": "data-supply-detection-floor/v1",
-      "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "6b93ba2ce9d0b87be2ac91d3664347f4919381200da0fa5d77289e3a60f98df9",
-      "logical_lane_count": 19,
-      "producer_member_count": 23,
+      "config_digest": "d7190a57453e1945f09e0784d355ccfc91e96abfeec3bfe1f0d306a47f2daca4",
       "counts": {
-        "ready": 16,
-        "stale": 0,
         "drift": 0,
-        "unavailable": 0,
-        "unobserved": 3,
-        "producer_members_ready": 20,
-        "producer_members_stale": 0,
         "producer_members_drift": 0,
+        "producer_members_ready": 21,
+        "producer_members_stale": 0,
         "producer_members_unavailable": 0,
-        "producer_members_unobserved": 3
+        "producer_members_unobserved": 3,
+        "ready": 17,
+        "stale": 0,
+        "unavailable": 0,
+        "unobserved": 3
       },
-      "monitoring_mode_counts": {
-        "post_fetch_artifact": 17,
-        "artifact_only": 1,
-        "composite": 1
-      },
+      "generated_at": "2026-07-11T00:00:00Z",
       "lanes": [
         {
-          "id": "fred_macro",
-          "label": "FRED macro series",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 24,
-            "unit": "hours"
-          },
           "affected_surface_ids": [
             "macro_fred"
-          ]
+          ],
+          "artifact": {
+            "age": 24,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "hours"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "fred_macro",
+          "kpi_required": true,
+          "label": "FRED macro series",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
         },
         {
-          "id": "fred_banking",
-          "label": "FRED banking series",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-03-31",
-            "age": 102,
-            "unit": "calendar_days"
-          },
           "affected_surface_ids": [
             "banking_liquidity",
             "rim_index_inputs"
-          ]
-        },
-        {
-          "id": "fred_yardeni",
-          "label": "FRED Yardeni model",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-03",
-            "age": 8,
-            "unit": "calendar_days"
-          },
-          "affected_surface_ids": [
-            "yardeni_model"
-          ]
-        },
-        {
-          "id": "fdic_tier1",
-          "label": "FDIC Tier 1 capital",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
+            "age": 102,
             "reason": "ok",
             "source_as_of": "2026-03-31",
-            "age": null,
-            "unit": "due_window"
+            "status": "ready",
+            "unit": "calendar_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "fred_banking",
+          "kpi_required": true,
+          "label": "FRED banking series",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "yardeni_model"
+          ],
+          "artifact": {
+            "age": 8,
+            "reason": "ok",
+            "source_as_of": "2026-07-03",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "fred_yardeni",
+          "kpi_required": true,
+          "label": "FRED Yardeni model",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "banking_tier1"
-          ]
+          ],
+          "artifact": {
+            "age": null,
+            "reason": "ok",
+            "source_as_of": "2026-03-31",
+            "status": "ready",
+            "unit": "due_window"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "fdic_tier1",
+          "kpi_required": true,
+          "label": "FDIC Tier 1 capital",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
         },
         {
-          "id": "treasury_tga",
-          "label": "US Treasury TGA",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 0,
-            "unit": "business_days"
-          },
           "affected_surface_ids": [
             "macro_tga"
-          ]
-        },
-        {
-          "id": "defillama_stablecoins",
-          "label": "DefiLlama stablecoins",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": 0,
             "reason": "ok",
             "source_as_of": "2026-07-10",
-            "age": 1,
-            "unit": "calendar_days"
+            "status": "ready",
+            "unit": "business_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "treasury_tga",
+          "kpi_required": true,
+          "label": "US Treasury TGA",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "macro_stablecoins"
-          ]
-        },
-        {
-          "id": "yahoo_etf_fallback",
-          "label": "Yahoo ETF fallback",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": 1,
             "reason": "ok",
-            "source_as_of": null,
-            "age": null,
+            "source_as_of": "2026-07-10",
+            "status": "ready",
             "unit": "calendar_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "defillama_stablecoins",
+          "kpi_required": true,
+          "label": "DefiLlama stablecoins",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "stockanalysis_etf_detail_coverage"
-          ]
-        },
-        {
-          "id": "stockanalysis_etf_universe",
-          "label": "StockAnalysis ETF universe",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": null,
             "reason": "ok",
             "source_as_of": null,
-            "age": null,
+            "status": "ready",
             "unit": "calendar_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "yahoo_etf_fallback",
+          "kpi_required": true,
+          "label": "Yahoo ETF fallback",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "stockanalysis_etf_universe"
-          ]
-        },
-        {
-          "id": "yahoo_ticker_macro",
-          "label": "Yahoo macro tickers",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": null,
             "reason": "ok",
-            "source_as_of": "2026-07-10T22:00:00Z",
-            "age": 2,
-            "unit": "hours"
-          },
-          "affected_surface_ids": [
-            "macro_tickers"
-          ]
-        },
-        {
-          "id": "sentiment",
-          "label": "Market sentiment",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
+            "source_as_of": null,
             "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 0,
-            "unit": "business_days"
-          },
-          "affected_surface_ids": [
-            "sentiment_dashboard"
-          ]
-        },
-        {
-          "id": "nasdaq_giw_sox",
-          "label": "Nasdaq GIW SOX constituents",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 0,
-            "unit": "business_days"
-          },
-          "affected_surface_ids": [
-            "rim_index_inputs"
-          ]
-        },
-        {
-          "id": "slickcharts",
-          "label": "SlickCharts composite",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "composite",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 1,
             "unit": "calendar_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "stockanalysis_etf_universe",
+          "kpi_required": true,
+          "label": "StockAnalysis ETF universe",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "macro_tickers"
+          ],
+          "artifact": {
+            "age": 2,
+            "reason": "ok",
+            "source_as_of": "2026-07-10T22:00:00Z",
+            "status": "ready",
+            "unit": "hours"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "yahoo_ticker_macro",
+          "kpi_required": true,
+          "label": "Yahoo macro tickers",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "sentiment_dashboard"
+          ],
+          "artifact": {
+            "age": 0,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "business_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "sentiment",
+          "kpi_required": true,
+          "label": "Market sentiment",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "rim_index_inputs"
+          ],
+          "artifact": {
+            "age": 0,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "business_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "nasdaq_giw_sox",
+          "kpi_required": true,
+          "label": "Nasdaq GIW SOX constituents",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "rim_index_inputs",
+            "macro_index_charts"
+          ],
+          "artifact": {
+            "age": 0,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "business_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "us_indices_daily",
+          "kpi_required": false,
+          "label": "US index daily close shadow",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "slickcharts_discovery",
             "stock_signals"
           ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "slickcharts",
+          "kpi_required": true,
+          "label": "SlickCharts composite",
           "members": [
             {
+              "artifact": {
+                "age": 1,
+                "reason": "ok",
+                "source_as_of": "2026-07-10",
+                "status": "ready",
+                "unit": "calendar_days"
+              },
+              "endpoint": {
+                "observed_at": "2026-07-11T00:00:00Z",
+                "reason": "ok",
+                "status": "ready"
+              },
               "id": "daily",
-              "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
-              "artifact": {
-                "status": "ready",
-                "reason": "ok",
-                "source_as_of": "2026-07-10",
-                "age": 1,
-                "unit": "calendar_days"
-              }
+              "status": "ready"
             },
             {
+              "artifact": {
+                "age": null,
+                "reason": "ok",
+                "source_as_of": null,
+                "status": "ready",
+                "unit": "calendar_days"
+              },
+              "endpoint": {
+                "observed_at": "2026-07-11T00:00:00Z",
+                "reason": "ok",
+                "status": "ready"
+              },
               "id": "weekly",
-              "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
-              "artifact": {
-                "status": "ready",
-                "reason": "ok",
-                "source_as_of": null,
-                "age": null,
-                "unit": "calendar_days"
-              }
+              "status": "ready"
             },
             {
+              "artifact": {
+                "age": null,
+                "reason": "ok",
+                "source_as_of": null,
+                "status": "ready",
+                "unit": "calendar_days"
+              },
+              "endpoint": {
+                "observed_at": "2026-07-11T00:00:00Z",
+                "reason": "ok",
+                "status": "ready"
+              },
               "id": "monthly",
-              "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
-              "artifact": {
-                "status": "ready",
-                "reason": "ok",
-                "source_as_of": null,
-                "age": null,
-                "unit": "calendar_days"
-              }
+              "status": "ready"
             },
             {
+              "artifact": {
+                "age": null,
+                "reason": "ok",
+                "source_as_of": null,
+                "status": "ready",
+                "unit": "calendar_days"
+              },
+              "endpoint": {
+                "observed_at": "2026-07-11T00:00:00Z",
+                "reason": "ok",
+                "status": "ready"
+              },
               "id": "history",
-              "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
-              "artifact": {
-                "status": "ready",
-                "reason": "ok",
-                "source_as_of": null,
-                "age": null,
-                "unit": "calendar_days"
-              }
+              "status": "ready"
             },
             {
-              "id": "symbols",
-              "status": "ready",
-              "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
-                "status": "ready",
+                "age": 1,
                 "reason": "ok",
                 "source_as_of": "2026-07-10",
-                "age": 1,
+                "status": "ready",
                 "unit": "calendar_days"
-              }
+              },
+              "endpoint": {
+                "observed_at": "2026-07-11T00:00:00Z",
+                "reason": "ok",
+                "status": "ready"
+              },
+              "id": "symbols",
+              "reason": "ok",
+              "status": "ready"
             }
-          ]
+          ],
+          "monitoring_mode": "composite",
+          "reason": "ok",
+          "status": "ready"
         },
         {
-          "id": "edgar_filings",
-          "label": "SEC EDGAR filings",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": null,
-            "unit": "due_window"
-          },
           "affected_surface_ids": [
             "edgar_timeline"
-          ]
-        },
-        {
-          "id": "sec_13f",
-          "label": "SEC 13F derivatives",
-          "enforcement": "shadow",
-          "kpi_required": false,
-          "monitoring_mode": "artifact_only",
-          "status": "unobserved",
-          "reason": "workflow_unobserved",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
+          ],
           "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-06-30",
             "age": null,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
             "unit": "due_window"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "edgar_filings",
+          "kpi_required": true,
+          "label": "SEC EDGAR filings",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "sec_13f_analytics"
-          ]
+          ],
+          "artifact": {
+            "age": null,
+            "reason": "ok",
+            "source_as_of": "2026-06-30",
+            "status": "ready",
+            "unit": "due_window"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "workflow_unobserved",
+            "status": "unobserved"
+          },
+          "enforcement": "shadow",
+          "id": "sec_13f",
+          "kpi_required": false,
+          "label": "SEC 13F derivatives",
+          "monitoring_mode": "artifact_only",
+          "reason": "workflow_unobserved",
+          "status": "unobserved"
         },
         {
-          "id": "finra_short_volume",
-          "label": "FINRA short volume",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 0,
-            "unit": "business_days"
-          },
           "affected_surface_ids": [
             "fenok_flow_proxies"
-          ]
-        },
-        {
-          "id": "occ_options_volume",
-          "label": "OCC options volume",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": 0,
             "reason": "ok",
             "source_as_of": "2026-07-10",
-            "age": 0,
+            "status": "ready",
             "unit": "business_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "finra_short_volume",
+          "kpi_required": true,
+          "label": "FINRA short volume",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "fenok_occ_options"
-          ]
-        },
-        {
-          "id": "yahoo_private_options",
-          "label": "Yahoo private options availability",
-          "enforcement": "shadow",
-          "kpi_required": false,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "ready",
-          "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": 0,
             "reason": "ok",
-            "source_as_of": "2026-07-10T01:10:00Z",
-            "age": 1,
+            "source_as_of": "2026-07-10",
+            "status": "ready",
             "unit": "business_days"
           },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "live",
+          "id": "occ_options_volume",
+          "kpi_required": true,
+          "label": "OCC options volume",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
           "affected_surface_ids": [
             "yahoo_private_options_availability"
-          ]
+          ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10T01:10:00Z",
+            "status": "ready",
+            "unit": "business_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "yahoo_private_options",
+          "kpi_required": false,
+          "label": "Yahoo private options availability",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
         },
         {
-          "id": "apewisdom_attention",
-          "label": "ApeWisdom attention",
-          "enforcement": "live",
-          "kpi_required": true,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "unobserved",
-          "reason": "workflow_unobserved",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
-          "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-10",
-            "age": 1,
-            "unit": "calendar_days"
-          },
           "affected_surface_ids": [
             "fenok_social_attention"
-          ]
-        },
-        {
-          "id": "gdelt_news_tone",
-          "label": "GDELT news tone",
-          "enforcement": "shadow",
-          "kpi_required": false,
-          "monitoring_mode": "post_fetch_artifact",
-          "status": "unobserved",
-          "reason": "workflow_unobserved",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
+          ],
           "artifact": {
-            "status": "ready",
+            "age": 1,
             "reason": "ok",
             "source_as_of": "2026-07-10",
-            "age": 1,
+            "status": "ready",
             "unit": "calendar_days"
           },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "workflow_unobserved",
+            "status": "unobserved"
+          },
+          "enforcement": "live",
+          "id": "apewisdom_attention",
+          "kpi_required": true,
+          "label": "ApeWisdom attention",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "workflow_unobserved",
+          "status": "unobserved"
+        },
+        {
           "affected_surface_ids": [
             "fenok_news_tone"
-          ]
+          ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "workflow_unobserved",
+            "status": "unobserved"
+          },
+          "enforcement": "shadow",
+          "id": "gdelt_news_tone",
+          "kpi_required": false,
+          "label": "GDELT news tone",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "workflow_unobserved",
+          "status": "unobserved"
         }
-      ]
+      ],
+      "logical_lane_count": 20,
+      "monitoring_mode_counts": {
+        "artifact_only": 1,
+        "composite": 1,
+        "post_fetch_artifact": 18
+      },
+      "producer_member_count": 24,
+      "schema_version": "data-supply-detection-floor/v1"
     }
   },
   "reason_cases": [
@@ -778,5 +805,5 @@
       "expected_logical_status": "unavailable"
     }
   ],
-  "registry_digest": "68921b8d23db8d0a6abc6f8baf40eda9b7f49f5496a6e3bca4de5916dcb1dd2f"
+  "registry_digest": "50d8446ae6d83bacf68095ed36dab68ee43dc0974489c32a4fedc3b1b787136c"
 }

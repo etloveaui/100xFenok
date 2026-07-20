@@ -1,5 +1,5 @@
 {
-  "registry_digest": "68921b8d23db8d0a6abc6f8baf40eda9b7f49f5496a6e3bca4de5916dcb1dd2f",
+  "registry_digest": "50d8446ae6d83bacf68095ed36dab68ee43dc0974489c32a4fedc3b1b787136c",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1099,6 +1099,29 @@
             "required": false
           }
         ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-us-indices-daily.yml": {
+      "exclude": [],
+      "lanes": [
+        "us_indices_daily"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/us_indices_daily.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/us-indices-daily",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
         "success_verify_not_plan_if_exists": []
       }
     },

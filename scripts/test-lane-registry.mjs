@@ -152,7 +152,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 19, auxiliary: 5 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 20, auxiliary: 5 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
     assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",
@@ -193,6 +193,13 @@ function clone(value) {
       );
       assert.ok(lane.declared_exception?.length > 0, `${id} must explain its observability exception`);
     }
+    const indices = registryLaneById("us_indices_daily");
+    assert.equal(indices.enforcement, "shadow", "US indices stays shadow until the parity acceptance window passes");
+    assert.deepEqual(indices.roots.canonical_outputs, [
+      "data/admin/us-indices-daily/shadow/sp500.json",
+      "data/admin/us-indices-daily/shadow/nasdaq.json",
+    ], "shadow phase must not claim GAS-owned canonical index paths");
+    assert.deepEqual(indices.roots.public_mirror, [], "shadow phase must not write the stale public mirror");
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
@@ -285,6 +292,7 @@ function clone(value) {
       "apewisdom_attention",
       "gdelt_news_tone",
       "damodaran",
+      "us_indices_daily",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);

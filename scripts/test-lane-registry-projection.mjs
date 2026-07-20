@@ -4,7 +4,7 @@
  * - RED-first privacy proof: the raw registry serialized WOULD leak paths/roots;
  *   the projection must not. The same detector flags the raw and clears the
  *   projection, proving the privacy filter is load-bearing.
- * - Emitter unit: 24 lanes, exact allowed key set, owner_workflow basename only.
+ * - Emitter unit: 25 lanes, exact allowed key set, owner_workflow basename only.
  */
 
 import assert from "node:assert/strict";
@@ -42,8 +42,8 @@ assert.deepEqual(
 
 // --- Emitter unit: shape + counts ---
 assert.equal(projection.schema_version, PROJECTION_SCHEMA);
-assert.equal(projection.lanes.length, 24, "projection must carry all 24 registry lanes");
-assert.equal(projection.lane_count, 24);
+assert.equal(projection.lanes.length, 25, "projection must carry all 25 registry lanes");
+assert.equal(projection.lane_count, 25);
 
 const ALLOWED_KEYS = ["cadence", "enforcement", "id", "label", "owner_workflow", "privacy_class", "store_kind"];
 for (const lane of projection.lanes) {

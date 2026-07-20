@@ -38,6 +38,7 @@ const MEMBER_IDS = Object.freeze([
   "yahoo_ticker_macro",
   "sentiment",
   "nasdaq_giw_sox",
+  "us_indices_daily",
   "daily",
   "weekly",
   "monthly",
@@ -274,8 +275,8 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 19,
-  producer_member_count: 23,
+  logical_lane_count: 20,
+  producer_member_count: 24,
   lanes: [
     lane({
       id: "fred_macro",
@@ -546,6 +547,24 @@ const config = {
       ),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs"],
+    }),
+    lane({
+      id: "us_indices_daily",
+      label: "US index daily close shadow",
+      members: [member("us_indices_daily", ".github/workflows/fetch-us-indices-daily.yml", ["0 22 * * 1-5"], [
+        artifact("us_indices_daily_sp500_shadow", "data/admin/us-indices-daily/shadow/sp500.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("sp500_non_empty", "")],
+        }),
+        artifact("us_indices_daily_nasdaq_shadow", "data/admin/us-indices-daily/shadow/nasdaq.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("nasdaq_non_empty", "")],
+        }),
+      ], "us_trading")],
+      endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
+      affectedSurfaceIds: ["rim_index_inputs", "macro_index_charts"],
+      visibility: "admin_only",
     }),
     lane({
       id: "slickcharts",
@@ -1111,8 +1130,8 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 19 || configValue.producer_member_count !== 23) fail("denominator must be 19/23");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 19) fail("lanes must contain exactly 19 rows");
+  if (configValue.logical_lane_count !== 20 || configValue.producer_member_count !== 24) fail("denominator must be 20/24");
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 20) fail("lanes must contain exactly 20 rows");
   const uncoveredLive = LIVE_LANE_IDS.filter((id) => !LANE_IDS.includes(id));
   if (uncoveredLive.length > 0) fail(`live registry lanes must have detection rows: ${uncoveredLive.join(", ")}`);
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
@@ -1128,7 +1147,7 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 23 || new Set(memberIds).size !== 23 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
+  if (memberIds.length !== 24 || new Set(memberIds).size !== 24 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
     fail("producer member order or identity changed");
   }
   canonicalJson(configValue);

@@ -371,6 +371,31 @@ const lanes = [
     kpi_recovery_shape: "direct",
   }),
   record({
+    id: "us_indices_daily",
+    label: "US index daily close (S&P 500 / NASDAQ)",
+    owner_workflow: ".github/workflows/fetch-us-indices-daily.yml",
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "daily", provider: "yahoo chart v8 (^GSPC/^IXIC, us_trading_days)" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/us-indices-daily",
+    detection_attempt: attemptShard("us_indices_daily"),
+    canonical_outputs: [
+      "data/admin/us-indices-daily/shadow/sp500.json",
+      "data/admin/us-indices-daily/shadow/nasdaq.json",
+    ],
+    public_mirror: [],
+    commit_shards: [
+      attemptShard("us_indices_daily"),
+      "data/admin/us-indices-daily",
+    ],
+    recovery_store: "data/admin/us-indices-daily/index.json",
+    kpi_recovery_shape: "keyed_v2",
+    declared_exception: "shadow parity phase writes admin-only Yahoo close series; canonical/public index paths remain GAS-owned until the live flip",
+    script_sources: ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],
+  }),
+  record({
     id: "slickcharts",
     label: "SlickCharts daily delivery (composite lane)",
     owner_workflow: ".github/workflows/slickcharts-daily.yml",
@@ -984,6 +1009,12 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"
   success_if_exists: [
     commitSpec("data/sentiment/*.json", "glob"),
     commitSpec("100xfenok-next/public/data/sentiment/*.json", "glob"),
+  ],
+});
+workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_indices_daily"], {
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/us_indices_daily.json", "file"),
+    commitSpec("data/admin/us-indices-daily", "directory"),
   ],
 });
 workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_short_volume", "occ_options_volume"], {
