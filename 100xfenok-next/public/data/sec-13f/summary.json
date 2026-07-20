@@ -40,13 +40,13 @@
       "sector": 0.7404,
       "industry": 0.6783,
       "market_cap": 0.6798,
-      "price_at_filing": 0.5368,
-      "return_since_filing": 0.5368
+      "price_at_filing": 0.5371,
+      "return_since_filing": 0.5371
     },
     "enrichment_source_mix": {
       "fallback": 5161,
-      "unknown": 29437,
-      "yf-local": 82070
+      "unknown": 29407,
+      "yf-local": 82100
     },
     "mode": {
       "strict_official": false,
@@ -61,17 +61,19 @@
     "enrichment_denominator": "public_filtered_holdings",
     "enrichment_backfill": {
       "source": "local_yf_finance",
-      "status": "ready",
-      "warnings": [],
-      "generated_at": "2026-07-19T08:47:59.417Z",
-      "yf_finance_generated_at": "2026-07-19T07:52:35Z",
-      "yf_finance_files": 1436,
-      "yf_quarter_closes_generated_at": "2026-07-18T00:54:25Z",
+      "status": "degraded",
+      "warnings": [
+        "YF finance is partial: 1/1437 tickers failed (ECHO); those 13F fields remain LKG"
+      ],
+      "generated_at": "2026-07-20T09:31:38.696Z",
+      "yf_finance_generated_at": "2026-07-19T10:55:42Z",
+      "yf_finance_files": 1437,
+      "yf_quarter_closes_generated_at": "2026-07-19T23:08:12Z",
       "total_holdings": 116668,
-      "profile_hit_rows": 82455,
-      "profile_miss_rows": 34213,
-      "touched_rows": 79336,
-      "unique_profile_symbols": 680,
+      "profile_hit_rows": 82555,
+      "profile_miss_rows": 34113,
+      "touched_rows": 82100,
+      "unique_profile_symbols": 682,
       "sector_method": "Yahoo sector normalized to GICS where local profile is available; existing converter sector preserved",
       "price_method": "report_date quarter close to latest close from local data/yf/quarter_closes.json"
     }
