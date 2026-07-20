@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-20T20:35:18.311Z",
-  "classification_as_of": "2026-07-20T20:34:42.021Z",
+  "generated_at": "2026-07-20T20:51:05.512Z",
+  "classification_as_of": "2026-07-20T20:50:37.737Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -374,17 +374,27 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 88,
-      "shard_count": 1,
+      "ticker_count": 108,
+      "shard_count": 2,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 88,
+          "ticker_count": 100,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "100",
-            "etfs": "AAPR,AAPW,AAPX,ACVU,AETH,AIOO,AJAN,AJUL,AKAF,AMJB,AMZW,APOC,APPX,ARKB,ARLU,AUGU,BBB,BCCC,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,CPSY,CXRN,DECU,DHSB,DVQQ,DVSP,EALT,EBUF,EETH,ESUM,ETH,ETHA,ETHD,ETHT,ETHV,ETHW,EZBC,EZET,FBTC,FEAT,FEBU,FETH,FIVY,FLAO,FLJJ,YBTC,YETH,ZALT,ZAPR,ZDEK,ZJAN"
+            "etfs": "AAPR,AAPW,AAPX,ACVU,AETH,AIOO,AJAN,AJUL,AKAF,AMJB,AMZW,APOC,APPX,ARKB,ARLU,AUGU,BBB,BCCC,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,CPSY,CXRN,DECU,DHSB,DVQQ,DVSP,EALT,EBUF,EETH,ESUM,ETH,ETHA,ETHD,ETHT,ETHV,ETHW,EZBC,EZET,FBTC,FEAT,FEBU,FETH,FIVY,FLAO,FLJJ,GBTC,GEVX,GMMA,GOOX,GPT,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF"
+          }
+        },
+        {
+          "shard": 2,
+          "ticker_count": 8,
+          "inputs": {
+            "history_gaps_only": "true",
+            "required_history_periods": "daily_1y",
+            "incremental_etf_limit": "100",
+            "etfs": "IDEC,IFEB,YBTC,YETH,ZALT,ZAPR,ZDEK,ZJAN"
           }
         }
       ]
