@@ -19,7 +19,7 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const triggerPaths = manifest.update_manifest.trigger_paths;
 const workflow = fs.readFileSync(workflowPath, "utf8");
 
-assert.equal(triggerPaths.length, 46);
+assert.equal(triggerPaths.length, 47);
 const expectedBlock = [
   startMarker,
   ...triggerPaths.map((entry) => `      - '${entry.replaceAll("'", "''")}'`),
