@@ -384,7 +384,8 @@ jobs:
             data/admin/stockanalysis-recovery
           for SHARD in \
             data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json \
-            data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json
+            data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json \
+            data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json
           do
             if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
           done

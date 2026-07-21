@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-21T05:41:06.703Z",
+  "generated_at": "2026-07-21T06:34:17.384Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 27,
+  "lane_count": 28,
   "lanes": [
     {
       "id": "fred_macro",
@@ -98,6 +98,18 @@
         "provider": "stockanalysis (shared workflow)"
       },
       "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "stockanalysis_surfaces",
+      "label": "StockAnalysis public surfaces",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "stockanalysis (shared workflow surface schedules)"
+      },
+      "enforcement": "shadow",
       "privacy_class": "public_mirror",
       "owner_workflow": "fetch-stockanalysis.yml"
     },

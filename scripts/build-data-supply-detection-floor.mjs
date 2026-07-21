@@ -335,6 +335,10 @@ function assertArtifact(document, assertion) {
   if (assertion.kind === "enum") return value !== undefined && assertion.values.some((entry) => canonicalJson(entry) === canonicalJson(value));
   if (assertion.kind === "min_rows") return Array.isArray(value) && value.length >= assertion.min;
   if (assertion.kind === "min_keys") return isPlainObject(value) && Object.keys(value).length >= assertion.min;
+  if (assertion.kind === "object_fields") {
+    return isPlainObject(value) && Object.entries(assertion.fields)
+      .every(([field, expected]) => jsonType(value[field]) === expected);
+  }
   if (assertion.kind === "object_array_fields") {
     if (!Array.isArray(value) || value.length < assertion.min) return false;
     const unique = new Set();

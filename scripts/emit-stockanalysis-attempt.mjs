@@ -20,7 +20,7 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_SHARD_ROOT = path.join(REPO_ROOT, "data/admin/data-supply-state/detection-attempts");
-const SUPPORTED_LANES = new Set(["yahoo_etf_fallback", "stockanalysis_etf_universe"]);
+const SUPPORTED_LANES = new Set(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_surfaces"]);
 
 function laneConfig(laneId) {
   if (!SUPPORTED_LANES.has(laneId)) throw new Error(`unsupported StockAnalysis attempt lane: ${laneId}`);

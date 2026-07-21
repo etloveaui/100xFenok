@@ -1,5 +1,5 @@
 {
-  "registry_digest": "8ec1b4e736dd71011d726305cf4467d103fe161492a45e67c0ebabf266703a14",
+  "registry_digest": "71cf7c14f2e7ac8fad728a8d1b6e7cd724fffd5ee8a3b60fed96aa00c28acc62",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1056,7 +1056,8 @@
       ],
       "lanes": [
         "yahoo_etf_fallback",
-        "stockanalysis_etf_universe"
+        "stockanalysis_etf_universe",
+        "stockanalysis_surfaces"
       ],
       "stages": {
         "always_if_exists": [
@@ -1088,6 +1089,11 @@
           {
             "kind": "file",
             "path": "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json",
             "required": false
           },
           {

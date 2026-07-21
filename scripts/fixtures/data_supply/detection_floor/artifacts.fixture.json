@@ -148,6 +148,16 @@
       "content": { "schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf", "generated_at": "2026-07-11T00:00:00Z", "source_as_of": null, "source_as_of_reason": "provider publishes no aggregate source date", "records": [{ "ticker": "SPY", "name": "SPDR S&P 500 ETF Trust" }] }
     },
     {
+      "id": "stockanalysis_surface_index",
+      "encoding": "json",
+      "content": { "schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "surface_index", "generated_at": "2026-07-11T00:00:00Z", "source_as_of": null, "source_as_of_reason": { "market_events": "provider publishes no aggregate source date" }, "counts": { "surfaces_requested": 25, "ok": 25, "failed": 0, "tables": 25, "rows": 25 }, "results": [{ "surface": "new_etfs", "status": "ok", "endpoint": "/fixture/new_etfs", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "etf_screener", "status": "ok", "endpoint": "/fixture/etf_screener", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "etf_provider_blackrock", "status": "ok", "endpoint": "/fixture/etf_provider_blackrock", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "etf_provider_proshares", "status": "ok", "endpoint": "/fixture/etf_provider_proshares", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "list_bitcoin_etfs", "status": "ok", "endpoint": "/fixture/list_bitcoin_etfs", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "ipos_recent", "status": "ok", "endpoint": "/fixture/ipos_recent", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "ipos_statistics", "status": "ok", "endpoint": "/fixture/ipos_statistics", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "ipos_calendar", "status": "ok", "endpoint": "/fixture/ipos_calendar", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "ipos_filings", "status": "ok", "endpoint": "/fixture/ipos_filings", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "ipos_withdrawn", "status": "ok", "endpoint": "/fixture/ipos_withdrawn", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "actions_recent", "status": "ok", "endpoint": "/fixture/actions_recent", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "actions_splits", "status": "ok", "endpoint": "/fixture/actions_splits", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_gainers", "status": "ok", "endpoint": "/fixture/market_gainers", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_losers", "status": "ok", "endpoint": "/fixture/market_losers", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_active", "status": "ok", "endpoint": "/fixture/market_active", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_premarket", "status": "ok", "endpoint": "/fixture/market_premarket", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_afterhours", "status": "ok", "endpoint": "/fixture/market_afterhours", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_gainers_week", "status": "ok", "endpoint": "/fixture/market_gainers_week", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_gainers_month", "status": "ok", "endpoint": "/fixture/market_gainers_month", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "market_losers_ytd", "status": "ok", "endpoint": "/fixture/market_losers_ytd", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "earnings_calendar", "status": "ok", "endpoint": "/fixture/earnings_calendar", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "industries", "status": "ok", "endpoint": "/fixture/industries", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "industries_all", "status": "ok", "endpoint": "/fixture/industries_all", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "sector_technology", "status": "ok", "endpoint": "/fixture/sector_technology", "tables": 1, "rows": 1, "latency_ms": 1 }, { "surface": "industry_semiconductors", "status": "ok", "endpoint": "/fixture/industry_semiconductors", "tables": 1, "rows": 1, "latency_ms": 1 }] }
+    },
+    {
+      "id": "stockanalysis_surface_index_partial",
+      "encoding": "json",
+      "content": { "schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "surface_index", "generated_at": "2026-07-11T00:00:00Z", "source_as_of": null, "source_as_of_reason": { "market_events": "provider publishes no aggregate source date" }, "counts": { "surfaces_requested": 1, "ok": 1, "failed": 0, "tables": 1, "rows": 1 }, "results": [{ "surface": "actions_recent", "status": "ok", "endpoint": "/fixture/actions_recent", "tables": 1, "rows": 1, "latency_ms": 1 }] }
+    },
+    {
       "id": "yahoo",
       "encoding": "json",
       "content": { "updated": "2026-07-11T00:00:00Z", "source": "ticker-api-worker (yahoo-finance origin)", "endpoint": "https://ticker-api.etloveaui.workers.dev/api/ticker", "tickers": { "TQQQ": { "regularMarketTime": 1783720800 } } }
@@ -381,6 +391,11 @@
           "node_type": "regular",
           "document_id": "stockanalysis_etf_universe"
         },
+        {
+          "path": "data/stockanalysis/surfaces/index.json",
+          "node_type": "regular",
+          "document_id": "stockanalysis_surface_index"
+        },
     {
       "path": "data/macro/yahoo-ticker.json",
       "node_type": "regular",
@@ -529,6 +544,16 @@
           "path": "data/macro/fred-macro.json",
           "node_type": "regular",
           "document_id": "fred_schema_drift"
+        }
+      ]
+    },
+    {
+      "id": "partial_surface_index",
+      "nodes": [
+        {
+          "path": "data/stockanalysis/surfaces/index.json",
+          "node_type": "regular",
+          "document_id": "stockanalysis_surface_index_partial"
         }
       ]
     },

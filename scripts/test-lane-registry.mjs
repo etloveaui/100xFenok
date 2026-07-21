@@ -130,8 +130,8 @@ function clone(value) {
   const roots = declaredAdminRoots();
   assert.deepEqual(
     [...(roots.get("data/admin/stockanalysis-recovery") ?? [])].sort(),
-    ["stockanalysis_etf_universe", "yahoo_etf_fallback"].sort(),
-    "the StockAnalysis recovery store must list both claimant lanes",
+    ["stockanalysis_etf_universe", "stockanalysis_surfaces", "yahoo_etf_fallback"].sort(),
+    "the StockAnalysis recovery store must list every claimant lane",
   );
   // every recovery_store-bearing lane's index lives under its admin root
   for (const lane of LANE_REGISTRY.lanes) {
@@ -152,7 +152,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 22, auxiliary: 5 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 23, auxiliary: 5 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
     assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",

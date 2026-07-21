@@ -1,15 +1,10 @@
-// Lane Registry SSOT (BACKLOG #366, migration step 1 — shadow/transcription only).
+// Lane Registry SSOT (BACKLOG #366 — active derivation source).
 //
 // One declarative record per current lane, transcribed from the scattered
 // hand-maintained lists (detection config, sync exclusions, KPI arrays, ~14
-// workflow git-add allowlists), so later migration steps can DERIVE those lists
-// from here instead of editing N files per lane. Every fact below was verified
-// against origin/main on 2026-07-18 (workflows' git-add blocks, store shapes,
-// public sync exclusions, KPI recovery arrays); nothing is inferred.
-//
-// Step 1 deliberately does NOT derive anything: the only consumers are the
-// shadow completeness checker (scripts/check-lane-registry-completeness.mjs)
-// and the exact-value digest fixture (scripts/fixtures/lane-registry/).
+// workflow git-add allowlists). Detection membership, workflow ownership,
+// commit manifests, projections, and related parity gates now derive from these
+// records so a new lane cannot silently miss a downstream consumer.
 // Conventions mirror scripts/lib/data-supply-detection-config.mjs
 // (deepFreeze + canonicalJson + sha256 digest, validating load, fail-closed).
 
@@ -276,7 +271,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
   }),
   record({
     id: "stockanalysis_etf_universe",
@@ -298,7 +293,29 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
+  }),
+  record({
+    id: "stockanalysis_surfaces",
+    label: "StockAnalysis public surfaces",
+    owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "daily", provider: "stockanalysis (shared workflow surface schedules)" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/stockanalysis-recovery",
+    detection_attempt: attemptShard("stockanalysis_surfaces"),
+    canonical_outputs: ["data/stockanalysis/surfaces/index.json"],
+    public_mirror: ["100xfenok-next/public/data/stockanalysis/surfaces/index.json"],
+    commit_shards: [
+      attemptShard("stockanalysis_surfaces"),
+      "data/stockanalysis",
+      "data/admin/stockanalysis-recovery",
+    ],
+    recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    kpi_recovery_shape: "direct",
+    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback and stockanalysis_etf_universe (store is multi-kind: stock/financial/surface/universe)",
   }),
   record({
     id: "yahoo_ticker_macro",
@@ -1091,7 +1108,7 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_bat
     commitSpec("100xfenok-next/public/data/yf/quarter_closes.json", "file", true),
   ],
 }, [commitSpec("data/yf/finance/_summary.json", "file")]);
-workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe"], {
+workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_surfaces"], {
   always_if_exists: [
     commitSpec("data/stockanalysis", "directory", true),
     commitSpec("data/yf/etf-details", "directory", true),
@@ -1099,6 +1116,7 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "file"),
+    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "file"),
     commitSpec("data/yf/finance", "dynamic_set"),
   ],
 }, [

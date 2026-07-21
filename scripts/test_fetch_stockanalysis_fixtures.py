@@ -59,7 +59,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
-    def test_attempt_tracker_emits_empty_yahoo_and_http_universe_with_distinct_ids(self) -> None:
+    def test_attempt_tracker_emits_empty_yahoo_and_http_universe_and_surfaces_with_distinct_ids(self) -> None:
         original_run = self.fetcher.subprocess.run
         calls = []
 
@@ -73,24 +73,111 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             tracker.configure(active=True, yahoo_enabled=True, run_id="123", run_attempt=1)
             tracker.start_universe()
             tracker.record_universe_http(200, [{"ticker": "SPY", "name": "SPDR S&P 500 ETF Trust"}])
+            tracker.start_surfaces()
+            tracker.record_surface_http(200, {
+                "surface": "actions_recent",
+                "status": "ok",
+                "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
+                "tables": 0,
+                "rows": 12,
+                "latency_ms": 42,
+            })
             tracker.emit()
         finally:
             self.fetcher.subprocess.run = original_run
 
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(calls), 3)
         by_lane = {
             args[args.index("--lane") + 1]: (args, json.loads(kwargs["input"]))
             for args, kwargs in calls
         }
         yahoo_args, yahoo = by_lane["yahoo_etf_fallback"]
         universe_args, universe = by_lane["stockanalysis_etf_universe"]
+        surface_args, surfaces = by_lane["stockanalysis_surfaces"]
         self.assertEqual(yahoo["candidate_count"], 0)
         self.assertEqual(yahoo["observations"], [])
         self.assertEqual(universe["observations"][0]["status_code"], 200)
+        self.assertEqual(surfaces["observations"][0]["status_code"], 200)
+        self.assertEqual(surfaces["observations"][0]["document"]["results"][0]["surface"], "actions_recent")
         self.assertNotEqual(
             yahoo_args[yahoo_args.index("--attempt-id") + 1],
             universe_args[universe_args.index("--attempt-id") + 1],
         )
+        self.assertNotEqual(
+            universe_args[universe_args.index("--attempt-id") + 1],
+            surface_args[surface_args.index("--attempt-id") + 1],
+        )
+
+    def test_surface_unexpected_exception_after_success_emits_failure_observation(self) -> None:
+        original_fetch = self.fetcher.fetch_table_surface_response
+        original_run = self.fetcher.subprocess.run
+        original_tracker = self.fetcher.ATTEMPT_TRACKER
+        original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        def fake_fetch(name, _definition, _timeout):
+            if name == "ipos_recent":
+                return ({
+                    "schema_version": "stockanalysis/v1",
+                    "source": "stockanalysis",
+                    "surface": name,
+                    "format": "html_table",
+                    "counts": {"tables": 1, "rows": 1},
+                }, 200)
+            raise TypeError("controlled uncaught schema branch")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tracker = self.fetcher.StockAnalysisAttemptTracker()
+            tracker.configure(active=True, yahoo_enabled=False, run_id="surface-unexpected", run_attempt=1)
+            recovery_store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            recovery_run = {
+                "run_id": "surface-unexpected",
+                "run_attempt": 1,
+                "event_name": "workflow_dispatch",
+                "observed_at": "2026-07-15T08:00:00Z",
+            }
+            self.fetcher.fetch_table_surface_response = fake_fetch
+            self.fetcher.subprocess.run = fake_run
+            self.fetcher.ATTEMPT_TRACKER = tracker
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            try:
+                summary = self.fetcher.fetch_surfaces(
+                    ["ipos_recent", "ipos_statistics"], 1, 0, False,
+                    recovery_store=recovery_store,
+                    recovery_run=recovery_run,
+                )
+                unexpected_state = json.loads(
+                    (recovery_store.root / "states" / "surface" / "ipos_statistics.json").read_text()
+                )
+                tracker.emit()
+            finally:
+                self.fetcher.fetch_table_surface_response = original_fetch
+                self.fetcher.subprocess.run = original_run
+                self.fetcher.ATTEMPT_TRACKER = original_tracker
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_dirs
+
+        self.assertEqual(summary["counts"]["ok"], 1)
+        self.assertEqual(summary["counts"]["failed"], 1)
+        self.assertTrue(unexpected_state["retry"])
+        self.assertIn("TypeError: controlled uncaught schema branch", unexpected_state["latest_failure"]["error"])
+        surface_envelope = next(
+            json.loads(kwargs["input"])
+            for args, kwargs in calls
+            if args[args.index("--lane") + 1] == "stockanalysis_surfaces"
+        )
+        self.assertEqual(surface_envelope["observations"][0]["status_code"], 200)
+        self.assertEqual(surface_envelope["observations"][1], {
+            "execution": "threw",
+            "exception_kind": "unexpected",
+        })
 
     def test_attempt_tracker_does_not_mislabel_disabled_gap_as_empty(self) -> None:
         original_run = self.fetcher.subprocess.run
@@ -1039,30 +1126,64 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertLess(retry_build.index(signal_command), retry_build.index(report_command))
         self.assertLess(retry_build.index(report_command), retry_build.index(basket_command))
 
-        projection_command = "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/"
+        materialize_command = "node scripts/materialize-update-manifest-routes.mjs --all"
+        validate_materialization_command = (
+            f"{materialize_command} --validate-only --assert-no-untracked"
+        )
         override_command = "(cd 100xfenok-next && node sync-static-overrides.mjs)"
         kpi_command = "npm --prefix 100xfenok-next run build:fenok-data-health-kpi"
         retry_build = manifest.split("          for attempt in 1 2 3; do", 1)[1]
-        self.assertLess(initial_build.index(projection_command), initial_build.index(kpi_command))
-        self.assertLess(retry_build.index(projection_command), retry_build.index(kpi_command))
-        self.assertLess(initial_build.index(projection_command), initial_build.index(override_command))
-        self.assertLess(initial_build.index(override_command), initial_build.index(kpi_command))
-        self.assertLess(retry_build.index(projection_command), retry_build.index(override_command))
-        self.assertLess(retry_build.index(override_command), retry_build.index(kpi_command))
+
+        def exact_line_index(block: str, command: str) -> int:
+            return next(
+                index
+                for index, line in enumerate(block.splitlines())
+                if line.strip() == command
+            )
+
+        def containing_line_index(block: str, command: str) -> int:
+            return next(
+                index
+                for index, line in enumerate(block.splitlines())
+                if command in line
+            )
+
+        initial_materialize = exact_line_index(initial_build, materialize_command)
+        retry_validate = exact_line_index(retry_build, validate_materialization_command)
+        retry_materialize = exact_line_index(retry_build, materialize_command)
+        self.assertLess(initial_materialize, containing_line_index(initial_build, override_command))
+        self.assertLess(containing_line_index(initial_build, override_command), exact_line_index(initial_build, kpi_command))
+        self.assertLess(retry_validate, retry_materialize)
+        self.assertLess(retry_materialize, containing_line_index(retry_build, override_command))
+        self.assertLess(containing_line_index(retry_build, override_command), exact_line_index(retry_build, kpi_command))
         self.assertEqual(manifest.count(override_command), 2)
         self.assertNotIn("sync-public-data.mjs --write", manifest)
         self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 2)
-        self.assertEqual(manifest.count("100xfenok-next/public/data/stockanalysis/ \\"), 3)
+        self.assertNotIn(
+            "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
+            manifest,
+        )
 
-        def path_lines(block: str) -> list[str]:
-            return [line.strip().removesuffix("\\").strip() for line in block.splitlines() if line.strip()]
-
-        initial_paths = path_lines(manifest.split("git diff --quiet \\", 1)[1].split("&& echo", 1)[0])
-        retry_region = manifest.split("          for attempt in 1 2 3; do", 1)[1]
-        retry_paths = path_lines(retry_region.split("if git diff --quiet \\", 1)[1].split("; then", 1)[0])
-        staged_paths = path_lines(retry_region.split("git add -- \\", 1)[1].split("git commit -m", 1)[0])
-        self.assertEqual(initial_paths, retry_paths)
-        self.assertEqual(retry_paths, staged_paths)
+        central_check = "node scripts/stage-update-manifest-central.mjs --check"
+        central_stage = "node scripts/stage-update-manifest-central.mjs --stage"
+        clean_after_reset = "node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset"
+        assert_clean_after_reset = "node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset"
+        self.assertEqual(manifest.count(central_check), 2)
+        self.assertEqual(manifest.count(central_stage), 1)
+        self.assertEqual(manifest.count(clean_after_reset), 1)
+        self.assertEqual(manifest.count(assert_clean_after_reset), 1)
+        self.assertLess(
+            exact_line_index(retry_build, clean_after_reset),
+            exact_line_index(retry_build, assert_clean_after_reset),
+        )
+        self.assertLess(
+            exact_line_index(retry_build, assert_clean_after_reset),
+            retry_validate,
+        )
+        self.assertLess(
+            exact_line_index(retry_build, central_check),
+            exact_line_index(retry_build, central_stage),
+        )
 
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
@@ -4240,7 +4361,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             )
 
     def test_surface_controlled_failure_retains_lkg_then_real_fetch_recovers(self) -> None:
-        original = self.fetcher.fetch_svelte_surface
+        original = self.fetcher.fetch_svelte_surface_response
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR
@@ -4285,17 +4406,17 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 self.assertEqual(
                     canonical_after_failure["latest_attempt"]["counts"]["failed"], 1
                 )
-                self.fetcher.fetch_svelte_surface = lambda *_args, **_kwargs: {
+                self.fetcher.fetch_svelte_surface_response = lambda *_args, **_kwargs: ({
                     **lkg_payload,
                     "fetched_at": "2026-07-15T08:05:00Z",
                     "tables": [{"records": [{"symbol": "MSFT", "date": "Jul 15, 2026"}]}],
-                }
+                }, 200)
                 succeeded = self.fetcher.fetch_surfaces(
                     [name], 1, 0, False,
                     recovery_store=store, recovery_run=recovery,
                 )
             finally:
-                self.fetcher.fetch_svelte_surface = original
+                self.fetcher.fetch_svelte_surface_response = original
                 self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_dirs
 
             state = json.loads((store.root / "states" / "surface" / f"{name}.json").read_text())

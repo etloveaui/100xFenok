@@ -105,7 +105,34 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         projection_workflow = (
             ROOT / ".github" / "workflows" / "update-manifest.yml"
         ).read_text(encoding="utf-8")
-        self.assertIn(
+        lane_manifest = json.loads(
+            (ROOT / "data" / "admin" / "lane-commit-manifest.json").read_text(encoding="utf-8")
+        )
+        stockanalysis_routes = [
+            route
+            for route in lane_manifest["update_manifest"]["materializations"]
+            if route["source"] == "data/stockanalysis"
+        ]
+        self.assertEqual(stockanalysis_routes, [{
+            "source": "data/stockanalysis",
+            "destination": "100xfenok-next/public/data/stockanalysis",
+            "mode": "rsync_tree",
+            "delete": True,
+            "required": True,
+            "trailing_slash": True,
+        }])
+
+        materialize = "node scripts/materialize-update-manifest-routes.mjs --all"
+        validate_only = f"{materialize} --validate-only --assert-no-untracked"
+        initial_block = projection_workflow.split("      - name: Check if manifest changed", 1)[0]
+        retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
+        initial_lines = [line.strip() for line in initial_block.splitlines()]
+        retry_lines = [line.strip() for line in retry_block.splitlines()]
+        self.assertEqual(initial_lines.count(materialize), 1)
+        self.assertEqual(retry_lines.count(materialize), 1)
+        self.assertEqual(retry_lines.count(validate_only), 1)
+        self.assertLess(retry_lines.index(validate_only), retry_lines.index(materialize))
+        self.assertNotIn(
             "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
             projection_workflow,
         )

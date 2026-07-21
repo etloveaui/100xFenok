@@ -46,6 +46,31 @@ assert.deepEqual(
   [],
   "a provider-dateless artifact must not promote collected_at into source_as_of",
 );
+assert.equal(lane("stockanalysis_surfaces").enforcement, "shadow");
+assert.equal(lane("stockanalysis_surfaces").kpi_required, false);
+assert.deepEqual(
+  lane("stockanalysis_surfaces").freshness.source_basis,
+  [],
+  "surface collection must not fabricate an aggregate provider source date",
+);
+const surfaceArtifactContract = lane("stockanalysis_surfaces").producer_members[0].artifact_contracts[0];
+const surfaceAssertions = surfaceArtifactContract.assertions;
+assert.deepEqual(
+  surfaceAssertions.filter((assertion) => assertion.kind === "exact")
+    .map((assertion) => [assertion.id, assertion.pointer, assertion.value]),
+  [
+    ["source_stockanalysis", "/source", "stockanalysis"],
+    ["asset_type_surface_index", "/asset_type", "surface_index"],
+    ["surface_index_canonical_requested", "/counts/surfaces_requested", 25],
+    ["surface_index_canonical_ok", "/counts/ok", 25],
+    ["surface_index_canonical_failures", "/counts/failed", 0],
+  ],
+  "the canonical core index must prove its full 25-surface acquisition, not a partial attempt",
+);
+const surfaceResultsAssertion = surfaceAssertions.find((assertion) => assertion.id === "surface_index_results");
+assert.equal(surfaceResultsAssertion?.kind, "object_array_fields");
+assert.equal(surfaceResultsAssertion?.min, 25, "canonical surface index needs one distinct row per core surface");
+assert.equal(surfaceResultsAssertion?.unique_by, "surface");
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "stockanalysis-attempt-"));
 try {
@@ -245,11 +270,83 @@ try {
     },
   });
   assert.equal(classifyAttempt(universeEmpty).reason, "empty_payload");
+
+  const surfacesReady = emitStockAnalysisAttempt({
+    laneId: "stockanalysis_surfaces",
+    shardRoot: root,
+    attemptId: "gh-907-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "http",
+      observations: [{
+        status_code: 200,
+        document: {
+          results: [{
+            surface: "actions_recent",
+            status: "ok",
+            endpoint: "/actions/__data.json?x-sveltekit-invalidated=01",
+            tables: 0,
+            rows: 12,
+            latency_ms: 42,
+          }],
+        },
+      }],
+    },
+  });
+  assert.equal(surfacesReady.http_status, 200);
+  assert.equal(classifyAttempt(surfacesReady).reason, "ok");
+  validateAttemptShard(readShard(root, "stockanalysis_surfaces"), "stockanalysis_surfaces");
+
+  const surfaceUnexpectedAfterSuccess = emitStockAnalysisAttempt({
+    laneId: "stockanalysis_surfaces",
+    shardRoot: root,
+    attemptId: "gh-907b-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "http",
+      observations: [
+        {
+          status_code: 200,
+          document: {
+            results: [{
+              surface: "actions_recent",
+              status: "ok",
+              endpoint: "/actions/__data.json?x-sveltekit-invalidated=01",
+              tables: 0,
+              rows: 12,
+              latency_ms: 42,
+            }],
+          },
+        },
+        { execution: "threw", exception_kind: "unexpected" },
+      ],
+    },
+  });
+  assert.equal(surfaceUnexpectedAfterSuccess.execution, "threw");
+  assert.equal(surfaceUnexpectedAfterSuccess.exception_kind, "unexpected");
+  assert.equal(classifyAttempt(surfaceUnexpectedAfterSuccess).reason, "unexpected_error",
+    "a later unhandled surface failure must dominate earlier HTTP success");
+
+  const surfaceSchemaDrift = emitStockAnalysisAttempt({
+    laneId: "stockanalysis_surfaces",
+    shardRoot: root,
+    attemptId: "gh-908-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "http",
+      observations: [{
+        status_code: 200,
+        document: { results: [{ surface: "", status: "ok", endpoint: "/actions/", tables: 0, rows: 0, latency_ms: 0 }] },
+      }],
+    },
+  });
+  assert.equal(classifyAttempt(surfaceSchemaDrift).reason, "schema_drift");
   const merged = {
     schema_version: ATTEMPT_SCHEMA,
     attempts: [
       ...readShard(root, "yahoo_etf_fallback").attempts,
       ...readShard(root, "stockanalysis_etf_universe").attempts,
+      ...readShard(root, "stockanalysis_surfaces").attempts,
     ],
   };
   assert.equal(validateAttemptEvidence(merged), true, "lane-specific attempt IDs merge without collision");
@@ -261,6 +358,7 @@ const workflow = fs.readFileSync(new URL("../.github/workflows/fetch-stockanalys
 assert.match(workflow, /test-stockanalysis-attempt-emitter\.mjs/);
 assert.match(workflow, /detection-attempts\/yahoo_etf_fallback\.json/);
 assert.match(workflow, /detection-attempts\/stockanalysis_etf_universe\.json/);
+assert.match(workflow, /detection-attempts\/stockanalysis_surfaces\.json/);
 
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
@@ -274,7 +372,7 @@ assert.match(workflow, /detection-attempts\/stockanalysis_etf_universe\.json/);
     `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-  assert.deepEqual(gate.lanes.sort(), ["stockanalysis_etf_universe", "yahoo_etf_fallback"].sort(), "registry lane attribution for this workflow");
+  assert.deepEqual(gate.lanes.sort(), ["stockanalysis_etf_universe", "stockanalysis_surfaces", "yahoo_etf_fallback"].sort(), "registry lane attribution for this workflow");
 }
 
 console.log("PASS stockanalysis attempt emitter");

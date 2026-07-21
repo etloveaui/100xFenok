@@ -14,6 +14,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_surfaces",
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
@@ -38,6 +39,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_surfaces",
       "yahoo_ticker_macro",
       "sentiment",
       "nasdaq_giw_sox",
@@ -58,9 +60,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "5d1be486a918da1e6619f0ea2707cdda82bea8ac6ce295f336fb1f1fa35bd89f",
-  "logical_lane_count": 22,
-  "producer_member_count": 26,
+  "config_digest": "9e203a88df6b99dfe9d7d7a7b9f09ab232b3ac2fc1a19729977b96ceecf4b3b3",
+  "logical_lane_count": 23,
+  "producer_member_count": 27,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -88,17 +90,17 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "02a4d4691d92f4064663ba08845fe6664d8feb79e60f2ad499b5edf6e64a47eb",
+    "report_file_sha256": "9912d573466213707536f23db7761f1c94b96c12894e1039b8e6eadd23c7c220",
     "expected_report": {
-      "config_digest": "5d1be486a918da1e6619f0ea2707cdda82bea8ac6ce295f336fb1f1fa35bd89f",
+      "config_digest": "9e203a88df6b99dfe9d7d7a7b9f09ab232b3ac2fc1a19729977b96ceecf4b3b3",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 23,
+        "producer_members_ready": 24,
         "producer_members_stale": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3,
-        "ready": 19,
+        "ready": 20,
         "stale": 0,
         "unavailable": 0,
         "unobserved": 3
@@ -294,6 +296,30 @@
           "id": "stockanalysis_etf_universe",
           "kpi_required": true,
           "label": "StockAnalysis ETF universe",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "market_events_stockanalysis"
+          ],
+          "artifact": {
+            "age": null,
+            "reason": "ok",
+            "source_as_of": null,
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "stockanalysis_surfaces",
+          "kpi_required": false,
+          "label": "StockAnalysis public surfaces",
           "monitoring_mode": "post_fetch_artifact",
           "reason": "ok",
           "status": "ready"
@@ -724,13 +750,13 @@
           "status": "unobserved"
         }
       ],
-      "logical_lane_count": 22,
+      "logical_lane_count": 23,
       "monitoring_mode_counts": {
         "artifact_only": 1,
         "composite": 1,
-        "post_fetch_artifact": 20
+        "post_fetch_artifact": 21
       },
-      "producer_member_count": 26,
+      "producer_member_count": 27,
       "schema_version": "data-supply-detection-floor/v1"
     }
   },
@@ -787,6 +813,11 @@
     },
     {
       "layout_id": "schema_drift_artifact",
+      "expected_reason": "schema_drift"
+    },
+    {
+      "layout_id": "partial_surface_index",
+      "lane_id": "stockanalysis_surfaces",
       "expected_reason": "schema_drift"
     },
     {
@@ -857,5 +888,5 @@
       "expected_logical_status": "unavailable"
     }
   ],
-  "registry_digest": "4fd237c0a55367669941316a3e9676ab5c697bbe12612d7a0376ac08637af5cb"
+  "registry_digest": "71cf7c14f2e7ac8fad728a8d1b6e7cd724fffd5ee8a3b60fed96aa00c28acc62"
 }

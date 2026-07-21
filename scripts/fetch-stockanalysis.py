@@ -74,6 +74,8 @@ class StockAnalysisAttemptTracker:
         self.yahoo_producer_failure: dict | None = None
         self.universe_started = False
         self.universe_observations: list[dict] = []
+        self.surfaces_started = False
+        self.surface_observations: list[dict] = []
 
     def configure(self, *, active: bool, yahoo_enabled: bool, run_id: str, run_attempt: int) -> None:
         self.active = active
@@ -140,6 +142,24 @@ class StockAnalysisAttemptTracker:
                 "exception_kind": exception_kind,
             })
 
+    def start_surfaces(self) -> None:
+        if self.active:
+            self.surfaces_started = True
+
+    def record_surface_http(self, status_code: int, result: dict) -> None:
+        if self.active:
+            self.surface_observations.append({
+                "status_code": int(status_code),
+                "document": {"results": [result]},
+            })
+
+    def record_surface_error(self, exception_kind: str) -> None:
+        if self.active:
+            self.surface_observations.append({
+                "execution": "threw",
+                "exception_kind": exception_kind,
+            })
+
     def _emit(self, lane_id: str, envelope: dict, prefix: str) -> None:
         attempt_id = f"stockanalysis-{prefix}-{self.run_id}-{self.run_attempt}".lower()
         subprocess.run(
@@ -183,6 +203,14 @@ class StockAnalysisAttemptTracker:
                 "stockanalysis_etf_universe",
                 {"transport": "http", "observations": self.universe_observations},
                 "universe",
+            )
+        if self.surfaces_started:
+            if not self.surface_observations:
+                self.record_surface_error("unexpected")
+            self._emit(
+                "stockanalysis_surfaces",
+                {"transport": "http", "observations": self.surface_observations},
+                "surfaces",
             )
 
 
@@ -1093,11 +1121,17 @@ def select_base_etfs(
     return unique_symbols(load_core_daily_basket_symbols() + DEFAULT_ETFS)
 
 
-def fetch_json(rel_path: str, timeout: int) -> dict:
+def fetch_json_response(rel_path: str, timeout: int) -> tuple[dict, int]:
     url = f"{BASE_URL}{rel_path}"
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read().decode("utf-8"))
+        status = response.status if isinstance(getattr(response, "status", None), int) else response.getcode()
+        return json.loads(response.read().decode("utf-8")), int(status)
+
+
+def fetch_json(rel_path: str, timeout: int) -> dict:
+    payload, _status = fetch_json_response(rel_path, timeout)
+    return payload
 
 
 def history_endpoint(asset_prefix: str, ticker: str, config: dict) -> str:
@@ -1688,9 +1722,8 @@ def parse_html_tables(html: str) -> list[dict]:
     return tables
 
 
-def fetch_table_surface(name: str, definition: dict, timeout: int) -> dict:
+def build_table_surface_payload(name: str, definition: dict, html: str) -> dict:
     path = definition["path"]
-    html = fetch_text(path, timeout)
     tables = parse_html_tables(html)
     page_path = definition.get("page_path") or path
     return {
@@ -1715,10 +1748,18 @@ def fetch_table_surface(name: str, definition: dict, timeout: int) -> dict:
     }
 
 
-def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
+def fetch_table_surface(name: str, definition: dict, timeout: int) -> dict:
+    return build_table_surface_payload(name, definition, fetch_text(definition["path"], timeout))
+
+
+def fetch_table_surface_response(name: str, definition: dict, timeout: int) -> tuple[dict, int]:
+    html, status = fetch_text_response(definition["path"], timeout)
+    return build_table_surface_payload(name, definition, html), status
+
+
+def build_svelte_surface_payload(name: str, definition: dict, payload: dict) -> dict:
     path = definition["path"]
     page_path = definition.get("page_path") or path.replace("/__data.json?x-sveltekit-invalidated=01", "/")
-    payload = fetch_json(path, timeout)
 
     if name == "earnings_calendar":
         decoded = extract_svelte_node(payload, ("earnings",))
@@ -1770,6 +1811,15 @@ def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
         "records": records,
         "metadata": {key: value for key, value in metadata.items() if value is not None},
     }
+
+
+def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
+    return build_svelte_surface_payload(name, definition, fetch_json(definition["path"], timeout))
+
+
+def fetch_svelte_surface_response(name: str, definition: dict, timeout: int) -> tuple[dict, int]:
+    payload, status = fetch_json_response(definition["path"], timeout)
+    return build_svelte_surface_payload(name, definition, payload), status
 
 
 def parse_surface_names(value: str, surface_set: str) -> list[str]:
@@ -1973,6 +2023,7 @@ def fetch_surfaces(
 ) -> dict:
     results = []
     controlled_failure_surfaces = controlled_failure_surfaces or set()
+    ATTEMPT_TRACKER.start_surfaces()
     for idx, name in enumerate(surface_names, 1):
         definition = SURFACE_DEFINITIONS[name]
         start = time.perf_counter()
@@ -1980,9 +2031,9 @@ def fetch_surfaces(
             if name in controlled_failure_surfaces:
                 raise RuntimeError(f"controlled failure injection for surface:{name}")
             if definition.get("format") == "svelte_devalue":
-                payload = fetch_svelte_surface(name, definition, timeout)
+                payload, response_status = fetch_svelte_surface_response(name, definition, timeout)
             else:
-                payload = fetch_table_surface(name, definition, timeout)
+                payload, response_status = fetch_table_surface_response(name, definition, timeout)
             if recovery_store is not None and not recovery_store.recovery_candidate_advances(
                 "surface", name, payload
             ):
@@ -2005,14 +2056,8 @@ def fetch_surfaces(
                 "latency_ms": round((time.perf_counter() - start) * 1000),
                 "error": None,
             }
-        except (
-            urllib.error.URLError,
-            TimeoutError,
-            OSError,
-            json.JSONDecodeError,
-            RuntimeError,
-            ValueError,
-        ) as exc:
+            ATTEMPT_TRACKER.record_surface_http(response_status, result)
+        except urllib.error.HTTPError as exc:
             if recovery_store is not None and recovery_run is not None:
                 recovery_store.record_failure(
                     "surface",
@@ -2033,6 +2078,31 @@ def fetch_surfaces(
                 "latency_ms": round((time.perf_counter() - start) * 1000),
                 "error": f"{type(exc).__name__}: {exc}",
             }
+            ATTEMPT_TRACKER.record_surface_http(exc.code, result)
+        except Exception as exc:
+            if recovery_store is not None and recovery_run is not None:
+                recovery_store.record_failure(
+                    "surface",
+                    name,
+                    f"{type(exc).__name__}: {exc}",
+                    recovery_run,
+                    controlled=name in controlled_failure_surfaces,
+                )
+            result = {
+                "surface": name,
+                "group": definition["group"],
+                "format": definition.get("format", "html_table"),
+                "status": "error",
+                "path": None,
+                "endpoint": definition["path"],
+                "tables": 0,
+                "rows": 0,
+                "latency_ms": round((time.perf_counter() - start) * 1000),
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+            ATTEMPT_TRACKER.record_surface_error(
+                "transport" if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)) else "unexpected"
+            )
 
         results.append(result)
         status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"

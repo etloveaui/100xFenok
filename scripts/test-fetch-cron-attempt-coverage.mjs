@@ -66,8 +66,8 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .flatMap((lane) => lane.producer_members)
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
-assert.equal(scheduledMembers.length, 25);
-assert.equal(scheduleBindings, 27);
+assert.equal(scheduledMembers.length, 26);
+assert.equal(scheduleBindings, 29);
 
 // Baseline includes two owner-declared scheduled members with no attempt row.
 const coverage = buildFetchCronAttemptCoverage({ report: baseline, calendars });
@@ -75,9 +75,9 @@ assert.equal(coverage.schema_version, "fetch-cron-attempt-coverage/v1");
 assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
-  scheduled_members: 25,
-  schedule_bindings: 27,
-  observed: 25,
+  scheduled_members: 26,
+  schedule_bindings: 29,
+  observed: 27,
   suspected_skips: 2,
   attempt_gaps: 0,
 });
@@ -85,6 +85,7 @@ assert.equal(coverage.status, "warning");
 assert.equal(rowOf(coverage, "gdelt_news_tone").state, "suspected_skip");
 assert.equal(rowOf(coverage, "apewisdom_attention").state, "suspected_skip");
 assert.equal(coverage.rows.filter((row) => row.lane_id === "yahoo_etf_fallback").length, 3);
+assert.equal(coverage.rows.filter((row) => row.lane_id === "stockanalysis_surfaces").length, 2);
 assert.equal(coverage.rows.filter((row) => row.lane_id === "slickcharts").length, 5);
 
 // An attempt after the slot counts as observed even when the producer failed.
@@ -134,10 +135,10 @@ const missingReportCoverage = buildFetchCronAttemptCoverage({
 assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
-  scheduled_members: 25,
-  schedule_bindings: 27,
+  scheduled_members: 26,
+  schedule_bindings: 29,
   observed: 0,
-  suspected_skips: 27,
+  suspected_skips: 29,
   attempt_gaps: 0,
 });
 

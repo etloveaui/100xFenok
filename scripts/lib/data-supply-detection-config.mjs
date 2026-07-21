@@ -26,35 +26,6 @@ const LIVE_LANE_IDS = Object.freeze(
 );
 const LIVE_LANE_ID_SET = new Set(LIVE_LANE_IDS);
 
-const MEMBER_IDS = Object.freeze([
-  "fred_macro",
-  "fred_banking",
-  "fred_yardeni",
-  "fdic_tier1",
-  "treasury_tga",
-  "defillama_stablecoins",
-  "yahoo_etf_fallback",
-  "stockanalysis_etf_universe",
-  "yahoo_ticker_macro",
-  "sentiment",
-  "nasdaq_giw_sox",
-  "us_indices_daily",
-  "oecd_cli",
-  "krx",
-  "daily",
-  "weekly",
-  "monthly",
-  "history",
-  "symbols",
-  "edgar_filings",
-  "sec_13f",
-  "finra_short_volume",
-  "occ_options_volume",
-  "yahoo_private_options",
-  "apewisdom_attention",
-  "gdelt_news_tone",
-]);
-
 const SLICKCHARTS_MEMBER_IDS = Object.freeze([
   "daily",
   "weekly",
@@ -205,6 +176,14 @@ function member(
   };
 }
 
+function registryMember(id, schedule, artifactContracts, cadenceCalendar = "utc") {
+  const registryLane = registryLaneById(id);
+  if (!registryLane || registryLane.owner_workflow === null) {
+    throw new TypeError(`detection member ${id} has no registry-owned workflow`);
+  }
+  return member(id, registryLane.owner_workflow, schedule, artifactContracts, cadenceCalendar);
+}
+
 function endpoint(endpointFamily, assertionId = null, pointer = null, expected = null) {
   const artifactOnly = assertionId === null;
   return {
@@ -277,13 +256,11 @@ function lane({
 const config = {
   schema_version: "data-supply-detection-config/v1",
   enforcement: "shadow",
-  logical_lane_count: 22,
-  producer_member_count: 26,
   lanes: [
     lane({
       id: "fred_macro",
       label: "FRED macro series",
-      members: [member("fred_macro", ".github/workflows/fetch-fred-macro.yml", ["0 8 * * *"], [
+      members: [registryMember("fred_macro", ["0 8 * * *"], [
         artifact("fred_macro", "data/macro/fred-macro.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
           assertions: [
@@ -307,7 +284,7 @@ const config = {
     lane({
       id: "fred_banking",
       label: "FRED banking series",
-      members: [member("fred_banking", ".github/workflows/fetch-fred-banking.yml", ["0 7 * * *"], [
+      members: [registryMember("fred_banking", ["0 7 * * *"], [
         artifact("fred_banking_daily", "data/macro/fred-banking-daily.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
           assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 3), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
@@ -344,7 +321,7 @@ const config = {
     lane({
       id: "fred_yardeni",
       label: "FRED Yardeni model",
-      members: [member("fred_yardeni", ".github/workflows/fetch-fred-yardeni.yml", ["0 10 * * 6"], [
+      members: [registryMember("fred_yardeni", ["0 10 * * 6"], [
         artifact("fred_yardeni_model", "data/yardney/yardney_model.json", {
           schemaVersion: schemaVersion("/meta/public_schema_version", "yardney_model_public_v1"),
           sourceSelector: pointerSource("/meta/last_update/last_public_date", "date"),
@@ -362,7 +339,7 @@ const config = {
     lane({
       id: "fdic_tier1",
       label: "FDIC Tier 1 capital",
-      members: [member("fdic_tier1", ".github/workflows/fetch-fdic.yml", ["0 6 1-7 * 1"], [
+      members: [registryMember("fdic_tier1", ["0 6 1-7 * 1"], [
         artifact("fdic_tier1", "data/macro/fdic-tier1.json", {
           sourceSelector: maxArrayFieldSource("/data", "date", "date"),
           assertions: [exactAssertion("source_fdic", "/source", "FDIC"), typeAssertion("data_array", "/data", "array"), minRowsAssertion("data_non_empty", "/data")],
@@ -380,7 +357,7 @@ const config = {
     lane({
       id: "treasury_tga",
       label: "US Treasury TGA",
-      members: [member("treasury_tga", ".github/workflows/fetch-treasury-tga.yml", ["0 */6 * * *"], [
+      members: [registryMember("treasury_tga", ["0 */6 * * *"], [
         artifact("treasury_tga", "data/macro/tga.json", {
           sourceSelector: maxArrayFieldSource("/series", "date", "date"),
           assertions: [
@@ -398,7 +375,7 @@ const config = {
     lane({
       id: "defillama_stablecoins",
       label: "DefiLlama stablecoins",
-      members: [member("defillama_stablecoins", ".github/workflows/fetch-defillama.yml", ["0 * * * *"], [
+      members: [registryMember("defillama_stablecoins", ["0 * * * *"], [
         artifact("defillama_stablecoins", "data/macro/stablecoins.json", {
           sourceSelector: maxArrayFieldSource("/series", "date", "date"),
           assertions: [
@@ -420,7 +397,7 @@ const config = {
     lane({
       id: "yahoo_etf_fallback",
       label: "Yahoo ETF fallback",
-      members: [member("yahoo_etf_fallback", ".github/workflows/fetch-stockanalysis.yml", [
+      members: [registryMember("yahoo_etf_fallback", [
         "50 22 * * 1-5",
         "50 23 * * 1-5",
         "20 23 * * 0",
@@ -449,7 +426,7 @@ const config = {
     lane({
       id: "stockanalysis_etf_universe",
       label: "StockAnalysis ETF universe",
-      members: [member("stockanalysis_etf_universe", ".github/workflows/fetch-stockanalysis.yml", ["20 23 * * 0"], [
+      members: [registryMember("stockanalysis_etf_universe", ["20 23 * * 0"], [
         artifact("stockanalysis_etf_universe", "data/stockanalysis/etf_universe.json", {
           schemaVersion: schemaVersion("/schema_version", "stockanalysis/v1"),
           sourceSelector: notApplicableSource(),
@@ -474,9 +451,61 @@ const config = {
       affectedSurfaceIds: ["stockanalysis_etf_universe"],
     }),
     lane({
+      id: "stockanalysis_surfaces",
+      label: "StockAnalysis public surfaces",
+      members: [registryMember("stockanalysis_surfaces", ["50 23 * * 1-5", "20 23 * * 0"], [
+        artifact("stockanalysis_surface_index", "data/stockanalysis/surfaces/index.json", {
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis/v1"),
+          sourceSelector: notApplicableSource(),
+          assertions: [
+            exactAssertion("source_stockanalysis", "/source", "stockanalysis"),
+            exactAssertion("asset_type_surface_index", "/asset_type", "surface_index"),
+            objectFieldsAssertion("surface_index_counts", "/counts", {
+              surfaces_requested: "number",
+              ok: "number",
+              failed: "number",
+            }),
+            exactAssertion("surface_index_canonical_requested", "/counts/surfaces_requested", 25),
+            exactAssertion("surface_index_canonical_ok", "/counts/ok", 25),
+            exactAssertion("surface_index_canonical_failures", "/counts/failed", 0),
+            objectArrayFieldsAssertion("surface_index_results", "/results", {
+              fields: {
+                surface: "string",
+                status: "string",
+                endpoint: "string",
+                tables: "number",
+                rows: "number",
+                latency_ms: "number",
+              },
+              min: 25,
+              nonEmptyFields: ["surface", "status", "endpoint"],
+              uniqueBy: "surface",
+            }),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertions("stockanalysis_surface_response", [
+        objectArrayFieldsAssertion("surface_results", "/results", {
+          fields: {
+            surface: "string",
+            status: "string",
+            endpoint: "string",
+            tables: "number",
+            rows: "number",
+            latency_ms: "number",
+          },
+          min: 1,
+          nonEmptyFields: ["surface", "status", "endpoint"],
+          uniqueBy: "surface",
+        }),
+      ]),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
+      affectedSurfaceIds: ["market_events_stockanalysis"],
+    }),
+    lane({
       id: "yahoo_ticker_macro",
       label: "Yahoo macro tickers",
-      members: [member("yahoo_ticker_macro", ".github/workflows/fetch-yahoo-ticker.yml", ["5 * * * *"], [
+      members: [registryMember("yahoo_ticker_macro", ["5 * * * *"], [
         artifact("yahoo_ticker_macro", "data/macro/yahoo-ticker.json", {
           sourceSelector: maxObjectFieldSource("/tickers", "regularMarketTime", "unix_seconds"),
           assertions: [
@@ -498,7 +527,7 @@ const config = {
     lane({
       id: "sentiment",
       label: "Market sentiment",
-      members: [member("sentiment", ".github/workflows/fetch-sentiment.yml", ["0 22 * * 1-5"], [
+      members: [registryMember("sentiment", ["0 22 * * 1-5"], [
         artifact("sentiment_vix", "data/sentiment/vix.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("vix_non_empty", "")],
@@ -514,7 +543,7 @@ const config = {
     lane({
       id: "nasdaq_giw_sox",
       label: "Nasdaq GIW SOX constituents",
-      members: [member("nasdaq_giw_sox", ".github/workflows/fetch-nasdaq-giw-sox.yml", ["50 23 * * 1-5"], [
+      members: [registryMember("nasdaq_giw_sox", ["50 23 * * 1-5"], [
         artifact("nasdaq_giw_sox_constituents", "data/indices/nasdaq-giw-sox-constituents.json", {
           schemaVersion: schemaVersion("/schema_version", "nasdaq_giw_sox_constituents.v1"),
           sourceSelector: pointerSource("/as_of", "date"),
@@ -553,7 +582,7 @@ const config = {
     lane({
       id: "us_indices_daily",
       label: "US index daily close shadow",
-      members: [member("us_indices_daily", ".github/workflows/fetch-us-indices-daily.yml", ["0 22 * * 1-5"], [
+      members: [registryMember("us_indices_daily", ["0 22 * * 1-5"], [
         artifact("us_indices_daily_sp500_shadow", "data/admin/us-indices-daily/shadow/sp500.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("sp500_non_empty", "")],
@@ -571,7 +600,7 @@ const config = {
     lane({
       id: "oecd_cli",
       label: "OECD composite leading indicators shadow",
-      members: [member("oecd_cli", ".github/workflows/fetch-oecd-cli.yml", ["0 8 1 * *"], [
+      members: [registryMember("oecd_cli", ["0 8 1 * *"], [
         artifact("oecd_cli_shadow", "data/admin/oecd_cli/shadow/oecd-cli.json", {
           schemaVersion: schemaVersion("/schema_version", "oecd-cli-shadow/v1"),
           sourceSelector: pointerSource("/latest_date", "date"),
@@ -586,7 +615,7 @@ const config = {
     lane({
       id: "krx",
       label: "KRX Open API daily shadow",
-      members: [member("krx", ".github/workflows/fenok-edge-krx-daily.yml", ["30 10 * * 1-5"], [
+      members: [registryMember("krx", ["30 10 * * 1-5"], [
         artifact("krx_daily_bridge", "data/admin/fenok-edge-korea-krx-daily-index.json", {
           schemaVersion: schemaVersion("/schema_version", "fenok-edge-korea-krx-bridge/v1"),
           sourceSelector: pointerSource("/as_of", "date"),
@@ -672,7 +701,7 @@ const config = {
     lane({
       id: "edgar_filings",
       label: "SEC EDGAR filings",
-      members: [member("edgar_filings", ".github/workflows/fetch-edgar-filings.yml", ["40 0 * * 1"], [
+      members: [registryMember("edgar_filings", ["40 0 * * 1"], [
         artifact("edgar_filings_index", "data/edgar-korean-summaries/index.json", {
           schemaVersion: schemaVersion("/schemaVersion", 1),
           sourceSelector: notApplicableSource(),
@@ -736,7 +765,7 @@ const config = {
     lane({
       id: "finra_short_volume",
       label: "FINRA short volume",
-      members: [member("finra_short_volume", ".github/workflows/fenok-edge-daily.yml", ["30 0 * * 2-6"], [
+      members: [registryMember("finra_short_volume", ["30 0 * * 2-6"], [
         artifact("finra_flow_proxy", "data/computed/fenok_flow_proxies.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
@@ -751,7 +780,7 @@ const config = {
     lane({
       id: "occ_options_volume",
       label: "OCC options volume",
-      members: [member("occ_options_volume", ".github/workflows/fenok-edge-daily.yml", ["30 0 * * 2-6"], [
+      members: [registryMember("occ_options_volume", ["30 0 * * 2-6"], [
         artifact("occ_options_volume", "data/computed/fenok_occ_options_volume.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
@@ -766,7 +795,7 @@ const config = {
     lane({
       id: "yahoo_private_options",
       label: "Yahoo private options availability",
-      members: [member("yahoo_private_options", ".github/workflows/fetch-fenok-private-options.yml", ["10 1 * * 2-6"], [
+      members: [registryMember("yahoo_private_options", ["10 1 * * 2-6"], [
         artifact("yahoo_private_options", "data/computed/fenok_yahoo_private_options_availability.json", {
           schemaVersion: schemaVersion("/schema_version", "fenok-yahoo-private-options-availability/v1"),
           sourceSelector: pointerSource("/source_as_of", "rfc3339"),
@@ -790,7 +819,7 @@ const config = {
     lane({
       id: "apewisdom_attention",
       label: "ApeWisdom attention",
-      members: [member("apewisdom_attention", ".github/workflows/fetch-fenok-apewisdom.yml", ["17 13 * * *"], [
+      members: [registryMember("apewisdom_attention", ["17 13 * * *"], [
         artifact("apewisdom_attention", "data/computed/fenok_social_attention_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: pointerSource("/source/source_date", "yyyymmdd"),
@@ -813,7 +842,7 @@ const config = {
     lane({
       id: "gdelt_news_tone",
       label: "GDELT news tone",
-      members: [member("gdelt_news_tone", ".github/workflows/fetch-fenok-news-tone.yml", ["43 14 * * *"], [
+      members: [registryMember("gdelt_news_tone", ["43 14 * * *"], [
         artifact("gdelt_news_tone", "data/computed/fenok_news_tone_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
@@ -834,6 +863,12 @@ const config = {
     }),
   ],
 };
+
+config.logical_lane_count = config.lanes.length;
+config.producer_member_count = config.lanes.reduce(
+  (count, laneConfig) => count + laneConfig.producer_members.length,
+  0,
+);
 
 function fail(message) {
   throw new TypeError(`invalid data-supply detection config: ${message}`);
@@ -1175,10 +1210,11 @@ export function validateDetectionConfig(configValue) {
   exactKeys(configValue, ["schema_version", "enforcement", "logical_lane_count", "producer_member_count", "lanes"], "config");
   if (configValue.schema_version !== "data-supply-detection-config/v1") fail("schema_version is invalid");
   if (configValue.enforcement !== "shadow") fail("enforcement must be shadow");
-  if (configValue.logical_lane_count !== 22 || configValue.producer_member_count !== 26) fail("denominator must be 22/26");
-  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== 22) fail("lanes must contain exactly 22 rows");
   const uncoveredLive = LIVE_LANE_IDS.filter((id) => !LANE_IDS.includes(id));
   if (uncoveredLive.length > 0) fail(`live registry lanes must have detection rows: ${uncoveredLive.join(", ")}`);
+  if (!Array.isArray(configValue.lanes) || configValue.lanes.length !== LANE_IDS.length) {
+    fail(`lanes must contain exactly ${LANE_IDS.length} registry detection rows`);
+  }
   const laneIds = configValue.lanes.map((laneValue) => laneValue.id);
   if (canonicalJson(laneIds) !== canonicalJson(LANE_IDS)) fail("logical lane order or identity changed");
   configValue.lanes.forEach(validateLane);
@@ -1192,8 +1228,10 @@ export function validateDetectionConfig(configValue) {
     }
   }
   const memberIds = configValue.lanes.flatMap((laneValue) => laneValue.producer_members.map((memberValue) => memberValue.id));
-  if (memberIds.length !== 26 || new Set(memberIds).size !== 26 || canonicalJson(memberIds) !== canonicalJson(MEMBER_IDS)) {
-    fail("producer member order or identity changed");
+  if (configValue.logical_lane_count !== configValue.lanes.length) fail("logical_lane_count contradicts lanes");
+  if (configValue.producer_member_count !== memberIds.length) fail("producer_member_count contradicts members");
+  if (new Set(memberIds).size !== memberIds.length) {
+    fail("producer member identity is not unique");
   }
   canonicalJson(configValue);
   return true;
