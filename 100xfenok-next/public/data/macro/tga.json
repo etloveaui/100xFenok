@@ -1,7 +1,24 @@
 {
-  "updated": "2026-07-18T02:11:38.258Z",
+  "updated": "2026-07-21T02:20:06.242Z",
   "source": "Treasury FiscalData",
   "endpoint": "accounting/dts/operating_cash_balance",
+  "persistence_policy": {
+    "schema_version": "treasury-tga-bounded-persistence/v1",
+    "basis": "record_date",
+    "scope": "series_and_raw",
+    "max_series_days": 10000,
+    "eviction": "oldest_record_date_first"
+  },
+  "persistence_state": {
+    "provider_rows": 5222,
+    "valid_series_days": 5222,
+    "retained_series_days": 5222,
+    "pruned_series_days": 0,
+    "retained_raw_rows": 5222,
+    "pruned_raw_rows": 0,
+    "oldest_retained_date": "2005-10-03",
+    "newest_retained_date": "2026-07-17"
+  },
   "series": [
     {
       "date": "2005-10-03",
@@ -20886,6 +20903,10 @@
     {
       "date": "2026-07-16",
       "val": 795976
+    },
+    {
+      "date": "2026-07-17",
+      "val": 822510
     }
   ],
   "raw": {
@@ -41777,6 +41798,10 @@
       {
         "record_date": "2026-07-16",
         "open_today_bal": "795976"
+      },
+      {
+        "record_date": "2026-07-17",
+        "open_today_bal": "822510"
       }
     ]
   }
