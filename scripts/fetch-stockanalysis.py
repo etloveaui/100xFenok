@@ -189,6 +189,16 @@ def configure_candidate_outputs(candidate_root: Path) -> CandidateOutputs:
     return install_candidate_outputs(outputs)
 
 
+def data_supply_store(*, provider_truth_root: Path) -> DataSupplyStateStore:
+    """Keep candidate acquisitions append-only so artifacts never encode deletions."""
+
+    return DataSupplyStateStore(
+        DATA_SUPPLY_STATE_ROOT,
+        provider_truth_root=provider_truth_root,
+        defer_maintenance=CANDIDATE_OUTPUTS.root != ROOT,
+    )
+
+
 class StockAnalysisAttemptTracker:
     def __init__(self) -> None:
         self.active = False
@@ -2977,7 +2987,7 @@ def record_etf_detail_observation(
         "observation_origin": "natural",
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=STORAGE_ROOT)
+    store = data_supply_store(provider_truth_root=STORAGE_ROOT)
     if validation_status == "valid":
         store.store_provider_object(observation=row, payload=payload_path.read_bytes())
     store.record_observation(row)
@@ -3022,7 +3032,7 @@ def record_etf_detail_failure_observation(
         "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=STORAGE_ROOT).record_observation(row)
+    data_supply_store(provider_truth_root=STORAGE_ROOT).record_observation(row)
     return row
 
 
@@ -3072,7 +3082,7 @@ def record_etf_detail_unavailability_observation(
         "provider_response": provider_response,
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=STORAGE_ROOT).record_observation(row)
+    data_supply_store(provider_truth_root=STORAGE_ROOT).record_observation(row)
     return row
 
 
@@ -5294,7 +5304,7 @@ def run_one(
                 if stock_supply.is_enrolled_stock_detail(ticker):
                     observed_at = now_iso()
                     stock_supply.record_stock_detail_failure(
-                        store=DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=OUT_DIR.parent.parent),
+                        store=data_supply_store(provider_truth_root=OUT_DIR.parent.parent),
                         provider="stockanalysis",
                         entity=ticker,
                         provider_path=f"data/stockanalysis/stocks/{ticker}.json",
@@ -5350,7 +5360,7 @@ def run_one(
                     )
                 except stock_supply.StockDetailValidationError as exc:
                     stock_supply.record_stock_detail_failure(
-                        store=DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=OUT_DIR.parent.parent),
+                        store=data_supply_store(provider_truth_root=OUT_DIR.parent.parent),
                         provider="stockanalysis",
                         entity=ticker,
                         provider_path=f"data/stockanalysis/{rel_path}",
@@ -5402,7 +5412,7 @@ def run_one(
                     provider_truth_root=OUT_DIR.parent.parent,
                 )
                 stock_supply.record_stock_detail_success(
-                    store=DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=OUT_DIR.parent.parent),
+                    store=data_supply_store(provider_truth_root=OUT_DIR.parent.parent),
                     candidate=verified,
                     observed_at=stock_observed_at,
                     origin="manual",
@@ -5435,10 +5445,7 @@ def run_one(
                         provider_truth_root=OUT_DIR.parent.parent,
                     )
                     stock_supply.record_stock_detail_success(
-                        store=DataSupplyStateStore(
-                            DATA_SUPPLY_STATE_ROOT,
-                            provider_truth_root=OUT_DIR.parent.parent,
-                        ),
+                        store=data_supply_store(provider_truth_root=OUT_DIR.parent.parent),
                         candidate=verified,
                         observed_at=stock_observed_at,
                         origin="manual",

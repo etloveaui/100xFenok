@@ -157,6 +157,32 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         finally:
             self.fetcher.install_candidate_outputs(saved)
 
+    def test_candidate_data_supply_store_defers_pruning_and_has_no_direct_bypasses(self) -> None:
+        saved_outputs = self.fetcher.current_candidate_outputs()
+        original_store = self.fetcher.DataSupplyStateStore
+        calls = []
+
+        class CapturingStore:
+            def __init__(self, *args, **kwargs):
+                calls.append((args, kwargs))
+
+        self.fetcher.DataSupplyStateStore = CapturingStore
+        try:
+            self.fetcher.data_supply_store(provider_truth_root=ROOT)
+            self.assertFalse(calls[-1][1]["defer_maintenance"])
+            with tempfile.TemporaryDirectory() as tmp:
+                candidate = Path(tmp) / "candidate"
+                candidate.mkdir()
+                self.fetcher.configure_candidate_outputs(candidate)
+                self.fetcher.data_supply_store(provider_truth_root=candidate)
+                self.assertTrue(calls[-1][1]["defer_maintenance"])
+        finally:
+            self.fetcher.DataSupplyStateStore = original_store
+            self.fetcher.install_candidate_outputs(saved_outputs)
+
+        source = FETCHER_PATH.read_text(encoding="utf-8")
+        self.assertEqual(source.count("DataSupplyStateStore("), 1)
+
     def test_manual_cap_fails_before_canary_or_candidate_mutation(self) -> None:
         original_canary = self.fetcher.run_endpoint_canary
         original_argv = sys.argv
