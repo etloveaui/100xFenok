@@ -252,6 +252,15 @@ jobs:
               exit 64
             fi
           fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ -n "${INPUT_STOCKS:-}" ] && [ "${INPUT_FETCH_FINANCIALS:-true}" != "true" ]; then
+              echo "manual stock dispatch requires fetch_financials=true" >&2
+              exit 64
+            fi
+            if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then
+              INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
+            fi
+          fi
           {
             echo "EFFECTIVE_HISTORY_GAPS_ONLY=${INPUT_HISTORY_GAPS_ONLY:-false}"
             echo "EFFECTIVE_REQUIRED_HISTORY_PERIODS=${INPUT_REQUIRED_HISTORY_PERIODS:-}"

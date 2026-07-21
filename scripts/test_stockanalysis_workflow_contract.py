@@ -52,6 +52,25 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("scripts/stockanalysis_artifact.py", self.text)
         self.assertIn("scripts/stage-lane-manifest.sh", self.text)
 
+    def test_manual_stock_dispatch_cannot_publish_an_unpaired_overview(self) -> None:
+        self.assertIn(
+            'if [ "$EVENT_NAME" = "workflow_dispatch" ]; then',
+            self.text,
+        )
+        self.assertIn(
+            'if [ -n "${INPUT_STOCKS:-}" ] && [ "${INPUT_FETCH_FINANCIALS:-true}" != "true" ]; then',
+            self.text,
+        )
+        self.assertIn(
+            'echo "manual stock dispatch requires fetch_financials=true" >&2',
+            self.text,
+        )
+        self.assertIn(
+            'if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then\n'
+            '              INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"',
+            self.text,
+        )
+
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (
             ("20 21 * * *", "stock,financial"),
