@@ -41,6 +41,8 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         self.root = Path(self.tmp.name) / "repo"
         self.root.mkdir()
         (self.root / "data/admin").mkdir(parents=True)
+        (self.root / "data/admin/data-supply-state").mkdir(parents=True)
+        (self.root / "data/admin/data-supply-state/state.json").write_text('{"state":1}\n')
         (self.root / "data/stockanalysis").mkdir(parents=True)
         (self.root / "data/stockanalysis/a.json").write_text('{"value":1}\n')
         (self.root / "data/admin/lane-commit-manifest.json").write_text(
@@ -53,6 +55,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
                         "stages": {
                             "always_if_exists": [
                                 {"kind": "directory", "path": "data/stockanalysis", "required": True},
+                                {"kind": "directory", "path": "data/admin/data-supply-state", "required": True},
                             ],
                             "required_on_success": [],
                             "success_if_exists": [],
@@ -110,6 +113,35 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         self.assertEqual((self.root / "data/stockanalysis/a.json").read_text(), '{"value":2}\n')
         run("git", "add", "--", "data/stockanalysis", cwd=self.root)
         self.helper.audit_staged_paths(self.root, self.artifact)
+
+    def test_runtime_lock_files_are_not_artifact_payload(self) -> None:
+        repo_lock = self.root / "data/admin/data-supply-state/v1/domains/stock_detail/.lock"
+        candidate_lock = self.candidate / "data/admin/data-supply-state/v1/domains/stock_detail/.lock"
+        entity_lock = self.candidate / "data/admin/data-supply-state/v1/providers/stockanalysis/stock_detail/.locks/AAPL.lock"
+        repo_lock.parent.mkdir(parents=True)
+        candidate_lock.parent.mkdir(parents=True)
+        repo_lock.write_text("repo-lock\n")
+        candidate_lock.write_text("candidate-lock\n")
+        entity_lock.parent.mkdir(parents=True)
+        entity_lock.write_text("entity-lock\n")
+        (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')
+
+        manifest = self.pack()
+
+        self.assertEqual(manifest["paths"], ["data/stockanalysis/a.json"])
+        self.assertFalse((self.artifact / "files/data/admin/data-supply-state/v1/domains/stock_detail/.lock").exists())
+        self.assertFalse((self.artifact / "files/data/admin/data-supply-state/v1/providers/stockanalysis/stock_detail/.locks/AAPL.lock").exists())
+        self.assertEqual(self.apply()["status"], "applied")
+
+        manifest_path = self.artifact / "manifest.json"
+        tampered = json.loads(manifest_path.read_text())
+        lock_rel = "data/admin/data-supply-state/v1/domains/stock_detail/.lock"
+        tampered["paths"].append(lock_rel)
+        tampered["files"].append({"path": lock_rel, "sha256": "0" * 64, "size": 0})
+        tampered["file_count"] += 1
+        manifest_path.write_text(json.dumps(tampered))
+        with self.assertRaisesRegex(ValueError, "runtime lock"):
+            self.apply()
 
     def test_stage_audit_rejects_same_path_with_different_staged_bytes(self) -> None:
         target = self.candidate / "data/stockanalysis/a.json"

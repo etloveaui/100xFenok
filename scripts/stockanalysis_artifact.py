@@ -110,8 +110,19 @@ def spec_matches(path: str, spec: dict) -> bool:
     return fnmatch.fnmatchcase(path, value)
 
 
+def is_runtime_lock_path(path: str) -> bool:
+    normalized = normalize_rel(path)
+    if not normalized.startswith("data/admin/data-supply-state/"):
+        return False
+    parts = PurePosixPath(normalized).parts
+    name = parts[-1]
+    return ".locks" in parts or (name.startswith(".") and name.endswith(".lock"))
+
+
 def validate_allowed_path(path: str, specs: list[dict], excludes: list[dict]) -> None:
     path = normalize_rel(path)
+    if is_runtime_lock_path(path):
+        fail(f"runtime lock path is forbidden in StockAnalysis artifact: {path}")
     if path.startswith(PUBLIC_PREFIX):
         fail(f"public path is forbidden in StockAnalysis artifact: {path}")
     if any(spec_matches(path, spec) for spec in excludes):
@@ -223,6 +234,8 @@ def repository_owned_files(repo: Path, specs: list[dict], excludes: list[dict]) 
             leaves = [match] if match.is_file() else assert_regular_tree(match)
             for leaf in leaves:
                 rel = normalize_rel(leaf.relative_to(repo).as_posix())
+                if is_runtime_lock_path(rel):
+                    continue
                 if any(spec_matches(rel, excluded) for excluded in excludes):
                     continue
                 paths.add(rel)
@@ -254,6 +267,8 @@ def pack_artifact(
     all_leaves = candidate_files(candidate)
     leaves: dict[str, Path] = {}
     for rel, path in all_leaves.items():
+        if is_runtime_lock_path(rel):
+            continue
         if any(spec_matches(rel, excluded) for excluded in excludes):
             source = repo / rel
             if not source.is_file() or sha256_file(source) != sha256_file(path):
