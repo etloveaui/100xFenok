@@ -8,6 +8,7 @@ const appRoot = path.resolve(__dirname, "..");
 
 const client = fs.readFileSync(path.join(appRoot, "src/app/screener/ScreenerClient.tsx"), "utf8");
 const screenerCss = fs.readFileSync(path.join(appRoot, "src/styles/cp-w4-screener.css"), "utf8");
+const canvasPlusCss = fs.readFileSync(path.join(appRoot, "src/styles/canvas-plus.css"), "utf8");
 
 const failures = [];
 
@@ -34,6 +35,10 @@ assert(
 assert(
   /\[data-canvas-plus-screener-service="true"\][^{]*\.cpw4-primary-cta\s*\{[^}]*background:\s*var\(--cpw4-ink\);[^}]*color:\s*#fff;[^}]*-webkit-tap-highlight-color:\s*transparent;/s.test(screenerCss),
   "the mobile detail primary CTA must pair its dark background with white text at shell-link specificity and suppress tap highlight",
+);
+assert(
+  /\[data-canvas-plus-screener-service="true"\]\s+\.cp-screener-card-grid\s*\{[^}]*align-items:\s*start;/s.test(canvasPlusCss),
+  "the desktop screener card grid must keep collapsed peer cards from stretching with an expanded card",
 );
 
 if (failures.length > 0) {

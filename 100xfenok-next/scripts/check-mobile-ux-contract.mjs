@@ -12,6 +12,7 @@ const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench
 const viewportCatalog = {
   mobile: { width: 390, height: 844 },
   narrow: { width: 375, height: 812 },
+  tablet: { width: 1024, height: 1366 },
   desktop: { width: 1280, height: 900 },
 };
 
@@ -3509,13 +3510,35 @@ async function collectScreenerCardViewChecks(page, route) {
   await cardButton.click({ timeout: 10000 });
   await page.waitForTimeout(500);
 
+  const peerBaseline = await page.evaluate(() => {
+    const grid = document.querySelector("[data-screener-card-grid]");
+    const cards = grid
+      ? Array.from(grid.querySelectorAll("[data-screener-desktop-stock-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        })
+      : [];
+    const targetRect = cards[0]?.getBoundingClientRect();
+    const peerCardIndex = targetRect
+      ? cards.findIndex((card, index) => (
+        index > 0 && Math.abs(card.getBoundingClientRect().top - targetRect.top) <= 2
+      ))
+      : -1;
+    if (peerCardIndex < 0) return null;
+    return {
+      peerCardIndex,
+      peerHeight: cards[peerCardIndex].getBoundingClientRect().height,
+    };
+  });
+
   const expandButton = page.locator('[data-screener-card-grid] [aria-controls^="screener-card-detail"]:visible').first();
   if ((await expandButton.count()) > 0) {
     await expandButton.click({ timeout: 10000 });
     await page.waitForTimeout(300);
   }
 
-  return page.evaluate((currentRoute) => {
+  return page.evaluate(({ currentRoute, peerBaselineBefore }) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -3532,6 +3555,10 @@ async function collectScreenerCardViewChecks(page, route) {
       : [];
     const activeCardButton = document.querySelector('[data-screener-view-mode-option="card"][aria-pressed="true"]');
     const detail = document.querySelector('[id^="screener-card-detail"]');
+    const peerCard = peerBaselineBefore
+      ? visibleCards[peerBaselineBefore.peerCardIndex]
+      : null;
+    const peerHeightAfter = peerCard?.getBoundingClientRect().height ?? null;
 
     if (!grid || grid.getBoundingClientRect().height <= 0) {
       failures.push({ check: "screener-card-view-grid-visible", detail: "card grid is not visible" });
@@ -3545,6 +3572,19 @@ async function collectScreenerCardViewChecks(page, route) {
     if (visibleCards.length > 0 && (!detail || detail.getBoundingClientRect().height <= 0)) {
       failures.push({ check: "screener-card-view-expanded-detail", detail: "expanded desktop card detail is not visible" });
     }
+    if (peerBaselineBefore) {
+      if (peerHeightAfter === null) {
+        failures.push({
+          check: "screener-card-view-peer-card-present",
+          detail: `peer index=${peerBaselineBefore.peerCardIndex} missing after expansion`,
+        });
+      } else if (Math.abs(peerHeightAfter - peerBaselineBefore.peerHeight) > 2) {
+        failures.push({
+          check: "screener-card-view-no-peer-height-stretch",
+          detail: `before=${peerBaselineBefore.peerHeight.toFixed(1)} after=${peerHeightAfter.toFixed(1)}`,
+        });
+      }
+    }
     if (scrollWidth > viewportWidth + 1) {
       failures.push({
         check: "screener-card-view-no-horizontal-overflow",
@@ -3556,9 +3596,11 @@ async function collectScreenerCardViewChecks(page, route) {
       route: currentRoute,
       viewportWidth,
       scrollWidth,
+      peerHeightBefore: peerBaselineBefore?.peerHeight ?? null,
+      peerHeightAfter,
       failures,
     };
-  }, route);
+  }, { currentRoute: route, peerBaselineBefore: peerBaseline });
 }
 
 async function collectStockFinancialChartChecks(page, route) {
@@ -3864,6 +3906,8 @@ try {
           const cardViewChecks = await collectScreenerCardViewChecks(page, route);
           result.failures.push(...cardViewChecks.failures);
           result.cardViewScrollWidth = cardViewChecks.scrollWidth;
+          result.cardViewPeerHeightBefore = cardViewChecks.peerHeightBefore;
+          result.cardViewPeerHeightAfter = cardViewChecks.peerHeightAfter;
         }
         if (route.startsWith("/stock/") && route.includes("tab=financials")) {
           const financialChartChecks = await collectStockFinancialChartChecks(page, route);
