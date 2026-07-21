@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1110,
+      "natural": true,
+      "observed_at": "2026-07-21T23:04:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29875696340",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:50:22Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BSOL.json",
-    "payload_sha256": "97c776201ce55c8e3309f4b7a53cd36d5f252207e3906d19edcc2eacebbf6d23",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-21T23:05:43Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/yf/finance/BSOL.json",
+    "payload_sha256": "1fc761a27ccc1eced4de18856f44c3794287eaf050e686e9b957e4bc6d2c2499",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1110,
+    "natural": true,
+    "observed_at": "2026-07-21T23:04:26Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29875696340",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:50:22Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-21T23:04:26Z",
+    "payload_sha256": "500438b17913fa4578b49e3a647e6a6fb6f4a9188272d0c6aea33ea925c294c4",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29875696340",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-21"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "BSOL",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-21T23:04:26Z"
 }

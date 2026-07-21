@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1280,
+      "natural": true,
+      "observed_at": "2026-07-21T23:04:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29875696340",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:09:45Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BTC.json",
-    "payload_sha256": "56ff9e7010815dddbabe80ed85a6369e86431892765c39a46f46df0ee7599d5d",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-21T23:05:54Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/yf/finance/BTC.json",
+    "payload_sha256": "0c3ba8e12cf2cf5ed069a05005e6ca9528d713c466c4f313c26521cc6feb09d5",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1280,
+    "natural": true,
+    "observed_at": "2026-07-21T23:04:26Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29875696340",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:09:45Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-21T23:04:26Z",
+    "payload_sha256": "e349399d651fa423b4113391a20d1269e07b9d1a21a0709c2684ff193ffda3dd",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "29875696340",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-21"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "BTC",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-21T23:04:26Z"
 }
