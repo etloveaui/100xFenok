@@ -457,8 +457,9 @@ jobs:
               exit 0
             fi
 
-            PROJECTION_ORACLE="$RUNNER_TEMP/stockanalysis-surface-oracle"
-            rm -rf "$PROJECTION_ORACLE"
+            PROJECTION_ORACLE_ROOT="$RUNNER_TEMP/stockanalysis-projection-oracle"
+            PROJECTION_ORACLE="$PROJECTION_ORACLE_ROOT/surfaces"
+            rm -rf "$PROJECTION_ORACLE_ROOT"
             mkdir -p "$PROJECTION_ORACLE"
             rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
             python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py

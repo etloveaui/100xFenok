@@ -208,6 +208,32 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertLess(publish.index("git commit \"${COMMIT_ARGS[@]}\""), publish.index("git push origin HEAD:main"))
         self.assertIn("if: ${{ steps.publish.outputs.status == 'published' }}", publish)
 
+    def test_projection_oracle_preserves_surface_relative_root(self) -> None:
+        publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
+        self.assertIn(
+            'PROJECTION_ORACLE_ROOT="$RUNNER_TEMP/stockanalysis-projection-oracle"',
+            publish,
+        )
+        self.assertIn('PROJECTION_ORACLE="$PROJECTION_ORACLE_ROOT/surfaces"', publish)
+        self.assertIn('rm -rf "$PROJECTION_ORACLE_ROOT"', publish)
+        self.assertIn('mkdir -p "$PROJECTION_ORACLE"', publish)
+        self.assertIn(
+            'rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"',
+            publish,
+        )
+        self.assertIn(
+            'STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE"',
+            publish,
+        )
+        self.assertLess(
+            publish.index('rm -rf "$PROJECTION_ORACLE_ROOT"'),
+            publish.index('mkdir -p "$PROJECTION_ORACLE"'),
+        )
+        self.assertLess(
+            publish.index('mkdir -p "$PROJECTION_ORACLE"'),
+            publish.index('rsync -a --checksum --delete data/stockanalysis/surfaces/'),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
