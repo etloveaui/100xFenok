@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-21T13:22:25Z",
+  "generated_at": "2026-07-21T15:14:51Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -31,8 +31,8 @@
     "surfaces_requested": 0,
     "surfaces_ok": 0,
     "surfaces_failed": 0,
-    "financials_requested": 0,
-    "financials_ok": 0,
+    "financials_requested": 1,
+    "financials_ok": 1,
     "financials_failed": 0,
     "ok": 1,
     "failed": 0,
@@ -58,9 +58,9 @@
       "canonical_write": true,
       "path": "stocks/AAPL.json",
       "candidate_path": null,
-      "financials_path": null,
+      "financials_path": "financials/AAPL.json",
       "financials_error": null,
-      "latency_ms": 474,
+      "latency_ms": 2524,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -70,7 +70,7 @@
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-21T13:22:25Z",
+    "generated_at": "2026-07-21T15:14:51Z",
     "status": "pass",
     "counts": {
       "candidate_total": 5536,
@@ -157,19 +157,24 @@
     "recovered_surfaces": [],
     "recovered_universes": [],
     "current_attempt": {
-      "run_id": "29834035604",
+      "run_id": "29842937947",
       "run_attempt": 1,
       "event_name": "workflow_dispatch",
       "schedule": "",
       "natural": false,
-      "attempted": 1,
-      "successes": 1,
+      "attempted": 2,
+      "successes": 2,
       "failed": 0,
       "recovered": 0,
       "errors": [],
       "success_rows": [
         {
           "artifact_kind": "stock",
+          "entity": "AAPL",
+          "outcome": "fresh"
+        },
+        {
+          "artifact_kind": "financial",
           "entity": "AAPL",
           "outcome": "fresh"
         }
