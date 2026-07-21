@@ -168,6 +168,8 @@ function clone(value) {
       "Global Scouter cadence is declared by the external converter payload, not a fabricated workflow");
     assert.equal(registryLaneById("damodaran").owner_workflow, ".github/workflows/fetch-damodaran-shadow.yml",
       "Damodaran keeps its measured in-repo owner workflow");
+    assert.equal(registryLaneById("stockanalysis_stock_financial").enforcement, "live",
+      "the bounded StockAnalysis pair lane is live after its first committed natural 8-pair attempt");
     for (const id of ["admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv"]) {
       const lane = registryLaneById(id);
       assert.ok(lane, `private/runtime denominator lane missing: ${id}`);

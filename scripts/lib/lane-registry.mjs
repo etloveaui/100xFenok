@@ -303,7 +303,7 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "stockanalysis (bounded 8-pair shared workflow schedule)" },
-    enforcement: "shadow",
+    enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_stock_financial"),
@@ -319,7 +319,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "emitter-first shadow lane; shares the multi-kind StockAnalysis recovery store and promotes only after a natural committed 8-pair attempt shard",
+    declared_exception: "shares the multi-kind StockAnalysis recovery store; promoted live after natural schedule run 29873027563 committed the complete 8-pair attempt shard",
   }),
   record({
     id: "stockanalysis_surfaces",

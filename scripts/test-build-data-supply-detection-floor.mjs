@@ -437,8 +437,8 @@ function runConfigAndFixtureChecks() {
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, 27);
   assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 31);
   const stockFinancial = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "stockanalysis_stock_financial");
-  assert.equal(stockFinancial.enforcement, "shadow");
-  assert.equal(stockFinancial.kpi_required, false);
+  assert.equal(stockFinancial.enforcement, "live");
+  assert.equal(stockFinancial.kpi_required, true);
   assert.deepEqual(stockFinancial.producer_members[0].schedule, ["20 21 * * *"]);
   assert.equal(stockFinancial.endpoint_contract.transport, "library");
   const benchmarks = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "benchmarks");
@@ -487,6 +487,7 @@ function runConfigAndFixtureChecks() {
     "defillama_stablecoins",
     "yahoo_etf_fallback",
     "stockanalysis_etf_universe",
+    "stockanalysis_stock_financial",
     "yahoo_ticker_macro",
     "sentiment",
     "nasdaq_giw_sox",

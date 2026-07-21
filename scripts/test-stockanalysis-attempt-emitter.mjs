@@ -48,8 +48,8 @@ assert.deepEqual(
 );
 assert.equal(lane("stockanalysis_surfaces").enforcement, "shadow");
 assert.equal(lane("stockanalysis_surfaces").kpi_required, false);
-assert.equal(lane("stockanalysis_stock_financial").enforcement, "shadow");
-assert.equal(lane("stockanalysis_stock_financial").kpi_required, false);
+assert.equal(lane("stockanalysis_stock_financial").enforcement, "live");
+assert.equal(lane("stockanalysis_stock_financial").kpi_required, true);
 assert.equal(lane("stockanalysis_stock_financial").endpoint_contract.transport, "library");
 assert.deepEqual(
   lane("stockanalysis_stock_financial").endpoint_contract.assertions

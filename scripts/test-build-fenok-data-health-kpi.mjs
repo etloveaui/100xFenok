@@ -560,6 +560,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "defillama_stablecoins",
     "yahoo_etf_fallback",
     "stockanalysis_etf_universe",
+    "stockanalysis_stock_financial",
     "yahoo_ticker_macro",
     "sentiment",
     "nasdaq_giw_sox",
@@ -1492,7 +1493,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
     "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
   ]);
   const { root, public: pub } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 26);
+  assert.equal(root.totals.lanes, 27);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);
