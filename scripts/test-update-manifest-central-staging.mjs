@@ -52,11 +52,11 @@ assert.deepEqual(centralSpecs.filter((spec) => spec.kind === "directory").map((s
 assert.equal(centralSpecs.filter((spec) => spec.kind === "file").length, 56);
 assert.equal(centralSpecs.every((spec) => spec.required === false), true);
 assert.equal(fs.existsSync(helperPath), true);
-assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 4);
+assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 5);
 assert.equal((workflow.match(/node scripts\/test-update-manifest-central-staging\.mjs/g) ?? []).length, 2);
 assert.match(workflow, /- name: Check if manifest changed[\s\S]*?stage-update-manifest-central\.mjs --check[\s\S]*?3\) echo "changed=false"/);
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
-assert.match(retry, /git reset --hard origin\/main[\s\S]*?test-update-manifest-central-staging\.mjs[\s\S]*?stage-update-manifest-central\.mjs --assert-clean-after-reset/);
+assert.match(retry, /git reset --hard origin\/main[\s\S]*?test-update-manifest-central-staging\.mjs[\s\S]*?stage-update-manifest-central\.mjs --clean-untracked-after-reset[\s\S]*?stage-update-manifest-central\.mjs --assert-clean-after-reset/);
 assert.match(retry, /stage-update-manifest-central\.mjs --check[\s\S]*?central_status[\s\S]*?stage-update-manifest-central\.mjs --stage[\s\S]*?git commit/);
 assert.doesNotMatch(workflow, /git diff --quiet \\/);
 assert.doesNotMatch(workflow, /git add -- \\/);
@@ -156,18 +156,30 @@ for (const relative of ["data/computed/signals.json", "data/computed/market_fact
   assert.deepEqual(cached(fixture.repoRoot), ["unrelated.txt"]);
 }
 
-// reset restores tracked files but leaves untracked central residue; preflight rejects it.
+// reset restores tracked files but leaves generated untracked central residue. The
+// policy-scoped cleanup removes only that residue before the clean assertion.
 {
   const fixture = makeFixture();
   const tracked = path.join(fixture.repoRoot, "data/computed/signals.json");
-  const untracked = path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/pre-reset.json");
   write(tracked, "tracked mutation\n");
-  write(untracked, "untracked residue\n");
+  const residue = Array.from({ length: 100 }, (_, index) => path.join(
+    fixture.repoRoot,
+    "100xfenok-next/public/data/slickcharts",
+    `pre-reset-${String(index).padStart(3, "0")}.json`,
+  ));
+  for (const target of residue) write(target, "untracked residue\n");
+  const unrelated = path.join(fixture.repoRoot, "unrelated-residue.txt");
+  write(unrelated, "outside central policy\n");
   git(fixture.repoRoot, ["reset", "--hard", "HEAD"]);
   assert.equal(fs.readFileSync(tracked, "utf8"), "baseline signals\n");
-  assert.equal(fs.existsSync(untracked), true);
-  assert.notEqual(runHelper(fixture, "--assert-clean-after-reset").status, 0);
-  fs.rmSync(untracked);
+  assert.equal(residue.every((target) => fs.existsSync(target)), true);
+  const dirty = runHelper(fixture, "--assert-clean-after-reset");
+  assert.notEqual(dirty.status, 0);
+  assert.match(dirty.stderr, /reset left central state: cached=0 changed=100 ignored=0/);
+  const cleaned = runHelper(fixture, "--clean-untracked-after-reset");
+  assert.equal(cleaned.status, 0, `${cleaned.stderr}\n${cleaned.stdout}`);
+  assert.equal(residue.some((target) => fs.existsSync(target)), false);
+  assert.equal(fs.existsSync(unrelated), true);
   assert.equal(runHelper(fixture, "--assert-clean-after-reset").status, 0);
   write(tracked, "retry rebuild\n");
   write(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/rebuilt.json"), "retry public rebuild\n");
@@ -187,6 +199,23 @@ for (const relative of ["data/computed/signals.json", "data/computed/market_fact
   write(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/ignored.json"), "ignored residue\n");
   git(fixture.repoRoot, ["reset", "--hard", "HEAD"]);
   assert.notEqual(runHelper(fixture, "--assert-clean-after-reset").status, 0);
+  const cleanup = runHelper(fixture, "--clean-untracked-after-reset");
+  assert.notEqual(cleanup.status, 0);
+  assert.match(cleanup.stderr, /reset left central state: cached=0 changed=0 ignored=1/);
+  assert.equal(fs.existsSync(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/ignored.json")), true);
+}
+
+// Cleanup is permitted only after reset has restored every tracked central path.
+{
+  const fixture = makeFixture();
+  const tracked = path.join(fixture.repoRoot, "data/computed/signals.json");
+  const untracked = path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/residue.json");
+  write(tracked, "tracked mutation\n");
+  write(untracked, "untracked residue\n");
+  const cleanup = runHelper(fixture, "--clean-untracked-after-reset");
+  assert.notEqual(cleanup.status, 0);
+  assert.match(cleanup.stderr, /cleanup requires clean tracked state: cached=0 changed=1/);
+  assert.equal(fs.existsSync(untracked), true);
 }
 
 {

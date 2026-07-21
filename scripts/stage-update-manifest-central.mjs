@@ -44,7 +44,7 @@ function parseArgs(argv) {
       index += 1;
       if (argument === "--repo-root") options.repoRoot = path.resolve(value);
       else options.manifestPath = path.resolve(value);
-    } else if (["--check", "--stage", "--assert-clean-after-reset"].includes(argument)) {
+    } else if (["--check", "--stage", "--clean-untracked-after-reset", "--assert-clean-after-reset"].includes(argument)) {
       if (options.mode) fail("select exactly one operation");
       options.mode = argument.slice(2);
     } else fail(`unknown argument: ${argument}`);
@@ -97,6 +97,10 @@ function collectChanged(repoRoot, policy) {
   return [...changed].sort();
 }
 
+function collectUntracked(repoRoot, policy) {
+  return listScoped(repoRoot, ["ls-files", "--others", "--exclude-standard", "-z"], policy.paths).sort();
+}
+
 function collectIgnored(repoRoot, policy) {
   return listScoped(repoRoot, ["ls-files", "--others", "--ignored", "--exclude-standard", "-z"], policy.paths).sort();
 }
@@ -110,6 +114,18 @@ function assertCleanAfterReset(repoRoot, policy) {
     fail(`reset left central state: cached=${cached.length} changed=${changed.length} ignored=${ignored.length}`);
   }
   return { changed: 0, staged: 0 };
+}
+
+function cleanUntrackedAfterReset(repoRoot, policy) {
+  assertNoOutOfPolicyStaged(repoRoot, policy.specs);
+  const cached = listCached(repoRoot);
+  const tracked = listScoped(repoRoot, ["diff", "--name-only", "-z"], policy.paths);
+  if (cached.length || tracked.length) {
+    fail(`cleanup requires clean tracked state: cached=${cached.length} changed=${tracked.length}`);
+  }
+  const untracked = collectUntracked(repoRoot, policy);
+  if (untracked.length) runGit(repoRoot, ["clean", "-fd", "--", ...untracked]);
+  return assertCleanAfterReset(repoRoot, policy);
 }
 
 function stagePolicy(repoRoot, policy) {
@@ -131,6 +147,7 @@ function stagePolicy(repoRoot, policy) {
 export function runCentralStaging(options) {
   const policy = loadPolicy(options);
   assertNoOutOfPolicyStaged(options.repoRoot, policy.specs);
+  if (options.mode === "clean-untracked-after-reset") return { ...cleanUntrackedAfterReset(options.repoRoot, policy), digest: policy.digest, declared: policy.paths.length };
   if (options.mode === "assert-clean-after-reset") return { ...assertCleanAfterReset(options.repoRoot, policy), digest: policy.digest, declared: policy.paths.length };
   if (options.mode === "stage") return { ...stagePolicy(options.repoRoot, policy), digest: policy.digest, declared: policy.paths.length };
   const changed = collectChanged(options.repoRoot, policy).length;

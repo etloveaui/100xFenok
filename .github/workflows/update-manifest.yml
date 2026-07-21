@@ -280,6 +280,7 @@ jobs:
             git reset --hard origin/main
             node scripts/test-update-manifest-materializations.mjs
             node scripts/test-update-manifest-central-staging.mjs
+            node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset
             node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset
             node scripts/materialize-update-manifest-routes.mjs --all --validate-only --assert-no-untracked
 
