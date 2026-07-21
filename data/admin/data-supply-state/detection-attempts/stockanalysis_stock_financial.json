@@ -1,0 +1,49 @@
+{
+  "schema_version": "data-supply-detection-attempt-shard/v1",
+  "lane_id": "stockanalysis_stock_financial",
+  "attempts": [
+    {
+      "lane_id": "stockanalysis_stock_financial",
+      "member_id": null,
+      "attempt_id": "stockanalysis-stock-financial-29873027563-1",
+      "observed_at": "2026-07-21T22:15:38Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": null,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "stock_financial_requested",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_stock_ok",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_financial_ok",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_failed",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_tickers",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_pairs",
+          "passed": true
+        }
+      ],
+      "candidates": 1,
+      "retry_count": 0,
+      "latency_ms": 13361,
+      "outcome": "success"
+    }
+  ]
+}
