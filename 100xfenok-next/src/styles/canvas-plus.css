@@ -3413,6 +3413,49 @@
   accent-color: var(--cp-accent);
 }
 
+/* Keep the 18px checkbox visual while its label owns a 44px tap target. */
+[data-screener-checkbox-target] {
+  position: relative;
+}
+
+[data-screener-checkbox-target]::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  content: "";
+  transform: translateY(-50%);
+}
+
+/* The 44px button keeps its former 39px visual and net flex footprint. */
+.cp-screener-expand-target {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  margin-left: -2px;
+  margin-right: -3px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.cp-screener-expand-target__visual {
+  display: flex;
+  width: 39px;
+  height: 39px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--c-surface-2);
+  color: var(--c-ink-2);
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .cp-screener-inline-chip-row {
   display: flex;
   flex-wrap: wrap;

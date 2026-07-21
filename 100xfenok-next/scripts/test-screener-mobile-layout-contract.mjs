@@ -40,6 +40,26 @@ assert(
   /\[data-canvas-plus-screener-service="true"\]\s+\.cp-screener-card-grid\s*\{[^}]*align-items:\s*start;/s.test(canvasPlusCss),
   "the desktop screener card grid must keep collapsed peer cards from stretching with an expanded card",
 );
+assert(
+  /data-screener-checkbox-target/.test(client),
+  "screener checkbox labels must expose an explicit hit-target hook without enlarging the native 18px control",
+);
+assert(
+  /\[data-screener-checkbox-target\]::before\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/s.test(canvasPlusCss),
+  "screener checkbox hit targets must extend to 44px through the label hit area",
+);
+assert(
+  /\.cp-screener-expand-target\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/s.test(canvasPlusCss),
+  "screener expand controls must expose a 44px hit target",
+);
+assert(
+  /\.cp-screener-expand-target__visual\s*\{[^}]*width:\s*39px;[^}]*height:\s*39px;/s.test(canvasPlusCss),
+  "the larger expand hit target must preserve the existing 39px visual control",
+);
+assert(
+  /cp-screener-expand-target/.test(client),
+  "mobile screener expand controls must use the explicit 44px target class",
+);
 
 if (failures.length > 0) {
   console.error("[screener-mobile-layout-contract] failed");

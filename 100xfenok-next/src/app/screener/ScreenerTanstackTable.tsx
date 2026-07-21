@@ -217,23 +217,27 @@ function ScreenerTanstackTableInner({
     {
       id: "__select",
       header: () => (
-        <input
-          type="checkbox"
-          checked={allPageSelected}
-          onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
-          aria-label="현재 페이지 종목 선택"
-          className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-        />
+        <label data-screener-checkbox-target onClick={(event) => event.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={allPageSelected}
+            onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
+            aria-label="현재 페이지 종목 선택"
+            className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+          />
+        </label>
       ),
       cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={selectedTickers.has(row.original.ticker)}
-          onChange={() => toggleSelectedTicker(row.original.ticker)}
-          onClick={(event) => event.stopPropagation()}
-          aria-label={`${row.original.ticker} 선택`}
-          className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-        />
+        <label data-screener-checkbox-target onClick={(event) => event.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={selectedTickers.has(row.original.ticker)}
+            onChange={() => toggleSelectedTicker(row.original.ticker)}
+            onClick={(event) => event.stopPropagation()}
+            aria-label={`${row.original.ticker} 선택`}
+            className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+          />
+        </label>
       ),
     },
     ...visibleColumns.map((column) => ({
@@ -441,7 +445,7 @@ function ScreenerTanstackTableInner({
                       >
                         {canvasPlusPreview ? (
                           <span
-                            className="block overflow-hidden"
+                            className={cx("block", cell.column.id === "__select" ? "overflow-visible" : "overflow-hidden")}
                             data-canvas-plus-cell-frame
                             data-canvas-plus-cell-kind={canvasPlusCellKind(cell.column.id)}
                             style={canvasPlusCellFrameStyle}

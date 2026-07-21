@@ -80,13 +80,15 @@ export default function ScreenerDesktopTable({
         <thead>
           <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
             <th className={cx("w-12 text-left", densityClass.headerCell)}>
-              <input
-                type="checkbox"
-                checked={allPageSelected}
-                onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
-                aria-label="현재 페이지 종목 선택"
-                className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-              />
+              <label data-screener-checkbox-target onClick={(event) => event.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={allPageSelected}
+                  onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
+                  aria-label="현재 페이지 종목 선택"
+                  className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+                />
+              </label>
             </th>
             {activeColumns.map((column) => {
               const active = column.key === sortKey;
@@ -129,14 +131,16 @@ export default function ScreenerDesktopTable({
                   className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
                 >
                   <td className={densityClass.bodyCell}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTickers.has(stock.ticker)}
-                      onChange={() => toggleSelectedTicker(stock.ticker)}
-                      onClick={(event) => event.stopPropagation()}
-                      aria-label={`${stock.ticker} 선택`}
-                      className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-                    />
+                    <label data-screener-checkbox-target onClick={(event) => event.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedTickers.has(stock.ticker)}
+                        onChange={() => toggleSelectedTicker(stock.ticker)}
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label={`${stock.ticker} 선택`}
+                        className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+                      />
+                    </label>
                   </td>
                   {activeColumns.map((column) => (
                     <td

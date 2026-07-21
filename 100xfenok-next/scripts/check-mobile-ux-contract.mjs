@@ -2607,13 +2607,31 @@ async function collectRouteChecks(page, route) {
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
-        });
+      });
       visibleCheckboxes.forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.width < 20 || rect.height < 20) {
+        const target = node.closest("[data-screener-checkbox-target]");
+        if (!target) {
           failures.push({
-            check: "screener-checkbox-size",
-            detail: `checkbox ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+            check: "screener-checkbox-target-hook",
+            detail: `checkbox ${index} has no hit-target wrapper`,
+          });
+          return;
+        }
+        const targetRect = target.getBoundingClientRect();
+        const pseudoStyle = window.getComputedStyle(target, "::before");
+        const targetWidth = Math.max(targetRect.width, Number.parseFloat(pseudoStyle.width || "0"));
+        const targetHeight = Math.max(targetRect.height, Number.parseFloat(pseudoStyle.height || "0"));
+        if (targetWidth < 44 || targetHeight < 44) {
+          failures.push({
+            check: "screener-checkbox-target",
+            detail: `checkbox ${index} target=${Math.round(targetWidth)}x${Math.round(targetHeight)}`,
+          });
+        }
+        if (rect.width > 20 || rect.height > 20) {
+          failures.push({
+            check: "screener-checkbox-visual-size",
+            detail: `checkbox ${index} visual=${Math.round(rect.width)}x${Math.round(rect.height)}`,
           });
         }
       });
@@ -2626,10 +2644,18 @@ async function collectRouteChecks(page, route) {
         }
         mobileExpandButtons.forEach((node, index) => {
           const rect = node.getBoundingClientRect();
-          if (rect.height < 44) {
+          if (rect.width < 44 || rect.height < 44) {
             failures.push({
               check: "screener-expand-target",
-              detail: `expand ${index} height=${Math.round(rect.height)}`,
+              detail: `expand ${index} target=${Math.round(rect.width)}x${Math.round(rect.height)}`,
+            });
+          }
+          const visual = node.querySelector(".cp-screener-expand-target__visual");
+          const visualRect = visual?.getBoundingClientRect();
+          if (!visualRect || Math.abs(visualRect.width - 39) > 1 || Math.abs(visualRect.height - 39) > 1) {
+            failures.push({
+              check: "screener-expand-visual-size",
+              detail: `expand ${index} visual=${visualRect ? `${Math.round(visualRect.width)}x${Math.round(visualRect.height)}` : "missing"}`,
             });
           }
         });
@@ -3486,6 +3512,55 @@ async function collectScreenerExpandedChecks(page, route) {
   }, route);
 }
 
+async function collectScreenerCheckboxTargetChecks(page, route) {
+  const viewport = page.viewportSize();
+  if (!viewport || viewport.width >= 768) {
+    return { route, failures: [] };
+  }
+
+  const checkbox = page.locator('[data-screener-stock-card] [data-screener-checkbox-target] input[type="checkbox"]:visible').first();
+  if ((await checkbox.count()) === 0) {
+    return {
+      route,
+      failures: [{ check: "screener-checkbox-target-click", detail: "no visible card checkbox" }],
+    };
+  }
+
+  await checkbox.scrollIntoViewIfNeeded();
+  const hitArea = await checkbox.evaluate((node) => {
+    const target = node.closest("[data-screener-checkbox-target]");
+    const targetRect = target?.getBoundingClientRect();
+    const pseudoStyle = target ? window.getComputedStyle(target, "::before") : null;
+    return {
+      checked: (node instanceof HTMLInputElement) ? node.checked : false,
+      target: targetRect?.toJSON() ?? null,
+      pseudoHeight: Number.parseFloat(pseudoStyle?.height || "0"),
+    };
+  });
+  const failures = [];
+  if (!hitArea.target || hitArea.pseudoHeight < 44) {
+    failures.push({ check: "screener-checkbox-target-click", detail: "44px label hit area missing" });
+    return { route, failures };
+  }
+
+  const clickX = hitArea.target.x + Math.min(10, hitArea.target.width / 2);
+  const clickY = hitArea.target.y - 1;
+  if (clickY < 0 || clickY < hitArea.target.y - ((hitArea.pseudoHeight - hitArea.target.height) / 2)) {
+    failures.push({ check: "screener-checkbox-target-click", detail: "expanded hit area is outside the viewport" });
+    return { route, failures };
+  }
+
+  await page.mouse.click(clickX, clickY);
+  await page.waitForTimeout(100);
+  if ((await checkbox.isChecked()) === hitArea.checked) {
+    failures.push({
+      check: "screener-checkbox-target-click",
+      detail: `outside-native click at ${Math.round(clickX)},${Math.round(clickY)} did not toggle the checkbox`,
+    });
+  }
+  return { route, failures };
+}
+
 async function collectScreenerCardViewChecks(page, route) {
   const viewport = page.viewportSize();
   if (!viewport || viewport.width < 768) {
@@ -3903,6 +3978,8 @@ try {
           const expandedChecks = await collectScreenerExpandedChecks(page, route);
           result.failures.push(...expandedChecks.failures);
           result.expandedScrollWidth = expandedChecks.scrollWidth;
+          const checkboxTargetChecks = await collectScreenerCheckboxTargetChecks(page, route);
+          result.failures.push(...checkboxTargetChecks.failures);
           const cardViewChecks = await collectScreenerCardViewChecks(page, route);
           result.failures.push(...cardViewChecks.failures);
           result.cardViewScrollWidth = cardViewChecks.scrollWidth;

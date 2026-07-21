@@ -1050,7 +1050,7 @@ function MobileStockCard({
       className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
     >
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
-        <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
@@ -1073,9 +1073,9 @@ function MobileStockCard({
             event.stopPropagation();
             onToggle();
           }}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--c-surface-2)] text-sm font-black text-[var(--c-ink-2)] transition focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+          className="cp-screener-expand-target shrink-0 transition focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
         >
-          {expanded ? "-" : "+"}
+          <span className="cp-screener-expand-target__visual" aria-hidden="true">{expanded ? "-" : "+"}</span>
         </button>
         <div onClick={onToggle} className="min-w-0 flex-1 cursor-pointer">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -1192,7 +1192,7 @@ function DesktopStockCard({
       className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
     >
       <div className="flex items-center justify-between gap-3 border-b border-[var(--c-line-2)] px-4 py-3">
-        <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
@@ -1215,9 +1215,9 @@ function DesktopStockCard({
           aria-controls={detailId}
           aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
           onClick={onToggle}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--c-surface-2)] text-sm font-black text-[var(--c-ink-2)] transition focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+          className="cp-screener-expand-target shrink-0 transition focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
         >
-          {expanded ? "-" : "+"}
+          <span className="cp-screener-expand-target__visual" aria-hidden="true">{expanded ? "-" : "+"}</span>
         </button>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -2701,7 +2701,7 @@ export default function ScreenerClient({
                       <option value="rich">고평가 (상위 25%)</option>
                     </select>
                   </label>
-                  <label className="cp-screener-check">
+                  <label data-screener-checkbox-target className="cp-screener-check">
                     <input
                       type="checkbox"
                       checked={profitableOnly}
@@ -3130,7 +3130,7 @@ export default function ScreenerClient({
                     <option value="rich">고평가 (상위 25%)</option>
                   </select>
                 </label>
-                <label className="inline-flex items-center gap-2 self-end text-sm font-bold text-[var(--c-ink-2)]">
+                <label data-screener-checkbox-target className="inline-flex items-center gap-2 self-end text-sm font-bold text-[var(--c-ink-2)]">
                   <input
                     type="checkbox"
                     checked={profitableOnly}
