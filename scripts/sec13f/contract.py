@@ -20,13 +20,13 @@ CIK_PATTERN = re.compile(r"^\d{10}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 EXPECTED_REGISTRY_SHA256 = "2a079d1adbe41acd7a1d3740bcfcc9e7f81a2b291ebe9e841efdd1f043edac35"
 PINNED_CONTENT_DIGESTS = {
-    "sec13f-base-output-manifest/v1": "2ff17cf362229ead4ed8ae1143632df1d55531d4e4c39d4d7e3d4a2046dfdca7",
+    "sec13f-base-output-manifest/v1": "409278b5dfbd321846aa74cc4155b9069b0e68dc2a53ae9a451e3c85d45d9e09",
     "sec13f-cch-cache-manifest/v1": "346e63bab2dcfacf6430adfaf2c29e0e85a2e5df7739b5bb41279b6ab0bb3ff5",
     "sec13f-cch-output-manifest/v1": "4decc214b9ffbfdf163b1289c2a98983bae602f7761bdf83888181e23be75c8b",
-    "sec13f-cch-platform-baseline/v1": "4b356d6ce689d720bc2b28abb3bfc3a72f188decda79c9d249311e0cc2fc8478",
+    "sec13f-cch-platform-baseline/v1": "dfa7cc22b98c4933e5cb5017acffa1cbde7ec8c09c0fc7ef6f2a22f988893404",
     "sec13f-cch-fixture-oracle/v1": "1139c6ac8007d0134b48956192d5aaaf8dee282028f43cefb0886362633baf9a",
     "sec13f-cch-snapshot/v1": "25ac11ff90bd5eaf8fcfbfa8e873a1d90803ac08668ac3e7eba9f344016b452c",
-    "sec13f-platform-derived-manifest/v1": "6c2f3664b34651e2d3ce02d808afb79576b7477eb757eb4996788b852fc6dd23",
+    "sec13f-platform-derived-manifest/v1": "86933a4248d211e66ec7909f8761ec57dc83c3ffffef411bc044944a93fe2ec6",
     "sec13f-generator-input/v1": "9f9d13eb9ce4980757fb4c69945bc644331ff3011cb631973c1d19213ddb56d9",
     "sec13f-slice0-fixtures/v1": "605dc8a6a096e2968c9af05f4f84a2185f621d580c49b96fdc2a4df611caf085",
 }
