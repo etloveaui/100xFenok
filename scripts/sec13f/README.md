@@ -120,3 +120,39 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
   tests.sec13f.test_slice_b_source \
   tests.sec13f.test_slice_b_ledger
 ```
+
+## Slice C0 local production input boundary
+
+`prepare_local_input.py` turns an explicit, fully local filing manifest into
+generator-safe investor input for the later Slice C backfill. It never creates
+a SEC client or falls back to the network: every XML component is read through
+the digest-validated `RawCache`, and every CUSIP resolution and unit decision
+is supplied as a versioned input.
+
+The manifest is `sec13f-local-input/v1` and contains the exact registry digest,
+all 60 investors' filings, and one `dollars` or `thousands` decision for every
+`(CIK, accession)`. The separate reference JSON maps each required CUSIP to a
+non-empty `ticker` and `sector`. Both input file bytes are recorded in the
+prepared artifact alongside the raw-cache source-set digest.
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/sec13f/prepare_local_input.py \
+  --manifest /explicit/sec13f-local-input.json \
+  --registry scripts/sec13f/config/investors.yaml \
+  --reference-mapping /explicit/cusip-reference.json \
+  --cache-root /explicit/private-sec13f-raw-cache \
+  --output /explicit/private-sec13f-prepared-input.json
+```
+
+The output must be an explicit noncanonical path; canonical/public SEC 13F
+trees and the immutable raw-cache root are rejected. Requested output paths
+containing symlink components or parent traversal are rejected, as are existing
+non-regular outputs. Replacing an existing regular prepared artifact additionally
+requires `--overwrite`. This command prepares
+input only: it does not run the 60-investor backfill, generate the 73 payloads,
+advance the ledger, or publish any data.
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
+  tests.sec13f.test_slice_c0_local_input
+```
