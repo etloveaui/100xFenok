@@ -1,19 +1,21 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "occ_options_volume",
-  "updated_at": "2026-07-18T12:09:05.395Z",
-  "retry_set": [],
+  "updated_at": "2026-07-21T04:08:58.380Z",
+  "retry_set": [
+    "occ_options_volume"
+  ],
   "items": {
     "occ_options_volume": {
       "key": "occ_options_volume",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/occ_options_volume/current/occ_options_volume.json",
+        "path": "data/admin/occ_options_volume/lkg/occ_options_volume.json",
         "payload_sha256": "61f1529321897a0a0badf27814232164659aed02a48bbcbebb50d07c2a086007",
         "source_as_of": "2026-07-17"
       },
-      "updated_at": "2026-07-18T12:09:05.395Z",
+      "updated_at": "2026-07-21T04:08:58.380Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -22,6 +24,17 @@
         "run_id": "29643409763",
         "run_attempt": 1,
         "observed_at": "2026-07-18T12:09:05.395Z"
+      },
+      "lkg": {
+        "path": "data/admin/occ_options_volume/lkg/occ_options_volume.json",
+        "payload_sha256": "61f1529321897a0a0badf27814232164659aed02a48bbcbebb50d07c2a086007",
+        "source_as_of": "2026-07-17"
+      },
+      "latest_failure": {
+        "run_id": "29799765665",
+        "run_attempt": 1,
+        "observed_at": "2026-07-21T04:08:58.380Z",
+        "reason": "decode_error"
       }
     }
   }

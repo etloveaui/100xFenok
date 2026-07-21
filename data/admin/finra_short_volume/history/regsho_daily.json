@@ -1,0 +1,26 @@
+{
+  "schema_version": "fenok-finra-marker-history/v1",
+  "lane_id": "finra_short_volume",
+  "persistence_policy": {
+    "schema_version": "finra-bounded-persistence/v1",
+    "basis": "source_date",
+    "scope": "per_artifact",
+    "max_distinct_source_dates": 100,
+    "eviction": "oldest_source_date_first"
+  },
+  "generated_at": "2026-07-21T04:02:21.354Z",
+  "entries": [
+    {
+      "schema_version": "fenok-finra-freshness-marker/v1",
+      "lane_id": "finra_short_volume",
+      "dataset_id": "regsho-daily",
+      "source_as_of": "2026-07-20",
+      "trade_date": "20260720",
+      "row_count": 12149,
+      "payload_sha256": "b60434044f6bd5ea3c54058d80966e92558241291449ef286dd0f09734b394e4",
+      "generated_at": "2026-07-21T04:02:21.354Z",
+      "raw_public": false,
+      "public_mirror_allowed": false
+    }
+  ]
+}

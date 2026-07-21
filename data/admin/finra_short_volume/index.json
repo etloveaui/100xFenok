@@ -1,36 +1,39 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "finra_short_volume",
-  "updated_at": "2026-07-18T12:03:03.229Z",
-  "retry_set": [
-    "regsho_daily"
-  ],
+  "updated_at": "2026-07-21T04:02:21.354Z",
+  "retry_set": [],
   "items": {
     "regsho_daily": {
       "key": "regsho_daily",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/finra_short_volume/lkg/regsho_daily.json",
-        "payload_sha256": "3574b6587d41e5e9cb4bcf11ad545fc6c1fef2a83569bbdc567c7debfe0063dd",
-        "source_as_of": "2026-07-17"
+        "path": "data/admin/finra_short_volume/current/regsho_daily.json",
+        "payload_sha256": "ad764789a3216e25a91e9d17434de14c53423fe027f597d5bc5580c0b1cdeb4b",
+        "source_as_of": "2026-07-20"
       },
-      "updated_at": "2026-07-18T12:03:03.229Z",
+      "updated_at": "2026-07-21T04:02:21.354Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "3574b6587d41e5e9cb4bcf11ad545fc6c1fef2a83569bbdc567c7debfe0063dd",
-        "source_as_of": "2026-07-17",
-        "run_id": "29629246100",
+        "payload_sha256": "ad764789a3216e25a91e9d17434de14c53423fe027f597d5bc5580c0b1cdeb4b",
+        "source_as_of": "2026-07-20",
+        "run_id": "29799765665",
         "run_attempt": 1,
-        "observed_at": "2026-07-18T03:41:42.993Z"
+        "observed_at": "2026-07-21T04:02:21.354Z"
       },
       "lkg": {
         "path": "data/admin/finra_short_volume/lkg/regsho_daily.json",
         "payload_sha256": "3574b6587d41e5e9cb4bcf11ad545fc6c1fef2a83569bbdc567c7debfe0063dd",
         "source_as_of": "2026-07-17"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "29643409763",
+      "recovered_at": "2026-07-21T04:02:21.354Z",
+      "recovery_run_id": "29799765665",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29643409763",
         "run_attempt": 1,
         "observed_at": "2026-07-18T12:03:03.229Z",
