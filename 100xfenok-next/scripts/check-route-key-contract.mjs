@@ -304,14 +304,18 @@ function assertRank2DailyWrapRedirectContract(errors) {
   const source = "/100x/100x-main.html";
   const destination = "/100x/daily-wrap";
   const expectedRule = `${source} ${destination} 308`;
-  const ibHelperRule = "/admin/ib-helper /admin/ib-helper/ 308";
+  const generatedAdminEnd = "# END GENERATED ADMIN REDIRECTS";
+  const manualRuleComment = "# Manual legacy archive remap.";
   const ruleIndex = lines.indexOf(expectedRule);
-  const ibHelperIndex = lines.indexOf(ibHelperRule);
+  const generatedAdminEndIndex = lines.indexOf(generatedAdminEnd);
+  const manualRuleCommentIndex = lines.indexOf(manualRuleComment);
 
   assert(ruleIndex !== -1, `${label}: missing _redirects rule ${expectedRule}`, errors);
-  assert(ibHelperIndex !== -1, `${label}: missing _redirects anchor ${ibHelperRule}`, errors);
-  if (ruleIndex !== -1 && ibHelperIndex !== -1) {
-    assert(ruleIndex === ibHelperIndex + 1, `${label}: ${expectedRule} must stay immediately after ${ibHelperRule}`, errors);
+  assert(generatedAdminEndIndex !== -1, `${label}: missing _redirects anchor ${generatedAdminEnd}`, errors);
+  assert(manualRuleCommentIndex !== -1, `${label}: missing _redirects anchor ${manualRuleComment}`, errors);
+  if (ruleIndex !== -1 && generatedAdminEndIndex !== -1 && manualRuleCommentIndex !== -1) {
+    assert(manualRuleCommentIndex === generatedAdminEndIndex + 1, `${label}: manual-rule comment must immediately follow the generated admin block`, errors);
+    assert(ruleIndex === manualRuleCommentIndex + 1, `${label}: ${expectedRule} must immediately follow its manual-rule comment`, errors);
   }
 }
 

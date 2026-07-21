@@ -11,6 +11,24 @@ export const tabSectorsRoute = "/?tab=sectors";
 export const tabLiquidityRoute = "/?tab=liquidity";
 export const tabSentimentRoute = "/?tab=sentiment";
 
+// ---- Cloudflare canonical admin redirects (source paths, no trailing slash) ----
+// This list is the only source for the generated block in public/_redirects.
+export const ADMIN_CANONICAL_REDIRECT_ROUTES = [
+  "/admin",
+  "/admin/data-lab",
+  "/admin/design-gallery",
+  "/admin/design-lab",
+  "/admin/design-lab/cp-kit",
+  "/admin/live",
+  "/admin/macro-monitor",
+  "/admin/market-radar",
+  "/admin/valuation-lab",
+  "/admin/stark-lab",
+  "/admin/personal",
+  "/admin/personal/travel",
+  "/admin/ib-helper",
+];
+
 // ---- Smoke test page routes (stockanalysis API surface) ----
 export const SMOKE_PAGE_ROUTES = [
   "/explore",
@@ -70,15 +88,8 @@ export const PLAYWRIGHT_ROUTES = [
   "/etfs/ADIU",
   "/market/events",
   "/100x/daily-wrap",
-  "/admin",
-  "/admin/design-lab",
+  ...ADMIN_CANONICAL_REDIRECT_ROUTES,
   designLabNativeRoute,
-  "/admin/data-lab",
-  "/admin/macro-monitor",
-  "/admin/market-radar",
-  "/admin/valuation-lab",
-  "/admin/stark-lab",
-  "/admin/ib-helper",
   "/tools/stock-analyzer",
   "/tools/stock-analyzer/native",
   "/this-route-should-not-exist",
