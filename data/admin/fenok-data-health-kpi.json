@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-21T10:50:40.104Z",
+  "generated_at": "2026-07-21T11:29:49.468Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "12 required lane(s) are not ready; healthy lanes may still publish.",
@@ -21,22 +21,22 @@
   },
   "runtime": {
     "producer_context": {
-      "built_at": "2026-07-21T05:41:04.912Z",
-      "duration_ms": 237,
-      "run_id": "29804288375",
+      "built_at": "2026-07-21T11:29:49.468Z",
+      "duration_ms": 233,
+      "run_id": "29825732223",
       "run_attempt": 1,
       "event_name": "schedule",
       "workflow": "Update Manifest",
-      "sha": "e8b0615a30647478d09096f5acba0f074369cf0d",
-      "slot_key": "update-manifest.yml:30 2 * * *@2026-07-21T02:30Z",
+      "sha": "7d3d184a71e592342a2cf6ef2a6b0f0947d5d669",
+      "slot_key": "update-manifest.yml:30 9 * * *@2026-07-21T09:30Z",
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-07-21T10:50:40.104Z",
-      "run_id": "29823046887",
+      "built_at": "2026-07-21T11:29:49.468Z",
+      "run_id": "29825732223",
       "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "d6b2295d62e2aebb3df2d4361d8821260ed5a3ab"
+      "event_name": "schedule",
+      "sha": "7d3d184a71e592342a2cf6ef2a6b0f0947d5d669"
     },
     "cadence": {
       "crons_utc": [
@@ -80,9 +80,10 @@
         "update-manifest.yml:30 9 * * *@2026-07-16T09:30Z",
         "update-manifest.yml:30 9 * * *@2026-07-17T09:30Z",
         "update-manifest.yml:30 9 * * *@2026-07-18T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-07-20T09:30Z"
+        "update-manifest.yml:30 9 * * *@2026-07-20T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-07-21T09:30Z"
       ],
-      "last_satisfied_slot_key": "update-manifest.yml:30 2 * * *@2026-07-21T02:30Z",
+      "last_satisfied_slot_key": "update-manifest.yml:30 9 * * *@2026-07-21T09:30Z",
       "missed_slot_keys": [
         "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-21T00:30Z",
         "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-15T10:30Z",
@@ -346,16 +347,25 @@
         "workflow": "Update Manifest",
         "status": "ready",
         "duration_ms": 237
+      },
+      {
+        "built_at": "2026-07-21T11:29:49.468Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-07-21T09:30Z",
+        "run_id": "29825732223",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 233
       }
     ],
     "authoritative_context": {
-      "authoritative": false,
-      "reason": "non_authoritative_context"
+      "authoritative": true,
+      "reason": "schedule"
     },
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-07-21T10:50:37.619Z",
+      "evaluated_at": "2026-07-21T11:29:47.563Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
@@ -438,7 +448,7 @@
           "schedule_id": "hourly_at_00",
           "cron": "0 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-07-21T08:00:00.000Z",
+          "expected_at": "2026-07-21T09:00:00.000Z",
           "observed_at": "2026-07-21T09:41:57.318Z",
           "state": "observed",
           "producer_status": "ready",
@@ -542,7 +552,7 @@
           "schedule_id": "hourly_at_05",
           "cron": "5 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-07-21T08:05:00.000Z",
+          "expected_at": "2026-07-21T09:05:00.000Z",
           "observed_at": "2026-07-21T10:39:08.640Z",
           "state": "observed",
           "producer_status": "ready",
@@ -1042,7 +1052,7 @@
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-07-20T00:15:45Z",
-              "collection_age_hours": 34.582,
+              "collection_age_hours": 35.235,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1241,7 +1251,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-07-20T00:15:59Z",
-              "collection_age_hours": 34.578,
+              "collection_age_hours": 35.231,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1298,7 +1308,7 @@
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-07-20T00:16:10Z",
-              "collection_age_hours": 34.575,
+              "collection_age_hours": 35.228,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4956,7 +4966,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-07-20T00:15:45Z",
-              "collection_age_hours": 34.582,
+              "collection_age_hours": 35.235,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5019,7 +5029,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-21T10:50:16.646Z",
+      "source_date": "2026-07-21T11:29:31.378Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -5035,7 +5045,7 @@
       "calendar": "wall_clock",
       "max_staleness": 30,
       "required": true,
-      "age": 2.26,
+      "age": 2.91,
       "status": "ready"
     },
     {
@@ -5046,7 +5056,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 49.1,
+      "age": 49.75,
       "status": "ready"
     },
     {
@@ -5057,7 +5067,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 48.94,
+      "age": 49.59,
       "status": "ready"
     },
     {
@@ -5068,7 +5078,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 163.76,
+      "age": 164.41,
       "status": "ready"
     },
     {
@@ -5079,44 +5089,44 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 48.54,
+      "age": 49.19,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-21T10:50:06.230Z",
+      "generated_at": "2026-07-21T11:29:23.428Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-21T10:50:31.241Z",
+      "generated_at": "2026-07-21T11:29:42.324Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-21T10:50:32.925Z",
+      "generated_at": "2026-07-21T11:29:43.643Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-21T10:50:16.585Z",
+      "generated_at": "2026-07-21T11:29:31.329Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-21T10:50:16.646Z",
+      "generated_at": "2026-07-21T11:29:31.378Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-21T10:49:57.409Z",
+      "generated_at": "2026-07-21T11:29:16.775Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5140,7 +5150,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-07-21T10:50:37.619Z",
+      "generated_at": "2026-07-21T11:29:47.563Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5176,7 +5186,7 @@
       "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 2 blockers; finra_full_us_source_ready: 690 / 691 · 2026-07-17; occ_full_us_source_ready: 690 / 691 · 2026-07-17. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:50:06.230Z",
+      "as_of": "2026-07-21T11:29:23.428Z",
       "counts": {
         "active_total": 1178,
         "by_market": [
@@ -5334,7 +5344,7 @@
       "status_message": "S1 candidate promotion gate is not ready: PUBLIC+DAILY+GATED with blocked ledger: NORMALIZED; gate blockers: 2 blockers. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:49:20.933Z",
+      "as_of": "2026-07-21T11:28:48.252Z",
       "counts": {
         "denominator": 1184,
         "current_public_stock": 1178,
@@ -5695,7 +5705,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-21T10:49:20.933Z",
+          "detail": "2026-07-21T11:28:48.252Z",
           "platform_blocking": false
         },
         {
@@ -5752,7 +5762,7 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:50:16.646Z",
+      "as_of": "2026-07-21T11:29:31.378Z",
       "counts": {
         "eligible_etf_count": 4431,
         "scored_public_etf": 4431,
@@ -7258,7 +7268,7 @@
       "status_message": "RIM inputs is not ready: KOSPI RIM input: input_only_krx_exact_weights_no_fair_value. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:50:31.241Z",
+      "as_of": "2026-07-21T11:29:42.324Z",
       "counts": {
         "required_ready": 3,
         "required_total": 4,
@@ -7413,7 +7423,7 @@
       "status_message": "Product surface freshness is not ready: product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:50:32.925Z",
+      "as_of": "2026-07-21T11:29:43.643Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -7472,7 +7482,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-21T10:50:32.925Z",
+          "detail": "2026-07-21T11:29:43.643Z",
           "platform_blocking": false
         },
         {
@@ -7537,7 +7547,7 @@
       "status_message": "FINRA/OCC source gate is not ready: plain US FINRA: 690 / 691; plain US OCC: 690 / 691. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:50:16.585Z",
+      "as_of": "2026-07-21T11:29:31.329Z",
       "counts": {
         "active_us_total": 750,
         "plain_us_finra_denominator": 691,
@@ -7549,10 +7559,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-21T10:49:25.555Z",
+          "signals_generated_at": "2026-07-21T11:28:52.006Z",
           "finra_source_date": "20260717",
           "occ_source_date": "20260717",
-          "coverage_index_generated_at": "2026-07-21T10:50:06.230Z",
+          "coverage_index_generated_at": "2026-07-21T11:29:23.428Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -7592,7 +7602,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-21T10:50:16.585Z",
+          "detail": "2026-07-21T11:29:31.329Z",
           "platform_blocking": true
         },
         {
@@ -7645,7 +7655,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21T10:50:40.388Z",
+      "as_of": "2026-07-21T11:29:49.690Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
