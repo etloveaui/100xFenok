@@ -14,6 +14,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_stock_financial",
       "stockanalysis_surfaces",
       "yahoo_ticker_macro",
       "sentiment",
@@ -39,6 +40,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_stock_financial",
       "stockanalysis_surfaces",
       "yahoo_ticker_macro",
       "sentiment",
@@ -60,9 +62,9 @@
       "gdelt_news_tone"
     ]
   },
-  "config_digest": "9e203a88df6b99dfe9d7d7a7b9f09ab232b3ac2fc1a19729977b96ceecf4b3b3",
-  "logical_lane_count": 23,
-  "producer_member_count": 27,
+  "config_digest": "b3bcf080330ad0b0492491f344d422c5a54a8125c32652b8aacfc7c433f5e4c9",
+  "logical_lane_count": 24,
+  "producer_member_count": 28,
   "slickcharts_member_ids": [
     "daily",
     "weekly",
@@ -90,17 +92,17 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "9912d573466213707536f23db7761f1c94b96c12894e1039b8e6eadd23c7c220",
+    "report_file_sha256": "40350b343e92e278e44e1d37d4d733a55cd0138f07c8073f98e71ce879bacea7",
     "expected_report": {
-      "config_digest": "9e203a88df6b99dfe9d7d7a7b9f09ab232b3ac2fc1a19729977b96ceecf4b3b3",
+      "config_digest": "b3bcf080330ad0b0492491f344d422c5a54a8125c32652b8aacfc7c433f5e4c9",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 24,
+        "producer_members_ready": 25,
         "producer_members_stale": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3,
-        "ready": 20,
+        "ready": 21,
         "stale": 0,
         "unavailable": 0,
         "unobserved": 3
@@ -296,6 +298,30 @@
           "id": "stockanalysis_etf_universe",
           "kpi_required": true,
           "label": "StockAnalysis ETF universe",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "stockanalysis_stock_financial_candidates"
+          ],
+          "artifact": {
+            "age": 0,
+            "reason": "ok",
+            "source_as_of": "2026-07-11T00:00:00Z",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "stockanalysis_stock_financial",
+          "kpi_required": false,
+          "label": "StockAnalysis bounded stock and financial pairs",
           "monitoring_mode": "post_fetch_artifact",
           "reason": "ok",
           "status": "ready"
@@ -750,13 +776,13 @@
           "status": "unobserved"
         }
       ],
-      "logical_lane_count": 23,
+      "logical_lane_count": 24,
       "monitoring_mode_counts": {
         "artifact_only": 1,
         "composite": 1,
-        "post_fetch_artifact": 21
+        "post_fetch_artifact": 22
       },
-      "producer_member_count": 27,
+      "producer_member_count": 28,
       "schema_version": "data-supply-detection-floor/v1"
     }
   },
@@ -888,5 +914,5 @@
       "expected_logical_status": "unavailable"
     }
   ],
-  "registry_digest": "71cf7c14f2e7ac8fad728a8d1b6e7cd724fffd5ee8a3b60fed96aa00c28acc62"
+  "registry_digest": "339f0cb0647be380dfabb4b672f919cccb53b18aa18451f112ba61464d4c8792"
 }

@@ -48,6 +48,21 @@ assert.deepEqual(
 );
 assert.equal(lane("stockanalysis_surfaces").enforcement, "shadow");
 assert.equal(lane("stockanalysis_surfaces").kpi_required, false);
+assert.equal(lane("stockanalysis_stock_financial").enforcement, "shadow");
+assert.equal(lane("stockanalysis_stock_financial").kpi_required, false);
+assert.equal(lane("stockanalysis_stock_financial").endpoint_contract.transport, "library");
+assert.deepEqual(
+  lane("stockanalysis_stock_financial").endpoint_contract.assertions
+    .filter((assertion) => assertion.kind === "exact")
+    .map((assertion) => [assertion.id, assertion.pointer, assertion.value]),
+  [
+    ["stock_financial_requested", "/counts/requested", 8],
+    ["stock_financial_stock_ok", "/counts/stock_ok", 8],
+    ["stock_financial_financial_ok", "/counts/financial_ok", 8],
+    ["stock_financial_failed", "/counts/failed", 0],
+    ["stock_financial_tickers", "/tickers", ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "JPM"]],
+  ],
+);
 assert.deepEqual(
   lane("stockanalysis_surfaces").freshness.source_basis,
   [],
@@ -297,6 +312,90 @@ try {
   assert.equal(classifyAttempt(surfacesReady).reason, "ok");
   validateAttemptShard(readShard(root, "stockanalysis_surfaces"), "stockanalysis_surfaces");
 
+  const stockFinancialReady = emitStockAnalysisAttempt({
+    laneId: "stockanalysis_stock_financial",
+    shardRoot: root,
+    attemptId: "gh-907-stock-financial-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "library",
+      candidate_count: 1,
+      observations: [{
+        execution: "returned",
+        retry_count: 0,
+        latency_ms: 0,
+        outcome: "success",
+        document: {
+          counts: { requested: 8, stock_ok: 8, financial_ok: 8, failed: 0 },
+          tickers: ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "JPM"],
+          pairs: Array.from({ length: 8 }, (_, index) => ({
+            ticker: `T${index}`,
+            stock_path: `data/stockanalysis/stocks/T${index}.json`,
+            financial_path: `data/stockanalysis/financials/T${index}.json`,
+          })),
+        },
+      }],
+    },
+  });
+  assert.equal(classifyAttempt(stockFinancialReady).reason, "ok");
+  validateAttemptShard(readShard(root, "stockanalysis_stock_financial"), "stockanalysis_stock_financial");
+
+  const stockFinancialTorn = emitStockAnalysisAttempt({
+    laneId: "stockanalysis_stock_financial",
+    shardRoot: root,
+    attemptId: "gh-907-stock-financial-torn-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "library",
+      candidate_count: 1,
+      observations: [{
+        execution: "returned",
+        retry_count: 0,
+        latency_ms: 0,
+        outcome: "success",
+        document: {
+          counts: { requested: 8, stock_ok: 8, financial_ok: 7, failed: 1 },
+          tickers: ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA"],
+          pairs: Array.from({ length: 7 }, (_, index) => ({
+            ticker: `T${index}`,
+            stock_path: `data/stockanalysis/stocks/T${index}.json`,
+            financial_path: `data/stockanalysis/financials/T${index}.json`,
+          })),
+        },
+      }],
+    },
+  });
+  assert.equal(classifyAttempt(stockFinancialTorn).reason, "schema_drift",
+    "a torn stock/financial batch must not report ready");
+
+  const stockFinancialWrongRoster = emitStockAnalysisAttempt({
+    laneId: "stockanalysis_stock_financial",
+    shardRoot: root,
+    attemptId: "gh-907-stock-financial-wrong-roster-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "library",
+      candidate_count: 1,
+      observations: [{
+        execution: "returned",
+        retry_count: 0,
+        latency_ms: 0,
+        outcome: "success",
+        document: {
+          counts: { requested: 8, stock_ok: 8, financial_ok: 8, failed: 0 },
+          tickers: ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "AMD"],
+          pairs: ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "AMD"].map((ticker) => ({
+            ticker,
+            stock_path: `data/stockanalysis/stocks/${ticker}.json`,
+            financial_path: `data/stockanalysis/financials/${ticker}.json`,
+          })),
+        },
+      }],
+    },
+  });
+  assert.equal(classifyAttempt(stockFinancialWrongRoster).reason, "schema_drift",
+    "a different eight-ticker roster must not impersonate the bounded scheduled basket");
+
   const surfaceUnexpectedAfterSuccess = emitStockAnalysisAttempt({
     laneId: "stockanalysis_surfaces",
     shardRoot: root,
@@ -347,6 +446,7 @@ try {
       ...readShard(root, "yahoo_etf_fallback").attempts,
       ...readShard(root, "stockanalysis_etf_universe").attempts,
       ...readShard(root, "stockanalysis_surfaces").attempts,
+      ...readShard(root, "stockanalysis_stock_financial").attempts,
     ],
   };
   assert.equal(validateAttemptEvidence(merged), true, "lane-specific attempt IDs merge without collision");
@@ -359,6 +459,7 @@ assert.match(workflow, /test-stockanalysis-attempt-emitter\.mjs/);
 assert.match(workflow, /detection-attempts\/yahoo_etf_fallback\.json/);
 assert.match(workflow, /detection-attempts\/stockanalysis_etf_universe\.json/);
 assert.match(workflow, /detection-attempts\/stockanalysis_surfaces\.json/);
+assert.match(workflow, /detection-attempts\/stockanalysis_stock_financial\.json/);
 
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
@@ -372,7 +473,12 @@ assert.match(workflow, /detection-attempts\/stockanalysis_surfaces\.json/);
     `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-  assert.deepEqual(gate.lanes.sort(), ["stockanalysis_etf_universe", "stockanalysis_surfaces", "yahoo_etf_fallback"].sort(), "registry lane attribution for this workflow");
+  assert.deepEqual(gate.lanes.sort(), [
+    "stockanalysis_etf_universe",
+    "stockanalysis_stock_financial",
+    "stockanalysis_surfaces",
+    "yahoo_etf_fallback",
+  ].sort(), "registry lane attribution for this workflow");
 }
 
 console.log("PASS stockanalysis attempt emitter");

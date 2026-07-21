@@ -74,6 +74,9 @@ class StockAnalysisAttemptTracker:
         self.yahoo_producer_failure: dict | None = None
         self.universe_started = False
         self.universe_observations: list[dict] = []
+        self.stock_financial_started = False
+        self.stock_financial_expected = 0
+        self.stock_financial_results: list[dict] = []
         self.surfaces_started = False
         self.surface_observations: list[dict] = []
 
@@ -146,6 +149,15 @@ class StockAnalysisAttemptTracker:
         if self.active:
             self.surfaces_started = True
 
+    def start_stock_financial(self, expected_count: int) -> None:
+        if self.active:
+            self.stock_financial_started = True
+            self.stock_financial_expected = int(expected_count)
+
+    def record_stock_financial(self, result: dict) -> None:
+        if self.active and self.stock_financial_started:
+            self.stock_financial_results.append(result)
+
     def record_surface_http(self, status_code: int, result: dict) -> None:
         if self.active:
             self.surface_observations.append({
@@ -203,6 +215,57 @@ class StockAnalysisAttemptTracker:
                 "stockanalysis_etf_universe",
                 {"transport": "http", "observations": self.universe_observations},
                 "universe",
+            )
+        if self.stock_financial_started:
+            stock_ok = [
+                result for result in self.stock_financial_results
+                if result.get("error") is None and result.get("path")
+            ]
+            financial_ok = [
+                result for result in self.stock_financial_results
+                if result.get("error") is None and result.get("financials_path")
+            ]
+            pairs = [
+                {
+                    "ticker": result["ticker"],
+                    "stock_path": f"data/stockanalysis/{result['path']}",
+                    "financial_path": f"data/stockanalysis/{result['financials_path']}",
+                }
+                for result in self.stock_financial_results
+                if result.get("error") is None and result.get("path") and result.get("financials_path")
+            ]
+            requested = self.stock_financial_expected
+            failed = max(requested - len(pairs), 0)
+            complete = (
+                requested == 8
+                and len(self.stock_financial_results) == requested
+                and len(stock_ok) == requested
+                and len(financial_ok) == requested
+                and failed == 0
+            )
+            self._emit(
+                "stockanalysis_stock_financial",
+                {
+                    "transport": "library",
+                    "candidate_count": 1,
+                    "observations": [{
+                        "execution": "returned",
+                        "retry_count": 0,
+                        "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.stock_financial_results),
+                        "outcome": "success" if complete else "error",
+                        "document": {
+                            "counts": {
+                                "requested": requested,
+                                "stock_ok": len(stock_ok),
+                                "financial_ok": len(financial_ok),
+                                "failed": failed,
+                            },
+                            "tickers": [pair["ticker"] for pair in pairs],
+                            "pairs": pairs,
+                        },
+                    }],
+                },
+                "stock-financial",
             )
         if self.surfaces_started:
             if not self.surface_observations:
@@ -300,6 +363,10 @@ DEFAULT_STOCKS = [
     "INTC", "V", "JNJ", "ORCL", "CSCO", "LRCX", "AMAT", "MA",
     "CAT", "ARM", "ABBV", "BAC", "CVX", "GE", "NFLX", "MS",
 ]
+STOCK_FINANCIAL_DETECTION_SCHEDULE = "20 21 * * *"
+STOCK_FINANCIAL_DETECTION_TICKERS = (
+    "AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "JPM",
+)
 HISTORY_PERIOD_ENDPOINTS = {
     "daily_1y": {"range": "1Y", "period": "Daily"},
     "weekly_1y": {"range": "1Y", "period": "Weekly"},
@@ -1062,6 +1129,16 @@ def parse_symbols(value: str) -> list[str]:
             out.append(symbol)
             seen.add(symbol)
     return out
+
+
+def should_emit_stock_financial_detection(args: argparse.Namespace, stocks: list[str]) -> bool:
+    return bool(
+        args.require_stock_financial_pair
+        and args.natural_run
+        and args.event_name == "schedule"
+        and args.event_schedule == STOCK_FINANCIAL_DETECTION_SCHEDULE
+        and tuple(stocks) == STOCK_FINANCIAL_DETECTION_TICKERS
+    )
 
 
 def parse_history_periods(value: str) -> tuple[str, ...]:
@@ -5429,6 +5506,9 @@ def _main() -> None:
         run_id=args.run_id,
         run_attempt=args.run_attempt,
     )
+    stock_financial_detection_active = should_emit_stock_financial_detection(args, stocks)
+    if stock_financial_detection_active:
+        ATTEMPT_TRACKER.start_stock_financial(len(stocks))
     if args.endpoint_canary:
         try:
             canary = run_endpoint_canary(args.timeout)
@@ -5651,6 +5731,8 @@ def _main() -> None:
                 ),
             )
             results.append(result)
+            if kind == "stock" and stock_financial_detection_active:
+                ATTEMPT_TRACKER.record_stock_financial(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
             if result["error"] is None and result.get("provider") == "yahoo_finance":
                 status = "YF_FALLBACK"

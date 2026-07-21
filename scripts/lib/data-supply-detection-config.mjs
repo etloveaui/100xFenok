@@ -34,6 +34,17 @@ const SLICKCHARTS_MEMBER_IDS = Object.freeze([
   "symbols",
 ]);
 
+const STOCKANALYSIS_STOCK_FINANCIAL_TICKERS = Object.freeze([
+  "AAPL",
+  "NVDA",
+  "MSFT",
+  "AMZN",
+  "GOOGL",
+  "META",
+  "TSLA",
+  "JPM",
+]);
+
 // OWNERLESS_LANE_IDS derives from the lane registry (artifact_only lanes).
 const OWNERLESS_LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
@@ -152,6 +163,10 @@ function minKeysAssertion(id, pointer, min = 1) {
 
 function exactAssertion(id, pointer, value) {
   return { id, kind: "exact", pointer, value };
+}
+
+function enumAssertion(id, pointer, values) {
+  return { id, kind: "enum", pointer, values };
 }
 
 function nonEmptySeriesAssertion(id, pointer) {
@@ -449,6 +464,57 @@ const config = {
       ),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
       affectedSurfaceIds: ["stockanalysis_etf_universe"],
+    }),
+    lane({
+      id: "stockanalysis_stock_financial",
+      label: "StockAnalysis bounded stock and financial pairs",
+      members: [registryMember("stockanalysis_stock_financial", ["20 21 * * *"],
+        STOCKANALYSIS_STOCK_FINANCIAL_TICKERS.flatMap((ticker) => [
+          artifact(`stockanalysis_stock_state_${ticker.toLowerCase()}`, `data/admin/stockanalysis-recovery/states/stock/${ticker}.json`, {
+            schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-state/v1"),
+            sourceSelector: pointerSource("/last_attempt/observed_at", "rfc3339"),
+            assertions: [
+              exactAssertion(`stockanalysis_stock_kind_${ticker.toLowerCase()}`, "/artifact_kind", "stock"),
+              exactAssertion(`stockanalysis_stock_entity_${ticker.toLowerCase()}`, "/entity", ticker),
+              exactAssertion(`stockanalysis_stock_event_${ticker.toLowerCase()}`, "/last_attempt/event_name", "schedule"),
+              exactAssertion(`stockanalysis_stock_schedule_${ticker.toLowerCase()}`, "/last_attempt/schedule", "20 21 * * *"),
+              exactAssertion(`stockanalysis_stock_natural_${ticker.toLowerCase()}`, "/last_attempt/natural", true),
+              exactAssertion(`stockanalysis_stock_controlled_${ticker.toLowerCase()}`, "/last_attempt/controlled", false),
+              enumAssertion(`stockanalysis_stock_outcome_${ticker.toLowerCase()}`, "/last_attempt/outcome", ["fresh", "recovered"]),
+            ],
+          }),
+          artifact(`stockanalysis_financial_state_${ticker.toLowerCase()}`, `data/admin/stockanalysis-recovery/states/financial/${ticker}.json`, {
+            schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-state/v1"),
+            sourceSelector: pointerSource("/last_attempt/observed_at", "rfc3339"),
+            assertions: [
+              exactAssertion(`stockanalysis_financial_kind_${ticker.toLowerCase()}`, "/artifact_kind", "financial"),
+              exactAssertion(`stockanalysis_financial_entity_${ticker.toLowerCase()}`, "/entity", ticker),
+              exactAssertion(`stockanalysis_financial_event_${ticker.toLowerCase()}`, "/last_attempt/event_name", "schedule"),
+              exactAssertion(`stockanalysis_financial_schedule_${ticker.toLowerCase()}`, "/last_attempt/schedule", "20 21 * * *"),
+              exactAssertion(`stockanalysis_financial_natural_${ticker.toLowerCase()}`, "/last_attempt/natural", true),
+              exactAssertion(`stockanalysis_financial_controlled_${ticker.toLowerCase()}`, "/last_attempt/controlled", false),
+              enumAssertion(`stockanalysis_financial_outcome_${ticker.toLowerCase()}`, "/last_attempt/outcome", ["fresh", "recovered"]),
+            ],
+          }),
+        ]))],
+      endpointContract: {
+        ...endpointAssertions("stockanalysis_stock_financial_batch", [
+          exactAssertion("stock_financial_requested", "/counts/requested", 8),
+          exactAssertion("stock_financial_stock_ok", "/counts/stock_ok", 8),
+          exactAssertion("stock_financial_financial_ok", "/counts/financial_ok", 8),
+          exactAssertion("stock_financial_failed", "/counts/failed", 0),
+          exactAssertion("stock_financial_tickers", "/tickers", STOCKANALYSIS_STOCK_FINANCIAL_TICKERS),
+          objectArrayFieldsAssertion("stock_financial_pairs", "/pairs", {
+            fields: { ticker: "string", stock_path: "string", financial_path: "string" },
+            min: 8,
+            nonEmptyFields: ["ticker", "stock_path", "financial_path"],
+            uniqueBy: "ticker",
+          }),
+        ]),
+        transport: "library",
+      },
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
+      affectedSurfaceIds: ["stockanalysis_stock_financial_candidates"],
     }),
     lane({
       id: "stockanalysis_surfaces",

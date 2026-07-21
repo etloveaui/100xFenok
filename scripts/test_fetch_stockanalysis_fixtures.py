@@ -59,6 +59,32 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
+    def test_stock_financial_detection_requires_exact_natural_schedule_and_basket(self) -> None:
+        def args(**overrides):
+            values = {
+                "require_stock_financial_pair": True,
+                "natural_run": True,
+                "event_name": "schedule",
+                "event_schedule": "20 21 * * *",
+            }
+            values.update(overrides)
+            return type("Args", (), values)()
+
+        basket = list(self.fetcher.STOCK_FINANCIAL_DETECTION_TICKERS)
+        self.assertTrue(self.fetcher.should_emit_stock_financial_detection(args(), basket))
+        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
+            args(event_name="workflow_dispatch", event_schedule=""), basket
+        ))
+        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
+            args(event_schedule="50 23 * * 1-5"), basket
+        ))
+        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
+            args(), [*basket[:-1], "AMD"]
+        ))
+        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
+            args(require_stock_financial_pair=False), basket
+        ))
+
     def test_attempt_tracker_emits_empty_yahoo_and_http_universe_and_surfaces_with_distinct_ids(self) -> None:
         original_run = self.fetcher.subprocess.run
         calls = []

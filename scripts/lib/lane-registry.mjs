@@ -271,7 +271,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe, stockanalysis_stock_financial, and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
   }),
   record({
     id: "stockanalysis_etf_universe",
@@ -293,7 +293,32 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback, stockanalysis_stock_financial, and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
+  }),
+  record({
+    id: "stockanalysis_stock_financial",
+    label: "StockAnalysis bounded stock and financial pairs",
+    owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "daily", provider: "stockanalysis (bounded 8-pair shared workflow schedule)" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/stockanalysis-recovery",
+    detection_attempt: attemptShard("stockanalysis_stock_financial"),
+    canonical_outputs: ["data/stockanalysis/stocks", "data/stockanalysis/financials"],
+    public_mirror: [
+      "100xfenok-next/public/data/stockanalysis/stocks",
+      "100xfenok-next/public/data/stockanalysis/financials",
+    ],
+    commit_shards: [
+      attemptShard("stockanalysis_stock_financial"),
+      "data/stockanalysis",
+      "data/admin/stockanalysis-recovery",
+    ],
+    recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    kpi_recovery_shape: "direct",
+    declared_exception: "emitter-first shadow lane; shares the multi-kind StockAnalysis recovery store and promotes only after a natural committed 8-pair attempt shard",
   }),
   record({
     id: "stockanalysis_surfaces",
@@ -315,7 +340,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback and stockanalysis_etf_universe (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback, stockanalysis_etf_universe, and stockanalysis_stock_financial (store is multi-kind: stock/financial/surface/universe)",
   }),
   record({
     id: "yahoo_ticker_macro",
@@ -1108,7 +1133,7 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_bat
     commitSpec("100xfenok-next/public/data/yf/quarter_closes.json", "file", true),
   ],
 }, [commitSpec("data/yf/finance/_summary.json", "file")]);
-workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_surfaces"], {
+workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"], {
   always_if_exists: [
     commitSpec("data/stockanalysis", "directory", true),
     commitSpec("data/yf/etf-details", "directory", true),
@@ -1116,6 +1141,7 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "file"),
+    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "file"),
     commitSpec("data/yf/finance", "dynamic_set"),
   ],

@@ -8,6 +8,7 @@ import {
   validateAttemptShard,
 } from "../build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./data-supply-detection-config.mjs";
+import { canonicalJson } from "./json-canonical.mjs";
 
 export { ATTEMPT_SHARD_SCHEMA };
 const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
@@ -289,6 +290,7 @@ function assertionPassed(assertion, document) {
     return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === candidate;
   };
   if (assertion.kind === "type") return typeMatches(value, assertion.expected);
+  if (assertion.kind === "exact") return canonicalJson(value) === canonicalJson(assertion.value);
   if (assertion.kind === "min_rows") return Array.isArray(value) && value.length >= assertion.min;
   if (assertion.kind === "object_fields") {
     return value !== null && typeof value === "object" && !Array.isArray(value)

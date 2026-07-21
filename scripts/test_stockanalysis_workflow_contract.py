@@ -49,6 +49,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             'if [ "${INPUT_ISOLATED_STOCK_SCHEDULE:-false}" = "true" ]; then',
             self.text,
         )
+        self.assertIn(
+            "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json",
+            self.text,
+        )
 
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (

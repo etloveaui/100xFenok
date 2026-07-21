@@ -1523,13 +1523,13 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(rootCronShadow.mode, "shadow");
   assert.equal(rootCronShadow.deployment_blocking, false);
   assert.deepEqual(rootCronShadow.counts, {
-    scheduled_members: 26,
-    schedule_bindings: 29,
-    observed: 27,
+    scheduled_members: 27,
+    schedule_bindings: 30,
+    observed: 28,
     suspected_skips: 2,
     attempt_gaps: 0,
   });
-  assert.equal(rootCronShadow.rows.length, 29);
+  assert.equal(rootCronShadow.rows.length, 30);
   assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "gdelt_news_tone"]);
   assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
   assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
