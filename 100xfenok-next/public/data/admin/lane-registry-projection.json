@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-21T06:47:06.069Z",
+  "generated_at": "2026-07-21T08:11:00.081Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 28,
+  "lane_count": 31,
   "lanes": [
     {
       "id": "fred_macro",
@@ -98,6 +98,18 @@
         "provider": "stockanalysis (shared workflow)"
       },
       "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "stockanalysis_stock_financial",
+      "label": "StockAnalysis bounded stock and financial pairs",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "stockanalysis (bounded 8-pair shared workflow schedule)"
+      },
+      "enforcement": "shadow",
       "privacy_class": "public_mirror",
       "owner_workflow": "fetch-stockanalysis.yml"
     },
@@ -258,12 +270,36 @@
       "owner_workflow": null
     },
     {
+      "id": "benchmarks",
+      "label": "Bloomberg benchmark converter payloads",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "owner-run fenok-benchmarks converter"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": null
+    },
+    {
+      "id": "global_scouter",
+      "label": "Global Scouter converter payload",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "owner-run global-scouter converter"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": null
+    },
+    {
       "id": "damodaran",
       "label": "Damodaran valuation data",
       "store_kind": "payload",
       "cadence": {
         "kind": "weekly",
-        "provider": "NYU Stern Damodaran"
+        "provider": "NYU Stern Damodaran owner guard"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",

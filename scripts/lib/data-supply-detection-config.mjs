@@ -45,10 +45,12 @@ const STOCKANALYSIS_STOCK_FINANCIAL_TICKERS = Object.freeze([
   "JPM",
 ]);
 
-// OWNERLESS_LANE_IDS derives from the lane registry (artifact_only lanes).
+// OWNERLESS_LANE_IDS derives from truly unobservable artifact-only lanes. An
+// external converter may also be artifact-only, but a declared payload cadence
+// makes it evidence-backed rather than ownerless.
 const OWNERLESS_LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
-    .filter((lane) => lane.store_kind === "artifact_only")
+    .filter((lane) => lane.store_kind === "artifact_only" && lane.cadence.provenance === undefined)
     .map((lane) => lane.id),
 );
 
@@ -197,6 +199,10 @@ function registryMember(id, schedule, artifactContracts, cadenceCalendar = "utc"
     throw new TypeError(`detection member ${id} has no registry-owned workflow`);
   }
   return member(id, registryLane.owner_workflow, schedule, artifactContracts, cadenceCalendar);
+}
+
+function externalMember(id, cadenceDeclaration, artifactContracts) {
+  return member(id, null, [], artifactContracts, null, cadenceDeclaration);
 }
 
 function endpoint(endpointFamily, assertionId = null, pointer = null, expected = null) {
@@ -829,6 +835,78 @@ const config = {
       visibility: "admin_only",
     }),
     lane({
+      id: "benchmarks",
+      label: "Bloomberg benchmark converter payloads",
+      ownerWorkflow: null,
+      monitoringMode: "artifact_only",
+      members: [externalMember("benchmarks", {
+        kind: "payload_field",
+        evidence: "/metadata/update_frequency",
+      }, [
+        "us",
+        "us_sectors",
+        "developed",
+        "emerging",
+        "msci",
+        "micro_sectors",
+      ].map((file) => artifact(`benchmarks_${file}`, `data/benchmarks/${file}.json`, {
+        sourceSelector: pointerSource("/metadata/version", "date"),
+        assertions: [
+          typeAssertion(`benchmarks_${file}_metadata`, "/metadata", "object"),
+          exactAssertion(`benchmarks_${file}_weekly`, "/metadata/update_frequency", "weekly"),
+          typeAssertion(`benchmarks_${file}_sections`, "/sections", "object"),
+          minKeysAssertion(`benchmarks_${file}_sections_non_empty`, "/sections", 1),
+        ],
+      })))],
+      endpointContract: endpoint("converter_payload"),
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      affectedSurfaceIds: ["market_valuation", "sectors", "dashboard"],
+    }),
+    lane({
+      id: "global_scouter",
+      label: "Global Scouter converter payload",
+      ownerWorkflow: null,
+      monitoringMode: "artifact_only",
+      members: [externalMember("global_scouter", {
+        kind: "payload_field",
+        evidence: "/update_frequency",
+      }, [
+        artifact("global_scouter_metadata", "data/global-scouter/core/metadata.json", {
+          sourceSelector: pointerSource("/source_date", "date"),
+          assertions: [
+            exactAssertion("global_scouter_source", "/source", "Global Scouter"),
+            exactAssertion("global_scouter_weekly", "/update_frequency", "weekly"),
+            typeAssertion("global_scouter_counts", "/counts", "object"),
+            typeAssertion("global_scouter_stocks", "/counts/stocks", "number"),
+          ],
+        }),
+      ])],
+      endpointContract: endpoint("converter_payload"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      affectedSurfaceIds: ["screener", "stock_detail", "explore"],
+    }),
+    lane({
+      id: "damodaran",
+      label: "Damodaran owner-guard producer",
+      members: [registryMember("damodaran", ["17 11 * * 6"], [
+        artifact("damodaran_owner_guard", "data/admin/damodaran/owner-guard.json", {
+          schemaVersion: schemaVersion("/schema_version", "damodaran-owner-guard/v1"),
+          sourceSelector: pointerSource("/fetched_at", "rfc3339"),
+          assertions: [
+            exactAssertion("damodaran_guard_status", "/status", "match"),
+            exactAssertion("damodaran_guard_mode", "/mode", "owner_guard"),
+            exactAssertion("damodaran_ownership_flip", "/ownership_flip", true),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertion(
+        "damodaran_converter",
+        exactAssertion("owner_guard_match", "/status", "match"),
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      affectedSurfaceIds: ["market_valuation", "stock_detail", "regime"],
+    }),
+    lane({
       id: "finra_short_volume",
       label: "FINRA short volume",
       members: [registryMember("finra_short_volume", ["30 0 * * 2-6"], [
@@ -1130,10 +1208,15 @@ function validateMember(memberValue, context) {
     if (schedules.has(schedule)) fail(`${context}.schedule contains duplicates`);
     schedules.add(schedule);
   });
-  const hasDeclaredCadence = memberValue.cadence_declaration !== null;
-  if (hasDeclaredCadence !== (memberValue.schedule.length > 0)) fail(`${context}.schedule contradicts cadence declaration`);
-  if (hasDeclaredCadence !== (memberValue.cadence_calendar !== null)) fail(`${context}.cadence_calendar contradicts cadence declaration`);
-  if ((memberValue.workflow !== null) !== (memberValue.cadence_declaration?.kind === "github_workflow")) {
+  const cadenceKind = memberValue.cadence_declaration?.kind ?? null;
+  const githubCadence = cadenceKind === "github_workflow";
+  const externalCadence = cadenceKind === "owner_contract" || cadenceKind === "payload_field";
+  if (githubCadence !== (memberValue.schedule.length > 0)) fail(`${context}.schedule contradicts cadence declaration`);
+  if (githubCadence !== (memberValue.cadence_calendar !== null)) fail(`${context}.cadence_calendar contradicts cadence declaration`);
+  if (externalCadence && (memberValue.schedule.length !== 0 || memberValue.cadence_calendar !== null)) {
+    fail(`${context}.external cadence fabricates a run slot`);
+  }
+  if ((memberValue.workflow !== null) !== githubCadence) {
     fail(`${context}.workflow contradicts cadence declaration provenance`);
   }
   if (!Array.isArray(memberValue.artifact_contracts) || memberValue.artifact_contracts.length === 0) {
@@ -1261,13 +1344,28 @@ function validateLane(laneValue, index) {
     const actualIds = laneValue.producer_members.map((memberValue) => memberValue.id);
     if (canonicalJson(actualIds) !== canonicalJson(SLICKCHARTS_MEMBER_IDS)) fail(`${context} has the wrong five members`);
   } else {
-    if (laneValue.monitoring_mode !== "post_fetch_artifact") fail(`${context} must have a post-fetch producer`);
     if (laneValue.producer_members.length !== 1 || laneValue.producer_members[0].id !== laneValue.id) {
       fail(`${context} must have exactly one canonical member`);
     }
     const onlyMember = laneValue.producer_members[0];
-    if (onlyMember.cadence_declaration === null || laneValue.owner_workflow !== onlyMember.workflow) {
+    if (onlyMember.cadence_declaration === null) {
       fail(`${context} must have one evidence-backed cadence declaration`);
+    }
+    const declarationKind = onlyMember.cadence_declaration.kind;
+    if (declarationKind === "github_workflow") {
+      if (laneValue.monitoring_mode !== "post_fetch_artifact" || laneValue.owner_workflow !== onlyMember.workflow) {
+        fail(`${context} must bind its post-fetch cadence to the registry workflow`);
+      }
+    } else if (!artifactOnly || onlyMember.workflow !== null || laneValue.owner_workflow !== null) {
+      fail(`${context} external cadence must remain artifact-only without a fabricated workflow`);
+    }
+    if (declarationKind === "payload_field") {
+      const evidencePointer = onlyMember.cadence_declaration.evidence;
+      const evidenceAssertions = onlyMember.artifact_contracts.map((contract) => contract.assertions
+        .filter((assertion) => assertion.kind === "exact" && assertion.pointer === evidencePointer));
+      if (evidenceAssertions.some((assertions) => assertions.length !== 1 || assertions[0].value !== "weekly")) {
+        fail(`${context} payload cadence must be fail-closed by an exact weekly assertion`);
+      }
     }
   }
 }

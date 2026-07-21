@@ -160,7 +160,12 @@ function ownerBundle() {
   assert.ok(lane, "Damodaran must be a registry lane after the ownership flip");
   assert.equal(lane.owner_workflow, ".github/workflows/fetch-damodaran-shadow.yml");
   assert.equal(lane.privacy_class, "public_mirror");
-  assert.equal(lane.lane_class, "auxiliary");
+  assert.equal(lane.lane_class, "detection_floor");
+  assert.equal(lane.enforcement, "shadow");
+  assert.deepStrictEqual(lane.cadence.provenance, {
+    kind: "github_workflow",
+    evidence: ".github/workflows/fetch-damodaran-shadow.yml",
+  });
   assert.deepStrictEqual(lane.roots.canonical_outputs, DamodaranProducer.CANONICAL_RELATIVE_PATHS);
   assert.deepStrictEqual(lane.roots.public_mirror, DamodaranProducer.PUBLIC_MIRROR_RELATIVE_PATHS);
 

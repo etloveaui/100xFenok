@@ -152,11 +152,22 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 24, auxiliary: 5 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 27, auxiliary: 4 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
-    assert.equal(registryLaneById("damodaran").lane_class, "auxiliary",
-      "Damodaran is an owned auxiliary producer outside the detection floor");
+    for (const id of ["benchmarks", "global_scouter", "damodaran"]) {
+      const converterLane = registryLaneById(id);
+      assert.ok(converterLane, `${id} converter lane is registered`);
+      assert.equal(converterLane.lane_class, "detection_floor", `${id} belongs to the detection floor`);
+      assert.equal(converterLane.cadence.kind, "weekly", `${id} carries its declared weekly cadence`);
+      assert.equal(converterLane.enforcement, "shadow", `${id} remains shadow until separately promoted`);
+    }
+    assert.equal(registryLaneById("benchmarks").owner_workflow, null,
+      "Benchmark cadence is declared by the external converter payload, not a fabricated workflow");
+    assert.equal(registryLaneById("global_scouter").owner_workflow, null,
+      "Global Scouter cadence is declared by the external converter payload, not a fabricated workflow");
+    assert.equal(registryLaneById("damodaran").owner_workflow, ".github/workflows/fetch-damodaran-shadow.yml",
+      "Damodaran keeps its measured in-repo owner workflow");
     for (const id of ["admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv"]) {
       const lane = registryLaneById(id);
       assert.ok(lane, `private/runtime denominator lane missing: ${id}`);

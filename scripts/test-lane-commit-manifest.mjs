@@ -200,7 +200,12 @@ assert.deepEqual(yfFinance.exclude, [
 ]);
 
 const stockanalysis = manifest.workflows[".github/workflows/fetch-stockanalysis.yml"];
-assert.deepEqual(stockanalysis.lanes, ["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_surfaces"]);
+assert.deepEqual(stockanalysis.lanes, [
+  "yahoo_etf_fallback",
+  "stockanalysis_etf_universe",
+  "stockanalysis_stock_financial",
+  "stockanalysis_surfaces",
+]);
 assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "directory", path: "data/stockanalysis", required: true },
   { kind: "directory", path: "data/yf/etf-details", required: true },
@@ -208,6 +213,7 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "directory", path: "data/admin/stockanalysis-recovery", required: true },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", required: false },
   { kind: "dynamic_set", path: "data/yf/finance", required: false },
 ]);

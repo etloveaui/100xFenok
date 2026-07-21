@@ -18,6 +18,7 @@ export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "direct
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
 export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
+export const CADENCE_PROVENANCE_KINDS = Object.freeze(["github_workflow", "owner_contract", "payload_field"]);
 export const WORKFLOW_CLASSES = Object.freeze(["platform_no_lane", "platform_central_reconciler", "platform_publisher"]);
 export const COMMIT_PATH_KINDS = Object.freeze(["file", "directory", "glob", "dynamic_set"]);
 export const COMMIT_STAGE_KEYS = Object.freeze([
@@ -636,14 +637,74 @@ const lanes = [
       + "100xfenok-next/docs/admin-live-skill-bridge.md:82-108",
   }),
   record({
+    id: "benchmarks",
+    label: "Bloomberg benchmark converter payloads",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    lane_class: "detection_floor",
+    cadence: {
+      kind: "weekly",
+      provider: "owner-run fenok-benchmarks converter",
+      provenance: { kind: "payload_field", evidence: "/metadata/update_frequency" },
+    },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    canonical_outputs: [
+      "data/benchmarks/us.json",
+      "data/benchmarks/us_sectors.json",
+      "data/benchmarks/developed.json",
+      "data/benchmarks/emerging.json",
+      "data/benchmarks/msci.json",
+      "data/benchmarks/micro_sectors.json",
+    ],
+    public_mirror: [
+      "100xfenok-next/public/data/benchmarks/us.json",
+      "100xfenok-next/public/data/benchmarks/us_sectors.json",
+      "100xfenok-next/public/data/benchmarks/developed.json",
+      "100xfenok-next/public/data/benchmarks/emerging.json",
+      "100xfenok-next/public/data/benchmarks/msci.json",
+      "100xfenok-next/public/data/benchmarks/micro_sectors.json",
+    ],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception: "external owner-run converter has no GitHub attempt shard; cadence is evidenced by each canonical payload",
+  }),
+  record({
+    id: "global_scouter",
+    label: "Global Scouter converter payload",
+    owner_workflow: null,
+    store_kind: "artifact_only",
+    lane_class: "detection_floor",
+    cadence: {
+      kind: "weekly",
+      provider: "owner-run global-scouter converter",
+      provenance: { kind: "payload_field", evidence: "/update_frequency" },
+    },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    canonical_outputs: ["data/global-scouter/core/metadata.json"],
+    public_mirror: ["100xfenok-next/public/data/global-scouter/core/metadata.json"],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception: "external owner-run converter has no GitHub attempt shard; cadence is evidenced by canonical metadata",
+  }),
+  record({
     id: "damodaran",
     label: "Damodaran valuation data",
     owner_workflow: ".github/workflows/fetch-damodaran-shadow.yml",
     store_kind: "payload",
-    lane_class: "auxiliary",
-    cadence: { kind: "weekly", provider: "NYU Stern Damodaran" },
+    lane_class: "detection_floor",
+    cadence: {
+      kind: "weekly",
+      provider: "NYU Stern Damodaran owner guard",
+      provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-damodaran-shadow.yml" },
+    },
     // Registry enforcement is the detection-floor switch, not producer
-    // ownership. This auxiliary lane has a fail-closed owner guard instead.
+    // ownership. This shadow lane has a fail-closed owner guard instead.
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/damodaran",
@@ -1333,6 +1394,15 @@ function validateLaneRecord(laneValue) {
   }
   if (laneValue.cadence.provider !== undefined && typeof laneValue.cadence.provider !== "string") {
     fail(`${context} cadence.provider must be a string when present`);
+  }
+  if (laneValue.cadence.provenance !== undefined) {
+    exactKeys(laneValue.cadence.provenance, ["kind", "evidence"], `${context}.cadence.provenance`);
+    if (!CADENCE_PROVENANCE_KINDS.includes(laneValue.cadence.provenance.kind)) {
+      fail(`${context} cadence.provenance.kind is invalid`);
+    }
+    if (typeof laneValue.cadence.provenance.evidence !== "string" || laneValue.cadence.provenance.evidence.length === 0) {
+      fail(`${context} cadence.provenance.evidence is required`);
+    }
   }
   exactKeys(laneValue.roots, ["admin_store", "detection_attempt", "canonical_outputs", "public_mirror"], `${context}.roots`);
   if (laneValue.roots.admin_store !== null && !validRepoRelativePath(laneValue.roots.admin_store)) {

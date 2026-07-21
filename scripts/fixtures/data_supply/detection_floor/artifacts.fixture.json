@@ -415,6 +415,43 @@
         },
         "derived_rim_inputs": {}
       }
+    },
+    {
+      "id": "benchmark_weekly",
+      "encoding": "json",
+      "content": {
+        "metadata": {
+          "version": "2026-07-10",
+          "generated": "2026-07-11T00:00:00Z",
+          "source": "Bloomberg Terminal",
+          "update_frequency": "weekly"
+        },
+        "sections": { "fixture": { "data": [{ "date": "2026-07-10", "px_last": 1 }] } }
+      }
+    },
+    {
+      "id": "global_scouter_weekly",
+      "encoding": "json",
+      "content": {
+        "source": "Global Scouter",
+        "version": "2.3.0",
+        "update_frequency": "weekly",
+        "structure": "hybrid",
+        "generated_at": "2026-07-11T00:00:00Z",
+        "source_date": "2026-07-10",
+        "counts": { "stocks": 1 }
+      }
+    },
+    {
+      "id": "damodaran_owner_guard",
+      "encoding": "json",
+      "content": {
+        "schema_version": "damodaran-owner-guard/v1",
+        "fetched_at": "2026-07-11T00:00:00Z",
+        "status": "match",
+        "mode": "owner_guard",
+        "ownership_flip": true
+      }
     }
   ],
   "layouts": [
@@ -640,6 +677,46 @@
           "path": "data/sec-13f/summary.json",
           "node_type": "regular",
           "document_id": "sec13f"
+        },
+        {
+          "path": "data/benchmarks/us.json",
+          "node_type": "regular",
+          "document_id": "benchmark_weekly"
+        },
+        {
+          "path": "data/benchmarks/us_sectors.json",
+          "node_type": "regular",
+          "document_id": "benchmark_weekly"
+        },
+        {
+          "path": "data/benchmarks/developed.json",
+          "node_type": "regular",
+          "document_id": "benchmark_weekly"
+        },
+        {
+          "path": "data/benchmarks/emerging.json",
+          "node_type": "regular",
+          "document_id": "benchmark_weekly"
+        },
+        {
+          "path": "data/benchmarks/msci.json",
+          "node_type": "regular",
+          "document_id": "benchmark_weekly"
+        },
+        {
+          "path": "data/benchmarks/micro_sectors.json",
+          "node_type": "regular",
+          "document_id": "benchmark_weekly"
+        },
+        {
+          "path": "data/global-scouter/core/metadata.json",
+          "node_type": "regular",
+          "document_id": "global_scouter_weekly"
+        },
+        {
+          "path": "data/admin/damodaran/owner-guard.json",
+          "node_type": "regular",
+          "document_id": "damodaran_owner_guard"
         },
         {
           "path": "data/computed/fenok_flow_proxies.json",

@@ -28,6 +28,7 @@ const IDENTIFIER = /^[a-z][a-z0-9_]{0,63}$/;
 const ATTEMPT_IDENTIFIER = /^[a-z][a-z0-9_-]{0,95}$/;
 const FINAL_REASON_CODES = new Set([
   "ok",
+  "declared_cadence",
   "missing_artifact",
   "workflow_unobserved",
   "transport_error",
@@ -45,6 +46,7 @@ const STATUSES = new Set(["ready", "unobserved", "stale", "drift", "unavailable"
 const STATUS_SEVERITY = Object.freeze({ ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 });
 const REASON_STATUS = Object.freeze({
   ok: "ready",
+  declared_cadence: "ready",
   workflow_unobserved: "unobserved",
   stale: "stale",
   schema_drift: "drift",
@@ -970,7 +972,7 @@ export function validateConfigCalendarBindings(config, calendars) {
   for (const lane of config.lanes) {
     if (!calendarIds.has(lane.freshness.calendar)) fail("calendar_error", `${lane.id} source freshness calendar is missing`);
     for (const member of lane.producer_members) {
-      if (member.cadence_declaration === null) continue;
+      if (member.cadence_declaration?.kind !== "github_workflow") continue;
       if (!calendarIds.has(member.cadence_calendar)) fail("calendar_error", `${lane.id}:${member.id} cadence calendar is missing`);
       for (const cron of member.schedule) {
         const matches = calendars.schedules.filter((schedule) => schedule.cron === cron && schedule.calendar_id === member.cadence_calendar);
@@ -1168,13 +1170,15 @@ function attemptMap(document) {
 function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
   const attemptKey = `${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`;
   const row = attemptsByKey.get(attemptKey) ?? null;
-  const hasDeclaredCadence = member.cadence_declaration !== null;
-  const endpoint = hasDeclaredCadence
+  const cadenceKind = member.cadence_declaration?.kind ?? null;
+  const endpoint = cadenceKind === "github_workflow"
     ? worstResult([
       classifyAttempt(row),
       evaluateAttemptCadence(row?.observed_at ?? null, member.schedule, member.cadence_calendar, now, calendars),
     ])
-    : reasonResult("workflow_unobserved", { observed_at: null });
+    : cadenceKind === "owner_contract" || cadenceKind === "payload_field"
+      ? reasonResult("declared_cadence", { observed_at: null })
+      : reasonResult("workflow_unobserved", { observed_at: null });
   const artifacts = member.artifact_contracts.flatMap((contract) => evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule));
   const artifactWorst = worstResult(artifacts);
   const sourceAsOf = foldSourceTimes(artifacts, lane.freshness);
@@ -1303,10 +1307,14 @@ function validateEndpointReport(row, context) {
   exactKeys(row, ["status", "reason", "observed_at"], context);
   validateStatusReason(row, context);
   if (row.observed_at === null) {
-    if (row.reason !== "workflow_unobserved") fail("schema_error", `${context}.observed_at is missing`);
+    if (!new Set(["workflow_unobserved", "declared_cadence"]).has(row.reason)) {
+      fail("schema_error", `${context}.observed_at is missing`);
+    }
   } else {
     strictUtc(row.observed_at, `${context}.observed_at`);
-    if (row.reason === "workflow_unobserved") fail("schema_error", `${context}.observed_at contradicts unobserved state`);
+    if (new Set(["workflow_unobserved", "declared_cadence"]).has(row.reason)) {
+      fail("schema_error", `${context}.observed_at contradicts cadence provenance`);
+    }
   }
 }
 

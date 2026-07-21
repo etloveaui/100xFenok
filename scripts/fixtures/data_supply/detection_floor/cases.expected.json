@@ -1,108 +1,86 @@
 {
-  "schema_version": "data-supply-detection-expected/v1",
-  "config_digest_input": {
-    "export": "DATA_SUPPLY_DETECTION_CONFIG",
-    "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
-    "schema_version": "data-supply-detection-config/v1",
-    "enforcement": "shadow",
-    "ordered_lane_ids": [
-      "fred_macro",
-      "fred_banking",
-      "fred_yardeni",
-      "fdic_tier1",
-      "treasury_tga",
-      "defillama_stablecoins",
-      "yahoo_etf_fallback",
-      "stockanalysis_etf_universe",
-      "stockanalysis_stock_financial",
-      "stockanalysis_surfaces",
-      "yahoo_ticker_macro",
-      "sentiment",
-      "nasdaq_giw_sox",
-      "us_indices_daily",
-      "oecd_cli",
-      "krx",
-      "slickcharts",
-      "edgar_filings",
-      "sec_13f",
-      "finra_short_volume",
-      "occ_options_volume",
-      "yahoo_private_options",
-      "apewisdom_attention",
-      "gdelt_news_tone"
-    ],
-    "ordered_member_ids": [
-      "fred_macro",
-      "fred_banking",
-      "fred_yardeni",
-      "fdic_tier1",
-      "treasury_tga",
-      "defillama_stablecoins",
-      "yahoo_etf_fallback",
-      "stockanalysis_etf_universe",
-      "stockanalysis_stock_financial",
-      "stockanalysis_surfaces",
-      "yahoo_ticker_macro",
-      "sentiment",
-      "nasdaq_giw_sox",
-      "us_indices_daily",
-      "oecd_cli",
-      "krx",
-      "daily",
-      "weekly",
-      "monthly",
-      "history",
-      "symbols",
-      "edgar_filings",
-      "sec_13f",
-      "finra_short_volume",
-      "occ_options_volume",
-      "yahoo_private_options",
-      "apewisdom_attention",
-      "gdelt_news_tone"
-    ]
-  },
-  "config_digest": "b3bcf080330ad0b0492491f344d422c5a54a8125c32652b8aacfc7c433f5e4c9",
-  "logical_lane_count": 24,
-  "producer_member_count": 28,
-  "slickcharts_member_ids": [
-    "daily",
-    "weekly",
-    "monthly",
-    "history",
-    "symbols"
-  ],
-  "privacy_exclusions": [
-    "raw_response_bodies",
-    "credentials",
-    "request_headers",
-    "query_tokens",
-    "private_artifact_paths",
-    "ticker_lists",
-    "per_entity_rows",
-    "observation_history",
-    "current_lkg_maps",
-    "recovery_counters",
-    "promotion_pointers",
-    "state_transitions"
+  "artifact_cases": [
+    {
+      "expected_reason": "missing_artifact",
+      "layout_id": "missing_artifact"
+    },
+    {
+      "expected_reason": "decode_error",
+      "layout_id": "malformed_artifact"
+    },
+    {
+      "expected_reason": "empty_payload",
+      "layout_id": "empty_artifact"
+    },
+    {
+      "expected_reason": "schema_drift",
+      "layout_id": "schema_drift_artifact"
+    },
+    {
+      "expected_reason": "schema_drift",
+      "lane_id": "stockanalysis_surfaces",
+      "layout_id": "partial_surface_index"
+    },
+    {
+      "expected_reason": "schema_drift",
+      "expected_status": "unavailable",
+      "layout_id": "missing_source_artifact"
+    },
+    {
+      "expected_reason": "schema_drift",
+      "lane_id": "edgar_filings",
+      "layout_id": "schema_version_mismatch"
+    },
+    {
+      "expected_reason": "empty_payload",
+      "lane_id": "sentiment",
+      "layout_id": "root_empty_artifact"
+    },
+    {
+      "expected_reason": "empty_payload",
+      "lane_id": "nasdaq_giw_sox",
+      "layout_id": "sox_short_artifact"
+    },
+    {
+      "expected_reason": "missing_artifact",
+      "lane_id": "edgar_filings",
+      "layout_id": "empty_bounded_glob"
+    },
+    {
+      "expected_reason": "future_source",
+      "layout_id": "future_artifact"
+    },
+    {
+      "expected_reason": "stale",
+      "layout_id": "stale_artifact"
+    },
+    {
+      "expected_outcome": "fail_closed_before_read",
+      "layout_id": "symlink_artifact"
+    },
+    {
+      "expected_outcome": "fail_closed_before_read",
+      "layout_id": "directory_artifact"
+    },
+    {
+      "expected_outcome": "fail_closed_before_read",
+      "layout_id": "special_artifact"
+    }
   ],
   "baseline": {
-    "id": "all_valid_at_fixed_now",
     "artifact_layout_id": "all_valid",
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
-    "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "40350b343e92e278e44e1d37d4d733a55cd0138f07c8073f98e71ce879bacea7",
     "expected_report": {
-      "config_digest": "b3bcf080330ad0b0492491f344d422c5a54a8125c32652b8aacfc7c433f5e4c9",
+      "config_digest": "095ae341b6ced4a37d40dabcc68306f0150c1909a551e2a78b27bde992d3d717",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 25,
+        "producer_members_ready": 28,
         "producer_members_stale": 0,
         "producer_members_unavailable": 0,
         "producer_members_unobserved": 3,
-        "ready": 21,
+        "ready": 24,
         "stale": 0,
         "unavailable": 0,
         "unobserved": 3
@@ -657,6 +635,84 @@
         },
         {
           "affected_surface_ids": [
+            "market_valuation",
+            "sectors",
+            "dashboard"
+          ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "declared_cadence",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "benchmarks",
+          "kpi_required": false,
+          "label": "Bloomberg benchmark converter payloads",
+          "monitoring_mode": "artifact_only",
+          "reason": "declared_cadence",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "screener",
+            "stock_detail",
+            "explore"
+          ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "declared_cadence",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "global_scouter",
+          "kpi_required": false,
+          "label": "Global Scouter converter payload",
+          "monitoring_mode": "artifact_only",
+          "reason": "declared_cadence",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "market_valuation",
+            "stock_detail",
+            "regime"
+          ],
+          "artifact": {
+            "age": 0,
+            "reason": "ok",
+            "source_as_of": "2026-07-11T00:00:00Z",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "damodaran",
+          "kpi_required": false,
+          "label": "Damodaran owner-guard producer",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
             "fenok_flow_proxies"
           ],
           "artifact": {
@@ -776,143 +832,171 @@
           "status": "unobserved"
         }
       ],
-      "logical_lane_count": 24,
+      "logical_lane_count": 27,
       "monitoring_mode_counts": {
-        "artifact_only": 1,
+        "artifact_only": 3,
         "composite": 1,
-        "post_fetch_artifact": 22
+        "post_fetch_artifact": 23
       },
-      "producer_member_count": 28,
+      "producer_member_count": 31,
       "schema_version": "data-supply-detection-floor/v1"
-    }
+    },
+    "id": "all_valid_at_fixed_now",
+    "now": "2026-07-11T00:00:00Z",
+    "report_file_sha256": "06d03fa94436be44f775c42b92eaa97cf881665bedacaadc7a21ea33ce1e8b94"
   },
+  "config_digest": "095ae341b6ced4a37d40dabcc68306f0150c1909a551e2a78b27bde992d3d717",
+  "config_digest_input": {
+    "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
+    "enforcement": "shadow",
+    "export": "DATA_SUPPLY_DETECTION_CONFIG",
+    "ordered_lane_ids": [
+      "fred_macro",
+      "fred_banking",
+      "fred_yardeni",
+      "fdic_tier1",
+      "treasury_tga",
+      "defillama_stablecoins",
+      "yahoo_etf_fallback",
+      "stockanalysis_etf_universe",
+      "stockanalysis_stock_financial",
+      "stockanalysis_surfaces",
+      "yahoo_ticker_macro",
+      "sentiment",
+      "nasdaq_giw_sox",
+      "us_indices_daily",
+      "oecd_cli",
+      "krx",
+      "slickcharts",
+      "edgar_filings",
+      "sec_13f",
+      "benchmarks",
+      "global_scouter",
+      "damodaran",
+      "finra_short_volume",
+      "occ_options_volume",
+      "yahoo_private_options",
+      "apewisdom_attention",
+      "gdelt_news_tone"
+    ],
+    "ordered_member_ids": [
+      "fred_macro",
+      "fred_banking",
+      "fred_yardeni",
+      "fdic_tier1",
+      "treasury_tga",
+      "defillama_stablecoins",
+      "yahoo_etf_fallback",
+      "stockanalysis_etf_universe",
+      "stockanalysis_stock_financial",
+      "stockanalysis_surfaces",
+      "yahoo_ticker_macro",
+      "sentiment",
+      "nasdaq_giw_sox",
+      "us_indices_daily",
+      "oecd_cli",
+      "krx",
+      "daily",
+      "weekly",
+      "monthly",
+      "history",
+      "symbols",
+      "edgar_filings",
+      "sec_13f",
+      "benchmarks",
+      "global_scouter",
+      "damodaran",
+      "finra_short_volume",
+      "occ_options_volume",
+      "yahoo_private_options",
+      "apewisdom_attention",
+      "gdelt_news_tone"
+    ],
+    "schema_version": "data-supply-detection-config/v1"
+  },
+  "logical_lane_count": 27,
+  "privacy_exclusions": [
+    "raw_response_bodies",
+    "credentials",
+    "request_headers",
+    "query_tokens",
+    "private_artifact_paths",
+    "ticker_lists",
+    "per_entity_rows",
+    "observation_history",
+    "current_lkg_maps",
+    "recovery_counters",
+    "promotion_pointers",
+    "state_transitions"
+  ],
+  "producer_member_count": 31,
   "reason_cases": [
     {
-      "id": "transport_exception",
-      "expected_reason": "transport_error"
+      "expected_reason": "transport_error",
+      "id": "transport_exception"
     },
     {
-      "id": "unexpected_exception",
-      "expected_reason": "unexpected_error"
+      "expected_reason": "unexpected_error",
+      "id": "unexpected_exception"
     },
     {
-      "id": "http_non_2xx",
-      "expected_reason": "http_error"
+      "expected_reason": "http_error",
+      "id": "http_non_2xx"
     },
     {
-      "id": "auth_rejected",
-      "expected_reason": "auth_error"
+      "expected_reason": "auth_error",
+      "id": "auth_rejected"
     },
     {
-      "id": "rate_limited",
-      "expected_reason": "rate_limited"
+      "expected_reason": "rate_limited",
+      "id": "rate_limited"
     },
     {
-      "id": "decode_error",
-      "expected_reason": "decode_error"
+      "expected_reason": "decode_error",
+      "id": "decode_error"
     },
     {
-      "id": "empty_payload",
-      "expected_reason": "empty_payload"
+      "expected_reason": "empty_payload",
+      "id": "empty_payload"
     },
     {
-      "id": "assertion_failed",
-      "expected_reason": "schema_drift"
+      "expected_reason": "schema_drift",
+      "id": "assertion_failed"
     },
     {
-      "id": "unobserved",
-      "expected_reason": "workflow_unobserved"
+      "expected_reason": "workflow_unobserved",
+      "id": "unobserved"
     }
   ],
-  "artifact_cases": [
-    {
-      "layout_id": "missing_artifact",
-      "expected_reason": "missing_artifact"
-    },
-    {
-      "layout_id": "malformed_artifact",
-      "expected_reason": "decode_error"
-    },
-    {
-      "layout_id": "empty_artifact",
-      "expected_reason": "empty_payload"
-    },
-    {
-      "layout_id": "schema_drift_artifact",
-      "expected_reason": "schema_drift"
-    },
-    {
-      "layout_id": "partial_surface_index",
-      "lane_id": "stockanalysis_surfaces",
-      "expected_reason": "schema_drift"
-    },
-    {
-      "layout_id": "missing_source_artifact",
-      "expected_reason": "schema_drift",
-      "expected_status": "unavailable"
-    },
-    {
-      "layout_id": "schema_version_mismatch",
-      "lane_id": "edgar_filings",
-      "expected_reason": "schema_drift"
-    },
-    {
-      "layout_id": "root_empty_artifact",
-      "lane_id": "sentiment",
-      "expected_reason": "empty_payload"
-    },
-    {
-      "layout_id": "sox_short_artifact",
-      "lane_id": "nasdaq_giw_sox",
-      "expected_reason": "empty_payload"
-    },
-    {
-      "layout_id": "empty_bounded_glob",
-      "lane_id": "edgar_filings",
-      "expected_reason": "missing_artifact"
-    },
-    {
-      "layout_id": "future_artifact",
-      "expected_reason": "future_source"
-    },
-    {
-      "layout_id": "stale_artifact",
-      "expected_reason": "stale"
-    },
-    {
-      "layout_id": "symlink_artifact",
-      "expected_outcome": "fail_closed_before_read"
-    },
-    {
-      "layout_id": "directory_artifact",
-      "expected_outcome": "fail_closed_before_read"
-    },
-    {
-      "layout_id": "special_artifact",
-      "expected_outcome": "fail_closed_before_read"
-    }
+  "registry_digest": "f585bbf1b456905b94948e3cd817e07d87069f8a0a1a01426955bbe051adbc51",
+  "schema_version": "data-supply-detection-expected/v1",
+  "slickcharts_member_ids": [
+    "daily",
+    "weekly",
+    "monthly",
+    "history",
+    "symbols"
   ],
   "slickcharts_member_worst_cases": [
     {
-      "member_id": "daily",
-      "expected_logical_status": "unavailable"
+      "expected_logical_status": "unavailable",
+      "member_id": "daily"
     },
     {
-      "member_id": "weekly",
-      "expected_logical_status": "unavailable"
+      "expected_logical_status": "unavailable",
+      "member_id": "weekly"
     },
     {
-      "member_id": "monthly",
-      "expected_logical_status": "unavailable"
+      "expected_logical_status": "unavailable",
+      "member_id": "monthly"
     },
     {
-      "member_id": "history",
-      "expected_logical_status": "unavailable"
+      "expected_logical_status": "unavailable",
+      "member_id": "history"
     },
     {
-      "member_id": "symbols",
-      "expected_logical_status": "unavailable"
+      "expected_logical_status": "unavailable",
+      "member_id": "symbols"
     }
-  ],
-  "registry_digest": "339f0cb0647be380dfabb4b672f919cccb53b18aa18451f112ba61464d4c8792"
+  ]
 }
