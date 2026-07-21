@@ -1,0 +1,40 @@
+name: Global Writer Queue Observability
+
+# This observer measures workflow-run states only. GitHub's REST response does
+# not identify the concurrency group, so its metric is deliberately named
+# `global-writer candidate queued runs`, not `lock wait`.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+# Keep this observer outside the data-writer group: it must remain measurable
+# while the writer queue is blocked.
+concurrency:
+  group: global-writer-queue-observer
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout observer policy and checker
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Observe global-writer candidate queue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/ops/check-global-writer-queue.mjs

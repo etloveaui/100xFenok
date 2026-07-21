@@ -1,0 +1,81 @@
+{
+  "workflow_runs": [
+    {
+      "id": 6001,
+      "status": "in_progress",
+      "conclusion": null,
+      "head_branch": "main",
+      "created_at": "2026-07-21T02:10:00Z"
+    },
+    {
+      "id": 6002,
+      "status": "in_progress",
+      "conclusion": null,
+      "head_branch": "main",
+      "created_at": "2026-07-21T02:20:00Z"
+    },
+    {
+      "id": 6003,
+      "status": "queued",
+      "conclusion": null,
+      "head_branch": "main",
+      "created_at": "2026-07-21T02:30:00Z"
+    }
+  ],
+  "jobs_by_run": {
+    "6001": [
+      {
+        "id": 6101,
+        "name": "acquire-stockanalysis",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-07-21T02:10:00Z",
+        "completed_at": null
+      },
+      {
+        "id": 6102,
+        "name": "publish-stockanalysis",
+        "status": "queued",
+        "conclusion": null,
+        "started_at": null,
+        "completed_at": null
+      }
+    ],
+    "6002": [
+      {
+        "id": 6201,
+        "name": "acquire-stockanalysis",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-07-21T02:20:00Z",
+        "completed_at": "2026-07-21T02:39:00Z"
+      },
+      {
+        "id": 6202,
+        "name": "publish-stockanalysis",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-07-21T02:40:00Z",
+        "completed_at": null
+      }
+    ],
+    "6003": [
+      {
+        "id": 6301,
+        "name": "acquire-stockanalysis",
+        "status": "queued",
+        "conclusion": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "id": 6302,
+        "name": "publish-stockanalysis",
+        "status": "queued",
+        "conclusion": null,
+        "started_at": null,
+        "completed_at": null
+      }
+    ]
+  }
+}

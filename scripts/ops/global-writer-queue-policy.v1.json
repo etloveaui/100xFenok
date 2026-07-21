@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "metric": "global-writer candidate queued runs",
+  "concurrency_group": "fenok-data-writer-refs/heads/main",
+  "canonical_branch": "main",
+  "default_observation_mode": "workflow_run",
+  "group_expression_forms": [
+    "fenok-data-writer-refs/heads/main",
+    "fenok-data-writer-${{ github.ref }}"
+  ],
+  "workflows": [
+    "build-stocks-analyzer.yml",
+    "fenok-edge-daily.yml",
+    "fenok-edge-krx-daily.yml",
+    "fetch-damodaran-shadow.yml",
+    "fetch-defillama.yml",
+    "fetch-edgar-filings.yml",
+    "fetch-fdic.yml",
+    "fetch-fenok-apewisdom.yml",
+    "fetch-fenok-news-tone.yml",
+    "fetch-fenok-private-options.yml",
+    "fetch-fred-banking.yml",
+    "fetch-fred-macro.yml",
+    "fetch-fred-yardeni.yml",
+    "fetch-nasdaq-giw-sox.yml",
+    "fetch-oecd-cli.yml",
+    "fetch-sentiment.yml",
+    "fetch-stockanalysis.yml",
+    "fetch-treasury-tga.yml",
+    "fetch-us-indices-daily.yml",
+    "fetch-yahoo-ticker.yml",
+    "fetch-yf-finance.yml",
+    "slickcharts-daily.yml",
+    "slickcharts-history.yml",
+    "slickcharts-monthly.yml",
+    "slickcharts-symbols.yml",
+    "slickcharts-weekly.yml",
+    "update-manifest.yml"
+  ],
+  "job_level_targets": {
+    "fetch-stockanalysis.yml": {
+      "job_name": "publish-stockanalysis",
+      "eligibility_predecessor": "acquire-stockanalysis",
+      "parent_run_statuses": [
+        "queued",
+        "requested",
+        "waiting",
+        "pending",
+        "in_progress"
+      ],
+      "candidate_statuses": [
+        "queued",
+        "waiting",
+        "pending"
+      ]
+    }
+  },
+  "candidate_statuses": [
+    "queued",
+    "requested",
+    "waiting",
+    "pending"
+  ],
+  "api": {
+    "base_url": "https://api.github.com",
+    "runs_per_page": 100,
+    "max_pages": 2,
+    "max_runs": 200,
+    "jobs_per_page": 100,
+    "max_job_pages": 1,
+    "max_jobs_per_run": 100,
+    "max_job_runs": 20,
+    "query_status": "omitted_to_include_all_states"
+  },
+  "thresholds": {
+    "max_depth": 3,
+    "max_age_minutes": 30
+  },
+  "alert": {
+    "output": "workflow-failure-and-json",
+    "exit_code": 2,
+    "unknown_exit_code": 3,
+    "attribution_note": "REST workflow-runs data does not prove concurrency-group membership; keep attribution [not verified]."
+  }
+}
