@@ -49,18 +49,144 @@ from stockanalysis_recovery_state import (
 )
 
 
-OUT_DIR = ROOT / "data" / "stockanalysis"
-PUBLIC_DIR = ROOT / "100xfenok-next" / "public" / "data" / "stockanalysis"
-YF_OUT_DIR = ROOT / "data" / "yf" / "finance"
-YF_PUBLIC_DIR = ROOT / "100xfenok-next" / "public" / "data" / "yf" / "finance"
-YF_ETF_DETAIL_OUT_DIR = ROOT / "data" / "yf" / "etf-details"
-DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
-STOCKANALYSIS_RECOVERY_ROOT = ROOT / "data" / "admin" / "stockanalysis-recovery"
+
+class RepositoryInputs:
+    """Immutable checkout inputs; candidate mode never writes through these paths."""
+
+    __slots__ = ("root", "scripts", "core_daily_basket", "daily_1y_fetchable_plan")
+
+    def __init__(self, root: Path, scripts: Path, core_daily_basket: Path, daily_1y_fetchable_plan: Path) -> None:
+        self.root = root
+        self.scripts = scripts
+        self.core_daily_basket = core_daily_basket
+        self.daily_1y_fetchable_plan = daily_1y_fetchable_plan
+
+    @classmethod
+    def from_root(cls, root: Path) -> "RepositoryInputs":
+        resolved = root.resolve(strict=True)
+        return cls(
+            root=resolved,
+            scripts=resolved / "scripts",
+            core_daily_basket=resolved / "data/admin/fenok-etf-core-daily-basket.json",
+            daily_1y_fetchable_plan=resolved / "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+        )
+
+
+class CandidateOutputs:
+    """Complete mutable path table for one StockAnalysis acquisition."""
+
+    __slots__ = (
+        "root", "stockanalysis", "stockanalysis_public", "yf_finance",
+        "yf_finance_public", "yf_etf_details", "data_supply_state",
+        "detection_attempts", "recovery_state",
+    )
+
+    def __init__(
+        self,
+        root: Path,
+        stockanalysis: Path,
+        stockanalysis_public: Path,
+        yf_finance: Path,
+        yf_finance_public: Path,
+        yf_etf_details: Path,
+        data_supply_state: Path,
+        detection_attempts: Path,
+        recovery_state: Path,
+    ) -> None:
+        self.root = root
+        self.stockanalysis = stockanalysis
+        self.stockanalysis_public = stockanalysis_public
+        self.yf_finance = yf_finance
+        self.yf_finance_public = yf_finance_public
+        self.yf_etf_details = yf_etf_details
+        self.data_supply_state = data_supply_state
+        self.detection_attempts = detection_attempts
+        self.recovery_state = recovery_state
+
+    @classmethod
+    def from_root(cls, root: Path) -> "CandidateOutputs":
+        resolved = root.resolve(strict=root.exists())
+        return cls(
+            root=resolved,
+            stockanalysis=resolved / "data/stockanalysis",
+            stockanalysis_public=resolved / "100xfenok-next/public/data/stockanalysis",
+            yf_finance=resolved / "data/yf/finance",
+            yf_finance_public=resolved / "100xfenok-next/public/data/yf/finance",
+            yf_etf_details=resolved / "data/yf/etf-details",
+            data_supply_state=resolved / "data/admin/data-supply-state/v1",
+            detection_attempts=resolved / "data/admin/data-supply-state/detection-attempts",
+            recovery_state=resolved / "data/admin/stockanalysis-recovery",
+        )
+
+    def all_output_paths(self) -> tuple[Path, ...]:
+        return (
+            self.stockanalysis,
+            self.stockanalysis_public,
+            self.yf_finance,
+            self.yf_finance_public,
+            self.yf_etf_details,
+            self.data_supply_state,
+            self.detection_attempts,
+            self.recovery_state,
+        )
+
+
+REPOSITORY_INPUTS = RepositoryInputs.from_root(ROOT)
+CANDIDATE_OUTPUTS = CandidateOutputs.from_root(ROOT)
+STORAGE_ROOT = ROOT
+OUT_DIR = CANDIDATE_OUTPUTS.stockanalysis
+PUBLIC_DIR = CANDIDATE_OUTPUTS.stockanalysis_public
+YF_OUT_DIR = CANDIDATE_OUTPUTS.yf_finance
+YF_PUBLIC_DIR = CANDIDATE_OUTPUTS.yf_finance_public
+YF_ETF_DETAIL_OUT_DIR = CANDIDATE_OUTPUTS.yf_etf_details
+DATA_SUPPLY_STATE_ROOT = CANDIDATE_OUTPUTS.data_supply_state
+STOCKANALYSIS_RECOVERY_ROOT = CANDIDATE_OUTPUTS.recovery_state
 STOCKANALYSIS_ATTEMPT_EMITTER = SCRIPT_DIR / "emit-stockanalysis-attempt.mjs"
 SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
+MAX_MANUAL_ETF_SHARD = 100
+
+
+def current_candidate_outputs() -> CandidateOutputs:
+    return CANDIDATE_OUTPUTS
+
+
+def install_candidate_outputs(outputs: CandidateOutputs) -> CandidateOutputs:
+    global CANDIDATE_OUTPUTS, STORAGE_ROOT
+    global OUT_DIR, PUBLIC_DIR, YF_OUT_DIR, YF_PUBLIC_DIR
+    global YF_ETF_DETAIL_OUT_DIR, DATA_SUPPLY_STATE_ROOT, STOCKANALYSIS_RECOVERY_ROOT
+    CANDIDATE_OUTPUTS = outputs
+    STORAGE_ROOT = outputs.root
+    OUT_DIR = outputs.stockanalysis
+    PUBLIC_DIR = outputs.stockanalysis_public
+    YF_OUT_DIR = outputs.yf_finance
+    YF_PUBLIC_DIR = outputs.yf_finance_public
+    YF_ETF_DETAIL_OUT_DIR = outputs.yf_etf_details
+    DATA_SUPPLY_STATE_ROOT = outputs.data_supply_state
+    STOCKANALYSIS_RECOVERY_ROOT = outputs.recovery_state
+    return outputs
+
+
+def configure_candidate_outputs(candidate_root: Path) -> CandidateOutputs:
+    if candidate_root.is_symlink():
+        raise ValueError("candidate root must not be a symlink")
+    resolved = candidate_root.resolve(strict=True)
+    repo = ROOT.resolve(strict=True)
+    if resolved == repo or repo in resolved.parents or resolved in repo.parents:
+        raise ValueError("candidate root must be outside the repository")
+    outputs = CandidateOutputs.from_root(resolved)
+    for path in outputs.all_output_paths():
+        resolved_path = path.resolve(strict=False)
+        if resolved_path != resolved and resolved not in resolved_path.parents:
+            raise ValueError(f"candidate output escapes candidate root: {path}")
+        cursor = path
+        while cursor != resolved:
+            if cursor.exists() and cursor.is_symlink():
+                raise ValueError(f"candidate output uses a symlink: {cursor}")
+            cursor = cursor.parent
+    return install_candidate_outputs(outputs)
 
 
 class StockAnalysisAttemptTracker:
@@ -1160,7 +1286,7 @@ def parse_history_periods(value: str) -> tuple[str, ...]:
 
 
 def load_core_daily_basket_symbols() -> list[str]:
-    path = OUT_DIR.parent / FENOK_ETF_CORE_DAILY_BASKET_REL_PATH
+    path = REPOSITORY_INPUTS.core_daily_basket
     if not path.exists():
         return []
     try:
@@ -1196,6 +1322,70 @@ def select_base_etfs(
     if explicit_etfs:
         return explicit_etfs
     return unique_symbols(load_core_daily_basket_symbols() + DEFAULT_ETFS)
+
+
+def validate_manual_etf_preflight(args: argparse.Namespace) -> None:
+    """Reject every non-schedule network ETF mode whose upper bound exceeds 100.
+
+    This gate runs before endpoint canaries, universe discovery, recovery-store
+    bootstrap, or any candidate write. Natural schedules retain their existing
+    profiles; plan-only is non-network and remains unbounded.
+    """
+
+    if args.event_name == "schedule" or args.plan_only:
+        return
+    explicit = parse_symbols(args.etfs)
+    if len(explicit) > MAX_MANUAL_ETF_SHARD:
+        raise SystemExit(
+            f"manual ETF shard exceeds {MAX_MANUAL_ETF_SHARD} explicit tickers"
+        )
+    if args.stocks_only:
+        return
+    if args.limit_etfs > MAX_MANUAL_ETF_SHARD:
+        raise SystemExit(f"--limit-etfs must be between 0 and {MAX_MANUAL_ETF_SHARD}")
+    if (
+        (args.incremental_etf_backfill or args.reconcile_missing_etf_details)
+        and args.incremental_etf_limit > MAX_MANUAL_ETF_SHARD
+    ):
+        raise SystemExit(
+            f"--incremental-etf-limit must be between 0 and {MAX_MANUAL_ETF_SHARD}"
+        )
+    if args.universe_backfill and not explicit:
+        if not 1 <= args.limit_etfs <= MAX_MANUAL_ETF_SHARD:
+            raise SystemExit(
+                "manual universe backfill requires an explicit bounded --limit-etfs <=100"
+            )
+        return
+    if args.reconcile_missing_etf_details and not explicit:
+        if not 1 <= args.incremental_etf_limit <= MAX_MANUAL_ETF_SHARD:
+            raise SystemExit(
+                "manual reconcile requires an explicit bounded --incremental-etf-limit <=100"
+            )
+        return
+    if args.incremental_etf_only:
+        base_count = len(explicit)
+    elif explicit:
+        base_count = len(explicit)
+    else:
+        base_count = len(unique_symbols(load_core_daily_basket_symbols() + DEFAULT_ETFS))
+    if args.limit_etfs:
+        base_count = min(base_count, args.limit_etfs)
+    incremental_count = args.incremental_etf_limit if args.incremental_etf_backfill else 0
+    if base_count + incremental_count > MAX_MANUAL_ETF_SHARD:
+        raise SystemExit(
+            f"combined manual ETF shard exceeds {MAX_MANUAL_ETF_SHARD} tickers"
+        )
+
+
+def validate_selected_manual_etfs(args: argparse.Namespace, tickers: list[str]) -> None:
+    if (
+        args.event_name != "schedule"
+        and not args.plan_only
+        and len(tickers) > MAX_MANUAL_ETF_SHARD
+    ):
+        raise SystemExit(
+            f"selected manual ETF shard exceeds {MAX_MANUAL_ETF_SHARD} tickers"
+        )
 
 
 def fetch_json_response(rel_path: str, timeout: int) -> tuple[dict, int]:
@@ -2787,7 +2977,7 @@ def record_etf_detail_observation(
         "observation_origin": "natural",
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT)
+    store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=STORAGE_ROOT)
     if validation_status == "valid":
         store.store_provider_object(observation=row, payload=payload_path.read_bytes())
     store.record_observation(row)
@@ -2832,7 +3022,7 @@ def record_etf_detail_failure_observation(
         "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
+    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=STORAGE_ROOT).record_observation(row)
     return row
 
 
@@ -2882,7 +3072,7 @@ def record_etf_detail_unavailability_observation(
         "provider_response": provider_response,
     }
     row["event_id"] = deterministic_event_id("observation", row)
-    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=ROOT).record_observation(row)
+    DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=STORAGE_ROOT).record_observation(row)
     return row
 
 
@@ -3759,7 +3949,7 @@ def is_daily_1y_history_gap_mode(required_history_periods: tuple[str, ...], hist
 
 
 def load_daily_1y_fetchable_plan_rows() -> list[dict] | None:
-    payload = read_json(OUT_DIR.parent / FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH)
+    payload = read_json(REPOSITORY_INPUTS.daily_1y_fetchable_plan)
     if not isinstance(payload, dict):
         return None
     rows = payload.get("rows")
@@ -4572,7 +4762,7 @@ def stockanalysis_reconcile_exit_assessment(summary: dict) -> dict:
 
 
 def load_yf_finance_module():
-    path = ROOT / "scripts" / "fetch-yf-finance.py"
+    path = REPOSITORY_INPUTS.scripts / "fetch-yf-finance.py"
     spec = importlib.util.spec_from_file_location("yf_finance_fetcher", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load Yahoo fallback fetcher from {path}")
@@ -5404,15 +5594,23 @@ def _main() -> None:
     parser.add_argument("--sleep", type=float, default=0.25)
     parser.add_argument("--timeout", type=int, default=20)
     parser.add_argument("--endpoint-canary", action="store_true", help="probe current ETF detail/quote/history contracts before collection")
+    parser.add_argument("--preflight-only", action="store_true", help="validate the manual ETF request bound, then exit before network or writes")
+    parser.add_argument("--candidate-root", default="", help="external seeded root for acquire-only writes")
     parser.add_argument("--no-public-mirror", action="store_true")
     parser.add_argument("--fail-on-error", action="store_true", help="exit non-zero when any ticker fails")
     parser.add_argument("--stop-on-hard-error", action="store_true", help="stop chunk on non-404 fetch errors")
     args = parser.parse_args()
 
+    if args.candidate_root and not args.no_public_mirror:
+        raise SystemExit("--candidate-root requires --no-public-mirror")
     if args.incremental_etf_only and not args.incremental_etf_backfill:
         raise SystemExit("--incremental-etf-only requires --incremental-etf-backfill")
     if args.stock_limit < 0:
         raise SystemExit("--stock-limit must be non-negative")
+    if args.incremental_etf_limit < 0:
+        raise SystemExit("--incremental-etf-limit must be non-negative")
+    if args.limit_etfs < 0:
+        raise SystemExit("--limit-etfs must be non-negative")
     try:
         natural_recovery_kinds = parse_natural_recovery_kinds(args.natural_recovery_kinds)
     except ValueError as exc:
@@ -5443,6 +5641,15 @@ def _main() -> None:
         )
     ):
         raise SystemExit("--reconcile-missing-etf-details is an isolated producer mode")
+    validate_manual_etf_preflight(args)
+    if args.preflight_only:
+        return
+
+    if args.candidate_root:
+        try:
+            configure_candidate_outputs(Path(args.candidate_root))
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
 
     mirror_public = not args.no_public_mirror
     explicit_stocks = parse_symbols(args.stocks)
@@ -5632,6 +5839,7 @@ def _main() -> None:
         if args.incremental_etf_limit > 0:
             reconcile_selected = reconcile_selected[: args.incremental_etf_limit]
         etfs = reconcile_selected[:]
+        validate_selected_manual_etfs(args, etfs)
         print(
             "[missing-detail-reconcile-plan] "
             f"initial_missing={len(reconcile_initial_missing)} selected={len(reconcile_selected)} "
@@ -5653,6 +5861,7 @@ def _main() -> None:
             etfs = etfs[args.offset:]
         if args.limit_etfs:
             etfs = etfs[: args.limit_etfs]
+        validate_selected_manual_etfs(args, etfs)
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:
         incremental_summary = incremental_etf_backfill_candidates(
@@ -5666,8 +5875,16 @@ def _main() -> None:
             required_history_periods=required_history_periods,
             history_gaps_only=args.history_gaps_only,
         )
+        if (
+            args.event_name != "schedule"
+            and not args.plan_only
+            and args.incremental_etf_limit == 0
+        ):
+            incremental_summary["selected"] = []
+            incremental_summary["counts"]["selected"] = 0
         incremental_etfs = [row["ticker"] for row in incremental_summary["selected"]]
         planned_etfs = unique_symbols(etfs + incremental_etfs)
+        validate_selected_manual_etfs(args, planned_etfs)
         if args.plan_only:
             plan_payload = build_incremental_etf_backfill_plan(
                 planned_etfs,

@@ -246,7 +246,7 @@ function cached(root) {
   const fixture = makeFixture({ workflow: STOCKANALYSIS_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=7 stage_selected=8 staged_index_total=7/);
+  assert.match(always.stdout, /declared=9 stage_selected=10 staged_index_total=9/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   for (const excluded of fixture.materialized.exclude) {
     assert.equal(cached(fixture.root).includes(excluded), false, `${excluded} must remain unstaged`);
@@ -260,7 +260,7 @@ function cached(root) {
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /declared=7 stage_selected=8 staged_index_total=7/);
+  assert.match(trackedAlways.stdout, /declared=9 stage_selected=10 staged_index_total=9/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 

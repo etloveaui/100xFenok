@@ -455,18 +455,26 @@ try {
 }
 
 const workflow = fs.readFileSync(new URL("../.github/workflows/fetch-stockanalysis.yml", import.meta.url), "utf8");
+const laneManifest = JSON.parse(fs.readFileSync(
+  new URL("../data/admin/lane-commit-manifest.json", import.meta.url),
+  "utf8",
+));
+const stockanalysisLanePolicy = JSON.stringify(
+  laneManifest.workflows[".github/workflows/fetch-stockanalysis.yml"],
+);
 assert.match(workflow, /test-stockanalysis-attempt-emitter\.mjs/);
-assert.match(workflow, /detection-attempts\/yahoo_etf_fallback\.json/);
-assert.match(workflow, /detection-attempts\/stockanalysis_etf_universe\.json/);
-assert.match(workflow, /detection-attempts\/stockanalysis_surfaces\.json/);
-assert.match(workflow, /detection-attempts\/stockanalysis_stock_financial\.json/);
+assert.match(workflow, /stockanalysis_artifact\.py audit-stage/);
+assert.match(stockanalysisLanePolicy, /detection-attempts\/yahoo_etf_fallback\.json/);
+assert.match(stockanalysisLanePolicy, /detection-attempts\/stockanalysis_etf_universe\.json/);
+assert.match(stockanalysisLanePolicy, /detection-attempts\/stockanalysis_surfaces\.json/);
+assert.match(stockanalysisLanePolicy, /detection-attempts\/stockanalysis_stock_financial\.json/);
 
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
 {
   const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-stockanalysis.yml", import.meta.url), "utf8");
   const gate = checkWorkflowCommitShardsAgainstRegistry({
-    workflowText,
+    workflowText: `${workflowText}\n${stockanalysisLanePolicy}`,
     workflowRel: ".github/workflows/fetch-stockanalysis.yml",
   });
   assert.deepEqual(gate.missing_in_workflow, [],

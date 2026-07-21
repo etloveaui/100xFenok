@@ -49,10 +49,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             'if [ "${INPUT_ISOLATED_STOCK_SCHEDULE:-false}" = "true" ]; then',
             self.text,
         )
-        self.assertIn(
-            "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json",
-            self.text,
-        )
+        self.assertIn("scripts/stockanalysis_artifact.py", self.text)
+        self.assertIn("scripts/stage-lane-manifest.sh", self.text)
 
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (
@@ -106,23 +104,109 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
 
     def test_manifest_staging_keeps_dynamic_yf_selection_before_exclusions(self) -> None:
         commit_step = re.search(
-            r"- name: Commit and push\n\s+run: \|\n(?P<body>.*?)(?=\n\s+- name:)",
+            r"- name: Publish candidate to latest main\n(?P<header>.*?)\n\s+run: \|\n(?P<body>.*?)(?=\n\s+- name:)",
             self.text,
             flags=re.DOTALL,
         )
         self.assertIsNotNone(commit_step)
+        self.assertIn("id: publish", commit_step.group("header"))
         body = commit_step.group("body")
         manifest_call = "scripts/stage-lane-manifest.sh"
-        legacy_add = "git add -- \\\n            data/stockanalysis"
-        dynamic_add = "git ls-files --modified --others --exclude-standard -z -- data/yf/finance"
-        restore = "git restore --staged --worktree --"
-        for expected in (manifest_call, "--stage always_if_exists", legacy_add, dynamic_add, restore):
+        audit = "python3 scripts/stockanalysis_artifact.py audit-stage"
+        for expected in (manifest_call, "--stage always_if_exists", audit):
             self.assertIn(expected, body)
-        self.assertLess(body.index(manifest_call), body.index(legacy_add))
-        self.assertLess(body.index(dynamic_add), body.index(restore))
-        restore_body = body[body.index(restore):]
-        self.assertIn("data/stockanalysis/backfill/history_gap_report_latest.json", restore_body)
-        self.assertIn("data/yf/finance/_summary.json", restore_body)
+        self.assertLess(body.index(manifest_call), body.index(audit))
+        self.assertNotIn("git add -A", body)
+
+    def test_acquire_is_read_only_and_publish_alone_owns_global_writer(self) -> None:
+        self.assertNotRegex(self.text, r"(?m)^concurrency:\n")
+        acquire = re.search(
+            r"  acquire-stockanalysis:\n(?P<body>.*?)(?=\n  publish-stockanalysis:)",
+            self.text,
+            flags=re.DOTALL,
+        )
+        publish = re.search(
+            r"  publish-stockanalysis:\n(?P<body>.*)\Z",
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(acquire)
+        self.assertIsNotNone(publish)
+        acquire_body = acquire.group("body")
+        publish_body = publish.group("body")
+        self.assertIn("permissions:\n      contents: read\n      actions: read", acquire_body)
+        self.assertIn("group: stockanalysis-acquire-${{ github.ref }}", acquire_body)
+        self.assertIn("PYTHONDONTWRITEBYTECODE: '1'", acquire_body)
+        self.assertIn("Assert acquisition checkout stayed byte-clean", acquire_body)
+        self.assertIn("git diff --cached --exit-code", acquire_body)
+        self.assertIn("--untracked-files=all --ignored", acquire_body)
+        self.assertNotIn("fenok-data-writer-refs/heads/main", acquire_body)
+        for forbidden in ("git commit", "git push", "gh workflow run", "100xfenok-next/public"):
+            self.assertNotIn(forbidden, acquire_body)
+        self.assertIn("permissions:\n      contents: write\n      actions: write", publish_body)
+        self.assertIn("timeout-minutes: 20", publish_body)
+        self.assertIn("group: fenok-data-writer-refs/heads/main", publish_body)
+        self.assertIn("cancel-in-progress: false", publish_body)
+        self.assertIn("queue: max", publish_body)
+
+    def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
+        for expected in (
+            "--candidate-root \"$STOCKANALYSIS_CANDIDATE_ROOT\"",
+            "--no-public-mirror",
+            "actions/upload-artifact@v4",
+            "actions/download-artifact@v4",
+            "stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}",
+            "artifact-digest",
+            "github.run_number",
+            "scripts/stockanalysis_artifact.py pack",
+            "scripts/stockanalysis_artifact.py apply",
+        ):
+            self.assertIn(expected, self.text)
+        self.assertNotIn("overwrite: true", self.text)
+
+    def test_manual_network_etf_cap_is_forwarded_without_changing_natural_profiles(self) -> None:
+        incremental_input = re.search(
+            r"incremental_etf_limit:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
+        reconcile_input = re.search(
+            r"reconcile_missing_etf_limit:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
+        limit_input = re.search(
+            r"limit_etfs:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
+        self.assertIn("default: '0'", incremental_input.group("body"))
+        self.assertIn("default: '100'", limit_input.group("body"))
+        self.assertIn("default: '100'", reconcile_input.group("body"))
+        self.assertIn('--event-name "$EVENT_NAME"', self.text)
+        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT:-120}"', self.text)
+        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"', self.text)
+
+    def test_manual_preflight_precedes_candidate_seed_and_provider_fetch(self) -> None:
+        preflight = self.text.index("--preflight-only")
+        seed = self.text.index("scripts/stockanalysis_artifact.py seed")
+        candidate_fetch = self.text.index(
+            '--candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT"',
+            seed,
+        )
+        self.assertLess(preflight, seed)
+        self.assertLess(seed, candidate_fetch)
+
+    def test_publish_restarts_from_fresh_main_and_never_rebases_candidate(self) -> None:
+        publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
+        self.assertIn("git checkout -f -B main origin/main", publish)
+        self.assertIn("for attempt in $(seq 1 5)", publish)
+        self.assertNotIn("git rebase", publish)
+        self.assertNotIn("git pull --rebase", publish)
+        self.assertIn("StockAnalysis-Artifact-Digest:", publish)
+        self.assertIn("COMMIT_ARGS=(--allow-empty)", publish)
+        self.assertIn('ACCEPTED_STATUS="accepted_no_changes"', publish)
+        self.assertNotIn('echo "status=no_changes"', publish)
+        self.assertLess(publish.index("git checkout -f -B main origin/main"), publish.index("git commit \"${COMMIT_ARGS[@]}\""))
+        self.assertLess(publish.index("git commit \"${COMMIT_ARGS[@]}\""), publish.index("git push origin HEAD:main"))
+        self.assertIn("if: ${{ steps.publish.outputs.status == 'published' }}", publish)
 
 
 if __name__ == "__main__":

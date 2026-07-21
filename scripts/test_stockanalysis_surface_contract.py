@@ -5,14 +5,22 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 FETCHER_PATH = ROOT / "scripts" / "fetch-stockanalysis.py"
-SURFACE_DIR = ROOT / "data" / "stockanalysis" / "surfaces"
-PUBLIC_SURFACE_DIR = ROOT / "100xfenok-next" / "public" / "data" / "stockanalysis" / "surfaces"
+SURFACE_DIR = Path(
+    os.environ.get("STOCKANALYSIS_SOURCE_SURFACE_DIR", ROOT / "data" / "stockanalysis" / "surfaces")
+)
+PUBLIC_SURFACE_DIR = Path(
+    os.environ.get(
+        "STOCKANALYSIS_PROJECTION_ORACLE_DIR",
+        ROOT / "100xfenok-next" / "public" / "data" / "stockanalysis" / "surfaces",
+    )
+)
 
 
 def load_fetcher_module():
@@ -78,29 +86,12 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
                 self.assertTrue(surfaces)
                 self.assertTrue(set(surfaces).issubset(defined))
 
-    def test_source_producer_projects_surfaces_transactionally_for_validation(self) -> None:
+    def test_source_producer_never_projects_surfaces_and_central_projection_owns_public(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(
             encoding="utf-8"
         )
-        validate_start = workflow.index("      - name: Validate StockAnalysis contracts\n")
-        commit_start = workflow.index("      - name: Commit and push\n", validate_start)
-        validate_block = workflow[validate_start:commit_start]
-
-        projection = (
-            'rsync -a --checksum --delete data/stockanalysis/surfaces/ '
-            '"$PUBLIC_SURFACE_DIR/"'
-        )
-        contract_test = "python3 -m unittest scripts/test_stockanalysis_surface_contract.py"
-        self.assertIn('PUBLIC_SURFACE_BACKUP="$(mktemp -d', validate_block)
-        self.assertIn("trap restore_public_surfaces EXIT", validate_block)
-        self.assertIn(projection, validate_block)
-        self.assertIn(contract_test, validate_block)
-        self.assertLess(validate_block.index(projection), validate_block.index(contract_test))
-        self.assertIn("restore_public_surfaces", validate_block)
-        self.assertIn("trap - EXIT", validate_block)
-
-        commit_block = workflow[commit_start:]
-        self.assertNotIn("100xfenok-next/public/data/stockanalysis", commit_block)
+        self.assertNotIn("100xfenok-next/public/data/stockanalysis", workflow)
+        self.assertNotIn("restore_public_surfaces", workflow)
 
         projection_workflow = (
             ROOT / ".github" / "workflows" / "update-manifest.yml"

@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import subprocess
@@ -13,6 +14,7 @@ import sys
 import tempfile
 import unittest
 import urllib.error
+from argparse import Namespace
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -84,6 +86,207 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
             args(require_stock_financial_pair=False), basket
         ))
+
+    def test_manual_etf_preflight_closes_every_unbounded_network_path(self) -> None:
+        def args(**overrides):
+            values = {
+                "event_name": "workflow_dispatch",
+                "plan_only": False,
+                "etfs": "SPY",
+                "stocks_only": False,
+                "universe_backfill": False,
+                "incremental_etf_backfill": False,
+                "incremental_etf_only": False,
+                "reconcile_missing_etf_details": False,
+                "incremental_etf_limit": 100,
+                "limit_etfs": 0,
+            }
+            values.update(overrides)
+            return Namespace(**values)
+
+        too_many = ",".join(f"E{index:03d}" for index in range(101))
+        for case in (
+            args(etfs=too_many),
+            args(etfs="SPY", limit_etfs=101),
+            args(incremental_etf_backfill=True, incremental_etf_limit=101),
+            args(etfs="", reconcile_missing_etf_details=True, incremental_etf_limit=0),
+            args(etfs="", universe_backfill=True, limit_etfs=0),
+            args(
+                etfs=",".join(f"E{index:03d}" for index in range(60)),
+                incremental_etf_backfill=True,
+                incremental_etf_limit=50,
+            ),
+        ):
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(SystemExit, "100|bounded"):
+                    self.fetcher.validate_manual_etf_preflight(case)
+
+        self.fetcher.validate_manual_etf_preflight(
+            args(event_name="schedule", etfs="", incremental_etf_backfill=True, incremental_etf_limit=120)
+        )
+        self.fetcher.validate_manual_etf_preflight(
+            args(plan_only=True, etfs="", incremental_etf_backfill=True, incremental_etf_limit=0)
+        )
+        self.fetcher.validate_manual_etf_preflight(
+            args(
+                etfs="",
+                incremental_etf_backfill=True,
+                incremental_etf_limit=0,
+                limit_etfs=100,
+            )
+        )
+
+    def test_candidate_root_rejects_repo_and_symlink_and_routes_all_outputs_outside_checkout(self) -> None:
+        saved = self.fetcher.current_candidate_outputs()
+        try:
+            with self.assertRaisesRegex(ValueError, "repository"):
+                self.fetcher.configure_candidate_outputs(ROOT)
+            with self.assertRaisesRegex(ValueError, "repository"):
+                self.fetcher.configure_candidate_outputs(ROOT.parent)
+            with tempfile.TemporaryDirectory() as tmp:
+                external = Path(tmp) / "candidate"
+                external.mkdir()
+                link = Path(tmp) / "candidate-link"
+                link.symlink_to(external, target_is_directory=True)
+                with self.assertRaisesRegex(ValueError, "symlink"):
+                    self.fetcher.configure_candidate_outputs(link)
+                outputs = self.fetcher.configure_candidate_outputs(external)
+                for path in outputs.all_output_paths():
+                    self.assertTrue(path.is_relative_to(external.resolve()))
+                    self.assertFalse(path.is_relative_to(ROOT.resolve()))
+        finally:
+            self.fetcher.install_candidate_outputs(saved)
+
+    def test_manual_cap_fails_before_canary_or_candidate_mutation(self) -> None:
+        original_canary = self.fetcher.run_endpoint_canary
+        original_argv = sys.argv
+        saved = self.fetcher.current_candidate_outputs()
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "candidate"
+            candidate.mkdir()
+            sentinel = candidate / "sentinel.txt"
+            sentinel.write_text("unchanged\n")
+            before = {p.relative_to(candidate): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
+            self.fetcher.run_endpoint_canary = lambda *_args: calls.append("canary")
+            sys.argv = [
+                "fetch-stockanalysis.py",
+                "--candidate-root", str(candidate),
+                "--no-public-mirror",
+                "--event-name", "workflow_dispatch",
+                "--endpoint-canary",
+                "--etfs", ",".join(f"E{index:03d}" for index in range(101)),
+            ]
+            try:
+                with self.assertRaisesRegex(SystemExit, "100"):
+                    self.fetcher.main()
+            finally:
+                self.fetcher.run_endpoint_canary = original_canary
+                sys.argv = original_argv
+                self.fetcher.install_candidate_outputs(saved)
+            after = {p.relative_to(candidate): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
+        self.assertEqual(calls, [])
+        self.assertEqual(after, before)
+
+    def test_acquire_subprocess_never_mutates_checkout_on_success_failure_or_signal(self) -> None:
+        def checkout_snapshot() -> tuple[bytes, bytes]:
+            status = subprocess.check_output(
+                ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+                cwd=ROOT,
+            )
+            diff = subprocess.check_output(
+                ["git", "diff", "--binary", "--no-ext-diff", "HEAD", "--"],
+                cwd=ROOT,
+            )
+            return status, diff
+
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        before = checkout_snapshot()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            success_candidate = root / "success-candidate"
+            success_candidate.mkdir()
+            success = subprocess.run(
+                [
+                    sys.executable,
+                    str(FETCHER_PATH),
+                    "--candidate-root", str(success_candidate),
+                    "--no-public-mirror",
+                    "--coverage-only",
+                    "--stocks-only",
+                    "--event-name", "workflow_dispatch",
+                ],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(success.returncode, 0, success.stderr)
+            self.assertTrue((success_candidate / "data/stockanalysis/coverage/etf_detail.json").is_file())
+
+            failure_candidate = root / "failure-candidate"
+            failure_candidate.mkdir()
+            failure = subprocess.run(
+                [
+                    sys.executable,
+                    str(FETCHER_PATH),
+                    "--candidate-root", str(failure_candidate),
+                    "--no-public-mirror",
+                    "--event-name", "workflow_dispatch",
+                    "--etfs", ",".join(f"E{index:03d}" for index in range(101)),
+                ],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(failure.returncode, 0)
+            self.assertIn("100", failure.stderr)
+            self.assertEqual(list(failure_candidate.iterdir()), [])
+
+            signal_candidate = root / "signal-candidate"
+            signal_candidate.mkdir()
+            wrapper = f"""
+import importlib.util
+import sys
+import time
+spec = importlib.util.spec_from_file_location('stockanalysis_signal_fixture', {str(FETCHER_PATH)!r})
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+def blocked_canary(*_args, **_kwargs):
+    print('SIGNAL_FIXTURE_READY', flush=True)
+    time.sleep(60)
+module.run_endpoint_canary = blocked_canary
+sys.argv = [
+    'fetch-stockanalysis.py', '--candidate-root', {str(signal_candidate)!r},
+    '--no-public-mirror', '--event-name', 'workflow_dispatch',
+    '--endpoint-canary', '--stocks-only',
+]
+module.main()
+"""
+            process = subprocess.Popen(
+                [sys.executable, "-c", wrapper],
+                cwd=ROOT,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            try:
+                self.assertEqual(process.stdout.readline().strip(), "SIGNAL_FIXTURE_READY")
+                process.terminate()
+                process.wait(timeout=5)
+                self.assertNotEqual(process.returncode, 0)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait(timeout=5)
+                if process.stdout is not None:
+                    process.stdout.close()
+                if process.stderr is not None:
+                    process.stderr.close()
+
+        self.assertEqual(checkout_snapshot(), before)
 
     def test_attempt_tracker_emits_empty_yahoo_and_http_universe_and_surfaces_with_distinct_ids(self) -> None:
         original_run = self.fetcher.subprocess.run
@@ -2230,6 +2433,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
     def test_incremental_etf_backfill_daily1y_uses_exact_fetchable_plan(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
+        original_inputs = self.fetcher.REPOSITORY_INPUTS
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 out_dir = Path(tmp) / "stockanalysis"
@@ -2292,6 +2496,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     ),
                     encoding="utf-8",
                 )
+                self.fetcher.REPOSITORY_INPUTS = self.fetcher.RepositoryInputs(
+                    root=original_inputs.root,
+                    scripts=original_inputs.scripts,
+                    core_daily_basket=original_inputs.core_daily_basket,
+                    daily_1y_fetchable_plan=out_dir.parent / "admin" / "fenok-edge-etf-daily1y-fetchable-plan.json",
+                )
                 summary = self.fetcher.incremental_etf_backfill_candidates(
                     universe_payload={
                         "records": [
@@ -2309,6 +2519,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 )
         finally:
             self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.REPOSITORY_INPUTS = original_inputs
 
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["PLANMISS", "PLANSHORT"])
         self.assertTrue(summary["selected"][0]["missing_file"])
@@ -2323,6 +2534,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
     def test_incremental_etf_backfill_daily1y_applies_offset_before_cooldown(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
+        original_inputs = self.fetcher.REPOSITORY_INPUTS
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 out_dir = Path(tmp) / "stockanalysis"
@@ -2343,6 +2555,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                         }
                     ),
                     encoding="utf-8",
+                )
+                self.fetcher.REPOSITORY_INPUTS = self.fetcher.RepositoryInputs(
+                    root=original_inputs.root,
+                    scripts=original_inputs.scripts,
+                    core_daily_basket=original_inputs.core_daily_basket,
+                    daily_1y_fetchable_plan=out_dir.parent / "admin" / "fenok-edge-etf-daily1y-fetchable-plan.json",
                 )
                 (out_dir / "backfill").mkdir(parents=True)
                 (out_dir / "backfill" / "pending_ledger.json").write_text(
@@ -2373,6 +2591,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 )
         finally:
             self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.REPOSITORY_INPUTS = original_inputs
 
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["PLAN003", "PLAN004"])
         self.assertEqual(summary["policy"]["offset"], 2)

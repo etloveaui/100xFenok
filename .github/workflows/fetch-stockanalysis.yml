@@ -1,5 +1,5 @@
 # StockAnalysis DataPack source refresh.
-# Output: data/stockanalysis/** + public mirror + manifest.
+# Output: source-lane data only; the shared projection workflow owns public materialization.
 
 name: Fetch StockAnalysis Data
 
@@ -46,7 +46,7 @@ on:
       incremental_etf_limit:
         description: 'Maximum incremental ETF detail retries per run'
         required: false
-        default: '120'
+        default: '0'
       incremental_etf_max_age_hours:
         description: 'Existing StockAnalysis ETF detail age before stale retry'
         required: false
@@ -56,9 +56,9 @@ on:
         required: false
         default: 'false'
       reconcile_missing_etf_limit:
-        description: 'Maximum missing ETF details to reconcile (0 = all)'
+        description: 'Maximum missing ETF details to reconcile (manual hard cap: 100)'
         required: false
-        default: '0'
+        default: '100'
       history_gap_plan:
         description: 'Write a no-network ETF multi-year history gap plan only'
         required: false
@@ -104,9 +104,9 @@ on:
         required: false
         default: '0'
       limit_etfs:
-        description: 'ETF limit for smoke/backfill runs'
+        description: 'Maximum base ETF detail targets before incremental retries (manual hard cap: 100)'
         required: false
-        default: ''
+        default: '100'
       max_universe_pages:
         description: 'Maximum ETF universe list pages to scan'
         required: false
@@ -116,18 +116,19 @@ on:
         required: false
         default: '0.25'
 
-permissions:
-  contents: write
-  actions: write
-
-concurrency:
-  group: fenok-data-writer-refs/heads/main
-  cancel-in-progress: false
-  queue: max
-
 jobs:
-  fetch-stockanalysis:
+  acquire-stockanalysis:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    concurrency:
+      group: stockanalysis-acquire-${{ github.ref }}
+      cancel-in-progress: false
+    outputs:
+      artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
     # 60 was structurally too short for post-outage catch-up: 261 rate-limited
     # ETF fetches x ~20s ≈ 87min, so the job died before its commit step and
     # the backlog could never drain (run 29117945172 cancelled at 60m, 171/261
@@ -145,6 +146,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Configure external candidate root
+        run: |
+          echo "STOCKANALYSIS_CANDIDATE_ROOT=$RUNNER_TEMP/stockanalysis-candidate" >> "$GITHUB_ENV"
+          echo "STOCKANALYSIS_ARTIFACT_ROOT=$RUNNER_TEMP/stockanalysis-artifact" >> "$GITHUB_ENV"
+          echo "STOCKANALYSIS_ARTIFACT_NAME=stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_ENV"
+          echo "STOCKANALYSIS_BASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Install optional Yahoo fallback dependency
         run: pip install yfinance
@@ -316,7 +324,18 @@ jobs:
           set -o pipefail
           PRIMARY_FETCH_LOG="$RUNNER_TEMP/stockanalysis-primary-fetch.log"
           PRIMARY_FETCHED_TICKERS="$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt"
-          python3 scripts/fetch-stockanalysis.py $ARGS --no-public-mirror | tee "$PRIMARY_FETCH_LOG"
+          # Reject oversized manual shards before creating the candidate tree or
+          # opening any StockAnalysis/Yahoo endpoint.
+          python3 scripts/fetch-stockanalysis.py $ARGS \
+            --event-name "$EVENT_NAME" \
+            --preflight-only \
+            --no-public-mirror
+          python3 scripts/stockanalysis_artifact.py seed \
+            --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT"
+          python3 scripts/fetch-stockanalysis.py $ARGS \
+            --event-name "$EVENT_NAME" \
+            --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
+            --no-public-mirror | tee "$PRIMARY_FETCH_LOG"
           awk '/^\[etf [0-9]+\/[0-9]+\]/ && $4 != "FAIL" { print $3 }' "$PRIMARY_FETCH_LOG" \
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
@@ -332,87 +351,162 @@ jobs:
           if [ -n "$REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $REQUIRED_HISTORY_PERIODS"; fi
           if [ "$REQUIRED_HISTORY_PERIODS" = "daily_1y" ]; then ARGS="$ARGS --write-plan"; fi
           if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
-          python3 scripts/fetch-stockanalysis.py $ARGS --no-public-mirror
+          python3 scripts/fetch-stockanalysis.py $ARGS \
+            --event-name "${{ github.event_name }}" \
+            --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
+            --no-public-mirror
 
-      - name: Validate StockAnalysis contracts
+      - name: Assert acquisition checkout stayed byte-clean
         run: |
-          # The source producer intentionally leaves permanent public projection to
-          # update-manifest. Project surfaces only for this parity gate, then restore
-          # the checkout so the producer commit remains canonical-source-only.
-          PUBLIC_SURFACE_DIR="100xfenok-next/public/data/stockanalysis/surfaces"
-          PUBLIC_SURFACE_BACKUP="$(mktemp -d "$RUNNER_TEMP/stockanalysis-public-surfaces-XXXXXX")"
-          rsync -a --checksum --delete "$PUBLIC_SURFACE_DIR/" "$PUBLIC_SURFACE_BACKUP/"
-          restore_public_surfaces() {
-            rsync -a --checksum --delete "$PUBLIC_SURFACE_BACKUP/" "$PUBLIC_SURFACE_DIR/"
-          }
-          trap restore_public_surfaces EXIT
-          rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PUBLIC_SURFACE_DIR/"
+          git diff --exit-code
+          git diff --cached --exit-code
+          if [ -n "$(git status --porcelain=v1 --untracked-files=all --ignored)" ]; then
+            git status --short --untracked-files=all --ignored
+            exit 1
+          fi
 
-          python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
-          python3 scripts/test_stockanalysis_recovery_state.py
-          node scripts/test-stockanalysis-attempt-emitter.mjs
-          python3 -m unittest scripts/test_stockanalysis_surface_contract.py
-          python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
-          python3 scripts/test-stockanalysis-financials-fixtures.py
-          python3 -m unittest scripts/test_audit_market_data.py
-          node scripts/test-select-stockanalysis-daily1y-offset.mjs
-          node scripts/test-write-fenok-etf-daily1y-readiness.mjs
-          node scripts/test-build-fenok-etf-core-daily-basket.mjs
-          ALT_TMPDIR="$RUNNER_TEMP/stockanalysis-contract-alt-tmp"
-          mkdir -p "$ALT_TMPDIR"
-          TMPDIR="$ALT_TMPDIR" python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
-          TMPDIR="$ALT_TMPDIR" node scripts/test-write-fenok-etf-daily1y-readiness.mjs
-          TMPDIR="$ALT_TMPDIR" node scripts/test-build-fenok-etf-core-daily-basket.mjs
-
-          restore_public_surfaces
-          trap - EXIT
-          diff -qr "$PUBLIC_SURFACE_BACKUP" "$PUBLIC_SURFACE_DIR"
-
-      - name: Commit and push
+      - name: Pack immutable StockAnalysis candidate
         run: |
+          python3 scripts/stockanalysis_artifact.py pack \
+            --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
+            --artifact-root "$STOCKANALYSIS_ARTIFACT_ROOT" \
+            --base-sha "$STOCKANALYSIS_BASE_SHA" \
+            --run-id "${{ github.run_id }}" \
+            --run-number "${{ github.run_number }}" \
+            --run-attempt "${{ github.run_attempt }}" \
+            --artifact-name "$STOCKANALYSIS_ARTIFACT_NAME"
+
+      - name: Upload immutable StockAnalysis candidate
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/stockanalysis-artifact
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-stockanalysis:
+    needs: acquire-stockanalysis
+    runs-on: ubuntu-latest
+    # Semantic validation must follow fresh-main apply while the writer lock is
+    # held; cap the fail-closed critical section instead of validating a stale
+    # pre-lock checkout.
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: write
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - name: Checkout complete history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download immutable StockAnalysis candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/stockanalysis-artifact
+
+      - name: Publish candidate to latest main
+        id: publish
+        env:
+          ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
+          ARTIFACT_NAME: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-stockanalysis.yml \
-            --stage always_if_exists
-          git add -- \
-            data/stockanalysis \
-            data/yf/etf-details \
-            data/admin/data-supply-state/v1 \
-            data/admin/stockanalysis-recovery
-          for SHARD in \
-            data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json \
-            data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json \
-            data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json \
-            data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json
-          do
-            if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
-          done
-          git ls-files --modified --others --exclude-standard -z -- data/yf/finance \
-            | git add --pathspec-from-file=- --pathspec-file-nul
-          git restore --staged --worktree -- \
-            data/stockanalysis/backfill/history_gap_report_latest.json \
-            data/yf/finance/_summary.json
-          git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
+          ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
           for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
+            git fetch origin main
+            git checkout -f -B main origin/main
+            git clean -fd -- \
+              data/stockanalysis \
+              data/yf/finance \
+              data/yf/etf-details \
+              data/admin/data-supply-state \
+              data/admin/stockanalysis-recovery
+
+            APPLY_JSON="$(
+              python3 scripts/stockanalysis_artifact.py apply \
+                --artifact-root "$ARTIFACT_ROOT" \
+                --run-id "${{ github.run_id }}" \
+                --run-number "${{ github.run_number }}" \
+                --run-attempt "${{ github.run_attempt }}" \
+                --artifact-name "$ARTIFACT_NAME" \
+                --artifact-digest "$ARTIFACT_DIGEST" \
+                --github-output "$RUNNER_TEMP/stockanalysis-apply-output"
+            )"
+            APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
+            if [ "$APPLY_STATUS" = "stale" ]; then
+              echo "status=stale" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
+
+            PROJECTION_ORACLE="$RUNNER_TEMP/stockanalysis-surface-oracle"
+            rm -rf "$PROJECTION_ORACLE"
+            mkdir -p "$PROJECTION_ORACLE"
+            rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
+            python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
+            python3 scripts/test_stockanalysis_recovery_state.py
+            node scripts/test-stockanalysis-attempt-emitter.mjs
+            STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
+              STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
+              python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+            python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
+            python3 -m unittest scripts/test_stockanalysis_artifact.py
+            python3 scripts/test-stockanalysis-financials-fixtures.py
+            python3 -m unittest scripts/test_audit_market_data.py
+            node scripts/test-select-stockanalysis-daily1y-offset.mjs
+            node scripts/test-write-fenok-etf-daily1y-readiness.mjs
+            node scripts/test-build-fenok-etf-core-daily-basket.mjs
+
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-stockanalysis.yml \
+              --stage always_if_exists
+            python3 scripts/stockanalysis_artifact.py audit-stage \
+              --artifact-root "$ARTIFACT_ROOT"
+            if git diff --staged --quiet; then
+              COMMIT_ARGS=(--allow-empty)
+              COMMIT_SUBJECT="chore: record stockanalysis no-change run"
+              ACCEPTED_STATUS="accepted_no_changes"
+            else
+              COMMIT_ARGS=()
+              COMMIT_SUBJECT="chore: update stockanalysis data"
+              ACCEPTED_STATUS="published"
+            fi
+            git commit "${COMMIT_ARGS[@]}" \
+              -m "$COMMIT_SUBJECT" \
+              -m "StockAnalysis-Run-Number: ${{ github.run_number }}" \
+              -m "StockAnalysis-Run-Attempt: ${{ github.run_attempt }}" \
+              -m "StockAnalysis-Run-ID: ${{ github.run_id }}" \
+              -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
+            if git push origin HEAD:main; then
+              echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; restarting from fresh origin/main"
             sleep 3
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
 
       - name: Dispatch shared projection rebuild
+        if: ${{ steps.publish.outputs.status == 'published' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run update-manifest.yml --ref main
