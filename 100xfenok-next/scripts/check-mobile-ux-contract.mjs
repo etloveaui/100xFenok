@@ -3530,32 +3530,41 @@ async function collectScreenerCheckboxTargetChecks(page, route) {
   const hitArea = await checkbox.evaluate((node) => {
     const target = node.closest("[data-screener-checkbox-target]");
     const targetRect = target?.getBoundingClientRect();
+    const checkboxRect = node.getBoundingClientRect();
     const pseudoStyle = target ? window.getComputedStyle(target, "::before") : null;
+    const candidatePoints = targetRect ? [
+      { x: targetRect.right - 2, y: targetRect.top + (targetRect.height / 2) },
+      { x: targetRect.left + 2, y: targetRect.top + (targetRect.height / 2) },
+      { x: targetRect.left + (targetRect.width / 2), y: targetRect.bottom - 2 },
+      { x: targetRect.left + (targetRect.width / 2), y: targetRect.top + 2 },
+    ] : [];
+    const hitPoint = candidatePoints.find((point) => {
+      const insideViewport = point.x >= 0 && point.x < window.innerWidth && point.y >= 0 && point.y < window.innerHeight;
+      const insideCheckbox = point.x >= checkboxRect.left && point.x <= checkboxRect.right
+        && point.y >= checkboxRect.top && point.y <= checkboxRect.bottom;
+      if (!insideViewport || insideCheckbox) return false;
+      const hitNode = document.elementFromPoint(point.x, point.y);
+      return Boolean(hitNode && target && target.contains(hitNode));
+    });
     return {
       checked: (node instanceof HTMLInputElement) ? node.checked : false,
       target: targetRect?.toJSON() ?? null,
       pseudoHeight: Number.parseFloat(pseudoStyle?.height || "0"),
+      hitPoint: hitPoint ?? null,
     };
   });
   const failures = [];
-  if (!hitArea.target || hitArea.pseudoHeight < 44) {
-    failures.push({ check: "screener-checkbox-target-click", detail: "44px label hit area missing" });
+  if (!hitArea.target || Math.max(hitArea.target.height, hitArea.pseudoHeight) < 44 || !hitArea.hitPoint) {
+    failures.push({ check: "screener-checkbox-target-click", detail: "no label-owned 44px hit point outside the native checkbox" });
     return { route, failures };
   }
 
-  const clickX = hitArea.target.x + Math.min(10, hitArea.target.width / 2);
-  const clickY = hitArea.target.y - 1;
-  if (clickY < 0 || clickY < hitArea.target.y - ((hitArea.pseudoHeight - hitArea.target.height) / 2)) {
-    failures.push({ check: "screener-checkbox-target-click", detail: "expanded hit area is outside the viewport" });
-    return { route, failures };
-  }
-
-  await page.mouse.click(clickX, clickY);
+  await page.mouse.click(hitArea.hitPoint.x, hitArea.hitPoint.y);
   await page.waitForTimeout(100);
   if ((await checkbox.isChecked()) === hitArea.checked) {
     failures.push({
       check: "screener-checkbox-target-click",
-      detail: `outside-native click at ${Math.round(clickX)},${Math.round(clickY)} did not toggle the checkbox`,
+      detail: `outside-native click at ${Math.round(hitArea.hitPoint.x)},${Math.round(hitArea.hitPoint.y)} did not toggle the checkbox`,
     });
   }
   return { route, failures };

@@ -2218,9 +2218,19 @@
 
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="__select"],
 [data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="__select"] {
+  overflow: visible;
   padding-right: 7px;
   padding-left: 7px;
   text-align: center;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table [data-column-id="__select"] [data-canvas-plus-cell-frame] {
+  overflow: visible;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table [data-column-id="__select"] [data-screener-checkbox-target]::before {
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="fenokEdgeScore"],

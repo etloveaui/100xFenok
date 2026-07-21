@@ -9,6 +9,7 @@ const appRoot = path.resolve(__dirname, "..");
 const client = fs.readFileSync(path.join(appRoot, "src/app/screener/ScreenerClient.tsx"), "utf8");
 const screenerCss = fs.readFileSync(path.join(appRoot, "src/styles/cp-w4-screener.css"), "utf8");
 const canvasPlusCss = fs.readFileSync(path.join(appRoot, "src/styles/canvas-plus.css"), "utf8");
+const mobileUxContract = fs.readFileSync(path.join(appRoot, "scripts/check-mobile-ux-contract.mjs"), "utf8");
 
 const failures = [];
 
@@ -47,6 +48,18 @@ assert(
 assert(
   /\[data-screener-checkbox-target\]::before\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/s.test(canvasPlusCss),
   "screener checkbox hit targets must extend to 44px through the label hit area",
+);
+assert(
+  /\[data-canvas-plus-screener-preview\][^,{]*\.cp-screener-table\s+th\[data-column-id="__select"\],\s*\[data-canvas-plus-screener-preview\][^,{]*\.cp-screener-table\s+td\[data-column-id="__select"\]\s*\{[^}]*overflow:\s*visible;/s.test(canvasPlusCss),
+  "the compact table select cell must not clip the 44px checkbox hit target",
+);
+assert(
+  !/const\s+clickY\s*=\s*hitArea\.target\.y\s*-\s*1/.test(mobileUxContract),
+  "the runtime checkbox probe must not click one pixel outside the label box",
+);
+assert(
+  /document\.elementFromPoint\([^)]+\)[\s\S]{0,240}target\.contains\(/s.test(mobileUxContract),
+  "the runtime checkbox probe must choose an actual label-owned hit-tested point",
 );
 assert(
   /\.cp-screener-expand-target\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/s.test(canvasPlusCss),
