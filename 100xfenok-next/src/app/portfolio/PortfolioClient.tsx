@@ -887,7 +887,7 @@ function ConnectionActionLink({
     <TransitionLink
       href={href}
       data-portfolio-touch-action="connection"
-      className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border px-3 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${toneClass}`}
+      className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border px-3 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${toneClass}`}
     >
       {children}
     </TransitionLink>
@@ -1075,7 +1075,7 @@ function PortfolioConnectionPanel({
                         key={link.ticker}
                         href={link.route || `/etfs/${encodeURIComponent(link.ticker)}`}
                         data-portfolio-touch-action="etf-chip"
-                        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-cyan-200 bg-white px-2.5 text-[10px] font-black text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-cyan-200 bg-white px-2.5 text-[10px] font-black text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"
                         title={[link.label ?? link.ticker, link.raw_underlying ? `분류 원문 ${link.raw_underlying}` : null].filter(Boolean).join(" · ")}
                       >
                         {link.ticker}
@@ -1126,7 +1126,7 @@ function MobileHoldingCard({
               <button
                 type="button"
                 onClick={() => onEdit(row)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                className="inline-flex h-[44px] w-[44px] items-center justify-center rounded-lg text-[10px] font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
                 aria-label={`${row.ticker} 수정 입력`}
               >
                 수정
@@ -1136,7 +1136,7 @@ function MobileHoldingCard({
               <button
                 type="button"
                 onClick={() => onDelete(row.ticker)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+                className="inline-flex h-[44px] w-[44px] items-center justify-center rounded-lg text-lg font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                 aria-label={`${row.ticker} 삭제`}
               >
                 ×
