@@ -97,41 +97,60 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 938,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-21T00:32:52Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:20:24Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PFGC.json",
-    "payload_sha256": "231fa857c19c9faadbe1191de86bcd6d26fd7b793190b0a7cdcbff131345fbb7",
-    "quote_as_of": "2026-07-16T20:00:02Z",
-    "source_as_of": "2026-07-16"
+    "fetched_at": "2026-07-21T00:18:41Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/PFGC.json",
+    "payload_sha256": "ee1f30778fb7b8b2117aa26d6eff2ecd07ba703ba251695825ba17ea20f89f86",
+    "quote_as_of": "2026-07-20T20:00:02Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for PFGC despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "TypeError: object of type 'NoneType' has no len()",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 542,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-18T00:42:07Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-21T00:32:52Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -160,18 +179,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:15:36Z",
-    "payload_sha256": "183b2f1cce0b239d46496e2c15ce995afe37587e3c220d62f97afeb3f41b8d08",
-    "quote_as_of": "2026-07-16T20:00:02Z",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "92c0ed9fc2856eec6202e3fcae98b8283e2d561de3c12246f01597aea286348e",
+    "quote_as_of": "2026-07-20T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29789662473",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-07-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-07-21T00:18:00Z",
+  "recovered_from_run_id": "29622560422",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "29789662473",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PFGC",
-  "updated_at": "2026-07-18T00:42:07Z"
+  "updated_at": "2026-07-21T00:32:52Z"
 }

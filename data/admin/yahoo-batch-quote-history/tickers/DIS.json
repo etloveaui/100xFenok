@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 990,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-21T00:36:39Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:22:15Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-21T00:21:47Z",
+    "history_as_of": "2026-07-20",
     "path": "data/yf/finance/DIS.json",
-    "payload_sha256": "006e5397004ddb673019b09ab1684eaebeed6b995b6f764aa877240bfcaa952c",
-    "quote_as_of": "2026-07-15T20:04:07Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "b6e69329bb88f50356c552e0ae6159950e59748971a4e014a2d116052ea1badf",
+    "quote_as_of": "2026-07-20T20:02:48Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 906,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-21T00:36:39Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "e622f8877359588a9b8c50adbf3de14e66c59c827ea307bb23f6908c4c913e42",
+    "quote_as_of": "2026-07-20T20:02:48Z",
+    "run_attempt": 1,
+    "run_id": "29789662473",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DIS",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-21T00:36:39Z"
 }

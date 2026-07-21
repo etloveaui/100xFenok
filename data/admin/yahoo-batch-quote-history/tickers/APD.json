@@ -25,36 +25,74 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 987,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-21T00:36:39Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:13:00Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-07-21T00:21:11Z",
+    "history_as_of": "2026-07-20",
     "path": "data/yf/finance/APD.json",
-    "payload_sha256": "e5e7f6fe26cde0ca10b3ace53131aeddf4b3cabd2c2c14066468cad212b29bea",
-    "quote_as_of": "2026-07-14T20:00:02Z",
-    "source_as_of": "2026-07-14"
+    "payload_sha256": "82d09b8935e7196bcd69b213c63fcf8cdcb15fb87a2351959f481c101aa4ebb2",
+    "quote_as_of": "2026-07-20T20:00:03Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 566,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-21T00:36:39Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "1746794c0bba4c64df05f7f395a2331daa85e521d7c07563dbd2276418872bab",
+    "quote_as_of": "2026-07-20T20:00:03Z",
+    "run_attempt": 1,
+    "run_id": "29789662473",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "APD",
-  "updated_at": "2026-07-15T00:10:40Z"
+  "updated_at": "2026-07-21T00:36:39Z"
 }

@@ -125,6 +125,26 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for HOLX",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError: 'exchangeTimezoneName'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1308,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "discovered_from": [
@@ -141,12 +161,12 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 683,
+    "latency_ms": 1308,
     "natural": true,
-    "observed_at": "2026-07-18T00:37:10Z",
+    "observed_at": "2026-07-21T00:18:00Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -164,13 +184,13 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-07-18T00:37:10Z",
+    "observed_at": "2026-07-21T00:18:00Z",
     "run_attempt": 1,
-    "run_id": "29622560422"
+    "run_id": "29789662473"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "HOLX",
-  "updated_at": "2026-07-18T00:37:10Z"
+  "updated_at": "2026-07-21T00:18:00Z"
 }

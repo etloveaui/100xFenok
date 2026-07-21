@@ -97,41 +97,60 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 972,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-21T00:24:06Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:22:37Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CASY.json",
-    "payload_sha256": "8c47cacf0ba7f4ccf30f0e853ac3c5f1efb7d5852e5a2d76c4c929cc32270f7e",
-    "quote_as_of": "2026-07-16T20:00:01Z",
-    "source_as_of": "2026-07-16"
+    "fetched_at": "2026-07-21T00:18:50Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/CASY.json",
+    "payload_sha256": "22c8b3b861a4b2f54ded0177243d540e8d4dfb2f9f7fffc2a27c950296845e13",
+    "quote_as_of": "2026-07-20T20:00:01Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for CASY despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "TypeError: object of type 'NoneType' has no len()",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 486,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-18T00:49:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-21T00:24:06Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -160,18 +179,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:21:09Z",
-    "payload_sha256": "51f89702a19bb020165c0b8b423113f2f0889390db4fa37fb65a850d0fb87c94",
-    "quote_as_of": "2026-07-16T20:00:01Z",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "64b7f3ef9eeeee680ac94a28aeda292e627f5e570890294d54bf8d2a9dea423a",
+    "quote_as_of": "2026-07-20T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29789662473",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-07-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-07-21T00:18:00Z",
+  "recovered_from_run_id": "29622560422",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "29789662473",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CASY",
-  "updated_at": "2026-07-18T00:49:31Z"
+  "updated_at": "2026-07-21T00:24:06Z"
 }

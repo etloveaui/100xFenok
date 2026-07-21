@@ -54,15 +54,14 @@
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:21:35Z",
-    "history_as_of": "2026-07-14",
-    "path": "data/yf/finance/AMUB.json",
-    "payload_sha256": "d45851eaa780214c0da82fe36c59dcfedbc4f9f9315401f94102847f9caad574",
+    "fetched_at": "2026-07-19T07:14:57Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AMUB.json",
+    "payload_sha256": "b1b08f48a3611027897ff4fee4c51716d170eba5c5fce73cc049fcdd620ca864",
     "quote_as_of": "2026-07-10T19:48:43Z",
     "source_as_of": "2026-07-10T19:48:43Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -79,26 +78,26 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T20:21:08Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-19T07:14:57Z",
+    "history_as_of": "2026-07-17",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AMUB.json",
-    "payload_sha256": "5301d351d0dea72fdcc7d5f64b608d8168b2277d25b1e63ed06a59474b986836",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "b1b08f48a3611027897ff4fee4c51716d170eba5c5fce73cc049fcdd620ca864",
+    "quote_as_of": "2026-07-10T19:48:43Z",
+    "source_as_of": "2026-07-10T19:48:43Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-21T00:18:00Z",
+    "classified_run_id": "29789662473",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AMUB holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AMUB holds LKG because Yahoo source date 2026-07-10T19:48:43Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-10T19:48:43Z"
   },
   "ticker": "AMUB",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-21T00:18:00Z"
 }

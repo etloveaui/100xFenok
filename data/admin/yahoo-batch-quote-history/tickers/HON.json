@@ -71,15 +71,28 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1241,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:23:16Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HON.json",
-    "payload_sha256": "56b63197b75eb9943fd07493832381c2426ad50a07361a38728f27850af87234",
-    "quote_as_of": "2026-07-16T20:00:01Z",
-    "source_as_of": "2026-07-16"
+    "fetched_at": "2026-07-21T00:18:35Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/yf/finance/HON.json",
+    "payload_sha256": "6c419e649d47074748e5eefe0aaaf6fc886d9020a51986d1623d8bbe3e19ac7d",
+    "quote_as_of": "2026-07-20T20:00:01Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -87,25 +100,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for HON despite available history",
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "TypeError: object of type 'NoneType' has no len()",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 512,
+    "failures": [],
+    "latency_ms": 1241,
     "natural": true,
-    "observed_at": "2026-07-18T00:37:10Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -134,18 +140,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:21:09Z",
-    "payload_sha256": "b4e82f474b1fb37a13fc1e381a2de6a6a9af60779709d34525f817773c14973e",
-    "quote_as_of": "2026-07-16T20:00:01Z",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "16fc893a60a07e4299b35a7d874eff3dd4ae590e9517feb36e3461c40b13c135",
+    "quote_as_of": "2026-07-20T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "29789662473",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-07-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-07-21T00:18:00Z",
+  "recovered_from_run_id": "29622560422",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "29789662473",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "HON",
-  "updated_at": "2026-07-18T00:37:10Z"
+  "updated_at": "2026-07-21T00:18:00Z"
 }

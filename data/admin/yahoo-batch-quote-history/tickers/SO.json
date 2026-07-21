@@ -64,32 +64,58 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 930,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-21T00:36:39Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:24:03Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-21T00:23:28Z",
+    "history_as_of": "2026-07-20",
     "path": "data/yf/finance/SO.json",
-    "payload_sha256": "016c885237ab1393691864535f53c2206122aa1b7187f8a2a35e09aeb2284523",
-    "quote_as_of": "2026-07-15T20:06:05Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "0ed00d72bf9a5e3b0e02d4add10ac1ef8fb55e395cb3791f442d164c58012512",
+    "quote_as_of": "2026-07-20T20:00:02Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 971,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-21T00:36:39Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:14:04Z",
@@ -98,6 +124,18 @@
     "payload_sha256": "148805ff9ec11e0fb65316bfce4eeb77a2463a3472524d72a30b5b92b6b8def8",
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "a600ec406c74f815e9f38432e4ab5c6c05c4af7f2cb373040093d12b7bbe878d",
+    "quote_as_of": "2026-07-20T20:00:02Z",
+    "run_attempt": 1,
+    "run_id": "29789662473",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -113,5 +151,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SO",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-21T00:36:39Z"
 }

@@ -51,32 +51,58 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 952,
+      "natural": true,
+      "observed_at": "2026-07-21T00:18:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-21T00:32:52Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29789662473",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:22:49Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-21T00:22:20Z",
+    "history_as_of": "2026-07-20",
     "path": "data/yf/finance/HSY.json",
-    "payload_sha256": "7c279cc1b1fbf5a2ffd0b1987367b6bd8f969249d225a972cfd2b6ee4a912eee",
-    "quote_as_of": "2026-07-15T20:00:02Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "24bdeac63fdd143316a4c3e90cbca3f2a4b1e4a47c82aea65a85c043ffe66bcf",
+    "quote_as_of": "2026-07-20T20:00:03Z",
+    "source_as_of": "2026-07-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 864,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-21T00:32:52Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29789662473",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-06-27T23:57:48Z",
@@ -85,6 +111,18 @@
     "payload_sha256": "6bfce34aadfd9ce3db071fe62ca85a475cee7bb05478b873e90f935d24682901",
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-20",
+    "observed_at": "2026-07-21T00:18:00Z",
+    "payload_sha256": "2d1336ba8397b02940c2269aeef575b7f342eb831d8dfeda8364c5041290ebb4",
+    "quote_as_of": "2026-07-20T20:00:03Z",
+    "run_attempt": 1,
+    "run_id": "29789662473",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -100,5 +138,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "HSY",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-21T00:32:52Z"
 }

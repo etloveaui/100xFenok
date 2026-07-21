@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-19T23:00:27Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/ACHX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ACHX.json",
     "payload_sha256": "f413988ebf497573e4d80850a3a3fc8e2b564d562fc424759ca69efe99e727a2",
     "quote_as_of": "2026-07-10T14:33:39Z",
     "source_as_of": "2026-07-10T14:33:39Z"
@@ -52,12 +52,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-08T22:43:26Z",
-    "history_as_of": "2026-07-07",
+    "fetched_at": "2026-07-19T23:00:27Z",
+    "history_as_of": "2026-07-17",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ACHX.json",
-    "payload_sha256": "073ff3ada90e1e7920e56ef92e45b3a91737755b5c1b094c31574d585b0c8896",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-07"
+    "payload_sha256": "f413988ebf497573e4d80850a3a3fc8e2b564d562fc424759ca69efe99e727a2",
+    "quote_as_of": "2026-07-10T14:33:39Z",
+    "source_as_of": "2026-07-10T14:33:39Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-10T14:33:39Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-16T00:13:37Z",
-    "classified_run_id": "29460793523",
+    "classified_at": "2026-07-21T00:18:00Z",
+    "classified_run_id": "29789662473",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ACHX holds LKG because Yahoo source date 2026-07-07 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ACHX holds LKG because Yahoo source date 2026-07-10T14:33:39Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-07"
+    "source_as_of": "2026-07-10T14:33:39Z"
   },
   "ticker": "ACHX",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-07-21T00:18:00Z"
 }
