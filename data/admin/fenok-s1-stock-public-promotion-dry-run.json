@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
-  "generated_at": "2026-07-20T22:55:16.512Z",
+  "generated_at": "2026-07-21T03:44:37.428Z",
   "purpose": "Persist an admin-only dry-run and fail-closed explicit-enable plan for future S1 public stock promotion.",
   "contract_doc": "docs/planning/CONTRACT_fenok_s1_stock_promotion_scoring_v0_1_20260630.md",
   "source_gate": "s1_stock_promotion_candidates.joined_gate",
@@ -61,9 +61,9 @@
         "public_s0_rows": 1177
       },
       "after_counts_if_enabled": {
-        "public_s0_rows": 1177,
-        "promoted_rows": 0,
-        "blocked_rows_excluded": 7,
+        "public_s0_rows": 1178,
+        "promoted_rows": 1,
+        "blocked_rows_excluded": 6,
         "duplicate_symbols": 0
       },
       "validation": {
@@ -86,22 +86,22 @@
   "counts": {
     "public_s0_before": 1177,
     "s1_gap_total": 7,
-    "promotion_rows": 0,
-    "excluded_blocked_rows": 7,
-    "public_s0_after_if_enabled": 1177,
+    "promotion_rows": 1,
+    "excluded_blocked_rows": 6,
+    "public_s0_after_if_enabled": 1178,
     "s0_overlap_rows": 0,
     "etf_rows": 0,
     "non_stock_rows": 0,
-    "scored_preview_rows": 0,
+    "scored_preview_rows": 1,
     "fake_score_rows": 0,
-    "rows_with_missing_axes": 0,
-    "rows_with_unsupported_axes": 0,
+    "rows_with_missing_axes": 1,
+    "rows_with_unsupported_axes": 1,
     "files_written": 1,
     "public_files_written": 0
   },
   "blocker_counts": {
-    "evidence_families_min3": 4,
-    "market_currency_country_scope": 5
+    "evidence_families_min3": 3,
+    "market_currency_country_scope": 4
   },
   "disallowed_claims": {
     "scored_public_s0": false,
@@ -119,12 +119,12 @@
     {
       "id": "s1_public_promotion_dry_run_counts_current",
       "ok": true,
-      "detail": "s0=1177, gap=7, promotion=0, blocked=7"
+      "detail": "s0=1177, gap=7, promotion=1, blocked=6"
     },
     {
       "id": "s1_public_promotion_dry_run_hypothetical_denominator",
       "ok": true,
-      "detail": "1177+0=1177; blocked=7; gap=7"
+      "detail": "1177+1=1178; blocked=6; gap=7"
     },
     {
       "id": "s1_public_promotion_dry_run_no_s0_overlap",
@@ -144,12 +144,12 @@
     {
       "id": "s1_public_promotion_dry_run_missing_axes_null_explicit",
       "ok": true,
-      "detail": "rows_with_missing_axes=0, rows_with_unsupported_axes=0"
+      "detail": "rows_with_missing_axes=1, rows_with_unsupported_axes=1"
     },
     {
       "id": "s1_public_promotion_dry_run_blockers_exact_current_set",
       "ok": true,
-      "detail": "[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"ECHO\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"STRC\",[\"evidence_families_min3\"]]]"
+      "detail": "[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"STRC\",[\"evidence_families_min3\"]]]"
     },
     {
       "id": "s1_public_promotion_dry_run_admin_only_no_public_write",
@@ -179,7 +179,7 @@
     {
       "id": "s1_public_mutation_plan_fail_closed_with_rollback",
       "ok": true,
-      "detail": "{\"after\":{\"public_s0_rows\":1177,\"promoted_rows\":0,\"blocked_rows_excluded\":7,\"duplicate_symbols\":0},\"rollback_targets\":[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"],\"validation\":{\"no_s0_overlap\":true,\"no_etf_or_non_stock_rows\":true,\"missing_axes_null_explicit\":true,\"blocked_rows_excluded\":true,\"full_public_signal_file_forbidden\":true}}"
+      "detail": "{\"after\":{\"public_s0_rows\":1178,\"promoted_rows\":1,\"blocked_rows_excluded\":6,\"duplicate_symbols\":0},\"rollback_targets\":[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"],\"validation\":{\"no_s0_overlap\":true,\"no_etf_or_non_stock_rows\":true,\"missing_axes_null_explicit\":true,\"blocked_rows_excluded\":true,\"full_public_signal_file_forbidden\":true}}"
     },
     {
       "id": "s1_public_mutation_no_write_check_mode",
@@ -191,12 +191,12 @@
     {
       "id": "s1_promotion_gate_plan_counts_match_gate",
       "ok": true,
-      "detail": "0+7 vs 0+7"
+      "detail": "1+6 vs 1+6"
     },
     {
       "id": "s1_promotion_gate_plan_preserves_s0_count",
       "ok": true,
-      "detail": "1177->1177, future=1177, s0_overlap_rows=0"
+      "detail": "1177->1177, future=1178, s0_overlap_rows=0"
     },
     {
       "id": "s1_promotion_gate_plan_no_etf_or_non_stock_rows",
@@ -216,12 +216,12 @@
     {
       "id": "s1_promotion_gate_plan_missing_axes_null_explicit",
       "ok": true,
-      "detail": "rows_with_missing_axes=0, rows_with_unsupported_axes=0"
+      "detail": "rows_with_missing_axes=1, rows_with_unsupported_axes=1"
     },
     {
       "id": "s1_promotion_gate_plan_blockers_exact_current_set",
       "ok": true,
-      "detail": "{\"blocked_rows\":[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"ECHO\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"STRC\",[\"evidence_families_min3\"]]],\"source_blocker_counts\":{\"evidence_families_min3\":4,\"market_currency_country_scope\":5}}"
+      "detail": "{\"blocked_rows\":[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"STRC\",[\"evidence_families_min3\"]]],\"source_blocker_counts\":{\"evidence_families_min3\":3,\"market_currency_country_scope\":4}}"
     },
     {
       "id": "s1_promotion_gate_plan_stdout_only_no_writes",
@@ -229,7 +229,151 @@
       "detail": "files_written=0, public_files_written=0"
     }
   ],
-  "promotion_rows": [],
+  "promotion_rows": [
+    {
+      "ticker": "ECHO",
+      "source_stage": "JOINED_READY_NOT_SCORED",
+      "target_stage": "S1_PUBLIC_PROMOTION_DRY_RUN",
+      "asset_type": "stock",
+      "identity": {
+        "name": "EchoStar Corporation",
+        "exchange": "NMS",
+        "currency": "USD",
+        "country_scope": "US",
+        "sector": "Communication Services",
+        "industry": "Telecom Services"
+      },
+      "eligibility": {
+        "joined_ready": true,
+        "outside_s0": true,
+        "etf_lane_excluded": true,
+        "exact_ticker_contract": true,
+        "minimum_evidence_families": 3,
+        "observed_evidence_family_count": 3
+      },
+      "score_source": "scripts/stock-action-score-core.mjs",
+      "score_contract_version": "action-score-v0.3.1",
+      "score_preview_summary": {
+        "action_score": 23.4,
+        "signal_score": 26,
+        "coverage_ratio": 0.6667,
+        "confidence_label": "medium",
+        "action_bucket": "watch",
+        "action_label": "관찰",
+        "action_reasons": [
+          "12M 218.8%",
+          "sp500",
+          "배당 0.0%"
+        ],
+        "families": {
+          "valuation": {
+            "present": false,
+            "eligible": false,
+            "score": 0,
+            "max": 20
+          },
+          "momentum_revision": {
+            "present": true,
+            "eligible": true,
+            "score": 9,
+            "max": 22
+          },
+          "income": {
+            "present": true,
+            "eligible": true,
+            "score": 0,
+            "max": 10
+          },
+          "index_structure": {
+            "present": true,
+            "eligible": true,
+            "score": 4,
+            "max": 18
+          },
+          "smart_money": {
+            "present": false,
+            "eligible": true,
+            "score": 0,
+            "max": 25
+          },
+          "sector_smart_money": {
+            "present": false,
+            "eligible": false,
+            "score": 0,
+            "max": 5
+          }
+        }
+      },
+      "missing_scoring_axes": [
+        {
+          "key": "global_scouter_core_row",
+          "label": "global-scouter core stock row",
+          "value": null,
+          "display": "미확인"
+        },
+        {
+          "key": "global_scouter_detail_file",
+          "label": "global-scouter detail estimates",
+          "value": null,
+          "display": "미확인"
+        },
+        {
+          "key": "stockanalysis_financials_file",
+          "label": "StockAnalysis financials",
+          "value": null,
+          "display": "미확인"
+        },
+        {
+          "key": "revision_movers",
+          "label": "revision movers",
+          "value": null,
+          "display": "미확인"
+        },
+        {
+          "key": "yf_quarter_closes",
+          "label": "YF quarter closes",
+          "value": null,
+          "display": "미확인"
+        },
+        {
+          "key": "sec13f_guru_holders",
+          "label": "13F guru holders",
+          "value": null,
+          "display": "미확인"
+        },
+        {
+          "key": "sec13f_enhanced_consensus",
+          "label": "13F enhanced consensus",
+          "value": null,
+          "display": "미확인"
+        }
+      ],
+      "unsupported_scoring_axes": [
+        {
+          "key": "per_band",
+          "label": "PER band",
+          "value": null,
+          "display": "미확인",
+          "reason": "S1 market_facts does not carry Global Scouter PER-band min/current/max."
+        },
+        {
+          "key": "sector_smart_money",
+          "label": "sector smart money",
+          "value": null,
+          "display": "미확인",
+          "reason": "S1 market_facts identity sector is not yet bridged to the stock_action canonical sector map."
+        },
+        {
+          "key": "conviction_entries",
+          "label": "13F conviction entries",
+          "value": null,
+          "display": "미확인",
+          "reason": "S1 score preview keeps conviction unmapped until the ticker-level source join is explicit."
+        }
+      ],
+      "claim_scope": "Admin-only S1 public-promotion dry run; not S0, not public, not daily, not gated."
+    }
+  ],
   "blocked_rows": [
     {
       "ticker": "230360.KQ",
@@ -355,52 +499,6 @@
             "terminal": true,
             "alias_target": null,
             "alias_source": null
-          }
-        ]
-      }
-    },
-    {
-      "ticker": "ECHO",
-      "source_stage": "NORMALIZED_NOT_JOINED",
-      "target_stage": "S1_PROMOTION_BLOCKED",
-      "promotion_action": "repair_blockers_before_shadow_candidate",
-      "claim_scope": "Blocked S1 stock candidate plan only; do not score, publish, or include in S0.",
-      "blockers": [
-        "evidence_families_min3",
-        "market_currency_country_scope"
-      ],
-      "blocker_actions": [
-        {
-          "blocker": "evidence_families_min3",
-          "required_action": "add one accepted evidence family so the ticker reaches 3 independent families.",
-          "future_file_targets": [
-            "scripts/fetch-stockanalysis.py",
-            "scripts/probe-stockanalysis-financials.py",
-            "scripts/audit-fenok-stock-promotion-candidates.mjs"
-          ]
-        },
-        {
-          "blocker": "market_currency_country_scope",
-          "required_action": "repair identity exchange/currency/country scope normalization before joined-ready promotion.",
-          "future_file_targets": [
-            "scripts/build-market-facts.py",
-            "scripts/audit-fenok-stock-promotion-candidates.mjs"
-          ]
-        }
-      ],
-      "corporate_action_policy": {
-        "status": "none",
-        "reason": null,
-        "evidence": [
-          {
-            "type": "Symbol Change",
-            "date": "Jun 24, 2026",
-            "symbol": "ECHO",
-            "other": "SATS",
-            "text": "SATS ticker symbol changed to ECHO",
-            "terminal": false,
-            "alias_target": null,
-            "alias_source": "SATS"
           }
         ]
       }
