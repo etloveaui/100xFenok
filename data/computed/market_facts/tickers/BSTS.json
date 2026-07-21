@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BSTS",
   "asset_type": "etf",
-  "generated_at": "2026-07-14T04:12:01Z",
+  "generated_at": "2026-07-21T23:22:51Z",
   "source_as_of": "2026-07-08",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -12,8 +12,8 @@
     "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": "Invesco",
-    "category": "Target Maturity"
+    "fund_family": null,
+    "category": null
   },
   "facts": {
     "price": {
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 25.12,
+      "value": 24.9999,
       "source": "yf",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-29T23:50:25Z",
+      "as_of": "2026-07-21",
+      "fetched_at": "2026-07-21T23:05:47Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,10 +53,10 @@
       ],
       "candidates": [
         {
-          "value": 25.12,
+          "value": 24.9999,
           "source": "yf",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-29T23:50:25Z",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
           "confidence": "observed"
         },
         {
@@ -88,9 +88,16 @@
           "as_of": "2026-07-08",
           "fetched_at": "2026-07-08T23:51:27Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.029901505,
+          "source": "yf",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": -0.04,
@@ -111,9 +118,16 @@
           "as_of": "2026-07-08",
           "fetched_at": "2026-07-08T23:51:27Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.11960649,
+          "source": "yf",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "total_assets": {
       "value": 1000000.0,
@@ -139,9 +153,9 @@
     },
     "expense_ratio": {
       "value": 0.07,
-      "source": "yf",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-29T23:50:25Z",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-07-08",
+      "fetched_at": "2026-07-08T23:51:27Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -152,14 +166,6 @@
       "candidates": [
         {
           "value": 0.07,
-          "source": "yf",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-29T23:50:25Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 0.07,
           "source": "stockanalysis.overview",
           "as_of": "2026-07-08",
           "fetched_at": "2026-07-08T23:51:27Z",
@@ -167,13 +173,38 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
+    },
+    "return_1m": {
+      "value": 0.1830641691108256,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-21",
+      "fetched_at": "2026-07-21T23:05:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 0.1830641691108256,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     },
     "return_ytd": {
-      "value": 0.25968288024723746,
+      "value": 0.22309189861226902,
       "source": "yf.history_1y",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-29T23:50:25Z",
+      "as_of": "2026-07-21",
+      "fetched_at": "2026-07-21T23:05:47Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -185,10 +216,10 @@
       ],
       "candidates": [
         {
-          "value": 0.25968288024723746,
+          "value": 0.22309189861226902,
           "source": "yf.history_1y",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-29T23:50:25Z",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -196,10 +227,10 @@
       "candidate_count": 1
     },
     "return_1y": {
-      "value": 0.25968288024723746,
+      "value": 0.22309189861226902,
       "source": "yf.history_1y",
-      "as_of": "2026-06-29",
-      "fetched_at": "2026-06-29T23:50:25Z",
+      "as_of": "2026-07-21",
+      "fetched_at": "2026-07-21T23:05:47Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -211,18 +242,18 @@
       ],
       "candidates": [
         {
-          "value": 0.25968288024723746,
+          "value": 0.22309189861226902,
           "source": "yf.history_1y",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-29T23:50:25Z",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
           "confidence": "derived",
           "unit": "percent_points"
         },
         {
-          "value": 0.279665,
+          "value": -0.15980601,
           "source": "yf",
-          "as_of": "2026-06-29",
-          "fetched_at": "2026-06-29T23:50:25Z",
+          "as_of": "2026-07-21",
+          "fetched_at": "2026-07-21T23:05:47Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -597,7 +628,7 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": true
+    "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
