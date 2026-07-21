@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-07-10 (15+ years, 863 S&P 500 data points)
+> **Period**: 2010-01-01 ~ 2026-07-17 (15+ years, 864 S&P 500 data points)
 > **Version**: 3.8.0
-> **Last Update**: 2026-07-13
+> **Last Update**: 2026-07-21
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-07-21 | Weekly update (2026-07-17 source): 32,019 records (+38), 2010-01-01 ~ 2026-07-17, 38 sections, 864 S&P 500 data points; DEC-275 floor preserved (source starts 2010-09-03); source_summaries remain 2,404 non-null + 66 null; ISO-week dup drops=0. |
 | 3.8.0 | 2026-07-13 | Weekly update (2026-07-10 source): 31,981 records (+38), 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points; DEC-275 floor preserved (source starts 2010-08-27); source_summaries remain 2,404 non-null + 66 null; ISO-week dup drops=0. |
 | 3.8.0 | 2026-07-09 | Re-ran the 2026-07-03 source workbook from inbox; regenerated benchmark JSON metadata and re-verified DEC-275 history preservation at 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; source_summaries remain 2,404 non-null + 66 null. |
 | 3.8.0 | 2026-07-06 | Weekly data update (2026-07-03 source): micro_sectors +1 section 과창판 (STAR50 Index, 311 rows from 2020-07-24); 31,943 records (+348), 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; DEC-275 floor preserved (source trimmed to 2010-08-20); source_summaries 2,404 non-null + 66 null; ISO-week dup drops=0. |
