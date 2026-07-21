@@ -6,10 +6,22 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  DATA_SUPPLY_POLICY_REGISTRY,
+  getDataSupplyDomainPolicy,
+} from "./data-supply-policy-registry.mjs";
+
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const STATE_REL_ROOT = "data/admin/data-supply-state/v1";
 const PRIMARY_REL_ROOT = "data/stockanalysis/etfs";
 const DOMAIN = "etf_detail";
+const POLICY_CONSUMER_ID = "scripts.effective_etf_detail_reader";
+const DOMAIN_POLICY = getDataSupplyDomainPolicy(
+  DATA_SUPPLY_POLICY_REGISTRY,
+  DOMAIN,
+  POLICY_CONSUMER_ID,
+);
+const PRIMARY_POLICY = DOMAIN_POLICY.providers[0];
 const SHA256_RE = /^[0-9a-f]{64}$/;
 const IMMUTABLE_REF_KINDS = new Set(["provider_object", "provider_lkg"]);
 const PYTHON_ACTIVE_READER = String.raw`
@@ -72,12 +84,12 @@ function parseJson(bytes, label) {
 
 function validatePrimary(payload, ticker) {
   if (
-    payload.schema_version !== "stockanalysis/v1"
+    payload.schema_version !== PRIMARY_POLICY.schema
     || payload.ticker !== ticker
     || payload.asset_type !== "etf"
-    || (payload.source !== "stockanalysis" && payload.source_provider !== "stockanalysis")
-    || payload.source === "yahoo_finance"
-    || payload.source_provider === "yahoo_finance"
+    || (payload.source !== PRIMARY_POLICY.name && payload.source_provider !== PRIMARY_POLICY.name)
+    || payload.source === DOMAIN_POLICY.providers[1].name
+    || payload.source_provider === DOMAIN_POLICY.providers[1].name
     || payload.detail_status === "yf_fallback"
   ) {
     throw new EffectiveEtfDetailIntegrityError(`StockAnalysis primary ${ticker} identity mismatch`);
@@ -185,6 +197,10 @@ function readSelectedPayload(active, ticker, selection) {
     throw new EffectiveEtfDetailIntegrityError(`R2 active selection ${ticker} identity mismatch`);
   }
   const ref = selection.payload_ref;
+  const providerPolicy = DOMAIN_POLICY.providers.find((provider) => provider.name === selection.provider);
+  if (!providerPolicy || selection.provider_schema !== providerPolicy.schema) {
+    throw new EffectiveEtfDetailIntegrityError(`R2 active selection ${ticker} provider contract mismatch`);
+  }
   if (!ref || typeof ref !== "object" || !IMMUTABLE_REF_KINDS.has(ref.kind)) {
     throw new EffectiveEtfDetailIntegrityError(`R2 active selection ${ticker} payload_ref is not immutable`);
   }

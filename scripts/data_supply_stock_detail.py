@@ -32,7 +32,8 @@ FROZEN_TICKER_SHA256 = "da4e5ec74ea0d741d529a627f2ea2f5507213787c5fa5395081e1756
 
 _ENROLLED = frozenset(FROZEN_STOCK_DETAIL_TICKERS)
 _TICKER = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
-_POLICY = get_domain_policy("stock_detail")
+POLICY_CONSUMER_ID = "scripts.data_supply_stock_detail"
+_POLICY = get_domain_policy("stock_detail", consumer_id=POLICY_CONSUMER_ID)
 
 if canonical_sha256(list(FROZEN_STOCK_DETAIL_TICKERS)) != FROZEN_TICKER_SHA256:
     raise RuntimeError("frozen stock-detail ticker digest mismatch")

@@ -25,7 +25,7 @@ def provider_path(provider, domain, entity, suffix):
 
 
 def make_observation(suffix="b", *, domain="etf_detail", entity="VYMI"):
-    policy = get_domain_policy(domain)
+    policy = get_domain_policy(domain, consumer_id="scripts.data_supply_state")
     payload = {"ticker": entity, "suffix": suffix}
     row = {
         "schema_version": "data-supply-observation/v1",
@@ -46,7 +46,7 @@ def make_observation(suffix="b", *, domain="etf_detail", entity="VYMI"):
 
 
 def make_failure(provider, suffix, observed_at, *, domain="etf_detail", entity="VYMI"):
-    policy = get_domain_policy(domain)
+    policy = get_domain_policy(domain, consumer_id="scripts.data_supply_state")
     provider_policy = policy.provider(provider)
     row = make_observation(suffix, domain=domain, entity=entity)
     row.update(
@@ -80,7 +80,7 @@ def main():
     parser.add_argument("--target-transaction-id", default="")
     parser.add_argument("--expected-active-transaction-id", default="")
     args = parser.parse_args()
-    policy = get_domain_policy(args.domain)
+    policy = get_domain_policy(args.domain, consumer_id="scripts.data_supply_state")
     domain = args.domain
     entity = args.entity
 

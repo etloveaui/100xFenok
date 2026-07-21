@@ -17,7 +17,8 @@ from data_supply_state import (
 )
 
 
-_ETF_DETAIL_POLICY = get_domain_policy("etf_detail")
+POLICY_CONSUMER_ID = "scripts.data_supply_resolver"
+_ETF_DETAIL_POLICY = get_domain_policy("etf_detail", consumer_id=POLICY_CONSUMER_ID)
 PRIMARY_PROVIDER = _ETF_DETAIL_POLICY.primary.name
 FALLBACK_PROVIDER = _ETF_DETAIL_POLICY.fallback.name
 PRIMARY_RECOVERY_REQUIRED = _ETF_DETAIL_POLICY.recovery_green_required
@@ -82,7 +83,7 @@ class DataSupplyResolver:
         decided_at: str,
     ) -> dict[str, Any]:
         try:
-            policy = get_domain_policy(domain)
+            policy = get_domain_policy(domain, consumer_id=POLICY_CONSUMER_ID)
         except KeyError as exc:
             raise SchemaError("resolver domain is not configured") from exc
         primary_provider = policy.primary.name

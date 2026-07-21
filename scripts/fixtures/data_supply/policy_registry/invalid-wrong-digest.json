@@ -1,0 +1,28 @@
+{
+  "schema_version": "data-supply-policy-registry/v1",
+  "policy_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+  "domains": {
+    "etf_detail": {
+      "resolution_scope": "domain_atomic",
+      "providers": [
+        {"name": "stockanalysis", "endpoint_family": "stockanalysis_etf_detail", "schema": "stockanalysis/v1"},
+        {"name": "yahoo_finance", "endpoint_family": "yahoo_finance_etf_detail", "schema": "yf-etf-detail/v1"}
+      ],
+      "fresh_ttl_hours": 168,
+      "emergency_lkg_ttl_days": 14,
+      "recovery_green_required": 3,
+      "allowed_consumers": ["scripts.data_supply_resolver"]
+    },
+    "stock_detail": {
+      "resolution_scope": "domain_atomic",
+      "providers": [
+        {"name": "stockanalysis", "endpoint_family": "stockanalysis_stock_detail", "schema": "stockanalysis/v1"},
+        {"name": "yahoo_finance", "endpoint_family": "yahoo_finance_stock_detail", "schema": "yf-finance/v2"}
+      ],
+      "fresh_ttl_hours": 168,
+      "emergency_lkg_ttl_days": 14,
+      "recovery_green_required": 3,
+      "allowed_consumers": ["scripts.data_supply_resolver"]
+    }
+  }
+}

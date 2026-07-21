@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import {
+  DATA_SUPPLY_ETF_DETAIL_POLICY,
   buildUnavailableEtfRepresentation,
   canonicalJsonSha256,
   mergeEtfDataSupply,
   resolveDataSupplyEtfDetail,
   sha256Text,
+  validateDataSupplyPolicyRegistryForConsumer,
   type PublicJsonDocument,
 } from "../src/lib/server/data-supply-etf-detail";
+import policyRegistry from "../src/generated/data-supply-policy-registry.json";
 import {
   buildTypedUnavailableDataPoint,
   recordTypedUnavailableResponse,
@@ -111,6 +114,31 @@ async function fixture(options: {
 }
 
 async function main() {
+  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.resolution_scope, "domain_atomic");
+  assert.deepEqual(
+    DATA_SUPPLY_ETF_DETAIL_POLICY.providers.map((provider) => provider.name),
+    ["stockanalysis", "yahoo_finance"],
+  );
+  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.fresh_ttl_hours, 168);
+  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.emergency_lkg_ttl_days, 14);
+  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.recovery_green_required, 3);
+  assert.throws(
+    () => validateDataSupplyPolicyRegistryForConsumer(
+      policyRegistry,
+      "etf_detail",
+      "100xfenok-next.not_authorized",
+    ),
+    /data-supply-policy-registry:.*not authorized/,
+  );
+  assert.throws(
+    () => validateDataSupplyPolicyRegistryForConsumer(
+      { ...policyRegistry, policy_digest: "0".repeat(64) },
+      "etf_detail",
+      "100xfenok-next.data_supply_etf_detail",
+    ),
+    /data-supply-policy-registry:.*digest/,
+  );
+
 const fresh = await fixture({ state: "fresh_fallback" });
 assert.equal(fresh.kind, "selected", JSON.stringify(fresh));
 if (fresh.kind === "selected") {

@@ -49,7 +49,8 @@ APPROVED_PROTECTED_SNAPSHOT = {
     "enrolled_count": 718,
 }
 
-_POLICY = get_domain_policy(DOMAIN)
+POLICY_CONSUMER_ID = "scripts.migrate_data_supply_stock_detail"
+_POLICY = get_domain_policy(DOMAIN, consumer_id=POLICY_CONSUMER_ID)
 _PRIMARY = _POLICY.primary.name
 _FALLBACK = _POLICY.fallback.name
 _EXPECTED_MANIFEST_KEYS = {

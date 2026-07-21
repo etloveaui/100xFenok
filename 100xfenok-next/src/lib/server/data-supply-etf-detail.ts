@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import policyRegistry from "../../generated/data-supply-policy-registry.json";
 import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
@@ -12,6 +13,22 @@ export type { PublicJsonDocument } from "./data-loader";
 type JsonRecord = Record<string, unknown>;
 type ResolutionState = "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
 type ProviderRole = "primary" | "fallback" | null;
+
+export interface DataSupplyProviderPolicy {
+  name: string;
+  endpoint_family: string;
+  schema: string;
+}
+
+export interface DataSupplyDomainPolicy {
+  resolution_scope: "domain_atomic";
+  providers: readonly [DataSupplyProviderPolicy, DataSupplyProviderPolicy];
+  fresh_ttl_hours: number;
+  emergency_lkg_ttl_days: number;
+  recovery_green_required: number;
+  allowed_consumers: readonly string[];
+  policy_digest: string;
+}
 
 export interface EtfDataSupplyMetadata {
   enrollment_state: "enrolled";
@@ -76,6 +93,87 @@ function stableJson(value: unknown): string {
   const record = value as JsonRecord;
   return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`).join(",")}}`;
 }
+
+function policyRegistryFailure(message: string): never {
+  throw new Error(`data-supply-policy-registry: ${message}`);
+}
+
+export function validateDataSupplyPolicyRegistryForConsumer(
+  value: unknown,
+  domain: string,
+  consumerId: string,
+): DataSupplyDomainPolicy {
+  const registry = asRecord(value);
+  const domains = asRecord(registry?.domains);
+  const policy = asRecord(domains?.[domain]);
+  const providers = Array.isArray(policy?.providers)
+    ? policy.providers.map(asRecord)
+    : [];
+  const consumers = Array.isArray(policy?.allowed_consumers)
+    ? policy.allowed_consumers
+    : [];
+  if (
+    registry?.schema_version !== "data-supply-policy-registry/v1"
+    || !isSha256(registry.policy_digest)
+    || !domains
+    || Object.keys(domains).sort().join(",") !== "etf_detail,stock_detail"
+    || !policy
+    || policy.resolution_scope !== "domain_atomic"
+    || providers.length !== 2
+    || !providers[0]
+    || !providers[1]
+    || providers[0].name !== "stockanalysis"
+    || providers[1].name !== "yahoo_finance"
+    || typeof providers[0].endpoint_family !== "string"
+    || typeof providers[1].endpoint_family !== "string"
+    || typeof providers[0].schema !== "string"
+    || typeof providers[1].schema !== "string"
+    || !Number.isInteger(policy.fresh_ttl_hours)
+    || (policy.fresh_ttl_hours as number) <= 0
+    || !Number.isInteger(policy.emergency_lkg_ttl_days)
+    || (policy.emergency_lkg_ttl_days as number) <= 0
+    || !Number.isInteger(policy.recovery_green_required)
+    || (policy.recovery_green_required as number) <= 0
+    || consumers.length === 0
+    || consumers.some((consumer) => typeof consumer !== "string")
+  ) policyRegistryFailure(`domain ${domain} contract is invalid`);
+  const calculated = createHash("sha256").update(stableJson({
+    schema_version: registry.schema_version,
+    domains,
+  })).digest("hex");
+  if (calculated !== registry.policy_digest) policyRegistryFailure("policy digest mismatch");
+  if (!consumers.includes(consumerId)) {
+    policyRegistryFailure(`consumer ${consumerId} is not authorized for domain ${domain}`);
+  }
+  const first = providers[0] as JsonRecord;
+  const second = providers[1] as JsonRecord;
+  return Object.freeze({
+    resolution_scope: "domain_atomic" as const,
+    providers: Object.freeze([
+      Object.freeze({
+        name: first.name as string,
+        endpoint_family: first.endpoint_family as string,
+        schema: first.schema as string,
+      }),
+      Object.freeze({
+        name: second.name as string,
+        endpoint_family: second.endpoint_family as string,
+        schema: second.schema as string,
+      }),
+    ]) as readonly [DataSupplyProviderPolicy, DataSupplyProviderPolicy],
+    fresh_ttl_hours: policy.fresh_ttl_hours as number,
+    emergency_lkg_ttl_days: policy.emergency_lkg_ttl_days as number,
+    recovery_green_required: policy.recovery_green_required as number,
+    allowed_consumers: Object.freeze([...(consumers as string[])]),
+    policy_digest: registry.policy_digest as string,
+  });
+}
+
+export const DATA_SUPPLY_ETF_DETAIL_POLICY = validateDataSupplyPolicyRegistryForConsumer(
+  policyRegistry,
+  "etf_detail",
+  "100xfenok-next.data_supply_etf_detail",
+);
 
 export async function sha256Text(value: string): Promise<string> {
   return createHash("sha256").update(value).digest("hex");
@@ -228,9 +326,10 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
 }
 
 function isStrictDirectEtfPayload(payload: JsonRecord, ticker: string): boolean {
+  const primary = DATA_SUPPLY_ETF_DETAIL_POLICY.providers[0];
   if (
-    payload.schema_version !== "stockanalysis/v1"
-    || (payload.source !== "stockanalysis" && payload.source_provider !== "stockanalysis")
+    payload.schema_version !== primary.schema
+    || (payload.source !== primary.name && payload.source_provider !== primary.name)
     || payload.asset_type !== "etf"
     || payload.ticker !== ticker
     || "data_supply" in payload
@@ -322,7 +421,7 @@ export async function resolveDataSupplyEtfDetail(
     || await sha256Text(payloadDocument.raw) !== parsed.entry.payload_sha256
     || payloadDocument.value.ticker !== ticker
     || payloadDocument.value.asset_type !== "etf"
-    || payloadDocument.value.schema_version !== "yf-etf-detail/v1"
+    || payloadDocument.value.schema_version !== DATA_SUPPLY_ETF_DETAIL_POLICY.providers[1].schema
     || payloadDocument.value.source_as_of !== parsed.metadata.source_as_of
     || "data_supply" in payloadDocument.value
   ) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };

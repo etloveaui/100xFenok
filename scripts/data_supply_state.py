@@ -27,7 +27,8 @@ from data_supply_policy import get_domain_policy
 GENERATIONS_RETAINED = 3
 MAX_LIVE_PREPARED_GENERATIONS = 4
 PREPARATION_LEASE_HOURS = 24
-_ETF_DETAIL_POLICY = get_domain_policy("etf_detail")
+POLICY_CONSUMER_ID = "scripts.data_supply_state"
+_ETF_DETAIL_POLICY = get_domain_policy("etf_detail", consumer_id=POLICY_CONSUMER_ID)
 ETF_DETAIL_FRESH_TTL_HOURS = _ETF_DETAIL_POLICY.fresh_ttl_hours
 ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS = _ETF_DETAIL_POLICY.emergency_lkg_ttl_days
 
@@ -402,7 +403,7 @@ def selection_age_status(
     if not isinstance(age_seconds, int) or isinstance(age_seconds, bool) or age_seconds < 0:
         raise SchemaError("age_seconds must be a non-negative integer")
     try:
-        policy = get_domain_policy(domain)
+        policy = get_domain_policy(domain, consumer_id=POLICY_CONSUMER_ID)
     except KeyError as exc:
         raise SchemaError("unavailable authority proof is not configured for this domain") from exc
     if resolution_state in {"fresh_primary", "fresh_fallback"}:
@@ -1482,7 +1483,7 @@ class DataSupplyStateStore:
             evidence_observations=evidence_observations,
         )
         try:
-            policy = get_domain_policy(domain)
+            policy = get_domain_policy(domain, consumer_id=POLICY_CONSUMER_ID)
         except KeyError as exc:
             raise SchemaError("unavailable authority proof is not configured for this domain") from exc
         required_providers = set(policy.provider_names)
