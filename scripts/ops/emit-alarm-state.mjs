@@ -18,6 +18,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ALARM_STATE_SCHEMA = "alarm-state/v1";
+const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", "no_declaration", "unknown"]);
+const PUBLIC_CADENCE_EVIDENCE = new Set(["suspected_skip", "attempt_gap"]);
 
 function isoNow(now) {
   return now instanceof Date ? now.toISOString() : new Date().toISOString();
@@ -41,6 +43,7 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     workflow: w.file ?? null,
     label: w.label ?? w.name ?? w.file ?? null,
     streak: typeof w.streak === "number" ? w.streak : null,
+    failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,
     first_failing_run_id: w.firstFailingRunId ?? w.alarm?.firstFailingRunId ?? null,
     first_failing_run_url: w.firstFailingRunUrl ?? w.alarm?.firstFailingRunUrl ?? null,
   }));
@@ -61,6 +64,24 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
       }))
       .sort((a, b) => String(a.file).localeCompare(String(b.file)))
     : [];
+  const cadence_state_counts = Object.fromEntries(CADENCE_STATES.map((state) => [state, 0]));
+  const watchedWorkflows = workflows.map((w) => {
+    const cadence_status = CADENCE_STATES.includes(w?.cadence_status) ? w.cadence_status : "unknown";
+    cadence_state_counts[cadence_status] += 1;
+    return {
+      file: w.file ?? null,
+      label: w.label ?? w.name ?? null,
+      events: Array.isArray(w.events) ? w.events : (w.event ? [w.event] : []),
+      event: w.event ?? (w.events?.length === 1 ? w.events[0] : null),
+      failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,
+      cadence_status,
+      // Preserve the existing point-in-time uncertainty vocabulary without
+      // publishing cron strings, paths, timestamps, or raw run evidence.
+      cadence_evidence: Array.isArray(w?.cadence_evidence)
+        ? [...new Set(w.cadence_evidence.filter((value) => PUBLIC_CADENCE_EVIDENCE.has(value)))].sort()
+        : [],
+    };
+  });
 
   const runId = env.GITHUB_RUN_ID ? String(env.GITHUB_RUN_ID) : null;
   const runUrl = runId && env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY
@@ -89,12 +110,8 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     status,
     open_incident_count: openIncidents.length,
     open_incidents: openIncidents,
-    watched_workflows: workflows.map((w) => ({
-      file: w.file ?? null,
-      label: w.label ?? w.name ?? null,
-      events: Array.isArray(w.events) ? w.events : (w.event ? [w.event] : []),
-      event: w.event ?? (w.events?.length === 1 ? w.events[0] : null),
-    })),
+    watched_workflows: watchedWorkflows,
+    cadence_state_counts,
     excluded_workflows: excludedWorkflows,
     unknown_workflows: unknownWorkflows,
     last_firing: lastFiring,
@@ -118,6 +135,7 @@ const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
   "open_incident_count",
   "open_incidents",
   "watched_workflows",
+  "cadence_state_counts",
   "excluded_workflows",
   "unknown_workflows",
   "last_resolved_at",
@@ -153,6 +171,15 @@ export function alarmStateUnchanged(prior, next) {
   return a !== null && a === significantAlarmState(next);
 }
 
+export function writeAlarmStateMirrors({ state, outPath, publicOutPath }) {
+  const json = `${JSON.stringify(state, null, 2)}\n`;
+  for (const target of [outPath, publicOutPath]) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, json);
+  }
+  return json;
+}
+
 function main() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(__dirname, "..", "..");
@@ -166,11 +193,7 @@ function main() {
 
   const unchanged = alarmStateUnchanged(prior, state);
   const emitted = unchanged ? prior : state;
-  const json = `${JSON.stringify(emitted, null, 2)}\n`;
-  for (const target of [outPath, publicOutPath]) {
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, json);
-  }
+  writeAlarmStateMirrors({ state: emitted, outPath, publicOutPath });
   // Published so the workflow can gate the OPS issue comment on it. Suppressing
   // the redundant commit without suppressing the comment would have left the
   // louder half of the churn in place: 9 comments on issue #88 between 04:53 and

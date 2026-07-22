@@ -388,6 +388,7 @@ function legalAttempt(reason) {
   if (reason === "unexpected_error") return { ...base, execution: "threw", exception_kind: "unexpected", http_status: null, auth: "not_applicable", decode: "not_attempted", payload: "not_available", assertions: [] };
   if (reason === "http_error") return { ...base, http_status: 500, auth: "not_applicable", decode: "not_attempted", payload: "not_available", assertions: [] };
   if (reason === "auth_error") return { ...base, http_status: 401, auth: "rejected", decode: "not_attempted", payload: "not_available", assertions: [] };
+  if (reason === "provider_throttled") return { ...base, http_status: 403, auth: "not_applicable", decode: "ok", payload: "non_empty", assertions: [{ id: "provider_throttled", passed: false }] };
   if (reason === "rate_limited") return { ...base, http_status: 429, auth: "not_applicable", rate_limited: true, decode: "not_attempted", payload: "not_available", assertions: [] };
   if (reason === "decode_error") return { ...base, decode: "error", payload: "not_available", assertions: [] };
   if (reason === "empty_payload") return { ...base, payload: "empty", assertions: [] };
@@ -496,6 +497,7 @@ function runConfigAndFixtureChecks() {
     "yahoo_ticker_macro",
     "sentiment",
     "nasdaq_giw_sox",
+    "us_indices_daily",
     "slickcharts",
     "edgar_filings",
     "finra_short_volume",
@@ -515,12 +517,18 @@ function runConfigAndFixtureChecks() {
   assert.equal(nasdaqGiwSox.producer_members[0].artifact_contracts[0].assertions
     .some((item) => item.id === "constituent_identity_consistency"), true);
   const usIndicesDaily = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "us_indices_daily");
-  assert.equal(usIndicesDaily.enforcement, "shadow");
-  assert.equal(usIndicesDaily.kpi_required, false);
+  assert.equal(usIndicesDaily.enforcement, "live");
+  assert.equal(usIndicesDaily.kpi_required, true);
+  assert.equal(usIndicesDaily.label, "US index daily close (Yahoo live canonical)");
+  assert.equal(usIndicesDaily.visibility, "public_safe_aggregate");
   assert.deepEqual(usIndicesDaily.producer_members[0].schedule, ["0 22 * * 1-5"]);
+  assert.deepEqual(usIndicesDaily.producer_members[0].artifact_contracts.map((item) => item.id), [
+    "us_indices_daily_sp500",
+    "us_indices_daily_nasdaq",
+  ]);
   assert.deepEqual(usIndicesDaily.producer_members[0].artifact_contracts.map((item) => item.path), [
-    "data/admin/us-indices-daily/shadow/sp500.json",
-    "data/admin/us-indices-daily/shadow/nasdaq.json",
+    "data/indices/sp500.json",
+    "data/indices/nasdaq.json",
   ]);
   const oecdCli = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "oecd_cli");
   assert.equal(oecdCli.enforcement, "shadow");
@@ -1524,7 +1532,7 @@ function runCliReproduction(artifactRoot) {
     const artifacts = JSON.parse(fs.readFileSync(artifactsPath, "utf8"));
     const calendars = JSON.parse(fs.readFileSync(calendarsPath, "utf8"));
     const pointer = (document, raw) => raw === "" ? document : raw.slice(1).split("/").reduce((value, token) => value == null ? undefined : value[token.replaceAll("~1", "/").replaceAll("~0", "~")], document);
-    const reasonStatus = { ok: "ready", declared_cadence: "ready", workflow_unobserved: "unobserved", stale: "stale", schema_drift: "drift", decode_error: "drift", missing_artifact: "unavailable", transport_error: "unavailable", http_error: "unavailable", auth_error: "unavailable", rate_limited: "unavailable", empty_payload: "unavailable", future_source: "unavailable", unexpected_error: "unavailable" };
+    const reasonStatus = { ok: "ready", declared_cadence: "ready", workflow_unobserved: "unobserved", stale: "stale", schema_drift: "drift", decode_error: "drift", missing_artifact: "unavailable", transport_error: "unavailable", http_error: "unavailable", auth_error: "unavailable", provider_throttled: "unavailable", rate_limited: "unavailable", empty_payload: "unavailable", future_source: "unavailable", unexpected_error: "unavailable" };
     const severity = { ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 };
     const classifyAttempt = (row) => {
       if (!row || row.execution === "unobserved") return "workflow_unobserved";
@@ -1533,6 +1541,7 @@ function runCliReproduction(artifactRoot) {
       if (row.outcome === "not_attempted") return "unexpected_error";
       if (row.outcome === "error") return "unexpected_error";
       if (row.outcome === "success") return row.assertions.some((assertion) => assertion.passed === false) ? "schema_drift" : "ok";
+      if (row.assertions.some((assertion) => assertion.id === "provider_throttled" && assertion.passed === false)) return "provider_throttled";
       if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) return "auth_error";
       if (row.http_status === 429) return "rate_limited";
       if (row.http_status < 200 || row.http_status >= 300) return "http_error";
@@ -1675,7 +1684,7 @@ function runCliReproduction(artifactRoot) {
     if (reportDigest !== expected.baseline.report_file_sha256) throw new Error("report digest mismatch");
     if (canonical(report) !== canonical(expected.baseline.expected_report)) throw new Error("independent report expectation mismatch");
     const statuses = ["ready", "stale", "drift", "unavailable", "unobserved"];
-    const reasons = new Set(["ok", "declared_cadence", "missing_artifact", "workflow_unobserved", "transport_error", "http_error", "auth_error", "rate_limited", "decode_error", "schema_drift", "empty_payload", "future_source", "stale", "unexpected_error"]);
+    const reasons = new Set(["ok", "declared_cadence", "missing_artifact", "workflow_unobserved", "transport_error", "http_error", "auth_error", "provider_throttled", "rate_limited", "decode_error", "schema_drift", "empty_payload", "future_source", "stale", "unexpected_error"]);
     const logical = Object.fromEntries(statuses.map((status) => [status, 0]));
     const members = Object.fromEntries(statuses.map((status) => [status, 0]));
     const modes = { post_fetch_artifact: 0, artifact_only: 0, composite: 0 };

@@ -65,6 +65,38 @@ assert.throws(() => validateControlledFailureFiles("sp500.json", "workflow_dispa
     failure_kind: "controlled",
     error: "owner-approved workflow_dispatch chaos injection",
   });
+  const challengeEvents = path.join(wrapperRoot, "challenge-events.jsonl");
+  const challengeOutcomes = path.join(wrapperRoot, "challenge-outcomes.jsonl");
+  const challengeEvent = JSON.stringify({
+    execution: "returned",
+    exception_kind: null,
+    http_status: 403,
+    auth: "not_applicable",
+    rate_limited: false,
+    decode: "ok",
+    payload: "non_empty",
+    assertions: [{ id: "provider_throttled", passed: false }],
+  });
+  const challenge = spawnSync(process.execPath, [
+    wrapper,
+    "--key", "treasury.json",
+    "--outcomes", challengeOutcomes,
+    "--event-name", "schedule",
+    "--selected-scraper", "all",
+    "--controlled-failure-files", "",
+    "--", process.execPath, "-e",
+    `require("node:fs").appendFileSync(process.env.SLICKCHARTS_ATTEMPT_EVENTS_PATH, ${JSON.stringify(`${challengeEvent}\n`)}); process.exit(7);`,
+  ], {
+    encoding: "utf8",
+    env: { ...process.env, SLICKCHARTS_ATTEMPT_EVENTS_PATH: challengeEvents },
+  });
+  assert.equal(challenge.status, 0, challenge.stderr);
+  assert.deepEqual(JSON.parse(fs.readFileSync(challengeOutcomes, "utf8")), {
+    key: "treasury.json",
+    outcome: "failure",
+    failure_kind: "provider_throttled",
+    error: "SlickCharts provider returned a Cloudflare challenge after bounded retries",
+  });
   const skippedOutcomes = path.join(wrapperRoot, "skipped.jsonl");
   const skipped = spawnSync(process.execPath, [
     wrapper,
@@ -135,6 +167,35 @@ writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({
 }
 
 prepareSlickchartsDailyRecovery({ dataDir, snapshotDir });
+fs.writeFileSync(path.join(dataDir, "treasury.json"), "{challenge\n");
+writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({
+  key,
+  outcome: key === "treasury.json" ? "failure" : "success",
+  failure_kind: key === "treasury.json" ? "provider_throttled" : null,
+  error: key === "treasury.json" ? "SlickCharts provider returned a Cloudflare challenge after bounded retries" : null,
+})));
+{
+  const result = finalizeSlickchartsDailyRecovery({
+    dataDir,
+    stateRoot,
+    snapshotDir,
+    outcomesPath,
+    statusPath,
+    run: run("slick-provider-throttled", "2026-07-15T02:00:00Z", "schedule"),
+  });
+  assert.equal(result.exitCode, 0, "a provider block with valid LKG remains degradable");
+  assert.equal(result.publishData, true);
+  assert.deepEqual(
+    fs.readFileSync(path.join(dataDir, "treasury.json")),
+    fs.readFileSync(path.join(snapshotDir, "treasury.json")),
+    "provider challenge must leave the canonical daily payload at its exact LKG bytes",
+  );
+  const state = JSON.parse(fs.readFileSync(path.join(stateRoot, "keys", "treasury.json"), "utf8"));
+  assert.equal(state.latest_failure.failure_kind, "provider_throttled");
+  assert.equal(state.resolution_state, "lkg_primary");
+}
+
+prepareSlickchartsDailyRecovery({ dataDir, snapshotDir });
 for (const key of SLICKCHARTS_DAILY_KEYS) writePayload(dataDir, key, "2026-07-16", 3);
 writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({ key, outcome: "success", failure_kind: null, error: null })));
 {
@@ -150,7 +211,7 @@ writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({ key, outcome:
   assert.deepEqual(result.degradedKeys, ["treasury.json"], "manual green dispatch retains per-file LKG instead of promoting recovery");
   const state = JSON.parse(fs.readFileSync(path.join(stateRoot, "keys", "treasury.json"), "utf8"));
   assert.equal(state.resolution_state, "lkg_primary");
-  assert.equal(state.latest_failure.run_id, "slick-failure");
+  assert.equal(state.latest_failure.run_id, "slick-provider-throttled");
 }
 
 prepareSlickchartsDailyRecovery({ dataDir, snapshotDir });
@@ -170,7 +231,7 @@ writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({ key, outcome:
   const state = JSON.parse(fs.readFileSync(path.join(stateRoot, "keys", "treasury.json"), "utf8"));
   assert.equal(state.resolution_state, "fresh_primary");
   assert.equal(state.retry, false);
-  assert.equal(state.recovered_from_run_id, "slick-failure");
+  assert.equal(state.recovered_from_run_id, "slick-provider-throttled");
   assert.equal(state.recovery_event_name, "schedule");
   assert.equal(state.recovery_run_attempt, 1);
 }

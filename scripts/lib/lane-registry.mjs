@@ -424,22 +424,28 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "yahoo chart v8 (^GSPC/^IXIC, us_trading_days)" },
-    enforcement: "shadow",
+    enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/us-indices-daily",
     detection_attempt: attemptShard("us_indices_daily"),
     canonical_outputs: [
-      "data/admin/us-indices-daily/shadow/sp500.json",
-      "data/admin/us-indices-daily/shadow/nasdaq.json",
+      "data/indices/sp500.json",
+      "data/indices/nasdaq.json",
     ],
-    public_mirror: [],
+    public_mirror: [
+      "100xfenok-next/public/data/indices/sp500.json",
+      "100xfenok-next/public/data/indices/nasdaq.json",
+    ],
     commit_shards: [
       attemptShard("us_indices_daily"),
       "data/admin/us-indices-daily",
+      "data/indices/sp500.json",
+      "data/indices/nasdaq.json",
+      "100xfenok-next/public/data/indices/sp500.json",
+      "100xfenok-next/public/data/indices/nasdaq.json",
     ],
     recovery_store: "data/admin/us-indices-daily/index.json",
     kpi_recovery_shape: "keyed_v2",
-    declared_exception: "shadow parity phase writes admin-only Yahoo close series; canonical/public index paths remain GAS-owned until the live flip",
     script_sources: ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],
   }),
   record({
@@ -1170,6 +1176,12 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/us_indices_daily.json", "file"),
     commitSpec("data/admin/us-indices-daily", "directory"),
+  ],
+  success_if_exists: [
+    commitSpec("data/indices/sp500.json", "file"),
+    commitSpec("data/indices/nasdaq.json", "file"),
+    commitSpec("100xfenok-next/public/data/indices/sp500.json", "file"),
+    commitSpec("100xfenok-next/public/data/indices/nasdaq.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {

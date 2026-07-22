@@ -20,13 +20,14 @@ function readEvents(filePath) {
 function failureKind(events) {
   const kinds = events.map((tuple) => {
     if (tuple?.execution === "threw") return tuple.exception_kind === "transport" ? "transport" : "unexpected";
+    if (tuple?.assertions?.some((item) => item?.id === "provider_throttled" && item?.passed === false)) return "provider_throttled";
     if ([401, 403].includes(tuple?.http_status)) return "auth";
     if (tuple?.http_status === 429) return "rate_limited";
     if (tuple?.decode === "error") return "decode";
     if (tuple?.assertions?.some((item) => item?.passed === false)) return "schema_drift";
     return tupleStatus(tuple) !== "ready" ? "http" : null;
   }).filter(Boolean);
-  return ["auth", "rate_limited", "decode", "schema_drift", "unexpected", "transport", "http"]
+  return ["provider_throttled", "auth", "rate_limited", "decode", "schema_drift", "unexpected", "transport", "http"]
     .find((kind) => kinds.includes(kind)) ?? "unexpected";
 }
 
@@ -77,11 +78,14 @@ const events = readEvents(process.env.SLICKCHARTS_ATTEMPT_EVENTS_PATH).slice(bef
 if (result.status === 0) {
   appendOutcome(outcomesPath, { key, outcome: "success", failure_kind: null, error: null });
 } else {
+  const kind = failureKind(events);
   appendOutcome(outcomesPath, {
     key,
     outcome: "failure",
-    failure_kind: failureKind(events),
-    error: result.error?.message ?? `scraper exited ${result.status ?? "without status"}`,
+    failure_kind: kind,
+    error: result.error?.message ?? (kind === "provider_throttled"
+      ? "SlickCharts provider returned a Cloudflare challenge after bounded retries"
+      : `scraper exited ${result.status ?? "without status"}`),
   });
 }
 

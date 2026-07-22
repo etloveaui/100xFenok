@@ -35,6 +35,7 @@ const REASON_STATUS = Object.freeze({
   transport_error: "unavailable",
   http_error: "unavailable",
   auth_error: "unavailable",
+  provider_throttled: "unavailable",
   rate_limited: "unavailable",
   empty_payload: "unavailable",
   future_source: "unavailable",

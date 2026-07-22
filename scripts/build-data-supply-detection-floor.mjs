@@ -34,6 +34,7 @@ const FINAL_REASON_CODES = new Set([
   "transport_error",
   "http_error",
   "auth_error",
+  "provider_throttled",
   "rate_limited",
   "decode_error",
   "schema_drift",
@@ -55,6 +56,7 @@ const REASON_STATUS = Object.freeze({
   transport_error: "unavailable",
   http_error: "unavailable",
   auth_error: "unavailable",
+  provider_throttled: "unavailable",
   rate_limited: "unavailable",
   empty_payload: "unavailable",
   future_source: "unavailable",
@@ -1015,6 +1017,9 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     const expectedAssertionIds = lane.endpoint_contract.assertions.map((assertion) => assertion.id).sort();
     const actualAssertionIds = [...assertionIds].sort();
     const hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
+    const providerThrottled = row.assertions.length === 1
+      && row.assertions[0].id === "provider_throttled"
+      && row.assertions[0].passed === false;
     if (row.execution === "unobserved") {
       if (row.attempt_id !== null || row.observed_at !== null || row.exception_kind !== null || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
         fail("schema_error", `${key} unobserved tuple is contradictory`);
@@ -1078,7 +1083,13 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
         const authFailure = row.http_status === 401 || (row.http_status === 403 && !finraMissingResponse);
         const rateFailure = row.http_status === 429;
         const otherHttpFailure = (row.http_status < 200 || row.http_status >= 300) && !authFailure && !rateFailure;
-        if (authFailure) {
+        if (providerThrottled) {
+          if (!([403].includes(row.http_status) || (row.http_status >= 200 && row.http_status < 300))
+            || row.auth !== "not_applicable" || row.rate_limited
+            || row.decode !== "ok" || row.payload !== "non_empty") {
+            fail("schema_error", `${key} provider-throttled tuple is contradictory`);
+          }
+        } else if (authFailure) {
           if (row.auth !== "rejected" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} auth tuple is contradictory`);
         } else if (rateFailure) {
           if (!row.rate_limited || !new Set(["ok", "not_applicable"]).has(row.auth) || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} rate tuple is contradictory`);
@@ -1151,6 +1162,9 @@ export function classifyAttempt(row) {
   if (row.outcome === "success") {
     if (row.assertions.some((assertion) => assertion.passed === false)) return reasonResult("schema_drift", { observed_at: row.observed_at });
     return reasonResult("ok", { observed_at: row.observed_at });
+  }
+  if (row.assertions.some((assertion) => assertion.id === "provider_throttled" && assertion.passed === false)) {
+    return reasonResult("provider_throttled", { observed_at: row.observed_at });
   }
   if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) {
     return reasonResult("auth_error", { observed_at: row.observed_at });

@@ -336,6 +336,11 @@ assert.deepEqual(classifyLkgFailure({ reason: "controlled_failure", hasCompleteL
   corrupt: false,
   exitCode: 0,
 });
+assert.deepEqual(classifyLkgFailure({ reason: "provider_throttled", hasCompleteLkg: true }), {
+  degraded: true,
+  corrupt: false,
+  exitCode: 0,
+});
 assert.deepEqual(classifyLkgFailure({ reason: "http_error", hasCompleteLkg: true, systemic: true }), {
   degraded: false,
   corrupt: true,

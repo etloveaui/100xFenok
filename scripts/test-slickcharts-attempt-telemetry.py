@@ -9,7 +9,11 @@ from unittest.mock import patch
 
 import requests
 
-from scrapers.scraper_utils import fetch_html
+from scrapers.scraper_utils import (
+    ProviderThrottledError,
+    fetch_html,
+    is_cloudflare_challenge,
+)
 
 
 class FakeSession:
@@ -23,6 +27,22 @@ class FakeSession:
         response.status_code = self.value[0]
         response._content = self.value[1].encode("utf-8")
         response.encoding = "utf-8"
+        return response
+
+
+class SequenceSession:
+    def __init__(self, values):
+        self.values = list(values)
+        self.calls = 0
+
+    def get(self, *_args, **_kwargs):
+        value = self.values[self.calls]
+        self.calls += 1
+        response = requests.Response()
+        response.status_code = value[0]
+        response._content = value[1].encode("utf-8")
+        response.encoding = "utf-8"
+        response.headers.update(value[2] if len(value) > 2 else {})
         return response
 
 
@@ -52,6 +72,59 @@ class SlickChartsAttemptTelemetryTest(unittest.TestCase):
     def test_nonempty_html_without_rows_emits_failed_assertion(self):
         fetch_html(FakeSession((200, "<html><body>blocked</body></html>")), "https://example.test", max_retries=1, rate_limit=0)
         self.assertEqual(self.rows()[0]["assertions"], [{"id": "table_rows", "passed": False}])
+
+    def test_challenge_signature_requires_cloudflare_or_just_a_moment_title(self):
+        self.assertTrue(is_cloudflare_challenge(
+            403,
+            {"server": "cloudflare"},
+            "<html><title>ordinary page</title></html>",
+        ))
+        self.assertTrue(is_cloudflare_challenge(
+            200,
+            {},
+            "<html><title>Just a moment...</title></html>",
+        ))
+        self.assertFalse(is_cloudflare_challenge(
+            200,
+            {},
+            "<html><title>ordinary page</title></html>",
+        ))
+
+    @patch("scrapers.scraper_utils.random.uniform", return_value=0.0)
+    @patch("scrapers.scraper_utils.time.sleep")
+    def test_challenge_retries_then_returns_normal_html(self, sleep, _jitter):
+        session = SequenceSession([
+            (403, "<html><title>Just a moment...</title></html>", {"server": "cloudflare"}),
+            (200, "<table><tr><td>ready</td></tr></table>"),
+        ])
+        html = fetch_html(session, "https://example.test", max_retries=2, rate_limit=0)
+        self.assertIn("ready", html)
+        self.assertEqual(session.calls, 2)
+        self.assertEqual(sleep.call_args_list[0].args, (0,))
+        self.assertEqual(sleep.call_args_list[1].args, (1.0,))
+        self.assertEqual(self.rows()[0]["assertions"], [{"id": "table_rows", "passed": True}])
+
+    @patch("scrapers.scraper_utils.random.uniform", return_value=0.0)
+    @patch("scrapers.scraper_utils.time.sleep")
+    def test_challenge_exhaustion_preserves_403_and_emits_provider_throttled(self, sleep, _jitter):
+        session = SequenceSession([
+            (403, "<html><title>Just a moment...</title></html>", {"cf-mitigated": "challenge"}),
+            (403, "<html><title>Just a moment...</title></html>", {"cf-mitigated": "challenge"}),
+        ])
+        with self.assertRaisesRegex(ProviderThrottledError, "provider_throttled"):
+            fetch_html(session, "https://example.test", max_retries=2, rate_limit=0)
+        self.assertEqual(session.calls, 2)
+        self.assertEqual(sleep.call_args_list[1].args, (1.0,))
+        self.assertEqual(self.rows(), [{
+            "execution": "returned",
+            "exception_kind": None,
+            "http_status": 403,
+            "auth": "not_applicable",
+            "rate_limited": False,
+            "decode": "ok",
+            "payload": "non_empty",
+            "assertions": [{"id": "provider_throttled", "passed": False}],
+        }])
 
     def test_rate_limit_emits_strict_returned_tuple(self):
         with self.assertRaises(RuntimeError):

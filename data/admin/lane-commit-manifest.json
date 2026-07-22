@@ -1,5 +1,5 @@
 {
-  "registry_digest": "10807c03c53ab6f7ca7bd654cdfc14e2453a59574f240d66ee292f5c6a5cea92",
+  "registry_digest": "bbfe46958f93d683765a230f334eae92cf89a090b2f737914319f087bf92d2e1",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1171,7 +1171,28 @@
           }
         ],
         "required_on_success": [],
-        "success_if_exists": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/indices/sp500.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/indices/nasdaq.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/indices/sp500.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/indices/nasdaq.json",
+            "required": false
+          }
+        ],
         "success_verify_not_plan_if_exists": []
       }
     },

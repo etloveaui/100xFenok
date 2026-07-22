@@ -69,6 +69,22 @@ function rowFor(memberId, index) {
     observedAt: "2026-07-14T00:00:00Z",
     tuple: returnedTuple({ httpStatus: 403 }),
   })), /schema_error/);
+
+  const slickchartsChallenge = buildAttemptRow({
+    laneId: "slickcharts",
+    memberId: "daily",
+    attemptId: "slickcharts-cloudflare-403-test",
+    observedAt: "2026-07-14T00:00:00Z",
+    tuple: returnedTuple({
+      httpStatus: 403,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "provider_throttled", passed: false }],
+    }),
+  });
+  assert.equal(slickchartsChallenge.http_status, 403, "provider block must preserve the actual HTTP status");
+  assert.equal(validateRow(slickchartsChallenge), true);
+  assert.equal(classifyAttempt(slickchartsChallenge).reason, "provider_throttled");
 }
 
 {
