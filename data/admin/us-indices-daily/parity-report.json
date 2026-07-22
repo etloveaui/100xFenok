@@ -1,16 +1,50 @@
 {
-  "schema_version": "us-indices-shadow-parity/v1",
-  "observed_at": "2026-07-20T23:02:02.530Z",
+  "schema_version": "us-indices-shadow-parity/v2",
+  "observed_at": "2026-07-22T23:04:12.494Z",
   "tolerance": {
     "absolute_index_points": 0.05,
     "relative_ratio": 0.001,
     "rule": "either"
   },
+  "provider_revision_retention_limit": 100,
   "summary": {
-    "pass": 8,
+    "pass": 13,
     "fail": 0,
-    "pending": 2
+    "pending": 1,
+    "parity_row_fail": 0,
+    "provider_revision_events": 1,
+    "provider_revision_history_events": 1,
+    "provider_revision_out_of_tolerance": 0
   },
+  "provider_revisions": [
+    {
+      "symbol": "^IXIC",
+      "endpoint": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?range=5d&interval=1d",
+      "body_sha256": "cf5e87b620103157be4167719f0e6ab8ed70868eb528991f940b5555b395f71e",
+      "run_id": "29964457183",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "natural": true,
+      "series": "nasdaq",
+      "date": "2026-07-20",
+      "stored_value": 25508.072265625,
+      "observed_value": 25508.0703125,
+      "abs_diff": 0.001953125,
+      "relative_diff": 7.656889864750995e-8,
+      "within_tolerance": true,
+      "float32_ulp": 0.001953125,
+      "delta_float32_ulps": 1,
+      "float32_step_distance": 1,
+      "stored_value_float32_exact": true,
+      "observed_value_float32_exact": true,
+      "within_one_float32_ulp": true,
+      "same_date_change_class": "float32_ulp_flutter",
+      "observed_at": "2026-07-22T23:04:12.494Z",
+      "first_observed_at": "2026-07-22T23:04:12.494Z",
+      "last_observed_at": "2026-07-22T23:04:12.494Z",
+      "occurrences": 1
+    }
+  ],
   "series": {
     "sp500": [
       {
@@ -52,6 +86,24 @@
       {
         "date": "2026-07-20",
         "source_value": 7443.27978515625,
+        "gas_value": 7443.28,
+        "abs_diff": 0.00021484374974534148,
+        "relative_diff": 2.8864123040560274e-8,
+        "within_tolerance": true,
+        "status": "pass"
+      },
+      {
+        "date": "2026-07-21",
+        "source_value": 7509.2001953125,
+        "gas_value": 7509.2,
+        "abs_diff": 0.00019531250018189894,
+        "relative_diff": 2.6009761383622614e-8,
+        "within_tolerance": true,
+        "status": "pass"
+      },
+      {
+        "date": "2026-07-22",
+        "source_value": 7498.9599609375,
         "gas_value": null,
         "abs_diff": null,
         "relative_diff": null,
@@ -99,11 +151,74 @@
       {
         "date": "2026-07-20",
         "source_value": 25508.072265625,
-        "gas_value": null,
-        "abs_diff": null,
-        "relative_diff": null,
-        "within_tolerance": null,
-        "status": "pending"
+        "gas_value": 25508.07,
+        "abs_diff": 0.0022656250002910383,
+        "relative_diff": 8.881993033150051e-8,
+        "within_tolerance": true,
+        "status": "pass"
+      },
+      {
+        "date": "2026-07-21",
+        "source_value": 25837.2109375,
+        "gas_value": 25837.21,
+        "abs_diff": 0.0009375000008731149,
+        "relative_diff": 3.628487754185204e-8,
+        "within_tolerance": true,
+        "status": "pass"
+      },
+      {
+        "date": "2026-07-22",
+        "source_value": 25690.90234375,
+        "gas_value": 25690.9,
+        "abs_diff": 0.0023437499985448085,
+        "relative_diff": 9.122880080280599e-8,
+        "within_tolerance": true,
+        "status": "pass"
+      }
+    ]
+  },
+  "qualification": {
+    "schema_version": "us-indices-shadow-qualification/v1",
+    "required_consecutive_trading_days": 10,
+    "status": "building",
+    "consecutive_clean_trading_days": 0,
+    "counted_dates": [],
+    "pending_dates": [
+      "2026-07-22"
+    ],
+    "observed_trading_dates": [
+      "2026-07-22"
+    ],
+    "last_natural_run": {
+      "run_id": "29964457183",
+      "run_attempt": 1,
+      "observed_at": "2026-07-22T23:04:12.494Z"
+    },
+    "last_reset": {
+      "reason": "missed_trading_days_backfilled",
+      "affected_dates": [
+        "2026-07-21"
+      ],
+      "run_id": "29964457183",
+      "run_attempt": 1,
+      "observed_at": "2026-07-22T23:04:12.494Z"
+    },
+    "reset_events": [
+      {
+        "reason": "qualification_schema_initialized_after_untracked_history",
+        "affected_dates": [],
+        "run_id": "29964457183",
+        "run_attempt": 1,
+        "observed_at": "2026-07-22T23:04:12.494Z"
+      },
+      {
+        "reason": "missed_trading_days_backfilled",
+        "affected_dates": [
+          "2026-07-21"
+        ],
+        "run_id": "29964457183",
+        "run_attempt": 1,
+        "observed_at": "2026-07-22T23:04:12.494Z"
       }
     ]
   }
