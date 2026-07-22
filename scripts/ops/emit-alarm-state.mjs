@@ -31,13 +31,27 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
   const healthStatus = health?.status ?? "unknown";
   const status = healthStatus === "alarm" ? "open" : healthStatus === "ok" ? "clear" : "unknown";
 
+  // evaluateWorkflow (check-pipeline-job-health.mjs) returns firstFailingRunId
+  // and firstFailingRunUrl at the TOP LEVEL of the workflow object. Reading only
+  // `w.alarm?.*` meant production always emitted null here while the OPS issue
+  // body, built from the same evaluator, printed the run id correctly. The nested
+  // read is kept as a fallback so any caller still passing that shape keeps
+  // working, but top level wins because that is what the producer emits.
   const openIncidents = alarming.map((w) => ({
     workflow: w.file ?? null,
     label: w.label ?? w.name ?? w.file ?? null,
     streak: typeof w.streak === "number" ? w.streak : null,
-    first_failing_run_id: w.alarm?.firstFailingRunId ?? null,
-    first_failing_run_url: w.alarm?.firstFailingRunUrl ?? null,
+    first_failing_run_id: w.firstFailingRunId ?? w.alarm?.firstFailingRunId ?? null,
+    first_failing_run_url: w.firstFailingRunUrl ?? w.alarm?.firstFailingRunUrl ?? null,
   }));
+
+  // A run the API could not classify is a real state, and going from one unknown
+  // workflow to several is a deterioration. Without recording WHICH workflows are
+  // unknown, those transitions compare equal and would be silently deduped.
+  const unknownWorkflows = workflows
+    .filter((w) => w?.status !== "alarm" && w?.status !== "ok")
+    .map((w) => ({ workflow: w?.file ?? null, status: w?.status ?? null }))
+    .sort((a, b) => String(a.workflow).localeCompare(String(b.workflow)));
 
   const runId = env.GITHUB_RUN_ID ? String(env.GITHUB_RUN_ID) : null;
   const runUrl = runId && env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY
@@ -67,6 +81,7 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     open_incident_count: openIncidents.length,
     open_incidents: openIncidents,
     watched_workflows: workflows.map((w) => ({ file: w.file ?? null, label: w.label ?? w.name ?? null })),
+    unknown_workflows: unknownWorkflows,
     last_firing: lastFiring,
     last_resolved_at: lastResolvedAt,
   };
@@ -88,6 +103,7 @@ const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
   "open_incident_count",
   "open_incidents",
   "watched_workflows",
+  "unknown_workflows",
   "last_resolved_at",
 ]);
 
@@ -139,10 +155,25 @@ function main() {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, json);
   }
+  // Published so the workflow can gate the OPS issue comment on it. Suppressing
+  // the redundant commit without suppressing the comment would have left the
+  // louder half of the churn in place: 9 comments on issue #88 between 04:53 and
+  // 06:35 on 2026-07-22, all restating one unchanged incident.
+  const incidentChanged = unchanged ? "false" : "true";
+  if (process.env.GITHUB_OUTPUT) {
+    try {
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incident_changed=${incidentChanged}\n`);
+    } catch (error) {
+      // Never let output plumbing mask the alarm; the job exit code and the OPS
+      // issue remain the primary channel.
+      console.warn(`::warning::alarm-state could not write GITHUB_OUTPUT: ${error.message}`);
+    }
+  }
+
   const suffix = unchanged
     ? " (unchanged incident: prior document preserved, no commit expected)"
     : "";
-  console.log(`alarm-state: status=${emitted.status} open=${emitted.open_incident_count} -> data/admin/alarm-state.json (+ public mirror)${suffix}`);
+  console.log(`alarm-state: status=${emitted.status} open=${emitted.open_incident_count} incident_changed=${incidentChanged} -> data/admin/alarm-state.json (+ public mirror)${suffix}`);
 }
 
 const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

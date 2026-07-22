@@ -7,6 +7,29 @@
 import assert from "node:assert/strict";
 
 import { buildAlarmState, alarmStateUnchanged, ALARM_STATE_SCHEMA } from "./emit-alarm-state.mjs";
+import { evaluateWorkflow } from "./check-pipeline-job-health.mjs";
+
+// Build workflow rows through the REAL evaluator instead of hand-writing a
+// shape. A hand-written fixture previously nested firstFailingRunId under an
+// `alarm` key that evaluateWorkflow never produces, so emit-alarm-state read
+// w.alarm?.firstFailingRunId, production emitted first_failing_run_id: null on
+// every incident, and the test passed anyway. Deriving from the producer means
+// the two can no longer drift apart silently.
+function ghRun(id, conclusion) {
+  return { id, conclusion, html_url: `https://github.com/etloveaui/100xFenok/actions/runs/${id}`, run_started_at: "2026-07-19T10:00:00Z" };
+}
+function alarmingRow(file, label, { streak = 2, firstFailingRunId = 999 } = {}) {
+  const runs = [];
+  for (let i = 0; i < streak; i += 1) {
+    runs.push(ghRun(i === streak - 1 ? firstFailingRunId : firstFailingRunId + 100 + i, "failure"));
+  }
+  runs.push(ghRun(1, "success"));
+  return evaluateWorkflow({ file, label }, runs);
+}
+function okRow(file, label) {
+  return evaluateWorkflow({ file, label }, [ghRun(1, "success")]);
+}
+
 
 const ENV = {
   GITHUB_RUN_ID: "123456",
@@ -20,15 +43,15 @@ const firingHealth = {
   status: "alarm",
   issueTitle: "100xFenok pipeline job failure alarm",
   workflows: [
-    { file: "update-manifest.yml", label: "Update Manifest", status: "alarm", streak: 3, alarm: { firstFailingRunId: 999, firstFailingRunUrl: "https://github.com/etloveaui/100xFenok/actions/runs/999" } },
-    { file: "deploy-worker.yml", label: "Deploy Worker", status: "ok" },
+    alarmingRow("update-manifest.yml", "Update Manifest", { streak: 3, firstFailingRunId: 999 }),
+    okRow("deploy-worker.yml", "Deploy Worker"),
   ],
 };
 const quietHealth = {
   status: "ok",
   workflows: [
-    { file: "update-manifest.yml", label: "Update Manifest", status: "ok" },
-    { file: "deploy-worker.yml", label: "Deploy Worker", status: "ok" },
+    okRow("update-manifest.yml", "Update Manifest"),
+    okRow("deploy-worker.yml", "Deploy Worker"),
   ],
 };
 
@@ -96,9 +119,10 @@ for (const state of [firing, resolved, unknown]) {
   const worse = buildAlarmState({
     health: {
       ...firingHealth,
-      workflows: firingHealth.workflows.map((w) => (
-        w.file === "update-manifest.yml" ? { ...w, streak: 4 } : w
-      )),
+      workflows: [
+        alarmingRow("update-manifest.yml", "Update Manifest", { streak: 4, firstFailingRunId: 999 }),
+        okRow("deploy-worker.yml", "Deploy Worker"),
+      ],
     },
     prior: openNow,
     env: ENV,
@@ -109,11 +133,10 @@ for (const state of [firing, resolved, unknown]) {
   const secondWorkflow = buildAlarmState({
     health: {
       ...firingHealth,
-      workflows: firingHealth.workflows.map((w) => (
-        w.file === "deploy-worker.yml"
-          ? { ...w, status: "alarm", streak: 2, alarm: { firstFailingRunId: 555, firstFailingRunUrl: "https://example.invalid/555" } }
-          : w
-      )),
+      workflows: [
+        alarmingRow("update-manifest.yml", "Update Manifest", { streak: 3, firstFailingRunId: 999 }),
+        alarmingRow("deploy-worker.yml", "Deploy Worker", { streak: 2, firstFailingRunId: 555 }),
+      ],
     },
     prior: openNow,
     env: ENV,
@@ -124,11 +147,10 @@ for (const state of [firing, resolved, unknown]) {
   const differentFirstFailure = buildAlarmState({
     health: {
       ...firingHealth,
-      workflows: firingHealth.workflows.map((w) => (
-        w.file === "update-manifest.yml"
-          ? { ...w, alarm: { firstFailingRunId: 4242, firstFailingRunUrl: "https://example.invalid/4242" } }
-          : w
-      )),
+      workflows: [
+        alarmingRow("update-manifest.yml", "Update Manifest", { streak: 3, firstFailingRunId: 4242 }),
+        okRow("deploy-worker.yml", "Deploy Worker"),
+      ],
     },
     prior: openNow,
     env: ENV,
@@ -140,7 +162,7 @@ for (const state of [firing, resolved, unknown]) {
   assert.ok(!alarmStateUnchanged(openNow, resolved), "resolution must be written");
 
   const watchListChanged = buildAlarmState({
-    health: { ...firingHealth, workflows: [...firingHealth.workflows, { file: "fenok-edge-daily.yml", label: "Fenok Edge Daily Data", status: "ok" }] },
+    health: { ...firingHealth, workflows: [...firingHealth.workflows, okRow("fenok-edge-daily.yml", "Fenok Edge Daily Data")] },
     prior: openNow,
     env: ENV,
     now: NOW,

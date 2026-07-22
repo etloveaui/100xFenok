@@ -39,6 +39,7 @@ jobs:
         run: node scripts/ops/check-pipeline-job-health.mjs
 
       - name: Emit alarm state
+        id: alarm_state
         if: always()
         continue-on-error: true
         env:
@@ -72,8 +73,13 @@ jobs:
             sleep $((attempt * 3))
           done
 
+      # Comment only on a state transition. An unresolved incident is re-reported
+      # on every trigger, which put 9 identical comments on the OPS issue between
+      # 04:53 and 06:35 on 2026-07-22. incident_changed is false only when nothing
+      # the alarm asserts has moved; it fails OPEN (treated as changed) if the
+      # emit step could not run, so a plumbing fault can never silence the alarm.
       - name: Prepare issue body
-        if: steps.pipeline.outcome == 'failure'
+        if: steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -83,7 +89,7 @@ jobs:
           NODE
 
       - name: Open or update OPS issue
-        if: steps.pipeline.outcome == 'failure'
+        if: steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
