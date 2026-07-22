@@ -39,6 +39,8 @@ for (const member of ["history", "symbols"]) {
   assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs prepare/);
   assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs finalize/);
   assert.match(daily, /node scripts\/test-slickcharts-daily-recovery\.mjs/);
+  assert.match(daily, /-- python scripts\/scrapers\/currency-scraper\.py/,
+    "daily producer must route currency fetches through the shared UTF-8 decoder");
   assert.match(
     daily,
     /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-daily\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--manifest-data success_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/gainers\.json/,
@@ -91,6 +93,13 @@ for (const member of ["history", "symbols"]) {
   assert.match(
     history,
     /- name: Commit and push changes[\s\S]*?scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-history\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/stocks-returns\.json[\s\S]*?data\/slickcharts\/stocks\//,
+  );
+  assert.match(history, /python scripts\/test_slickcharts_encoding\.py/,
+    "history merge must run the UTF-8 fetch/intermediate/merge regression test");
+  assert.ok(
+    history.indexOf("python scripts/test_slickcharts_encoding.py")
+      < history.indexOf("python scripts/validate-slickcharts-integrity.py --skip-public"),
+    "round-trip proof must run before the merge integrity guard",
   );
   const singleAttempt = history.slice(history.indexOf("- name: Commit history attempt"));
   assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol history attempt must remain shard-only");
