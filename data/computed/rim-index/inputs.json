@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-07-22T00:41:27.842Z",
+  "generated_at": "2026-07-22T01:27:50.792Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -103,7 +103,7 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 1.66987,
+          "value": 1.67821,
           "formula": "stock_action_index_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
@@ -113,10 +113,10 @@
           "coverage": {
             "stock_action_source_date": "2026-07-17",
             "index_key": "sp500",
-            "weighted_dividend_yield": 0.08386602,
+            "weighted_dividend_yield": 0.08428485,
             "benchmark_as_of": "2026-07-17",
             "benchmark_earnings_yield": 0.05022307,
-            "value": 0.083866021,
+            "value": 0.084284854,
             "covered_rows": 502,
             "total_rows": 502,
             "total_weight": 100.04,
@@ -146,7 +146,7 @@
           },
           "qa": {
             "formula": "index-weighted YF payoutRatio cross-check",
-            "value": 0.265576,
+            "value": 0.265616,
             "total_weight": 100.01,
             "covered_weight": 98.6,
             "covered_weight_ratio": 0.985901,
@@ -256,7 +256,7 @@
                     "IVZ",
                     "CFG",
                     "HIG",
-                    "KEY"
+                    "WRB"
                   ]
                 },
                 "notes": [
@@ -314,12 +314,12 @@
                     "IVZ",
                     "CFG",
                     "HIG",
-                    "KEY"
+                    "WRB"
                   ]
                 }
               },
               "payout_ratio": {
-                "value": 1.66987,
+                "value": 1.67821,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -335,7 +335,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.083866,
+                "value": 0.08428486,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -479,12 +479,12 @@
                     "IVZ",
                     "CFG",
                     "HIG",
-                    "KEY"
+                    "WRB"
                   ]
                 }
               },
               "payout_ratio": {
-                "value": 1.66987,
+                "value": 1.67821,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -500,7 +500,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.10296076,
+                "value": 0.10347499,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -644,12 +644,12 @@
                     "IVZ",
                     "CFG",
                     "HIG",
-                    "KEY"
+                    "WRB"
                   ]
                 }
               },
               "payout_ratio": {
-                "value": 1.66987,
+                "value": 1.67821,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -665,7 +665,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.12051479,
+                "value": 0.12111669,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -712,7 +712,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-17",
-            "stock_action_generated_at": "2026-07-21T23:23:35.985Z",
+            "stock_action_generated_at": "2026-07-22T01:26:43.949Z",
             "index_key": "sp500",
             "index_diagnostics": {
               "index_key": "sp500",
@@ -826,7 +826,7 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.196379,
+          "value": 0.19669,
           "formula": "stock_action_index_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
@@ -836,10 +836,10 @@
           "coverage": {
             "stock_action_source_date": "2026-07-17",
             "index_key": "nasdaq100",
-            "weighted_dividend_yield": 0.00884396,
+            "weighted_dividend_yield": 0.00885796,
             "benchmark_as_of": "2026-07-17",
             "benchmark_earnings_yield": 0.04503517,
-            "value": 0.00884396,
+            "value": 0.008857957,
             "covered_rows": 103,
             "total_rows": 103,
             "total_weight": 100.02,
@@ -869,7 +869,7 @@
           },
           "qa": {
             "formula": "index-weighted YF payoutRatio cross-check",
-            "value": 0.136485,
+            "value": 0.136868,
             "total_weight": 100.04,
             "covered_weight": 99.79,
             "covered_weight_ratio": 0.997501,
@@ -987,7 +987,7 @@
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 4234.3038,
+                "value": 4233.9033,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1032,7 +1032,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.196379,
+                "value": 0.19669,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1040,7 +1040,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.803621,
+                "value": 0.80331,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1048,7 +1048,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.00884396,
+                "value": 0.00885797,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1142,7 +1142,7 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 4234.3038,
+                "value": 4233.9033,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
                   "benchmarks/us.json",
@@ -1151,7 +1151,7 @@
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 5558.8431,
+                "value": 5557.93,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1160,7 +1160,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.389253,
+                "value": 0.389289,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1196,7 +1196,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.196379,
+                "value": 0.19669,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1204,7 +1204,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.803621,
+                "value": 0.80331,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1212,7 +1212,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.0113202,
+                "value": 0.01133813,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1243,7 +1243,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1242.5677,
+                "value": 1242.606,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1305,7 +1305,7 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 5558.8431,
+                "value": 5557.93,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
                   "benchmarks/us.json",
@@ -1314,7 +1314,7 @@
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 7399.5852,
+                "value": 7397.9598,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1323,7 +1323,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.412057,
+                "value": 0.412125,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1359,7 +1359,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.196379,
+                "value": 0.19669,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1367,7 +1367,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.803621,
+                "value": 0.80331,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1375,7 +1375,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01573194,
+                "value": 0.01575685,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1406,7 +1406,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1758.0228,
+                "value": 1758.1103,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1422,7 +1422,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-17",
-            "stock_action_generated_at": "2026-07-21T23:23:35.985Z",
+            "stock_action_generated_at": "2026-07-22T01:26:43.949Z",
             "index_key": "nasdaq100",
             "index_diagnostics": {
               "index_key": "nasdaq100",
@@ -2242,7 +2242,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-17",
-            "stock_action_generated_at": "2026-07-21T23:23:35.985Z",
+            "stock_action_generated_at": "2026-07-22T01:26:43.949Z",
             "index_key": "kospi_krx_mktcap",
             "index_diagnostics": {
               "index_key": "kospi_krx_mktcap",
@@ -2916,7 +2916,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-17",
-            "stock_action_generated_at": "2026-07-21T23:23:35.985Z",
+            "stock_action_generated_at": "2026-07-22T01:26:43.949Z",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "index_diagnostics": {
               "index_key": "sox_nasdaq_giw_methodology_mktcap",
