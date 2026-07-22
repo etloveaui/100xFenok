@@ -7,9 +7,7 @@ import { fileURLToPath } from "node:url";
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 export const PARITY_SCHEMA = "us-indices-shadow-parity/v2";
-export const QUALIFICATION_SCHEMA = "us-indices-shadow-qualification/v1";
 export const SERIES_KEYS = Object.freeze(["sp500", "nasdaq"]);
-export const REQUIRED_CONSECUTIVE_TRADING_DAYS = 10;
 export const PROVIDER_REVISION_RETENTION_LIMIT = 100;
 const FLOAT32_MAX = 3.4028234663852886e38;
 
@@ -140,91 +138,6 @@ export function checkUsIndicesParity({
   };
 }
 
-function commonNewDates(newDatesBySeries) {
-  const left = new Set(newDatesBySeries?.sp500 ?? []);
-  return [...new Set(newDatesBySeries?.nasdaq ?? [])]
-    .filter((date) => left.has(date))
-    .sort((a, b) => a.localeCompare(b));
-}
-
-function reportStatusForDate(report, date) {
-  const statuses = SERIES_KEYS.map((key) => report.series[key]?.find((row) => row.date === date)?.status ?? "pending");
-  if (statuses.includes("fail")) return "fail";
-  return statuses.every((status) => status === "pass") ? "pass" : "pending";
-}
-
-export function advanceQualification({ previous, report, run, newDatesBySeries = {} }) {
-  const priorValid = previous?.schema_version === QUALIFICATION_SCHEMA;
-  let observedDates = priorValid && Array.isArray(previous.observed_trading_dates)
-    ? [...previous.observed_trading_dates]
-    : [];
-  const resetEvents = priorValid && Array.isArray(previous.reset_events)
-    ? previous.reset_events.map((row) => ({ ...row }))
-    : [];
-  let lastReset = priorValid ? (previous.last_reset ?? null) : null;
-  const natural = run?.natural === true && run?.event_name === "schedule" && Number(run?.run_attempt ?? 1) === 1;
-  let blocked = priorValid && previous.status === "blocked";
-
-  const reset = (reason, affectedDates = []) => {
-    const event = {
-      reason,
-      affected_dates: affectedDates,
-      run_id: String(run?.run_id ?? "unknown"),
-      run_attempt: Number(run?.run_attempt ?? 1),
-      observed_at: run?.observed_at ?? report.observed_at,
-    };
-    observedDates = [];
-    lastReset = event;
-    resetEvents.push(event);
-  };
-
-  if (!priorValid) reset("qualification_schema_initialized_after_untracked_history");
-
-  if (natural) {
-    blocked = false;
-    const newCommonDates = commonNewDates(newDatesBySeries);
-    const outOfToleranceRevisions = report.provider_revisions
-      .filter((row) => (row.last_observed_at ?? row.observed_at) === run.observed_at && row.within_tolerance === false)
-      .map((row) => row.date);
-    if (outOfToleranceRevisions.length > 0) {
-      reset("provider_revision_out_of_tolerance", [...new Set(outOfToleranceRevisions)].sort());
-      blocked = true;
-    } else {
-      if (newCommonDates.length > 1) reset("missed_trading_days_backfilled", newCommonDates.slice(0, -1));
-      const observationDate = newCommonDates.at(-1) ?? null;
-      if (observationDate !== null && !observedDates.includes(observationDate)) observedDates.push(observationDate);
-      if (observedDates.some((date) => reportStatusForDate(report, date) === "fail")) {
-        reset("parity_failure", observedDates.filter((date) => reportStatusForDate(report, date) === "fail"));
-        blocked = true;
-      }
-    }
-  }
-
-  const countedDates = [];
-  for (const date of observedDates) {
-    if (reportStatusForDate(report, date) !== "pass") break;
-    countedDates.push(date);
-  }
-  const pendingDates = observedDates.filter((date) => !countedDates.includes(date));
-  const consecutive = countedDates.length;
-  return {
-    schema_version: QUALIFICATION_SCHEMA,
-    required_consecutive_trading_days: REQUIRED_CONSECUTIVE_TRADING_DAYS,
-    status: blocked ? "blocked" : (consecutive >= REQUIRED_CONSECUTIVE_TRADING_DAYS ? "ready" : "building"),
-    consecutive_clean_trading_days: consecutive,
-    counted_dates: countedDates,
-    pending_dates: pendingDates,
-    observed_trading_dates: observedDates,
-    last_natural_run: natural ? {
-      run_id: String(run.run_id),
-      run_attempt: Number(run.run_attempt ?? 1),
-      observed_at: run.observed_at,
-    } : (previous?.last_natural_run ?? null),
-    last_reset: lastReset,
-    reset_events: resetEvents,
-  };
-}
-
 function revisionIdentity(row) {
   return JSON.stringify([row.series, row.date, row.stored_value, row.observed_value]);
 }
@@ -286,26 +199,20 @@ function readSeries(filePath) {
   return fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
 }
 
+// Dormant historical Yahoo-vs-GAS report generator. The live workflow does not
+// invoke or upload it after the atomic GAS ownership cutover.
 export function emitUsIndicesParity({
   shadowRoot = path.join(REPO_ROOT, "data", "admin", "us-indices-daily", "shadow"),
   gasCanonicalRoot = path.join(REPO_ROOT, "data", "indices"),
   outputPath = path.join(REPO_ROOT, "data", "admin", "us-indices-daily", "parity-report.json"),
   observedAt = new Date().toISOString(),
   providerRevisions = [],
-  run = null,
-  newDatesBySeries = {},
 } = {}) {
   const shadowSeries = Object.fromEntries(SERIES_KEYS.map((key) => [key, readSeries(path.join(shadowRoot, `${key}.json`))]));
   const gasSeries = Object.fromEntries(SERIES_KEYS.map((key) => [key, readSeries(path.join(gasCanonicalRoot, `${key}.json`))]));
   const previousReport = fs.existsSync(outputPath) ? JSON.parse(fs.readFileSync(outputPath, "utf8")) : null;
   const revisionHistory = mergeProviderRevisionHistory(previousReport?.provider_revisions, providerRevisions);
   const report = checkUsIndicesParity({ shadowSeries, gasSeries, providerRevisions: revisionHistory, observedAt });
-  report.qualification = advanceQualification({
-    previous: previousReport?.qualification,
-    report,
-    run,
-    newDatesBySeries,
-  });
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   const temporary = `${outputPath}.${process.pid}.tmp`;
   fs.writeFileSync(temporary, `${JSON.stringify(report, null, 2)}\n`);

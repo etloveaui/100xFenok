@@ -19,7 +19,6 @@ import {
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
 import {
   classifyFloat32Change,
-  emitUsIndicesParity,
   withinParityTolerance,
 } from "./check-us-indices-parity.mjs";
 
@@ -193,7 +192,7 @@ function classifyResponse(response, descriptor) {
   }
 }
 
-function writePairAtomic(plans) {
+function writeTargetsAtomic(plans) {
   const staged = plans.map(({ targetPath, bytes }) => {
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     const temporary = `${targetPath}.${process.pid}.${Math.random().toString(16).slice(2)}.tmp`;
@@ -212,12 +211,11 @@ function writePairAtomic(plans) {
   }
 }
 
-export async function runUsIndicesShadow({
-  shadowRoot = path.join(REPO_ROOT, "data", "admin", "us-indices-daily", "shadow"),
+export async function runUsIndicesDaily({
+  canonicalRoot = path.join(REPO_ROOT, "data", "indices"),
+  publicRoot = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "indices"),
   stateRoot = path.join(REPO_ROOT, "data", "admin", "us-indices-daily"),
   attemptShardPath = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH),
-  parityReportPath = path.join(REPO_ROOT, "data", "admin", "us-indices-daily", "parity-report.json"),
-  gasCanonicalRoot = path.join(REPO_ROOT, "data", "indices"),
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-us-indices`,
@@ -238,20 +236,20 @@ export async function runUsIndicesShadow({
     }
   }
   const worst = foldWorstTuples(results.map((result) => result.tuple));
-  const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
-  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
   const run = runContext(attemptId, eventName, observedAt);
   const store = stateStore(stateRoot);
   if (results.some((result) => result.rows === null)) {
+    const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
+    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
     for (const result of results.filter((entry) => entry.rows === null)) {
       const key = `${result.descriptor.key}.json`;
-      const shadowPath = path.join(shadowRoot, key);
+      const canonicalPath = path.join(canonicalRoot, key);
       store.recordFailure({
         key,
         error: result.error?.message ?? tupleStatus(result.tuple),
         failureKind: result.tuple.execution === "threw" ? result.tuple.exception_kind : "schema_drift",
-        fallbackBytes: fs.existsSync(shadowPath) ? fs.readFileSync(shadowPath) : null,
-        canonicalRef: `data/admin/us-indices-daily/shadow/${key}`,
+        fallbackBytes: fs.existsSync(canonicalPath) ? fs.readFileSync(canonicalPath) : null,
+        canonicalRef: `data/indices/${key}`,
         run,
       });
     }
@@ -261,12 +259,11 @@ export async function runUsIndicesShadow({
 
   const candidates = [];
   const providerRevisions = [];
-  const newDatesBySeries = {};
   for (const result of results) {
     const key = `${result.descriptor.key}.json`;
-    const targetPath = path.join(shadowRoot, key);
-    const existing = readSeries(targetPath);
-    const existingDates = new Set(existing.map((row) => row.date));
+    const canonicalPath = path.join(canonicalRoot, key);
+    const publicPath = path.join(publicRoot, key);
+    const existing = readSeries(canonicalPath);
     const merged = mergeSeries(existing, result.rows, {
       seriesKey: result.descriptor.key,
       providerRevisions,
@@ -281,38 +278,80 @@ export async function runUsIndicesShadow({
       },
       observedAt,
     });
-    newDatesBySeries[result.descriptor.key] = merged
-      .filter((row) => !existingDates.has(row.date))
-      .map((row) => row.date);
     const payloadBytes = seriesBytes(merged);
     const candidate = store.planCandidate({
       key,
       payloadBytes,
-      canonicalRef: `data/admin/us-indices-daily/shadow/${key}`,
+      canonicalRef: `data/indices/${key}`,
       run,
       providerObservation: store.buildProviderObservation({ key, payloadBytes, run }),
     });
-    if (!candidate.accepted) throw new Error(`${key}: shadow candidate rejected: ${candidate.reason}`);
-    candidates.push({ candidate, targetPath, bytes: payloadBytes });
+    if (!candidate.accepted) throw new Error(`${key}: live candidate rejected: ${candidate.reason}`);
+    candidates.push({ candidate, canonicalPath, publicPath, bytes: payloadBytes });
   }
-  writePairAtomic(candidates);
+
+  const outOfTolerance = providerRevisions.filter((revision) => revision.within_tolerance === false);
+  if (outOfTolerance.length > 0) {
+    const revisionFailure = returnedTuple({
+      httpStatus: 200,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "chart_result_array", passed: false }],
+    });
+    const failedWorst = foldWorstTuples([worst, revisionFailure]);
+    const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: failedWorst, attemptId, observedAt });
+    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+    for (const revision of outOfTolerance) {
+      const key = `${revision.series}.json`;
+      const canonicalPath = path.join(canonicalRoot, key);
+      store.recordFailure({
+        key,
+        error: `out-of-tolerance provider revision for ${revision.date}`,
+        failureKind: "schema_drift",
+        fallbackBytes: fs.existsSync(canonicalPath) ? fs.readFileSync(canonicalPath) : null,
+        canonicalRef: `data/indices/${key}`,
+        run,
+      });
+    }
+    store.buildIndex({ keys: SERIES.map(({ key }) => `${key}.json`), run });
+    return {
+      ok: false,
+      updated: false,
+      exitCode: 2,
+      row,
+      reason: tupleStatus(failedWorst),
+      providerRevisions,
+    };
+  }
+
+  const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
+  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+  writeTargetsAtomic(candidates.flatMap(({ canonicalPath, publicPath, bytes }) => [
+    { targetPath: canonicalPath, bytes },
+    { targetPath: publicPath, bytes },
+  ]));
   for (const { candidate } of candidates) store.commitCandidate(candidate);
   const index = store.buildIndex({ keys: SERIES.map(({ key }) => `${key}.json`), run });
-  const parity = emitUsIndicesParity({
-    shadowRoot,
-    gasCanonicalRoot,
-    outputPath: parityReportPath,
-    observedAt,
+  return {
+    ok: true,
+    updated: true,
+    exitCode: 0,
+    row,
+    reason: tupleStatus(worst),
+    index,
     providerRevisions,
-    run,
-    newDatesBySeries,
-  });
-  return { ok: true, updated: true, exitCode: 0, row, reason: tupleStatus(worst), index, parity };
+  };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runUsIndicesShadow().then((result) => {
-    console.log(JSON.stringify({ ok: result.ok, updated: result.updated, exit_code: result.exitCode, reason: result.reason }));
+  runUsIndicesDaily().then((result) => {
+    console.log(JSON.stringify({
+      ok: result.ok,
+      updated: result.updated,
+      exit_code: result.exitCode,
+      reason: result.reason,
+      provider_revision_events: result.providerRevisions?.length ?? 0,
+    }));
     process.exitCode = result.exitCode;
   }).catch((error) => {
     console.error(error);
