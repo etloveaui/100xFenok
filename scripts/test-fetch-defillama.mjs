@@ -384,6 +384,12 @@ for (const failure of [
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-defillama.yml"), "utf8");
+  const workflowCrons = [...workflow.matchAll(/^\s*-\s*cron:\s*['\"]([^'\"]+)['\"]\s*$/gm)]
+    .map((match) => match[1]);
+  const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === DEFILLAMA_LANE_ID);
+  const producer = lane?.producer_members.find((row) => row.id === DEFILLAMA_LANE_ID);
+  assert.deepEqual(workflowCrons, ["12 * * * *"], "DefiLlama stays hourly off the congested top-of-hour slot");
+  assert.deepEqual(producer?.schedule, workflowCrons, "workflow and detection-config cron declarations stay aligned");
   assert.match(workflow, /node scripts\/test-fetch-defillama\.mjs/);
   assert.match(workflow, /node scripts\/fetch-defillama\.mjs/);
   assert.match(workflow, /controlled_failure_endpoint/);

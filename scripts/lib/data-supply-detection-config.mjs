@@ -396,7 +396,7 @@ const config = {
     lane({
       id: "defillama_stablecoins",
       label: "DefiLlama stablecoins",
-      members: [registryMember("defillama_stablecoins", ["0 * * * *"], [
+      members: [registryMember("defillama_stablecoins", ["12 * * * *"], [
         artifact("defillama_stablecoins", "data/macro/stablecoins.json", {
           sourceSelector: maxArrayFieldSource("/series", "date", "date"),
           assertions: [
