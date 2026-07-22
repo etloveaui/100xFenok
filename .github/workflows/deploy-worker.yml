@@ -61,14 +61,6 @@ jobs:
         working-directory: 100xfenok-next
         run: npm ci
 
-      - name: Run admin live bridge guards
-        working-directory: 100xfenok-next
-        run: npm run test:live-bridge
-
-      - name: Verify EDGAR summary evidence guards
-        working-directory: 100xfenok-next
-        run: npm run qa:edgar-summaries
-
       - name: Build data supply detection floor
         run: |
           set -euo pipefail
@@ -106,23 +98,7 @@ jobs:
 
       - name: Verify data health KPI contract
         working-directory: 100xfenok-next
-        run: npm run qa:fenok-data-health-kpi
-
-      - name: Verify product data-state rendering contract
-        working-directory: 100xfenok-next
-        run: npm run qa:data-state
-
-      - name: Verify IB V2 calculator parity (no drift vs V1)
-        working-directory: 100xfenok-next
-        run: npm run qa:ib-parity
-
-      - name: Verify IB V2 live-data input quirks
-        working-directory: 100xfenok-next
-        run: npm run qa:ib-live-data
-
-      - name: Verify public SEO surface
-        working-directory: 100xfenok-next
-        run: npm run qa:seo-surface
+        run: npm run qa:fenok-data-health-kpi:artifact
 
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
@@ -148,8 +124,59 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  # Repo-source unit gates. These read only committed sources and fixtures
+  # (temp data roots + injected clock), never the built bundle or regenerated
+  # derived data, so they are correct to run concurrently with build-verify.
+  # Splitting them out also runs the KPI fixture suite ONCE per deploy instead
+  # of once per chain call site.
+  unit-gates:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: workers-100xfenok-main-unit-gates
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: 100xfenok-next
+        run: npm ci
+
+      - name: Verify data health KPI fixtures
+        working-directory: 100xfenok-next
+        run: npm run qa:fenok-data-health-kpi:fixtures
+
+      - name: Run admin live bridge guards
+        working-directory: 100xfenok-next
+        run: npm run test:live-bridge
+
+      - name: Verify EDGAR summary evidence guards
+        working-directory: 100xfenok-next
+        run: npm run qa:edgar-summaries
+
+      - name: Verify product data-state rendering contract
+        working-directory: 100xfenok-next
+        run: npm run qa:data-state
+
+      - name: Verify IB V2 calculator parity (no drift vs V1)
+        working-directory: 100xfenok-next
+        run: npm run qa:ib-parity
+
+      - name: Verify IB V2 live-data input quirks
+        working-directory: 100xfenok-next
+        run: npm run qa:ib-live-data
+
+      - name: Verify public SEO surface
+        working-directory: 100xfenok-next
+        run: npm run qa:seo-surface
+
   deploy:
-    needs: build-verify
+    needs: [build-verify, unit-gates]
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 35
