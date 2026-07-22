@@ -28,7 +28,7 @@ jobs:
           node-version: '20'
 
       - name: Test US indices shadow producer
-        run: node scripts/test-fetch-us-indices-daily.mjs
+        run: npm --prefix 100xfenok-next run qa:us-indices-daily
 
       - name: Fetch Yahoo index closes and compare with GAS
         id: fetch_indices

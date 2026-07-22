@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,7 +17,11 @@ import {
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
-import { emitUsIndicesParity } from "./check-us-indices-parity.mjs";
+import {
+  classifyFloat32Change,
+  emitUsIndicesParity,
+  withinParityTolerance,
+} from "./check-us-indices-parity.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
@@ -77,7 +82,12 @@ export function parseYahooChart(payload, expectedSymbol) {
   return rows;
 }
 
-export function mergeSeries(existing, incoming) {
+export function mergeSeries(existing, incoming, {
+  seriesKey = null,
+  providerRevisions = null,
+  revisionContext = {},
+  observedAt = new Date().toISOString(),
+} = {}) {
   if (!Array.isArray(existing) || !Array.isArray(incoming) || !existing.every(validRow) || !incoming.every(validRow)) {
     throw new Error("index series must contain valid date/value rows");
   }
@@ -86,7 +96,24 @@ export function mergeSeries(existing, incoming) {
   const lastDate = output.at(-1)?.date ?? null;
   for (const row of [...incoming].sort((left, right) => left.date.localeCompare(right.date))) {
     if (byDate.has(row.date)) {
-      if (byDate.get(row.date) !== row.value) throw new Error(`conflicting value for existing date ${row.date}`);
+      const storedValue = byDate.get(row.date);
+      if (storedValue !== row.value) {
+        if (!Array.isArray(providerRevisions) || !seriesKey) throw new Error(`conflicting value for existing date ${row.date}`);
+        const absolute = Math.abs(storedValue - row.value);
+        const revision = {
+          ...revisionContext,
+          series: seriesKey,
+          date: row.date,
+          stored_value: storedValue,
+          observed_value: row.value,
+          abs_diff: absolute,
+          relative_diff: storedValue === 0 ? null : absolute / Math.abs(storedValue),
+          within_tolerance: withinParityTolerance(storedValue, row.value),
+          ...classifyFloat32Change(storedValue, row.value),
+          observed_at: observedAt,
+        };
+        providerRevisions.push(revision);
+      }
       continue;
     }
     if (lastDate !== null && row.date <= lastDate) throw new Error(`out-of-order index date ${row.date}`);
@@ -128,14 +155,16 @@ function runContext(attemptId, eventName, observedAt) {
 
 function classifyResponse(response, descriptor) {
   const statusCode = response?.statusCode;
+  const body = String(response?.body ?? "");
+  const bodySha256 = createHash("sha256").update(body).digest("hex");
   if (!Number.isInteger(statusCode) || statusCode < 200 || statusCode >= 300) {
-    return { tuple: returnedTuple({ httpStatus: Number.isInteger(statusCode) ? statusCode : 500 }), rows: null };
+    return { tuple: returnedTuple({ httpStatus: Number.isInteger(statusCode) ? statusCode : 500 }), rows: null, bodySha256 };
   }
   let document;
   try {
-    document = JSON.parse(String(response.body ?? ""));
+    document = JSON.parse(body);
   } catch {
-    return { tuple: returnedTuple({ httpStatus: statusCode, decode: "error" }), rows: null };
+    return { tuple: returnedTuple({ httpStatus: statusCode, decode: "error" }), rows: null, bodySha256 };
   }
   try {
     const rows = parseYahooChart(document, descriptor.symbol);
@@ -147,6 +176,7 @@ function classifyResponse(response, descriptor) {
         assertions: [{ id: "chart_result_array", passed: true }],
       }),
       rows,
+      bodySha256,
     };
   } catch (error) {
     return {
@@ -158,6 +188,7 @@ function classifyResponse(response, descriptor) {
       }),
       rows: null,
       error,
+      bodySha256,
     };
   }
 }
@@ -196,7 +227,7 @@ export async function runUsIndicesShadow({
   for (const descriptor of SERIES) {
     try {
       const url = `${ENDPOINT}/${descriptor.encoded}?range=5d&interval=1d`;
-      results.push({ descriptor, ...classifyResponse(await request(url, descriptor.key), descriptor) });
+      results.push({ descriptor, url, ...classifyResponse(await request(url, descriptor.key), descriptor) });
     } catch (error) {
       results.push({
         descriptor,
@@ -229,10 +260,30 @@ export async function runUsIndicesShadow({
   }
 
   const candidates = [];
+  const providerRevisions = [];
+  const newDatesBySeries = {};
   for (const result of results) {
     const key = `${result.descriptor.key}.json`;
     const targetPath = path.join(shadowRoot, key);
-    const merged = mergeSeries(readSeries(targetPath), result.rows);
+    const existing = readSeries(targetPath);
+    const existingDates = new Set(existing.map((row) => row.date));
+    const merged = mergeSeries(existing, result.rows, {
+      seriesKey: result.descriptor.key,
+      providerRevisions,
+      revisionContext: {
+        symbol: result.descriptor.symbol,
+        endpoint: result.url,
+        body_sha256: result.bodySha256,
+        run_id: run.run_id,
+        run_attempt: run.run_attempt,
+        event_name: run.event_name,
+        natural: run.natural,
+      },
+      observedAt,
+    });
+    newDatesBySeries[result.descriptor.key] = merged
+      .filter((row) => !existingDates.has(row.date))
+      .map((row) => row.date);
     const payloadBytes = seriesBytes(merged);
     const candidate = store.planCandidate({
       key,
@@ -247,7 +298,15 @@ export async function runUsIndicesShadow({
   writePairAtomic(candidates);
   for (const { candidate } of candidates) store.commitCandidate(candidate);
   const index = store.buildIndex({ keys: SERIES.map(({ key }) => `${key}.json`), run });
-  const parity = emitUsIndicesParity({ shadowRoot, gasCanonicalRoot, outputPath: parityReportPath, observedAt });
+  const parity = emitUsIndicesParity({
+    shadowRoot,
+    gasCanonicalRoot,
+    outputPath: parityReportPath,
+    observedAt,
+    providerRevisions,
+    run,
+    newDatesBySeries,
+  });
   return { ok: true, updated: true, exitCode: 0, row, reason: tupleStatus(worst), index, parity };
 }
 
