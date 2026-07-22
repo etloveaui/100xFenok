@@ -13,12 +13,18 @@ on:
       - 'scripts/ops/fixtures/workflow-actionlint/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
+      - 'scripts/stage-lane-manifest.sh'
+      - 'scripts/test-stage-lane-manifest.mjs'
+      - '100xfenok-next/package.json'
   pull_request:
     paths:
       - '.github/workflows/**'
       - 'scripts/ops/fixtures/workflow-actionlint/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
+      - 'scripts/stage-lane-manifest.sh'
+      - 'scripts/test-stage-lane-manifest.mjs'
+      - '100xfenok-next/package.json'
   workflow_dispatch:
 
 permissions:
@@ -33,6 +39,9 @@ jobs:
 
       - name: Parse workflow YAML
         run: ruby scripts/ops/validate-workflow-yaml.rb
+
+      - name: Validate lane manifest staging
+        run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
 
       - name: Install pinned actionlint
         env:

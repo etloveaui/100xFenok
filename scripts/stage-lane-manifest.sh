@@ -55,9 +55,54 @@ jq -e --arg workflow "$WORKFLOW" --arg stage "$STAGE" --arg digest "$EXPECTED_DI
 
 cd "$REPO_ROOT"
 declare -a SELECTED_EXACT=()
+declare -a SELECTED_TRACKED_FILES=()
+declare -a SELECTED_UNTRACKED_FILES=()
+declare -a SELECTED_DIRECTORIES=()
+declare -a SELECTED_DIRECTORY_TRACKED=()
+declare -a SELECTED_DIRECTORY_UNTRACKED=()
 declare -a SELECTED_GLOB=()
 declare -a SELECTED_DYNAMIC=()
 declare -A SEEN=()
+
+is_git_ignored() {
+  git check-ignore -q -- "$1"
+}
+
+handle_ignored_manifest_path() {
+  local kind=$1
+  local path_value=$2
+  local required=$3
+  if [[ "$required" == "true" ]]; then
+    echo "lane-manifest conflict: manifest declares '$path_value' required while .gitignore excludes it ($kind)" >&2
+    return 1 # required-ignore-conflict
+  fi
+  echo "lane-manifest skip ignored optional $kind path: $path_value (.gitignore excludes it)" >&2
+  return 0
+}
+
+select_directory_path() {
+  local path_value=$1
+  if [[ -n "${SEEN[$path_value]+x}" ]]; then return 0; fi
+  SELECTED_DIRECTORIES+=("$path_value")
+  SEEN[$path_value]=1
+  mapfile -d '' -t matches < <(git ls-files --modified -z -- "$path_value")
+  SELECTED_DIRECTORY_TRACKED+=("${matches[@]}")
+  mapfile -d '' -t matches < <(git ls-files --others --exclude-standard -z -- "$path_value")
+  SELECTED_DIRECTORY_UNTRACKED+=("${matches[@]}")
+}
+
+select_file_path() {
+  local selection_kind=$1
+  local path_value=$2
+  if [[ -n "${SEEN[$path_value]+x}" ]]; then return 0; fi
+  if [[ "$selection_kind" == "file" ]]; then SELECTED_EXACT+=("$path_value"); else SELECTED_GLOB+=("$path_value"); fi
+  SEEN[$path_value]=1
+  if git ls-files --error-unmatch -- "$path_value" >/dev/null 2>&1; then
+    SELECTED_TRACKED_FILES+=("$path_value")
+  else
+    SELECTED_UNTRACKED_FILES+=("$path_value")
+  fi
+}
 
 while IFS= read -r -d '' encoded; do
   spec=$(printf '%s' "$encoded" | base64 --decode)
@@ -67,16 +112,34 @@ while IFS= read -r -d '' encoded; do
   case "$kind" in
     file)
       [[ -f "$path_value" ]] || { [[ "$required" == "true" ]] && { echo "required file is missing" >&2; exit 1; } || continue; }
-      [[ -z "${SEEN[$path_value]+x}" ]] && SELECTED_EXACT+=("$path_value") && SEEN[$path_value]=1
+      if is_git_ignored "$path_value"; then
+        if ! handle_ignored_manifest_path "$kind" "$path_value" "$required"; then exit 1; fi
+        continue
+      fi
+      select_file_path "$kind" "$path_value"
       ;;
     directory)
       [[ -d "$path_value" ]] || { [[ "$required" == "true" ]] && { echo "required directory is missing" >&2; exit 1; } || continue; }
-      [[ -z "${SEEN[$path_value]+x}" ]] && SELECTED_EXACT+=("$path_value") && SEEN[$path_value]=1
+      if is_git_ignored "$path_value"; then
+        if ! handle_ignored_manifest_path "$kind" "$path_value" "$required"; then exit 1; fi
+        continue
+      fi
+      select_directory_path "$path_value"
       ;;
     glob)
       mapfile -t matches < <(compgen -G "$path_value" || true)
       if [[ ${#matches[@]} -eq 0 ]]; then [[ "$required" == "true" ]] && { echo "required glob has no matches" >&2; exit 1; } || continue; fi
-      for match in "${matches[@]}"; do [[ -z "${SEEN[$match]+x}" ]] && SELECTED_GLOB+=("$match") && SEEN[$match]=1; done
+      for match in "${matches[@]}"; do
+        if is_git_ignored "$match"; then
+          if ! handle_ignored_manifest_path "$kind" "$match" "$required"; then exit 1; fi
+          continue
+        fi
+        if [[ -d "$match" ]]; then
+          select_directory_path "$match"
+        else
+          select_file_path "$kind" "$match"
+        fi
+      done
       ;;
     dynamic_set)
       mapfile -d '' -t matches < <(git ls-files --modified --others --exclude-standard -z -- "$path_value")
@@ -86,7 +149,10 @@ while IFS= read -r -d '' encoded; do
   esac
 done < <(jq -j --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.workflows[$workflow].stages[$stage][] | @base64 + "\u0000"' "$MANIFEST")
 
-for path_value in "${SELECTED_EXACT[@]}" "${SELECTED_GLOB[@]}"; do git add -- "$path_value"; done
+if [[ ${#SELECTED_TRACKED_FILES[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_TRACKED_FILES[@]}" | git add -u --pathspec-from-file=- --pathspec-file-nul; fi
+if [[ ${#SELECTED_UNTRACKED_FILES[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_UNTRACKED_FILES[@]}" | git add --pathspec-from-file=- --pathspec-file-nul; fi
+if [[ ${#SELECTED_DIRECTORY_TRACKED[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_DIRECTORY_TRACKED[@]}" | git add -u --pathspec-from-file=- --pathspec-file-nul; fi
+if [[ ${#SELECTED_DIRECTORY_UNTRACKED[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_DIRECTORY_UNTRACKED[@]}" | git add --pathspec-from-file=- --pathspec-file-nul; fi
 if [[ ${#SELECTED_DYNAMIC[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_DYNAMIC[@]}" | git add --pathspec-from-file=- --pathspec-file-nul; fi
 
 while IFS= read -r -d '' encoded; do
@@ -100,7 +166,7 @@ while IFS= read -r -d '' encoded; do
 done < <(jq -j --arg workflow "$WORKFLOW" '.workflows[$workflow].exclude[]? | @base64 + "\u0000"' "$MANIFEST")
 
 declared_count=$(jq -r --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.workflows[$workflow].stages[$stage] | length' "$MANIFEST")
-stage_selected=$(( ${#SELECTED_EXACT[@]} + ${#SELECTED_GLOB[@]} + ${#SELECTED_DYNAMIC[@]} ))
+stage_selected=$(( ${#SELECTED_EXACT[@]} + ${#SELECTED_DIRECTORIES[@]} + ${#SELECTED_GLOB[@]} + ${#SELECTED_DYNAMIC[@]} ))
 staged_index_total=$(git diff --cached --name-only | awk 'NF { count += 1 } END { print count + 0 }')
 digest_prefix=${EXPECTED_DIGEST:0:12}
 printf 'lane-manifest stage proof: digest=%s workflow=%s stage=%s declared=%s stage_selected=%s staged_index_total=%s\n' "$digest_prefix" "$WORKFLOW" "$STAGE" "$declared_count" "$stage_selected" "$staged_index_total"

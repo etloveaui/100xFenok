@@ -12,6 +12,9 @@ import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
+const HELPER_SOURCE = fs.readFileSync(HELPER, "utf8");
+const APP_PACKAGE = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "100xfenok-next/package.json"), "utf8"));
+const VALIDATE_WORKFLOWS = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/validate-workflows.yml"), "utf8");
 const WORKFLOW = ".github/workflows/fetch-defillama.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
@@ -88,8 +91,8 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
   return { root, manifest, paths, materialized };
 }
 
-function run(root, stage, extra = [], workflow = WORKFLOW) {
-  return spawnSync("bash", [HELPER, "--repo-root", root, "--manifest", path.join(root, "data/admin/lane-commit-manifest.json"), "--workflow", workflow, "--stage", stage, "--expected-digest", DIGEST, ...extra], {
+function run(root, stage, extra = [], workflow = WORKFLOW, helper = HELPER) {
+  return spawnSync("bash", [helper, "--repo-root", root, "--manifest", path.join(root, "data/admin/lane-commit-manifest.json"), "--workflow", workflow, "--stage", stage, "--expected-digest", DIGEST, ...extra], {
     cwd: root,
     encoding: "utf8",
   });
@@ -98,6 +101,225 @@ function run(root, stage, extra = [], workflow = WORKFLOW) {
 function cached(root) {
   return execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).sort();
+}
+
+function configureAlwaysStage(fixture, specs, exclude = []) {
+  fixture.manifest.workflows[WORKFLOW].stages.always_if_exists = specs;
+  fixture.manifest.workflows[WORKFLOW].exclude = exclude;
+  writeJson(path.join(fixture.root, "data/admin/lane-commit-manifest.json"), fixture.manifest);
+}
+
+function writeFixturePath(root, kind, relativePath) {
+  const target = path.join(root, relativePath);
+  if (kind === "directory") {
+    fs.mkdirSync(target, { recursive: true });
+    fs.writeFileSync(path.join(target, "fixture.json"), "{}\n");
+    return;
+  }
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, "{}\n");
+}
+
+function assertIgnoredExactPathSemantics(helper = HELPER) {
+  for (const kind of ["file", "directory"]) {
+    for (const required of [false, true]) {
+      const fixture = makeFixture();
+      try {
+        const relativePath = `ignored-${kind}-${required ? "required" : "optional"}${kind === "file" ? ".json" : ""}`;
+        configureAlwaysStage(fixture, [{ kind, path: relativePath, required }]);
+        writeFixturePath(fixture.root, kind, relativePath);
+        fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${relativePath}${kind === "directory" ? "/" : ""}\n`);
+        const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+        if (required) {
+          assert.notEqual(result.status, 0, `required ignored ${kind} must fail closed`);
+          assert.match(
+            result.stderr,
+            new RegExp(`manifest declares '${relativePath.replaceAll(".", "\\.")}' required while \\.gitignore excludes it`),
+          );
+        } else {
+          assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+          assert.match(result.stderr, new RegExp(`skip ignored optional ${kind}.*${relativePath.replaceAll(".", "\\.")}`));
+        }
+        assert.deepEqual(cached(fixture.root), [], `ignored ${kind} must not reach git add`);
+      } finally {
+        fs.rmSync(fixture.root, { recursive: true, force: true });
+      }
+    }
+  }
+}
+
+function assertIgnoredGlobFiltered(helper = HELPER) {
+  const fixture = makeFixture();
+  try {
+    const directory = "ignored-glob";
+    const included = `${directory}/included.json`;
+    const ignored = `${directory}/ignored.json`;
+    configureAlwaysStage(fixture, [{ kind: "glob", path: `${directory}/*.json`, required: false }]);
+    writeFixturePath(fixture.root, "file", included);
+    writeFixturePath(fixture.root, "file", ignored);
+    fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${ignored}\n`);
+    const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+    assert.equal(result.status, 0, `ignored glob match must be filtered before git add: ${result.stderr}`);
+    assert.match(result.stderr, /skip ignored optional glob.*ignored\.json/);
+    assert.match(result.stdout, /stage_selected=1 staged_index_total=1/);
+    assert.deepEqual(cached(fixture.root), [included]);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+function assertRequiredIgnoredGlobFails(helper = HELPER) {
+  const fixture = makeFixture();
+  try {
+    const directory = "required-ignored-glob";
+    const included = `${directory}/included.json`;
+    const ignored = `${directory}/ignored.json`;
+    configureAlwaysStage(fixture, [{ kind: "glob", path: `${directory}/*.json`, required: true }]);
+    writeFixturePath(fixture.root, "file", included);
+    writeFixturePath(fixture.root, "file", ignored);
+    fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${ignored}\n`);
+    const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+    assert.notEqual(result.status, 0, "required glob with an ignored match must fail closed");
+    assert.match(result.stderr, /manifest declares 'required-ignored-glob\/ignored\.json' required while \.gitignore excludes it/);
+    assert.deepEqual(cached(fixture.root), [], "required ignored glob must fail before any index mutation");
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+function assertTrackedIgnoredDirectoryStillStages(helper = HELPER) {
+  const fixture = makeFixture();
+  try {
+    const directory = "tracked-then-ignored";
+    const trackedFile = `${directory}/tracked.json`;
+    configureAlwaysStage(fixture, [{ kind: "directory", path: directory, required: false }]);
+    writeFixturePath(fixture.root, "file", trackedFile);
+    execFileSync("git", ["add", "--", trackedFile], { cwd: fixture.root });
+    execFileSync("git", ["commit", "-qm", "tracked directory baseline"], { cwd: fixture.root });
+    fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${directory}/\n`);
+    fs.appendFileSync(path.join(fixture.root, trackedFile), "changed\n");
+    const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+    assert.equal(result.status, 0, `tracked files below an ignored directory remain stageable: ${result.stderr}`);
+    assert.deepEqual(cached(fixture.root), [trackedFile]);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+function assertTrackedFileBelowIgnoredParentStillStages(helper = HELPER) {
+  const fixture = makeFixture();
+  try {
+    const directory = "tracked-file-ignored-parent";
+    const trackedFile = `${directory}/tracked.json`;
+    configureAlwaysStage(fixture, [{ kind: "file", path: trackedFile, required: false }]);
+    writeFixturePath(fixture.root, "file", trackedFile);
+    execFileSync("git", ["add", "--", trackedFile], { cwd: fixture.root });
+    execFileSync("git", ["commit", "-qm", "tracked file baseline"], { cwd: fixture.root });
+    fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${directory}/\n`);
+    fs.appendFileSync(path.join(fixture.root, trackedFile), "changed\n");
+    const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+    assert.equal(result.status, 0, `tracked file below an ignored parent remains stageable: ${result.stderr}`);
+    assert.deepEqual(cached(fixture.root), [trackedFile]);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+function assertTrackedIgnoredDirectoryFromGlobStillStages(helper = HELPER) {
+  const fixture = makeFixture();
+  try {
+    const directory = "tracked-glob-directory";
+    const trackedFile = `${directory}/tracked.json`;
+    configureAlwaysStage(fixture, [{ kind: "glob", path: "tracked-glob-*", required: false }]);
+    writeFixturePath(fixture.root, "file", trackedFile);
+    execFileSync("git", ["add", "--", trackedFile], { cwd: fixture.root });
+    execFileSync("git", ["commit", "-qm", "tracked glob directory baseline"], { cwd: fixture.root });
+    fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${directory}/\n`);
+    fs.appendFileSync(path.join(fixture.root, trackedFile), "changed\n");
+    const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+    assert.equal(result.status, 0, `glob-matched tracked directory remains stageable: ${result.stderr}`);
+    assert.deepEqual(cached(fixture.root), [trackedFile]);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+function assertTrackedFileFromGlobBelowIgnoredParentStillStages(helper = HELPER) {
+  const fixture = makeFixture();
+  try {
+    const directory = "tracked-glob-file-ignored-parent";
+    const trackedFile = `${directory}/tracked.json`;
+    configureAlwaysStage(fixture, [{ kind: "glob", path: `${directory}/*.json`, required: false }]);
+    writeFixturePath(fixture.root, "file", trackedFile);
+    execFileSync("git", ["add", "--", trackedFile], { cwd: fixture.root });
+    execFileSync("git", ["commit", "-qm", "tracked glob file baseline"], { cwd: fixture.root });
+    fs.writeFileSync(path.join(fixture.root, ".gitignore"), `${directory}/\n`);
+    fs.appendFileSync(path.join(fixture.root, trackedFile), "changed\n");
+    const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
+    assert.equal(result.status, 0, `glob-matched tracked file below an ignored parent remains stageable: ${result.stderr}`);
+    assert.deepEqual(cached(fixture.root), [trackedFile]);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+assert.equal(
+  APP_PACKAGE.scripts?.["qa:lane-manifest-staging"],
+  "node ../scripts/test-stage-lane-manifest.mjs",
+  "the lane-manifest staging test must have a package-script hop",
+);
+assert.match(
+  VALIDATE_WORKFLOWS,
+  /npm --prefix 100xfenok-next run qa:lane-manifest-staging/,
+  "Validate GitHub Workflows must invoke the package-script hop",
+);
+for (const triggerPath of [
+  "100xfenok-next/package.json",
+  "scripts/stage-lane-manifest.sh",
+  "scripts/test-stage-lane-manifest.mjs",
+]) {
+  assert.match(VALIDATE_WORKFLOWS, new RegExp(`- '${triggerPath.replaceAll(".", "\\.")}'`));
+}
+
+assertIgnoredExactPathSemantics();
+assertIgnoredGlobFiltered();
+assertRequiredIgnoredGlobFails();
+assertTrackedIgnoredDirectoryStillStages();
+assertTrackedFileBelowIgnoredParentStillStages();
+assertTrackedIgnoredDirectoryFromGlobStillStages();
+assertTrackedFileFromGlobBelowIgnoredParentStillStages();
+
+{
+  const mutationRoot = fs.mkdtempSync(path.join(os.tmpdir(), "stage-lane-manifest-mutations-"));
+  try {
+    const unfilteredSource = HELPER_SOURCE.replace(
+      'if is_git_ignored "$match"; then',
+      "if false; then",
+    );
+    assert.notEqual(unfilteredSource, HELPER_SOURCE, "ignore-filter mutation anchor must exist");
+    const unfilteredHelper = path.join(mutationRoot, "unfiltered-glob.sh");
+    fs.writeFileSync(unfilteredHelper, unfilteredSource);
+    assert.throws(
+      () => assertIgnoredGlobFiltered(unfilteredHelper),
+      /ignored glob match must be filtered before git add/,
+      "reverting the glob ignore filter must fail the behavior test",
+    );
+
+    const silentRequiredSource = HELPER_SOURCE.replace(
+      "return 1 # required-ignore-conflict",
+      "return 0 # required-ignore-conflict",
+    );
+    assert.notEqual(silentRequiredSource, HELPER_SOURCE, "required-ignore mutation anchor must exist");
+    const silentRequiredHelper = path.join(mutationRoot, "silent-required.sh");
+    fs.writeFileSync(silentRequiredHelper, silentRequiredSource);
+    assert.throws(
+      () => assertIgnoredExactPathSemantics(silentRequiredHelper),
+      /required ignored file must fail closed/,
+      "downgrading a required ignored path to a skip must fail the behavior test",
+    );
+  } finally {
+    fs.rmSync(mutationRoot, { recursive: true, force: true });
+  }
 }
 
 // The full symbols merge publishes its attempt shard and canonical aggregate;
