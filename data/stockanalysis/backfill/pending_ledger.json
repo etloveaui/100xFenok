@@ -2,20 +2,42 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-20T01:06:10Z",
+  "generated_at": "2026-07-21T23:44:11Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation"
   },
   "counts": {
-    "tracked": 260,
-    "cooldown": 33,
+    "tracked": 275,
+    "cooldown": 22,
     "provider_coverage_gaps": 0,
-    "updated": 0,
+    "updated": 21,
     "cleared": 0
   },
-  "updated": [],
+  "updated": [
+    "ACII",
+    "EDGQ",
+    "EDGX",
+    "ESUM",
+    "FREI",
+    "FSTB",
+    "GEQ",
+    "IDEQ",
+    "KRYP",
+    "PHYS",
+    "PSLV",
+    "RAAR",
+    "RAAY",
+    "RCLR",
+    "RCLY",
+    "RMHY",
+    "SFGV",
+    "SPPP",
+    "TOT",
+    "WTIB",
+    "XLII"
+  ],
   "cleared": [],
   "entries": {
     "AAAU": {
@@ -60,10 +82,10 @@
     },
     "ACII": {
       "ticker": "ACII",
-      "last_attempt_utc": "2026-07-18T00:04:41Z",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": "yahoo_finance"
@@ -1010,6 +1032,26 @@
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
+    "EDGQ": {
+      "ticker": "EDGQ",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
+    "EDGX": {
+      "ticker": "EDGX",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "EJAN": {
       "ticker": "EJAN",
       "last_attempt_utc": "2026-07-19T08:42:27Z",
@@ -1083,6 +1125,16 @@
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
+    "ESUM": {
+      "ticker": "ESUM",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "ETHE": {
       "ticker": "ETHE",
       "last_attempt_utc": "2026-07-19T08:42:27Z",
@@ -1150,6 +1202,92 @@
       "next_attempt_after_utc": "2026-07-16T09:37:56Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
+    },
+    "FREI": {
+      "ticker": "FREI",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "successful StockAnalysis primary fetch still has 21 unique daily_1y dates (< 200)",
+      "failure_class": "successful_short_history",
+      "consecutive_failures": 0,
+      "stable_observation_count": 1,
+      "observed_history_start_date": "2026-06-22",
+      "confirmed_history_start_date": null,
+      "short_history_evidence": {
+        "row_count": 21,
+        "raw_row_count": 21,
+        "valid_unique_date_count": 21,
+        "invalid_or_duplicate_date_count": 0,
+        "earliest_observation": "2026-06-22",
+        "earliest_date": "2026-06-22",
+        "latest_observation": "2026-07-21",
+        "latest_date": "2026-07-21",
+        "span_days": 29,
+        "expected_trading_days": 22,
+        "expected_utc_weekdays_inclusive": 22,
+        "observed_trading_days": 21,
+        "density": 0.954545,
+        "max_internal_gap_days": 4,
+        "max_internal_calendar_gap_days": 4,
+        "latest_observation_age_days": 0,
+        "latest_observation_age_business_days": 0,
+        "latest_business_day_age": 0,
+        "latest_not_future": true,
+        "gates": {
+          "min_rows": true,
+          "density": true,
+          "max_internal_gap": true,
+          "latest_business_day_age": true
+        },
+        "evidence_pass": true,
+        "eligible": true
+      },
+      "payload_fetched_at": "2026-07-21T23:42:54Z",
+      "next_attempt_after_utc": "2026-07-28T23:44:11Z",
+      "last_status": "ok",
+      "last_provider": "stockanalysis"
+    },
+    "FSTB": {
+      "ticker": "FSTB",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "successful StockAnalysis primary fetch still has 20 unique daily_1y dates (< 200)",
+      "failure_class": "successful_short_history",
+      "consecutive_failures": 0,
+      "stable_observation_count": 1,
+      "observed_history_start_date": "2026-06-22",
+      "confirmed_history_start_date": null,
+      "short_history_evidence": {
+        "row_count": 20,
+        "raw_row_count": 20,
+        "valid_unique_date_count": 20,
+        "invalid_or_duplicate_date_count": 0,
+        "earliest_observation": "2026-06-22",
+        "earliest_date": "2026-06-22",
+        "latest_observation": "2026-07-20",
+        "latest_date": "2026-07-20",
+        "span_days": 28,
+        "expected_trading_days": 21,
+        "expected_utc_weekdays_inclusive": 21,
+        "observed_trading_days": 20,
+        "density": 0.952381,
+        "max_internal_gap_days": 4,
+        "max_internal_calendar_gap_days": 4,
+        "latest_observation_age_days": 1,
+        "latest_observation_age_business_days": 1,
+        "latest_business_day_age": 1,
+        "latest_not_future": true,
+        "gates": {
+          "min_rows": true,
+          "density": true,
+          "max_internal_gap": true,
+          "latest_business_day_age": true
+        },
+        "evidence_pass": true,
+        "eligible": true
+      },
+      "payload_fetched_at": "2026-07-21T23:43:00Z",
+      "next_attempt_after_utc": "2026-07-28T23:44:11Z",
+      "last_status": "ok",
+      "last_provider": "stockanalysis"
     },
     "FXA": {
       "ticker": "FXA",
@@ -1243,32 +1381,32 @@
     },
     "GEQ": {
       "ticker": "GEQ",
-      "last_attempt_utc": "2026-07-14T00:04:14Z",
-      "failure_reason": "successful StockAnalysis primary fetch still has 21 unique daily_1y dates (< 200)",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "successful StockAnalysis primary fetch still has 27 unique daily_1y dates (< 200)",
       "failure_class": "successful_short_history",
       "consecutive_failures": 0,
-      "stable_observation_count": 1,
+      "stable_observation_count": 2,
       "observed_history_start_date": "2026-06-10",
-      "confirmed_history_start_date": null,
+      "confirmed_history_start_date": "2026-06-10",
       "short_history_evidence": {
-        "row_count": 21,
-        "raw_row_count": 21,
-        "valid_unique_date_count": 21,
+        "row_count": 27,
+        "raw_row_count": 27,
+        "valid_unique_date_count": 27,
         "invalid_or_duplicate_date_count": 0,
         "earliest_observation": "2026-06-10",
         "earliest_date": "2026-06-10",
-        "latest_observation": "2026-07-10",
-        "latest_date": "2026-07-10",
-        "span_days": 30,
-        "expected_trading_days": 23,
-        "expected_utc_weekdays_inclusive": 23,
-        "observed_trading_days": 21,
-        "density": 0.913043,
+        "latest_observation": "2026-07-20",
+        "latest_date": "2026-07-20",
+        "span_days": 40,
+        "expected_trading_days": 29,
+        "expected_utc_weekdays_inclusive": 29,
+        "observed_trading_days": 27,
+        "density": 0.931034,
         "max_internal_gap_days": 4,
         "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 4,
-        "latest_observation_age_business_days": 2,
-        "latest_business_day_age": 2,
+        "latest_observation_age_days": 1,
+        "latest_observation_age_business_days": 1,
+        "latest_business_day_age": 1,
         "latest_not_future": true,
         "gates": {
           "min_rows": true,
@@ -1279,8 +1417,8 @@
         "evidence_pass": true,
         "eligible": true
       },
-      "payload_fetched_at": "2026-07-13T23:56:27Z",
-      "next_attempt_after_utc": "2026-07-21T00:04:14Z",
+      "payload_fetched_at": "2026-07-21T23:43:12Z",
+      "next_attempt_after_utc": "2026-07-28T23:44:11Z",
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
@@ -1607,11 +1745,11 @@
     },
     "IDEQ": {
       "ticker": "IDEQ",
-      "last_attempt_utc": "2026-07-19T08:42:27Z",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 2,
-      "next_attempt_after_utc": null,
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-28T23:44:11Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
@@ -1813,6 +1951,16 @@
       "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "KRYP": {
+      "ticker": "KRYP",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
       "last_provider": "yahoo_finance"
     },
     "LFEQ": {
@@ -2448,11 +2596,11 @@
     },
     "PHYS": {
       "ticker": "PHYS",
-      "last_attempt_utc": "2026-07-19T08:42:27Z",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 2,
-      "next_attempt_after_utc": null,
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-28T23:44:11Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
@@ -2567,11 +2715,11 @@
     },
     "PSLV": {
       "ticker": "PSLV",
-      "last_attempt_utc": "2026-07-19T08:42:27Z",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 2,
-      "next_attempt_after_utc": null,
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-28T23:44:11Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
@@ -2678,6 +2826,46 @@
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
+    "RAAR": {
+      "ticker": "RAAR",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
+    "RAAY": {
+      "ticker": "RAAY",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
+    "RCLR": {
+      "ticker": "RCLR",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
+    "RCLY": {
+      "ticker": "RCLY",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "REGS": {
       "ticker": "REGS",
       "last_attempt_utc": "2026-07-14T00:04:14Z",
@@ -2721,6 +2909,16 @@
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
+    "RMHY": {
+      "ticker": "RMHY",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "RYLG": {
       "ticker": "RYLG",
       "last_attempt_utc": "2026-07-19T07:29:27Z",
@@ -2763,6 +2961,16 @@
     "SDD": {
       "ticker": "SDD",
       "last_attempt_utc": "2026-07-19T07:29:27Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "SFGV": {
+      "ticker": "SFGV",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
       "consecutive_failures": 1,
@@ -2938,10 +3146,10 @@
     },
     "SPPP": {
       "ticker": "SPPP",
-      "last_attempt_utc": "2026-07-19T07:29:27Z",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": "yahoo_finance"
@@ -3140,6 +3348,16 @@
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "TOT": {
+      "ticker": "TOT",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
       "last_provider": "yahoo_finance"
     },
     "TPUT": {
@@ -3586,6 +3804,16 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "WTIB": {
+      "ticker": "WTIB",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "WTPI": {
       "ticker": "WTPI",
       "last_attempt_utc": "2026-07-19T07:29:27Z",
@@ -3624,6 +3852,16 @@
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "XLII": {
+      "ticker": "XLII",
+      "last_attempt_utc": "2026-07-21T23:44:11Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
       "last_provider": "yahoo_finance"
     },
     "XTJA": {
