@@ -117,6 +117,20 @@ def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
         assertions=[{"id": "table_rows", "passed": has_rows}],
     )
 
+def decode_response_html(response: Response) -> str:
+    """Decode SlickCharts bytes as UTF-8 before Requests' latin-1 default."""
+    raw = response.content
+    try:
+        return raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        # Preserve compatibility for a genuinely non-UTF-8 upstream response.
+        # This fallback is intentionally second: response.text may otherwise
+        # decode charset-less text/html as latin-1 and permanently mojibake
+        # non-ASCII labels before the JSON intermediate/merge stages.
+        encoding = response.encoding or response.apparent_encoding
+        return raw.decode(encoding)
+
+
 def fetch_html_playwright(
     url: str,
     *,
@@ -260,7 +274,7 @@ def fetch_html(
                 )
             response.raise_for_status()
             try:
-                html = response.text
+                html = decode_response_html(response)
             except Exception:
                 _emit_attempt_tuple(_returned_attempt_tuple(response.status_code, decode="error"))
                 raise RuntimeError(f"Unable to decode {url}")

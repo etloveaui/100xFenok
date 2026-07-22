@@ -37,7 +37,14 @@ CRITICAL_MIRROR_FILES = (
     "stocks-dividends-recent.json",
     "stocks-dividends-historical.json",
 )
-MOJIBAKE_MARKERS = ("Â", "Ã", "å", "ä", "ç")
+MOJIBAKE_MARKERS = ("Â", "Ã", "â", "å", "ä", "ç", "�")
+
+
+def has_mojibake(value: object) -> bool:
+    text = str(value)
+    return any(marker in text for marker in MOJIBAKE_MARKERS) or any(
+        "\u0080" <= char <= "\u009f" for char in text
+    )
 
 
 def reject_non_finite_number(token: str) -> None:
@@ -211,8 +218,11 @@ def assert_currency(data_dir: Path, warnings: list[str]) -> None:
         warnings.append("currency.json latest totalMarketCap is unavailable")
     bad_names = [
         currency.get("name", "")
-        for currency in latest.get("currencies", []) or []
-        if any(marker in str(currency.get("name", "")) for marker in MOJIBAKE_MARKERS)
+        for entry in history
+        if isinstance(entry, dict)
+        for currency in entry.get("currencies", []) or []
+        if isinstance(currency, dict)
+        if has_mojibake(currency.get("name", ""))
     ]
     if bad_names:
         raise RuntimeError("currency.json mojibake names: " + ", ".join(map(str, bad_names[:10])))

@@ -246,6 +246,9 @@ jobs:
         run: |
           pip install requests beautifulsoup4
 
+      - name: Verify UTF-8 fetch-to-merge round trip
+        run: python scripts/test_slickcharts_encoding.py
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
