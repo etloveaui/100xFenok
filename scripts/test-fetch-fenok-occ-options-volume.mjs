@@ -139,6 +139,37 @@ assert.equal(semanticErrorEndpoint.reason, "decode_error");
 assert.equal(semanticErrorEndpoint.expectedUnavailable, true);
 assert.equal(reduceOccEndpointResults([semanticErrorEndpoint, readyEndpoint]).status, "ready");
 
+// The date sentinel must match the WHOLE body. A prefix anchor would accept any
+// payload that merely started with the sentence, and because expectedUnavailable
+// rows are excluded from both the reducer and the systemic scan, an all-endpoint
+// failure shaped that way would reduce to workflow_unobserved and exit 0 as
+// degraded while a real decode failure went unreported.
+for (const contaminated of [
+  "Report date cannot be greater than 07/14/2026<html><body>gateway</body></html>",
+  "Report date cannot be greater than 07/14/2026\nquantity,underlying",
+  "Report date cannot be greater than the configured window",
+]) {
+  const endpoint = classifyOccEndpointResponse({ statusCode: 200, body: contaminated });
+  assert.equal(
+    endpoint.expectedUnavailable,
+    false,
+    `a body that only starts with the sentinel must stay actionable: ${contaminated.slice(0, 48)}`,
+  );
+  assert.equal(endpoint.reason, "decode_error");
+}
+// The exact provider sentence, with or without a trailing period, still passes.
+for (const exact of [
+  "Report date cannot be greater than 7/4/2026",
+  "Report date cannot be greater than 07/14/2026.",
+  "  Report date cannot be greater than 07/14/2026  ",
+]) {
+  assert.equal(
+    classifyOccEndpointResponse({ statusCode: 200, body: exact }).expectedUnavailable,
+    true,
+    `the exact provider sentence must stay expected: ${exact.trim()}`,
+  );
+}
+
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-ready-"));
   const attemptShardPath = path.join(root, "occ_options_volume.json");

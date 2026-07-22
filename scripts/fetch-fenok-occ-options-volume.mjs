@@ -604,7 +604,16 @@ function classifyOccEndpointResponse(response) {
     laneId: "occ_options_volume",
     decodeBody: (body) => ({ rows: parseOccCsv(body) }),
   });
-  if (response?.statusCode === 200 && /^Report date cannot be greater than /i.test(String(response.body ?? "").trim())) {
+  // WHOLE-BODY match, not a prefix. A prefix anchor accepted any body that
+  // merely STARTED with the provider's sentence, so a gateway page or truncated
+  // payload appended after it would still be classified expectedUnavailable.
+  // Since expectedUnavailable rows are excluded from both reduceOccEndpointResults
+  // and the systemic scan, an all-endpoint decode failure shaped that way would
+  // reduce to workflow_unobserved and, with a complete LKG, exit 0 as degraded —
+  // silently masking a real fault. Anything beyond the sentence and its date now
+  // falls through as an actionable decode_error and escalates as it should.
+  if (response?.statusCode === 200
+    && /^Report date cannot be greater than \d{1,2}\/\d{1,2}\/\d{4}\.?$/i.test(String(response.body ?? "").trim())) {
     return {
       ...classified,
       expectedUnavailable: true,
