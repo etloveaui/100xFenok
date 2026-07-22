@@ -16,7 +16,7 @@ import {
 import {
   mergeSeries,
   parseYahooChart,
-  runUsIndicesShadow,
+  runUsIndicesDaily,
 } from "./fetch-us-indices-daily.mjs";
 
 const OBSERVED_AT = "2026-07-20T22:00:00Z";
@@ -41,11 +41,10 @@ function response(statusCode, payload) {
 
 function pathsFor(root) {
   return {
-    shadowRoot: path.join(root, "data", "admin", "us-indices-daily", "shadow"),
+    canonicalRoot: path.join(root, "data", "indices"),
+    publicRoot: path.join(root, "public", "data", "indices"),
     stateRoot: path.join(root, "data", "admin", "us-indices-daily"),
     attemptShardPath: path.join(root, "attempts", "us_indices_daily.json"),
-    parityReportPath: path.join(root, "data", "admin", "us-indices-daily", "parity-report.json"),
-    gasCanonicalRoot: path.join(root, "data", "indices"),
   };
 }
 
@@ -206,18 +205,20 @@ assert.deepEqual(
 }
 
 {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-shadow-success-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-success-"));
   const paths = pathsFor(root);
-  fs.mkdirSync(paths.gasCanonicalRoot, { recursive: true });
-  fs.writeFileSync(path.join(paths.gasCanonicalRoot, "sp500.json"), `${JSON.stringify(parsed)}\n`);
-  fs.writeFileSync(path.join(paths.gasCanonicalRoot, "nasdaq.json"), `${JSON.stringify([{ date: "2026-07-16", value: 20200.1 }])}\n`);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  fs.writeFileSync(path.join(paths.canonicalRoot, "sp500.json"), `${JSON.stringify([{ date: "2026-07-16", value: 6200.1 }])}\n`);
+  fs.writeFileSync(path.join(paths.canonicalRoot, "nasdaq.json"), `${JSON.stringify([{ date: "2026-07-16", value: 20200.1 }])}\n`);
+  fs.cpSync(paths.canonicalRoot, paths.publicRoot, { recursive: true });
   const request = async (_url, key) => response(200, yahooPayload(
     key === "sp500" ? "^GSPC" : "^IXIC",
     key === "sp500"
       ? [["2026-07-16", 6200.1], ["2026-07-17", 6210.2]]
       : [["2026-07-16", 20200.1], ["2026-07-17", 20250.2]],
   ));
-  const first = await runUsIndicesShadow({
+  const first = await runUsIndicesDaily({
     ...paths,
     request,
     observedAt: OBSERVED_AT,
@@ -226,12 +227,16 @@ assert.deepEqual(
   });
   assert.equal(first.exitCode, 0);
   assert.equal(first.updated, true);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(paths.shadowRoot, "sp500.json"), "utf8")).length, 2);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(paths.shadowRoot, "nasdaq.json"), "utf8")).length, 2);
-  const report = JSON.parse(fs.readFileSync(paths.parityReportPath, "utf8"));
-  assert.equal(report.series.sp500.at(-1).status, "pass");
-  assert.equal(report.series.nasdaq.at(-1).status, "pending", "pre-GAS NASDAQ dates remain pending");
-  const second = await runUsIndicesShadow({
+  for (const key of ["sp500", "nasdaq"]) {
+    const canonical = fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`));
+    const publicMirror = fs.readFileSync(path.join(paths.publicRoot, `${key}.json`));
+    assert.deepEqual(publicMirror, canonical, `${key} public mirror must be byte-identical`);
+    assert.equal(JSON.parse(canonical).length, 2);
+  }
+  assert.equal(fs.existsSync(path.join(paths.stateRoot, "shadow")), false, "live producer must not write shadow paths");
+  assert.equal(fs.existsSync(path.join(paths.stateRoot, "parity-report.json")), false, "retired parity must not be emitted live");
+
+  const second = await runUsIndicesDaily({
     ...paths,
     request,
     observedAt: "2026-07-20T22:05:00Z",
@@ -239,23 +244,24 @@ assert.deepEqual(
     eventName: "schedule",
   });
   assert.equal(second.exitCode, 0);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(paths.shadowRoot, "sp500.json"), "utf8")).length, 2);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(paths.canonicalRoot, "sp500.json"), "utf8")).length, 2);
 }
 
 {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-shadow-provider-revision-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-provider-revision-"));
   const paths = pathsFor(root);
-  fs.mkdirSync(paths.shadowRoot, { recursive: true });
-  fs.mkdirSync(paths.gasCanonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
   const initial = {
     sp500: [{ date: "2026-07-20", value: 7443.27978515625 }],
     nasdaq: [{ date: "2026-07-20", value: 25508.072265625 }],
   };
   for (const [key, rows] of Object.entries(initial)) {
-    fs.writeFileSync(path.join(paths.shadowRoot, `${key}.json`), `${JSON.stringify(rows)}\n`);
-    fs.writeFileSync(path.join(paths.gasCanonicalRoot, `${key}.json`), `${JSON.stringify(rows)}\n`);
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify(rows)}\n`);
+    }
   }
-  const first = await runUsIndicesShadow({
+  const result = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => response(200, yahooPayload(
       key === "sp500" ? "^GSPC" : "^IXIC",
@@ -267,72 +273,35 @@ assert.deepEqual(
     attemptId: "gh-403-1-us-indices",
     eventName: "schedule",
   });
-  assert.equal(first.exitCode, 0, "same-date provider variation must not wedge the lane");
-  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(paths.shadowRoot, "nasdaq.json"), "utf8")), [
+  assert.equal(result.exitCode, 0, "one-float32-ULP provider variation must not wedge the lane");
+  assert.equal(result.providerRevisions.length, 1);
+  assert.equal(result.providerRevisions[0].same_date_change_class, "float32_ulp_flutter");
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(paths.canonicalRoot, "nasdaq.json"), "utf8")), [
     initial.nasdaq[0],
     { date: "2026-07-21", value: 25837.2109375 },
   ]);
-  const firstReport = JSON.parse(fs.readFileSync(paths.parityReportPath, "utf8"));
-  assert.equal(firstReport.observed_at, "2026-07-21T22:47:00Z", "artifact must be fresh for the current run");
-  assert.equal(firstReport.provider_revisions.length, 1);
-  assert.equal(firstReport.provider_revisions[0].series, "nasdaq");
-  assert.equal(firstReport.provider_revisions[0].symbol, "^IXIC");
-  assert.equal(firstReport.provider_revisions[0].run_id, "403");
-  assert.equal(firstReport.provider_revisions[0].run_attempt, 1);
-  assert.equal(firstReport.provider_revisions[0].event_name, "schedule");
-  assert.match(firstReport.provider_revisions[0].body_sha256, /^[a-f0-9]{64}$/u);
-  assert.equal(firstReport.provider_revisions[0].occurrences, 1);
-  assert.equal(firstReport.qualification.consecutive_clean_trading_days, 0);
-  assert.deepEqual(firstReport.qualification.observed_trading_dates, ["2026-07-21"]);
-
-  fs.writeFileSync(path.join(paths.gasCanonicalRoot, "sp500.json"), `${JSON.stringify([
-    initial.sp500[0],
-    { date: "2026-07-21", value: 7509.2001953125 },
-  ])}\n`);
-  fs.writeFileSync(path.join(paths.gasCanonicalRoot, "nasdaq.json"), `${JSON.stringify([
-    initial.nasdaq[0],
-    { date: "2026-07-21", value: 25837.2109375 },
-  ])}\n`);
-
-  const second = await runUsIndicesShadow({
-    ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-20", 7443.27978515625], ["2026-07-21", 7509.2001953125]]
-        : [["2026-07-20", 25508.072265625], ["2026-07-21", 25837.2109375]],
-    )),
-    observedAt: "2026-07-21T23:00:00Z",
-    attemptId: "gh-404-1-us-indices",
-    eventName: "schedule",
-  });
-  assert.equal(second.exitCode, 0);
-  const secondReport = JSON.parse(fs.readFileSync(paths.parityReportPath, "utf8"));
-  assert.equal(secondReport.observed_at, "2026-07-21T23:00:00Z");
-  assert.equal(secondReport.provider_revisions.length, 1, "revision history must survive a clean replay");
-  assert.equal(secondReport.provider_revisions[0].occurrences, 1);
-  assert.equal(secondReport.qualification.consecutive_clean_trading_days, 1);
-  assert.deepEqual(secondReport.qualification.counted_dates, ["2026-07-21"]);
+  assert.deepEqual(
+    fs.readFileSync(path.join(paths.publicRoot, "nasdaq.json")),
+    fs.readFileSync(path.join(paths.canonicalRoot, "nasdaq.json")),
+  );
 }
 
 {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-shadow-missed-backfill-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-backfill-"));
   const paths = pathsFor(root);
-  fs.mkdirSync(paths.shadowRoot, { recursive: true });
-  fs.mkdirSync(paths.gasCanonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
   const rows = {
     sp500: [["2026-07-20", 6200], ["2026-07-21", 6210], ["2026-07-22", 6220]],
     nasdaq: [["2026-07-20", 20200], ["2026-07-21", 20210], ["2026-07-22", 20220]],
   };
   for (const [key, values] of Object.entries(rows)) {
-    fs.writeFileSync(path.join(paths.shadowRoot, `${key}.json`), `${JSON.stringify([{
-      date: values[0][0], value: values[0][1],
-    }])}\n`);
-    fs.writeFileSync(path.join(paths.gasCanonicalRoot, `${key}.json`), `${JSON.stringify(
-      values.map(([date, value]) => ({ date, value })),
-    )}\n`);
+    const initial = [{ date: values[0][0], value: values[0][1] }];
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify(initial)}\n`);
+    }
   }
-  await runUsIndicesShadow({
+  const result = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => response(200, yahooPayload(
       key === "sp500" ? "^GSPC" : "^IXIC",
@@ -342,27 +311,26 @@ assert.deepEqual(
     attemptId: "gh-405-1-us-indices",
     eventName: "schedule",
   });
-  const report = JSON.parse(fs.readFileSync(paths.parityReportPath, "utf8"));
-  assert.equal(report.qualification.last_reset.reason, "missed_trading_days_backfilled");
-  assert.deepEqual(report.qualification.last_reset.affected_dates, ["2026-07-21"]);
-  assert.deepEqual(report.qualification.counted_dates, ["2026-07-22"], "backfilled missed dates must not be credited");
-  assert.equal(report.qualification.consecutive_clean_trading_days, 1);
+  assert.equal(result.exitCode, 0);
+  for (const key of ["sp500", "nasdaq"]) {
+    assert.equal(JSON.parse(fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`), "utf8")).length, 3,
+      "range=5d must keep natural multi-date recovery after the clock is retired");
+  }
 }
 
 {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-shadow-blocking-revision-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-out-of-tolerance-"));
   const paths = pathsFor(root);
-  fs.mkdirSync(paths.shadowRoot, { recursive: true });
-  fs.mkdirSync(paths.gasCanonicalRoot, { recursive: true });
-  const initial = { sp500: 6200, nasdaq: 20200 };
-  for (const [key, value] of Object.entries(initial)) {
-    fs.writeFileSync(path.join(paths.shadowRoot, `${key}.json`), `${JSON.stringify([{ date: "2026-07-20", value }])}\n`);
-    fs.writeFileSync(path.join(paths.gasCanonicalRoot, `${key}.json`), `${JSON.stringify([
-      { date: "2026-07-20", value },
-      { date: "2026-07-21", value: value + 10 },
-    ])}\n`);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-20", value }])}\n`);
+    }
   }
-  await runUsIndicesShadow({
+  const before = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
+    ["sp500", "nasdaq"].map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
+  const result = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => response(200, yahooPayload(
       key === "sp500" ? "^GSPC" : "^IXIC",
@@ -374,60 +342,26 @@ assert.deepEqual(
     attemptId: "gh-406-1-us-indices",
     eventName: "schedule",
   });
-  const report = JSON.parse(fs.readFileSync(paths.parityReportPath, "utf8"));
-  assert.equal(report.summary.fail, 1, "out-of-tolerance provider revision must fail closed for legacy summary readers");
-  assert.equal(report.summary.provider_revision_out_of_tolerance, 1);
-  assert.equal(report.qualification.status, "blocked");
-  assert.equal(report.qualification.consecutive_clean_trading_days, 0);
-  assert.equal(report.qualification.last_reset.reason, "provider_revision_out_of_tolerance");
-
-  for (const [key, value] of Object.entries(initial)) {
-    fs.writeFileSync(path.join(paths.gasCanonicalRoot, `${key}.json`), `${JSON.stringify([
-      { date: "2026-07-20", value },
-      { date: "2026-07-21", value: value + 10 },
-      { date: "2026-07-22", value: value + 20 },
-    ])}\n`);
-  }
-  await runUsIndicesShadow({
-    ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-20", 6200], ["2026-07-21", 6210], ["2026-07-22", 6220]]
-        : [["2026-07-20", 20200], ["2026-07-21", 20210], ["2026-07-22", 20220]],
-    )),
-    observedAt: "2026-07-22T22:05:00Z",
-    attemptId: "gh-407-1-us-indices",
-    eventName: "schedule",
-  });
-  const recovered = JSON.parse(fs.readFileSync(paths.parityReportPath, "utf8"));
-  assert.equal(recovered.summary.fail, 0, "historical revision evidence must not keep clean runs failed forever");
-  assert.equal(recovered.summary.provider_revision_history_events, 1);
-  assert.equal(recovered.qualification.status, "building");
-  assert.equal(recovered.qualification.consecutive_clean_trading_days, 1);
-  assert.deepEqual(recovered.qualification.counted_dates, ["2026-07-22"]);
-  assert.equal(recovered.qualification.last_reset.reason, "provider_revision_out_of_tolerance", "recovery must preserve reset evidence");
+  assert.equal(result.exitCode, 2, "out-of-tolerance settled-date changes must remain fail-closed after parity retirement");
+  assert.equal(result.providerRevisions.some((row) => row.within_tolerance === false), true);
+  const after = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
+    ["sp500", "nasdaq"].map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
+  after.forEach((bytes, index) => assert.deepEqual(bytes, before[index]));
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].assertions.some((assertion) => assertion.passed === false), true);
 }
 
 {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-shadow-atomic-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-atomic-"));
   const paths = pathsFor(root);
-  fs.mkdirSync(paths.shadowRoot, { recursive: true });
-  fs.mkdirSync(paths.gasCanonicalRoot, { recursive: true });
-  const protectedPaths = [
-    path.join(paths.shadowRoot, "sp500.json"),
-    path.join(paths.shadowRoot, "nasdaq.json"),
-    path.join(paths.gasCanonicalRoot, "sp500.json"),
-    path.join(paths.gasCanonicalRoot, "nasdaq.json"),
-    path.join(root, "public", "data", "indices", "sp500.json"),
-    path.join(root, "public", "data", "indices", "nasdaq.json"),
-  ];
+  const protectedPaths = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
+    ["sp500", "nasdaq"].map((key) => path.join(rootPath, `${key}.json`)));
   for (const [index, filePath] of protectedPaths.entries()) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, `sentinel-${index}\n`);
   }
   const before = protectedPaths.map((filePath) => fs.readFileSync(filePath));
-  const result = await runUsIndicesShadow({
+  const result = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => {
       if (key === "nasdaq") throw Object.assign(new Error("reset"), { code: "ECONNRESET" });
@@ -467,34 +401,36 @@ assert.deepEqual(
     "workflow must invoke the package-script hop",
   );
 
-  function assertRevisionGuardSource(source) {
+  function assertLiveProducerSource(source) {
     assert.match(source, /if \(!Array\.isArray\(providerRevisions\) \|\| !seriesKey\) throw new Error\(`conflicting value for existing date \$\{row\.date\}`\);/,
       "conflicts without an explicit evidence sink must fail closed");
     assert.match(source, /providerRevisions\.push\(revision\);/,
       "accepted provider revisions must be recorded before merge continues");
-    assert.match(source, /if \(newCommonDates\.length > 1\) reset\("missed_trading_days_backfilled", newCommonDates\.slice\(0, -1\)\);/,
-      "multiple backfilled dates must reset the consecutive qualification clock");
+    assert.match(source, /if \(outOfTolerance\.length > 0\) \{/,
+      "out-of-tolerance settled-date revisions must fail closed");
+    assert.match(source, /\{ targetPath: canonicalPath, bytes \},\s*\{ targetPath: publicPath, bytes \}/u,
+      "successful live writes must include canonical and public mirror targets");
+    assert.doesNotMatch(source, /emitUsIndicesParity|qualification/,
+      "the live producer must not retain the retired qualification clock or emit parity");
   }
   const producerSource = fs.readFileSync(path.join(REPO_ROOT, "scripts/fetch-us-indices-daily.mjs"), "utf8");
-  const paritySource = fs.readFileSync(path.join(REPO_ROOT, "scripts/check-us-indices-parity.mjs"), "utf8");
-  const contractSource = `${producerSource}\n${paritySource}`;
-  assertRevisionGuardSource(contractSource);
-  const swallowedEvidence = contractSource.replace("providerRevisions.push(revision);", "void revision;");
-  assert.notEqual(swallowedEvidence, contractSource, "revision-recording mutation anchor must exist");
+  assertLiveProducerSource(producerSource);
+  const swallowedEvidence = producerSource.replace("providerRevisions.push(revision);", "void revision;");
+  assert.notEqual(swallowedEvidence, producerSource, "revision-recording mutation anchor must exist");
   assert.throws(
-    () => assertRevisionGuardSource(swallowedEvidence),
+    () => assertLiveProducerSource(swallowedEvidence),
     /must be recorded/,
     "a mutation that swallows provider revision evidence must fail",
   );
-  const launderedBackfill = contractSource.replace(
-    'if (newCommonDates.length > 1) reset("missed_trading_days_backfilled", newCommonDates.slice(0, -1));',
-    "void newCommonDates;",
+  const bypassedRevisionGuard = producerSource.replace(
+    "if (outOfTolerance.length > 0) {",
+    "if (false) {",
   );
-  assert.notEqual(launderedBackfill, contractSource, "backfill-clock mutation anchor must exist");
+  assert.notEqual(bypassedRevisionGuard, producerSource, "revision-failure mutation anchor must exist");
   assert.throws(
-    () => assertRevisionGuardSource(launderedBackfill),
-    /must reset the consecutive qualification clock/,
-    "a mutation that launders missed trading days through backfill must fail",
+    () => assertLiveProducerSource(bypassedRevisionGuard),
+    /must fail closed/,
+    "a mutation that bypasses the revision failure path must fail",
   );
 }
 

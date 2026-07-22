@@ -164,6 +164,20 @@ assert.deepEqual(sentiment.stages.success_if_exists, [
 ]);
 assert.deepEqual(sentiment.exclude, []);
 
+const usIndicesDaily = manifest.workflows[".github/workflows/fetch-us-indices-daily.yml"];
+assert.deepEqual(usIndicesDaily.lanes, ["us_indices_daily"]);
+assert.deepEqual(usIndicesDaily.stages.always_if_exists, [
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/us_indices_daily.json", required: false },
+  { kind: "directory", path: "data/admin/us-indices-daily", required: false },
+]);
+assert.deepEqual(usIndicesDaily.stages.success_if_exists, [
+  { kind: "file", path: "data/indices/sp500.json", required: false },
+  { kind: "file", path: "data/indices/nasdaq.json", required: false },
+  { kind: "file", path: "100xfenok-next/public/data/indices/sp500.json", required: false },
+  { kind: "file", path: "100xfenok-next/public/data/indices/nasdaq.json", required: false },
+]);
+assert.deepEqual(usIndicesDaily.exclude, []);
+
 const fenokEdgeDaily = manifest.workflows[".github/workflows/fenok-edge-daily.yml"];
 assert.deepEqual(fenokEdgeDaily.lanes, ["finra_short_volume", "occ_options_volume"]);
 assert.deepEqual(fenokEdgeDaily.stages.always_if_exists, [
