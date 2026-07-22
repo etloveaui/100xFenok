@@ -564,6 +564,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "yahoo_ticker_macro",
     "sentiment",
     "nasdaq_giw_sox",
+    "us_indices_daily",
     "slickcharts",
     "edgar_filings",
     "finra_short_volume",
@@ -941,11 +942,16 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   const recoveryAware = buildDetectionFloorLanes(report(), {
     yahoo_ticker_macro: yahooRecovery,
+    us_indices_daily: recoveryIndex("us_indices_daily", ["sp500.json", "nasdaq.json"]),
     slickcharts: recoveryIndex("slickcharts_daily_delivery", [
       "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
     ]),
   });
   assert.equal(recoveryAware.find((item) => item.id === "yahoo_ticker_macro")?.status, "degraded");
+  const usIndicesRecovery = recoveryAware.find((item) => item.id === "us_indices_daily");
+  assert.equal(usIndicesRecovery?.status, "ready");
+  assert.equal(usIndicesRecovery?.checks.find((item) => item.id === "recovery_state_present")?.status, "ready");
+  assert.equal(usIndicesRecovery?.checks.find((item) => item.id === "recovery_retry_set_empty")?.status, "ready");
   assert.equal(recoveryAware.find((item) => item.id === "slickcharts")?.status, "ready");
   assert.equal(recoveryAware.find((item) => item.id === "treasury_tga")?.checks.some((item) => item.id.startsWith("recovery_")), false);
 
@@ -1041,8 +1047,18 @@ const REQUIRED_LANE_IDS = [
 ];
 
 const TARGET_RECOVERY_FIXTURES = Object.freeze({
-  yahoo_ticker_macro: { laneId: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
+  yahoo_ticker_macro: {
+    relPath: "yahoo-hourly-ticker",
+    laneId: "yahoo_hourly_ticker",
+    keys: ["TQQQ.json", "SOXL.json"],
+  },
+  us_indices_daily: {
+    relPath: "us-indices-daily",
+    laneId: "us_indices_daily",
+    keys: ["sp500.json", "nasdaq.json"],
+  },
   slickcharts: {
+    relPath: "slickcharts-daily-delivery",
     laneId: "slickcharts_daily_delivery",
     keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"],
   },
@@ -1324,9 +1340,8 @@ function installHourlyRecoveryLane(root, index) {
 }
 
 function writeReadyTargetRecoveryIndexes(tmp, generatedAt) {
-  for (const [laneId, recovery] of Object.entries(TARGET_RECOVERY_FIXTURES)) {
-    const relPath = laneId === "yahoo_ticker_macro" ? "yahoo-hourly-ticker" : "slickcharts-daily-delivery";
-    writeReadyRecoveryIndex(tmp, relPath, recovery.laneId, recovery.keys, generatedAt);
+  for (const recovery of Object.values(TARGET_RECOVERY_FIXTURES)) {
+    writeReadyRecoveryIndex(tmp, recovery.relPath, recovery.laneId, recovery.keys, generatedAt);
   }
 }
 
@@ -1490,11 +1505,12 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
   writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
   writeReadyRecoveryIndex(tmp, "slickcharts-daily-delivery", "slickcharts_daily_delivery", [
     "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
   ]);
   const { root, public: pub } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 28);
+  assert.equal(root.totals.lanes, 29);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);

@@ -656,6 +656,7 @@ const DETECTION_REASON_STATUS = Object.freeze({
 });
 const DETECTION_RECOVERY_CONFIG = Object.freeze({
   yahoo_ticker_macro: { lane_id: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
+  us_indices_daily: { lane_id: "us_indices_daily", keys: ["sp500.json", "nasdaq.json"] },
   slickcharts: { lane_id: "slickcharts_daily_delivery", keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"] },
 });
 

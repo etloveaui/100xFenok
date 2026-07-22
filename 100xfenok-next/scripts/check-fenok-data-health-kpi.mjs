@@ -286,7 +286,7 @@ const DETECTION_KPI_REASONS = new Set([
   "auth_error", "rate_limited", "decode_error", "schema_drift", "empty_payload",
   "future_source", "stale", "unexpected_error", "recovery_degraded",
 ]);
-const TARGET_RECOVERY_LANE_IDS = new Set(["yahoo_ticker_macro", "slickcharts"]);
+const TARGET_RECOVERY_LANE_IDS = new Set(["yahoo_ticker_macro", "us_indices_daily", "slickcharts"]);
 
 function isDetectionSourceStamp(value) {
   if (typeof value !== "string") return false;
@@ -427,6 +427,7 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
   }
   for (const [laneId, stateDir] of [
     ["yahoo_ticker_macro", "yahoo-hourly-ticker"],
+    ["us_indices_daily", "us-indices-daily"],
     ["slickcharts", "slickcharts-daily-delivery"],
   ]) {
     const state = readOptionalJson(path.join(adminRoot, stateDir, "index.json"));
