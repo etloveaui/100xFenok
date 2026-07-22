@@ -1480,9 +1480,19 @@ function applyOccLkgStore({
   }
   if (outcome.kind === "failure") {
     const reduced = reduceOccEndpointResults(effectiveEndpointResults);
+    // Only ACTIONABLE rows may escalate to a systemic reason. OCC answers some
+    // requests with HTTP 200 carrying prose instead of CSV — "No record(s)
+    // found", "Report date cannot be greater than <date>" — which parseOccCsv
+    // cannot decode, so those rows carry reason "decode_error" even though
+    // classifyOccEndpointResponse has already marked them expectedUnavailable.
+    // reduceOccEndpointResults excludes them for exactly that reason; scanning
+    // them here contradicted it and turned an ordinary provider answer into a
+    // corrupt-classified hard failure that took the whole edge-daily workflow
+    // down on 2026-07-21 and 07-22 (runs 29799765665, 29889729136).
+    const systemicCandidates = effectiveEndpointResults.filter((row) => row?.expectedUnavailable !== true);
     const reason = controlledFailure
       ? "controlled_failure"
-      : systemicLkgFailureReason(effectiveEndpointResults.map((row) => row?.reason))
+      : systemicLkgFailureReason(systemicCandidates.map((row) => row?.reason))
         ?? reduced.reason
         ?? "workflow_unobserved";
     const failure = store.recordFailure({ artifacts: [artifact], run, reason });

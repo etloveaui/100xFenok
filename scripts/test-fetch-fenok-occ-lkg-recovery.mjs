@@ -536,4 +536,88 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.throws(() => store.evaluatePromotionCandidates([candidate], run), /provider observation sha256 is not payload-bound/);
 }
 
+// Expected-unavailable provider answers must never escalate to a systemic
+// reason. OCC replies to some requests with HTTP 200 carrying prose instead of
+// CSV, so parseOccCsv throws and the row carries reason "decode_error" even
+// though classifyOccEndpointResponse already marked it expectedUnavailable.
+// reduceOccEndpointResults excludes such rows; the systemic scan used to read
+// them anyway, which classified an ordinary provider answer as corrupt and took
+// the whole edge-daily workflow down on 2026-07-21 and 07-22 (runs 29799765665
+// and 29889729136, both OCC batch 3/5). A genuine decode failure must still
+// escalate, so both directions are asserted here.
+{
+  const root = makeRoot("expected-unavailable-not-systemic");
+  const seedDocument = outputDocument("2026-07-15", "seed-run");
+  writeCanonical(root, seedDocument);
+  const seed = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: seedDocument,
+    dates: ["20260715"],
+    currentAttempt: seedDocument.current_attempt,
+    endpointResults: [],
+    run: naturalRun("seed-run", "2026-07-15T12:00:00.000Z"),
+  });
+  assert.equal(seed.kind, "success");
+
+  const dateNotAvailable = classifyOccEndpointResponse({
+    statusCode: 200,
+    body: "Report date cannot be greater than 07/15/2026",
+  });
+  assert.equal(dateNotAvailable.reason, "decode_error");
+  assert.equal(dateNotAvailable.expectedUnavailable, true);
+
+  const benign = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: null,
+    dates: ["20260716"],
+    currentAttempt: {
+      ...readyAttempt("2026-07-16", "benign-run"),
+      status: "unavailable",
+      served_source_date: null,
+    },
+    endpointResults: [dateNotAvailable],
+    run: naturalRun("benign-run", "2026-07-16T12:00:00.000Z"),
+  });
+  assert.equal(benign.kind, "failure");
+  assert.notEqual(
+    benign.reason,
+    "decode_error",
+    "an expected provider answer must not escalate to a systemic reason",
+  );
+  assert.equal(
+    benign.corrupt,
+    false,
+    "expected-unavailable rows must not hard-fail the workflow",
+  );
+
+  const realDecodeFailure = classifyOccEndpointResponse({
+    statusCode: 200,
+    body: "<html><body>gateway</body></html>",
+  });
+  assert.equal(realDecodeFailure.reason, "decode_error");
+  assert.equal(realDecodeFailure.expectedUnavailable, false);
+
+  const systemic = applyOccLkgStore({
+    repoRoot: root,
+    markerPath: markerPath(root),
+    candidateDocument: null,
+    dates: ["20260716"],
+    currentAttempt: {
+      ...readyAttempt("2026-07-16", "systemic-run"),
+      status: "unavailable",
+      served_source_date: null,
+    },
+    endpointResults: [realDecodeFailure],
+    run: naturalRun("systemic-run", "2026-07-16T13:00:00.000Z"),
+  });
+  assert.equal(systemic.reason, "decode_error");
+  assert.equal(
+    systemic.corrupt,
+    true,
+    "a genuine decode failure must still be systemic",
+  );
+}
+
 console.log("test-fetch-fenok-occ-lkg-recovery: ok");
