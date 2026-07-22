@@ -21,6 +21,7 @@ import argparse
 import json
 import math
 import os
+import random
 import re
 import time
 from datetime import datetime, timedelta, timezone
@@ -42,6 +43,21 @@ USER_AGENT = (
 MAX_RETRIES = 3
 RATE_LIMIT_SECONDS = 1.5
 REQUEST_TIMEOUT = 30
+CHALLENGE_BACKOFF_MAX_SECONDS = 8.0
+CHALLENGE_RETRY_JITTER_MAX_SECONDS = 0.25
+
+
+class ProviderThrottledError(RuntimeError):
+    """The upstream provider returned a Cloudflare challenge, not scrapeable HTML."""
+
+    def __init__(self, url: str, status: int, attempts: int):
+        self.url = url
+        self.status = status
+        self.attempts = attempts
+        super().__init__(
+            f"provider_throttled: Cloudflare challenge after {attempts} bounded attempts "
+            f"(HTTP {status}) for {url}"
+        )
 
 
 # ==============================================================================
@@ -105,6 +121,16 @@ def _returned_failure_tuple(status: int) -> Dict[str, Any]:
     return _returned_attempt_tuple(status)
 
 
+def _provider_throttled_attempt_tuple(status: int) -> Dict[str, Any]:
+    """Preserve the HTTP status while marking a verified provider challenge."""
+    return _returned_attempt_tuple(
+        status,
+        decode="ok",
+        payload="non_empty",
+        assertions=[{"id": "provider_throttled", "passed": False}],
+    )
+
+
 def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
     if not html.strip():
         return _returned_attempt_tuple(status, decode="ok", payload="empty")
@@ -116,6 +142,7 @@ def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
         payload="non_empty",
         assertions=[{"id": "table_rows", "passed": has_rows}],
     )
+
 
 def decode_response_html(response: Response) -> str:
     """Decode SlickCharts bytes as UTF-8 before Requests' latin-1 default."""
@@ -129,6 +156,30 @@ def decode_response_html(response: Response) -> str:
         # non-ASCII labels before the JSON intermediate/merge stages.
         encoding = response.encoding or response.apparent_encoding
         return raw.decode(encoding)
+
+
+_JUST_A_MOMENT_TITLE = re.compile(
+    r"<title\b[^>]*>\s*just\s+a\s+moment(?:\s*\.\s*\.\s*\.)?\s*</title\s*>",
+    re.IGNORECASE,
+)
+
+
+def is_cloudflare_challenge(status: int, headers: Dict[str, Any], html: str) -> bool:
+    """Identify provider challenge pages without logging or parsing their body."""
+    normalized_headers = {str(key).lower(): str(value).lower() for key, value in headers.items()}
+    if status == 403 and (
+        "cloudflare" in normalized_headers.get("server", "")
+        or normalized_headers.get("cf-mitigated") == "challenge"
+    ):
+        return True
+    return _JUST_A_MOMENT_TITLE.search(html) is not None
+
+
+def _challenge_retry_delay(rate_limit: float, challenge_attempt: int) -> float:
+    """Return bounded exponential backoff plus a small jitter for a challenge retry."""
+    base = max(float(rate_limit), 0.5)
+    bounded_backoff = min(base * (2 ** challenge_attempt), CHALLENGE_BACKOFF_MAX_SECONDS)
+    return bounded_backoff + random.uniform(0.0, CHALLENGE_RETRY_JITTER_MAX_SECONDS)
 
 
 def fetch_html_playwright(
@@ -189,20 +240,32 @@ def fetch_html_playwright(
                 page = context.new_page()
                 navigation = page.goto(url, wait_until=wait_until, timeout=timeout)
                 status = navigation.status if navigation is not None else 200
+                response_headers = navigation.all_headers() if navigation is not None else {}
+                challenge_html = page.content()
+                if is_cloudflare_challenge(status, response_headers, challenge_html):
+                    context.close()
+                    browser.close()
+                    raise ProviderThrottledError(url, status, attempt)
                 if post_load_wait_ms > 0:
                     page.wait_for_timeout(post_load_wait_ms)
                 page.wait_for_selector(wait_for_selector, timeout=15000)
                 page.wait_for_timeout(1200)
                 html = page.content()
-                title = page.title()
                 context.close()
                 browser.close()
 
-            if challenge_detector and challenge_detector(html):
-                raise RuntimeError(f"Challenge page detected for {url} (title={title})")
+            if is_cloudflare_challenge(status, response_headers, html) or (challenge_detector and challenge_detector(html)):
+                raise ProviderThrottledError(url, status, attempt)
 
             _emit_attempt_tuple(_html_attempt_tuple(status, html))
             return html
+        except ProviderThrottledError as exc:
+            last_error = exc
+            last_status = status
+            if attempt == attempts:
+                break
+            time.sleep(_challenge_retry_delay(RATE_LIMIT_SECONDS, attempt))
+            continue
         except (PlaywrightError, RuntimeError) as exc:
             last_error = exc
             if isinstance(status, int) and 100 <= status <= 599:
@@ -212,6 +275,9 @@ def fetch_html_playwright(
             time.sleep(RATE_LIMIT_SECONDS)
             continue
 
+    if isinstance(last_error, ProviderThrottledError):
+        _emit_attempt_tuple(_provider_throttled_attempt_tuple(last_error.status))
+        raise last_error
     if last_error is None:
         _emit_attempt_tuple(_threw_attempt_tuple("unexpected"))
         raise RuntimeError(f"Playwright failed fetching {url}")
@@ -258,26 +324,34 @@ def fetch_html(
         RuntimeError: If all retry attempts fail
     """
     last_error: Exception | None = None
+    retry_delay = rate_limit
 
     for attempt in range(1, max_retries + 1):
         try:
-            time.sleep(rate_limit)
+            time.sleep(retry_delay)
             response: Response = session.get(
                 url,
                 headers={"User-Agent": user_agent},
                 timeout=timeout,
             )
+            try:
+                html = decode_response_html(response)
+            except Exception:
+                _emit_attempt_tuple(_returned_attempt_tuple(response.status_code, decode="error"))
+                raise RuntimeError(f"Unable to decode {url}")
+            if is_cloudflare_challenge(response.status_code, dict(response.headers), html):
+                challenge = ProviderThrottledError(url, response.status_code, attempt)
+                if attempt == max_retries:
+                    _emit_attempt_tuple(_provider_throttled_attempt_tuple(response.status_code))
+                    raise challenge
+                retry_delay = _challenge_retry_delay(rate_limit, attempt)
+                continue
             if response.status_code >= 500:
                 raise requests.HTTPError(
                     f"Upstream error {response.status_code}",
                     response=response,
                 )
             response.raise_for_status()
-            try:
-                html = decode_response_html(response)
-            except Exception:
-                _emit_attempt_tuple(_returned_attempt_tuple(response.status_code, decode="error"))
-                raise RuntimeError(f"Unable to decode {url}")
             _emit_attempt_tuple(_html_attempt_tuple(response.status_code, html))
             return html
         except requests.RequestException as exc:
