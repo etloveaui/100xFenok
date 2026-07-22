@@ -26,8 +26,8 @@ function alarmingRow(file, label, { streak = 2, firstFailingRunId = 999 } = {}) 
   runs.push(ghRun(1, "success"));
   return evaluateWorkflow({ file, label }, runs);
 }
-function okRow(file, label, event = null) {
-  return evaluateWorkflow({ file, label, ...(event ? { event } : {}) }, [ghRun(1, "success")]);
+function okRow(file, label, events = null) {
+  return evaluateWorkflow({ file, label, ...(events ? { events } : {}) }, [ghRun(1, "success")]);
 }
 
 
@@ -50,7 +50,7 @@ const firingHealth = {
   workflows: [
     alarmingRow("update-manifest.yml", "Update Manifest", { streak: 3, firstFailingRunId: 999 }),
     okRow("deploy-worker.yml", "Deploy Worker"),
-    okRow("validate-workflows.yml", "Validate GitHub Workflows", "push"),
+    okRow("validate-workflows.yml", "Validate GitHub Workflows", ["push"]),
   ],
 };
 const quietHealth = {
@@ -58,7 +58,7 @@ const quietHealth = {
   workflows: [
     okRow("update-manifest.yml", "Update Manifest"),
     okRow("deploy-worker.yml", "Deploy Worker"),
-    okRow("validate-workflows.yml", "Validate GitHub Workflows", "push"),
+    okRow("validate-workflows.yml", "Validate GitHub Workflows", ["push"]),
   ],
 };
 
@@ -80,6 +80,11 @@ assert.equal(
   "push",
   "the public watch policy must expose the critical gate's event filter",
 );
+assert.deepEqual(
+  firing.watched_workflows.find((row) => row.file === "validate-workflows.yml")?.events,
+  ["push"],
+  "the public alarm state must expose every counted automatic event",
+);
 assert.deepEqual(firing.excluded_workflows, firingHealth.excluded,
   "declared workflow exclusions and their reasons must remain visible in alarm state");
 
@@ -99,6 +104,27 @@ assert.equal(stillClear.last_resolved_at, "2026-07-19T13:00:00.000Z", "clear->cl
 const unknown = buildAlarmState({ health: { status: "unknown", workflows: [] }, prior: null, env: ENV, now: NOW });
 assert.equal(unknown.status, "unknown");
 assert.equal(unknown.open_incident_count, 0);
+
+const unknownWithPolicy = buildAlarmState({
+  health: {
+    status: "unknown",
+    workflows: [{
+      file: "deploy-worker.yml",
+      label: "Deploy Worker",
+      events: ["push", "schedule"],
+      status: "unknown",
+      message: "API unavailable",
+    }],
+  },
+  prior: null,
+  env: ENV,
+  now: NOW,
+});
+assert.deepEqual(
+  unknownWithPolicy.watched_workflows[0].events,
+  ["push", "schedule"],
+  "API degradation must preserve the declared counted-event policy in public alarm state",
+);
 
 // --- Privacy: the serialized state must not leak repo paths/roots/secrets ---
 const FORBIDDEN = ["_private/", "data/admin", ".github/", "100xfenok-next", "public/data", "recovery_store", "GITHUB_TOKEN", "ghp_", "secret"];

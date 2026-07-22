@@ -11,6 +11,7 @@ import {
   computeFailureStreak,
   deriveWorkflowWatchPolicy,
   evaluateWorkflow,
+  mergeWorkflowRunBatches,
   parseWorkflowRunsPayload,
 } from "./check-pipeline-job-health.mjs";
 
@@ -21,6 +22,7 @@ const C = (id) => ({ id, conclusion: "cancelled", html_url: `https://gh/run/${id
 const SU = (id) => ({ id, conclusion: "startup_failure", html_url: `https://gh/run/${id}`, run_started_at: `t${id}` });
 const T = (id) => ({ id, conclusion: "timed_out", html_url: `https://gh/run/${id}`, run_started_at: `t${id}` });
 const K = (id) => ({ id, conclusion: "skipped", html_url: `https://gh/run/${id}` });
+const R = (id, event, createdAt) => ({ id, event, conclusion: "success", created_at: createdAt });
 
 function writeWorkflow(root, file, source) {
   fs.mkdirSync(root, { recursive: true });
@@ -94,6 +96,21 @@ function writeWorkflow(root, file, source) {
   assert.deepEqual(
     policy.watched.map((row) => row.file),
     ["critical-gate.yml", "future-scheduled.yml", "inline-flow.yml"],
+  );
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "future-scheduled.yml")?.events,
+    ["schedule"],
+    "manual dispatch must never enter the counted event set",
+  );
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "inline-flow.yml")?.events,
+    ["schedule"],
+    "inline workflow_dispatch must also be excluded from the counted event set",
+  );
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "critical-gate.yml")?.events,
+    ["push"],
+    "the explicit non-scheduled gate keeps its declared automatic event",
   );
   assert.deepEqual(policy.excluded, [{
     file: "self-alarm.yaml",
@@ -188,15 +205,25 @@ function writeWorkflow(root, file, source) {
     NON_SCHEDULED_WORKFLOW_INCLUSIONS["validate-workflows.yml"].reason,
     "critical workflow syntax gate must page despite having no schedule",
   );
-  assert.equal(
-    NON_SCHEDULED_WORKFLOW_INCLUSIONS["validate-workflows.yml"].event,
-    "push",
+  assert.deepEqual(
+    NON_SCHEDULED_WORKFLOW_INCLUSIONS["validate-workflows.yml"].events,
+    ["push"],
     "the non-scheduled gate must count main push runs only",
   );
-  assert.equal(
-    policy.watched.find((row) => row.file === "validate-workflows.yml")?.event,
-    "push",
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "validate-workflows.yml")?.events,
+    ["push"],
     "the derived policy must carry the push-event filter to the API query",
+  );
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "deploy-worker.yml")?.events,
+    ["push", "schedule"],
+    "every declared automatic trigger must count while manual dispatch stays excluded",
+  );
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "slickcharts-history.yml")?.events,
+    ["schedule"],
+    "manual remediation runs must never contribute to the alarm streak",
   );
   for (const file of [
     "build-stocks-analyzer.yml",
@@ -208,6 +235,63 @@ function writeWorkflow(root, file, source) {
   ]) {
     assert.ok(policy.watched.some((row) => row.file === file), `${file} must be watched`);
   }
+}
+
+// GitHub accepts one event filter per workflow-runs request. Event-scoped
+// batches are merged newest-first and deduplicated before streak evaluation, so
+// manual runs cannot crowd counted automatic runs out of the API page.
+{
+  const merged = mergeWorkflowRunBatches([
+    [R(4, "push", "2026-07-22T04:00:00Z"), R(2, "push", "2026-07-22T02:00:00Z")],
+    [R(3, "schedule", "2026-07-22T03:00:00Z"), R(2, "schedule", "2026-07-22T02:00:00Z")],
+  ]);
+  assert.deepEqual(merged.map((run) => run.id), [4, 3, 2]);
+  assert.equal(merged.some((run) => run.event === "workflow_dispatch"), false);
+}
+
+// Required production regression: manual remediation failures do not page the
+// monthly history workflow, while two real scheduled analyzer failures still do.
+{
+  const slickchartsRuns = mergeWorkflowRunBatches([[
+    { ...F(303), event: "workflow_dispatch" },
+    { ...F(302), event: "workflow_dispatch" },
+    { ...S(301), event: "schedule" },
+  ]]);
+  const slickcharts = evaluateWorkflow(
+    { file: "slickcharts-history.yml", label: "SlickCharts Historical Membership", events: ["schedule"] },
+    slickchartsRuns,
+  );
+  assert.equal(slickcharts.status, "ok");
+  assert.equal(slickcharts.streak, 0);
+  assert.equal(slickcharts.latestRunUrl, "https://gh/run/301");
+
+  const analyzerRuns = mergeWorkflowRunBatches([[F(203), F(202), S(201)]]);
+  const analyzer = evaluateWorkflow(
+    { file: "build-stocks-analyzer.yml", label: "Build Stocks Analyzer", events: ["schedule"] },
+    analyzerRuns,
+  );
+  assert.equal(analyzer.status, "alarm");
+  assert.equal(analyzer.streak, 2);
+  assert.equal(analyzer.firstFailingRunId, 202);
+}
+
+// Multi-event workflow runs must be evaluated by chronology, not by batch order.
+{
+  const runs = mergeWorkflowRunBatches([
+    [{ ...F(402), event: "push", run_started_at: "2026-07-22T04:02:00Z" }],
+    [
+      { ...F(403), event: "schedule", run_started_at: "2026-07-22T04:03:00Z" },
+      { ...C(401), event: "schedule", run_started_at: "2026-07-22T04:01:00Z" },
+      { ...S(400), event: "schedule", run_started_at: "2026-07-22T04:00:00Z" },
+    ],
+  ]);
+  const result = evaluateWorkflow(
+    { file: "multi.yml", label: "Multi Event", events: ["push", "schedule"] },
+    runs,
+  );
+  assert.deepEqual(runs.map((run) => run.id), [403, 402, 401, 400]);
+  assert.equal(result.status, "alarm");
+  assert.equal(result.firstFailingRunId, 402);
 }
 
 // 2 consecutive failures -> alarm

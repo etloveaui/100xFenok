@@ -92,7 +92,8 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     watched_workflows: workflows.map((w) => ({
       file: w.file ?? null,
       label: w.label ?? w.name ?? null,
-      event: w.event ?? null,
+      events: Array.isArray(w.events) ? w.events : (w.event ? [w.event] : []),
+      event: w.event ?? (w.events?.length === 1 ? w.events[0] : null),
     })),
     excluded_workflows: excludedWorkflows,
     unknown_workflows: unknownWorkflows,

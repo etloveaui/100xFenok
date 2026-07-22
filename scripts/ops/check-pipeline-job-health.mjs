@@ -20,7 +20,7 @@ export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({
 export const NON_SCHEDULED_WORKFLOW_INCLUSIONS = Object.freeze({
   "validate-workflows.yml": Object.freeze({
     reason: "critical workflow syntax gate must page despite having no schedule",
-    event: "push",
+    events: Object.freeze(["push"]),
   }),
 });
 
@@ -37,6 +37,47 @@ function unquoteYamlScalar(value) {
   return trimmed;
 }
 
+function splitTopLevelFlow(value, separator = ",") {
+  const parts = [];
+  let start = 0;
+  let depth = 0;
+  let quote = null;
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    if (quote) {
+      if (char === quote && value[index - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (char === "\"" || char === "'") {
+      quote = char;
+    } else if (char === "[" || char === "{") {
+      depth += 1;
+    } else if (char === "]" || char === "}") {
+      depth -= 1;
+    } else if (char === separator && depth === 0) {
+      parts.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+function inlineTriggerNames(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    return splitTopLevelFlow(trimmed.slice(1, -1)).map(unquoteYamlScalar).filter(Boolean);
+  }
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    return splitTopLevelFlow(trimmed.slice(1, -1)).map((entry) => {
+      const [key] = splitTopLevelFlow(entry, ":");
+      return unquoteYamlScalar(key);
+    }).filter(Boolean);
+  }
+  return [unquoteYamlScalar(trimmed)];
+}
+
 function workflowMetadata(file, source) {
   const nameMatch = source.match(/^name:\s*(.+?)\s*$/m);
   if (!nameMatch) throw new Error(`${file}: top-level name is required`);
@@ -49,7 +90,7 @@ function workflowMetadata(file, source) {
   if (/^\*/.test(inlineOn)) {
     throw new Error(`${file}: aliased top-level on trigger is unsupported`);
   }
-  let scheduled = /(?:^|[\s\[,{])["']?schedule["']?(?:\s*[:,}\]]|$)/.test(inlineOn);
+  const inlineTriggers = inlineTriggerNames(inlineOn);
   const triggerKeys = [];
   for (let index = onIndex + 1; index < lines.length; index += 1) {
     const line = lines[index];
@@ -59,12 +100,16 @@ function workflowMetadata(file, source) {
       triggerKeys.push({ indent: keyMatch[1].length, key: keyMatch[2] ?? keyMatch[3] });
     }
   }
-  if (!scheduled && triggerKeys.length > 0) {
-    const triggerIndent = Math.min(...triggerKeys.map((row) => row.indent));
-    scheduled = triggerKeys.some((row) => row.indent === triggerIndent && row.key === "schedule");
-  }
+  const triggerIndent = triggerKeys.length > 0
+    ? Math.min(...triggerKeys.map((row) => row.indent))
+    : null;
+  const blockTriggers = triggerKeys
+    .filter((row) => row.indent === triggerIndent)
+    .map((row) => row.key);
+  const triggers = [...new Set([...inlineTriggers, ...blockTriggers])];
+  const scheduled = triggers.includes("schedule");
 
-  return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled };
+  return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled, triggers };
 }
 
 function validateReason(kind, file, reason) {
@@ -79,10 +124,16 @@ function normalizeInclusion(file, entry) {
     throw new Error(`non-scheduled inclusion ${file}: policy must be a reason string or object`);
   }
   validateReason("non-scheduled inclusion", file, config.reason);
-  if (config.event !== undefined && (typeof config.event !== "string" || config.event.trim() === "")) {
-    throw new Error(`non-scheduled inclusion ${file}: event must be a non-empty string`);
+  const events = config.events ?? (config.event === undefined ? null : [config.event]);
+  if (events === null) return { reason: config.reason.trim(), events: null };
+  if (!Array.isArray(events) || events.length === 0 || events.some((event) => typeof event !== "string" || event.trim() === "")) {
+    throw new Error(`non-scheduled inclusion ${file}: events must be a non-empty string array`);
   }
-  return { reason: config.reason.trim(), event: config.event?.trim() ?? null };
+  const normalizedEvents = [...new Set(events.map((event) => event.trim()))];
+  if (normalizedEvents.includes("workflow_dispatch")) {
+    throw new Error(`non-scheduled inclusion ${file}: workflow_dispatch can never be counted`);
+  }
+  return { reason: config.reason.trim(), events: normalizedEvents };
 }
 
 /**
@@ -123,9 +174,13 @@ export function deriveWorkflowWatchPolicy({
 
   const watched = rows
     .filter((row) => (row.scheduled && !(row.file in scheduledExclusions)) || row.file in nonScheduledInclusions)
-    .map(({ file, label }) => {
-      const event = inclusionConfigs.get(file)?.event;
-      return event ? { file, label, event } : { file, label };
+    .map(({ file, label, triggers }) => {
+      const events = inclusionConfigs.get(file)?.events
+        ?? triggers.filter((event) => event !== "workflow_dispatch");
+      if (events.length === 0) {
+        throw new Error(`${file}: watched workflow has no countable automatic event`);
+      }
+      return { file, label, events };
     })
     .sort((a, b) => a.file.localeCompare(b.file));
   const excluded = Object.entries(scheduledExclusions)
@@ -194,8 +249,12 @@ export function computeFailureStreak(runs) {
  * Returns a per-workflow status object; never throws.
  */
 export function evaluateWorkflow(workflow, runs) {
-  const { streak, firstFailingIndex } = computeFailureStreak(runs);
-  const latest = runs[0] || null;
+  const countedRuns = runs.filter((run) => {
+    if (run?.event === "workflow_dispatch") return false;
+    return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
+  });
+  const { streak, firstFailingIndex } = computeFailureStreak(countedRuns);
+  const latest = countedRuns[0] || null;
   const base = {
     file: workflow.file,
     label: workflow.label,
@@ -203,8 +262,8 @@ export function evaluateWorkflow(workflow, runs) {
     alarming: streak >= ALARM_STREAK_THRESHOLD,
     latestRunUrl: latest?.html_url || null,
   };
-  if (workflow.event) base.event = workflow.event;
-  if (runs.length === 0) {
+  if (workflow.events) base.events = workflow.events;
+  if (countedRuns.length === 0) {
     return {
       ...base,
       status: "unknown",
@@ -214,7 +273,7 @@ export function evaluateWorkflow(workflow, runs) {
   if (!base.alarming) {
     return { ...base, status: "ok" };
   }
-  const firstFailing = firstFailingIndex === null ? null : runs[firstFailingIndex];
+  const firstFailing = firstFailingIndex === null ? null : countedRuns[firstFailingIndex];
   return {
     ...base,
     status: "alarm",
@@ -266,6 +325,20 @@ export function parseWorkflowRunsPayload(payload) {
   return payload.workflow_runs;
 }
 
+export function mergeWorkflowRunBatches(batches) {
+  const byId = new Map();
+  for (const run of batches.flat()) {
+    const key = run?.id ?? `${run?.run_started_at ?? run?.created_at ?? ""}:${run?.html_url ?? ""}`;
+    if (!byId.has(key)) byId.set(key, run);
+  }
+  return [...byId.values()].sort((a, b) => {
+    const aTime = Date.parse(a?.run_started_at ?? a?.created_at ?? "") || 0;
+    const bTime = Date.parse(b?.run_started_at ?? b?.created_at ?? "") || 0;
+    if (aTime !== bTime) return bTime - aTime;
+    return Number(b?.id ?? 0) - Number(a?.id ?? 0);
+  });
+}
+
 async function fetchCompletedRuns({ token, owner, repo, file, branch, event }) {
   const url = buildWorkflowRunsUrl({ owner, repo, file, branch, event });
   const response = await fetch(url, { headers: authHeaders(token) });
@@ -299,8 +372,7 @@ export async function main() {
     branch,
     watched: policy.watched.map((workflow) => workflow.file),
     event_filters: policy.watched
-      .filter((workflow) => workflow.event)
-      .map((workflow) => ({ file: workflow.file, event: workflow.event })),
+      .map((workflow) => ({ file: workflow.file, events: workflow.events })),
     excluded: policy.excluded,
     scheduled_count: policy.scheduled_count,
   };
@@ -320,20 +392,25 @@ export async function main() {
   const workflows = [];
   for (const workflow of policy.watched) {
     try {
-      const runs = await fetchCompletedRuns({
-        token,
-        owner,
-        repo,
-        file: workflow.file,
-        branch,
-        event: workflow.event,
-      });
+      const batches = [];
+      for (const event of workflow.events) {
+        batches.push(await fetchCompletedRuns({
+          token,
+          owner,
+          repo,
+          file: workflow.file,
+          branch,
+          event,
+        }));
+      }
+      const runs = mergeWorkflowRunBatches(batches);
       workflows.push(evaluateWorkflow(workflow, runs));
     } catch (error) {
       // A transient API failure must never itself alarm — report unknown, keep exit 0.
       workflows.push({
         file: workflow.file,
         label: workflow.label,
+        events: workflow.events,
         status: "unknown",
         message: error.message,
       });
