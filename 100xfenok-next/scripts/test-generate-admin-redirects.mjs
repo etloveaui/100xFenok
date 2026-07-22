@@ -21,7 +21,6 @@ assert.deepEqual(ADMIN_CANONICAL_REDIRECT_ROUTES, [
   "/admin/macro-monitor",
   "/admin/market-radar",
   "/admin/valuation-lab",
-  "/admin/stark-lab",
   "/admin/personal",
   "/admin/personal/travel",
   "/admin/ib-helper",

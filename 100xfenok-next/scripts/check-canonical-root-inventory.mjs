@@ -21,6 +21,14 @@ const RETIRED_LEGACY_FILES = [
   path.join(appRoot, "public", "admin", "data-lab", "index-legacy.html"),
 ];
 
+// Retired admin surfaces. Source and public mirror are guarded together because
+// sync-static copies ../admin into public, so guarding only one side is not
+// durable. Any path under these roots is a reintroduction.
+const RETIRED_LEGACY_DIRS = [
+  path.join(repoRoot, "admin", "stark-lab"),
+  path.join(appRoot, "public", "admin", "stark-lab"),
+];
+
 const TEXT_EXTENSIONS = new Set([
   ".css",
   ".html",
@@ -1320,6 +1328,11 @@ function main() {
   for (const retiredPath of RETIRED_LEGACY_FILES) {
     if (exists(retiredPath)) {
       errors.push(`retired Data Lab legacy backup was reintroduced: ${rel(retiredPath)}`);
+    }
+  }
+  for (const retiredDir of RETIRED_LEGACY_DIRS) {
+    if (exists(retiredDir)) {
+      errors.push(`retired admin surface was reintroduced: ${rel(retiredDir)}`);
     }
   }
   if (appRoutes.length < 20) errors.push(`app route inventory unexpectedly small: ${appRoutes.length}`);

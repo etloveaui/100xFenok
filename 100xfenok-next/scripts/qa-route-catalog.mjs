@@ -23,7 +23,6 @@ export const ADMIN_CANONICAL_REDIRECT_ROUTES = [
   "/admin/macro-monitor",
   "/admin/market-radar",
   "/admin/valuation-lab",
-  "/admin/stark-lab",
   "/admin/personal",
   "/admin/personal/travel",
   "/admin/ib-helper",
@@ -123,7 +122,6 @@ export const EXPECTED_IFRAME_ROUTES = new Set([
   "/admin/macro-monitor",
   "/admin/market-radar",
   "/admin/valuation-lab",
-  "/admin/stark-lab",
   "/admin/ib-helper",
   "/tools/stock-analyzer",
 ]);
@@ -144,7 +142,6 @@ export const EXPECTED_IFRAME_SRC_BY_ROUTE = {
   "/admin/macro-monitor": "/admin/market-radar/index.html",
   "/admin/market-radar": "/admin/market-radar/index.html",
   "/admin/valuation-lab": "/admin/valuation-lab/index.html",
-  "/admin/stark-lab": "/admin/stark-lab/index.html",
   "/admin/ib-helper": "/ib/ib-helper/index.html",
   "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
 };
