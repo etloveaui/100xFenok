@@ -1,4 +1,5 @@
 import { POST_HTML_FILES } from "@/generated/static-route-manifest";
+import { resolvePostCandidates } from "@/lib/post-candidates";
 import { readPublicAssetText } from "@/lib/server/public-assets";
 
 export type PostCatalogEntry = {
@@ -129,15 +130,9 @@ export async function readPostCatalog(): Promise<PostCatalogEntry[]> {
 }
 
 export function resolvePostPublicPathBySlug(slug: string[]): string | null {
-  const joined = slug.join("/");
-  const candidates = joined.endsWith(".html")
-    ? [joined]
-    : [`${joined}.html`, `${joined}/index.html`];
-
-  for (const candidate of candidates) {
-    const normalized = candidate.replace(/^\/+/, "").replaceAll("\\", "/");
-    if (POST_HTML_FILE_SET.has(normalized)) {
-      return `${POST_PUBLIC_ROOT}/${normalized}`;
+  for (const candidate of resolvePostCandidates(slug)) {
+    if (POST_HTML_FILE_SET.has(candidate)) {
+      return `${POST_PUBLIC_ROOT}/${candidate}`;
     }
   }
 

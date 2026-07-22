@@ -1,10 +1,15 @@
 import type { NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
-import { ADMIN_LEGACY_HTML_FILES } from "@/generated/static-route-manifest";
+import { ADMIN_LEGACY_HTML_FILES, POST_HTML_FILES } from "@/generated/static-route-manifest";
 // Pure module on purpose: @/lib/server/legacy-bridge reaches node:fs via
 // publicAssetExists and cannot be imported into the edge bundle.
-import { isSafeSlugSegments, resolveAdminLegacyCandidates } from "@/lib/admin-legacy-candidates";
+import {
+  decodeSlugSegments,
+  isSafeSlugSegments,
+  resolveAdminLegacyCandidates,
+} from "@/lib/admin-legacy-candidates";
+import { resolvePostCandidates } from "@/lib/post-candidates";
 import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
@@ -257,7 +262,7 @@ function rateLimitResponse(): NextResponse {
 // backing HTML asset at all - including /admin/live, the Mona English surface.
 // A manifest-only test would 404 them. Derived from `find src/app/admin -name
 // page.tsx`; adding an admin page without adding it here 404s that new page.
-const ADMIN_CONCRETE_ROUTES = new Set<string>([
+export const ADMIN_CONCRETE_ROUTES = new Set<string>([
   "/admin",
   "/admin/data-lab",
   "/admin/design-gallery",
@@ -270,17 +275,43 @@ const ADMIN_CONCRETE_ROUTES = new Set<string>([
 ]);
 
 const ADMIN_LEGACY_ASSET_SET = new Set<string>(ADMIN_LEGACY_HTML_FILES);
+const POST_HTML_FILE_SET = new Set<string>(POST_HTML_FILES);
 
-function isConcreteAdminRoute(pathname: string): boolean {
-  // trailingSlash: true makes /admin/live/ canonical, so strip it before lookup.
-  return ADMIN_CONCRETE_ROUTES.has(pathname.replace(/\/+$/, "") || "/admin");
+function decodeRequestPathSegments(pathname: string, prefix: string): string[] | null {
+  const rawSegments = pathname.slice(prefix.length).split("/");
+  // Allow only the one empty tail created by trailingSlash. Internal or repeated
+  // empty segments are ambiguous and must fail open rather than emit a false 404.
+  if (rawSegments.some((segment, index) => !segment && index !== rawSegments.length - 1)) {
+    return null;
+  }
+
+  const encodedSegments = rawSegments.filter(Boolean);
+  if (encodedSegments.length === 0) return null;
+  const decodedSegments = decodeSlugSegments(encodedSegments);
+  if (!decodedSegments || !isSafeSlugSegments(decodedSegments)) return null;
+  return decodedSegments;
 }
 
-function adminLegacyResolves(pathname: string): boolean {
-  // filter(Boolean) matters: "/admin/data-lab/".split("/") yields a trailing ""
-  // segment, which isSafeSlugSegments rejects, which would 404 the canonical form.
-  const slug = pathname.slice("/admin/".length).split("/").filter(Boolean);
-  if (slug.length === 0 || !isSafeSlugSegments(slug)) return false;
+type DecodedAdminRequestPath = {
+  pathname: string;
+  slug: string[];
+};
+
+function decodeAdminRequestPath(pathname: string): DecodedAdminRequestPath | null {
+  const decodedSegments = decodeRequestPathSegments(pathname, "/");
+  if (!decodedSegments || decodedSegments[0] !== "admin") return null;
+  return {
+    pathname: `/${decodedSegments.join("/")}`,
+    slug: decodedSegments.slice(1),
+  };
+}
+
+function isConcreteAdminRoute(decodedPathname: string): boolean {
+  return ADMIN_CONCRETE_ROUTES.has(decodedPathname);
+}
+
+function adminLegacyResolves(slug: string[]): boolean {
+  if (slug.length === 0) return false;
   return resolveAdminLegacyCandidates(slug).some((candidate) => ADMIN_LEGACY_ASSET_SET.has(candidate));
 }
 
@@ -302,15 +333,43 @@ function adminLegacyResolves(pathname: string): boolean {
 // The candidate logic is shared with the page through a pure module - importing
 // it from `legacy-bridge` would drag `node:fs` into the edge bundle - so
 // middleware and page cannot disagree about what resolves.
-function getAdminNotFoundRewrite(request: NextRequest): NextResponse | null {
+export function getAdminNotFoundRewrite(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
   if (!isAdminPath(pathname) || isAdminApiPath(pathname)) return null;
   // Static admin files are owned by the assets layer and the auth gate below;
   // a missing .html is normalised to its extensionless form first and reaches
   // this check on the next pass.
   if (isAdminStaticFilePath(pathname)) return null;
-  if (isConcreteAdminRoute(pathname)) return null;
-  if (adminLegacyResolves(pathname)) return null;
+  const decodedAdminPath = decodeAdminRequestPath(pathname);
+  if (!decodedAdminPath) return null;
+  if (isConcreteAdminRoute(decodedAdminPath.pathname)) return null;
+  if (adminLegacyResolves(decodedAdminPath.slug)) return null;
+
+  const targetUrl = request.nextUrl.clone();
+  targetUrl.pathname = "/_not-found";
+  targetUrl.search = "";
+  return NextResponse.rewrite(targetUrl, { status: 404 });
+}
+
+/**
+ * Whether an otherwise-routable posts request must leave middleware as a 404.
+ * Invalid or ambiguous inputs deliberately fail open to the page-level bridge.
+ */
+export function shouldRewritePostsNotFound(
+  pathname: string,
+  postHtmlFileSet: ReadonlySet<string> = POST_HTML_FILE_SET,
+): boolean {
+  // The landing page owns both the catalog and its `?path=` query bridge.
+  if (pathname === "/posts" || pathname === "/posts/") return false;
+  if (!pathname.startsWith("/posts/")) return false;
+
+  const slug = decodeRequestPathSegments(pathname, "/posts/");
+  if (!slug) return false;
+  return !resolvePostCandidates(slug).some((candidate) => postHtmlFileSet.has(candidate));
+}
+
+export function getPostsNotFoundRewrite(request: NextRequest): NextResponse | null {
+  if (!shouldRewritePostsNotFound(request.nextUrl.pathname)) return null;
 
   const targetUrl = request.nextUrl.clone();
   targetUrl.pathname = "/_not-found";
@@ -402,6 +461,13 @@ export async function middleware(request: NextRequest) {
 
   if (!(await passesRateLimit(request))) {
     return rateLimitResponse();
+  }
+
+  // Ahead of any bridge response: a safe, known-missing post must leave with
+  // a real 404 rather than a 200 carrying a not-found body.
+  const postsNotFoundRewrite = getPostsNotFoundRewrite(request);
+  if (postsNotFoundRewrite) {
+    return withNoindexHeader(postsNotFoundRewrite);
   }
 
   // Ahead of the canonicaliser: an unresolvable path must 404 rather than be

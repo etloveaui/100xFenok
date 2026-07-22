@@ -145,6 +145,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:alarm-state
 
+      - name: Verify posts and admin not-found guards
+        working-directory: 100xfenok-next
+        run: npm run qa:route-not-found-guards
+
       - name: Run admin live bridge guards
         working-directory: 100xfenok-next
         run: npm run test:live-bridge

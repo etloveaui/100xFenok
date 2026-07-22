@@ -32,6 +32,25 @@ export function isSafeSlugSegments(slug: string[]): boolean {
   );
 }
 
+/** Decode one URL path layer and fail closed on malformed or double encoding. */
+export function decodeSlugSegments(segments: string[]): string[] | null {
+  const decoded: string[] = [];
+
+  for (const segment of segments) {
+    try {
+      const value = decodeURIComponent(segment);
+      // A residual percent sign can represent a second encoding layer. Callers
+      // must fail open rather than compare an ambiguous path against a manifest.
+      if (value.includes("%")) return null;
+      decoded.push(value);
+    } catch {
+      return null;
+    }
+  }
+
+  return decoded;
+}
+
 /**
  * Ordered public-root-relative candidates for an `/admin/<slug...>` request.
  *
