@@ -16,6 +16,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(appRoot, "..");
 
+const RETIRED_LEGACY_FILES = [
+  path.join(repoRoot, "admin", "data-lab", "index-legacy.html"),
+  path.join(appRoot, "public", "admin", "data-lab", "index-legacy.html"),
+];
+
 const TEXT_EXTENSIONS = new Set([
   ".css",
   ".html",
@@ -1312,6 +1317,11 @@ function main() {
   };
 
   const errors = [];
+  for (const retiredPath of RETIRED_LEGACY_FILES) {
+    if (exists(retiredPath)) {
+      errors.push(`retired Data Lab legacy backup was reintroduced: ${rel(retiredPath)}`);
+    }
+  }
   if (appRoutes.length < 20) errors.push(`app route inventory unexpectedly small: ${appRoutes.length}`);
   if (legacyHtml.length === 0) errors.push("legacy HTML inventory is empty; re-check sync-static/public root before #296 decisions");
   if (routeEmbedConsumers.length === 0) errors.push("bridge consumer inventory is empty; #296 cannot prove current iframe surface");

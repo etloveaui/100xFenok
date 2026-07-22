@@ -43,11 +43,22 @@ assert.equal(
   "node ../scripts/test-data-supply-policy-registry.mjs",
   "package QA command must execute the strict parity contract",
 );
+assert.match(
+  packageScripts["qa:routes"],
+  /(?:^|&& )npm run qa:canonical-root-inventory(?: &&|$)/,
+  "route QA must reject retired static files reintroduced after sync-static",
+);
 for (const buildPath of ["build:runtime:steps", "build:static:steps", "cf:build:steps"]) {
   assert.match(
     packageScripts[buildPath],
     /(?:^|&& )npm run qa:data-supply-policy-registry(?: &&|$)/,
     `${buildPath} must fail closed on policy projection drift`,
+  );
+  const syncIndex = packageScripts[buildPath].indexOf("npm run sync-static");
+  const routeQaIndex = packageScripts[buildPath].indexOf("npm run qa:routes");
+  assert.ok(
+    syncIndex >= 0 && routeQaIndex > syncIndex,
+    `${buildPath} must run route QA, including retired-file rejection, after sync-static`,
   );
 }
 

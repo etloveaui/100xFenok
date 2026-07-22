@@ -39,9 +39,8 @@ admin/data-lab/
 │   │   └── freshness-checker.js  (update date checks)
 │   └── ui/
 │       └── status-card.js        (reusable status widget)
-├── styles/
-│   └── dashboard.css             (extracted styles)
-└── index-legacy.html             (backup of v1.0, 1,716 lines)
+└── styles/
+    └── dashboard.css             (extracted styles)
 ```
 
 ---
@@ -125,7 +124,6 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `index-legacy.html` | Backup | Original 1,716-line monolithic version |
 | `shared/validators.js` | Legacy | Old hardcoded validators (kept for reference) |
 | `shared/data-lab-config.js` | Legacy | Old path config (kept for compatibility) |
 | `shared/slickcharts-validator.js` | Legacy | Old SlickCharts validators |
