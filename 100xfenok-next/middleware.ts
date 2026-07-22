@@ -248,7 +248,19 @@ function rateLimitResponse(): NextResponse {
   });
 }
 
-function getAdminTrailingSlashRedirect(request: NextRequest): NextResponse | null {
+// Serve the canonical trailing-slash form INTERNALLY instead of redirecting to
+// it. A 308 here produced an infinite self-loop in production: the Location that
+// reached the wire was byte-identical to the request path (the appended slash was
+// lost somewhere below this code — the responsible layer is still unidentified),
+// so every unknown /admin/** path redirected to itself forever. A rewrite emits
+// no Location at all, which makes the loop structurally impossible regardless of
+// which layer was dropping the slash.
+//
+// Canonicalisation for real admin routes is NOT lost: public/_redirects carries a
+// generated 308 per catalogued admin route and runs ahead of this middleware.
+// What reaches here is the uncatalogued remainder, where the canonical URL is
+// moot because the destination is the not-found bridge.
+function getAdminTrailingSlashRewrite(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
   if (
     isAdminApiPath(pathname) ||
@@ -261,7 +273,7 @@ function getAdminTrailingSlashRedirect(request: NextRequest): NextResponse | nul
 
   const targetUrl = request.nextUrl.clone();
   targetUrl.pathname = `${pathname}/`;
-  return NextResponse.redirect(targetUrl, 308);
+  return NextResponse.rewrite(targetUrl);
 }
 
 function getAdminGateRedirect(request: NextRequest): NextResponse {
@@ -322,9 +334,9 @@ export async function middleware(request: NextRequest) {
     return rateLimitResponse();
   }
 
-  const adminTrailingSlashRedirect = getAdminTrailingSlashRedirect(request);
-  if (adminTrailingSlashRedirect) {
-    return withNoindexHeader(adminTrailingSlashRedirect);
+  const adminTrailingSlashRewrite = getAdminTrailingSlashRewrite(request);
+  if (adminTrailingSlashRewrite) {
+    return withNoindexHeader(adminTrailingSlashRewrite);
   }
 
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
