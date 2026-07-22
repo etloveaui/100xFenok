@@ -1,0 +1,29 @@
+{
+  "schema_version": "fenok_krx_public_kosdaq_market_cap_aggregate.v1",
+  "market": "KOSDAQ",
+  "source": "KRX_OPEN_API",
+  "source_endpoint": "sto/ksq_bydd_trd",
+  "public_serving": true,
+  "aggregate_only": true,
+  "per_issuer_rows": false,
+  "raw_public": false,
+  "license_or_terms_note": "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.",
+  "generated_at": "2026-07-22T12:19:35.053Z",
+  "as_of": "2026-07-21",
+  "status": "ready",
+  "raw_input_row_count": 1821,
+  "excluded_non_kosdaq_rows": 0,
+  "excluded_invalid_market_cap_rows": 0,
+  "issuer_count": 1821,
+  "unit": "KRW",
+  "weight_method": "issuer market capitalization divided by valid KOSDAQ market capitalization sum; public output is top-N aggregate only",
+  "total_market_cap": 421059596409225,
+  "top_n": 10,
+  "top_n_market_cap": 74990530037100,
+  "top_n_weight": 0.178099562809,
+  "top_n_weight_pct": 17.8099562809,
+  "notes": [
+    "Derived KOSDAQ top-10 market-cap concentration aggregate. Public serving authorized by owner 2026-07-19.",
+    "No issuer rows, codes, names, individual weights, raw fields, or private paths are included."
+  ]
+}
