@@ -673,11 +673,18 @@ function redactOccEndpointRow(row, depth = 0) {
   return out;
 }
 
-function reportOccCorruptFailure({ reason, endpointResults, batchIndex = null }) {
+function reportOccFailureIdentity({
+  label,
+  reason,
+  sourceDate = null,
+  endpointResults,
+  batchIndex = null,
+}) {
   const rows = Array.isArray(endpointResults) ? endpointResults : [];
   const offenders = rows.filter((row) => row?.status !== "ready");
   console.error(
-    `::error::OCC corrupt failure reason=${reason} batch_index=${batchIndex ?? "unknown"}`
+    `::error::OCC ${label} reason=${reason} source_date=${sourceDate ?? "unknown"}`
+    + ` batch_index=${batchIndex ?? "unknown"}`
     + ` endpoint_rows=${rows.length} non_ready_rows=${offenders.length}`,
   );
   for (const row of offenders.slice(0, OCC_FAILURE_DIAGNOSTIC_LIMIT)) {
@@ -688,6 +695,50 @@ function reportOccCorruptFailure({ reason, endpointResults, batchIndex = null })
       `::error::OCC failing endpoint list truncated: ${offenders.length - OCC_FAILURE_DIAGNOSTIC_LIMIT} more`,
     );
   }
+}
+
+function reportOccCorruptFailure({
+  reason,
+  sourceDate = null,
+  endpointResults,
+  batchIndex = null,
+}) {
+  reportOccFailureIdentity({
+    label: "corrupt failure",
+    reason,
+    sourceDate,
+    endpointResults,
+    batchIndex,
+  });
+}
+
+function reportOccThresholdStopDiagnostic({ dateAttempt, endpointResults, batchIndex = null }) {
+  if (dateAttempt?.stopped_fail_threshold !== true) return false;
+  reportOccFailureIdentity({
+    label: "threshold stop",
+    reason: "stopped_fail_threshold",
+    sourceDate: dateAttempt.source_date,
+    endpointResults,
+    batchIndex,
+  });
+  return true;
+}
+
+function buildOccEndpointDiagnostic(endpointResult, { ticker, side }) {
+  if (!endpointResult) return null;
+  return {
+    ticker,
+    side,
+    endpoint: OCC_ENDPOINT,
+    status: endpointResult.status,
+    reason: endpointResult.reason,
+    expectedUnavailable: endpointResult.expectedUnavailable ?? false,
+    expectedKind: endpointResult.expectedKind ?? null,
+    http_status: endpointResult.attempt?.http_status ?? null,
+    decode: endpointResult.attempt?.decode ?? null,
+    payload: endpointResult.attempt?.payload ?? null,
+    exceptionKind: endpointResult.attempt?.exception_kind ?? null,
+  };
 }
 
 function thrownEndpointResult(error) {
@@ -769,9 +820,11 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, ca
           error_class: "cache_missing_no_fetch",
         },
         endpointResult: null,
+        endpointDiagnostic: null,
       };
     }
     const endpointResult = load.response ? classifyOccEndpointResponse(load.response) : null;
+    const endpointDiagnostic = buildOccEndpointDiagnostic(endpointResult, { ticker, side });
     if (endpointResult && endpointResult.status !== "ready") {
       const status = endpointResult.expectedKind === "no_record"
         ? "no_record"
@@ -787,6 +840,7 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, ca
           error: endpointResult.reason,
         },
         endpointResult,
+        endpointDiagnostic,
       };
     }
     try {
@@ -799,8 +853,17 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, ca
           error_class: null,
         },
         endpointResult,
+        endpointDiagnostic,
       };
     } catch (error) {
+      const parseFailureDiagnostic = endpointDiagnostic ?? buildOccEndpointDiagnostic(
+        attemptResult("decode_error", returnedTuple({
+          httpStatus: null,
+          decode: "error",
+          payload: "not_available",
+        })),
+        { ticker, side },
+      );
       return {
         load,
         evidence: {
@@ -810,10 +873,12 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, ca
           error: String(error.message ?? error).slice(0, 240),
         },
         endpointResult,
+        endpointDiagnostic: parseFailureDiagnostic,
       };
     }
   } catch (error) {
     const endpointResult = thrownEndpointResult(error);
+    const endpointDiagnostic = buildOccEndpointDiagnostic(endpointResult, { ticker, side });
     return {
       load: null,
       evidence: {
@@ -828,6 +893,7 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, ca
         error: String(error.message ?? error).slice(0, 240),
       },
       endpointResult,
+      endpointDiagnostic,
     };
   }
 }
@@ -935,12 +1001,15 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold, 
   const sideAttempts = [];
   const tickerAvailability = [];
   const endpointResults = [];
+  const endpointDiagnostics = [];
   for (const ticker of tickers) {
     const call = await loadOccSideWithEvidence({ ymd, ticker, side: "C", noFetch, request, cacheDir });
     if (call.endpointResult) endpointResults.push(call.endpointResult);
+    if (call.endpointDiagnostic) endpointDiagnostics.push(call.endpointDiagnostic);
     if (sleepMs > 0 && call.load && !call.load.cache_hit) await sleep(sleepMs);
     const put = await loadOccSideWithEvidence({ ymd, ticker, side: "P", noFetch, request, cacheDir });
     if (put.endpointResult) endpointResults.push(put.endpointResult);
+    if (put.endpointDiagnostic) endpointDiagnostics.push(put.endpointDiagnostic);
     if (sleepMs > 0 && put.load && !put.load.cache_hit) await sleep(sleepMs);
     sideAttempts.push(call.evidence, put.evidence);
     const summary = summarizeTickerAvailability({ ticker, ymd, sideAttempts: [call.evidence, put.evidence] });
@@ -979,6 +1048,7 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold, 
     side_attempts: sideAttempts,
     ticker_availability: tickerAvailability,
     endpoint_results: endpointResults,
+    endpoint_diagnostics: endpointDiagnostics,
   };
 }
 
@@ -1630,6 +1700,7 @@ async function build(args, {
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
   const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
+  const thresholdDiagnosticSourceDates = new Set();
   const manageLkg = shouldManageOccLkg({ args, universe, selectedTickers: tickers.length });
   const run = {
     runId: String(runId),
@@ -1748,6 +1819,7 @@ async function build(args, {
   }
 
   const endpointResults = [];
+  const endpointDiagnostics = [];
   try {
     if (!args.noFetch && args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests) {
       throw new Error(`OCC request budget exceeded: estimated ${estimatedMaxLiveRequests}, max ${args.maxRequests}. Use --plan-only, smaller --batch-size, or explicit approval.`);
@@ -1765,7 +1837,16 @@ async function build(args, {
       cacheDir,
       });
       endpointResults.push(...result.endpoint_results);
-      dateAttempts.push(summarizeDateAttempt(result));
+      endpointDiagnostics.push(...result.endpoint_diagnostics);
+      const dateAttempt = summarizeDateAttempt(result);
+      dateAttempts.push(dateAttempt);
+      if (reportOccThresholdStopDiagnostic({
+        dateAttempt,
+        endpointResults: result.endpoint_diagnostics,
+        batchIndex: args.batchIndex,
+      })) {
+        thresholdDiagnosticSourceDates.add(dateAttempt.source_date);
+      }
       const availabilitySnapshot = buildAvailabilitySnapshot({
       ymd,
       generatedAt: isoNow(),
@@ -1810,7 +1891,14 @@ async function build(args, {
           })
           : null;
         if (lkgRecovery?.corrupt) {
-          reportOccCorruptFailure({ reason: lkgRecovery.reason, endpointResults });
+          if (!thresholdDiagnosticSourceDates.has(isoFromYmd(ymd))) {
+            reportOccCorruptFailure({
+              reason: lkgRecovery.reason,
+              sourceDate: isoFromYmd(ymd),
+              endpointResults: endpointDiagnostics.length > 0 ? endpointDiagnostics : endpointResults,
+              batchIndex: args.batchIndex,
+            });
+          }
           throw new Error(`OCC LKG failure is corrupt: ${lkgRecovery.reason}`);
         }
         let wrote = false;
@@ -1892,11 +1980,14 @@ async function build(args, {
         })
         : null;
       if (lkgRecovery?.corrupt) {
-        reportOccCorruptFailure({
-          reason: lkgRecovery.reason,
-          endpointResults,
-          batchIndex: args.batchIndex,
-        });
+        if (!thresholdDiagnosticSourceDates.has(isoFromYmd(ymd))) {
+          reportOccCorruptFailure({
+            reason: lkgRecovery.reason,
+            sourceDate: isoFromYmd(ymd),
+            endpointResults: endpointDiagnostics.length > 0 ? endpointDiagnostics : endpointResults,
+            batchIndex: args.batchIndex,
+          });
+        }
         throw new Error(`OCC LKG failure is corrupt: ${lkgRecovery.reason}`);
       }
       if (!args.noWrite) {
@@ -1976,6 +2067,8 @@ export {
   mergeOccCurrentAttempt,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
+  OCC_FAILURE_DIAGNOSTIC_KEYS,
+  OCC_FAILURE_DIAGNOSTIC_LIMIT,
   OCC_FRESHNESS_MARKER_SCHEMA,
   OCC_LANE_ID,
   OCC_LKG_KEY,
@@ -1987,6 +2080,7 @@ export {
   parseControlledFailureLanes,
   parseArgs,
   reduceOccEndpointResults,
+  reportOccThresholdStopDiagnostic,
   retainLatestTickerSourceDates,
   scoreOptionsLogRatio,
   scoreOptionsVolume,

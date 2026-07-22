@@ -107,7 +107,7 @@
     "qa:fenok-s1-public-mutation-guard": "node ../scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check --enable-public-mutation --no-write",
     "qa:fenok-s1-public-mutation-readiness": "node ../scripts/write-fenok-s1-public-mutation-enable-readiness.mjs --check --no-write",
     "qa:fenok-daily-accumulation": "node ../scripts/report-fenok-daily-accumulation.mjs --check",
-    "qa:fenok-occ-options": "node ../scripts/test-fetch-fenok-occ-options-volume.mjs",
+    "qa:fenok-occ-options": "node ../scripts/test-fetch-fenok-occ-options-volume.mjs && node ../scripts/test-fetch-fenok-occ-lkg-recovery.mjs && node ../scripts/test-fetch-fenok-occ-threshold-diagnostics.mjs",
     "qa:fenok-s0-source-gaps": "node ../scripts/audit-fenok-s0-source-gaps.mjs --check",
     "qa:fenok-edge-coverage-index": "node ../scripts/test-build-fenok-edge-coverage-index.mjs",
     "qa:fenok-edge-build-target": "if [ \"${NEXT_BUILD_TARGET:-runtime}\" = \"cloudflare\" ]; then npm run qa:fenok-edge-public-bundle; else npm run qa:fenok-edge-readiness; fi",

@@ -86,8 +86,7 @@ jobs:
           node scripts/test-data-supply-attempt-producer.mjs
           node scripts/test-fetch-fenok-finra-daily-private.mjs
           node scripts/test-fetch-fenok-finra-lkg-recovery.mjs
-          node scripts/test-fetch-fenok-occ-options-volume.mjs
-          node scripts/test-fetch-fenok-occ-lkg-recovery.mjs
+          npm --prefix 100xfenok-next run qa:fenok-occ-options
           node scripts/test-fenok-edge-daily-attempt-workflow.mjs
 
       - name: Resolve bounded window
