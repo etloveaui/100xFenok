@@ -7,8 +7,13 @@ import { fileURLToPath } from "node:url";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
+  CADENCE_STATES,
+  assertDeclaredScheduleGraceContracts,
+  attachWorkflowCadence,
   buildWorkflowRunsUrl,
   computeFailureStreak,
+  deriveFailureStreakThreshold,
+  deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
   evaluateWorkflow,
   mergeWorkflowRunBatches,
@@ -178,6 +183,176 @@ function writeWorkflow(root, file, source) {
   );
 }
 
+// Defect 2: every cadence outcome is explicit.  This fixture deliberately
+// joins member-level coverage (not workflow-level guesses), preserves the
+// suspected_skip/attempt_gap evidence words, and proves recovered uses only
+// canonical KPI runtime recovery for a tracked workflow/cron pair.
+{
+  const config = {
+    lanes: [{
+      producer_members: [
+        { id: "not_due_member", workflow: ".github/workflows/not-due.yml", schedule: ["0 1 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
+        { id: "overdue_member", workflow: ".github/workflows/overdue.yml", schedule: ["0 2 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
+        { id: "recovered_member", workflow: ".github/workflows/update-manifest.yml", schedule: ["30 2 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
+        { id: "unknown_member", workflow: ".github/workflows/unknown.yml", schedule: ["0 3 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
+      ],
+    }],
+  };
+  const calendars = {
+    schedules: [
+      { id: "not_due_contract", cron: "0 1 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+      { id: "overdue_contract", cron: "0 2 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+      { id: "update_manifest_0230", cron: "30 2 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+      { id: "unknown_contract", cron: "0 3 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+    ],
+  };
+  const recoveredSlot = "update-manifest.yml:30 2 * * *@2026-07-21T02:30Z";
+  const recoverySlot = "update-manifest.yml:30 2 * * *@2026-07-22T02:30Z";
+  const projection = deriveWorkflowCadenceProjection({
+    watched: [
+      { file: "not-due.yml" },
+      { file: "overdue.yml" },
+      { file: "update-manifest.yml" },
+      { file: "no-declaration.yml" },
+      { file: "unknown.yml" },
+    ],
+    coverage: {
+      rows: [
+        { workflow: ".github/workflows/not-due.yml", member_id: "not_due_member", cron: "0 1 * * *", state: "observed", expected_at: "2026-07-22T01:00:00.000Z" },
+        { workflow: ".github/workflows/overdue.yml", member_id: "overdue_member", cron: "0 2 * * *", state: "suspected_skip", expected_at: "2026-07-22T02:00:00.000Z" },
+        { workflow: ".github/workflows/update-manifest.yml", member_id: "recovered_member", cron: "30 2 * * *", state: "attempt_gap", expected_at: "2026-07-21T02:30:00.000Z" },
+      ],
+    },
+    kpiRuntime: {
+      slots: { missed_slot_keys: [recoveredSlot], satisfied_slot_keys: [recoverySlot] },
+      successful_snapshot_history: [{
+        slot_key: recoverySlot,
+        built_at: "2026-07-22T03:00:00.000Z",
+        workflow: "Update Manifest",
+        status: "ready",
+        run_attempt: 1,
+      }],
+    },
+    config,
+    calendars,
+  });
+  assert.deepEqual(projection.state_counts, {
+    not_due: 1,
+    overdue: 1,
+    recovered: 1,
+    no_declaration: 1,
+    unknown: 1,
+  });
+  assert.deepEqual(
+    projection.workflows.map((row) => [row.file, row.state, row.evidence]),
+    [
+      ["not-due.yml", "not_due", []],
+      ["overdue.yml", "overdue", ["suspected_skip"]],
+      ["update-manifest.yml", "recovered", ["attempt_gap"]],
+      ["no-declaration.yml", "no_declaration", []],
+      ["unknown.yml", "unknown", []],
+    ],
+  );
+  const joined = attachWorkflowCadence([{ file: "overdue.yml", label: "Overdue", status: "ok" }], projection);
+  assert.equal(joined[0].status, "ok", "overdue remains visible but cannot become a failure alarm");
+  assert.equal(joined[0].cadence_status, "overdue");
+
+  // Mutation proof: neither absent grace nor an ambiguous/missing schedule may
+  // silently fall back to zero, KPI's 360 minutes, or no_declaration.
+  const missingGrace = structuredClone(calendars);
+  delete missingGrace.schedules.find((row) => row.id === "overdue_contract").grace;
+  assert.throws(
+    () => assertDeclaredScheduleGraceContracts({ config, calendars: missingGrace }),
+    /schedule overdue_contract has no grace block/,
+  );
+  const missingContract = structuredClone(calendars);
+  missingContract.schedules = missingContract.schedules.filter((row) => row.id !== "overdue_contract");
+  assert.throws(
+    () => assertDeclaredScheduleGraceContracts({ config, calendars: missingContract }),
+    /declared schedule overdue\.yml:0 2 \* \* \* must have exactly one grace contract/,
+  );
+}
+
+// fh-538: paging sensitivity comes from the existing cadence declaration, not
+// a second workflow-name table. A monthly declaration pages on its first
+// completed failure; daily/hourly declarations retain the two-failure noise
+// guard. Slot drift remains the separate overdue join proved above.
+{
+  const calendars = {
+    schedules: [
+      { id: "monthly", cron: "0 9 1 * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+      { id: "weekly", cron: "0 7 * * 0", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+      { id: "daily", cron: "0 6 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+      { id: "hourly", cron: "23 * * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
+    ],
+  };
+  const member = (id, file, cron) => ({
+    id,
+    workflow: `.github/workflows/${file}`,
+    schedule: [cron],
+    cadence_calendar: "utc",
+    cadence_declaration: { kind: "github_workflow" },
+  });
+  const config = {
+    lanes: [{ producer_members: [
+      member("monthly_member", "monthly.yml", "0 9 1 * *"),
+      member("daily_member", "daily.yml", "0 6 * * *"),
+      member("hourly_member", "hourly.yml", "23 * * * *"),
+    ] }],
+  };
+  const watched = [
+    { file: "monthly.yml", label: "Monthly" },
+    { file: "daily.yml", label: "Daily" },
+    { file: "hourly.yml", label: "Hourly" },
+  ];
+  const projection = deriveWorkflowCadenceProjection({ watched, config, calendars });
+  assert.deepEqual(
+    projection.workflows.map((row) => [row.file, row.failure_streak_threshold]),
+    [["monthly.yml", 1], ["daily.yml", 2], ["hourly.yml", 2]],
+    "the same declared cron rows must calibrate monthly=1 and daily/hourly=2",
+  );
+
+  const calibrated = attachWorkflowCadence(watched, projection);
+  const [monthly, daily, hourly] = calibrated.map((workflow) => evaluateWorkflow(workflow, [F(1), S(0)]));
+  assert.equal(monthly.status, "alarm", "one monthly completed failure must page");
+  assert.equal(daily.status, "ok", "one daily completed failure must not page");
+  assert.equal(hourly.status, "ok", "one hourly completed failure must not page");
+  assert.equal(hourly.failure_streak_threshold, 2,
+    "hourly stays at 2, not 3: completed failures are evidence and slot drift is the overdue join");
+
+  // Bidirectional mutation: cadence alone flips the decision in both directions.
+  const monthlyToDaily = structuredClone(config);
+  monthlyToDaily.lanes[0].producer_members[0].schedule = ["0 6 * * *"];
+  const mutatedMonthly = deriveWorkflowCadenceProjection({ watched, config: monthlyToDaily, calendars });
+  const monthlyAfterMutation = evaluateWorkflow(
+    attachWorkflowCadence(watched, mutatedMonthly)[0],
+    [F(1), S(0)],
+  );
+  assert.equal(monthlyAfterMutation.failure_streak_threshold, 2);
+  assert.equal(monthlyAfterMutation.status, "ok", "monthly -> daily must remove the one-failure page");
+
+  const dailyToMonthly = structuredClone(config);
+  dailyToMonthly.lanes[0].producer_members[1].schedule = ["0 9 1 * *"];
+  const mutatedDaily = deriveWorkflowCadenceProjection({ watched, config: dailyToMonthly, calendars });
+  const dailyAfterMutation = evaluateWorkflow(
+    attachWorkflowCadence(watched, mutatedDaily)[1],
+    [F(1), S(0)],
+  );
+  assert.equal(dailyAfterMutation.failure_streak_threshold, 1);
+  assert.equal(dailyAfterMutation.status, "alarm", "daily -> monthly must add the one-failure page");
+
+  assert.equal(
+    deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]),
+    1,
+    "the exact weekly boundary must page on the first completed failure",
+  );
+  assert.equal(
+    deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }, { cron: "0 6 * * *" }]),
+    2,
+    "a weekly+daily workflow uses its combined effective cadence and keeps the two-failure guard",
+  );
+}
+
 // Real-repository contract: at least 31 scheduled workflows are discovered. The
 // alarm itself is the sole declared exclusion, while the non-scheduled workflow
 // syntax gate is an explicit inclusion. Operational observer/alarm workflows
@@ -235,6 +410,18 @@ function writeWorkflow(root, file, source) {
   ]) {
     assert.ok(policy.watched.some((row) => row.file === file), `${file} must be watched`);
   }
+  const calendars = JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "lib", "data-supply-detection-calendars.json"), "utf8"));
+  const initialCadence = deriveWorkflowCadenceProjection({
+    watched: policy.watched,
+    coverage: { rows: [] },
+    calendars,
+  });
+  assert.deepEqual(Object.keys(initialCadence.state_counts), CADENCE_STATES, "first-evaluation dry run must expose all five states");
+  assert.equal(
+    Object.values(initialCadence.state_counts).reduce((sum, count) => sum + count, 0),
+    policy.watched.length,
+    "the first 31-workflow evaluation must classify every watched workflow exactly once",
+  );
 }
 
 // GitHub accepts one event filter per workflow-runs request. Event-scoped
@@ -392,6 +579,16 @@ function writeWorkflow(root, file, source) {
   const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
   assert.equal(result.status, "unknown", "missing repository reports unknown status");
   assert.ok(!("issueBody" in result), "unknown status must not produce an alarm issue body");
+  assert.equal(result.watched.length, 31, "the first cadence dry run covers the current 31 watched workflows");
+  assert.equal(result.workflows.length, result.watched.length, "the first cadence dry run emits one classified row per watched workflow");
+  assert.deepEqual(Object.keys(result.cadence_state_counts), CADENCE_STATES);
+  assert.equal(
+    Object.values(result.cadence_state_counts).reduce((sum, count) => sum + count, 0),
+    result.watched.length,
+    "the five-state count must reconcile to the complete watch inventory",
+  );
+  assert.equal(result.workflows.some((row) => row.cadence_status === "overdue" && row.status === "alarm"), false,
+    "cadence overdue cannot manufacture a paging alarm during the first evaluation");
 }
 
 // Workflow YAML sanity: mirror the budget-alarm shape and honor #357 (no runner
