@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-19T23:00:54Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/AKAF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AKAF.json",
     "payload_sha256": "d67f4adb74a82df53ffe804e6780c595e58d048aa5db520b866867043ce2a398",
     "quote_as_of": "2026-07-13T16:30:21Z",
     "source_as_of": "2026-07-13T16:30:21Z"
@@ -52,12 +52,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:05:58Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-07-19T23:00:54Z",
+    "history_as_of": "2026-07-17",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AKAF.json",
-    "payload_sha256": "395d839e438fb9592dcc0cd391d66d7a7199d0fb017b55d4ccd2818b2b63b4b5",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "d67f4adb74a82df53ffe804e6780c595e58d048aa5db520b866867043ce2a398",
+    "quote_as_of": "2026-07-13T16:30:21Z",
+    "source_as_of": "2026-07-13T16:30:21Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-13T16:30:21Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-22T00:47:32Z",
+    "classified_run_id": "29879427185",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AKAF holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AKAF holds LKG because Yahoo source date 2026-07-13T16:30:21Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-07-13T16:30:21Z"
   },
   "ticker": "AKAF",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-07-22T00:47:32Z"
 }

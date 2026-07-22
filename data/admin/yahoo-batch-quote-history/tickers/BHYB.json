@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:08:50Z",
     "history_as_of": "2026-07-20",
-    "path": "data/yf/finance/BHYB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BHYB.json",
     "payload_sha256": "30c408aae1c60632acd4d926a7dc6e47f5e5419414bf9e0a5fb8c27825514968",
     "quote_as_of": "2026-07-08T14:25:14Z",
     "source_as_of": "2026-07-08T14:25:14Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 2",
     "shard": "2/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-21T23:08:50Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BHYB.json",
+    "payload_sha256": "30c408aae1c60632acd4d926a7dc6e47f5e5419414bf9e0a5fb8c27825514968",
+    "quote_as_of": "2026-07-08T14:25:14Z",
+    "source_as_of": "2026-07-08T14:25:14Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-08T14:25:14Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 10,
+    "classified_at": "2026-07-22T00:47:32Z",
+    "classified_run_id": "29879427185",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BHYB holds LKG because Yahoo source date 2026-07-08T14:25:14Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-08T14:25:14Z"
+  },
   "ticker": "BHYB",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-22T00:47:32Z"
 }

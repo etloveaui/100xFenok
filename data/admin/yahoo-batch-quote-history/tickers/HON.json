@@ -84,32 +84,58 @@
       "run_id": "29789662473",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1622,
+      "natural": true,
+      "observed_at": "2026-07-22T00:47:32Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29879427185",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-22T01:10:12Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29879427185",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T00:18:35Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-07-22T00:52:01Z",
+    "history_as_of": "2026-07-21",
     "path": "data/yf/finance/HON.json",
-    "payload_sha256": "6c419e649d47074748e5eefe0aaaf6fc886d9020a51986d1623d8bbe3e19ac7d",
-    "quote_as_of": "2026-07-20T20:00:01Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "1efa7a85677bc41f4cdd891a42c03060989ed11d142f2ea0b2b5afcdca120e9e",
+    "quote_as_of": "2026-07-21T20:00:01Z",
+    "source_as_of": "2026-07-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1241,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-21T00:18:00Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-22T01:10:12Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29789662473",
+    "run_id": "29879427185",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -140,14 +166,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-21T00:18:00Z",
-    "payload_sha256": "16fc893a60a07e4299b35a7d874eff3dd4ae590e9517feb36e3461c40b13c135",
-    "quote_as_of": "2026-07-20T20:00:01Z",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-22T00:47:32Z",
+    "payload_sha256": "e3094ebf0566117332dd585404368f7287ea9554501182c203bbe184301f03d0",
+    "quote_as_of": "2026-07-21T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "29789662473",
+    "run_id": "29879427185",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-07-21"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -158,5 +184,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "HON",
-  "updated_at": "2026-07-21T00:18:00Z"
+  "updated_at": "2026-07-22T01:10:12Z"
 }

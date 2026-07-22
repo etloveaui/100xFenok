@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-20T23:07:55Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/EPMB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPMB.json",
     "payload_sha256": "d3d747034e72f53557976b39d7d433b7ba8662dc67260175cf2438a31d91c5f1",
     "quote_as_of": "2026-07-13T18:32:06Z",
     "source_as_of": "2026-07-13T18:32:06Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 1",
     "shard": "1/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-20T23:07:55Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPMB.json",
+    "payload_sha256": "d3d747034e72f53557976b39d7d433b7ba8662dc67260175cf2438a31d91c5f1",
+    "quote_as_of": "2026-07-13T18:32:06Z",
+    "source_as_of": "2026-07-13T18:32:06Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-13T18:32:06Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-22T00:47:32Z",
+    "classified_run_id": "29879427185",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EPMB holds LKG because Yahoo source date 2026-07-13T18:32:06Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-13T18:32:06Z"
+  },
   "ticker": "EPMB",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-07-22T00:47:32Z"
 }

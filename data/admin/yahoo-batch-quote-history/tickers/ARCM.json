@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:07:11Z",
     "history_as_of": "2026-07-20",
-    "path": "data/yf/finance/ARCM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ARCM.json",
     "payload_sha256": "e534723e71b58863771fda976acc2ea8ca897cc0b0269cd7bbd3efec2b283eb7",
     "quote_as_of": "2026-07-08T19:41:59Z",
     "source_as_of": "2026-07-08T19:41:59Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 2",
     "shard": "2/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-21T23:07:11Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ARCM.json",
+    "payload_sha256": "e534723e71b58863771fda976acc2ea8ca897cc0b0269cd7bbd3efec2b283eb7",
+    "quote_as_of": "2026-07-08T19:41:59Z",
+    "source_as_of": "2026-07-08T19:41:59Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-08T19:41:59Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 10,
+    "classified_at": "2026-07-22T00:47:32Z",
+    "classified_run_id": "29879427185",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ARCM holds LKG because Yahoo source date 2026-07-08T19:41:59Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-08T19:41:59Z"
+  },
   "ticker": "ARCM",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-22T00:47:32Z"
 }

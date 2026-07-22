@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:29:52Z",
     "history_as_of": "2026-07-14",
-    "path": "data/yf/finance/VYLD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VYLD.json",
     "payload_sha256": "ef4816ef4b42cb67fc84502f0d632f9a7ed8521eb2cd9d2519ab5b6fcffbc993",
     "quote_as_of": "2026-07-13T14:16:46Z",
     "source_as_of": "2026-07-13T14:16:46Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "4/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T20:22:41Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:29:52Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VYLD.json",
-    "payload_sha256": "b04415dc5658ac0deff46965fc18e6c586881dfc30e9bb6ad0ed016bd7eeca5b",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "ef4816ef4b42cb67fc84502f0d632f9a7ed8521eb2cd9d2519ab5b6fcffbc993",
+    "quote_as_of": "2026-07-13T14:16:46Z",
+    "source_as_of": "2026-07-13T14:16:46Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-22T00:47:32Z",
+    "classified_run_id": "29879427185",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VYLD holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VYLD holds LKG because Yahoo source date 2026-07-13T14:16:46Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-13T14:16:46Z"
   },
   "ticker": "VYLD",
-  "updated_at": "2026-07-16T00:35:28Z"
+  "updated_at": "2026-07-22T00:47:32Z"
 }

@@ -51,36 +51,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1216,
+      "natural": true,
+      "observed_at": "2026-07-22T00:47:32Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29879427185",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-22T01:10:12Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29879427185",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:23:59Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-22T00:53:14Z",
+    "history_as_of": "2026-07-21",
     "path": "data/yf/finance/SLB.json",
-    "payload_sha256": "5796d3c99130af43c6dc98753770a9a98279a41908a699bb21c95265108d0855",
-    "quote_as_of": "2026-07-15T20:00:02Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "345a2229c434001ca0ab06382cdf6d1dafc5a86c26c3a4b55af700696f3b6ad8",
+    "quote_as_of": "2026-07-21T20:00:02Z",
+    "source_as_of": "2026-07-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 791,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-22T01:10:12Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29879427185",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-22T00:47:32Z",
+    "payload_sha256": "f723b2fee3a678b2dd0945b35b66eb2d179ae5a3ca0f3a441b12a366f4a3e178",
+    "quote_as_of": "2026-07-21T20:00:02Z",
+    "run_attempt": 1,
+    "run_id": "29879427185",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SLB",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-22T01:10:12Z"
 }

@@ -38,36 +38,74 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1268,
+      "natural": true,
+      "observed_at": "2026-07-22T00:47:32Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29879427185",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-22T01:10:12Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "29879427185",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:22:51Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-22T00:52:06Z",
+    "history_as_of": "2026-07-21",
     "path": "data/yf/finance/ICE.json",
-    "payload_sha256": "9af8d7602dbb90d1fa97922c3472b51714b2c9e1d15ccbb0898a4a4bb2fc755f",
-    "quote_as_of": "2026-07-15T20:00:03Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "e35ee3097b181f89e71c9e6dd0b6a46a09d94337b39ea6bc779ab3e96db46963",
+    "quote_as_of": "2026-07-21T20:00:03Z",
+    "source_as_of": "2026-07-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 673,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-22T01:10:12Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
+    "run_id": "29879427185",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-22T00:47:32Z",
+    "payload_sha256": "e00eb0de66754e0b0044688ea8482a070fe45b43140f389bc5fa8909e119ba9f",
+    "quote_as_of": "2026-07-21T20:00:03Z",
+    "run_attempt": 1,
+    "run_id": "29879427185",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ICE",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-22T01:10:12Z"
 }

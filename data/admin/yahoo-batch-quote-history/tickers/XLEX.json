@@ -30,13 +30,12 @@
   "current": {
     "fetched_at": "2026-07-14T00:15:16Z",
     "history_as_of": "2026-07-13",
-    "path": "data/yf/finance/XLEX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XLEX.json",
     "payload_sha256": "a487b816552e21ce6b53e4d6b18c944853fc8db564690257aa67c24bffb400bf",
     "quote_as_of": "2026-07-13T19:29:01Z",
     "source_as_of": "2026-07-13"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -53,26 +52,26 @@
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:50Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-14T00:15:16Z",
+    "history_as_of": "2026-07-13",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XLEX.json",
-    "payload_sha256": "1cd426087370bca7b219964d7ca00c41a7d23e5f670a46597bde86df467f57e9",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "a487b816552e21ce6b53e4d6b18c944853fc8db564690257aa67c24bffb400bf",
+    "quote_as_of": "2026-07-13T19:29:01Z",
+    "source_as_of": "2026-07-13"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-22T00:47:32Z",
+    "classified_run_id": "29879427185",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XLEX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XLEX holds LKG because Yahoo source date 2026-07-13 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-13"
   },
   "ticker": "XLEX",
-  "updated_at": "2026-07-14T00:11:54Z"
+  "updated_at": "2026-07-22T00:47:32Z"
 }
