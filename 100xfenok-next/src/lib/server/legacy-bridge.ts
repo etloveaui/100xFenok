@@ -1,7 +1,7 @@
+import { LEGACY_SEGMENT_PATTERN } from "@/lib/admin-legacy-candidates";
 import { publicAssetExists } from "@/lib/server/public-assets";
 
 const LEGACY_PATH_PATTERN = /^[A-Za-z0-9._/-]+$/;
-const LEGACY_SEGMENT_PATTERN = /^[A-Za-z0-9._-]+$/;
 
 type SanitizeLegacyPathOptions = {
   prefixes: string[];
@@ -52,17 +52,9 @@ export function sanitizeLegacyPath(
   return `${normalized}${suffix}`;
 }
 
-export function isSafeSlugSegments(slug: string[]): boolean {
-  return slug.every(
-    (segment) =>
-      !!segment &&
-      !segment.includes("/") &&
-      !segment.includes("\\") &&
-      !segment.includes("..") &&
-      !segment.startsWith(".") &&
-      LEGACY_SEGMENT_PATTERN.test(segment),
-  );
-}
+// Canonical definition lives in the edge-safe module so middleware can apply the
+// identical check without importing anything that reaches `node:fs`.
+export { isSafeSlugSegments } from "@/lib/admin-legacy-candidates";
 
 export async function legacyPublicFileExists(relativePath: string): Promise<boolean> {
   const { pathname } = splitLegacyPathSuffix(relativePath);

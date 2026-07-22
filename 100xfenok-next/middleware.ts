@@ -1,6 +1,10 @@
 import type { NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
+import { ADMIN_LEGACY_HTML_FILES } from "@/generated/static-route-manifest";
+// Pure module on purpose: @/lib/server/legacy-bridge reaches node:fs via
+// publicAssetExists and cannot be imported into the edge bundle.
+import { isSafeSlugSegments, resolveAdminLegacyCandidates } from "@/lib/admin-legacy-candidates";
 import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
@@ -248,6 +252,72 @@ function rateLimitResponse(): NextResponse {
   });
 }
 
+// Concrete /admin routes backed by their own page.tsx. Next resolves these
+// BEFORE [...slug], so they never reach the legacy bridge and six of them have no
+// backing HTML asset at all - including /admin/live, the Mona English surface.
+// A manifest-only test would 404 them. Derived from `find src/app/admin -name
+// page.tsx`; adding an admin page without adding it here 404s that new page.
+const ADMIN_CONCRETE_ROUTES = new Set<string>([
+  "/admin",
+  "/admin/data-lab",
+  "/admin/design-gallery",
+  "/admin/design-lab",
+  "/admin/design-lab/cp-kit",
+  "/admin/live",
+  "/admin/macro-monitor",
+  "/admin/personal",
+  "/admin/personal/travel",
+]);
+
+const ADMIN_LEGACY_ASSET_SET = new Set<string>(ADMIN_LEGACY_HTML_FILES);
+
+function isConcreteAdminRoute(pathname: string): boolean {
+  // trailingSlash: true makes /admin/live/ canonical, so strip it before lookup.
+  return ADMIN_CONCRETE_ROUTES.has(pathname.replace(/\/+$/, "") || "/admin");
+}
+
+function adminLegacyResolves(pathname: string): boolean {
+  // filter(Boolean) matters: "/admin/data-lab/".split("/") yields a trailing ""
+  // segment, which isSafeSlugSegments rejects, which would 404 the canonical form.
+  const slug = pathname.slice("/admin/".length).split("/").filter(Boolean);
+  if (slug.length === 0 || !isSafeSlugSegments(slug)) return false;
+  return resolveAdminLegacyCandidates(slug).some((candidate) => ADMIN_LEGACY_ASSET_SET.has(candidate));
+}
+
+// An /admin path that resolves to nothing must leave with a real 404.
+//
+// The bridge page already calls notFound(), but that status never reaches the
+// wire: streaming commits the status line before the page throws, so the response
+// goes out as 200 carrying the not-found BODY. Measured on production - the reply
+// pairs HTTP 200 with fixHeadersForError's 404-only cache-control, proving the
+// status was 404 internally and was simply too late.
+//
+// Rewriting to /_not-found WITH an explicit status escapes that: middleware.ts in
+// the OpenNext core propagates an explicit rewrite status as rewriteStatusCode,
+// /_not-found is prerendered with initialStatus 404 so the cache interceptor
+// engages for it, and the interceptor gives rewriteStatusCode precedence over the
+// cached status. The interceptor returns a complete buffered result, so there is
+// no early flush to lose the status to.
+//
+// The candidate logic is shared with the page through a pure module - importing
+// it from `legacy-bridge` would drag `node:fs` into the edge bundle - so
+// middleware and page cannot disagree about what resolves.
+function getAdminNotFoundRewrite(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (!isAdminPath(pathname) || isAdminApiPath(pathname)) return null;
+  // Static admin files are owned by the assets layer and the auth gate below;
+  // a missing .html is normalised to its extensionless form first and reaches
+  // this check on the next pass.
+  if (isAdminStaticFilePath(pathname)) return null;
+  if (isConcreteAdminRoute(pathname)) return null;
+  if (adminLegacyResolves(pathname)) return null;
+
+  const targetUrl = request.nextUrl.clone();
+  targetUrl.pathname = "/_not-found";
+  targetUrl.search = "";
+  return NextResponse.rewrite(targetUrl, { status: 404 });
+}
+
 // Serve the canonical trailing-slash form INTERNALLY instead of redirecting to
 // it. A 308 here produced an infinite self-loop in production: the Location that
 // reached the wire was byte-identical to the request path (the appended slash was
@@ -332,6 +402,13 @@ export async function middleware(request: NextRequest) {
 
   if (!(await passesRateLimit(request))) {
     return rateLimitResponse();
+  }
+
+  // Ahead of the canonicaliser: an unresolvable path must 404 rather than be
+  // rewritten into the bridge, which would answer 200 with a not-found body.
+  const adminNotFoundRewrite = getAdminNotFoundRewrite(request);
+  if (adminNotFoundRewrite) {
+    return withNoindexHeader(adminNotFoundRewrite);
   }
 
   const adminTrailingSlashRewrite = getAdminTrailingSlashRewrite(request);

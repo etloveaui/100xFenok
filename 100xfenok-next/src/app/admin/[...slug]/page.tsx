@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { resolveAdminLegacyCandidates } from "@/lib/admin-legacy-candidates";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
 import { publicAssetExists } from "@/lib/server/public-assets";
 
@@ -15,26 +16,12 @@ interface AdminLegacyPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-const legacyAliasBySlug: Record<string, string> = {
-  "ib-helper": "ib/ib-helper/index.html",
-};
-
+// Candidate ORDER is owned by @/lib/admin-legacy-candidates so that this page
+// and the edge middleware cannot drift. Only the existence probe differs: the
+// page asks the filesystem/ASSETS binding, middleware asks the build-time
+// manifest.
 async function resolveLegacyIframeSrc(slug: string[]): Promise<string | null> {
-  const joined = slug.join("/");
-  const alias = legacyAliasBySlug[joined];
-  if (alias) {
-    if (await publicAssetExists(alias)) {
-      return `/${alias}`;
-    }
-  }
-
-  const candidates = joined.endsWith(".html")
-    ? [joined]
-    : [`${joined}.html`, `${joined}/index.html`];
-
-  for (const candidate of candidates) {
-    const relativePath = `admin/${candidate}`.replaceAll("\\", "/");
-
+  for (const relativePath of resolveAdminLegacyCandidates(slug)) {
     if (await publicAssetExists(relativePath)) {
       return `/${relativePath}`;
     }
