@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
+import { registryLaneById } from "./lib/lane-registry.mjs";
 
 const workflow = fs.readFileSync(new URL("../.github/workflows/fetch-fenok-private-options.yml", import.meta.url), "utf8");
 const broadWorkflow = fs.readFileSync(new URL("../.github/workflows/fetch-yf-finance.yml", import.meta.url), "utf8");
@@ -33,5 +34,7 @@ const registryGate = checkWorkflowCommitShardsAgainstRegistry({
 });
 assert.equal(registryGate.ok, true, JSON.stringify(registryGate));
 assert.deepEqual(registryGate.lanes, ["yahoo_private_options"]);
+assert.equal(registryLaneById("yahoo_private_options")?.enforcement, "live",
+  "the targeted Yahoo options lane is live only after its natural scheduled evidence is committed");
 
 console.log("test-fetch-fenok-private-options-workflow: ok");

@@ -320,6 +320,10 @@ const lanes = [
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
     declared_exception: "shares the multi-kind StockAnalysis recovery store; promoted live after natural schedule run 29873027563 committed the complete 8-pair attempt shard",
+    script_sources: [
+      "scripts/fetch-stockanalysis.py",
+      "scripts/emit-stockanalysis-attempt.mjs",
+    ],
   }),
   record({
     id: "stockanalysis_surfaces",
@@ -800,7 +804,7 @@ const lanes = [
     store_kind: "marker",
     lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "yahoo finance targeted options (us_trading_days)" },
-    enforcement: "shadow",
+    enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/yahoo_private_options",
     detection_attempt: attemptShard("yahoo_private_options"),
@@ -814,6 +818,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/yahoo_private_options/index.json",
     kpi_recovery_shape: "general",
+    declared_exception: "promoted live after natural schedule run 29801392365 committed the complete targeted allowlist attempt shard and fresh_primary provider observation",
   }),
   record({
     id: "apewisdom_attention",

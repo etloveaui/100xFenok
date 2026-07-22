@@ -13,6 +13,7 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const manifest = buildLaneCommitManifest(LANE_REGISTRY);
 const UPDATE_MANIFEST_WORKFLOW = ".github/workflows/update-manifest.yml";
 const UPDATE_MANIFEST_CENTRAL_HELPER = "scripts/stage-update-manifest-central.mjs";
+const LANE_STAGE_HELPER = "scripts/stage-lane-manifest.sh";
 const UPDATE_MANIFEST_CENTRAL_DIRECTORIES = [
   "data/computed/market_facts",
   "100xfenok-next/public/data/yf/finance",
@@ -20,14 +21,34 @@ const UPDATE_MANIFEST_CENTRAL_DIRECTORIES = [
   "100xfenok-next/public/data/slickcharts",
 ];
 
-function sourceRepresentsSpec(sourceText, spec) {
-  if (sourceText.includes(spec.path)) return true;
+const ATTEMPT_SHARD_ROOT = "data/admin/data-supply-state/detection-attempts";
+
+function sourceRepresentsDynamicAttemptShard(sourceText, spec) {
+  if (spec.kind !== "file" || !spec.path.startsWith(`${ATTEMPT_SHARD_ROOT}/`) || !spec.path.endsWith(".json")) return false;
+  const laneId = path.posix.basename(spec.path, ".json");
+  return sourceText.includes(`"${laneId}"`)
+    && sourceText.includes(`path.join(REPO_ROOT, "${ATTEMPT_SHARD_ROOT}")`)
+    && sourceText.includes("attemptShardPath: path.join(shardRoot, `${laneId}.json`)");
+}
+
+function sourceRepresentsSpec(sourceTexts, spec) {
+  if (sourceTexts.some((sourceText) => sourceText.includes(spec.path))) return true;
+  if (sourceTexts.some((sourceText) => sourceRepresentsDynamicAttemptShard(sourceText, spec))) return true;
   if (spec.kind !== "glob") return false;
   const directory = path.posix.dirname(spec.path);
   const pattern = path.posix.basename(spec.path);
-  return sourceText.includes(directory)
-    && (sourceText.includes(`-name '${pattern}'`) || sourceText.includes(`-name "${pattern}"`));
+  return sourceTexts.some((sourceText) => sourceText.includes(directory)
+    && (sourceText.includes(`-name '${pattern}'`) || sourceText.includes(`-name "${pattern}"`)));
 }
+
+function workflowAppliesManifestExcludes(workflowText, workflowRel, stageHelperText) {
+  return workflowText.includes("scripts/stage-lane-manifest.sh")
+    && workflowText.includes(`--workflow ${workflowRel}`)
+    && stageHelperText.includes('.workflows[$workflow].exclude[]?')
+    && stageHelperText.includes('git restore --staged -- "$exclude_path"');
+}
+
+const laneStageHelperText = fs.readFileSync(path.join(REPO_ROOT, LANE_STAGE_HELPER), "utf8");
 
 for (const workflowRel of enumerateCommitCapableWorkflows()) {
   const workflowText = fs.readFileSync(path.join(REPO_ROOT, workflowRel), "utf8");
@@ -38,7 +59,8 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
       if (lane.caller_workflows?.[workflowRel] === caller) for (const source of caller.script_sources ?? []) scriptSources.add(source);
     }
   }
-  const sourceText = [workflowText, ...[...scriptSources].map((source) => fs.readFileSync(path.join(REPO_ROOT, source), "utf8"))].join("\n");
+  const sourceTexts = [workflowText, ...[...scriptSources].map((source) => fs.readFileSync(path.join(REPO_ROOT, source), "utf8"))];
+  const sourceText = sourceTexts.join("\n");
   const entry = manifest.workflows[workflowRel];
   for (const [stage, specs] of Object.entries(entry.stages)) {
     if (workflowRel === UPDATE_MANIFEST_WORKFLOW && stage === "always_if_exists") {
@@ -51,12 +73,13 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
     }
     for (const spec of specs) {
       if (spec.kind === "dynamic_set") continue;
-      assert.ok(sourceRepresentsSpec(sourceText, spec), `${workflowRel} ${stage} path is not present in workflow/script source: ${spec.path}`);
+      assert.ok(sourceRepresentsSpec(sourceTexts, spec), `${workflowRel} ${stage} path is not present in workflow/script source: ${spec.path}`);
     }
   }
   for (const spec of entry.exclude) {
     const represented = sourceText.includes(spec.path)
-      || sourceText.includes(path.posix.basename(spec.path));
+      || sourceText.includes(path.posix.basename(spec.path))
+      || workflowAppliesManifestExcludes(workflowText, workflowRel, laneStageHelperText);
     assert.ok(represented, `${workflowRel} exclusion is not present in workflow/script source: ${spec.path}`);
   }
 }

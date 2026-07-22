@@ -441,6 +441,10 @@ function runConfigAndFixtureChecks() {
   assert.equal(stockFinancial.kpi_required, true);
   assert.deepEqual(stockFinancial.producer_members[0].schedule, ["20 21 * * *"]);
   assert.equal(stockFinancial.endpoint_contract.transport, "library");
+  const yahooPrivateOptions = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "yahoo_private_options");
+  assert.equal(yahooPrivateOptions.enforcement, "live");
+  assert.equal(yahooPrivateOptions.kpi_required, true);
+  assert.deepEqual(yahooPrivateOptions.producer_members[0].schedule, ["10 1 * * 2-6"]);
   const benchmarks = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "benchmarks");
   const globalScouter = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "global_scouter");
   const damodaran = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "damodaran");
@@ -495,6 +499,7 @@ function runConfigAndFixtureChecks() {
     "edgar_filings",
     "finra_short_volume",
     "occ_options_volume",
+    "yahoo_private_options",
     "apewisdom_attention",
   ], "only attempt-proven lanes are live");
   assert.equal(treasuryTga.enforcement, "live");

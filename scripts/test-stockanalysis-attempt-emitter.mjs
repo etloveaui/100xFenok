@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   ATTEMPT_SCHEMA,
@@ -22,6 +23,7 @@ import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-
 
 const ATTEMPT_ID = "gh-900-1";
 const OBSERVED_AT = "2026-07-16T09:30:00.000Z";
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function lane(id) {
   return DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === id);
@@ -476,6 +478,7 @@ assert.match(stockanalysisLanePolicy, /detection-attempts\/stockanalysis_stock_f
   const gate = checkWorkflowCommitShardsAgainstRegistry({
     workflowText: `${workflowText}\n${stockanalysisLanePolicy}`,
     workflowRel: ".github/workflows/fetch-stockanalysis.yml",
+    repoRoot: REPO_ROOT,
   });
   assert.deepEqual(gate.missing_in_workflow, [],
     `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
