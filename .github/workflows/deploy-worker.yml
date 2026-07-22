@@ -141,6 +141,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:fenok-data-health-kpi:fixtures
 
+      - name: Verify pipeline alarm guards
+        working-directory: 100xfenok-next
+        run: npm run qa:alarm-state
+
       - name: Run admin live bridge guards
         working-directory: 100xfenok-next
         run: npm run test:live-bridge

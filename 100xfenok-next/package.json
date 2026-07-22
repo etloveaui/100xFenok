@@ -134,7 +134,7 @@
     "qa:lane-registry-projection": "node ../scripts/test-lane-registry-projection.mjs",
     "qa:lane-board": "tsx scripts/check-lane-board-render-contract.tsx",
     "qa:lane-runid": "node scripts/test-generate-lane-runid-map.mjs && npm run qa:lane-board",
-    "qa:alarm-state": "node ../scripts/ops/test-emit-alarm-state.mjs",
+    "qa:alarm-state": "node ../scripts/ops/test-emit-alarm-state.mjs && node ../scripts/test-pipeline-failure-alarm-manifest.mjs",
     "qa:kpi-last-attempt": "node ../scripts/test-kpi-last-attempt.mjs",
     "qa:market-events-freshness": "tsx scripts/check-market-events-freshness.tsx",
     "qa:format-number": "tsx scripts/check-format-number-contract.ts",
