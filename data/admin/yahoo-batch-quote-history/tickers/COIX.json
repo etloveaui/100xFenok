@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 842,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T14:33:53Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/COIX.json",
-    "payload_sha256": "dde2922a558075e37352f26bac9c01693b0f623571a056aa6de7bdda06494f14",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-07-22T23:46:27Z",
+    "history_as_of": "2026-07-22",
+    "path": "data/yf/finance/COIX.json",
+    "payload_sha256": "1953370dfe63357c52fd715f7c40d7d3ed5bb5af9f31e9488bf564d0b4e88c05",
+    "quote_as_of": "2026-07-22T14:56:26Z",
+    "source_as_of": "2026-07-22"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 842,
+    "natural": true,
+    "observed_at": "2026-07-22T23:45:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29965324287",
+    "schedule": "0 22 * * 3",
+    "shard": "3/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T14:33:53Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-22",
+    "observed_at": "2026-07-22T23:45:22Z",
+    "payload_sha256": "3df439dde3b940a27ba0854132b8f68e66bd6869b1f41e6eb2d2023b099e4539",
+    "quote_as_of": "2026-07-22T14:56:26Z",
+    "run_attempt": 1,
+    "run_id": "29965324287",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-22"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-30"
   },
   "ticker": "COIX",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-22T23:45:22Z"
 }

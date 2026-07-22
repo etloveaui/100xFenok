@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 809,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T23:55:13Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CIEI.json",
-    "payload_sha256": "1a39825318ef27ccb2fb3ccbd4a39c3e6f8dfd92512d2bb5d2bacdd08c8ca4bc",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-22T23:46:10Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/yf/finance/CIEI.json",
+    "payload_sha256": "b24af8dc3e4d4baff6b89d6e1b0f09d513b019e8c00f19fe91a7372e9bf1d1fd",
+    "quote_as_of": "2026-06-29T19:00:16Z",
+    "source_as_of": "2026-06-29T19:00:16Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 809,
+    "natural": true,
+    "observed_at": "2026-07-22T23:45:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29965324287",
+    "schedule": "0 22 * * 3",
+    "shard": "3/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T23:55:13Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-22T23:45:22Z",
+    "payload_sha256": "e6fd461b61d3fc096d81c68b39098414c447979ba4455509f7e528d3a212d1a4",
+    "quote_as_of": "2026-06-29T19:00:16Z",
+    "run_attempt": 1,
+    "run_id": "29965324287",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-06-29T19:00:16Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "CIEI",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-22T23:45:22Z"
 }

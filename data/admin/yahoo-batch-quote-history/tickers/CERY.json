@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1089,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:10:28Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CERY.json",
-    "payload_sha256": "21f8739927cdafb5d3aad6b50ee72d590c3a42d467e766d409ce6d70b5a670b9",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-22T23:46:00Z",
+    "history_as_of": "2026-07-22",
+    "path": "data/yf/finance/CERY.json",
+    "payload_sha256": "b10d283d3c2a6e682f2ecffc93ffa578a21bddf99afe2297dd2228d226c91bf4",
+    "quote_as_of": "2026-07-22T19:59:53Z",
+    "source_as_of": "2026-07-22"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1089,
+    "natural": true,
+    "observed_at": "2026-07-22T23:45:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29965324287",
+    "schedule": "0 22 * * 3",
+    "shard": "3/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:10:28Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-22",
+    "observed_at": "2026-07-22T23:45:22Z",
+    "payload_sha256": "f7a2530af1016c007560c6c075cea53b8de23c673f2a11c2feb4e84d4243685b",
+    "quote_as_of": "2026-07-22T19:59:53Z",
+    "run_attempt": 1,
+    "run_id": "29965324287",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-22"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "CERY",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-22T23:45:22Z"
 }

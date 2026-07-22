@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 973,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:20:52Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CJUL.json",
-    "payload_sha256": "5acabf9b5bfb5f42b11748e9d8bd07359f91980a1e9a90a9031ad7e13736ffc7",
-    "quote_as_of": "2026-07-07T16:57:01Z",
-    "source_as_of": "2026-07-07T16:57:01Z"
+    "fetched_at": "2026-07-22T23:46:19Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/yf/finance/CJUL.json",
+    "payload_sha256": "8e1b40cbf04c0d9235b9402ee5c9bd81d2d66987ad482d7a92462889150ec199",
+    "quote_as_of": "2026-07-17T16:31:27Z",
+    "source_as_of": "2026-07-17T16:31:27Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 973,
+    "natural": true,
+    "observed_at": "2026-07-22T23:45:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29965324287",
+    "schedule": "0 22 * * 3",
+    "shard": "3/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:20:52Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-07T16:57:01Z",
     "source_as_of": "2026-07-07T16:57:01Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-21",
+    "observed_at": "2026-07-22T23:45:22Z",
+    "payload_sha256": "e0224a87abacc7ce480fadf569713dfe8f6d99e2c028576b950a6c6ee6f83e40",
+    "quote_as_of": "2026-07-17T16:31:27Z",
+    "run_attempt": 1,
+    "run_id": "29965324287",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17T16:31:27Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-07T16:57:01Z"
   },
   "ticker": "CJUL",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-22T23:45:22Z"
 }

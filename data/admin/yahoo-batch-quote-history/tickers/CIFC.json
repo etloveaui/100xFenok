@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 968,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-08T22:43:34Z",
-    "history_as_of": "2026-07-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CIFC.json",
-    "payload_sha256": "84e03bb24f5d4a2b81d5e7e78145a0c622edb65d8caa9c5911b7c19fa1662179",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-07"
+    "fetched_at": "2026-07-22T23:46:13Z",
+    "history_as_of": "2026-07-22",
+    "path": "data/yf/finance/CIFC.json",
+    "payload_sha256": "8a6c8de273376c714048a6dc8aa87e4787090bfb7e70a292e4502ba46d56c760",
+    "quote_as_of": "2026-07-22T13:43:43Z",
+    "source_as_of": "2026-07-22"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 968,
+    "natural": true,
+    "observed_at": "2026-07-22T23:45:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "29965324287",
+    "schedule": "0 22 * * 3",
+    "shard": "3/6"
   },
   "lkg": {
     "fetched_at": "2026-07-08T22:43:34Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-07-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-22",
+    "observed_at": "2026-07-22T23:45:22Z",
+    "payload_sha256": "636a6b825b93ef8aad73876c03ad20cbe436d59187e07866cfa1d616f7773516",
+    "quote_as_of": "2026-07-22T13:43:43Z",
+    "run_attempt": 1,
+    "run_id": "29965324287",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-22"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-07"
   },
   "ticker": "CIFC",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-22T23:45:22Z"
 }
