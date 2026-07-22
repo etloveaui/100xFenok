@@ -80,6 +80,47 @@ function readJson(p) {
   }
 }
 
+// Everything the alarm actually asserts. `generated_at` and `last_firing` are
+// excluded because they describe the RUN that reported, not the incident.
+const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
+  "schema_version",
+  "status",
+  "open_incident_count",
+  "open_incidents",
+  "watched_workflows",
+  "last_resolved_at",
+]);
+
+function significantAlarmState(state) {
+  if (!state || typeof state !== "object") return null;
+  return JSON.stringify(Object.fromEntries(
+    ALARM_STATE_SIGNIFICANT_KEYS.map((key) => [key, state[key] ?? null]),
+  ));
+}
+
+/**
+ * An unresolved incident is re-reported on every trigger, and each report used to
+ * rewrite `generated_at` and `last_firing` with the reporting run's identity. That
+ * is a real content change, so the workflow committed it every time: 14 commits to
+ * origin/main on 2026-07-22 alone, all carrying the identical incident. Comparing
+ * consecutive commits showed the ONLY deltas were those two fields.
+ *
+ * When nothing the alarm asserts has moved, keep the prior document byte-identical
+ * so git produces no commit at all. Every state transition still writes: a new
+ * incident, a changed streak, a different first-failing run, a workflow entering or
+ * leaving the watch list, and resolution. `last_firing` then means "the firing that
+ * established the current state", which is more useful than "the last time we
+ * repeated ourselves".
+ *
+ * This deliberately does NOT touch the alarm's firing path. The job still exits
+ * non-zero and the OPS issue is still the primary channel; only the redundant
+ * commit is suppressed.
+ */
+export function alarmStateUnchanged(prior, next) {
+  const a = significantAlarmState(prior);
+  return a !== null && a === significantAlarmState(next);
+}
+
 function main() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(__dirname, "..", "..");
@@ -91,12 +132,17 @@ function main() {
   const prior = readJson(outPath);
   const state = buildAlarmState({ health, prior, env: process.env, now: new Date() });
 
-  const json = `${JSON.stringify(state, null, 2)}\n`;
+  const unchanged = alarmStateUnchanged(prior, state);
+  const emitted = unchanged ? prior : state;
+  const json = `${JSON.stringify(emitted, null, 2)}\n`;
   for (const target of [outPath, publicOutPath]) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, json);
   }
-  console.log(`alarm-state: status=${state.status} open=${state.open_incident_count} -> data/admin/alarm-state.json (+ public mirror)`);
+  const suffix = unchanged
+    ? " (unchanged incident: prior document preserved, no commit expected)"
+    : "";
+  console.log(`alarm-state: status=${emitted.status} open=${emitted.open_incident_count} -> data/admin/alarm-state.json (+ public mirror)${suffix}`);
 }
 
 const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

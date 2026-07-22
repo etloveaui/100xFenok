@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-import { buildAlarmState, ALARM_STATE_SCHEMA } from "./emit-alarm-state.mjs";
+import { buildAlarmState, alarmStateUnchanged, ALARM_STATE_SCHEMA } from "./emit-alarm-state.mjs";
 
 const ENV = {
   GITHUB_RUN_ID: "123456",
@@ -70,6 +70,85 @@ for (const state of [firing, resolved, unknown]) {
   for (const marker of FORBIDDEN) {
     assert.ok(!json.includes(marker), `alarm state leaked forbidden marker: ${marker}`);
   }
+}
+
+// An unresolved incident is re-reported on every trigger. Each report used to
+// rewrite generated_at and last_firing with the reporting run's identity, which
+// is a real content change, so the workflow committed it every time - 14 commits
+// to origin/main on 2026-07-22 carrying an identical incident. Suppression must
+// never become blindness, so every transition below is asserted to still write.
+{
+  const openNow = buildAlarmState({ health: firingHealth, prior: null, env: ENV, now: NOW });
+
+  // Same incident, later run: nothing the alarm asserts has moved.
+  const repeat = buildAlarmState({
+    health: firingHealth,
+    prior: openNow,
+    env: { ...ENV, GITHUB_RUN_ID: "999999", GITHUB_EVENT_NAME: "schedule" },
+    now: new Date("2026-07-19T12:30:00Z"),
+  });
+  assert.ok(
+    alarmStateUnchanged(openNow, repeat),
+    "a re-report of an identical incident must be treated as unchanged",
+  );
+
+  // --- transitions that MUST still be written ---
+  const worse = buildAlarmState({
+    health: {
+      ...firingHealth,
+      workflows: firingHealth.workflows.map((w) => (
+        w.file === "update-manifest.yml" ? { ...w, streak: 4 } : w
+      )),
+    },
+    prior: openNow,
+    env: ENV,
+    now: NOW,
+  });
+  assert.ok(!alarmStateUnchanged(openNow, worse), "a growing streak must be written");
+
+  const secondWorkflow = buildAlarmState({
+    health: {
+      ...firingHealth,
+      workflows: firingHealth.workflows.map((w) => (
+        w.file === "deploy-worker.yml"
+          ? { ...w, status: "alarm", streak: 2, alarm: { firstFailingRunId: 555, firstFailingRunUrl: "https://example.invalid/555" } }
+          : w
+      )),
+    },
+    prior: openNow,
+    env: ENV,
+    now: NOW,
+  });
+  assert.ok(!alarmStateUnchanged(openNow, secondWorkflow), "a second alarming workflow must be written");
+
+  const differentFirstFailure = buildAlarmState({
+    health: {
+      ...firingHealth,
+      workflows: firingHealth.workflows.map((w) => (
+        w.file === "update-manifest.yml"
+          ? { ...w, alarm: { firstFailingRunId: 4242, firstFailingRunUrl: "https://example.invalid/4242" } }
+          : w
+      )),
+    },
+    prior: openNow,
+    env: ENV,
+    now: NOW,
+  });
+  assert.ok(!alarmStateUnchanged(openNow, differentFirstFailure), "a different first-failing run must be written");
+
+  const resolved = buildAlarmState({ health: quietHealth, prior: openNow, env: ENV, now: new Date("2026-07-19T13:00:00Z") });
+  assert.ok(!alarmStateUnchanged(openNow, resolved), "resolution must be written");
+
+  const watchListChanged = buildAlarmState({
+    health: { ...firingHealth, workflows: [...firingHealth.workflows, { file: "fenok-edge-daily.yml", label: "Fenok Edge Daily Data", status: "ok" }] },
+    prior: openNow,
+    env: ENV,
+    now: NOW,
+  });
+  assert.ok(!alarmStateUnchanged(openNow, watchListChanged), "a change to the watched-workflow set must be written");
+
+  // A first-ever emission has no prior and must always be written.
+  assert.ok(!alarmStateUnchanged(null, openNow), "a first emission must be written");
 }
 
 console.log(JSON.stringify({ ok: true, suite: "emit-alarm-state contract" }, null, 2));
