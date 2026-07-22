@@ -460,12 +460,21 @@ function assertAdminRateLimitPolicy() {
     middleware.includes('bindingName: "RL_ADMIN"'),
     "middleware must route admin paths through RL_ADMIN",
   );
-  const trailingSlashRedirect = middleware.slice(
-    middleware.indexOf("function getAdminTrailingSlashRedirect"),
+  // The canonicaliser is a rewrite, not a redirect, since 08621574d5: a 308 here
+  // emitted a Location identical to the request path and looped forever. The
+  // guard below is unchanged in intent — admin API paths must still be excluded
+  // from canonicalisation before an auth POST/DELETE — only the anchor moved.
+  const trailingSlashAnchor = "function getAdminTrailingSlashRewrite";
+  assert(
+    middleware.includes(trailingSlashAnchor),
+    "middleware must keep the admin trailing-slash canonicaliser under a known name",
+  );
+  const trailingSlashCanonicaliser = middleware.slice(
+    middleware.indexOf(trailingSlashAnchor),
     middleware.indexOf("function getAdminGateRedirect"),
   );
   assert(
-    trailingSlashRedirect.includes("isAdminApiPath(pathname)"),
+    trailingSlashCanonicaliser.includes("isAdminApiPath(pathname)"),
     "admin API routes must not be redirected to trailing-slash paths before auth POST/DELETE",
   );
 
