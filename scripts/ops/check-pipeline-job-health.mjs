@@ -11,6 +11,7 @@ const ALERT_EXIT = 2;
 const WATCHED_WORKFLOWS = [
   { file: "update-manifest.yml", label: "Update Manifest" },
   { file: "deploy-worker.yml", label: "Deploy Worker" },
+  { file: "fenok-edge-daily.yml", label: "Fenok Edge Daily Data" },
 ];
 
 const ISSUE_TITLE = "100xFenok pipeline job failure alarm";

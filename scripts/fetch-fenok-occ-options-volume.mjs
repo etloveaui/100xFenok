@@ -636,6 +636,51 @@ function reduceOccEndpointResults(results) {
   return worstRequestResult(actionable);
 }
 
+// A corrupt-classified OCC failure aborts the whole edge-daily workflow with a
+// bare reason token. On 2026-07-21 and 07-22 batch 3/5 died on `decode_error`
+// having printed nothing at all, so no one could tell which endpoint broke.
+// This emits failure IDENTITY only — never provider bodies, because this
+// repository is public and OCC raw rows are private.
+const OCC_FAILURE_DIAGNOSTIC_KEYS = [
+  "ticker", "symbol", "side", "endpoint", "endpointKind", "url_kind",
+  "status", "reason", "expectedUnavailable", "expectedKind",
+  "statusCode", "status_code", "http_status", "decode", "payload",
+  "returned", "observed_at", "exceptionKind",
+];
+const OCC_FAILURE_DIAGNOSTIC_LIMIT = 8;
+
+function redactOccEndpointRow(row, depth = 0) {
+  if (!row || typeof row !== "object") return { shape: typeof row };
+  const out = {};
+  for (const key of OCC_FAILURE_DIAGNOSTIC_KEYS) {
+    if (!(key in row)) continue;
+    const value = row[key];
+    if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+      out[key] = typeof value === "string" ? value.slice(0, 120) : value;
+    } else if (typeof value === "object" && depth < 2) {
+      out[key] = redactOccEndpointRow(value, depth + 1);
+    }
+  }
+  return out;
+}
+
+function reportOccCorruptFailure({ reason, endpointResults, batchIndex = null }) {
+  const rows = Array.isArray(endpointResults) ? endpointResults : [];
+  const offenders = rows.filter((row) => row?.status !== "ready");
+  console.error(
+    `::error::OCC corrupt failure reason=${reason} batch_index=${batchIndex ?? "unknown"}`
+    + ` endpoint_rows=${rows.length} non_ready_rows=${offenders.length}`,
+  );
+  for (const row of offenders.slice(0, OCC_FAILURE_DIAGNOSTIC_LIMIT)) {
+    console.error(`::error::OCC failing endpoint ${JSON.stringify(redactOccEndpointRow(row))}`);
+  }
+  if (offenders.length > OCC_FAILURE_DIAGNOSTIC_LIMIT) {
+    console.error(
+      `::error::OCC failing endpoint list truncated: ${offenders.length - OCC_FAILURE_DIAGNOSTIC_LIMIT} more`,
+    );
+  }
+}
+
 function thrownEndpointResult(error) {
   const exceptionKind = transportError(error) ? "transport" : "unexpected";
   return attemptResult(
@@ -1746,6 +1791,7 @@ async function build(args, {
           })
           : null;
         if (lkgRecovery?.corrupt) {
+          reportOccCorruptFailure({ reason: lkgRecovery.reason, endpointResults });
           throw new Error(`OCC LKG failure is corrupt: ${lkgRecovery.reason}`);
         }
         let wrote = false;
@@ -1827,6 +1873,11 @@ async function build(args, {
         })
         : null;
       if (lkgRecovery?.corrupt) {
+        reportOccCorruptFailure({
+          reason: lkgRecovery.reason,
+          endpointResults,
+          batchIndex: args.batchIndex,
+        });
         throw new Error(`OCC LKG failure is corrupt: ${lkgRecovery.reason}`);
       }
       if (!args.noWrite) {

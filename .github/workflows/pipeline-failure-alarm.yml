@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '23 * * * *'
   workflow_run:
-    workflows: ['Update Manifest', 'Deploy Worker (Cloudflare)']
+    workflows: ['Update Manifest', 'Deploy Worker (Cloudflare)', 'Fenok Edge Daily Data']
     types: [completed]
   workflow_dispatch:
 

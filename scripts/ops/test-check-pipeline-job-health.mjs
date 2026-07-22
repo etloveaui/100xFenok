@@ -125,15 +125,20 @@ const K = (id) => ({ id, conclusion: "skipped", html_url: `https://gh/run/${id}`
     path.join(repoRoot, ".github", "workflows", "deploy-worker.yml"),
     "utf8",
   );
+  const edgeDailyWorkflow = fs.readFileSync(
+    path.join(repoRoot, ".github", "workflows", "fenok-edge-daily.yml"),
+    "utf8",
+  );
   assert.match(workflow, /cron: '23 \* \* \* \*'/, "hourly schedule at minute 23");
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(
     workflow,
-    /workflow_run:\s*\n\s+workflows:\s*\['Update Manifest', 'Deploy Worker \(Cloudflare\)'\]\s*\n\s+types:\s*\[completed\]/,
-    "completed runs from both watched publisher workflows trigger the alarm",
+    /workflow_run:\s*\n\s+workflows:\s*\['Update Manifest', 'Deploy Worker \(Cloudflare\)', 'Fenok Edge Daily Data'\]\s*\n\s+types:\s*\[completed\]/,
+    "completed runs from every watched publisher workflow trigger the alarm",
   );
   assert.match(updateManifestWorkflow, /^name: Update Manifest$/m, "workflow_run display name stays exact");
   assert.match(deployWorkerWorkflow, /^name: Deploy Worker \(Cloudflare\)$/m, "workflow_run display name stays exact");
+  assert.match(edgeDailyWorkflow, /^name: Fenok Edge Daily Data$/m, "workflow_run display name stays exact");
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /actions: read/);
   assert.match(workflow, /group: pipeline-failure-alarm/, "alarm runs share one serialized concurrency group");
