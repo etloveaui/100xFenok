@@ -1839,12 +1839,49 @@ function workflowCheck(file, token) {
   return readText(file).includes(token);
 }
 
+function packageScript(scriptName) {
+  try {
+    const scripts = JSON.parse(readText("100xfenok-next/package.json")).scripts;
+    return typeof scripts?.[scriptName] === "string" ? scripts[scriptName] : "";
+  } catch {
+    return "";
+  }
+}
+
+function packageScriptCheck(scriptName, token) {
+  return packageScript(scriptName).includes(token);
+}
+
+function packageScriptOrderCheck(scriptName, tokens) {
+  const body = packageScript(scriptName);
+  let cursor = 0;
+  for (const token of tokens) {
+    const index = body.indexOf(token, cursor);
+    if (index < 0) return false;
+    cursor = index + token.length;
+  }
+  return true;
+}
+
+function deployWorkerKpiGateWired() {
+  return workflowCheck(".github/workflows/deploy-worker.yml", "        run: npm run cf:build\n")
+    && packageScriptCheck("cf:build", "npm run cf:build:steps")
+    && packageScriptCheck("sync-static", "npm run reconcile:derived")
+    && packageScriptCheck("reconcile:derived", "npm run build:fenok-data-health-kpi")
+    && packageScriptCheck("reconcile:verify", "npm run qa:fenok-data-health-kpi:artifact")
+    && packageScriptOrderCheck("cf:build:steps", [
+      "npm run sync-static",
+      "npm run reconcile:verify",
+      "opennextjs-cloudflare build",
+    ]);
+}
+
 function buildAutomationLane() {
   return lane("automation_contract", "Daily automation and deploy gates", [
     check("sync_static_builds_kpi", "sync-static KPI build", workflowCheck("100xfenok-next/package.json", "build:fenok-data-health-kpi"), "package script wiring", { platform_blocking: true }),
     check("sync_static_checks_kpi", "sync-static KPI check", workflowCheck("100xfenok-next/package.json", "qa:fenok-data-health-kpi"), "package gate wiring", { platform_blocking: true }),
     check("update_manifest_rebuilds_kpi", "manifest reconciliation", workflowCheck(".github/workflows/update-manifest.yml", "build:fenok-data-health-kpi"), "update-manifest rebuild path", { platform_blocking: true }),
-    check("deploy_worker_checks_kpi", "Worker deploy gate", workflowCheck(".github/workflows/deploy-worker.yml", "qa:fenok-data-health-kpi"), "deploy prebuild gate", { platform_blocking: true }),
+    check("deploy_worker_checks_kpi", "Worker deploy gate", deployWorkerKpiGateWired(), "deploy build/reconcile/verify wiring", { platform_blocking: true }),
     check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract", { platform_blocking: true }),
     check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring", { platform_blocking: true }),
     check("phase_b_pending_max_age", "Phase B pending age enforcement", workflowCheck("100xfenok-next/scripts/check-fenok-data-health-kpi.mjs", "PENDING_MAX_AGE_DAYS") && workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "14-day pending exemption expiry is active under strict", { platform_blocking: true }),

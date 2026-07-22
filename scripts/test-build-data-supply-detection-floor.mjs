@@ -52,6 +52,7 @@ const EXPECTED_PATH = path.join(FIXTURE_DIR, "cases.expected.json");
 const ADMIN_REPORT = path.join(REPO_ROOT, "data", "admin", REPORT_BASENAME);
 const DEPLOY_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "deploy-worker.yml");
 const UPDATE_MANIFEST_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "update-manifest.yml");
+const APP_PACKAGE = path.join(REPO_ROOT, "100xfenok-next", "package.json");
 const TEST_PREFIX = "fenok-dfloor-test-";
 const PROTECTED_RELATIVE_PATHS = [
   ".github/workflows/deploy-worker.yml",
@@ -1781,12 +1782,13 @@ function runPrivacyAndProtectedChecks(report) {
 function runWorkflowBridgeChecks() {
   const workflow = fs.readFileSync(DEPLOY_WORKFLOW, "utf8");
   const updateWorkflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW, "utf8");
+  const packageScripts = JSON.parse(fs.readFileSync(APP_PACKAGE, "utf8")).scripts;
   const stepName = "      - name: Build data supply detection floor\n";
   const stepStart = workflow.indexOf(stepName);
-  const reconcileStart = workflow.indexOf("      - name: Reconcile derived data\n");
+  const buildStart = workflow.indexOf("      - name: Build (OpenNext Cloudflare)\n");
   assert.ok(stepStart >= 0, "deploy workflow runs the detection floor");
-  assert.ok(reconcileStart > stepStart, "detection floor is installed before KPI reconciliation");
-  const step = workflow.slice(stepStart, reconcileStart);
+  assert.ok(buildStart > stepStart, "detection floor is installed before the Cloudflare build reconciliation");
+  const step = workflow.slice(stepStart, buildStart);
   const requiredTokens = [
     "mktemp -d \"/tmp/fenok-data-supply-detection-floor-",
     "trap 'rm -rf \"$output_root\"' EXIT",
@@ -1803,6 +1805,57 @@ function runWorkflowBridgeChecks() {
   }
   assert.equal(step.includes("--output-root \"$repo_root/data"), false, "builder never writes under repo data");
   assert.equal(updateWorkflow.split("--output-root \"$repo_root/data").length - 1, 0, "update-manifest builder never writes under repo data");
+
+  assert.equal(
+    workflow.includes("      - name: Reconcile derived data\n"),
+    false,
+    "deploy workflow must not repeat reconciliation before cf:build",
+  );
+  assert.equal(
+    workflow.includes("      - name: Verify derived data\n"),
+    false,
+    "deploy workflow must not repeat derived verification before cf:build",
+  );
+  assert.equal(
+    workflow.includes("      - name: Verify data health KPI contract\n"),
+    false,
+    "deploy workflow must not verify the stale pre-reconciliation KPI artifact",
+  );
+  const buildEnd = workflow.indexOf("      - name: Verify Worker bundle budget\n", buildStart);
+  assert.ok(buildEnd > buildStart, "Cloudflare build step has a stable following boundary");
+  assert.match(
+    workflow.slice(buildStart, buildEnd),
+    /(?:^|\n)        run: npm run cf:build(?:\n|$)/,
+    "deploy workflow delegates the build to cf:build",
+  );
+  assert.match(
+    packageScripts["cf:build"],
+    /(?:^| )npm run cf:build:steps(?: |$)/,
+    "cf:build delegates to the guard-frozen cf:build:steps chain",
+  );
+  const publicBuildIndex = packageScripts["sync-static"].indexOf("npm run build:data-supply-public");
+  const derivedIndex = packageScripts["sync-static"].indexOf("npm run reconcile:derived");
+  assert.ok(
+    publicBuildIndex >= 0 && derivedIndex > publicBuildIndex,
+    "sync-static reconciles derived data after materializing data-supply inputs",
+  );
+  assert.match(
+    packageScripts["reconcile:derived"],
+    /(?:^|&& )npm run build:fenok-data-health-kpi(?: &&|$)/,
+    "derived reconciliation rebuilds the KPI from the fresh detection floor",
+  );
+  assert.match(
+    packageScripts["reconcile:verify"],
+    /(?:^|&& )npm run qa:fenok-data-health-kpi:artifact(?: &&|$)/,
+    "derived verification retains the strict KPI artifact gate",
+  );
+  const syncIndex = packageScripts["cf:build:steps"].indexOf("npm run sync-static");
+  const verifyIndex = packageScripts["cf:build:steps"].indexOf("npm run reconcile:verify");
+  const bundleIndex = packageScripts["cf:build:steps"].indexOf("opennextjs-cloudflare build");
+  assert.ok(
+    syncIndex >= 0 && verifyIndex > syncIndex && bundleIndex > verifyIndex,
+    "cf:build reconciles and verifies derived data before bundling",
+  );
 
   const initialBridgeStart = updateWorkflow.indexOf(stepName);
   const initialKpiStart = updateWorkflow.indexOf("      - name: Build data health KPI\n");

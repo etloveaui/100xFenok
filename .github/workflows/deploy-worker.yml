@@ -88,18 +88,8 @@ jobs:
           cmp -s "$report_path" "$installed_path"
           node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
 
-      - name: Reconcile derived data
-        working-directory: 100xfenok-next
-        run: npm run reconcile:derived
-
-      - name: Verify derived data
-        working-directory: 100xfenok-next
-        run: npm run reconcile:verify
-
-      - name: Verify data health KPI contract
-        working-directory: 100xfenok-next
-        run: npm run qa:fenok-data-health-kpi:artifact
-
+      # cf:build rebuilds derived data from the freshly installed detection
+      # floor, then verifies the KPI artifact before the OpenNext bundler.
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build
