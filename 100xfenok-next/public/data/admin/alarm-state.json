@@ -1,31 +1,206 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-22T08:30:32.025Z",
-  "status": "clear",
-  "open_incident_count": 0,
-  "open_incidents": [],
+  "generated_at": "2026-07-22T10:54:53.781Z",
+  "status": "open",
+  "open_incident_count": 2,
+  "open_incidents": [
+    {
+      "workflow": "build-stocks-analyzer.yml",
+      "label": "Build Stocks Analyzer",
+      "streak": 2,
+      "first_failing_run_id": 29815219390,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29815219390"
+    },
+    {
+      "workflow": "slickcharts-history.yml",
+      "label": "SlickCharts History",
+      "streak": 2,
+      "first_failing_run_id": 29682788928,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29682788928"
+    }
+  ],
   "watched_workflows": [
     {
-      "file": "update-manifest.yml",
-      "label": "Update Manifest"
+      "file": "build-stocks-analyzer.yml",
+      "label": "Build Stocks Analyzer",
+      "event": null
     },
     {
       "file": "deploy-worker.yml",
-      "label": "Deploy Worker"
+      "label": "Deploy Worker (Cloudflare)",
+      "event": null
     },
     {
       "file": "fenok-edge-daily.yml",
-      "label": "Fenok Edge Daily Data"
+      "label": "Fenok Edge Daily Data",
+      "event": null
+    },
+    {
+      "file": "fenok-edge-krx-daily.yml",
+      "label": "Fenok Edge KRX Daily Data",
+      "event": null
+    },
+    {
+      "file": "fetch-damodaran-shadow.yml",
+      "label": "Fetch Damodaran Data",
+      "event": null
+    },
+    {
+      "file": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
+      "event": null
+    },
+    {
+      "file": "fetch-edgar-filings.yml",
+      "label": "Fetch EDGAR Filing Timeline",
+      "event": null
+    },
+    {
+      "file": "fetch-fdic.yml",
+      "label": "Fetch FDIC Tier1 Data",
+      "event": null
+    },
+    {
+      "file": "fetch-fenok-apewisdom.yml",
+      "label": "Fetch Fenok ApeWisdom Attention Proxy",
+      "event": null
+    },
+    {
+      "file": "fetch-fenok-news-tone.yml",
+      "label": "Fetch Fenok GDELT News Tone Proxy",
+      "event": null
+    },
+    {
+      "file": "fetch-fenok-private-options.yml",
+      "label": "Fetch Fenok Private Options Availability",
+      "event": null
+    },
+    {
+      "file": "fetch-fred-banking.yml",
+      "label": "Fetch FRED Banking Data",
+      "event": null
+    },
+    {
+      "file": "fetch-fred-macro.yml",
+      "label": "Fetch FRED Macro Data",
+      "event": null
+    },
+    {
+      "file": "fetch-fred-yardeni.yml",
+      "label": "Fetch FRED Yardeni Data",
+      "event": null
+    },
+    {
+      "file": "fetch-nasdaq-giw-sox.yml",
+      "label": "Fetch Nasdaq GIW SOX Constituents",
+      "event": null
+    },
+    {
+      "file": "fetch-oecd-cli.yml",
+      "label": "Fetch OECD CLI Shadow",
+      "event": null
+    },
+    {
+      "file": "fetch-sentiment.yml",
+      "label": "Fetch Sentiment Data",
+      "event": null
+    },
+    {
+      "file": "fetch-stockanalysis.yml",
+      "label": "Fetch StockAnalysis Data",
+      "event": null
+    },
+    {
+      "file": "fetch-treasury-tga.yml",
+      "label": "Fetch Treasury TGA Data",
+      "event": null
+    },
+    {
+      "file": "fetch-us-indices-daily.yml",
+      "label": "Fetch US Index Daily Close Shadow",
+      "event": null
+    },
+    {
+      "file": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "event": null
+    },
+    {
+      "file": "fetch-yf-finance.yml",
+      "label": "Fetch YF Finance Data",
+      "event": null
+    },
+    {
+      "file": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "event": null
+    },
+    {
+      "file": "slickcharts-daily.yml",
+      "label": "SlickCharts Daily",
+      "event": null
+    },
+    {
+      "file": "slickcharts-history.yml",
+      "label": "SlickCharts History",
+      "event": null
+    },
+    {
+      "file": "slickcharts-monthly.yml",
+      "label": "SlickCharts Monthly",
+      "event": null
+    },
+    {
+      "file": "slickcharts-symbols.yml",
+      "label": "SlickCharts Symbols",
+      "event": null
+    },
+    {
+      "file": "slickcharts-weekly.yml",
+      "label": "SlickCharts Weekly",
+      "event": null
+    },
+    {
+      "file": "update-manifest.yml",
+      "label": "Update Manifest",
+      "event": null
+    },
+    {
+      "file": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "event": "push"
+    },
+    {
+      "file": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "event": null
     }
   ],
-  "unknown_workflows": [],
+  "excluded_workflows": [
+    {
+      "file": "pipeline-failure-alarm.yml",
+      "label": "Pipeline Failure Alarm",
+      "reason": "self-monitoring would create a recursive alarm loop"
+    }
+  ],
+  "unknown_workflows": [
+    {
+      "workflow": "fetch-damodaran-shadow.yml",
+      "status": "unknown"
+    },
+    {
+      "workflow": "fetch-oecd-cli.yml",
+      "status": "unknown"
+    }
+  ],
   "last_firing": {
-    "run_id": "29899610491",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29899610491",
-    "observed_at": "2026-07-22T07:17:16.871Z",
+    "run_id": "29913651117",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29913651117",
+    "observed_at": "2026-07-22T10:54:53.781Z",
     "event": "workflow_run",
     "workflows": [
-      "fenok-edge-daily.yml"
+      "build-stocks-analyzer.yml",
+      "slickcharts-history.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
