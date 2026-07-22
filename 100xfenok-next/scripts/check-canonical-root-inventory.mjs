@@ -21,12 +21,29 @@ const RETIRED_LEGACY_FILES = [
   path.join(appRoot, "public", "admin", "data-lab", "index-legacy.html"),
 ];
 
+// Orphaned Design Lab / Valuation Lab assets: no runtime, QA, manifest, or
+// in-surface consumer reached them. The surrounding surfaces are KEPT, so these
+// are guarded file-by-file rather than by directory.
+const RETIRED_LEGACY_ASSETS = [
+  path.join(repoRoot, "admin", "design-lab", "main", ".qa-main-v17.8-phase2.js"),
+  path.join(appRoot, "public", "admin", "design-lab", "main", ".qa-main-v17.8-phase2.js"),
+  path.join(repoRoot, "admin", "valuation-lab", "app", "renderer.js"),
+  path.join(appRoot, "public", "admin", "valuation-lab", "app", "renderer.js"),
+  path.join(repoRoot, "admin", "valuation-lab", "app", "state-manager.js"),
+  path.join(appRoot, "public", "admin", "valuation-lab", "app", "state-manager.js"),
+];
+
 // Retired admin surfaces. Source and public mirror are guarded together because
 // sync-static copies ../admin into public, so guarding only one side is not
 // durable. Any path under these roots is a reintroduction.
 const RETIRED_LEGACY_DIRS = [
   path.join(repoRoot, "admin", "stark-lab"),
   path.join(appRoot, "public", "admin", "stark-lab"),
+  // design-lab/system was an unreachable island: its own index.html was the
+  // only linker of the nine variants, and nothing linked to that index. The
+  // whole directory retires, so guard it as a directory.
+  path.join(repoRoot, "admin", "design-lab", "system"),
+  path.join(appRoot, "public", "admin", "design-lab", "system"),
 ];
 
 const TEXT_EXTENSIONS = new Set([
@@ -1333,6 +1350,11 @@ function main() {
   for (const retiredDir of RETIRED_LEGACY_DIRS) {
     if (exists(retiredDir)) {
       errors.push(`retired admin surface was reintroduced: ${rel(retiredDir)}`);
+    }
+  }
+  for (const retiredAsset of RETIRED_LEGACY_ASSETS) {
+    if (exists(retiredAsset)) {
+      errors.push(`retired orphan admin asset was reintroduced: ${rel(retiredAsset)}`);
     }
   }
   if (appRoutes.length < 20) errors.push(`app route inventory unexpectedly small: ${appRoutes.length}`);
