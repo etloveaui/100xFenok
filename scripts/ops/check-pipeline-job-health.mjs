@@ -1,20 +1,143 @@
 import fs from "node:fs";
-import { pathToFileURL } from "node:url";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const GITHUB_API = "https://api.github.com";
 const RUNS_PER_PAGE = 15;
 const ALARM_STREAK_THRESHOLD = 2;
 const ALERT_EXIT = 2;
 
-// Publishing jobs whose consecutive failures block the deploy pipeline.
-// Extending coverage is a one-line edit here.
-const WATCHED_WORKFLOWS = [
-  { file: "update-manifest.yml", label: "Update Manifest" },
-  { file: "deploy-worker.yml", label: "Deploy Worker" },
-  { file: "fenok-edge-daily.yml", label: "Fenok Edge Daily Data" },
-];
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const WORKFLOWS_DIR = path.join(REPO_ROOT, ".github", "workflows");
+
+// Every exception is a declared policy entry, not an invisible parser escape.
+// Validation below fails closed if an exclusion stops being scheduled or if an
+// inclusion becomes scheduled (and therefore no longer needs special policy).
+export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({
+  "pipeline-failure-alarm.yml": "self-monitoring would create a recursive alarm loop",
+});
+
+export const NON_SCHEDULED_WORKFLOW_INCLUSIONS = Object.freeze({
+  "validate-workflows.yml": Object.freeze({
+    reason: "critical workflow syntax gate must page despite having no schedule",
+    event: "push",
+  }),
+});
 
 const ISSUE_TITLE = "100xFenok pipeline job failure alarm";
+
+function unquoteYamlScalar(value) {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function workflowMetadata(file, source) {
+  const nameMatch = source.match(/^name:\s*(.+?)\s*$/m);
+  if (!nameMatch) throw new Error(`${file}: top-level name is required`);
+
+  const lines = source.split(/\r?\n/);
+  const onIndex = lines.findIndex((line) => /^(?:on|["']on["']):(?:\s*.*)?$/.test(line));
+  if (onIndex === -1) throw new Error(`${file}: top-level on trigger is required`);
+
+  const inlineOn = lines[onIndex].replace(/^(?:on|["']on["']):\s*/, "");
+  if (/^\*/.test(inlineOn)) {
+    throw new Error(`${file}: aliased top-level on trigger is unsupported`);
+  }
+  let scheduled = /(?:^|[\s\[,{])["']?schedule["']?(?:\s*[:,}\]]|$)/.test(inlineOn);
+  const triggerKeys = [];
+  for (let index = onIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (/^[^\s#][^:]*:/.test(line)) break;
+    const keyMatch = line.match(/^(\s+)(?:([A-Za-z_][\w-]*)|["']([^"']+)["']):/);
+    if (keyMatch) {
+      triggerKeys.push({ indent: keyMatch[1].length, key: keyMatch[2] ?? keyMatch[3] });
+    }
+  }
+  if (!scheduled && triggerKeys.length > 0) {
+    const triggerIndent = Math.min(...triggerKeys.map((row) => row.indent));
+    scheduled = triggerKeys.some((row) => row.indent === triggerIndent && row.key === "schedule");
+  }
+
+  return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled };
+}
+
+function validateReason(kind, file, reason) {
+  if (typeof reason !== "string" || reason.trim() === "") {
+    throw new Error(`${kind} ${file}: reason must be a non-empty string`);
+  }
+}
+
+function normalizeInclusion(file, entry) {
+  const config = typeof entry === "string" ? { reason: entry } : entry;
+  if (!config || typeof config !== "object") {
+    throw new Error(`non-scheduled inclusion ${file}: policy must be a reason string or object`);
+  }
+  validateReason("non-scheduled inclusion", file, config.reason);
+  if (config.event !== undefined && (typeof config.event !== "string" || config.event.trim() === "")) {
+    throw new Error(`non-scheduled inclusion ${file}: event must be a non-empty string`);
+  }
+  return { reason: config.reason.trim(), event: config.event?.trim() ?? null };
+}
+
+/**
+ * Derive the alarm watch policy from the workflow directory. All scheduled
+ * workflows are watched automatically unless they have a validated, explained
+ * exclusion. Critical non-scheduled gates must be declared individually.
+ */
+export function deriveWorkflowWatchPolicy({
+  workflowsDir = WORKFLOWS_DIR,
+  scheduledExclusions = SCHEDULED_WORKFLOW_EXCLUSIONS,
+  nonScheduledInclusions = NON_SCHEDULED_WORKFLOW_INCLUSIONS,
+  } = {}) {
+  const rows = fs.readdirSync(workflowsDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name))
+    .map((entry) => workflowMetadata(
+      entry.name,
+      fs.readFileSync(path.join(workflowsDir, entry.name), "utf8"),
+    ));
+  const byFile = new Map(rows.map((row) => [row.file, row]));
+  const inclusionConfigs = new Map(
+    Object.entries(nonScheduledInclusions).map(([file, entry]) => [file, normalizeInclusion(file, entry)]),
+  );
+
+  for (const [file, reason] of Object.entries(scheduledExclusions)) {
+    validateReason("scheduled exclusion", file, reason);
+    const row = byFile.get(file);
+    if (!row?.scheduled) {
+      throw new Error(`${file}: exclusion must reference a scheduled workflow`);
+    }
+  }
+  for (const [file] of inclusionConfigs) {
+    const row = byFile.get(file);
+    if (!row) throw new Error(`${file}: inclusion must reference an existing workflow`);
+    if (row.scheduled) {
+      throw new Error(`${file}: inclusion must reference a non-scheduled workflow`);
+    }
+  }
+
+  const watched = rows
+    .filter((row) => (row.scheduled && !(row.file in scheduledExclusions)) || row.file in nonScheduledInclusions)
+    .map(({ file, label }) => {
+      const event = inclusionConfigs.get(file)?.event;
+      return event ? { file, label, event } : { file, label };
+    })
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const excluded = Object.entries(scheduledExclusions)
+    .map(([file, reason]) => ({ file, label: byFile.get(file).label, reason: reason.trim() }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+
+  return {
+    watched,
+    excluded,
+    scheduled_count: rows.filter((row) => row.scheduled).length,
+  };
+}
 
 function writeJson(path, payload) {
   if (!path) return;
@@ -80,6 +203,14 @@ export function evaluateWorkflow(workflow, runs) {
     alarming: streak >= ALARM_STREAK_THRESHOLD,
     latestRunUrl: latest?.html_url || null,
   };
+  if (workflow.event) base.event = workflow.event;
+  if (runs.length === 0) {
+    return {
+      ...base,
+      status: "unknown",
+      message: "No completed run observed for this workflow and filter.",
+    };
+  }
   if (!base.alarming) {
     return { ...base, status: "ok" };
   }
@@ -97,9 +228,9 @@ function buildIssueBody(alarms) {
   const lines = [
     "[alert] Consecutive pipeline job failures detected.",
     "",
-    "A publishing job failed at least twice in a row. On 07-16 a bad commit hard-failed",
+    "A scheduled or critical workflow failed at least twice in a row. On 07-16 a bad commit hard-failed",
     "every Update Manifest run for ~12h and blocked Deploy Worker with no alarm — this",
-    "check exists to fire within ~20 minutes of that class of outage.",
+    "check exists to detect that class of outage on the next hourly alarm sweep.",
     "",
   ];
   for (const alarm of alarms) {
@@ -117,10 +248,26 @@ function buildIssueBody(alarms) {
   return lines.join("\n");
 }
 
-async function fetchCompletedRuns({ token, owner, repo, file }) {
-  const url =
-    `${GITHUB_API}/repos/${owner}/${repo}/actions/workflows/${file}/runs` +
-    `?status=completed&per_page=${RUNS_PER_PAGE}`;
+export function buildWorkflowRunsUrl({ owner, repo, file, branch = "main", event = null }) {
+  const query = new URLSearchParams({
+    status: "completed",
+    branch,
+    per_page: String(RUNS_PER_PAGE),
+  });
+  if (event) query.set("event", event);
+  const segments = [owner, repo, file].map((segment) => encodeURIComponent(segment));
+  return `${GITHUB_API}/repos/${segments[0]}/${segments[1]}/actions/workflows/${segments[2]}/runs?${query}`;
+}
+
+export function parseWorkflowRunsPayload(payload) {
+  if (!Array.isArray(payload?.workflow_runs)) {
+    throw new Error("GitHub workflow-runs response is missing workflow_runs[]");
+  }
+  return payload.workflow_runs;
+}
+
+async function fetchCompletedRuns({ token, owner, repo, file, branch, event }) {
+  const url = buildWorkflowRunsUrl({ owner, repo, file, branch, event });
   const response = await fetch(url, { headers: authHeaders(token) });
   if (!response.ok) {
     let detail = `HTTP ${response.status}`;
@@ -133,21 +280,29 @@ async function fetchCompletedRuns({ token, owner, repo, file }) {
     throw new Error(detail);
   }
   const payload = await response.json();
-  return Array.isArray(payload?.workflow_runs) ? payload.workflow_runs : [];
+  return parseWorkflowRunsPayload(payload);
 }
 
 export async function main() {
   const token = process.env.GITHUB_TOKEN;
   const resultPath = process.env.PIPELINE_JOB_HEALTH_RESULT || "pipeline-job-health-result.json";
   const repository = process.env.GITHUB_REPOSITORY || "";
+  const branch = process.env.PIPELINE_JOB_HEALTH_BRANCH || "main";
   const [owner, repo] = repository.split("/");
   const checkedAtUtc = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  const policy = deriveWorkflowWatchPolicy();
 
   const base = {
     checkedAtUtc,
     issueTitle: ISSUE_TITLE,
     repository,
-    watched: WATCHED_WORKFLOWS.map((w) => w.file),
+    branch,
+    watched: policy.watched.map((workflow) => workflow.file),
+    event_filters: policy.watched
+      .filter((workflow) => workflow.event)
+      .map((workflow) => ({ file: workflow.file, event: workflow.event })),
+    excluded: policy.excluded,
+    scheduled_count: policy.scheduled_count,
   };
 
   if (!owner || !repo) {
@@ -163,9 +318,16 @@ export async function main() {
   }
 
   const workflows = [];
-  for (const workflow of WATCHED_WORKFLOWS) {
+  for (const workflow of policy.watched) {
     try {
-      const runs = await fetchCompletedRuns({ token, owner, repo, file: workflow.file });
+      const runs = await fetchCompletedRuns({
+        token,
+        owner,
+        repo,
+        file: workflow.file,
+        branch,
+        event: workflow.event,
+      });
       workflows.push(evaluateWorkflow(workflow, runs));
     } catch (error) {
       // A transient API failure must never itself alarm — report unknown, keep exit 0.

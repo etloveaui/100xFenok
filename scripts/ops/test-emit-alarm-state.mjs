@@ -26,8 +26,8 @@ function alarmingRow(file, label, { streak = 2, firstFailingRunId = 999 } = {}) 
   runs.push(ghRun(1, "success"));
   return evaluateWorkflow({ file, label }, runs);
 }
-function okRow(file, label) {
-  return evaluateWorkflow({ file, label }, [ghRun(1, "success")]);
+function okRow(file, label, event = null) {
+  return evaluateWorkflow({ file, label, ...(event ? { event } : {}) }, [ghRun(1, "success")]);
 }
 
 
@@ -42,9 +42,15 @@ const NOW = new Date("2026-07-19T12:00:00Z");
 const firingHealth = {
   status: "alarm",
   issueTitle: "100xFenok pipeline job failure alarm",
+  excluded: [{
+    file: "pipeline-failure-alarm.yml",
+    label: "Pipeline Failure Alarm",
+    reason: "self-monitoring would create a recursive alarm loop",
+  }],
   workflows: [
     alarmingRow("update-manifest.yml", "Update Manifest", { streak: 3, firstFailingRunId: 999 }),
     okRow("deploy-worker.yml", "Deploy Worker"),
+    okRow("validate-workflows.yml", "Validate GitHub Workflows", "push"),
   ],
 };
 const quietHealth = {
@@ -52,6 +58,7 @@ const quietHealth = {
   workflows: [
     okRow("update-manifest.yml", "Update Manifest"),
     okRow("deploy-worker.yml", "Deploy Worker"),
+    okRow("validate-workflows.yml", "Validate GitHub Workflows", "push"),
   ],
 };
 
@@ -67,7 +74,14 @@ assert.ok(firing.last_firing && firing.last_firing.run_id === "123456", "last_fi
 assert.equal(firing.last_firing.run_url, "https://github.com/etloveaui/100xFenok/actions/runs/123456");
 assert.deepEqual(firing.last_firing.workflows, ["update-manifest.yml"]);
 assert.equal(firing.last_resolved_at, null, "not resolved while open");
-assert.equal(firing.watched_workflows.length, 2);
+assert.equal(firing.watched_workflows.length, 3);
+assert.equal(
+  firing.watched_workflows.find((row) => row.file === "validate-workflows.yml")?.event,
+  "push",
+  "the public watch policy must expose the critical gate's event filter",
+);
+assert.deepEqual(firing.excluded_workflows, firingHealth.excluded,
+  "declared workflow exclusions and their reasons must remain visible in alarm state");
 
 // --- Quiet run AFTER an open state: honest resolution + preserved history ---
 const resolved = buildAlarmState({ health: quietHealth, prior: firing, env: ENV, now: new Date("2026-07-19T13:00:00Z") });
@@ -168,6 +182,18 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, watchListChanged), "a change to the watched-workflow set must be written");
+
+  const exclusionChanged = buildAlarmState({
+    health: {
+      ...firingHealth,
+      excluded: [{ ...firingHealth.excluded[0], reason: "changed policy reason" }],
+    },
+    prior: openNow,
+    env: ENV,
+    now: NOW,
+  });
+  assert.ok(!alarmStateUnchanged(openNow, exclusionChanged),
+    "a change to an explicit exclusion policy must be written");
 
   // A first-ever emission has no prior and must always be written.
   assert.ok(!alarmStateUnchanged(null, openNow), "a first emission must be written");

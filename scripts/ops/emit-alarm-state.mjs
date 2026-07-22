@@ -52,6 +52,15 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     .filter((w) => w?.status !== "alarm" && w?.status !== "ok")
     .map((w) => ({ workflow: w?.file ?? null, status: w?.status ?? null }))
     .sort((a, b) => String(a.workflow).localeCompare(String(b.workflow)));
+  const excludedWorkflows = Array.isArray(health?.excluded)
+    ? health.excluded
+      .map((row) => ({
+        file: row?.file ?? null,
+        label: row?.label ?? row?.file ?? null,
+        reason: row?.reason ?? null,
+      }))
+      .sort((a, b) => String(a.file).localeCompare(String(b.file)))
+    : [];
 
   const runId = env.GITHUB_RUN_ID ? String(env.GITHUB_RUN_ID) : null;
   const runUrl = runId && env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY
@@ -80,7 +89,12 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     status,
     open_incident_count: openIncidents.length,
     open_incidents: openIncidents,
-    watched_workflows: workflows.map((w) => ({ file: w.file ?? null, label: w.label ?? w.name ?? null })),
+    watched_workflows: workflows.map((w) => ({
+      file: w.file ?? null,
+      label: w.label ?? w.name ?? null,
+      event: w.event ?? null,
+    })),
+    excluded_workflows: excludedWorkflows,
     unknown_workflows: unknownWorkflows,
     last_firing: lastFiring,
     last_resolved_at: lastResolvedAt,
@@ -103,6 +117,7 @@ const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
   "open_incident_count",
   "open_incidents",
   "watched_workflows",
+  "excluded_workflows",
   "unknown_workflows",
   "last_resolved_at",
 ]);

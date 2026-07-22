@@ -13,7 +13,12 @@ on:
       - 'scripts/ops/fixtures/workflow-actionlint/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
+      - 'scripts/ops/check-pipeline-job-health.mjs'
+      - 'scripts/ops/emit-alarm-state.mjs'
+      - 'scripts/ops/test-check-pipeline-job-health.mjs'
+      - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/stage-lane-manifest.sh'
+      - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
       - '100xfenok-next/package.json'
   pull_request:
@@ -22,7 +27,12 @@ on:
       - 'scripts/ops/fixtures/workflow-actionlint/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
+      - 'scripts/ops/check-pipeline-job-health.mjs'
+      - 'scripts/ops/emit-alarm-state.mjs'
+      - 'scripts/ops/test-check-pipeline-job-health.mjs'
+      - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/stage-lane-manifest.sh'
+      - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
       - '100xfenok-next/package.json'
   workflow_dispatch:
@@ -42,6 +52,9 @@ jobs:
 
       - name: Validate lane manifest staging
         run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
+
+      - name: Validate alarm workflow contracts
+        run: npm --prefix 100xfenok-next run qa:alarm-state
 
       - name: Install pinned actionlint
         env:
