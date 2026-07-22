@@ -48,6 +48,12 @@ function workflowAppliesManifestExcludes(workflowText, workflowRel, stageHelperT
     && stageHelperText.includes('git restore --staged -- "$exclude_path"');
 }
 
+function workflowAppliesManifestStage(workflowText, workflowRel, stage) {
+  return workflowText.includes("scripts/stage-lane-manifest.sh")
+    && workflowText.includes(`--workflow ${workflowRel}`)
+    && new RegExp(`--stage\\s+${stage}\\b`).test(workflowText);
+}
+
 const laneStageHelperText = fs.readFileSync(path.join(REPO_ROOT, LANE_STAGE_HELPER), "utf8");
 
 for (const workflowRel of enumerateCommitCapableWorkflows()) {
@@ -73,7 +79,10 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
     }
     for (const spec of specs) {
       if (spec.kind === "dynamic_set") continue;
-      assert.ok(sourceRepresentsSpec(sourceTexts, spec), `${workflowRel} ${stage} path is not present in workflow/script source: ${spec.path}`);
+      assert.ok(
+        sourceRepresentsSpec(sourceTexts, spec) || workflowAppliesManifestStage(workflowText, workflowRel, stage),
+        `${workflowRel} ${stage} path is not present in workflow/script source or an exact manifest-driven stage: ${spec.path}`,
+      );
     }
   }
   for (const spec of entry.exclude) {

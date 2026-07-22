@@ -653,13 +653,13 @@ const config = {
     }),
     lane({
       id: "us_indices_daily",
-      label: "US index daily close shadow",
+      label: "US index daily close (Yahoo live canonical)",
       members: [registryMember("us_indices_daily", ["0 22 * * 1-5"], [
-        artifact("us_indices_daily_sp500_shadow", "data/admin/us-indices-daily/shadow/sp500.json", {
+        artifact("us_indices_daily_sp500", "data/indices/sp500.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("sp500_non_empty", "")],
         }),
-        artifact("us_indices_daily_nasdaq_shadow", "data/admin/us-indices-daily/shadow/nasdaq.json", {
+        artifact("us_indices_daily_nasdaq", "data/indices/nasdaq.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("nasdaq_non_empty", "")],
         }),
@@ -667,7 +667,6 @@ const config = {
       endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs", "macro_index_charts"],
-      visibility: "admin_only",
     }),
     lane({
       id: "oecd_cli",

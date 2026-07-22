@@ -57,8 +57,8 @@
 | 파일 | 데이터 소스 | 대상 JSON |
 |------|------------|-----------|
 | **`yahoo-quotes.gs`** | **100x quote.v1→Yahoo OHLC→Stooq→GOOGLEFINANCE** | **범용 실시간 주가 조회 (IB Helper 등)** |
-| `indices.gs` | GOOGLEFINANCE (GAS owner; retirement deferred) | `data/indices/sp500.json`, `nasdaq.json` |
-| `fetch-us-indices-daily.yml` | Yahoo chart v8 shadow parity (intended successor) | `data/admin/us-indices-daily/shadow/` |
+| `indices.gs` | retired canonical writer; owner removes GAS triggers atomically with the bot cutover | historical source only |
+| `fetch-us-indices-daily.yml` | Yahoo chart v8 canonical producer; source + public mirror are one atomic write set | `data/indices/sp500.json`, `nasdaq.json` + public mirrors |
 | `vix.gs` | deprecated Yahoo backup | `data/sentiment/vix.json` (runtime owner: `fetch-sentiment.mjs`) |
 | `move.gs` | deprecated Yahoo backup | `data/sentiment/move.json` (runtime owner: `fetch-sentiment.mjs`) |
 | `aaii.gs` | IMPORTHTML (AAII 웹사이트) | `data/sentiment/aaii.json` |

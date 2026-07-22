@@ -1,4 +1,4 @@
-name: Fetch US Index Daily Close Shadow
+name: Fetch US Index Daily Close
 
 on:
   schedule:
@@ -27,23 +27,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Test US indices shadow producer
+      - name: Test US indices live producer
         run: npm --prefix 100xfenok-next run qa:us-indices-daily
 
-      - name: Fetch Yahoo index closes and compare with GAS
+      # Yahoo becomes the live canonical/public owner in one atomic cutover.
+      # The former GAS comparator and historical report remain dormant only.
+      - name: Fetch Yahoo index closes to canonical and public mirrors atomically
         id: fetch_indices
         run: node scripts/fetch-us-indices-daily.mjs
 
-      - name: Preserve parity report
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: us-indices-shadow-parity-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/us-indices-daily/parity-report.json
-          if-no-files-found: ignore
-          retention-days: 21
-
-      - name: Commit shadow evidence
+      - name: Commit live data and attempt evidence
         if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,11 +53,16 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-us-indices-daily.yml \
             --stage always_if_exists
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-us-indices-daily.yml \
+              --stage success_if_exists
+          fi
           if git diff --staged --quiet; then
-            echo "No US indices shadow evidence to publish"
+            echo "No US indices live data or attempt evidence to publish"
             exit "$RECOVERY_EXIT"
           fi
-          git commit -m "data: refresh US indices shadow parity"
+          git commit -m "data: refresh US indices canonical and public mirrors"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
               git rebase --abort >/dev/null 2>&1 || true

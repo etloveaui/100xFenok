@@ -209,12 +209,28 @@ function clone(value) {
       assert.ok(lane.declared_exception?.length > 0, `${id} must explain its observability exception`);
     }
     const indices = registryLaneById("us_indices_daily");
-    assert.equal(indices.enforcement, "shadow", "US indices stays shadow until the parity acceptance window passes");
+    assert.equal(indices.enforcement, "live", "Yahoo owns US indices after the atomic GAS cutover");
     assert.deepEqual(indices.roots.canonical_outputs, [
-      "data/admin/us-indices-daily/shadow/sp500.json",
-      "data/admin/us-indices-daily/shadow/nasdaq.json",
-    ], "shadow phase must not claim GAS-owned canonical index paths");
-    assert.deepEqual(indices.roots.public_mirror, [], "shadow phase must not write the stale public mirror");
+      "data/indices/sp500.json",
+      "data/indices/nasdaq.json",
+    ]);
+    assert.deepEqual(indices.roots.public_mirror, [
+      "100xfenok-next/public/data/indices/sp500.json",
+      "100xfenok-next/public/data/indices/nasdaq.json",
+    ]);
+    assert.equal(indices.declared_exception, null, "the retired shadow qualification exception must be removed");
+    assert.deepEqual(indices.script_sources, ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],
+      "the live producer imports shared tolerance helpers from the dormant comparator module");
+    const paritySource = fs.readFileSync(path.join(REPO_ROOT, "scripts", "check-us-indices-parity.mjs"), "utf8");
+    assert.doesNotMatch(paritySource, /QUALIFICATION_SCHEMA|advanceQualification|REQUIRED_CONSECUTIVE_TRADING_DAYS/,
+      "the retired 10-day qualification state machine must be deleted");
+    const workflowSource = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-us-indices-daily.yml"), "utf8");
+    assert.doesNotMatch(workflowSource, /check-us-indices-parity|parity-report|upload-artifact/,
+      "the live workflow must not invoke or upload the dormant historical comparator");
+    assert.match(workflowSource, /--stage\s+success_if_exists/,
+      "the live workflow must stage canonical/public outputs only after producer success");
+    assert.match(workflowSource, /atomic (?:cutover|GAS ownership cutover)/,
+      "the workflow must document the atomic GAS-to-Yahoo ownership cutover");
     const oecd = registryLaneById("oecd_cli");
     assert.equal(oecd.enforcement, "shadow");
     assert.deepEqual(oecd.roots.canonical_outputs, ["data/admin/oecd_cli/shadow/oecd-cli.json"]);

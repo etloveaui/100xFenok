@@ -72,7 +72,7 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
-      "config_digest": "57365b825eccfcd7575ff93e5ed944d82458f92eeab424def8d32211e4058e1e",
+      "config_digest": "e1c22dce16dab2f68e3251457413b6f9afcfc22de802485172388caf1961d5e8",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
@@ -417,10 +417,10 @@
             "reason": "ok",
             "status": "ready"
           },
-          "enforcement": "shadow",
+          "enforcement": "live",
           "id": "us_indices_daily",
-          "kpi_required": false,
-          "label": "US index daily close shadow",
+          "kpi_required": true,
+          "label": "US index daily close (Yahoo live canonical)",
           "monitoring_mode": "post_fetch_artifact",
           "reason": "ok",
           "status": "ready"
@@ -843,9 +843,9 @@
     },
     "id": "all_valid_at_fixed_now",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "688eed4d795a3a1b4d360ad8dabda15147b12c5af8c0dffb0fc53f2e84355f72"
+    "report_file_sha256": "7c022482721a036658f925e4538c5a71be08f2401c21d1f6ce2efa32cc58b993"
   },
-  "config_digest": "57365b825eccfcd7575ff93e5ed944d82458f92eeab424def8d32211e4058e1e",
+  "config_digest": "e1c22dce16dab2f68e3251457413b6f9afcfc22de802485172388caf1961d5e8",
   "config_digest_input": {
     "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
     "enforcement": "shadow",
@@ -968,7 +968,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "10807c03c53ab6f7ca7bd654cdfc14e2453a59574f240d66ee292f5c6a5cea92",
+  "registry_digest": "bbfe46958f93d683765a230f334eae92cf89a090b2f737914319f087bf92d2e1",
   "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",
