@@ -1,17 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-23T05:55:01.841Z",
+  "generated_at": "2026-07-23T09:41:04.796Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 2,
   "open_incidents": [
-    {
-      "workflow": "build-stocks-analyzer.yml",
-      "label": "Build Stocks Analyzer",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 29815219390,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29815219390"
-    },
     {
       "workflow": "slickcharts-history.yml",
       "label": "SlickCharts History",
@@ -96,8 +88,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -379,8 +373,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 22,
-    "overdue": 2,
+    "not_due": 21,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -403,12 +397,11 @@
     }
   ],
   "last_firing": {
-    "run_id": "29983410147",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29983410147",
-    "observed_at": "2026-07-23T05:55:01.841Z",
-    "event": "workflow_run",
+    "run_id": "29996238859",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29996238859",
+    "observed_at": "2026-07-23T09:41:04.796Z",
+    "event": "schedule",
     "workflows": [
-      "build-stocks-analyzer.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml"
     ],
