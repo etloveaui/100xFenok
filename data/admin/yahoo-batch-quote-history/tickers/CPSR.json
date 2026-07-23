@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 656,
+      "natural": true,
+      "observed_at": "2026-07-23T23:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30051682457",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:52:07Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CPSR.json",
-    "payload_sha256": "c893f113da827c59db629f3bdab49dca0b3c292e48fe3ab183e90bad39583536",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-23T23:19:48Z",
+    "history_as_of": "2026-07-22",
+    "path": "data/yf/finance/CPSR.json",
+    "payload_sha256": "97b3e6204e48f9cdf5d71d5c74d94bac59d80211307276d91d73d8ce267b2439",
+    "quote_as_of": "2026-07-17T18:54:47Z",
+    "source_as_of": "2026-07-17T18:54:47Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 656,
+    "natural": true,
+    "observed_at": "2026-07-23T23:19:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30051682457",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:52:07Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-22",
+    "observed_at": "2026-07-23T23:19:22Z",
+    "payload_sha256": "d39981228654590e57caade9a465736d5ae921c30474e217d87c212a114a37b7",
+    "quote_as_of": "2026-07-17T18:54:47Z",
+    "run_attempt": 1,
+    "run_id": "30051682457",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-17T18:54:47Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "CPSR",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-23T23:19:22Z"
 }

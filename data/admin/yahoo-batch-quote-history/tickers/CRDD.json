@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 708,
+      "natural": true,
+      "observed_at": "2026-07-23T23:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30051682457",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:21:01Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CRDD.json",
-    "payload_sha256": "eca30c77f3bd2cc39b18c571ce409b2e6ad466c1cf0e25406232b4e4df7b7576",
-    "quote_as_of": "2026-07-08T15:55:26Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-23T23:19:55Z",
+    "history_as_of": "2026-07-23",
+    "path": "data/yf/finance/CRDD.json",
+    "payload_sha256": "9ad34f0c3839270c973a3c26a4e794649f1ced340383e11867a2c2f48ef283b2",
+    "quote_as_of": "2026-07-23T19:32:45Z",
+    "source_as_of": "2026-07-23"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 708,
+    "natural": true,
+    "observed_at": "2026-07-23T23:19:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30051682457",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:21:01Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T15:55:26Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-23",
+    "observed_at": "2026-07-23T23:19:22Z",
+    "payload_sha256": "9e080343e92143489c801ecb32289b2b3864780a80fa7085bbdca1f91c5a551d",
+    "quote_as_of": "2026-07-23T19:32:45Z",
+    "run_attempt": 1,
+    "run_id": "30051682457",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-23"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "CRDD",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-23T23:19:22Z"
 }
