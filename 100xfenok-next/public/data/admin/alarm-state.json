@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-22T23:41:56.231Z",
+  "generated_at": "2026-07-23T04:12:22.923Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 3,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -11,14 +11,6 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 29815219390,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29815219390"
-    },
-    {
-      "workflow": "fenok-edge-daily.yml",
-      "label": "Fenok Edge Daily Data",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 29799765665,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29799765665"
     },
     {
       "workflow": "slickcharts-history.yml",
@@ -271,8 +263,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-yf-finance.yml",
@@ -387,8 +381,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 22,
-    "overdue": 2,
+    "not_due": 21,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -411,13 +405,12 @@
     }
   ],
   "last_firing": {
-    "run_id": "29966866248",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29966866248",
-    "observed_at": "2026-07-22T23:41:56.231Z",
+    "run_id": "29978908969",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/29978908969",
+    "observed_at": "2026-07-23T04:12:22.923Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
-      "fenok-edge-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml"
     ],
